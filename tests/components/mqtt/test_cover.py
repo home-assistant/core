@@ -7,6 +7,7 @@ from unittest.mock import patch
 import pytest
 from pytest_homeassistant.common import async_fire_mqtt_message
 from pytest_homeassistant.components.mqtt.common import (
+    MOCK_COVER_SUBENTRY_DATA,
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -59,6 +60,7 @@ from homeassistant.components.mqtt.cover import (
     CONF_TILT_STATUS_TOPIC,
     MQTT_COVER_ATTRIBUTES_BLOCKED,
 )
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -78,6 +80,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.json import json_dumps
 
 DEFAULT_CONFIG = {DOMAIN: {cover.DOMAIN: {"name": "test", "state_topic": "test-topic"}}}
 
@@ -3661,3 +3665,702 @@ async def test_entity_icon_and_entity_picture(
     await help_test_entity_icon_and_entity_picture(
         hass, mqtt_mock_entry, domain, config
     )
+
+
+TILT_BASE_CONFIG = {
+    "name": "test",
+    "tilt_command_topic": "tilt-command-topic",
+    "tilt_status_topic": "tilt-status-topic",
+}
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "expected"),
+    [
+        pytest.param(
+            {DOMAIN: {cover.DOMAIN: TILT_BASE_CONFIG}},
+            (100, [0], None, None),
+            id="defaults",
+        ),
+        pytest.param(
+            {DOMAIN: {cover.DOMAIN: {**TILT_BASE_CONFIG, "tilt_max": 180}}},
+            (55, [0], None, None),
+            id="defaults_altered_range",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_max": 180,
+                        "tilt_start_angle": -90,
+                        "tilt_end_angle": 90,
+                    }
+                }
+            },
+            (50, [0, 100], -90, 90),
+            id="angles_both_ends_closed",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_start_angle": 0,
+                        "tilt_end_angle": 90,
+                    }
+                }
+            },
+            (0, [100], 0, 90),
+            id="angles_closed_at_end",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "open_tilt_position": 50,
+                        "closed_tilt_positions": [100, 0],
+                    }
+                }
+            },
+            (50, [0, 100], None, None),
+            id="explicit_positions",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_start_angle": -90,
+                        "tilt_end_angle": 90,
+                        "open_tilt_position": 40,
+                    }
+                }
+            },
+            (40, [0, 100], -90, 90),
+            id="angles_with_open_position",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_opened_value": 0,
+                        "tilt_closed_value": 100,
+                    }
+                }
+            },
+            (0, [100], None, None),
+            id="legacy_inverted",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_max": 400,
+                        "tilt_opened_value": 400,
+                        "tilt_closed_value": 125,
+                    }
+                }
+            },
+            (100, [0], None, None),
+            id="legacy_closed_not_at_end",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_opened_value": 0,
+                        "tilt_closed_value": 0,
+                    }
+                }
+            },
+            (100, [0], None, None),
+            id="legacy_open_equals_closed",
+        ),
+    ],
+)
+async def test_tilt_position_attributes(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    expected: tuple[int, list[int], int | None, int | None],
+) -> None:
+    """Test the open and closed tilt positions and the tilt angles."""
+    await mqtt_mock_entry()
+
+    state = hass.states.get("cover.test")
+    assert (
+        state.attributes.get("open_tilt_position"),
+        state.attributes.get("closed_tilt_positions"),
+        state.attributes.get("tilt_start_angle"),
+        state.attributes.get("tilt_end_angle"),
+    ) == expected
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "tilt_status", "service", "expected_payload"),
+    [
+        pytest.param(
+            {DOMAIN: {cover.DOMAIN: TILT_BASE_CONFIG}},
+            None,
+            SERVICE_OPEN_COVER_TILT,
+            "100",
+            id="defaults_open",
+        ),
+        pytest.param(
+            {DOMAIN: {cover.DOMAIN: TILT_BASE_CONFIG}},
+            None,
+            SERVICE_CLOSE_COVER_TILT,
+            "0",
+            id="defaults_close",
+        ),
+        pytest.param(
+            {DOMAIN: {cover.DOMAIN: {**TILT_BASE_CONFIG, "tilt_max": 180}}},
+            None,
+            SERVICE_OPEN_COVER_TILT,
+            "100",
+            id="defaults_open_altered_range",
+        ),
+        pytest.param(
+            {DOMAIN: {cover.DOMAIN: {**TILT_BASE_CONFIG, "tilt_max": 180}}},
+            "100",
+            SERVICE_TOGGLE_COVER_TILT,
+            "0",
+            id="defaults_toggle_altered_range",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_max": 180,
+                        "open_tilt_position": 100,
+                    }
+                }
+            },
+            None,
+            SERVICE_OPEN_COVER_TILT,
+            "180",
+            id="open_position_altered_range",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_max": 180,
+                        "tilt_start_angle": -90,
+                        "tilt_end_angle": 90,
+                    }
+                }
+            },
+            None,
+            SERVICE_OPEN_COVER_TILT,
+            "90",
+            id="angles_open",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_max": 180,
+                        "tilt_start_angle": -90,
+                        "tilt_end_angle": 90,
+                    }
+                }
+            },
+            None,
+            SERVICE_CLOSE_COVER_TILT,
+            "0",
+            id="angles_close_tilt_unknown",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_max": 180,
+                        "tilt_start_angle": -90,
+                        "tilt_end_angle": 90,
+                    }
+                }
+            },
+            "20",
+            SERVICE_CLOSE_COVER_TILT,
+            "0",
+            id="angles_close_nearest_start",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_max": 180,
+                        "tilt_start_angle": -90,
+                        "tilt_end_angle": 90,
+                    }
+                }
+            },
+            "170",
+            SERVICE_CLOSE_COVER_TILT,
+            "180",
+            id="angles_close_nearest_end",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_max": 180,
+                        "tilt_start_angle": -90,
+                        "tilt_end_angle": 90,
+                    }
+                }
+            },
+            "180",
+            SERVICE_TOGGLE_COVER_TILT,
+            "90",
+            id="angles_toggle_open_from_end",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_max": 180,
+                        "tilt_start_angle": -90,
+                        "tilt_end_angle": 90,
+                    }
+                }
+            },
+            "90",
+            SERVICE_TOGGLE_COVER_TILT,
+            "0",
+            id="angles_toggle_close_from_open",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_start_angle": 0,
+                        "tilt_end_angle": 90,
+                    }
+                }
+            },
+            None,
+            SERVICE_OPEN_COVER_TILT,
+            "0",
+            id="angles_open_at_start",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_start_angle": 0,
+                        "tilt_end_angle": 90,
+                    }
+                }
+            },
+            None,
+            SERVICE_CLOSE_COVER_TILT,
+            "100",
+            id="angles_close_at_end",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_start_angle": -45,
+                        "tilt_end_angle": 90,
+                        "closed_tilt_positions": [0, 100],
+                    }
+                }
+            },
+            "5",
+            SERVICE_CLOSE_COVER_TILT,
+            "100",
+            id="angles_close_at_flattest_end",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_min": 180,
+                        "tilt_max": 0,
+                        "tilt_start_angle": -90,
+                        "tilt_end_angle": 90,
+                    }
+                }
+            },
+            None,
+            SERVICE_OPEN_COVER_TILT,
+            "90",
+            id="angles_inverted_range_open",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_min": 180,
+                        "tilt_max": 0,
+                        "tilt_start_angle": -90,
+                        "tilt_end_angle": 90,
+                    }
+                }
+            },
+            None,
+            SERVICE_CLOSE_COVER_TILT,
+            "180",
+            id="angles_inverted_range_close",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "open_tilt_position": 50,
+                        "closed_tilt_positions": [0, 100],
+                    }
+                }
+            },
+            "80",
+            SERVICE_CLOSE_COVER_TILT,
+            "100",
+            id="explicit_positions_close_nearest_end",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_max": 180,
+                        "tilt_opened_value": 100,
+                        "tilt_closed_value": 70,
+                    }
+                }
+            },
+            "70",
+            SERVICE_TOGGLE_COVER_TILT,
+            "100",
+            id="legacy_toggle_open_from_closed_value",
+        ),
+    ],
+)
+async def test_tilt_open_close_toggle_positions(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    tilt_status: str | None,
+    service: str,
+    expected_payload: str,
+) -> None:
+    """Test the tilt value published to open, close and toggle the tilt."""
+    mqtt_mock = await mqtt_mock_entry()
+    if tilt_status is not None:
+        async_fire_mqtt_message(hass, "tilt-status-topic", tilt_status)
+
+    await hass.services.async_call(
+        cover.DOMAIN, service, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic",
+        expected_payload,
+        0,
+        False,
+        message_expiry_interval=None,
+    )
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "error"),
+    [
+        pytest.param(
+            {DOMAIN: {cover.DOMAIN: {**TILT_BASE_CONFIG, "tilt_start_angle": 0}}},
+            "'tilt_start_angle' must be set together with 'tilt_end_angle'.",
+            id="one_angle",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_start_angle": 45,
+                        "tilt_end_angle": 45,
+                    }
+                }
+            },
+            "'tilt_start_angle' and 'tilt_end_angle' must differ.",
+            id="equal_angles",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_start_angle": -91,
+                        "tilt_end_angle": 90,
+                    }
+                }
+            },
+            "tilt_start_angle",
+            id="angle_out_of_range",
+        ),
+        pytest.param(
+            {DOMAIN: {cover.DOMAIN: {**TILT_BASE_CONFIG, "open_tilt_position": 101}}},
+            "open_tilt_position",
+            id="open_position_out_of_range",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {**TILT_BASE_CONFIG, "closed_tilt_positions": [50]}
+                }
+            },
+            "closed_tilt_positions",
+            id="closed_position_not_at_end",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_start_angle": -90,
+                        "tilt_end_angle": 90,
+                        "tilt_closed_value": 0,
+                    }
+                }
+            },
+            "'tilt_opened_value' and 'tilt_closed_value' cannot be used together"
+            " with 'tilt_start_angle', 'tilt_end_angle', 'open_tilt_position' or"
+            " 'closed_tilt_positions'.",
+            id="angles_and_legacy_closed_value",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "open_tilt_position": 50,
+                        "tilt_opened_value": 50,
+                    }
+                }
+            },
+            "'tilt_opened_value' and 'tilt_closed_value' cannot be used together",
+            id="open_position_and_legacy_opened_value",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_start_angle": -90,
+                        "tilt_end_angle": 90,
+                        "open_tilt_position": 0,
+                    }
+                }
+            },
+            "The open tilt position 0 must not be one of the closed tilt"
+            " positions [0, 100].",
+            id="open_position_in_derived_closed_positions",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "open_tilt_position": 100,
+                        "closed_tilt_positions": 100,
+                    }
+                }
+            },
+            "The open tilt position 100 must not be one of the closed tilt"
+            " positions [100].",
+            id="open_position_in_closed_positions",
+        ),
+    ],
+)
+async def test_invalid_tilt_positions(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    error: str,
+) -> None:
+    """Test invalid tilt angles and positions are rejected."""
+    assert await mqtt_mock_entry()
+    assert hass.states.get("cover.test") is None
+    assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "issue_expected"),
+    [
+        pytest.param(
+            {DOMAIN: {cover.DOMAIN: {**TILT_BASE_CONFIG, "tilt_closed_value": 0}}},
+            True,
+            id="legacy_closed_value",
+        ),
+        pytest.param(
+            {DOMAIN: {cover.DOMAIN: {**TILT_BASE_CONFIG, "tilt_opened_value": 100}}},
+            True,
+            id="legacy_opened_value",
+        ),
+        pytest.param(
+            {
+                DOMAIN: {
+                    cover.DOMAIN: {
+                        **TILT_BASE_CONFIG,
+                        "tilt_start_angle": -90,
+                        "tilt_end_angle": 90,
+                    }
+                }
+            },
+            False,
+            id="angles",
+        ),
+    ],
+)
+async def test_deprecated_tilt_values_yaml_issue(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+    issue_expected: bool,
+) -> None:
+    """Test a repair issue is raised for deprecated tilt values in YAML."""
+    await mqtt_mock_entry()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_tilt_values_cover.test")
+    assert (issue is not None) is issue_expected
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [{DOMAIN: {cover.DOMAIN: {**TILT_BASE_CONFIG, "tilt_closed_value": 0}}}],
+)
+async def test_deprecated_tilt_values_yaml_issue_details(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the repair issue for deprecated tilt values in YAML."""
+    await mqtt_mock_entry()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_tilt_values_cover.test")
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.7.0"
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.translation_key == "deprecated_tilt_values"
+    assert issue.translation_placeholders == {
+        "entity_id": "cover.test",
+        "breaks_in_ha_version": "2027.7.0",
+    }
+
+
+@pytest.mark.parametrize(
+    ("discovery_payload", "warning_expected"),
+    [
+        pytest.param(
+            {
+                "name": "test",
+                "tilt_cmd_t": "tilt-command-topic",
+                "tilt_clsd_val": 0,
+            },
+            True,
+            id="legacy_closed_value",
+        ),
+        pytest.param(
+            {
+                "name": "test",
+                "tilt_cmd_t": "tilt-command-topic",
+                "tilt_strt_ang": -90,
+                "tilt_end_ang": 90,
+            },
+            False,
+            id="angles",
+        ),
+    ],
+)
+async def test_deprecated_tilt_values_discovery_warning(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+    discovery_payload: dict[str, Any],
+    warning_expected: bool,
+) -> None:
+    """Test discovered deprecated tilt values are logged, without a repair issue."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass, "homeassistant/cover/bla/config", json_dumps(discovery_payload)
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test") is not None
+    assert (
+        "The MQTT cover cover.test, discovered on topic"
+        " homeassistant/cover/bla/config, uses the deprecated 'tilt_opened_value'"
+        " or 'tilt_closed_value' option" in caplog.text
+    ) is warning_expected
+    assert not issue_registry.issues
+
+
+async def test_tilt_positions_discovery_abbreviations(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the abbreviations of the tilt position options."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/cover/bla/config",
+        json_dumps(
+            {
+                "name": "test",
+                "tilt_cmd_t": "tilt-command-topic",
+                "tilt_strt_ang": -60,
+                "tilt_end_ang": 90,
+                "open_tilt_pos": 30,
+                "clsd_tilt_pos": [0, 100],
+            }
+        ),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test")
+    assert state.attributes["tilt_start_angle"] == -60
+    assert state.attributes["tilt_end_angle"] == 90
+    assert state.attributes["open_tilt_position"] == 30
+    assert state.attributes["closed_tilt_positions"] == [0, 100]
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_subentries_data",
+    [
+        (
+            ConfigSubentryData(
+                data=MOCK_COVER_SUBENTRY_DATA,
+                subentry_type="device",
+                title="Mock subentry",
+            ),
+        )
+    ],
+)
+async def test_deprecated_tilt_values_subentry_not_reported(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the tilt values stored in a subentry are not reported as deprecated."""
+    await mqtt_mock_entry()
+
+    assert len(hass.states.async_entity_ids(cover.DOMAIN)) == 1
+    assert not issue_registry.issues
+    assert "uses the deprecated" not in caplog.text

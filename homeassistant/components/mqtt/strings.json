@@ -1183,6 +1183,10 @@
       "description": "The client certificate that is loaded from `{client_cert_file}` to connect to MQTT broker {broker} expires on {expiry}. The installed private key file `{client_key_file}` cannot be read, or does not contain a valid unencrypted PEM encoded private key. MQTT keeps using the certificate that was loaded, but might not start correctly after a restart. Install a valid private key in `{client_key_file}`. The files are checked once a day. To check them right away after fixing them, reload the MQTT integration.",
       "title": "Invalid MQTT private key file installed"
     },
+    "deprecated_tilt_values": {
+      "description": "The manually configured MQTT cover `{entity_id}` uses the `tilt_opened_value` or `tilt_closed_value` option. These options are deprecated and will stop working in Home Assistant {breaks_in_ha_version}.\n\nDescribe the slats with `tilt_start_angle` and `tilt_end_angle`, the angles of the slats at `tilt_min` and `tilt_max`, from -90 to 90 degrees. If the angles are not known, set `open_tilt_position` and `closed_tilt_positions` as a percentage instead. Then remove `tilt_opened_value` and `tilt_closed_value` from the YAML configuration and [reload](/config/tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
+      "title": "MQTT cover uses deprecated tilt options"
+    },
     "invalid_platform_config": {
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/config/tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
       "title": "Invalid config found for MQTT {domain} item"
