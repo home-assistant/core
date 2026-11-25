@@ -46,6 +46,51 @@ async def async_update_demand_control(
     mode: str,
 ) -> None:
     """Update the demand control settings and refresh device data."""
+    async with coordinator.demand_control_lock:
+        await _async_update_demand_control(
+            coordinator, enabled=enabled, max_power=max_power, mode=mode
+        )
+
+
+async def async_select_demand_control_option(
+    coordinator: DaikinCoordinator, option: str
+) -> None:
+    """Select a demand control option while preserving other settings."""
+    async with coordinator.demand_control_lock:
+        attrs = coordinator.device.get_demand_control()
+        mode = (
+            get_demand_control_mode(attrs) if option == "off" else option
+        ) or "manual"
+        max_power = get_demand_control_max_power(attrs)
+        await _async_update_demand_control(
+            coordinator,
+            enabled=option != "off",
+            max_power=100 if max_power is None else max_power,
+            mode=mode,
+        )
+
+
+async def async_set_demand_control_max_power(
+    coordinator: DaikinCoordinator, max_power: int
+) -> None:
+    """Set maximum power while preserving the other demand control settings."""
+    async with coordinator.demand_control_lock:
+        enabled, mode = demand_control_write_state(
+            coordinator.device.get_demand_control()
+        )
+        await _async_update_demand_control(
+            coordinator, enabled=enabled, max_power=max_power, mode=mode
+        )
+
+
+async def _async_update_demand_control(
+    coordinator: DaikinCoordinator,
+    *,
+    enabled: bool,
+    max_power: int,
+    mode: str,
+) -> None:
+    """Update demand control; the caller must hold the coordinator lock."""
     device = coordinator.device
     if not device.support_demand_control:
         raise HomeAssistantError(

@@ -9,8 +9,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
 from .demand_control import (
-    async_update_demand_control,
-    demand_control_write_state,
+    async_set_demand_control_max_power,
     get_demand_control_max_power,
 )
 from .entity import DaikinEntity, daikin_exception_handler
@@ -57,11 +56,4 @@ class DaikinDemandControlNumber(DaikinEntity, NumberEntity):
     @daikin_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Set the manual maximum power."""
-        attrs = self.device.get_demand_control()
-        enabled, mode = demand_control_write_state(attrs)
-        await async_update_demand_control(
-            self.coordinator,
-            enabled=enabled,
-            max_power=int(value),
-            mode=mode,
-        )
+        await async_set_demand_control_max_power(self.coordinator, int(value))

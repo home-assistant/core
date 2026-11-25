@@ -7,12 +7,10 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DAIKIN_DEMAND_CONTROL_OPTIONS, MODE_MANUAL
+from .const import DAIKIN_DEMAND_CONTROL_OPTIONS
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
 from .demand_control import (
-    async_update_demand_control,
-    get_demand_control_max_power,
-    get_demand_control_mode,
+    async_select_demand_control_option,
     get_demand_control_option,
 )
 from .entity import DaikinEntity, daikin_exception_handler
@@ -56,14 +54,4 @@ class DaikinDemandControlSelect(DaikinEntity, SelectEntity):
     @daikin_exception_handler
     async def async_select_option(self, option: str) -> None:
         """Set the demand control mode."""
-        attrs = self.device.get_demand_control()
-        mode = (
-            get_demand_control_mode(attrs) if option == "off" else option
-        ) or MODE_MANUAL
-        max_power = get_demand_control_max_power(attrs)
-        await async_update_demand_control(
-            self.coordinator,
-            enabled=option != "off",
-            max_power=100 if max_power is None else max_power,
-            mode=mode,
-        )
+        await async_select_demand_control_option(self.coordinator, option)

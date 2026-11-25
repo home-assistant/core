@@ -1,5 +1,6 @@
 """Tests for Daikin select entities."""
 
+import asyncio
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
@@ -7,6 +8,10 @@ from pydaikin.exceptions import DaikinException
 import pytest
 
 from homeassistant.components.daikin.const import DOMAIN
+from homeassistant.components.daikin.demand_control import (
+    async_select_demand_control_option,
+    async_set_demand_control_max_power,
+)
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SelectService,
@@ -159,3 +164,67 @@ async def test_select_demand_control_communication_error(
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "error_communicating"
     assert err.value.translation_placeholders == {"error": message}
+
+
+async def test_concurrent_demand_control_updates(
+    hass: HomeAssistant,
+    zone_device: ZoneDevice,
+) -> None:
+    """Serialize select and number updates, including coordinator refresh."""
+    demand_control = {"en_demand": "1", "mode": "0", "max_pow": "50"}
+    zone_device.support_demand_control = True
+    zone_device.get_demand_control.side_effect = demand_control.copy
+    first_write_started = asyncio.Event()
+    refresh_started = asyncio.Event()
+    release_refresh = asyncio.Event()
+    writes: list[tuple[str, int, int]] = []
+
+    async def set_demand_control(*, en_demand: str, max_pow: int, mode: int) -> None:
+        writes.append((en_demand, max_pow, mode))
+        demand_control.update(
+            en_demand="1" if en_demand == "on" else "0",
+            max_pow=str(max_pow),
+            mode=str(mode),
+        )
+        first_write_started.set()
+
+    async def update_status() -> None:
+        refresh_started.set()
+        await release_refresh.wait()
+
+    zone_device.set_demand_control = AsyncMock(side_effect=set_demand_control)
+    config_entry = await async_setup_daikin(hass, zone_device)
+    zone_device.update_status.side_effect = update_status
+
+    async def select_auto() -> None:
+        await async_select_demand_control_option(config_entry.runtime_data, "auto")
+
+    async def set_max_power() -> None:
+        await async_set_demand_control_max_power(config_entry.runtime_data, 75)
+
+    select_task = asyncio.create_task(select_auto())
+    tasks = [select_task]
+    try:
+        await first_write_started.wait()
+        await refresh_started.wait()
+        number_started = asyncio.Event()
+
+        async def set_power() -> None:
+            number_started.set()
+            await set_max_power()
+
+        number_task = asyncio.create_task(set_power())
+        tasks.append(number_task)
+        await number_started.wait()
+        await asyncio.sleep(0)
+
+        assert writes == [("on", 50, 2)]
+
+        release_refresh.set()
+        await asyncio.gather(select_task, number_task)
+    finally:
+        release_refresh.set()
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+    assert writes == [("on", 50, 2), ("on", 75, 2)]
+    assert demand_control == {"en_demand": "1", "mode": "2", "max_pow": "75"}

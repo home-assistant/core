@@ -1,5 +1,6 @@
 """Coordinator for Daikin integration."""
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import override
@@ -33,6 +34,7 @@ class DaikinCoordinator(DataUpdateCoordinator[None]):
             update_interval=timedelta(seconds=TIMEOUT_SEC),
         )
         self.device = device
+        self.demand_control_lock = asyncio.Lock()
 
     @override
     async def _async_update_data(self) -> None:
