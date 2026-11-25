@@ -106,25 +106,34 @@ def _get_unique_id_prefixes(
     )
 
 
+def _user_disabled_by(
+    entity_entry: er.RegistryEntry, child_device: dr.ChildDeviceEntry
+) -> er.RegistryEntryDisabler | Undefined:
+    """Return the disabler that keeps an entity of a child device disabled.
+
+    An entity disabled with its device is enabled again when it moves to another
+    device, or is restored after removal. The entities of a child device the user
+    disabled stay disabled by the user instead.
+    """
+    if (
+        entity_entry.disabled_by is er.RegistryEntryDisabler.DEVICE
+        and child_device.disabled_by is dr.DeviceEntryDisabler.USER
+    ):
+        return er.RegistryEntryDisabler.USER
+    return Undefined
+
+
 def _move_entity_to_node_device(
     entity_registry: er.EntityRegistry,
     entity_entry: er.RegistryEntry,
     child_device: dr.ChildDeviceEntry,
     node_device_id: str,
 ) -> None:
-    """Move an entity of a child device to the node device.
-
-    Moving an entity disabled with its device would enable it, so the entities of
-    a child device the user disabled stay disabled by the user.
-    """
-    disabled_by: er.RegistryEntryDisabler | Undefined = Undefined
-    if (
-        entity_entry.disabled_by is er.RegistryEntryDisabler.DEVICE
-        and child_device.disabled_by is dr.DeviceEntryDisabler.USER
-    ):
-        disabled_by = er.RegistryEntryDisabler.USER
+    """Move an entity of a child device to the node device."""
     entity_registry.async_update_entity(
-        entity_entry.entity_id, device_id=node_device_id, disabled_by=disabled_by
+        entity_entry.entity_id,
+        device_id=node_device_id,
+        disabled_by=_user_disabled_by(entity_entry, child_device),
     )
 
 
@@ -410,6 +419,15 @@ class MatterAdapter:
                         node.node_id, _get_child_device_endpoint_ids(node, endpoint_id)
                     )
             elif endpoint_id is not None:
+                for entity_entry in er.async_entries_for_device(
+                    entity_registry, child_device.id, include_disabled_entities=True
+                ):
+                    if (
+                        disabled_by := _user_disabled_by(entity_entry, child_device)
+                    ) is not Undefined:
+                        entity_registry.async_update_entity(
+                            entity_entry.entity_id, disabled_by=disabled_by
+                        )
                 self._forget_endpoint_entities(
                     node.node_id, _get_child_device_endpoint_ids(node, endpoint_id)
                 )
