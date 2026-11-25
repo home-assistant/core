@@ -47,7 +47,7 @@ rules:
     comment: >-
       Depends on entity-unavailable. Lock.online is used for availability,
       but transitions are not yet logged.
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
