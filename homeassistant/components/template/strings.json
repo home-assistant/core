@@ -15,7 +15,10 @@
   },
   "config": {
     "error": {
+      "hs_action_required": "Actions on set HS color are required when an HS color is set.",
+      "level_action_required": "Actions on set level are required when a brightness level is set.",
       "source_list_required": "A source list is required when a source or the select source actions are set.",
+      "temperature_action_required": "Actions on set color temperature are required when a color temperature is set.",
       "volume_up_and_down_required": "Volume up and volume down actions must be set together."
     },
     "step": {
@@ -776,6 +779,14 @@
       "description": "The template binary sensor blueprint `{blueprint}` sets options in `attributes` that have a dedicated option. Setting these options in `attributes` is deprecated and will stop working in a future version of Home Assistant.\n\nUpdate the blueprint by moving the following options out of `attributes` to their dedicated option, or by removing them from `attributes` if the dedicated option is already set:\n\n{options}\n\nThe `device_class` option does not support templates, use a supported device class.\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
       "title": "Template binary sensor blueprint sets options in attributes ({blueprint})"
     },
+    "deprecated_cover_missing_actions": {
+      "description": "The template cover entity with `{identifier}` has options without the action that changes them. This is deprecated and will be a configuration error in a future version of Home Assistant.\n\nUpdate your YAML configuration by adding the missing actions or removing the options:\n\n{options}\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template cover entity has options without their action ({identifier})"
+    },
+    "deprecated_cover_missing_actions_blueprint": {
+      "description": "The template cover blueprint `{blueprint}` has options without the action that changes them. This is deprecated and will be a configuration error in a future version of Home Assistant.\n\nUpdate the blueprint by adding the missing actions or removing the options:\n\n{options}\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template cover blueprint has options without their action ({blueprint})"
+    },
     "deprecated_event_attributes": {
       "description": "The template event entity with `{identifier}` sets options in `attributes` that have a dedicated option. Setting these options in `attributes` is deprecated and will stop working in a future version of Home Assistant.\n\nUpdate your YAML configuration by moving the following options out of `attributes` to their dedicated option, or by removing them from `attributes` if the dedicated option is already set:\n\n{options}\n\nThe `device_class` option does not support templates, use a supported device class.\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
       "title": "Template event entity sets options in attributes ({identifier})"
@@ -784,6 +795,10 @@
       "description": "The template event blueprint `{blueprint}` sets options in `attributes` that have a dedicated option. Setting these options in `attributes` is deprecated and will stop working in a future version of Home Assistant.\n\nUpdate the blueprint by moving the following options out of `attributes` to their dedicated option, or by removing them from `attributes` if the dedicated option is already set:\n\n{options}\n\nThe `device_class` option does not support templates, use a supported device class.\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
       "title": "Template event blueprint sets options in attributes ({blueprint})"
     },
+    "deprecated_light_helper_missing_actions": {
+      "description": "The template light helper {name} has options without the action that changes them. This is deprecated and will stop working in Home Assistant Core {breaks_in_ha_version}.\n\nOpen the options of the template light helper and add the missing actions or remove the options:\n\n{options}",
+      "title": "Template light helper {name} has options without their action"
+    },
     "deprecated_light_mireds_options": {
       "description": "The template light entity with `{identifier}` uses options in mireds. These options are deprecated and will be removed in a future version of Home Assistant.\n\nUpdate your YAML configuration by replacing the following options and change their templates to render kelvin instead of mireds:\n\n{options}\n\nThe lowest mireds value is the highest kelvin value, so `min_mireds` is replaced by `max_kelvin` and `max_mireds` by `min_kelvin`.\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
       "title": "Template light entity uses deprecated options in mireds ({identifier})"
@@ -791,6 +806,14 @@
     "deprecated_light_mireds_options_blueprint": {
       "description": "The template light blueprint `{blueprint}` uses options in mireds. These options are deprecated and will be removed in a future version of Home Assistant.\n\nUpdate the blueprint by replacing the following options and change their templates to render kelvin instead of mireds:\n\n{options}\n\nThe lowest mireds value is the highest kelvin value, so `min_mireds` is replaced by `max_kelvin` and `max_mireds` by `min_kelvin`.\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
       "title": "Template light blueprint uses deprecated options in mireds ({blueprint})"
+    },
+    "deprecated_light_missing_actions": {
+      "description": "The template light entity with `{identifier}` has options without the action that changes them. This is deprecated and will be a configuration error in a future version of Home Assistant.\n\nUpdate your YAML configuration by adding the missing actions or removing the options:\n\n{options}\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template light entity has options without their action ({identifier})"
+    },
+    "deprecated_light_missing_actions_blueprint": {
+      "description": "The template light blueprint `{blueprint}` has options without the action that changes them. This is deprecated and will be a configuration error in a future version of Home Assistant.\n\nUpdate the blueprint by adding the missing actions or removing the options:\n\n{options}\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template light blueprint has options without their action ({blueprint})"
     },
     "deprecated_light_temperature": {
       "description": "The template light helper {name} defines its color temperature in mireds. This is deprecated and will stop working in Home Assistant Core {breaks_in_ha_version}.\n\nTo fix this issue, open the options of the template light helper and define the color temperature in kelvin, or remove the actions on set color temperature if the light should not support a color temperature.",
@@ -823,7 +846,10 @@
   },
   "options": {
     "error": {
+      "hs_action_required": "[%key:component::template::config::error::hs_action_required%]",
+      "level_action_required": "[%key:component::template::config::error::level_action_required%]",
       "source_list_required": "[%key:component::template::config::error::source_list_required%]",
+      "temperature_action_required": "[%key:component::template::config::error::temperature_action_required%]",
       "volume_up_and_down_required": "[%key:component::template::config::error::volume_up_and_down_required%]"
     },
     "step": {

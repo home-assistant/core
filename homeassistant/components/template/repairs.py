@@ -90,7 +90,7 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
         )
 
 
-def _format_deprecated_options(
+def format_deprecated_options(
     hass: HomeAssistant,
     deprecation: DeprecatedTemplateOptions,
     deprecated: list[str],
@@ -100,7 +100,10 @@ def _format_deprecated_options(
     prefix = f"{deprecation.parent_option}: " if deprecation.parent_option else ""
     changes: list[str] = []
     for key in deprecated:
-        change = f"`{prefix}{key}` → `{deprecation.options[key]}`"
+        if deprecation.requires_mapped_option:
+            change = f"`{prefix}{key}` requires `{deprecation.options[key]}`"
+        else:
+            change = f"`{prefix}{key}` → `{deprecation.options[key]}`"
         if (location := locations.get(key)) is not None:
             path = os.path.relpath(location[0], hass.config.config_dir)
             change = f"`{path}:{location[1]}`: {change}"
@@ -133,9 +136,7 @@ def _async_update_deprecated_options_issues(
             blueprint_path = section.raw_blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
 
         for index, entity_config in enumerate(section.get(platform, [])):
-            options_config = deprecation.options_config(entity_config)
-            deprecated = [key for key in options_config if key in deprecation.options]
-            if not deprecated:
+            if not (deprecated := deprecation.deprecated_options(entity_config)):
                 continue
 
             # The id only changes with the configuration, so a dismissed issue stays
@@ -151,6 +152,7 @@ def _async_update_deprecated_options_issues(
                 translation_key = deprecation.blueprint_translation_key
                 label = {"blueprint": blueprint_path}
             else:
+                options_config = deprecation.options_config(entity_config)
                 fingerprint = "\n".join(
                     [
                         tcv.entity_config_repair_identifier(
@@ -170,7 +172,7 @@ def _async_update_deprecated_options_issues(
 
             # Identical entities share a fingerprint, one issue lists all of them
             issues.setdefault(fingerprint, (translation_key, label, []))[2].append(
-                _format_deprecated_options(
+                format_deprecated_options(
                     hass,
                     deprecation,
                     deprecated,
