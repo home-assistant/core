@@ -1,6 +1,7 @@
 """Tests for Shelly light platform."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import (
@@ -42,6 +43,7 @@ from homeassistant.const import (
     TargetKey,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -53,11 +55,20 @@ from . import (
     register_device,
     register_entity,
 )
-from .conftest import mock_white_light_set_state
+from .conftest import (
+    MOCK_LEDSTRIP_EFFECTS,
+    MOCK_LEDSTRIP_STATUS_AURORA,
+    MOCK_LEDSTRIP_STATUS_BLINK,
+    MOCK_LEDSTRIP_STATUS_RAINBOW,
+    MOCK_LEDSTRIP_STATUS_SOLID,
+    mock_white_light_set_state,
+)
 
 RELAY_BLOCK_ID = 0
 LIGHT_BLOCK_ID = 2
 SHELLY_PLUS_RGBW_CHANNELS = 4
+LEDSTRIP_ENTITY_ID = f"{LIGHT_DOMAIN}.test_name"
+LEDSTRIP_BACKGROUND_ENTITY_ID = f"{LIGHT_DOMAIN}.test_name_effect_background"
 
 
 @pytest.fixture(autouse=True)
@@ -1103,7 +1114,7 @@ async def test_rpc_ledstrip_light(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC LED strip light."""
-    entity_id = f"{LIGHT_DOMAIN}.test_name"
+    entity_id = LEDSTRIP_ENTITY_ID
 
     await init_integration(hass, 4)
 
@@ -1222,13 +1233,13 @@ async def test_rpc_ledstrip_light_device_not_initialized(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC LED strip light state update when the device is not initialized."""
-    entity_id = f"{LIGHT_DOMAIN}.test_name"
+    entity_id = LEDSTRIP_ENTITY_ID
 
     await init_integration(hass, 4)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_EFFECT_LIST] == ["solid", "blink", "fade", "rainbow"]
+    assert state.attributes[ATTR_EFFECT_LIST] == list(MOCK_LEDSTRIP_EFFECTS)
 
     monkeypatch.setattr(mock_ledstrip_rpc_device, "initialized", False)
     mock_ledstrip_rpc_device.mock_disconnected()
@@ -1236,4 +1247,266 @@ async def test_rpc_ledstrip_light_device_not_initialized(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
-    assert state.attributes[ATTR_EFFECT_LIST] == []
+    # The effect list should still be available because it comes from the runtime data.
+    assert state.attributes[ATTR_EFFECT_LIST] == list(MOCK_LEDSTRIP_EFFECTS)
+
+
+async def test_rpc_ledstrip_background_light(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC LED strip effect background light."""
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status,
+        "ledstrip:0",
+        MOCK_LEDSTRIP_STATUS_BLINK | {"on": True},
+    )
+
+    await init_integration(hass, 4)
+
+    state = hass.states.get(LEDSTRIP_BACKGROUND_ENTITY_ID)
+    assert state == snapshot(name=f"{LEDSTRIP_BACKGROUND_ENTITY_ID}-state")
+
+    entry = entity_registry.async_get(LEDSTRIP_BACKGROUND_ENTITY_ID)
+    assert entry == snapshot(name=f"{LEDSTRIP_BACKGROUND_ENTITY_ID}-entry")
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: LEDSTRIP_BACKGROUND_ENTITY_ID,
+            LightServiceArgument.RGB_COLOR: [100, 150, 200],
+            LightServiceArgument.BRIGHTNESS: 128,
+        },
+        blocking=True,
+    )
+
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(
+        0, {"on": True, "bg_rgb": [64, 96, 128]}
+    )
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_ledstrip_rpc_device, "ledstrip:0", "bg_rgb", [64, 96, 128]
+    )
+    mock_ledstrip_rpc_device.mock_update()
+
+    assert (state := hass.states.get(LEDSTRIP_BACKGROUND_ENTITY_ID))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 128
+    assert state.attributes[ATTR_RGB_COLOR] == (128, 191, 255)
+
+    mock_ledstrip_rpc_device.ledstrip_set.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: LEDSTRIP_BACKGROUND_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(
+        0, {"bg_rgb": [0, 0, 0]}
+    )
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_ledstrip_rpc_device, "ledstrip:0", "bg_rgb", [0, 0, 0]
+    )
+    mock_ledstrip_rpc_device.mock_update()
+
+    assert (state := hass.states.get(LEDSTRIP_BACKGROUND_ENTITY_ID))
+    assert state.state == STATE_OFF
+
+    # Turning on without a color or brightness restores the last background color
+    mock_ledstrip_rpc_device.ledstrip_set.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: LEDSTRIP_BACKGROUND_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(
+        0, {"on": True, "bg_rgb": [64, 96, 128]}
+    )
+
+
+async def test_rpc_ledstrip_background_light_turn_on_default_white(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the background light turns on white without a color to restore."""
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status,
+        "ledstrip:0",
+        MOCK_LEDSTRIP_STATUS_AURORA | {"on": True},
+    )
+
+    await init_integration(hass, 4)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: LEDSTRIP_BACKGROUND_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(
+        0, {"on": True, "bg_rgb": [255, 255, 255]}
+    )
+
+
+async def test_rpc_ledstrip_background_light_turn_on_strip_off(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test turning on the background light also turns on the LED strip."""
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status, "ledstrip:0", MOCK_LEDSTRIP_STATUS_BLINK
+    )
+
+    await init_integration(hass, 4)
+
+    assert (state := hass.states.get(LEDSTRIP_BACKGROUND_ENTITY_ID))
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: LEDSTRIP_BACKGROUND_ENTITY_ID},
+        blocking=True,
+    )
+
+    # The background color stored for the effect is kept
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(
+        0, {"on": True, "bg_rgb": [171, 171, 171]}
+    )
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_ledstrip_rpc_device, "ledstrip:0", "on", True
+    )
+    mock_ledstrip_rpc_device.mock_update()
+
+    assert (state := hass.states.get(LEDSTRIP_BACKGROUND_ENTITY_ID))
+    assert state.state == STATE_ON
+
+
+async def test_rpc_ledstrip_background_light_turn_off_strip_off(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test turning off the background light keeps its color if the strip is off."""
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status, "ledstrip:0", MOCK_LEDSTRIP_STATUS_BLINK
+    )
+
+    await init_integration(hass, 4)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: LEDSTRIP_BACKGROUND_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_ledstrip_rpc_device.ledstrip_set.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("ledstrip_status", "expected_state"),
+    [
+        pytest.param(
+            MOCK_LEDSTRIP_STATUS_BLINK | {"on": True}, STATE_ON, id="background_set"
+        ),
+        pytest.param(MOCK_LEDSTRIP_STATUS_BLINK, STATE_OFF, id="main_light_off"),
+        pytest.param(
+            MOCK_LEDSTRIP_STATUS_AURORA | {"on": True},
+            STATE_OFF,
+            id="background_black",
+        ),
+        pytest.param(
+            MOCK_LEDSTRIP_STATUS_RAINBOW, STATE_UNAVAILABLE, id="no_background"
+        ),
+    ],
+)
+async def test_rpc_ledstrip_background_light_availability(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    ledstrip_status: dict[str, Any],
+    expected_state: str,
+) -> None:
+    """Test RPC LED strip background light availability depends on the effect."""
+    monkeypatch.setitem(mock_ledstrip_rpc_device.status, "ledstrip:0", ledstrip_status)
+
+    await init_integration(hass, 4)
+
+    assert (state := hass.states.get(LEDSTRIP_BACKGROUND_ENTITY_ID))
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("ledstrip_status", "expected_rgb"),
+    [
+        pytest.param(MOCK_LEDSTRIP_STATUS_SOLID, (255, 81, 68), id="main_only"),
+        pytest.param(MOCK_LEDSTRIP_STATUS_BLINK, (127, 172, 255), id="both"),
+        pytest.param(
+            MOCK_LEDSTRIP_STATUS_AURORA | {"rgb": [1, 2, 3]},
+            None,
+            id="background_only",
+        ),
+        pytest.param(MOCK_LEDSTRIP_STATUS_RAINBOW, None, id="none"),
+    ],
+)
+async def test_rpc_ledstrip_light_color_by_effect(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    ledstrip_status: dict[str, Any],
+    expected_rgb: tuple[int, int, int] | None,
+) -> None:
+    """Test RPC LED strip light reports a color only if the effect uses it."""
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status, "ledstrip:0", ledstrip_status | {"on": True}
+    )
+
+    await init_integration(hass, 4)
+
+    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_RGB_COLOR] == expected_rgb
+
+
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        pytest.param({}, id="current_effect"),
+        pytest.param({LightServiceArgument.EFFECT: "aurora"}, id="new_effect"),
+    ],
+)
+async def test_rpc_ledstrip_light_color_not_used_by_effect(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    service_data: dict[str, Any],
+) -> None:
+    """Test RPC LED strip light rejects a color the target effect does not use."""
+    await init_integration(hass, 4)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            LightService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: LEDSTRIP_ENTITY_ID,
+                LightServiceArgument.RGB_COLOR: [100, 150, 200],
+                **service_data,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "ledstrip_effect_no_color"
+    mock_ledstrip_rpc_device.call_rpc.assert_not_called()

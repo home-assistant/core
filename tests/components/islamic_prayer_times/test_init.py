@@ -1,9 +1,9 @@
 """Tests for Islamic Prayer Times init."""
 
-from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -13,7 +13,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import NOW, PRAYER_TIMES
 
@@ -62,30 +61,26 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_options_listener(hass: HomeAssistant) -> None:
+async def test_options_listener(
+    hass: HomeAssistant,
+    prayer_entry: MockConfigEntry,
+    schedules: dict[str, dict[str, str | int | None]],
+) -> None:
     """Ensure updating options triggers a coordinator refresh."""
-    entry = MockConfigEntry(domain=DOMAIN, data={})
-    entry.add_to_hass(hass)
+    assert (
+        hass.states.get("sensor.islamic_prayer_times_isha_prayer").state
+        == "2019-12-31T18:52:00+00:00"
+    )
+    schedules["2019-12-31"]["Isha"] = "2019-12-31T19:00:00+00:00"
 
-    with (
-        patch(
-            "prayer_times_calculator_offline.PrayerTimesCalculator.fetch_prayer_times",
-            return_value=PRAYER_TIMES,
-        ) as mock_fetch_prayer_times,
-        freeze_time(NOW),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        # Each scheduling run calls this 3 times (yesterday, today, tomorrow)
-        assert mock_fetch_prayer_times.call_count == 3
-        mock_fetch_prayer_times.reset_mock()
-
-        hass.config_entries.async_update_entry(
-            entry, options={CONF_CALC_METHOD: "makkah"}
-        )
-        await hass.async_block_till_done()
-        # Each scheduling run calls this 3 times (yesterday, today, tomorrow)
-        assert mock_fetch_prayer_times.call_count == 3
+    hass.config_entries.async_update_entry(
+        prayer_entry, options={CONF_CALC_METHOD: "makkah"}
+    )
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("sensor.islamic_prayer_times_isha_prayer").state
+        == "2019-12-31T19:00:00+00:00"
+    )
 
 
 @pytest.mark.parametrize(
@@ -160,39 +155,23 @@ async def test_migration_from_1_1_to_1_2(hass: HomeAssistant) -> None:
     assert entry.minor_version == 2
 
 
-async def test_update_scheduling(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("prayer_entry")
+async def test_update_scheduling(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that integration schedules update immediately after Islamic midnight."""
-    entry = MockConfigEntry(domain=DOMAIN, data={})
-    entry.add_to_hass(hass)
+    freezer.move_to("2020-01-01T00:44:00Z")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("sensor.islamic_prayer_times_fajr_prayer").state
+        == "2019-12-31T06:09:00+00:00"
+    )
 
-    with (
-        patch(
-            "prayer_times_calculator_offline.PrayerTimesCalculator.fetch_prayer_times",
-            return_value=PRAYER_TIMES,
-        ),
-        freeze_time(NOW),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert entry.state is ConfigEntryState.LOADED
-
-    with patch(
-        "prayer_times_calculator_offline.PrayerTimesCalculator.fetch_prayer_times",
-        return_value=PRAYER_TIMES,
-    ) as mock_fetch_prayer_times:
-        midnight_time = dt_util.parse_datetime(PRAYER_TIMES["Midnight"])
-        assert midnight_time
-        with freeze_time(midnight_time):
-            async_fire_time_changed(hass, midnight_time)
-            await hass.async_block_till_done()
-
-            mock_fetch_prayer_times.assert_not_called()
-
-        midnight_time += timedelta(seconds=1)
-        with freeze_time(midnight_time):
-            async_fire_time_changed(hass, midnight_time)
-            await hass.async_block_till_done()
-
-            # Each scheduling run calls this 3 times (yesterday, today, tomorrow)
-            assert mock_fetch_prayer_times.call_count == 3
+    freezer.move_to("2020-01-01T00:44:01Z")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("sensor.islamic_prayer_times_fajr_prayer").state
+        == "2020-01-01T06:10:00+00:00"
+    )

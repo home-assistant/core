@@ -18,6 +18,23 @@
       "asr": {
         "name": "Asr prayer"
       },
+      "current_prayer": {
+        "name": "Current prayer",
+        "state": {
+          "asr": "Asr",
+          "between_prayers": "Between prayers",
+          "dhuhr": "Dhuhr",
+          "fajr": "Fajr",
+          "isha": "Isha",
+          "maghrib": "Maghrib"
+        }
+      },
+      "current_prayer_ends": {
+        "name": "Current prayer ends"
+      },
+      "current_prayer_started": {
+        "name": "Current prayer started"
+      },
       "dhuhr": {
         "name": "Dhuhr prayer"
       },
@@ -33,9 +50,27 @@
       "midnight": {
         "name": "Midnight time"
       },
+      "next_prayer": {
+        "name": "Next prayer",
+        "state": {
+          "asr": "[%key:component::islamic_prayer_times::entity::sensor::current_prayer::state::asr%]",
+          "dhuhr": "[%key:component::islamic_prayer_times::entity::sensor::current_prayer::state::dhuhr%]",
+          "fajr": "[%key:component::islamic_prayer_times::entity::sensor::current_prayer::state::fajr%]",
+          "isha": "[%key:component::islamic_prayer_times::entity::sensor::current_prayer::state::isha%]",
+          "maghrib": "[%key:component::islamic_prayer_times::entity::sensor::current_prayer::state::maghrib%]"
+        }
+      },
+      "next_prayer_starts": {
+        "name": "Next prayer starts"
+      },
       "sunrise": {
         "name": "Sunrise time"
       }
+    }
+  },
+  "exceptions": {
+    "calculation_failed": {
+      "message": "Prayer times could not be calculated."
     }
   },
   "options": {
@@ -43,9 +78,13 @@
       "init": {
         "data": {
           "calculation_method": "Prayer calculation method",
+          "isha_calendar_end": "Isha calendar end",
           "latitude_adjustment_method": "Latitude adjustment method",
           "midnight_mode": "Midnight mode",
           "school": "School"
+        },
+        "data_description": {
+          "isha_calendar_end": "Choose the calculated end of Isha for the calendar and current-prayer sensors. First third and half-night follow the selected Midnight mode. If the end is not after Isha, next Fajr is used, then a ten-minute display marker. Individual prayer-time sensors and rollover are unchanged."
         }
       }
     }
@@ -77,6 +116,13 @@
         "tehran": "Institute of Geophysics, University of Tehran",
         "tunisia": "Tunisia",
         "turkey": "Diyanet İşleri Başkanlığı, Turkey"
+      }
+    },
+    "isha_calendar_end": {
+      "options": {
+        "first_third": "First third of the night",
+        "half_night": "Half of the night (Islamic Midnight)",
+        "next_fajr": "Next Fajr"
       }
     },
     "latitude_adjustment_method": {
