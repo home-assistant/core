@@ -2,7 +2,7 @@
   "domain": "apsystems",
   "name": "APsystems",
   "categories": ["energy.solar_batteries"],
-  "codeowners": ["@mawoka-myblock", "@SonnenladenGmbH"],
+  "codeowners": ["@mawoka-myblock", "@SonnenladenGmbH", "@gozexixi-afk"],
   "config_flow": true,
   "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/apsystems",
