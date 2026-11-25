@@ -3,11 +3,13 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from itertools import product
 from typing import Any, override
 
 from aiowithings import (
     Activity,
     Device,
+    DeviceModel,
     Goals,
     MeasurementPosition,
     MeasurementType,
@@ -238,10 +240,25 @@ MEASUREMENT_SENSORS: dict[
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
+    MeasurementType.METABOLIC_AGE: WithingsMeasurementSensorEntityDescription(
+        key="metabolic_age",
+        measurement_type=MeasurementType.METABOLIC_AGE,
+        translation_key="metabolic_age",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
     MeasurementType.VISCERAL_FAT: WithingsMeasurementSensorEntityDescription(
         key="visceral_fat",
         measurement_type=MeasurementType.VISCERAL_FAT,
         translation_key="visceral_fat_index",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.BASAL_METABOLIC_RATE: WithingsMeasurementSensorEntityDescription(
+        key="basal_metabolic_rate",
+        measurement_type=MeasurementType.BASAL_METABOLIC_RATE,
+        translation_key="basal_metabolic_rate",
+        native_unit_of_measurement="kcal/day",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
@@ -680,6 +697,7 @@ class WithingsDeviceSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
     value_fn: Callable[[Device], StateType]
+    exists_fn: Callable[[Device], bool] = lambda _: True
 
 
 DEVICE_SENSORS = [
@@ -689,6 +707,8 @@ DEVICE_SENSORS = [
         options=["low", "medium", "high"],
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda device: device.battery,
+        # The Aura Sensor V2 is a wired Sleep Analyzer, so it has no battery
+        exists_fn=lambda device: device.model is not DeviceModel.AURA_SENSOR_V2,
     )
 ]
 
@@ -700,6 +720,20 @@ def get_current_goals(goals: Goals) -> set[str]:
         if getattr(goals, goal):
             result.add(goal)
     return result
+
+
+def get_registered_measurements(
+    ent_reg: er.EntityRegistry, entry: WithingsConfigEntry
+) -> set[tuple[MeasurementType, MeasurementPosition | None]]:
+    """Return the measurements whose sensors are in the entity registry."""
+    return {
+        measurement
+        for measurement in product(MeasurementType, (None, *MeasurementPosition))
+        if (description := get_measurement_description(measurement)) is not None
+        and ent_reg.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_{description.key}"
+        )
+    }
 
 
 async def async_setup_entry(
@@ -714,14 +748,17 @@ async def async_setup_entry(
 
     measurement_coordinator = withings_data.measurement_coordinator
 
+    # The first refresh only looks back 14 days, so sensors set up before are
+    # added too; they stay unknown until their next reading.
+    current_measurement_types = set(measurement_coordinator.data)
+    current_measurement_types.update(get_registered_measurements(ent_reg, entry))
+
     entities: list[SensorEntity] = []
     entities.extend(
         WithingsMeasurementSensor(measurement_coordinator, description)
-        for measurement_type in measurement_coordinator.data
+        for measurement_type in current_measurement_types
         if (description := get_measurement_description(measurement_type)) is not None
     )
-
-    current_measurement_types = set(measurement_coordinator.data)
 
     def _async_measurement_listener() -> None:
         """Listen for new measurements and add sensors if they did not exist."""
@@ -871,10 +908,27 @@ async def async_setup_entry(
                     )
                 ):
                     continue
-                async_add_entities(
+                withings_device = device_coordinator.data[device_id]
+                if device_entities := [
                     WithingsDeviceSensor(device_coordinator, description, device_id)
                     for description in DEVICE_SENSORS
-                )
+                    if description.exists_fn(withings_device)
+                ]:
+                    async_add_entities(device_entities)
+                else:
+                    # Register devices without sensors, so they still show up
+                    device_registry.async_get_or_create(
+                        config_entry_id=entry.entry_id,
+                        identifiers={(DOMAIN, device_id)},
+                        manufacturer="Withings",
+                        name=withings_device.raw_model,
+                        model=withings_device.raw_model,
+                        via_device_id=dr.async_get_device_id_by_identifier(
+                            hass,
+                            (DOMAIN, str(entry.unique_id)),
+                            config_entry_id=entry.entry_id,
+                        ),
+                    )
                 current_devices.add(device_id)
 
         if old_devices:
@@ -928,26 +982,13 @@ class WithingsMeasurementSensor(
 
     @property
     @override
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the state of the entity."""
-        return self.coordinator.data[
+        return self.coordinator.data.get(
             (
                 self.entity_description.measurement_type,
                 self.entity_description.measurement_position,
             )
-        ]
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        return (
-            super().available
-            and (
-                self.entity_description.measurement_type,
-                self.entity_description.measurement_position,
-            )
-            in self.coordinator.data
         )
 
 
@@ -980,7 +1021,6 @@ class WithingsGoalsSensor(
     @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
-        assert self.coordinator.data
         return self.entity_description.value_fn(self.coordinator.data)
 
 

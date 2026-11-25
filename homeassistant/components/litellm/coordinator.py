@@ -5,6 +5,11 @@ from typing import override
 
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeniedError
 
+# The client imports its chat and audio resources lazily on first use, which
+# would happen inside the event loop. Import them with the integration instead.
+from openai.resources.audio import AsyncAudio  # noqa: F401
+from openai.resources.chat import AsyncChat  # noqa: F401
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant, callback

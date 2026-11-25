@@ -4,6 +4,7 @@
   "categories": ["climate.fans_ventilation"],
   "codeowners": ["@ronaldvdmeer"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "duco_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"

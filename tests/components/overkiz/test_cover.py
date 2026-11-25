@@ -9,7 +9,7 @@ from aiohttp import ClientConnectorError, ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import ExecutionState, OverkizCommandParam, OverkizState
 import pytest
-from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
@@ -24,10 +24,11 @@ from homeassistant.components.cover import (
     SERVICE_OPEN_COVER,
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
     CoverEntityFeature,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.components.overkiz import DOMAIN
@@ -38,6 +39,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -50,6 +52,7 @@ from .helpers import (
     async_deliver_events,
     device_state_changed_event,
     device_unavailable_event,
+    execution_registered_event,
     execution_state_changed_event,
 )
 
@@ -114,7 +117,13 @@ DYNAMIC_EXTERIOR_VENETIAN_BLIND = FixtureDevice(
 POSITIONABLE_ROLLER_SHUTTER_UNO = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe_2.json",
     "io://1234-5678-1516/3656107",
-    "cover.maple_residence_hallway_shutter",
+    "cover.front_door_shutter",
+)
+# Device that only reports TargetClosureState (no ClosureState/OpenClosedState)
+POSITIONABLE_SCREEN_UNO = FixtureDevice(
+    "setup/local_somfy_tahoma_switch_europe_2.json",
+    "io://1234-5678-1516/3959838",
+    "cover.patio_screen",
 )
 POSITIONABLE_DUAL_ROLLER_SHUTTER = FixtureDevice(
     "setup/cloud_somfy_tahoma_switch_sc_europe.json",
@@ -461,6 +470,21 @@ async def test_cover_entities_snapshot(
             None,
             STATE_UNKNOWN,
         ),
+        (
+            POSITIONABLE_SCREEN_UNO,
+            SERVICE_OPEN_COVER,
+            "open",
+            None,
+            CoverState.OPENING,
+        ),
+        (
+            POSITIONABLE_SCREEN_UNO,
+            SERVICE_CLOSE_COVER,
+            "close",
+            None,
+            CoverState.CLOSING,
+        ),
+        (POSITIONABLE_SCREEN_UNO, SERVICE_STOP_COVER, "stop", None, CoverState.OPEN),
     ],
     ids=[
         "open-roller-shutter",
@@ -531,6 +555,9 @@ async def test_cover_entities_snapshot(
         "open-tilt-sheer-screen-rts",
         "close-tilt-sheer-screen-rts",
         "stop-tilt-sheer-screen-rts",
+        "open-positionable-screen-uno",
+        "close-positionable-screen-uno",
+        "stop-positionable-screen-uno",
     ],
 )
 async def test_cover_service_actions(
@@ -585,8 +612,8 @@ async def test_merged_action_groups_keep_per_device_tracking(
     for device in (SHUTTER, GARAGE):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: device.entity_id},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: device.entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -612,6 +639,58 @@ async def test_merged_action_groups_keep_per_device_tracking(
 
 
 @pytest.mark.parametrize(
+    ("command_name", "expected_state"),
+    [
+        pytest.param("open", CoverState.OPENING, id="open"),
+        pytest.param("close", CoverState.CLOSING, id="close"),
+    ],
+)
+async def test_external_execution_tracks_movement(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    command_name: str,
+    expected_state: CoverState,
+) -> None:
+    """Test that an execution started outside Home Assistant reports movement."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.CLOSED
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_registered_event(
+                exec_id="app-exec",
+                device_url=SHUTTER.device_url,
+                command_name=command_name,
+                label="Shutter - TaHoma PC",
+                source="mobile:pc",
+            )
+        ],
+    )
+
+    assert hass.states.get(SHUTTER.entity_id).state == expected_state
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="app-exec",
+                new_state=ExecutionState.COMPLETED,
+                old_state=ExecutionState.IN_PROGRESS,
+            )
+        ],
+    )
+
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.CLOSED
+
+
+@pytest.mark.parametrize(
     "exception",
     [
         TimeoutError("Connection timeout to host"),
@@ -634,8 +713,8 @@ async def test_cover_command_connection_error_raises(
     with pytest.raises(HomeAssistantError, match="Failed to connect"):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: SHUTTER.entity_id},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: SHUTTER.entity_id},
             blocking=True,
         )
 
@@ -660,6 +739,13 @@ async def test_cover_command_connection_error_raises(
             [75],
             25,
         ),
+        (
+            POSITIONABLE_SCREEN_UNO,
+            POSITIONABLE_SCREEN_UNO.entity_id,
+            "setDeployment",
+            [75],
+            25,
+        ),
     ],
     ids=[
         "roller-shutter",
@@ -667,6 +753,7 @@ async def test_cover_command_connection_error_raises(
         "dynamic-pergola",
         "pergola-horizontal-awning",
         "dynamic-venetian-blind",
+        "positionable-screen-uno",
     ],
 )
 async def test_cover_set_position(
@@ -684,8 +771,8 @@ async def test_cover_set_position(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: position},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.POSITION: position},
         blocking=True,
     )
 
@@ -722,8 +809,11 @@ async def test_cover_set_tilt_position(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: device.entity_id, ATTR_TILT_POSITION: tilt_position},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: device.entity_id,
+            CoverServiceArgument.TILT_POSITION: tilt_position,
+        },
         blocking=True,
     )
 
@@ -794,8 +884,8 @@ async def test_cover_tilt_services(
     mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: PERGOLA.entity_id},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: PERGOLA.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -823,8 +913,8 @@ async def test_cover_tilt_services(
     mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: PERGOLA.entity_id},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: PERGOLA.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -838,8 +928,8 @@ async def test_cover_tilt_services(
     mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER_TILT,
-        {ATTR_ENTITY_ID: PERGOLA.entity_id},
+        CoverService.STOP_TILT,
+        {TargetKey.ENTITY_ID: PERGOLA.entity_id},
         blocking=True,
     )
     assert_command_call(
@@ -851,8 +941,11 @@ async def test_cover_tilt_services(
     mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: PERGOLA.entity_id, ATTR_TILT_POSITION: 40},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: PERGOLA.entity_id,
+            CoverServiceArgument.TILT_POSITION: 40,
+        },
         blocking=True,
     )
     assert_command_call(
@@ -953,8 +1046,8 @@ async def test_cover_state_updates(
     # Execution tracking: state stays OPENING until execution completes
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: SHUTTER.entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: SHUTTER.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1152,8 +1245,8 @@ async def test_awning_direct_position_mapping(
     mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: AWNING.entity_id, ATTR_POSITION: 35},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: AWNING.entity_id, CoverServiceArgument.POSITION: 35},
         blocking=True,
     )
     assert_command_call(
@@ -1296,50 +1389,50 @@ async def test_tilt_position_none_value(
     [
         pytest.param(
             SERVICE_OPEN_COVER,
-            {ATTR_SPEED: "low"},
+            {ATTR_SPEED: "slow"},
             "setClosureAndLinearSpeed",
             [0, OverkizCommandParam.LOWSPEED],
-            id="open-low",
+            id="open-slow",
         ),
         pytest.param(
             SERVICE_CLOSE_COVER,
-            {ATTR_SPEED: "low"},
+            {ATTR_SPEED: "slow"},
             "setClosureAndLinearSpeed",
             [100, OverkizCommandParam.LOWSPEED],
-            id="close-low",
+            id="close-slow",
         ),
         pytest.param(
             SERVICE_SET_COVER_POSITION,
-            {ATTR_POSITION: 35, ATTR_SPEED: "low"},
+            {ATTR_POSITION: 35, ATTR_SPEED: "slow"},
             "setClosureAndLinearSpeed",
             [65, OverkizCommandParam.LOWSPEED],
-            id="set-position-low",
+            id="set-position-slow",
         ),
         pytest.param(
             SERVICE_OPEN_COVER,
-            {ATTR_SPEED: "default"},
+            {ATTR_SPEED: "fast"},
             "open",
             None,
-            id="open-default",
+            id="open-fast",
         ),
         pytest.param(
             SERVICE_CLOSE_COVER,
-            {ATTR_SPEED: "default"},
+            {ATTR_SPEED: "fast"},
             "close",
             None,
-            id="close-default",
+            id="close-fast",
         ),
         pytest.param(
             SERVICE_SET_COVER_POSITION,
-            {ATTR_POSITION: 35, ATTR_SPEED: "default"},
+            {ATTR_POSITION: 35, ATTR_SPEED: "fast"},
             "setClosure",
             [65],
-            id="set-position-default",
+            id="set-position-fast",
         ),
         # An unsupported speed is dropped, so the cover opens at its default speed
         pytest.param(
             SERVICE_OPEN_COVER,
-            {ATTR_SPEED: "fast"},
+            {ATTR_SPEED: "medium"},
             "open",
             None,
             id="open-unsupported",
@@ -1377,19 +1470,21 @@ async def test_cover_speed_supported(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test only the main cover advertises the speed option."""
     entity_registry.async_get_or_create(
         COVER_DOMAIN,
         DOMAIN,
         f"{LOW_SPEED.device_url}_low_speed",
+        config_entry=mock_config_entry,
         suggested_object_id="maple_residence_nursery_shutter_low_speed",
     )
     await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
 
     state = hass.states.get(LOW_SPEED.entity_id)
     assert state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
-    assert state.attributes["supported_speeds"] == ["default", "low"]
+    assert state.attributes["supported_speeds"] == ["fast", "slow"]
 
     state = hass.states.get(DEPRECATED_LOW_SPEED_ENTITY_ID)
     assert not state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
@@ -1420,6 +1515,7 @@ async def test_deprecated_low_speed_cover(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
     disabled_by: er.RegistryEntryDisabler | None,
     entity_kept: bool,
@@ -1429,6 +1525,7 @@ async def test_deprecated_low_speed_cover(
         COVER_DOMAIN,
         DOMAIN,
         f"{LOW_SPEED.device_url}_low_speed",
+        config_entry=mock_config_entry,
         suggested_object_id="maple_residence_nursery_shutter_low_speed",
         disabled_by=disabled_by,
     )
@@ -1456,6 +1553,7 @@ async def test_deprecated_low_speed_cover_used(
     setup_overkiz_integration: SetupOverkizIntegration,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
     disabled_by: er.RegistryEntryDisabler | None,
 ) -> None:
     """Test the deprecated low speed cover is kept while automations or scripts use it."""
@@ -1463,6 +1561,7 @@ async def test_deprecated_low_speed_cover_used(
         COVER_DOMAIN,
         DOMAIN,
         f"{LOW_SPEED.device_url}_low_speed",
+        config_entry=mock_config_entry,
         suggested_object_id="maple_residence_nursery_shutter_low_speed",
         disabled_by=disabled_by,
     )
@@ -1505,12 +1604,40 @@ async def test_deprecated_low_speed_cover_used(
     assert entity_registry.async_get(DEPRECATED_LOW_SPEED_ENTITY_ID) is not None
     issue = issue_registry.async_get_issue(DOMAIN, DEPRECATED_LOW_SPEED_ISSUE_ID)
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_key == "deprecated_low_speed_cover_used"
     assert issue.translation_placeholders["items"] == (
         "- [Close shutter slowly](/config/automation/edit/close_shutter_slowly)\n"
         "- `automation.open_shutter_slowly`\n"
         "- [Stop shutter](/config/script/edit/stop_shutter)"
     )
+
+
+async def test_deprecated_low_speed_cover_issue_removed_with_entry(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the issue is linked to the config entry and removed together with it."""
+    entity_registry.async_get_or_create(
+        COVER_DOMAIN,
+        DOMAIN,
+        f"{LOW_SPEED.device_url}_low_speed",
+        config_entry=mock_config_entry,
+        suggested_object_id="maple_residence_nursery_shutter_low_speed",
+    )
+    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
+
+    issue = issue_registry.async_get_issue(DOMAIN, DEPRECATED_LOW_SPEED_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, DEPRECATED_LOW_SPEED_ISSUE_ID) is None
 
 
 @pytest.mark.parametrize(
@@ -1524,6 +1651,7 @@ async def test_deprecated_low_speed_cover_checked_after_startup(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
     automations: list[dict[str, Any]],
     entity_kept: bool,
@@ -1533,6 +1661,7 @@ async def test_deprecated_low_speed_cover_checked_after_startup(
         COVER_DOMAIN,
         DOMAIN,
         f"{LOW_SPEED.device_url}_low_speed",
+        config_entry=mock_config_entry,
         suggested_object_id="maple_residence_nursery_shutter_low_speed",
         disabled_by=er.RegistryEntryDisabler.USER,
     )
@@ -1580,6 +1709,7 @@ async def test_deprecated_low_speed_cover_commands(
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
     service: str,
     service_data: dict[str, Any],
     parameters: list[Any],
@@ -1589,6 +1719,7 @@ async def test_deprecated_low_speed_cover_commands(
         COVER_DOMAIN,
         DOMAIN,
         f"{LOW_SPEED.device_url}_low_speed",
+        config_entry=mock_config_entry,
         suggested_object_id="maple_residence_nursery_shutter_low_speed",
     )
     await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
@@ -1720,3 +1851,84 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
         )
 
     assert mock_client.execute_action_group.await_count == 0
+
+
+@pytest.mark.parametrize(
+    ("device", "device_states", "expected_state", "expected_position"),
+    [
+        pytest.param(
+            POSITIONABLE_SCREEN_UNO,
+            {OverkizState.CORE_TARGET_CLOSURE: 0},
+            CoverState.OPEN,
+            100,
+            id="screen-uno-open",
+        ),
+        pytest.param(
+            POSITIONABLE_SCREEN_UNO,
+            {OverkizState.CORE_TARGET_CLOSURE: 40},
+            CoverState.OPEN,
+            60,
+            id="screen-uno-intermediate",
+        ),
+        pytest.param(
+            POSITIONABLE_SCREEN_UNO,
+            {OverkizState.CORE_TARGET_CLOSURE: 100},
+            CoverState.CLOSED,
+            0,
+            id="screen-uno-closed",
+        ),
+        # TargetClosureState is both the position and the 124 fallback state
+        pytest.param(
+            POSITIONABLE_SCREEN_UNO,
+            {OverkizState.CORE_TARGET_CLOSURE: 124},
+            STATE_UNKNOWN,
+            None,
+            id="screen-uno-unknown",
+        ),
+        pytest.param(
+            POSITIONABLE_ROLLER_SHUTTER_UNO,
+            {OverkizState.CORE_CLOSURE: 124, OverkizState.CORE_TARGET_CLOSURE: 30},
+            CoverState.OPEN,
+            70,
+            id="unknown-closure-falls-back-to-target-closure",
+        ),
+        pytest.param(
+            POSITIONABLE_ROLLER_SHUTTER_UNO,
+            {OverkizState.CORE_CLOSURE: 124, OverkizState.CORE_TARGET_CLOSURE: 124},
+            STATE_UNKNOWN,
+            None,
+            id="unknown-closure-and-target-closure",
+        ),
+    ],
+)
+async def test_cover_position_from_closure_states(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    device: FixtureDevice,
+    device_states: dict[OverkizState, int],
+    expected_state: CoverState | str,
+    expected_position: int | None,
+) -> None:
+    """Test position and state derived from (Target)ClosureState, including 124."""
+    await setup_overkiz_integration(fixture=device.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=device.device_url,
+                device_states=[
+                    {"name": name.value, "type": 1, "value": value}
+                    for name, value in device_states.items()
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(device.entity_id)
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == expected_position

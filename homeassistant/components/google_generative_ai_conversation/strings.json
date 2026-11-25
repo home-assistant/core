@@ -64,7 +64,7 @@
       },
       "entry_type": "Conversation agent",
       "error": {
-        "invalid_google_search_option": "Google Search can only be enabled if nothing is selected in the \"Control Home Assistant\" setting."
+        "invalid_google_search_option": "Google Search can only be enabled if nothing is selected in the \"AI tools\" setting."
       },
       "initiate_flow": {
         "reconfigure": "Reconfigure conversation agent",
@@ -91,7 +91,8 @@
             "top_p": "Top P"
           },
           "data_description": {
-            "enable_google_search_tool": "Only works if there is nothing selected in the \"Control Home Assistant\" setting. See docs for a workaround using it with \"Assist\".",
+            "enable_google_search_tool": "Only works if nothing is selected in the \"AI tools\" setting. See the documentation for a workaround to use it with \"Device control\".",
+            "llm_hass_api": "[%key:common::config_flow::data_description::llm_hass_api%]",
             "prompt": "Instruct how the LLM should respond. This can be a template.",
             "temperature": "Only sent for older Gemini models and non-Gemini models. Newer Gemini models and the latest text aliases use model defaults; your saved setting is kept.",
             "thinking_budget": "Token budget for model reasoning (Gemini 2.5 only). Use -1 for automatic or 0 to disable (not available for Gemini 2.5 Pro).",

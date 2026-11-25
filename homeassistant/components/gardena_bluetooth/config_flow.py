@@ -97,7 +97,6 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             data = await self.async_read_data()
             return self.async_create_entry(title=title, data=data)
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm",
             description_placeholders=self.context["title_placeholders"],

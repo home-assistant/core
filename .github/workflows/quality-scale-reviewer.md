@@ -12,7 +12,8 @@ description: >
   applies the repository's `ha-quality-scale-verify` skill to each selected
   rule and posts each violation as an inline review comment on the offending
   changed line, or a short comment when no rule is violated. Pull requests
-  above the size limit are not reviewed; a comment states that.
+  above the size limit, or arriving after the workflow's daily AI-credit budget
+  is used up, are not reviewed; a comment states that.
 intent: >
   Pull requests that break a quality scale rule their integration claims to
   satisfy receive an inline review comment naming the rule on the offending
@@ -20,7 +21,9 @@ intent: >
 on:
   workflow_run:
     workflows: ["Quality scale reviewer (trigger)"]
-    types: [completed]
+    # `requested` only cancels an older review through the concurrency group
+    # when a new push arrives; `prepare` runs only on a successful `completed`.
+    types: [requested, completed]
   workflow_dispatch:
     inputs:
       pull_request_number:
@@ -36,6 +39,7 @@ permissions:
   actions: read
   pull-requests: read
   copilot-requests: write
+max-daily-ai-credits: 10000
 tools:
   github:
     mode: gh-proxy
@@ -67,10 +71,12 @@ safe-outputs:
   add-comment:
     max: 1
     target: "${{ needs.prepare.outputs.pr_number }}"
-    # Re-runs (reopen, manual dispatch) minimize the previous run's comment.
+    # Re-runs (new commits, reopen, manual dispatch) minimize the previous run's comment.
     hide-older-comments: true
   needs:
     - prepare
+  # The conclusion job comments on the pull request when the credit budget skips a run.
+  report-failure-as-issue: ["!daily_ai_credits_exceeded"]
 jobs:
   prepare:
     # Resolves the pull request from `workflow_run.head_sha` (or the dispatch
@@ -184,8 +190,35 @@ jobs:
           path: deterministic
           if-no-files-found: error
           retention-days: 7
+  # The activation job evaluates the daily AI-credit budget but may not write,
+  # so the notice is posted from the conclusion job, which runs when the budget
+  # is exceeded and the agent is skipped.
+  conclusion:
+    pre-steps:
+      - name: Comment that the review was skipped by the daily AI-credit budget
+        if: needs.activation.outputs.daily_ai_credits_exceeded == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
+        run: |
+          set -euo pipefail
+          MARKER='<!-- quality-scale-reviewer-credit-budget -->'
+          if gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" --paginate --jq '.[].body' \
+              | grep -F "${MARKER}" >/dev/null; then
+            echo "Comment already posted on PR #${PR_NUMBER}"
+            exit 0
+          fi
+          gh pr comment "${PR_NUMBER}" --repo "${GITHUB_REPOSITORY}" --body "${MARKER}
+          ## Quality scale review
+
+          ⏭️ The automated Integration Quality Scale review was skipped: the workflow's daily AI-credit budget is used up."
+# One run per pull request: a newer push cancels the review of an older one as
+# soon as its trigger run is requested. The pull request number is not known
+# here for forks, its head repository and branch identify it. Completions of
+# cancelled or failed trigger runs get their own group, so a late one cannot
+# cancel a newer review.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.workflow_run.id || inputs.pull_request_number }}
+  group: ${{ github.workflow }}-${{ inputs.pull_request_number || (github.event.action == 'completed' && github.event.workflow_run.conclusion != 'success' && github.run_id) || format('{0}:{1}', github.event.workflow_run.head_repository.full_name, github.event.workflow_run.head_branch) }}
   cancel-in-progress: true
   job-discriminator: ${{ github.run_id }}
 steps:
@@ -217,7 +250,7 @@ steps:
       rm -f .mcp.json
       # Only the skill from the frontmatter is in scope for the agent.
       find .claude/skills -mindepth 1 -maxdepth 1 ! -name ha-quality-scale-verify -exec rm -rf {} +
-timeout-minutes: 30
+timeout-minutes: 40
 ---
 
 # Quality scale reviewer
@@ -302,10 +335,9 @@ If no rule is selected, go to Step 7.
 ## Step 5: Check each selected rule
 
 Apply the `ha-quality-scale-verify` skill to each selected rule, one rule at
-a time; use parallel subagents when several rules are selected. Read the
-full documentation of a selected rule only now, from
-`/tmp/gh-aw/agent/rules/<rule>.md`, wherever the skill's step 1 says to fetch
-it.
+a time, without delegating to subagents. Read the full documentation of a
+selected rule only now, from `/tmp/gh-aw/agent/rules/<rule>.md`, wherever the
+skill's step 1 says to fetch it.
 
 Scope the skill to the diff: where the skill says to analyze the
 integration's codebase, analyze only the files and lines changed in

@@ -9,19 +9,21 @@ from matter_server.common.errors import UpdateCheckError, UpdateError
 from matter_server.common.models import MatterSoftwareVersion, UpdateSource
 
 from homeassistant.components.update import (
+    RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
     UpdateEntityStateAttribute,
+    UpdateReleaseNotesMessage,
+    UpdateReleaseNotesMessageSeverity,
 )
-from homeassistant.const import STATE_ON, Platform
+from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData
-from homeassistant.helpers.translation import async_get_translations
 
 from .const import DOMAIN
 from .entity import MatterEntity, MatterEntityDescription
@@ -32,6 +34,11 @@ SCAN_INTERVAL = timedelta(hours=12)
 POLL_AFTER_INSTALL = 10
 
 ATTR_SOFTWARE_UPDATE = "software_update"
+
+RELEASE_NOTES_MESSAGE_UPDATE_DURATION = UpdateReleaseNotesMessage(
+    translation_domain=DOMAIN,
+    translation_key="update_duration",
+)
 
 
 @dataclass
@@ -163,38 +170,40 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         except UpdateCheckError as err:
             raise HomeAssistantError(f"Error finding applicable update: {err}") from err
 
+    @property
+    @override
+    def release_notes_messages(self) -> tuple[UpdateReleaseNotesMessage, ...]:
+        """Messages shown before the release notes."""
+        messages: tuple[UpdateReleaseNotesMessage, ...] = (
+            RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
+            RELEASE_NOTES_MESSAGE_UPDATE_DURATION,
+        )
+        if (
+            self._software_update is not None
+            and self._software_update.update_source is not UpdateSource.MAIN_NET_DCL
+        ):
+            # Extra heavy warning in case the update is not from the main net
+            messages = (
+                UpdateReleaseNotesMessage(
+                    translation_domain=DOMAIN,
+                    translation_key="non_main_net_update_source",
+                    severity=UpdateReleaseNotesMessageSeverity.WARNING,
+                    translation_placeholders={
+                        "update_source": self._software_update.update_source.value
+                    },
+                ),
+                *messages,
+            )
+        return messages
+
     @override
     async def async_release_notes(self) -> str | None:
         """Return full release notes.
 
-        This is suitable for a long changelog that does not fit in the release_summary
-        property. The returned string can contain markdown.
+        Matter provides no release notes; the guidance is in the release notes
+        messages.
         """
-        if self._software_update is None:
-            return None
-        if self.state != STATE_ON:
-            return None
-
-        translations = await async_get_translations(
-            self.hass, self.hass.config.language, "common", integrations={DOMAIN}
-        )
-
-        release_notes = ""
-
-        if self._software_update.update_source is not UpdateSource.MAIN_NET_DCL:
-            warning = translations[
-                f"component.{DOMAIN}.common.release_notes_not_official_source"
-            ].format(update_source=self._software_update.update_source.value)
-            release_notes += (
-                f"\n\n<ha-alert alert-type='warning'>{warning}</ha-alert>\n\n"
-            )
-
-        notice = translations[
-            f"component.{DOMAIN}.common.release_notes_installation_notice"
-        ]
-        return (
-            release_notes + f"\n\n<ha-alert alert-type='info'>{notice}</ha-alert>\n\n"
-        )
+        return None
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -206,11 +215,10 @@ class MatterUpdate(MatterEntity, UpdateEntity):
                 UpdateEntityStateAttribute.LATEST_VERSION
             )
 
-        if (extra_data := await self.async_get_last_extra_data()) and (
-            matter_extra_data := MatterUpdateExtraStoredData.from_dict(
+        if extra_data := await self.async_get_last_extra_data():
+            matter_extra_data = MatterUpdateExtraStoredData.from_dict(
                 extra_data.as_dict()
             )
-        ):
             self._software_update = matter_extra_data.software_update
         else:
             # Check for updates when added the first time.

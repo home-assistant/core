@@ -35,6 +35,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "filter": {
+        "name": "Filter"
+      }
+    },
     "fan": {
       "ventilation": {
         "state_attributes": {
@@ -46,6 +51,23 @@
             }
           }
         }
+      }
+    },
+    "sensor": {
+      "filter_volume": {
+        "name": "Air treated by filter"
+      },
+      "indoor_humidity": {
+        "name": "Indoor humidity"
+      },
+      "indoor_temperature": {
+        "name": "Indoor temperature"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "total_volume": {
+        "name": "Total air treated"
       }
     }
   },

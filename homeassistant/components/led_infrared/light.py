@@ -55,6 +55,7 @@ SUPPORTED_EFFECTS = {
         "diy6",
     ],
     LEDIrDeviceType.GENERIC_10_KEY: ["candle", "light"],
+    LEDIrDeviceType.GENERIC_10_KEY_B708: ["candle", "light"],
     LEDIrDeviceType.GENERIC_21_KEY: ["auto"],
 }
 
@@ -182,7 +183,7 @@ class LEDIrLightEntity(LEDIrBaseEntity, InfraredEmitterConsumerEntity, LightEnti
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        await self._send_command(self._codes.ON.to_command())
+        await self._send_command(self._codes["ON"].to_command())
         self._attr_is_on = True
         effect: str | None = kwargs.get(ATTR_EFFECT)
         if effect and effect in self._attr_effect_list:
@@ -194,7 +195,7 @@ class LEDIrLightEntity(LEDIrBaseEntity, InfraredEmitterConsumerEntity, LightEnti
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self._send_command(self._codes.OFF.to_command())
+        await self._send_command(self._codes["OFF"].to_command())
         self._attr_is_on = False
         self.async_write_ha_state()
 

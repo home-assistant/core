@@ -125,6 +125,6 @@ class MyNeoConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
-            description_placeholders={CONF_EMAIL: email},
+            description_placeholders={"email": email},
             errors=errors,
         )

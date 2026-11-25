@@ -4,6 +4,7 @@
   "categories": ["buttons_remotes", "vehicles_transport.cars_evs"],
   "codeowners": ["@Gentex-Corporation/Homelink", "@rjones-gentex"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/gentex_homelink",
   "integration_type": "hub",

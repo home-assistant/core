@@ -81,8 +81,11 @@
   dict({
     'https://github.com/hacs-test-org/plugin-basic/archive/refs/tags/1.0.0.zip': 1,
     'https://github.com/hacs-test-org/plugin-basic/releases/download/1.0.0/plugin-basic-bundle.js': 1,
+    'https://github.com/hacs-test-org/plugin-basic/releases/download/1.0.0/plugin-basic-bundle.zip': 1,
     'https://github.com/hacs-test-org/plugin-basic/releases/download/1.0.0/plugin-basic.js': 1,
     'https://github.com/hacs-test-org/plugin-basic/releases/download/1.0.0/plugin-basic.umd.js': 1,
+    'https://github.com/hacs-test-org/plugin-basic/releases/download/1.0.0/plugin-basic.umd.zip': 1,
+    'https://github.com/hacs-test-org/plugin-basic/releases/download/1.0.0/plugin-basic.zip': 1,
     'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/1.0.0/hacs.json': 1,
   })
 # ---
@@ -142,6 +145,8 @@
     'id': '91296269',
     'installed': False,
     'installed_version': '',
+    'integration_categories': list([
+    ]),
     'issues': 0,
     'last_updated': '2011-01-26T19:06:43Z',
     'name': 'Proxy manifest',
@@ -188,6 +193,8 @@
     'id': '12962674',
     'installed': False,
     'installed_version': '',
+    'integration_categories': list([
+    ]),
     'issues': 0,
     'last_updated': '2011-01-26T19:06:43Z',
     'name': 'Proxy manifest',

@@ -2,33 +2,55 @@
 
 from typing import Any, override
 
+from modbus_connection import ModbusTcpParams
 import probatio
-from python_qube_heatpump import QubeClient, async_get_device_info, parse_device_info
+from python_qube_heatpump import (
+    QubeClient,
+    QubeDeviceInfo,
+    async_get_device_info,
+    parse_device_info,
+)
 
 from homeassistant.components import zeroconf
+from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DEFAULT_PORT, DOMAIN, MDNS_LOOKUP_TIMEOUT
+from .const import CONF_SW_VERSION, DEFAULT_PORT, DOMAIN, MDNS_LOOKUP_TIMEOUT, UNIT_ID
 
 HOST_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): TextSelector()})
 
 
-async def _async_validate_device(host: str) -> str | None:
-    """Connect and verify the device is a Qube; return an error key on failure."""
-    client = QubeClient(host, DEFAULT_PORT)
+async def _async_validate_device(hass: HomeAssistant, host: str) -> str | None:
+    """Verify the device is a Qube; return an error key on failure."""
     try:
-        if not await client.connect():
-            return "cannot_connect"
-        if not await client.async_verify_device():
-            return "not_qube_device"
-    except OSError:
+        async with async_get_temporary_unit(
+            hass, ModbusTcpParams(host=host, port=DEFAULT_PORT), UNIT_ID
+        ) as unit:
+            client = QubeClient(host, DEFAULT_PORT, UNIT_ID, unit=unit)
+            if await client.async_verify_device():
+                return None
+            # A failed request drops the link; an error reply leaves it up
+            return "not_qube_device" if client.is_connected else "cannot_connect"
+    except HomeAssistantError:
+        # The device is already in use over different link settings
         return "cannot_connect"
-    finally:
-        await client.close()
-    return None
+
+
+def _host_key(host: str) -> str:
+    """Return a host in the form the mDNS record lists it."""
+    return host.lower().rstrip(".")
+
+
+def _sw_version_data(device: QubeDeviceInfo | None) -> dict[str, str]:
+    """Return the entry data for the panel version in the mDNS record."""
+    if device is None or not device.software_version:
+        return {}
+    return {CONF_SW_VERSION: device.software_version}
 
 
 class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -37,6 +59,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _host: str
+    _device: QubeDeviceInfo | None = None
 
     @override
     async def async_step_user(
@@ -50,7 +73,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({CONF_HOST: host})
 
-            if error := await _async_validate_device(host):
+            if error := await _async_validate_device(self.hass, host):
                 errors["base"] = error
             else:
                 # The controller's mDNS record carries a stable uuid; without
@@ -59,11 +82,16 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await async_get_device_info(
                     host, aiozc, timeout=MDNS_LOOKUP_TIMEOUT
                 )
+                # The lookup matched this host, so the record and its panel
+                # version belong to it even when another Qube has the uuid
+                self._device = device
                 if device and not await self._async_uuid_of_other_qube(
                     device.uuid, host
                 ):
                     await self.async_set_unique_id(device.uuid)
-                    self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+                    self._abort_if_unique_id_configured(
+                        updates={CONF_HOST: host, **_sw_version_data(device)}
+                    )
                 return self._async_create_qube_entry(host)
 
         return self.async_show_form(
@@ -80,23 +108,40 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         host = discovery_info.host
         await self.async_set_unique_id(device.uuid)
+        # The record also carries the panel version, which changes with a
+        # firmware update; a changed version reloads the entry
+        sw_version = _sw_version_data(device)
+        # The controller answers on each advertised IP and its mDNS hostname
+        controller_hosts = {_host_key(str(ip)) for ip in discovery_info.ip_addresses}
+        controller_hosts.add(_host_key(discovery_info.hostname))
+
+        entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, device.uuid
+        )
+        if (
+            entry is not None
+            and _host_key(entry.data.get(CONF_HOST, "")) in controller_hosts
+        ):
+            # This controller under another of its names; keep that host
+            self._abort_if_unique_id_configured(updates=sw_version)
         if await self._async_uuid_of_other_qube(device.uuid, host):
             return self.async_abort(reason="already_configured")
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host, **sw_version})
 
         # Entries created without mDNS have no unique id yet; adopt the one
-        # whose host is this controller (any advertised IP or the mDNS hostname)
-        controller_hosts = {str(ip) for ip in discovery_info.ip_addresses}
-        controller_hosts.add(discovery_info.hostname.lower().rstrip("."))
+        # whose host is this controller
         for entry in self._async_current_entries(include_ignore=False):
-            configured_host = entry.data[CONF_HOST].lower().rstrip(".")
-            if entry.unique_id is None and configured_host in controller_hosts:
+            if (
+                entry.unique_id is None
+                and _host_key(entry.data[CONF_HOST]) in controller_hosts
+            ):
                 self.hass.config_entries.async_update_entry(
-                    entry, unique_id=device.uuid
+                    entry, unique_id=device.uuid, data={**entry.data, **sw_version}
                 )
                 return self.async_abort(reason="already_configured")
 
         self._host = host
+        self._device = device
         self.context["title_placeholders"] = {"host": host}
         return await self.async_step_zeroconf_confirm()
 
@@ -107,12 +152,11 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if error := await _async_validate_device(self._host):
+            if error := await _async_validate_device(self.hass, self._host):
                 errors["base"] = error
             else:
                 return self._async_create_qube_entry(self._host)
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={"host": self._host},
@@ -131,7 +175,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({CONF_HOST: host})
 
-            if error := await _async_validate_device(host):
+            if error := await _async_validate_device(self.hass, host):
                 errors["base"] = error
             else:
                 # Refuse a different controller when both uuids are known;
@@ -172,7 +216,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
             for other in self._async_current_entries(include_ignore=False)
         ):
             return True
-        return await _async_validate_device(entry.data[CONF_HOST]) is None
+        return await _async_validate_device(self.hass, entry.data[CONF_HOST]) is None
 
     def _async_create_qube_entry(self, host: str) -> ConfigFlowResult:
         """Create the config entry for a verified Qube."""
@@ -181,5 +225,6 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: host,
                 CONF_PORT: DEFAULT_PORT,
+                **_sw_version_data(self._device),
             },
         )

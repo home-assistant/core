@@ -10,6 +10,7 @@ from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterCommand, NullValue
 from matter_server.client.models import device_types
 from matter_server.client.models.node import MatterEndpoint
+from matter_server.common import custom_clusters
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -470,13 +471,13 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
         entity_description=MatterNumericSwitchEntityDescription(
+            # Key kept as EveTrvChildLock for backwards compatibility: it is
+            # part of the existing unique_id of entities created before the
+            # vendor ID filter was removed.
             key="EveTrvChildLock",
             entity_category=EntityCategory.CONFIG,
             translation_key="child_lock",
-            device_to_ha={
-                0: False,
-                1: True,
-            }.get,
+            device_to_ha=lambda value: None if value is None else value != 0,
             ha_to_device={
                 False: 0,
                 True: 1,
@@ -486,7 +487,6 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ThermostatUserInterfaceConfiguration.Attributes.KeypadLockout,
         ),
-        vendor_id=(4874,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
@@ -595,5 +595,30 @@ DISCOVERY_SCHEMAS = [
         # Mode is mandatory on every covering, but the bit reverses the lift
         # direction, so a tilt-only covering has nothing to configure
         featuremap_contains=clusters.WindowCovering.Bitmaps.Feature.kLift,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="AqaraLedStripMusicSyncEnabled",
+            translation_key="music_sync",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(
+            custom_clusters.AqaraLedStripCluster.Attributes.MusicSyncEnabled,
+        ),
+        vendor_id=(4447,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="HeimanIndicatorEnable",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="led_indicator",
+            device_to_ha=bool,
+            ha_to_device=int,
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(custom_clusters.HeimanCluster.Attributes.IndicatorEnable,),
     ),
 ]
