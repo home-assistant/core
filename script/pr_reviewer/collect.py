@@ -101,6 +101,7 @@ def pr_diff(repo: str, base: str, head: str, paths: set[bytes] | None = None) ->
 
     With paths, only the diffs of those files are kept.
     """
+    # Not the pulls/{number} diff: GitHub refuses it with HTTP 406 above 300 files.
     diff = gh_api(
         "-H",
         "Accept: application/vnd.github.diff",

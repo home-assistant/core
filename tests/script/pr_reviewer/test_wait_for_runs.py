@@ -144,18 +144,16 @@ def test_posting_then_done(
 def test_still_posting(
     gh: FakeGh, sleep: Mock, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Test the script warns and goes on after waiting for 12 minutes."""
+    """Test the script warns after its last check, without waiting again."""
     gh.json(IN_PROGRESS_RUNS, OTHER_RUN_ACTIVE)
     gh.json(OTHER_RUN_JOBS, jobs_page(job("agent", "success")))
 
     wait_for_runs.main()
 
-    waits = [sleep_call.args[0] for sleep_call in sleep.call_args_list]
-    assert set(waits) == {20}
-    assert 700 <= sum(waits) <= 720
+    assert sleep.call_args_list == [call(20)] * 35
     assert (
         capsys.readouterr().out
-        == "::warning::Earlier runs for #42 are still posting after 12 minutes\n"
+        == "::warning::Earlier runs for #42 are still posting after 11 minutes\n"
     )
 
 

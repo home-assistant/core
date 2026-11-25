@@ -63,7 +63,9 @@ def main() -> None:
 
     repo = os.environ["GITHUB_REPOSITORY"]
     run_id = int(os.environ["GITHUB_RUN_ID"])
-    for _ in range(ATTEMPTS):
+    for attempt in range(ATTEMPTS):
+        if attempt:
+            time.sleep(INTERVAL)
         try:
             posting = earlier_run_posting(
                 repo, run_id, f"PR reviewer: #{args.pr_number}"
@@ -73,10 +75,9 @@ def main() -> None:
             posting = True
         if not posting:
             return
-        time.sleep(INTERVAL)
     print(
         f"::warning::Earlier runs for #{args.pr_number} are still posting after"
-        f" {ATTEMPTS * INTERVAL // 60} minutes"
+        f" {(ATTEMPTS - 1) * INTERVAL // 60} minutes"
     )
 
 
