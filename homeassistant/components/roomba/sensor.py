@@ -40,6 +40,22 @@ class RoombaSensorEntityDescription(SensorEntityDescription):
     refresh_on_signal: bool = False
 
 
+PHASE_TO_STATUS = {
+    "charge": "charging",
+    "chargingerror": "charging_error",
+    "evac": "emptying",
+    "hmMidMsn": "recharging",
+    "hmPostMsn": "returning_finished",
+    "hmUsrDock": "returning_canceled",
+    "pause": "paused",
+    "refill": "refilling",
+    "run": "cleaning",
+    "spot": "spot_cleaning",
+    "stop": "stopped",
+    "stuck": "stuck",
+}
+
+
 def _battery_cycles(entity: IRobotEntity) -> int | None:
     """Return the battery cycles, falling back to the battery's own count."""
     return next(
@@ -161,6 +177,16 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda self: self.last_mission,
         entity_registry_enabled_default=False,
+    ),
+    RoombaSensorEntityDescription(
+        key="status",
+        translation_key="status",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(PHASE_TO_STATUS.values()),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: PHASE_TO_STATUS.get(
+            self.vacuum_state.get("cleanMissionStatus", {}).get("phase")
+        ),
     ),
     RoombaSensorEntityDescription(
         key="rssi",
