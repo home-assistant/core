@@ -23,6 +23,7 @@ from homeassistant.components import conversation, cover, media_player, weather
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.conversation import (
     DOMAIN,
+    ConversationServiceArgument,
     async_get_agent,
     default_agent,
     gazetteer,
@@ -33,7 +34,6 @@ from homeassistant.components.conversation.chat_log import (
     ToolResultContent,
     async_get_chat_log,
 )
-from homeassistant.components.conversation.const import ATTR_LANGUAGE, ATTR_TEXT
 from homeassistant.components.conversation.default_agent import (
     METADATA_CUSTOM_SENTENCE,
     LanguageIntents,
@@ -50,6 +50,7 @@ from homeassistant.components.intent import (
     async_register_timer_handler,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.timer_list import DOMAIN as TIMER_LIST_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -98,6 +99,7 @@ class OrderBeerIntentHandler(intent.IntentHandler):
 async def init_components(hass: HomeAssistant) -> None:
     """Initialize relevant components with empty configs."""
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, TIMER_LIST_DOMAIN, {})
     assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(hass, "intent", {})
 
@@ -2957,8 +2959,8 @@ async def test_language_region(hass: HomeAssistant, init_components) -> None:
         "conversation",
         "process",
         {
-            ATTR_TEXT: "turn on the kitchen",
-            ATTR_LANGUAGE: language,
+            ConversationServiceArgument.TEXT: "turn on the kitchen",
+            ConversationServiceArgument.LANGUAGE: language,
         },
     )
     await hass.async_block_till_done()
@@ -3026,7 +3028,7 @@ async def test_turn_on_area(
     await hass.services.async_call(
         "conversation",
         "process",
-        {ATTR_TEXT: "turn on lights in the kitchen"},
+        {ConversationServiceArgument.TEXT: "turn on lights in the kitchen"},
     )
     await hass.async_block_till_done()
 
@@ -3045,7 +3047,7 @@ async def test_turn_on_area(
     await hass.services.async_call(
         "conversation",
         "process",
-        {ATTR_TEXT: "turn on lights in the kitchen"},
+        {ConversationServiceArgument.TEXT: "turn on lights in the kitchen"},
     )
     await hass.async_block_till_done()
 
@@ -3055,7 +3057,7 @@ async def test_turn_on_area(
     await hass.services.async_call(
         "conversation",
         "process",
-        {ATTR_TEXT: "turn on lights in the basement"},
+        {ConversationServiceArgument.TEXT: "turn on lights in the basement"},
     )
     await hass.async_block_till_done()
 
@@ -3119,7 +3121,7 @@ async def test_light_area_same_name(
     await hass.services.async_call(
         "conversation",
         "process",
-        {ATTR_TEXT: "turn on light in the kitchen"},
+        {ConversationServiceArgument.TEXT: "turn on light in the kitchen"},
     )
     await hass.async_block_till_done()
 
@@ -3530,7 +3532,7 @@ async def test_handle_intents_with_response_errors(
                 user_input.language, error_code, "Mock error message"
             ),
         ) as mock_process,
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         response = await agent.async_handle_intents(user_input, chat_log)
@@ -3600,7 +3602,7 @@ async def test_handle_failed_intents(
             "homeassistant.components.conversation.default_agent.intent.async_handle",
             side_effect=side_effect,
         ) as mock_handle,
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         response = await agent.async_handle_intents(user_input, chat_log)
@@ -3657,7 +3659,7 @@ async def test_handle_intents_filters_results(
         patch(
             "homeassistant.components.conversation.default_agent.DefaultAgent._async_process_intent_result",
         ) as mock_process,
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         response = await agent.async_handle_intents(
@@ -3739,8 +3741,8 @@ async def test_language_with_alternative_code(
             "conversation",
             "process",
             {
-                ATTR_TEXT: sentence,
-                ATTR_LANGUAGE: lang_code,
+                ConversationServiceArgument.TEXT: sentence,
+                ConversationServiceArgument.LANGUAGE: lang_code,
             },
         )
         await hass.async_block_till_done()
@@ -3767,7 +3769,9 @@ async def test_intent_tool_call_in_chat_log(hass: HomeAssistant) -> None:
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
     with (
-        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, result.conversation_id, context=None
+        ) as session,
         async_get_chat_log(hass, session) as chat_log,
     ):
         pass
@@ -3819,7 +3823,9 @@ async def test_trigger_tool_call_in_chat_log(hass: HomeAssistant) -> None:
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
     with (
-        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, result.conversation_id, context=None
+        ) as session,
         async_get_chat_log(hass, session) as chat_log,
     ):
         pass
@@ -3857,7 +3863,9 @@ async def test_no_tool_call_on_no_intent_match(hass: HomeAssistant) -> None:
     assert result.response.response_type is intent.IntentResponseType.ERROR
 
     with (
-        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, result.conversation_id, context=None
+        ) as session,
         async_get_chat_log(hass, session) as chat_log,
     ):
         pass
@@ -3883,7 +3891,9 @@ async def test_intent_tool_call_with_error_response(hass: HomeAssistant) -> None
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
     with (
-        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, result.conversation_id, context=None
+        ) as session,
         async_get_chat_log(hass, session) as chat_log,
     ):
         pass

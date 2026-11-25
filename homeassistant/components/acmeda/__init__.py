@@ -1,19 +1,16 @@
 """The Rollease Acmeda Automate integration."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
-from .hub import PulseHub
+from .hub import AcmedaConfigEntry, PulseHub
 
 CONF_HUBS = "hubs"
 
 PLATFORMS = [Platform.COVER, Platform.SENSOR]
-
-type AcmedaConfigEntry = ConfigEntry[PulseHub]
 
 
 async def async_setup_entry(

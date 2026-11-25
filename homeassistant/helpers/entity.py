@@ -28,6 +28,7 @@ from typing import (
 
 import probatio
 from propcache.api import cached_property
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -66,7 +67,7 @@ from .event import (
 from .frame import report_non_thread_safe_operation, report_usage
 from .group import Group
 from .singleton import singleton
-from .typing import UNDEFINED, StateType, UndefinedType
+from .typing import StateType, Undefined
 
 timer = time.time
 
@@ -206,12 +207,12 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
 
 def get_device_class_or_undefined(
     hass: HomeAssistant, entity_id: str
-) -> str | UndefinedType | None:
-    """Get the device class of an entity or UNDEFINED if not found."""
+) -> str | Undefined | None:
+    """Get the device class of an entity or Undefined if not found."""
     try:
         return get_device_class(hass, entity_id)
     except HomeAssistantError:
-        return UNDEFINED
+        return Undefined
 
 
 def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
@@ -279,7 +280,7 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 
 class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
@@ -295,7 +296,7 @@ class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     force_update: bool = False
     icon: str | None = None
     has_entity_name: bool = False
-    name: str | UndefinedType | None = UNDEFINED
+    name: str | Undefined | None = Undefined
     translation_key: str | None = None
     translation_placeholders: Mapping[str, str] | None = None
     unit_of_measurement: str | None = None
@@ -763,7 +764,7 @@ class Entity(
         self,
         device_class_name: str | None,
         platform_translations: dict[str, str],
-    ) -> str | UndefinedType | None:
+    ) -> str | Undefined | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
@@ -775,7 +776,7 @@ class Entity(
             return self._substitute_name_placeholders(name)
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
-            if description_name is UNDEFINED and self._default_to_device_class_name():
+            if description_name is Undefined and self._default_to_device_class_name():
                 return device_class_name
             return description_name
 
@@ -784,7 +785,7 @@ class Entity(
         # Check if the entity should be named by its device class
         if self._default_to_device_class_name():
             return device_class_name
-        return UNDEFINED
+        return Undefined
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -807,10 +808,10 @@ class Entity(
         else:
             name = self.name
 
-        return None if name is UNDEFINED else name
+        return None if name is Undefined else name
 
     @cached_property
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """Return the name of the entity."""
         # The check for self.platform_data guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2026.8
@@ -1084,7 +1085,7 @@ class Entity(
     @callback
     def _async_write_ha_state_from_call_soon_threadsafe(self) -> None:
         """Write the state to the state machine from the event loop thread."""
-        if not self.hass or not self._verified_state_writable:
+        if self.hass is None or not self._verified_state_writable:
             self._async_verify_state_writable()
         self._async_write_ha_state()
 
@@ -1096,7 +1097,7 @@ class Entity(
         Note: Integrations which need to customize state write should
         override _async_write_ha_state, not this method.
         """
-        if not self.hass or not self._verified_state_writable:
+        if self.hass is None or not self._verified_state_writable:
             self._async_verify_state_writable()
         if self.hass.loop_thread_id != threading.get_ident():
             report_non_thread_safe_operation("async_write_ha_state")
@@ -1187,7 +1188,7 @@ class Entity(
             attr[EntityStateAttribute.ICON] = icon
 
         original_name = self.name
-        if original_name is UNDEFINED:
+        if original_name is Undefined:
             original_name = None
 
         # Use cached friendly name if available and original_name hasn't changed.
@@ -1408,7 +1409,11 @@ class Entity(
 
         # Process update sequential
         if self.parallel_updates:
-            await self.parallel_updates.acquire()
+            try:
+                await self.parallel_updates.acquire()
+            except asyncio.CancelledError:
+                self._update_staged = False
+                raise
 
         if warning:
             update_warn = hass.loop.call_at(
@@ -1519,31 +1524,32 @@ class Entity(
 
         self._call_on_remove_callbacks()
 
-        await self.async_internal_will_remove_from_hass()
-        await self.async_will_remove_from_hass()
-
-        # Check if entry still exists in entity registry (e.g. unloading config entry)
-        if (
-            not force_remove
-            and self.registry_entry
-            and not self.registry_entry.disabled
-            # Check if entity is still in the entity registry
-            # by checking self._removed_from_registry
-            #
-            # Because self.registry_entry is unset in a task,
-            # its possible that the entity has been removed but
-            # the task has not yet been executed.
-            #
-            # self._removed_from_registry is set to True in a
-            # callback which does not have the same issue.
-            #
-            and not self._removed_from_registry
-        ):
-            # Set the entity's state will to unavailable and
-            # EntityStateAttribute.RESTORED: True
-            self.registry_entry.write_unavailable_state(self.hass)
-        else:
-            self.hass.states.async_remove(self.entity_id, context=self._context)
+        try:
+            await self.async_internal_will_remove_from_hass()
+            await self.async_will_remove_from_hass()
+        finally:
+            # Check if entry still exists in entity registry (e.g. unloading config entry)
+            if (
+                not force_remove
+                and self.registry_entry
+                and not self.registry_entry.disabled
+                # Check if entity is still in the entity registry
+                # by checking self._removed_from_registry
+                #
+                # Because self.registry_entry is unset in a task,
+                # its possible that the entity has been removed but
+                # the task has not yet been executed.
+                #
+                # self._removed_from_registry is set to True in a
+                # callback which does not have the same issue.
+                #
+                and not self._removed_from_registry
+            ):
+                # Set the entity's state will to unavailable and
+                # EntityStateAttribute.RESTORED: True
+                self.registry_entry.write_unavailable_state(self.hass)
+            else:
+                self.hass.states.async_remove(self.entity_id, context=self._context)
 
     async def async_prepare_to_add_to_hass(self) -> None:
         """Run before the entity is added to hass.

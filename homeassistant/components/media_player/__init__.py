@@ -127,8 +127,8 @@ DEVICE_CLASSES = [cls.value for cls in MediaPlayerDeviceClass]
 
 
 MEDIA_PLAYER_BROWSE_MEDIA_SCHEMA = {
-    probatio.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
-    probatio.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
+    probatio.Optional(MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE): cv.string,
+    probatio.Optional(MediaPlayerServiceArgument.MEDIA_CONTENT_ID): cv.string,
 }
 
 
@@ -383,7 +383,6 @@ async def websocket_browse_media(
     try:
         payload = await player.async_browse_media(media_content_type, media_content_id)
     except NotImplementedError:
-        assert player.platform
         _LOGGER.error(
             "%s allows media browsing but its integration (%s) does not",
             player.entity_id,
@@ -465,6 +464,7 @@ async def websocket_search_media(
     query = str(msg.get(ATTR_MEDIA_SEARCH_QUERY))
     media_filter_classes = msg.get(ATTR_MEDIA_FILTER_CLASSES, [])
 
+    player.async_set_context(connection.context(msg))
     try:
         payload = await player.async_internal_search_media(
             query,

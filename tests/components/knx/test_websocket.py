@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 from unittest.mock import patch
 
-from knx_telegram_store import KnxTelegramStoreException
+from knx_telegram_store import BufferedSqliteStore, KnxTelegramStoreException
 import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
@@ -175,6 +176,75 @@ async def test_knx_project_file_process_error(
     assert not hass.data[KNX_MODULE_KEY].project.loaded
 
 
+async def test_knx_set_project(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    current_project_data: dict[str, Any],
+) -> None:
+    """Test knx/set_knx_project command for storing and loading project data."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    assert not hass.data[KNX_MODULE_KEY].project.loaded
+
+    await client.send_json_auto_id(
+        {"type": "knx/set_knx_project", "project": current_project_data}
+    )
+    res = await client.receive_json()
+
+    assert res["success"], res
+    assert hass.data[KNX_MODULE_KEY].project.loaded
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == current_project_data
+
+
+async def test_knx_set_project_invalid(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    current_project_data: dict[str, Any],
+) -> None:
+    """Test knx/set_knx_project refuses invalid project data."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/set_knx_project",
+            "project": {**current_project_data, "group_addresses": None},
+        }
+    )
+    res = await client.receive_json()
+
+    assert not res["success"]
+    assert res["error"]["code"] == "home_assistant_error"
+    assert res["error"]["translation_key"] == "project_data_invalid"
+    assert not hass.data[KNX_MODULE_KEY].project.loaded
+    assert KNX_PROJECT_STORAGE_KEY not in hass_storage
+
+
+async def test_knx_set_project_not_loaded(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    current_project_data: dict[str, Any],
+) -> None:
+    """Test knx/set_knx_project when the config entry is unloaded."""
+    await knx.setup_integration()
+    await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "knx/set_knx_project", "project": current_project_data}
+    )
+    res = await client.receive_json()
+
+    assert not res["success"]
+    assert res["error"]["code"] == "home_assistant_error"
+    assert res["error"]["translation_key"] == "integration_not_loaded"
+
+
 @pytest.mark.usefixtures("load_knxproj")
 async def test_knx_project_file_remove(
     hass: HomeAssistant,
@@ -243,7 +313,35 @@ async def test_knx_group_monitor_info_command(
     res = await client.receive_json()
     assert res["success"], res
     assert res["result"]["project_loaded"] is False
+    assert res["result"]["telegram_store_status"] == "ready"
     assert res["result"]["recent_telegrams"] == []
+
+
+async def test_telegram_store_initializing(
+    hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test telegram commands while the storage backend is still initializing."""
+
+    async def hanging_initialize(self: BufferedSqliteStore) -> None:
+        await asyncio.Event().wait()
+
+    with patch.object(BufferedSqliteStore, "initialize", hanging_initialize):
+        await knx.setup_integration(
+            real_telegram_store=True, wait_for_telegram_store=False
+        )
+        client = await hass_ws_client(hass)
+        assert hass.data[KNX_MODULE_KEY].telegrams.store is None
+
+        await client.send_json_auto_id({"type": "knx/group_monitor_info"})
+        res = await client.receive_json()
+        assert res["success"], res
+        assert res["result"]["telegram_store_status"] == "initializing"
+        assert res["result"]["recent_telegrams"] == []
+
+        await client.send_json_auto_id({"type": "knx/query_telegrams"})
+        res = await client.receive_json()
+        assert not res["success"]
+        assert res["error"]["code"] == "telegram_store_initializing"
 
 
 async def test_knx_query_telegrams_command(

@@ -21,7 +21,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
-    with patch("homeassistant.components.iss.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.iss.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -57,7 +57,7 @@ async def test_options(hass: HomeAssistant) -> None:
 
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.iss.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.iss.async_setup_entry", return_value=None):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         optionflow = await hass.config_entries.options.async_init(config_entry.entry_id)

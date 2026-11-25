@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.helpers import config_validation as cv, frame, intent
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -22,6 +22,7 @@ from .chat_log import (
     Attachment,
     ChatLog,
     Content,
+    ConversationBusyError,
     ConverseError,
     SystemContent,
     ToolResultContent,
@@ -34,6 +35,8 @@ from .const import (
     DOMAIN,
     HOME_ASSISTANT_AGENT,
     ConversationEntityFeature,
+    ConversationService,
+    ConversationServiceArgument,
 )
 from .default_agent import async_setup_default_agent
 from .entity import ConversationEntity
@@ -58,10 +61,13 @@ __all__ = [
     "Attachment",
     "ChatLog",
     "Content",
+    "ConversationBusyError",
     "ConversationEntity",
     "ConversationEntityFeature",
     "ConversationInput",
     "ConversationResult",
+    "ConversationService",
+    "ConversationServiceArgument",
     "ConversationTraceEventType",
     "ConverseError",
     "SystemContent",
@@ -102,6 +108,15 @@ def async_set_agent(
     agent: AbstractConversationAgent,
 ) -> None:
     """Set the agent to handle the conversations."""
+    if not isinstance(agent, ConversationEntity):
+        frame.report_usage(
+            "sets a conversation agent that is not a conversation entity. Convert "
+            "the conversation platform to use ConversationEntity",
+            breaks_in_ha_version="2027.6.0",
+            # Test agents use config entries of domains that are not loaded
+            core_behavior=frame.ReportBehavior.LOG,
+            integration_domain=config_entry.domain,
+        )
     get_agent_manager(hass).async_set_agent(config_entry.entry_id, agent)
 
 

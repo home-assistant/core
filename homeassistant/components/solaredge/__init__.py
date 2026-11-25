@@ -53,11 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) ->
         # Register the site device up front so per-battery devices can resolve it
         # as their via_device when their entities are created.
         device_registry = dr.async_get(hass)
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={(DOMAIN, site_id)}, manufacturer="SolarEdge"
-            ),
+            identifiers={(DOMAIN, site_id)},
+            manufacturer="SolarEdge",
         )
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -75,3 +74,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) -
         return  # Nothing to unload
 
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: SolarEdgeConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Remove a config entry from a device."""
+    return CONF_API_KEY not in config_entry.data

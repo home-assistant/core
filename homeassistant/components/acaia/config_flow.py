@@ -11,19 +11,52 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, UnitOfTime
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
-from .const import CONF_IS_NEW_STYLE_SCALE, DOMAIN
+from .const import (
+    CONF_IDLE_TIMEOUT,
+    CONF_IS_NEW_STYLE_SCALE,
+    DEFAULT_IDLE_TIMEOUT,
+    DOMAIN,
+)
+from .coordinator import AcaiaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+OPTIONS_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(
+            CONF_IDLE_TIMEOUT, default=DEFAULT_IDLE_TIMEOUT
+        ): probatio.All(
+            NumberSelector(
+                NumberSelectorConfig(
+                    min=0,
+                    max=120,
+                    step=1,
+                    mode=NumberSelectorMode.BOX,
+                    unit_of_measurement=UnitOfTime.MINUTES,
+                )
+            ),
+            probatio.Coerce(int),
+        ),
+    }
+)
 
 
 class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -33,6 +66,13 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered: dict[str, Any] = {}
         self._discovered_devices: dict[str, str] = {}
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: AcaiaConfigEntry) -> AcaiaOptionsFlow:
+        """Get the options flow for this handler."""
+        return AcaiaOptionsFlow()
 
     @override
     async def async_step_user(
@@ -141,11 +181,28 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         self.context["title_placeholders"] = placeholders = {
-            CONF_NAME: self._discovered[CONF_NAME]
+            "name": self._discovered[CONF_NAME]
         }
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=placeholders,
+        )
+
+
+class AcaiaOptionsFlow(OptionsFlowWithReload):
+    """Handle the connection options of an Acaia scale."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
         )

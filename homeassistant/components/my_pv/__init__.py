@@ -10,16 +10,19 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import MyPVConfigEntry, MyPVCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
     Platform.WATER_HEATER,
 ]
 
@@ -27,7 +30,11 @@ PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> None:
     """Set up my-PV from a config entry."""
 
-    device = MyPVLocalDevice(entry.data[CONF_HOST], entry.data.get(CONF_PASSWORD))
+    device = MyPVLocalDevice(
+        entry.data[CONF_HOST],
+        entry.data.get(CONF_PASSWORD),
+        session=async_get_clientsession(hass),
+    )
 
     try:
         if not await device.connect():

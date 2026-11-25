@@ -10,6 +10,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER, PLATFORM_MAPPING
+from .utils import async_keep_shell_template_issue
 
 
 async def async_load_platforms(
@@ -36,6 +37,8 @@ async def async_load_platforms(
                 PLATFORM_MAPPING[platform],
             )
             reload_configs.append((PLATFORM_MAPPING[platform], _config))
+            # Kept here as platform setup may still run when a reload finishes
+            async_keep_shell_template_issue(hass, platform, _config)
             load_coroutines.append(
                 discovery.async_load_platform(
                     hass,

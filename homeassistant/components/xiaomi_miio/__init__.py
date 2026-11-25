@@ -52,6 +52,7 @@ from .const import (
     DOMAIN,
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
+    MODEL_AIRPURIFIER_3H,
     MODEL_FAN_1C,
     MODEL_FAN_P5,
     MODEL_FAN_P9,
@@ -136,6 +137,7 @@ LAZY_DISCOVER_FOR_MODEL = {
     "zhimi.fan.za5": True,
     "zhimi.airpurifier.za1": True,
     "dmaker.fan.1c": True,
+    MODEL_AIRPURIFIER_3H: True,
 }
 
 
@@ -435,17 +437,15 @@ async def async_setup_gateway_entry(
     gateway_info = gateway.gateway_info
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, gateway_info.mac_address)},
-            identifiers={(DOMAIN, gateway_id)},
-            manufacturer="Xiaomi",
-            name=name,
-            model=gateway_info.model,
-            sw_version=gateway_info.firmware_version,
-            hw_version=gateway_info.hardware_version,
-        ),
+        connections={(dr.CONNECTION_NETWORK_MAC, gateway_info.mac_address)},
+        identifiers={(DOMAIN, gateway_id)},
+        manufacturer="Xiaomi",
+        name=name,
+        model=gateway_info.model,
+        sw_version=gateway_info.firmware_version,
+        hw_version=gateway_info.hardware_version,
     )
 
     coordinator_dict: dict[str, GatewayDeviceCoordinator] = {}

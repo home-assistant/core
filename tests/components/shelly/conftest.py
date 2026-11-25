@@ -1,5 +1,6 @@
 """Test configuration for Shelly."""
 
+import asyncio
 from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
@@ -490,6 +491,112 @@ MOCK_CAMERA_STATUS = {
     }
 }
 
+MOCK_STORAGE_STATUS = {
+    "id": 0,
+    "present": True,
+    "active": True,
+    "fs_size": 31914983424,
+    "fs_free": 1048576000,
+}
+
+MOCK_STORAGE_ITEMS = [
+    {
+        "media_id": "11111111-1111-1111-1111-111111111111",
+        "type": "video",
+        "ts": 1750000000.0,
+        "duration": 12,
+        "size": 123456,
+        "url": "/storage/11111111-1111-1111-1111-111111111111/aaaa1111/MOV_0001.mp4",
+        "thumbnail_url": "/storage/11111111-1111-1111-1111-111111111111/aaaa1111/thumb_0001.jpg",
+        "trigger": {
+            "component": "camerazone:200",
+            "event": "motion_detected",
+            "ts": 1750000000.0,
+        },
+    },
+    {
+        "media_id": "22222222-2222-2222-2222-222222222222",
+        "type": "video",
+        "ts": 1750000060.0,
+        "duration": 30,
+        "size": 234567,
+        "url": "/storage/22222222-2222-2222-2222-222222222222/bbbb2222/MOV_0002.mp4",
+        "thumbnail_url": "/storage/22222222-2222-2222-2222-222222222222/bbbb2222/thumb_0002.jpg",
+        "trigger": {
+            "component": "camerazone:200",
+            "event": "motion_detected",
+            "ts": 1750000060.0,
+        },
+    },
+    {
+        "media_id": "33333333-3333-3333-3333-333333333333",
+        "type": "image",
+        "ts": 1750000120.0,
+        "size": 34567,
+        "url": "/storage/33333333-3333-3333-3333-333333333333/cccc3333/IMG_0003.jpg",
+        "thumbnail_url": "/storage/33333333-3333-3333-3333-333333333333/cccc3333/thumb_0003.jpg",
+    },
+    {
+        "media_id": "44444444-4444-4444-4444-444444444444",
+        "type": "video",
+        "ts": 1750000180.0,
+        "duration": 15,
+        "size": 345678,
+        "url": "/storage/44444444-4444-4444-4444-444444444444/dddd4444/MOV_0004.mp4",
+        "thumbnail_url": "/storage/44444444-4444-4444-4444-444444444444/dddd4444/thumb_0004.jpg",
+    },
+    {
+        "media_id": "55555555-5555-5555-5555-555555555555",
+        "type": "video",
+        "ts": 1750000240.0,
+        "duration": 8,
+        "size": 456789,
+        "url": "/storage/55555555-5555-5555-5555-555555555555/eeee5555/MOV_0005.mp4",
+        "thumbnail_url": "/storage/55555555-5555-5555-5555-555555555555/eeee5555/thumb_0005.jpg",
+        "trigger": {
+            "component": "camerazone:200",
+            "event": "motion_detected",
+            "ts": 1750000240.0,
+        },
+    },
+    {
+        "media_id": "66666666-6666-6666-6666-666666666666",
+        "type": "image",
+        "ts": 1750000300.0,
+        "size": 45678,
+        "url": "/storage/66666666-6666-6666-6666-666666666666/ffff6666/IMG_0006.jpg",
+        "thumbnail_url": "/storage/66666666-6666-6666-6666-666666666666/ffff6666/thumb_0006.jpg",
+        "trigger": {
+            "component": "camerazone:200",
+            "event": "motion_detected",
+            "ts": 1750000300.0,
+        },
+    },
+    {
+        "media_id": "77777777-7777-7777-7777-777777777777",
+        "type": "video",
+        "ts": 1750000360.0,
+        "duration": 20,
+        "size": 567890,
+        "url": "/storage/77777777-7777-7777-7777-777777777777/gggg7777/MOV_0007.mp4",
+        "thumbnail_url": "/storage/77777777-7777-7777-7777-777777777777/gggg7777/thumb_0007.jpg",
+    },
+    {
+        "media_id": "88888888-8888-8888-8888-888888888888",
+        "type": "video",
+        "ts": 1750000420.0,
+        "duration": 5,
+        "size": 678901,
+        "url": "/storage/88888888-8888-8888-8888-888888888888/hhhh8888/MOV_0008.mp4",
+        "thumbnail_url": "/storage/88888888-8888-8888-8888-888888888888/hhhh8888/thumb_0008.jpg",
+        "trigger": {
+            "component": "camerazone:200",
+            "event": "motion_detected",
+            "ts": 1750000420.0,
+        },
+    },
+]
+
 MOCK_LEDSTRIP_CONFIG = {
     "ledstrip:0": {
         "id": 0,
@@ -503,16 +610,42 @@ MOCK_LEDSTRIP_CONFIG = {
     }
 }
 
-MOCK_LEDSTRIP_STATUS = {
-    "ledstrip:0": {
-        "id": 0,
-        "on": False,
-        "brightness": 36,
-        "effect": "rainbow",
-        "speed": 33,
-        "reverse": True,
-    }
+MOCK_LEDSTRIP_STATUS_RAINBOW = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "rainbow",
+    "speed": 33,
+    "reverse": True,
 }
+MOCK_LEDSTRIP_STATUS_AURORA = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "bg_rgb": [0, 0, 0],
+    "effect": "aurora",
+    "palette": "ocean",
+    "speed": 50,
+    "intensity": 50,
+}
+MOCK_LEDSTRIP_STATUS_BLINK = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "blink",
+    "rgb": [127, 172, 255],
+    "bg_rgb": [171, 171, 171],
+    "speed": 50,
+    "intensity": 65,
+}
+MOCK_LEDSTRIP_STATUS_SOLID = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "solid",
+    "rgb": [255, 81, 68],
+}
+MOCK_LEDSTRIP_STATUS = {"ledstrip:0": MOCK_LEDSTRIP_STATUS_RAINBOW}
 
 MOCK_SCRIPTS = [
     """"
@@ -542,7 +675,17 @@ MOCK_LEDSTRIP_EFFECTS = {
     "fade": {"name": "Fade", "controls": ["rgb", "speed"]},
     "rainbow": {"name": "Rainbow", "controls": ["speed", "reverse"]},
     "colorwipe": {"name": "Color Wipe", "controls": ["rgb", "speed", "reverse"]},
+    "aurora": {
+        "name": "Aurora",
+        "controls": ["bg_rgb", "palette", "intensity", "speed"],
+    },
     "ddp": {"name": "DDP Receiver", "controls": []},
+}
+MOCK_LEDSTRIP_PALETTES = {
+    "rainbow": "Rainbow",
+    "fire": "Fire",
+    "ocean": "Ocean",
+    "monochrome": "Monochrome",
 }
 
 
@@ -593,7 +736,7 @@ async def mock_block_device(model: str = MODEL_1):
 
         device = Mock(
             spec=BlockDevice,
-            blocks=MOCK_BLOCKS,
+            blocks=deepcopy(MOCK_BLOCKS),
             settings=MOCK_SETTINGS,
             shelly=MOCK_SHELLY_COAP,
             version="1.11.0",
@@ -643,8 +786,10 @@ def _mock_rpc_device(version: str | None = None):
         wifi_setconfig=AsyncMock(return_value={"restart_required": True}),
         ble_getconfig=AsyncMock(return_value={}),
         ble_setconfig=AsyncMock(return_value={"restart_required": False}),
+        update_component_config=AsyncMock(return_value=set()),
         shutdown=AsyncMock(),
         ledstrip_list_effects=AsyncMock(return_value=MOCK_LEDSTRIP_EFFECTS),
+        ledstrip_list_palettes=AsyncMock(return_value=MOCK_LEDSTRIP_PALETTES),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -716,7 +861,12 @@ async def mock_rpc_device():
                 current_pos, device.status[f"cover:{cover_id}"]["current_pos"]
             )
 
+        async def _initialize() -> None:
+            # Yield like the network I/O of a real device
+            await asyncio.sleep(0)
+
         device = _mock_rpc_device()
+        device.initialize = AsyncMock(side_effect=_initialize)
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=_disconnected)
         rpc_device_mock.return_value.mock_update = Mock(side_effect=_update)
@@ -909,9 +1059,30 @@ def mock_ledstrip_rpc_device(
     monkeypatch: pytest.MonkeyPatch, mock_rpc_device: Mock
 ) -> Mock:
     """Set up mock RPC device with LED strip component data."""
-    monkeypatch.setattr(mock_rpc_device, "config", MOCK_CONFIG | MOCK_LEDSTRIP_CONFIG)
-    monkeypatch.setattr(
-        mock_rpc_device, "status", MOCK_STATUS_RPC | MOCK_LEDSTRIP_STATUS
-    )
+    config = MOCK_CONFIG | MOCK_LEDSTRIP_CONFIG
+    status = MOCK_STATUS_RPC | MOCK_LEDSTRIP_STATUS
+    # A real LED strip device has no other lights, all light types count as one
+    # set of channels so keeping them would turn the LED strip into a sub-device
+    for key in ("light:0", "light:1", "light:2", "light:3", "rgb:0", "rgbw:0"):
+        del config[key]
+        del status[key]
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+    monkeypatch.setattr(mock_rpc_device, "status", status)
 
     return mock_rpc_device
+
+
+@pytest.fixture
+def mock_camera_storage(
+    mock_camera_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> Mock:
+    """Mock active storage for a camera device."""
+    monkeypatch.setattr(
+        mock_camera_rpc_device,
+        "status",
+        {**MOCK_CAMERA_STATUS, "storage:0": deepcopy(MOCK_STORAGE_STATUS)},
+    )
+    mock_camera_rpc_device.storage_list = AsyncMock(
+        return_value=deepcopy(MOCK_STORAGE_ITEMS)
+    )
+    return mock_camera_rpc_device

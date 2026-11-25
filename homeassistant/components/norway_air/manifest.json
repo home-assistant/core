@@ -3,9 +3,10 @@
   "name": "Om Luftkvalitet i Norge (Norway Air)",
   "categories": ["weather_alerts.air_quality_pollen"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/norway_air",
   "iot_class": "cloud_polling",
   "loggers": ["metno"],
   "quality_scale": "legacy",
-  "requirements": ["PyMetno==0.13.0"]
+  "requirements": ["PyMetno==0.14.0"]
 }

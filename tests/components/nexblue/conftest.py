@@ -36,7 +36,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Prevent a config-flow test from setting up the integration."""
-    with patch("homeassistant.components.nexblue.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.nexblue.async_setup_entry", return_value=None):
         yield
 
 
@@ -56,6 +56,7 @@ def mock_client() -> Generator[MagicMock]:
         client.async_login.return_value = TOKEN
         client.async_ensure_access_token.return_value = None
         client.async_list_chargers.return_value = [CHARGER]
+        client.async_list_load_balancers.return_value = []
         client.async_get_charger_status.return_value = CHARGER_STATUS
         yield client
 

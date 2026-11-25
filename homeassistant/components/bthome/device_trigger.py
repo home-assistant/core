@@ -43,6 +43,7 @@ EVENT_TYPES_BY_EVENT_CLASS = {
         "long_double_press",
         "long_triple_press",
         "hold_press",
+        "hold_release",
     },
     EVENT_CLASS_DIMMER: {"rotate_left", "rotate_right"},
     EVENT_CLASS_COMMAND: {"off", "on", "toggle", "step_up", "step_down"},

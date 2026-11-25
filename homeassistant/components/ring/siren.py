@@ -20,18 +20,11 @@ from homeassistant.components.siren import (
     SirenEntityFeature,
     SirenTurnOnServiceParameters,
 )
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import RingConfigEntry, RingDataCoordinator
-from .entity import (
-    RingDeviceT,
-    RingEntity,
-    RingEntityDescription,
-    async_check_create_deprecated,
-    refresh_after,
-)
+from .entity import RingDeviceT, RingEntity, refresh_after
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +36,6 @@ PARALLEL_UPDATES = 1
 @dataclass(frozen=True, kw_only=True)
 class RingSirenEntityDescription(
     SirenEntityDescription,
-    RingEntityDescription,
     Generic[RingDeviceT],  # noqa: UP046
 ):
     """Describes a Ring siren entity."""
@@ -97,12 +89,6 @@ async def async_setup_entry(
         for device in ring_data.devices.all_devices
         for description in SIRENS
         if description.exists_fn(device)
-        and async_check_create_deprecated(
-            hass,
-            Platform.SIREN,
-            description.unique_id_fn(device),
-            description,
-        )
     )
 
 

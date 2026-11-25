@@ -7,7 +7,7 @@ from pytest_homeassistant.common import MockUser, async_mock_service
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import conversation
-from homeassistant.components.button import SERVICE_PRESS
+from homeassistant.components.button import ButtonService
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
@@ -295,7 +295,7 @@ async def test_turn_on_intent_button(
     button = entity_registry.async_get_or_create(domain, "test", "button_uid")
 
     hass.states.async_set(button.entity_id, "unknown")
-    button_service_calls = async_mock_service(hass, domain, SERVICE_PRESS)
+    button_service_calls = async_mock_service(hass, domain, ButtonService.PRESS)
 
     with pytest.raises(intent.IntentHandleError):
         await intent.async_handle(
@@ -309,7 +309,7 @@ async def test_turn_on_intent_button(
     assert len(button_service_calls) == 1
     call = button_service_calls[0]
     assert call.domain == domain
-    assert call.service == SERVICE_PRESS
+    assert call.service == ButtonService.PRESS
     assert call.data == {"entity_id": button.entity_id}
 
 

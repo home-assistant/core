@@ -157,20 +157,35 @@ class TargetTriggerFormat(TriggerFormat):
             CONF_TARGET: {"entity_id": entity_id},
         }
         if offset:
-            options: dict[str, Any] = {}
-            # Convert signed offset to offset + offset_type
-            if offset < dt.timedelta(0):
-                options[CONF_OFFSET] = -offset
-                options[CONF_OFFSET_TYPE] = OFFSET_TYPE_BEFORE
-            else:
-                options[CONF_OFFSET] = offset
-                options[CONF_OFFSET_TYPE] = OFFSET_TYPE_AFTER
-            trigger_data[CONF_OPTIONS] = options
+            trigger_data[CONF_OPTIONS] = {CONF_OFFSET: offset}
+        return trigger_data
+
+
+@dataclass
+class TargetOffsetTypeTriggerFormat(TargetTriggerFormat):
+    """Target trigger format with a positive offset and an offset type."""
+
+    id: str = "target_offset_type"
+
+    def get_trigger_data(
+        self, entity_id: str, event_type: str, offset: dt.timedelta | None = None
+    ) -> dict[str, Any]:
+        """Get the trigger configuration data."""
+        trigger_data = super().get_trigger_data(entity_id, event_type)
+        if offset:
+            trigger_data[CONF_OPTIONS] = {
+                CONF_OFFSET: abs(offset),
+                CONF_OFFSET_TYPE: OFFSET_TYPE_BEFORE
+                if offset < dt.timedelta(0)
+                else OFFSET_TYPE_AFTER,
+            }
         return trigger_data
 
 
 TRIGGER_FORMATS = [LegacyTriggerFormat(), TargetTriggerFormat()]
 TRIGGER_FORMAT_IDS = [fmt.id for fmt in TRIGGER_FORMATS]
+OFFSET_TRIGGER_FORMATS = [*TRIGGER_FORMATS, TargetOffsetTypeTriggerFormat()]
+OFFSET_TRIGGER_FORMAT_IDS = [fmt.id for fmt in OFFSET_TRIGGER_FORMATS]
 
 
 @pytest.fixture(params=TRIGGER_FORMATS, ids=TRIGGER_FORMAT_IDS)
@@ -268,16 +283,16 @@ class FakeSchedule:
 
     async def fire_until(self, end: dt.datetime) -> None:
         """Simulate the passage of time by firing alarms until the time is reached."""
-
+        end_utc = dt_util.as_utc(end)
         current_time = dt_util.as_utc(self.freezer())
-        if (end - current_time) > (TEST_UPDATE_INTERVAL * 2):
+        if (end_utc - current_time) > (TEST_UPDATE_INTERVAL * 2):
             # Jump ahead to right before the target alarm them to remove
             # unnecessary waiting, before advancing in smaller increments below.
             # This leaves time for multiple update intervals to refresh the set
             # of upcoming events
-            await self.fire_time(end - TEST_UPDATE_INTERVAL * 2)
+            await self.fire_time(end_utc - TEST_UPDATE_INTERVAL * 2)
 
-        while dt_util.utcnow() < end:
+        while dt_util.utcnow() < end_utc:
             self.freezer.tick(TEST_TIME_ADVANCE_INTERVAL)
             await self.fire_time(dt_util.utcnow())
 
@@ -386,15 +401,16 @@ async def create_automation(
     )
     await hass.async_block_till_done()
 
-    yield
-
-    # Disable automation to cleanup lingering timers
-    await hass.services.async_call(
-        automation.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: f"automation.{event_type}"},
-        blocking=True,
-    )
+    try:
+        yield
+    finally:
+        # Disable automation to cleanup lingering timers
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: f"automation.{event_type}"},
+            blocking=True,
+        )
 
 
 @pytest.fixture
@@ -444,6 +460,9 @@ async def test_event_start_trigger(
     ]
 
 
+@pytest.mark.parametrize(
+    "trigger_format", OFFSET_TRIGGER_FORMATS, ids=OFFSET_TRIGGER_FORMAT_IDS
+)
 @pytest.mark.parametrize(
     ("offset_delta"),
     [
@@ -514,6 +533,9 @@ async def test_event_end_trigger(
         ]
 
 
+@pytest.mark.parametrize(
+    "trigger_format", OFFSET_TRIGGER_FORMATS, ids=OFFSET_TRIGGER_FORMAT_IDS
+)
 @pytest.mark.parametrize(
     ("offset_delta"),
     [
@@ -969,6 +991,331 @@ async def test_event_start_trigger_dst(
             ),
             trigger_format.get_expected_call_data(
                 CALENDAR_ENTITY_ID, EVENT_START, event3_data
+            ),
+        ]
+
+
+async def test_event_start_trigger_dst_fall_back(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    freezer: FrozenDateTimeFactory,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test calendar event triggers across the end of daylight saving time."""
+    await hass.config.async_set_time_zone("America/Los_Angeles")
+    tzinfo = zoneinfo.ZoneInfo("America/Los_Angeles")
+    freezer.move_to("2023-11-05 01:00:00-07:00")
+
+    # First 1am hour before clocks fall back (01:30 PDT / 08:30 UTC)
+    event1_data = test_entity.create_event(
+        summary="Event 1",
+        start=dt.datetime(2023, 11, 5, 1, 30, tzinfo=tzinfo, fold=0),
+        end=dt.datetime(2023, 11, 5, 1, 45, tzinfo=tzinfo, fold=0),
+    )
+    # Just before clocks fall back at 2am -> 1am (01:58 PDT / 08:58 UTC)
+    event2_data = test_entity.create_event(
+        summary="Event 2",
+        start=dt.datetime(2023, 11, 5, 1, 58, tzinfo=tzinfo, fold=0),
+        end=dt.datetime(2023, 11, 5, 1, 59, tzinfo=tzinfo, fold=0),
+    )
+    # Repeated 1am hour after clocks fall back (01:15 PST / 09:15 UTC)
+    event3_data = test_entity.create_event(
+        summary="Event 3",
+        start=dt.datetime(2023, 11, 5, 1, 15, tzinfo=tzinfo, fold=1),
+        end=dt.datetime(2023, 11, 5, 1, 30, tzinfo=tzinfo, fold=1),
+    )
+    # Later in the repeated 1am hour, with earlier wall time than Event 2 (01:57 PST / 09:57 UTC)
+    event4_data = test_entity.create_event(
+        summary="Event 4",
+        start=dt.datetime(2023, 11, 5, 1, 57, tzinfo=tzinfo, fold=1),
+        end=dt.datetime(2023, 11, 5, 1, 59, tzinfo=tzinfo, fold=1),
+    )
+    # After the repeated hour ends (02:15 PST / 10:15 UTC)
+    event5_data = test_entity.create_event(
+        summary="Event 5",
+        start=dt.datetime(2023, 11, 5, 2, 15, tzinfo=tzinfo),
+        end=dt.datetime(2023, 11, 5, 2, 30, tzinfo=tzinfo),
+    )
+
+    async with create_automation(hass, trigger_format, EVENT_START):
+        assert len(calls_data()) == 0
+
+        await fake_schedule.fire_until(
+            dt.datetime(2023, 11, 5, 1, 35, tzinfo=tzinfo, fold=0),
+        )
+        assert [c["calendar_event"]["summary"] for c in calls_data()] == ["Event 1"]
+
+        await fake_schedule.fire_until(
+            dt.datetime(2023, 11, 5, 1, 59, tzinfo=tzinfo, fold=0),
+        )
+        assert [c["calendar_event"]["summary"] for c in calls_data()] == [
+            "Event 1",
+            "Event 2",
+        ]
+
+        await fake_schedule.fire_until(
+            dt.datetime(2023, 11, 5, 1, 20, tzinfo=tzinfo, fold=1),
+        )
+        assert [c["calendar_event"]["summary"] for c in calls_data()] == [
+            "Event 1",
+            "Event 2",
+            "Event 3",
+        ]
+
+        await fake_schedule.fire_until(
+            dt.datetime(2023, 11, 5, 1, 59, tzinfo=tzinfo, fold=1),
+        )
+        assert [c["calendar_event"]["summary"] for c in calls_data()] == [
+            "Event 1",
+            "Event 2",
+            "Event 3",
+            "Event 4",
+        ]
+
+        await fake_schedule.fire_until(
+            dt.datetime(2023, 11, 5, 2, 20, tzinfo=tzinfo),
+        )
+        assert calls_data() == [
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event1_data
+            ),
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event2_data
+            ),
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event3_data
+            ),
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event4_data
+            ),
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event5_data
+            ),
+        ]
+
+
+async def test_event_start_trigger_dst_fall_back_same_window(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    freezer: FrozenDateTimeFactory,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test ordering of opposite-fold events queued within a single scan window."""
+    await hass.config.async_set_time_zone("America/Los_Angeles")
+    tzinfo = zoneinfo.ZoneInfo("America/Los_Angeles")
+    # Initial 7-minute scan [01:55 PDT, 01:02 PST) spans the 2am -> 1am transition
+    freezer.move_to("2023-11-05 01:55:00-07:00")
+
+    pdt_event = test_entity.create_event(
+        summary="PDT Event",
+        start=dt.datetime(2023, 11, 5, 1, 58, tzinfo=tzinfo, fold=0),
+        end=dt.datetime(2023, 11, 5, 1, 59, tzinfo=tzinfo, fold=0),
+    )
+    pst_event = test_entity.create_event(
+        summary="PST Event",
+        start=dt.datetime(2023, 11, 5, 1, 1, tzinfo=tzinfo, fold=1),
+        end=dt.datetime(2023, 11, 5, 1, 10, tzinfo=tzinfo, fold=1),
+    )
+
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(
+            dt.datetime(2023, 11, 5, 1, 59, tzinfo=tzinfo, fold=0),
+        )
+        assert calls_data() == [
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, pdt_event
+            ),
+        ]
+
+        await fake_schedule.fire_until(
+            dt.datetime(2023, 11, 5, 1, 2, tzinfo=tzinfo, fold=1),
+        )
+        assert calls_data() == [
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, pdt_event
+            ),
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, pst_event
+            ),
+        ]
+
+
+@pytest.mark.parametrize(
+    ("event_start", "event_end", "offset_delta", "before_fire", "after_fire"),
+    [
+        pytest.param(
+            "2023-11-05T01:45:00-07:00",
+            "2023-11-05T01:55:00-07:00",
+            dt.timedelta(minutes=30),
+            "2023-11-05T01:10:00-08:00",
+            "2023-11-05T01:20:00-08:00",
+            id="after_across_fall_back",
+        ),
+        pytest.param(
+            "2023-11-05T01:15:00-08:00",
+            "2023-11-05T01:30:00-08:00",
+            dt.timedelta(minutes=-30),
+            "2023-11-05T01:40:00-07:00",
+            "2023-11-05T01:50:00-07:00",
+            id="before_across_fall_back",
+        ),
+        pytest.param(
+            "2023-11-05T02:15:00-08:00",
+            "2023-11-05T02:30:00-08:00",
+            dt.timedelta(minutes=-30),
+            "2023-11-05T01:40:00-08:00",
+            "2023-11-05T01:50:00-08:00",
+            id="after_transition_offset_into_fold",
+        ),
+    ],
+)
+async def test_event_start_trigger_dst_fall_back_with_offset(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    freezer: FrozenDateTimeFactory,
+    trigger_format: TriggerFormat,
+    event_start: str,
+    event_end: str,
+    offset_delta: dt.timedelta,
+    before_fire: str,
+    after_fire: str,
+) -> None:
+    """Test calendar event trigger offsets across the end of daylight saving time."""
+    await hass.config.async_set_time_zone("America/Los_Angeles")
+    freezer.move_to("2023-11-05 00:30:00-07:00")
+
+    event_data = test_entity.create_event(
+        summary="Event with offset",
+        start=dt_util.as_local(dt.datetime.fromisoformat(event_start)),
+        end=dt_util.as_local(dt.datetime.fromisoformat(event_end)),
+    )
+
+    async with create_automation(
+        hass, trigger_format, EVENT_START, offset=offset_delta
+    ):
+        await fake_schedule.fire_until(
+            dt_util.as_local(dt.datetime.fromisoformat(before_fire))
+        )
+        assert len(calls_data()) == 0
+
+        await fake_schedule.fire_until(
+            dt_util.as_local(dt.datetime.fromisoformat(after_fire))
+        )
+        assert calls_data() == [
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event_data
+            )
+        ]
+
+
+async def test_event_start_trigger_all_day_and_timed_dst_fall_back(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    freezer: FrozenDateTimeFactory,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test ordering of all-day and timed events across local midnight and DST fall-back."""
+    await hass.config.async_set_time_zone("America/Los_Angeles")
+    tzinfo = zoneinfo.ZoneInfo("America/Los_Angeles")
+    # At 23:00 PDT on Nov 4, UTC is already 2023-11-05 06:00Z
+    freezer.move_to("2023-11-04 23:00:00-07:00")
+
+    saturday_late = test_entity.create_event(
+        summary="Saturday Late",
+        start=dt.datetime(2023, 11, 4, 23, 30, tzinfo=tzinfo),
+        end=dt.datetime(2023, 11, 4, 23, 45, tzinfo=tzinfo),
+    )
+    sunday_all_day = test_entity.create_event(
+        summary="Sunday All Day",
+        start=dt.date(2023, 11, 5),
+        end=dt.date(2023, 11, 6),
+    )
+    sunday_pdt = test_entity.create_event(
+        summary="Sunday 1:30 PDT",
+        start=dt.datetime(2023, 11, 5, 1, 30, tzinfo=tzinfo, fold=0),
+        end=dt.datetime(2023, 11, 5, 1, 45, tzinfo=tzinfo, fold=0),
+    )
+    sunday_pst = test_entity.create_event(
+        summary="Sunday 1:15 PST",
+        start=dt.datetime(2023, 11, 5, 1, 15, tzinfo=tzinfo, fold=1),
+        end=dt.datetime(2023, 11, 5, 1, 30, tzinfo=tzinfo, fold=1),
+    )
+
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(
+            dt.datetime(2023, 11, 4, 23, 50, tzinfo=tzinfo),
+        )
+        assert [c["calendar_event"]["summary"] for c in calls_data()] == [
+            "Saturday Late"
+        ]
+
+        await fake_schedule.fire_until(
+            dt.datetime(2023, 11, 5, 0, 5, tzinfo=tzinfo),
+        )
+        assert [c["calendar_event"]["summary"] for c in calls_data()] == [
+            "Saturday Late",
+            "Sunday All Day",
+        ]
+
+        await fake_schedule.fire_until(
+            dt.datetime(2023, 11, 5, 1, 20, tzinfo=tzinfo, fold=1),
+        )
+        assert calls_data() == [
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, saturday_late
+            ),
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, sunday_all_day
+            ),
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, sunday_pdt
+            ),
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, sunday_pst
+            ),
+        ]
+
+
+async def test_event_end_trigger_all_day_dst_fall_back(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    freezer: FrozenDateTimeFactory,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test all-day event end trigger fires at local midnight after a 25-hour DST fall-back day."""
+    await hass.config.async_set_time_zone("America/Los_Angeles")
+    tzinfo = zoneinfo.ZoneInfo("America/Los_Angeles")
+    freezer.move_to("2023-11-05 22:50:00-08:00")
+
+    sunday_all_day = test_entity.create_event(
+        summary="Sunday All Day",
+        start=dt.date(2023, 11, 5),
+        end=dt.date(2023, 11, 6),
+    )
+
+    async with create_automation(hass, trigger_format, EVENT_END):
+        # 24 real hours after 2023-11-05 00:00-07:00 is 23:00-08:00; end must wait for local midnight
+        await fake_schedule.fire_until(
+            dt.datetime(2023, 11, 5, 23, 10, tzinfo=tzinfo),
+        )
+        assert len(calls_data()) == 0
+
+        await fake_schedule.fire_until(
+            dt.datetime(2023, 11, 6, 0, 5, tzinfo=tzinfo),
+        )
+        assert calls_data() == [
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_END, sunday_all_day
             ),
         ]
 

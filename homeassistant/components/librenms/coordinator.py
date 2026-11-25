@@ -109,16 +109,14 @@ class LibrenmsCentralDataUpdateCoordinator(
                     sw_version += f" ({feature})"
                 model = device.hardware
 
-            device_reg.async_get_or_create_device(
+            device_reg.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
-                device_info=dr.DeviceInfo(
-                    identifiers={(DOMAIN, identifier)},
-                    sw_version=sw_version,
-                    configuration_url=f"{self.configuration_url}/device/{device.device_id}",
-                    name=device.display,
-                    model=model,
-                    serial_number=device.serial,
-                ),
+                identifiers={(DOMAIN, identifier)},
+                sw_version=sw_version,
+                configuration_url=f"{self.configuration_url}/device/{device.device_id}",
+                name=device.display,
+                model=model,
+                serial_number=device.serial,
             )
 
         return LibrenmsCentralData(system, {dev.device_id: dev for dev in devices})

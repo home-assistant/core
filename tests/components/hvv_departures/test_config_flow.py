@@ -48,7 +48,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.hvv_departures.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         # step: user
@@ -136,7 +136,7 @@ async def test_user_flow_stations_with_same_name(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.hvv_departures.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -190,7 +190,7 @@ async def test_user_flow_no_results(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.hvv_departures.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         # step: user
@@ -279,7 +279,7 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.hvv_departures.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result_user = await hass.config_entries.flow.async_configure(
@@ -346,7 +346,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.hvv_departures.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result_user = await hass.config_entries.flow.async_configure(

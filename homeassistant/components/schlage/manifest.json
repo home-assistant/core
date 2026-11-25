@@ -4,8 +4,11 @@
   "categories": ["security_safety.locks_access"],
   "codeowners": ["@dknowles2"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/schlage",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["pyschlage==2026.9.0"]
+  "loggers": ["pyschlage"],
+  "quality_scale": "bronze",
+  "requirements": ["pyschlage==2026.11.1"]
 }

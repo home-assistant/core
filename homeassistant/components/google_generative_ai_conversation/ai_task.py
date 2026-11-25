@@ -7,7 +7,6 @@ from google.genai.errors import APIError
 from google.genai.types import GenerateContentConfig, Part, PartUnionDict
 
 from homeassistant.components import ai_task, conversation
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -34,7 +33,7 @@ if TYPE_CHECKING:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GoogleGenerativeAIConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AI Task entities."""
@@ -66,8 +65,10 @@ class GoogleGenerativeAITaskEntity(
             | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
         )
 
-        if subentry.data.get(CONF_RECOMMENDED) or "-image" in subentry.data.get(
-            CONF_CHAT_MODEL, ""
+        if (
+            subentry.data.get(CONF_RECOMMENDED)
+            or "-image" in subentry.data.get(CONF_CHAT_MODEL, "")
+            or "-nano-banana" in subentry.data.get(CONF_CHAT_MODEL, "")
         ):
             self._attr_supported_features |= ai_task.AITaskEntityFeature.GENERATE_IMAGE
 

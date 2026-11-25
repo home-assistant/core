@@ -1,9 +1,8 @@
 """Common fixtures for the ENGIE Belgium tests."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 from datetime import UTC, date, datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
-from zoneinfo import ZoneInfo
 
 from aioengiebelgium import (
     AccountRelation,
@@ -19,11 +18,15 @@ from aioengiebelgium import (
     EpexGranularity,
     EpexPayload,
     EpexSlot,
+    MonthlyPeaks,
+    Peak,
     PricePeriod,
     PriceSlot,
     PricesResponse,
     ProductConfiguration,
     ServicePoint,
+    ServicePointInstallation,
+    ServicePointMarketDetails,
     bare_ean,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -31,15 +34,16 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.engie_be.const import (
+    BRUSSELS_TIME_ZONE,
     CONF_MFA_METHOD,
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
 EMAIL = "user@example.com"
 PASSWORD = "hunter2"
 SUBJECT = "auth0|69f5b418f3be21cc2ede9c98"
@@ -47,6 +51,7 @@ BAN = "000000000001"
 BAN_2 = "000000000002"
 OFFTAKE_ONLY_EAN = "541448820000000001_ID1"
 OFFTAKE_INJECTION_EAN = "541448820000000002_ID1"
+GAS_CONVERSION_COEFFICIENT = 11.5
 _SERVICE_POINT_ENERGY_TYPES = {
     bare_ean(OFFTAKE_ONLY_EAN): "GAS",
     bare_ean(OFFTAKE_INJECTION_EAN): "ELECTRICITY",
@@ -152,10 +157,22 @@ def build_prices(
     )
 
 
-def build_service_point(ean: str) -> ServicePoint:
+def build_service_point(
+    ean: str, *, gas_conversion_coefficient: float | None = GAS_CONVERSION_COEFFICIENT
+) -> ServicePoint:
     """Build a service point response for a queried (possibly suffixed) EAN."""
     bare = bare_ean(ean)
-    return ServicePoint(ean_energy_types={bare: _SERVICE_POINT_ENERGY_TYPES[bare]})
+    energy_type = _SERVICE_POINT_ENERGY_TYPES[bare]
+    return ServicePoint(
+        ean_energy_types={bare: energy_type},
+        market_details=ServicePointMarketDetails(
+            installation=ServicePointInstallation(
+                gas_conversion_coefficient=gas_conversion_coefficient
+                if energy_type == "GAS"
+                else None
+            )
+        ),
+    )
 
 
 def build_contracts(*, dynamic: bool = False) -> EnergyContractsResponse:
@@ -249,6 +266,43 @@ def build_epex_payload_with_partial_tomorrow(
     return build_epex_payload(start, end, granularity)
 
 
+def build_peak(
+    start: datetime, *, power_kw: float = 4.2, energy_kwh: float = 1.05
+) -> Peak:
+    """Build a 15-minute capacity tariff peak starting at the given moment."""
+    return Peak(
+        peak_kw=power_kw,
+        peak_kwh=energy_kwh,
+        start=start,
+        end=start + timedelta(minutes=15),
+    )
+
+
+def build_monthly_peaks(
+    year: int,
+    month: int,
+    *,
+    peak: Peak | None = None,
+    daily_peaks: tuple[Peak, ...] = (),
+) -> MonthlyPeaks:
+    """Build a monthly peaks response for the given month."""
+    return MonthlyPeaks(
+        year=year,
+        month=month,
+        peak_of_the_month=peak,
+        daily_peaks=daily_peaks,
+    )
+
+
+def build_monthly_peaks_for_request(
+    ban: str, year: int, month: int, *, day: int | None = None
+) -> MonthlyPeaks:
+    """Build a peaks response with one peak on the 15th of the requested month."""
+    start = datetime(year, month, 15, 18, 0, tzinfo=BRUSSELS_TIME_ZONE)
+    peak = build_peak(start, power_kw=4.2, energy_kwh=1.05)
+    return build_monthly_peaks(year, month, peak=peak, daily_peaks=(peak,))
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
@@ -283,6 +337,7 @@ def mock_engie_client(mock_auth_flow: MagicMock) -> Generator[MagicMock]:
         client.async_get_service_point.side_effect = build_service_point
         client.async_get_energy_contracts.return_value = build_contracts()
         client.async_get_epex_prices.side_effect = build_epex_payload
+        client.async_get_monthly_peaks.side_effect = build_monthly_peaks_for_request
         client.async_start_authentication.return_value = mock_auth_flow
         yield mock_client_class
 
@@ -310,6 +365,13 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def frozen_afternoon(freezer: FrozenDateTimeFactory) -> None:
     """Freeze time on a Brussels Saturday afternoon."""
     freezer.move_to(datetime(2026, 10, 3, 14, 0, tzinfo=BRUSSELS_TIME_ZONE))
+
+
+def without_capacity_tariff(
+    entries: Iterable[er.RegistryEntry],
+) -> list[er.RegistryEntry]:
+    """Return the given registry entries excluding the capacity tariff peak sensors."""
+    return [entry for entry in entries if "_capacity_tariff_" not in entry.unique_id]
 
 
 async def setup_entry(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:

@@ -11,7 +11,7 @@ from iaqualink.exception import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.iaqualink import DOMAIN, config_flow
+from homeassistant.components.iaqualink import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -44,19 +44,6 @@ async def test_single_instance_allowed(
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_without_config(hass: HomeAssistant) -> None:
-    """Test config flow with no configuration."""
-    flow = config_flow.AqualinkFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-
-    result = await flow.async_step_user()
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-
 async def test_dhcp_discovery_starts_user_flow(
     hass: HomeAssistant, config_data: dict[str, str]
 ) -> None:
@@ -79,7 +66,7 @@ async def test_dhcp_discovery_starts_user_flow(
         ),
         patch(
             "homeassistant.components.iaqualink.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -97,25 +84,36 @@ async def test_with_invalid_credentials(
     hass: HomeAssistant, config_data: dict[str, str]
 ) -> None:
     """Test config flow with invalid username and/or password."""
-    flow = config_flow.AqualinkFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         side_effect=AqualinkServiceUnauthorizedException,
     ):
-        result = await flow.async_step_user(config_data)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], config_data
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
-    with patch(
-        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-        _async_mock_login,
+    with (
+        patch(
+            "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+            _async_mock_login,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.async_setup_entry",
+            return_value=None,
+        ),
     ):
-        result = await flow.async_step_user(config_data)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], config_data
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -134,41 +132,64 @@ async def test_cannot_connect_exception(
     raised_exception: Exception | type[Exception],
 ) -> None:
     """Test config flow encountering a connection-related exception."""
-    flow = config_flow.AqualinkFlowHandler()
-    flow.hass = hass
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         side_effect=raised_exception,
     ):
-        result = await flow.async_step_user(config_data)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], config_data
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
-    with patch(
-        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-        _async_mock_login,
+    with (
+        patch(
+            "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+            _async_mock_login,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.async_setup_entry",
+            return_value=None,
+        ),
     ):
-        result = await flow.async_step_user(config_data)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], config_data
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_with_existing_config(
-    hass: HomeAssistant, config_data: dict[str, str]
-) -> None:
-    """Test config flow with existing configuration."""
-    flow = config_flow.AqualinkFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+async def test_user_flow(hass: HomeAssistant, config_data: dict[str, str]) -> None:
+    """Test the user flow shows the form and creates an entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-    with patch(
-        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-        _async_mock_login,
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+            _async_mock_login,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.async_setup_entry",
+            return_value=None,
+        ),
     ):
-        result = await flow.async_step_user(config_data)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], config_data
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == config_data["username"]

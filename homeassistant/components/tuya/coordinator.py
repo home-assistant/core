@@ -81,9 +81,10 @@ class DeviceListener(SharingDeviceListener):
         # Get all devices from Tuya, makes blocking web calls
         try:
             manager.update_device_cache()
-        except requests.exceptions.ConnectionError as exc:
-            msg = "Unable to connect to Tuya"
-            raise ConfigEntryNotReady(msg) from exc
+        except requests.RequestException as exc:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from exc
         except Exception as exc:
             # While in general, we should avoid catching broad exceptions,
             # we have no other way of detecting this case.
@@ -149,7 +150,7 @@ class DeviceListener(SharingDeviceListener):
         """Register device with Home Assistant."""
         TUYA_QUIRKS_REGISTRY.initialise_device_quirk(device)
 
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create_from_info(
             config_entry_id=self._entry.entry_id,
             device_info=get_device_info(device),
         )
