@@ -448,13 +448,13 @@ async def test_reload_resubscribe_error_is_contained(
 
     with patch.object(
         AdsSwitch,
-        "async_added_to_hass",
+        "async_subscribe",
         AsyncMock(side_effect=[TypeError("closed"), None]),
-    ) as mock_added:
+    ) as mock_subscribe:
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_added.call_count == 2
+    assert mock_subscribe.call_count == 2
     assert "Error resubscribing switch." in caplog.text
 
 
@@ -481,14 +481,14 @@ async def test_reload_resubscribes_concurrently(
     never_answers = asyncio.Event()
     fan_resubscribed = asyncio.Event()
 
-    async def _async_added_to_hass(self: AdsEntity) -> None:
+    async def _async_subscribe(self: AdsEntity) -> None:
         # The pump registered first, so a serial resubscribe would wait on it.
         if self.entity_id == SWITCH_ID:
             await never_answers.wait()
         else:
             fan_resubscribed.set()
 
-    with patch.object(AdsSwitch, "async_added_to_hass", _async_added_to_hass):
+    with patch.object(AdsSwitch, "async_subscribe", _async_subscribe):
         await hass.config_entries.async_reload(entry.entry_id)
         async with asyncio.timeout(1):
             await fan_resubscribed.wait()
@@ -512,7 +512,7 @@ async def test_unload_cancels_resubscribe(
         resubscribing.set()
         await asyncio.Event().wait()
 
-    with patch.object(AdsSwitch, "async_added_to_hass", _wait_forever):
+    with patch.object(AdsSwitch, "async_subscribe", _wait_forever):
         await hass.config_entries.async_setup(entry.entry_id)
         await resubscribing.wait()
         hub = get_hub(hass)

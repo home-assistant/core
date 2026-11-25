@@ -70,8 +70,8 @@ class AdsValve(AdsEntity, ValveEntity):
         self._attr_is_closed = True
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Register device notification."""
+    async def async_subscribe(self) -> None:
+        """Subscribe to the PLC variables of this entity."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
     @override

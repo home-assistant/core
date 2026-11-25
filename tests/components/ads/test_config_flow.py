@@ -41,13 +41,6 @@ CONNECT_ERRORS = [
     ),
     pytest.param(
         lambda mock: setattr(
-            mock, "side_effect", ValueError("invalid literal for int() with base 10")
-        ),
-        "invalid_net_id",
-        id="invalid_net_id",
-    ),
-    pytest.param(
-        lambda mock: setattr(
             mock.return_value.open,
             "side_effect",
             RuntimeError("Failed to open port on AMS router."),
@@ -118,6 +111,32 @@ async def test_user_flow_errors(
     assert result["data"] == ADS_CONFIG
 
 
+@pytest.mark.parametrize("net_id", ["abc", "1.2.3", "1.2.3.4.5.256"])
+async def test_user_flow_invalid_net_id(
+    hass: HomeAssistant,
+    mock_pyads_connection: MagicMock,
+    mock_create_connection: MagicMock,
+    net_id: str,
+) -> None:
+    """Test a malformed AMS NetID is reported on its field without connecting."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: net_id, CONF_PORT: PORT}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_DEVICE: "invalid_net_id"}
+    mock_create_connection.assert_not_called()
+    mock_pyads_connection.assert_not_called()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], ADS_CONFIG
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_user_flow_unreachable(
     hass: HomeAssistant,
     mock_pyads_connection: MagicMock,
@@ -174,11 +193,7 @@ async def test_import_flow(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     "configure_mock",
-    [
-        pytest.param(param.values[0], id=param.id)
-        for param in CONNECT_ERRORS
-        if param.id != "invalid_net_id"
-    ],
+    [pytest.param(param.values[0], id=param.id) for param in CONNECT_ERRORS],
 )
 async def test_import_flow_offline(
     hass: HomeAssistant,

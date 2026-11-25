@@ -35,6 +35,19 @@ class AdsEntity(Entity):
         # rejected one is not left behind on the hub.
         self.async_on_remove(self._unregister_from_hub)
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe once the entity is added."""
+        await self.async_subscribe()
+
+    async def async_subscribe(self) -> None:
+        """Subscribe to the PLC variables of this entity.
+
+        Also called after the entry is reloaded, to subscribe again on the new
+        hub.
+        """
+        raise NotImplementedError
+
     async def async_initialize_device(
         self,
         ads_var: str,

@@ -566,8 +566,9 @@ async def async_wait_for_hub(hass: HomeAssistant) -> AdsHub:
     """Return the hub once the entry's setup attempt finished.
 
     YAML platforms are set up while the entry imported from YAML is still being
-    created and connected; failing at once would leave them retrying on a
-    timer of their own long after the connection is up.
+    created and connected, so they wait for that attempt instead of failing at
+    once and retrying on a timer of their own. When the attempt does not load
+    the entry, they still raise PlatformNotReady and retry on their timer.
     """
     with suppress(TimeoutError):
         async with asyncio.timeout(HUB_WAIT_TIMEOUT):
