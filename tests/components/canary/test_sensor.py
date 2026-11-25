@@ -1,7 +1,7 @@
 """The tests for the Canary sensor platform."""
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from pytest_homeassistant.common import async_fire_time_changed
 
@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    STATE_UNAVAILABLE,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -148,6 +149,47 @@ async def test_sensors_attributes_pro(hass: HomeAssistant, canary) -> None:
     assert state3
     assert state3.state == "1.0"
     assert state3.attributes[ATTR_AIR_QUALITY] == STATE_AIR_QUALITY_NORMAL
+
+
+async def test_sensors_unavailable_when_device_offline(
+    hass: HomeAssistant, canary
+) -> None:
+    """Test the sensors are unavailable while the device is offline."""
+    device = mock_device(20, "Dining Room", True, "Canary Pro")
+
+    instance = canary.return_value
+    instance.get_locations.return_value = [
+        mock_location(100, "Home", True, devices=[device]),
+    ]
+    instance.get_latest_readings.return_value = [
+        mock_reading("temperature", "21.12"),
+    ]
+
+    with patch("homeassistant.components.canary.PLATFORMS", ["sensor"]):
+        await init_integration(hass)
+
+    entity_id = "sensor.dining_room_home_dining_room_temperature"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "21.12"
+
+    type(device).is_online = PropertyMock(return_value=False)
+    future = utcnow() + timedelta(seconds=30)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    type(device).is_online = PropertyMock(return_value=True)
+    future += timedelta(seconds=30)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "21.12"
 
 
 async def test_sensors_flex(
