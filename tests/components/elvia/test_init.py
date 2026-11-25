@@ -80,7 +80,8 @@ async def test_scheduled_import_auth_failed(hass: HomeAssistant) -> None:
         side_effect=ElviaError.AuthError("Boom", 401, {}, ""),
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=61))
-        await hass.async_block_till_done()
+        # The scheduled import runs as a background task.
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

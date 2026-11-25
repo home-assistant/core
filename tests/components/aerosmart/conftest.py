@@ -36,6 +36,11 @@ VENTILATION_HOLDING: dict[int, list[int]] = {
     5016: [0, 21000],  # room_temperature.temp_raumluft_soll (-> 21.0)
 }
 HEAT_PUMP_HOLDING: dict[int, list[int]] = {
+    910: [0, 60],  # compressor runtime in minutes (1 h)
+    916: [0, 90],  # liquid refrigerant valve runtime (1.5 h)
+    918: [0, 120],  # hot gas valve runtime (2 h)
+    920: [0, 150],  # air condenser valve runtime (2.5 h)
+    922: [0, 180],  # electric heater runtime (3 h)
     1044: [0, 1],  # heat_pump.waermepumpe
     1314: [0, 1],  # heat_pump.wp_status: Wärmepumpe aus
     212: [0, 45000],  # hot_water_heat_pump.warmwasser_speicher_oben (-> 45.0)
