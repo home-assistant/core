@@ -992,5 +992,12 @@ async def test_provider_stream_source_needs_stream_integration(
         assert camera.webrtc_provider is not None
         assert camera.camera_capabilities.frontend_stream_types == {StreamType.WEB_RTC}
 
+        # The stream integration may load after the camera picked its provider
+        hass.config.components.add("stream")
+        assert camera.camera_capabilities.frontend_stream_types == {
+            StreamType.HLS,
+            StreamType.WEB_RTC,
+        }
+
     unregister()
     await hass.async_block_till_done()
