@@ -55,15 +55,12 @@ async def test_undervoltage_time_is_disabled_by_default(
 @pytest.mark.parametrize("registers", [INITIALISING_REGISTERS])
 @pytest.mark.usefixtures("init_integration")
 async def test_initialising_gateway_reports_no_values(hass: HomeAssistant) -> None:
-    """A gateway that just powered up says so and has no values yet."""
+    """A gateway that just powered up says so and has no temperatures yet."""
     assert hass.states.get(PREFIX + "error").state == "initialising"
     assert hass.states.get(PREFIX + "error_code").state == STATE_UNKNOWN
-    for key in (
-        "operation_time",
-        "outdoor_intake_temperature",
-        "return_path_temperature",
-    ):
+    for key in ("outdoor_intake_temperature", "return_path_temperature"):
         assert hass.states.get(UNIT_PREFIX + key).state == STATE_UNKNOWN
+    assert hass.states.get(UNIT_PREFIX + "operation_time").state == "1234"
 
 
 @pytest.mark.parametrize("registers", [{11: 5}])
@@ -74,6 +71,23 @@ async def test_unit_error_shows_the_remote_controller_code(
     """An error of the air conditioner comes with the code its remote shows."""
     assert hass.states.get(PREFIX + "error").state == "unit_error"
     assert hass.states.get(PREFIX + "error_code").state == "E5"
+
+
+@pytest.mark.parametrize("registers", [{11: 12345}])
+@pytest.mark.usefixtures("init_integration")
+async def test_unit_error_without_a_remote_controller_code_shows_its_number(
+    hass: HomeAssistant,
+) -> None:
+    """An error the library has no code for is still told apart by its number."""
+    assert hass.states.get(PREFIX + "error").state == "unit_error"
+    assert hass.states.get(PREFIX + "error_code").state == "12345"
+
+
+@pytest.mark.parametrize("registers", [{9: 32768}])
+@pytest.mark.usefixtures("init_integration")
+async def test_operation_time_covers_the_whole_register(hass: HomeAssistant) -> None:
+    """32768 hours is a reading, not the gateway's initialisation value."""
+    assert hass.states.get(UNIT_PREFIX + "operation_time").state == "32768"
 
 
 @pytest.mark.usefixtures("init_integration")

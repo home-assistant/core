@@ -31,6 +31,17 @@ class IntesisSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[IntesisSingleUnitGateway], StateType]
 
 
+def _error_code(device: IntesisSingleUnitGateway) -> str | None:
+    """The code the remote controller shows for an error of the air conditioner.
+
+    An error the library has no remote controller code for shows as the
+    number the gateway reports.
+    """
+    if (error := device.error) is None or error.state is not ErrorState.UNIT_ERROR:
+        return None
+    return error.remote_code or str(error.code)
+
+
 # What the gateway knows by itself: these stay available while it cannot reach
 # the air conditioner, and the error sensor then says so.
 GATEWAY_SENSORS: Final[tuple[IntesisSensorEntityDescription, ...]] = (
@@ -50,9 +61,7 @@ GATEWAY_SENSORS: Final[tuple[IntesisSensorEntityDescription, ...]] = (
         translation_key="error_code",
         report_name="control",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda device: (
-            None if (error := device.error) is None else error.remote_code
-        ),
+        value_fn=_error_code,
     ),
     IntesisSensorEntityDescription(
         key="undervoltage_hours",
@@ -62,6 +71,7 @@ GATEWAY_SENSORS: Final[tuple[IntesisSensorEntityDescription, ...]] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.undervoltage_hours,
     ),
 )
