@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import RpcCallError
+from aioshelly.rpc_device import RpcDevice
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.switch import (
@@ -27,7 +28,6 @@ from .const import (
     MODEL_LINKEDGO_ST802_THERMOSTAT,
     MODEL_LINKEDGO_ST1820_THERMOSTAT,
     MODEL_NEO_WATER_VALVE,
-    MODEL_TOP_EV_CHARGER_EVE01,
     ROLE_GENERIC,
     RPC_ERROR_CODE_REMOTE_DISABLED,
 )
@@ -37,6 +37,7 @@ from .entity import (
     RpcEntityDescription,
     ShellyBlockAttributeEntity,
     ShellyRpcAttributeEntity,
+    ShellyRpcEntity,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_block,
     async_setup_entry_rpc,
@@ -46,11 +47,11 @@ from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
     get_rpc_channel_name,
-    get_rpc_key,
     get_virtual_component_ids,
     is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
     is_rpc_ledstrip_control_available,
+    is_rpc_wall_display_brightness_supported,
     is_view_for_platform,
 )
 
@@ -83,16 +84,14 @@ class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
     """Class to describe a RPC virtual switch."""
 
     is_on: Callable[[dict[str, Any]], bool]
-    # "{component}" in a method name is replaced by the component of the entity
-    method_on: str
-    method_off: str
-    method_params_fn: Callable[[int | None, bool], tuple]
+    method: Callable[[RpcDevice, int, bool], Awaitable[Any]]
 
 
 class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     """Entity that controls a switch on RPC based Shelly devices."""
 
     entity_description: RpcSwitchDescription
+    _id: int
 
     def __init__(
         self,
@@ -111,17 +110,6 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
         ):
             self._attr_name = get_rpc_channel_name(coordinator.device, key)
 
-    def _get_method(self, name: str) -> Callable[..., Awaitable[Any]]:
-        """Return the device method, resolved for the component of the entity."""
-        method = getattr(
-            self.coordinator.device, name.format(component=get_rpc_key(self.key)[1])
-        )
-
-        if TYPE_CHECKING:
-            assert method is not None
-
-        return cast(Callable[..., Awaitable[Any]], method)
-
     @property
     @override
     def is_on(self) -> bool:
@@ -132,17 +120,13 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        method = self._get_method(self.entity_description.method_on)
-        params = self.entity_description.method_params_fn(self._id, True)
-        await method(*params)
+        await self.entity_description.method(self.coordinator.device, self._id, True)
 
     @rpc_call
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        method = self._get_method(self.entity_description.method_off)
-        params = self.entity_description.method_params_fn(self._id, False)
-        await method(*params)
+        await self.entity_description.method(self.coordinator.device, self._id, False)
 
 
 class RpcConfigSwitch(RpcSwitch):
@@ -179,14 +163,10 @@ class RpcCircuitBreakerSwitch(RpcSwitch):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on circuit breaker."""
-        method = getattr(self.coordinator.device, self.entity_description.method_on)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
-        params = self.entity_description.method_params_fn(self._id, True)
         try:
-            await method(*params)
+            await self.entity_description.method(
+                self.coordinator.device, self._id, True
+            )
         except RpcCallError as err:
             if err.code == RPC_ERROR_CODE_REMOTE_DISABLED:
                 raise HomeAssistantError(
@@ -243,290 +223,332 @@ class RpcLedStripSwitch(RpcSwitch):
         )
 
 
-RPC_SWITCHES = {
-    "switch": RpcSwitchDescription(
+class RpcWallDisplayAutoBrightnessSwitch(ShellyRpcEntity, SwitchEntity):
+    """Represent a RPC Wall Display auto brightness switch."""
+
+    def __init__(
+        self, coordinator: ShellyRpcCoordinator, description: SwitchEntityDescription
+    ) -> None:
+        """Initialize Wall Display auto brightness switch."""
+        super().__init__(coordinator, "ui")
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.mac}-ui-{description.key}"
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true if auto brightness is on."""
+        return cast(bool, self.coordinator.device.config["ui"]["brightness"]["auto"])
+
+    @rpc_call
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on auto brightness."""
+        await self.coordinator.device.wall_display_ui_setconfig(
+            {"brightness": {"auto": True}}
+        )
+
+    @rpc_call
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off auto brightness."""
+        await self.coordinator.device.wall_display_ui_setconfig(
+            {"brightness": {"auto": False}}
+        )
+
+
+WALL_DISPLAY_AUTO_BRIGHTNESS_SWITCH = SwitchEntityDescription(
+    key="auto",
+    translation_key="auto_brightness",
+    entity_category=EntityCategory.CONFIG,
+)
+
+
+RPC_SWITCHES = (
+    RpcSwitchDescription(
         key="switch",
+        components=("switch",),
         sub_key="output",
         removal_condition=is_rpc_exclude_from_relay,
         is_on=lambda status: bool(status["output"]),
-        method_on="switch_set",
-        method_off="switch_set",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.switch_set(id_, value),
         entity_class=RpcRelaySwitch,
     ),
-    "cb": RpcSwitchDescription(
+    RpcSwitchDescription(
         key="cb",
+        components=("cb",),
         sub_key="output",
         is_on=lambda status: bool(status["output"]),
-        method_on="cb_set",
-        method_off="cb_set",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.cb_set(id_, value),
         entity_class=RpcCircuitBreakerSwitch,
     ),
-    "boolean_generic": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_generic",
+        components=("boolean",),
         sub_key="value",
         removal_condition=lambda config, _, key: (
             not is_view_for_platform(config, key, SWITCH_DOMAIN)
         ),
         is_on=lambda status: bool(status["value"]),
-        method_on="boolean_set",
-        method_off="boolean_set",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.boolean_set(id_, value),
         role=ROLE_GENERIC,
     ),
-    "boolean_anti_freeze": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_anti_freeze",
+        components=("boolean",),
         sub_key="value",
         translation_key="frost_protection",
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
-        method_on="boolean_set",
-        method_off="boolean_set",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.boolean_set(id_, value),
         role="anti_freeze",
         models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
-    "boolean_child_lock": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_child_lock",
+        components=("boolean",),
         sub_key="value",
         translation_key="child_lock",
         is_on=lambda status: bool(status["value"]),
-        method_on="boolean_set",
-        method_off="boolean_set",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.boolean_set(id_, value),
         role="child_lock",
         models={MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
-    "boolean_enable": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_enable",
+        components=("boolean",),
         sub_key="value",
         translation_key="thermostat_enabled",
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
-        method_on="boolean_set",
-        method_off="boolean_set",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.boolean_set(id_, value),
         role="enable",
         models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
-    "boolean_start_charging": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_start_charging",
+        components=("boolean",),
         sub_key="value",
         translation_key="charging",
         is_on=lambda status: bool(status["value"]),
-        method_on="boolean_set",
-        method_off="boolean_set",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.boolean_set(id_, value),
         role="start_charging",
-        models={MODEL_TOP_EV_CHARGER_EVE01},
     ),
-    "boolean_state": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_state",
+        components=("boolean",),
         sub_key="value",
         translation_key="valve_opened",
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
-        method_on="boolean_set",
-        method_off="boolean_set",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.boolean_set(id_, value),
         role="state",
         models={MODEL_NEO_WATER_VALVE},
     ),
-    "boolean_zone0": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_zone0",
+        components=("boolean",),
         sub_key="value",
         translation_key="zone_with_number",
         translation_placeholders={"zone_number": "1"},
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
-        method_on="boolean_set",
-        method_off="boolean_set",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.boolean_set(id_, value),
         role="zone0",
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone1": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_zone1",
+        components=("boolean",),
         sub_key="value",
         translation_key="zone_with_number",
         translation_placeholders={"zone_number": "2"},
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
-        method_on="boolean_set",
-        method_off="boolean_set",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.boolean_set(id_, value),
         role="zone1",
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone2": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_zone2",
+        components=("boolean",),
         sub_key="value",
         translation_key="zone_with_number",
         translation_placeholders={"zone_number": "3"},
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
-        method_on="boolean_set",
-        method_off="boolean_set",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.boolean_set(id_, value),
         role="zone2",
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone3": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_zone3",
+        components=("boolean",),
         sub_key="value",
         translation_key="zone_with_number",
         translation_placeholders={"zone_number": "4"},
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
-        method_on="boolean_set",
-        method_off="boolean_set",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.boolean_set(id_, value),
         role="zone3",
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone4": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_zone4",
+        components=("boolean",),
         sub_key="value",
         translation_key="zone_with_number",
         translation_placeholders={"zone_number": "5"},
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
-        method_on="boolean_set",
-        method_off="boolean_set",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.boolean_set(id_, value),
         role="zone4",
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "boolean_zone5": RpcSwitchDescription(
-        key="boolean",
+    RpcSwitchDescription(
+        key="boolean_zone5",
+        components=("boolean",),
         sub_key="value",
         translation_key="zone_with_number",
         translation_placeholders={"zone_number": "6"},
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
-        method_on="boolean_set",
-        method_off="boolean_set",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.boolean_set(id_, value),
         role="zone5",
         models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
-    "script": RpcSwitchDescription(
+    RpcSwitchDescription(
         key="script",
+        components=("script",),
         sub_key="running",
         is_on=lambda status: bool(status["running"]),
-        method_on="script_start",
-        method_off="script_stop",
-        method_params_fn=lambda id, _: (id,),
+        method=lambda device, id_, value: (
+            device.script_start(id_) if value else device.script_stop(id_)
+        ),
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
-    "cury_left": RpcSwitchDescription(
-        key="cury",
+    RpcSwitchDescription(
+        key="cury_left",
+        components=("cury",),
         sub_key="slots",
         translation_key="left_slot",
         is_on=lambda status: bool(status["slots"]["left"]["on"]),
-        method_on="cury_set",
-        method_off="cury_set",
-        method_params_fn=lambda id, value: (id, "left", value),
+        method=lambda device, id_, value: device.cury_set(id_, "left", value),
         available=lambda status: (
             (left := status["left"]) is not None
             and left.get("vial", {}).get("level", -1) != -1
         ),
     ),
-    "cury_left_boost": RpcSwitchDescription(
-        key="cury",
+    RpcSwitchDescription(
+        key="cury_left_boost",
+        components=("cury",),
         sub_key="slots",
         translation_key="left_slot_boost",
         is_on=lambda status: status["slots"]["left"]["boost"] is not None,
-        method_on="cury_boost",
-        method_off="cury_stop_boost",
-        method_params_fn=lambda id, _: (id, "left"),
+        method=lambda device, id_, value: (
+            device.cury_boost(id_, "left")
+            if value
+            else device.cury_stop_boost(id_, "left")
+        ),
         available=lambda status: (
             (left := status["left"]) is not None
             and left.get("vial", {}).get("level", -1) != -1
         ),
     ),
-    "cury_right": RpcSwitchDescription(
-        key="cury",
+    RpcSwitchDescription(
+        key="cury_right",
+        components=("cury",),
         sub_key="slots",
         translation_key="right_slot",
         is_on=lambda status: bool(status["slots"]["right"]["on"]),
-        method_on="cury_set",
-        method_off="cury_set",
-        method_params_fn=lambda id, value: (id, "right", value),
+        method=lambda device, id_, value: device.cury_set(id_, "right", value),
         available=lambda status: (
             (right := status["right"]) is not None
             and right.get("vial", {}).get("level", -1) != -1
         ),
     ),
-    "cury_right_boost": RpcSwitchDescription(
-        key="cury",
+    RpcSwitchDescription(
+        key="cury_right_boost",
+        components=("cury",),
         sub_key="slots",
         translation_key="right_slot_boost",
         is_on=lambda status: status["slots"]["right"]["boost"] is not None,
-        method_on="cury_boost",
-        method_off="cury_stop_boost",
-        method_params_fn=lambda id, _: (id, "right"),
+        method=lambda device, id_, value: (
+            device.cury_boost(id_, "right")
+            if value
+            else device.cury_stop_boost(id_, "right")
+        ),
         available=lambda status: (
             (right := status["right"]) is not None
             and right.get("vial", {}).get("level", -1) != -1
         ),
     ),
-    "cury_away_mode": RpcSwitchDescription(
-        key="cury",
+    RpcSwitchDescription(
+        key="cury_away_mode",
+        components=("cury",),
         sub_key="away_mode",
         translation_key="cury_away_mode",
         is_on=lambda status: status["away_mode"],
-        method_on="cury_set_away_mode",
-        method_off="cury_set_away_mode",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.cury_set_away_mode(id_, value),
     ),
-    "fan_boost": RpcSwitchDescription(
-        key="fan",
+    RpcSwitchDescription(
+        key="fan_boost",
+        components=("fan",),
         sub_key="boost",
         translation_key="boost",
         is_on=lambda status: status["boost"]["active"],
-        method_on="fan_boost",
-        method_off="fan_stop_boost",
-        method_params_fn=lambda id, _: (id,),
+        method=lambda device, id_, value: (
+            device.fan_boost(id_) if value else device.fan_stop_boost(id_)
+        ),
         entity_class=RpcFanBoostSwitch,
     ),
-    "ledstrip_reverse": RpcSwitchDescription(
-        key="ledstrip",
+    RpcSwitchDescription(
+        key="ledstrip_reverse",
+        components=("ledstrip",),
         sub_key="reverse",
         translation_key="effect_reverse",
         is_on=lambda status: bool(status["reverse"]),
-        method_on="ledstrip_set",
-        method_off="ledstrip_set",
-        method_params_fn=lambda id, value: (id, {"reverse": value}),
+        method=lambda device, id_, value: device.ledstrip_set(id_, {"reverse": value}),
         supported=lambda _: True,
         entity_class=RpcLedStripSwitch,
     ),
-    "in_locked": RpcSwitchDescription(
-        key="switch",
-        components=("switch", "cover"),
+    RpcSwitchDescription(
+        key="switch_in_locked",
+        components=("switch",),
         translation_key="input_lock",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         removal_condition=lambda config, _status, key: "in_locked" not in config[key],
         is_on=lambda config: bool(config["in_locked"]),
-        method_on="{component}_setconfig",
-        method_off="{component}_setconfig",
-        method_params_fn=lambda id, value: (id, {"in_locked": value}),
+        method=lambda device, id_, value: device.switch_setconfig(
+            id_, {"in_locked": value}
+        ),
         entity_class=RpcConfigSwitch,
     ),
-    "camera_privacy": RpcSwitchDescription(
-        key="camera",
+    RpcSwitchDescription(
+        key="cover_in_locked",
+        components=("cover",),
+        translation_key="input_lock",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        removal_condition=lambda config, _status, key: "in_locked" not in config[key],
+        is_on=lambda config: bool(config["in_locked"]),
+        method=lambda device, id_, value: device.cover_setconfig(
+            id_, {"in_locked": value}
+        ),
+        entity_class=RpcConfigSwitch,
+    ),
+    RpcSwitchDescription(
+        key="camera_privacy",
+        components=("camera",),
         sub_key="privacy",
         translation_key="camera_privacy",
         is_on=lambda status: status["privacy"],
-        method_on="set_camera_privacy",
-        method_off="set_camera_privacy",
-        method_params_fn=lambda id, value: (id, value),
+        method=lambda device, id_, value: device.set_camera_privacy(id_, value),
         entity_category=EntityCategory.CONFIG,
     ),
-}
+)
 
 
 async def async_setup_entry(
@@ -577,6 +599,16 @@ def _async_setup_rpc_entry(
     async_setup_entry_rpc(
         hass, config_entry, async_add_entities, RPC_SWITCHES, RpcSwitch
     )
+
+    # The Wall Display does not report the ui component in the status
+    if is_rpc_wall_display_brightness_supported(coordinator):
+        async_add_entities(
+            [
+                RpcWallDisplayAutoBrightnessSwitch(
+                    coordinator, WALL_DISPLAY_AUTO_BRIGHTNESS_SWITCH
+                )
+            ]
+        )
 
     # the user can remove virtual components from the device configuration, so we need
     # to remove orphaned entities

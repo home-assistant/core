@@ -21,6 +21,10 @@ addon_stdin:
       example: core_ssh
       selector:
         addon:
+    input:
+      required: true
+      selector:
+        object:
 
 addon_stop:
   fields:

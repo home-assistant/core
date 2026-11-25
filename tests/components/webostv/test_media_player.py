@@ -383,6 +383,13 @@ async def test_entity_attributes(
 
     assert attrs.get(ATTR_MEDIA_VOLUME_LEVEL) is None
 
+    # Sound output without volume control reports volume -1
+    client.tv_state.volume = -1
+    await client.mock_state_update()
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs.get(ATTR_MEDIA_VOLUME_LEVEL) is None
+
     # Channel change
     client.tv_state.current_channel = CHANNEL_2
     await client.mock_state_update()
@@ -845,6 +852,21 @@ WEBOS_23_TV_SPEAKER_SYNCABLE = {
     "volumeSyncable": True,
     "adjustVolume": True,
 }
+WEBOS_24_TV_AND_OPTICAL_NOT_SYNCABLE = {
+    "volumeLimitable": True,
+    "activeStatus": True,
+    "maxVolume": 100,
+    "ossActivate": False,
+    "volumeLimiter": "none",
+    "soundOutput": "tv_external_speaker",
+    "volume": 1,
+    "dedicatedSpeakerConnected": False,
+    "mode": "normal",
+    "externalDeviceControl": False,
+    "muteStatus": False,
+    "volumeSyncable": False,
+    "adjustVolume": True,
+}
 WEBOS_4_ARC_NO_SUPPORT_VOLUME = {
     "returnValue": True,
     "volumeMax": 100,
@@ -868,6 +890,18 @@ WEBOS_4_TV_SPEAKER_SUPPORT_VOLUME = {
     "slider": False,
     "active": False,
     "mute": False,
+}
+WEBOS_4_OPTICAL_NO_VOLUME_CONTROL = {
+    "returnValue": True,
+    "volumeMax": 100,
+    "scenario": "mastervolume_ext_speaker_optical",
+    "muted": False,
+    "subscribed": True,
+    "volume": -1,
+    "action": "requested",
+    "supportvolume": False,
+    "slider": False,
+    "active": False,
 }
 WEBOS_6_ARC_UNKNOWN = {
     "activeStatus": True,
@@ -905,6 +939,18 @@ SUPPORT_WEBOSTV_VOLUME_SET = (
             id="webos_23_tv_speaker",
         ),
         pytest.param(
+            "tv_external_speaker",
+            WEBOS_24_TV_AND_OPTICAL_NOT_SYNCABLE,
+            SUPPORT_WEBOSTV_VOLUME_SET,
+            id="webos_24_tv_and_optical_not_syncable",
+        ),
+        pytest.param(
+            "tv_speaker",
+            WEBOS_24_ARC_NOT_SYNCABLE,
+            SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME,
+            id="webos_22_not_syncable_stale_sound_output",
+        ),
+        pytest.param(
             "external_arc",
             WEBOS_4_ARC_NO_SUPPORT_VOLUME,
             SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME,
@@ -915,6 +961,12 @@ SUPPORT_WEBOSTV_VOLUME_SET = (
             WEBOS_4_TV_SPEAKER_SUPPORT_VOLUME,
             SUPPORT_WEBOSTV_VOLUME_SET,
             id="webos_4_support_volume",
+        ),
+        pytest.param(
+            "external_optical",
+            WEBOS_4_OPTICAL_NO_VOLUME_CONTROL,
+            SUPPORT_WEBOSTV,
+            id="webos_4_no_volume_control",
         ),
         pytest.param(
             "external_arc",

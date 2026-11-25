@@ -1,0 +1,154 @@
+# serializer version: 1
+# name: test_entities[pm8006_integrated_amplifier][switch.marantz_pm8006_integrated_amplifier_power_amp_direct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('marantz_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.marantz_pm8006_integrated_amplifier_power_amp_direct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power amp direct',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power amp direct',
+    'platform': 'marantz_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_amp_direct',
+    'unique_id': '01JTEST0000000000000000000_power_amp_direct',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[pm8006_integrated_amplifier][switch.marantz_pm8006_integrated_amplifier_power_amp_direct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marantz PM8006 Integrated Amplifier Power amp direct',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.marantz_pm8006_integrated_amplifier_power_amp_direct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[pm8006_integrated_amplifier][switch.marantz_pm8006_integrated_amplifier_speaker_a-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('marantz_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.marantz_pm8006_integrated_amplifier_speaker_a',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Speaker A',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Speaker A',
+    'platform': 'marantz_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'speaker_a',
+    'unique_id': '01JTEST0000000000000000000_speaker_a',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[pm8006_integrated_amplifier][switch.marantz_pm8006_integrated_amplifier_speaker_a-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marantz PM8006 Integrated Amplifier Speaker A',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.marantz_pm8006_integrated_amplifier_speaker_a',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[pm8006_integrated_amplifier][switch.marantz_pm8006_integrated_amplifier_speaker_b-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('marantz_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.marantz_pm8006_integrated_amplifier_speaker_b',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Speaker B',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Speaker B',
+    'platform': 'marantz_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'speaker_b',
+    'unique_id': '01JTEST0000000000000000000_speaker_b',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[pm8006_integrated_amplifier][switch.marantz_pm8006_integrated_amplifier_speaker_b-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marantz PM8006 Integrated Amplifier Speaker B',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.marantz_pm8006_integrated_amplifier_speaker_b',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

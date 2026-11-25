@@ -47,9 +47,9 @@ from homeassistant.components.sensor.const import (
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
     EntityCategory,
+    EntityStateAttribute,
     Platform,
     UnitOfApparentPower,
     UnitOfArea,
@@ -147,7 +147,7 @@ async def test_temperature_conversion(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == state_value
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == state_unit
 
 
 @pytest.mark.parametrize("device_class", [None, SensorDeviceClass.PRESSURE])
@@ -169,7 +169,10 @@ async def test_temperature_conversion_wrong_device_class(
     # Check compatible unit is applied
     state = hass.states.get(entity0.entity_id)
     assert state.state == "0.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.FAHRENHEIT
+    assert (
+        state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT]
+        == UnitOfTemperature.FAHRENHEIT
+    )
 
 
 @pytest.mark.parametrize(
@@ -196,7 +199,7 @@ async def test_ambiguous_unit_of_measurement_compat(
     # Check temperature is not converted
     state = hass.states.get(entity0.entity_id)
     assert state.state == "0.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == normalized_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == normalized_unit
 
 
 def test_ambiguous_units_of_measurement_aligned() -> None:
@@ -663,7 +666,7 @@ async def test_translated_unit(
 
         entity_id = entity0.entity_id
         state = hass.states.get(entity_id)
-        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "Tests"
+        assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == "Tests"
 
 
 async def test_translated_unit_with_native_unit_raises(
@@ -968,7 +971,7 @@ async def test_custom_unit(
     entity_id = entity0.entity_id
     state = hass.states.get(entity_id)
     assert float(state.state) == custom_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == state_unit
 
     assert (
         async_rounded_state(hass, entity_id, hass.states.get(entity_id))
@@ -1030,7 +1033,7 @@ async def test_custom_unit_zero_between_inverse_units(
 
     state = hass.states.get(entity0.entity_id)
     assert state.state == expected_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == custom_unit
 
 
 @pytest.mark.parametrize(
@@ -1316,7 +1319,7 @@ async def test_custom_unit_change(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == native_state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == native_unit
+    assert state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT) == native_unit
 
     entity_registry.async_update_entity_options(
         "sensor.test", "sensor", {"unit_of_measurement": custom_unit}
@@ -1325,7 +1328,7 @@ async def test_custom_unit_change(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == custom_state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == state_unit
+    assert state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT) == state_unit
 
     entity_registry.async_update_entity_options(
         "sensor.test", "sensor", {"unit_of_measurement": native_unit}
@@ -1334,14 +1337,14 @@ async def test_custom_unit_change(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == native_state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == native_unit
+    assert state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT) == native_unit
 
     entity_registry.async_update_entity_options("sensor.test", "sensor", None)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == native_state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == native_unit
+    assert state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT) == native_unit
 
 
 @pytest.mark.parametrize(
@@ -1453,7 +1456,7 @@ async def test_unit_conversion_priority(
     # Registered entity -> Follow automatic unit conversion
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == automatic_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == automatic_unit
     # Assert the automatic unit conversion is stored in the registry
     entry = entity_registry.async_get(entity0.entity_id)
     assert entry.unit_of_measurement == automatic_unit
@@ -1465,12 +1468,12 @@ async def test_unit_conversion_priority(
     # Unregistered entity -> Follow native unit
     state = hass.states.get(entity1.entity_id)
     assert float(state.state) == native_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == native_unit
 
     # Registered entity with suggested unit
     state = hass.states.get(entity2.entity_id)
     assert float(state.state) == suggested_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == suggested_unit
     # Assert the suggested unit is stored in the registry
     entry = entity_registry.async_get(entity2.entity_id)
     assert entry.unit_of_measurement == suggested_unit
@@ -1482,7 +1485,7 @@ async def test_unit_conversion_priority(
     # Unregistered entity with suggested unit
     state = hass.states.get(entity3.entity_id)
     assert float(state.state) == suggested_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == suggested_unit
 
     # Set a custom unit, this should have priority over the automatic unit conversion
     entity_registry.async_update_entity_options(
@@ -1492,7 +1495,7 @@ async def test_unit_conversion_priority(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == custom_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == custom_unit
 
     entity_registry.async_update_entity_options(
         entity2.entity_id, "sensor", {"unit_of_measurement": custom_unit}
@@ -1501,7 +1504,7 @@ async def test_unit_conversion_priority(
 
     state = hass.states.get(entity2.entity_id)
     assert float(state.state) == custom_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == custom_unit
 
 
 @pytest.mark.parametrize(
@@ -1615,7 +1618,7 @@ async def test_unit_conversion_priority_precision(
     # Registered entity -> Follow automatic unit conversion
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(automatic_state)
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == automatic_unit
     # Assert the automatic unit conversion is stored in the registry
     entry = entity_registry.async_get(entity0.entity_id)
     assert entry.unit_of_measurement == automatic_unit
@@ -1630,12 +1633,12 @@ async def test_unit_conversion_priority_precision(
     # Unregistered entity -> Follow native unit
     state = hass.states.get(entity1.entity_id)
     assert state.state == native_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == native_unit
 
     # Registered entity with suggested unit
     state = hass.states.get(entity2.entity_id)
     assert float(state.state) == pytest.approx(suggested_state)
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == suggested_unit
     # Assert the suggested unit is stored in the registry
     entry = entity_registry.async_get(entity2.entity_id)
     assert entry.unit_of_measurement == suggested_unit
@@ -1647,7 +1650,7 @@ async def test_unit_conversion_priority_precision(
     # Unregistered entity with suggested unit
     state = hass.states.get(entity3.entity_id)
     assert float(state.state) == pytest.approx(suggested_state)
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == suggested_unit
 
     # Set a custom unit, this should have priority over the automatic unit conversion
     entity_registry.async_update_entity_options(
@@ -1657,7 +1660,7 @@ async def test_unit_conversion_priority_precision(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(custom_state)
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == custom_unit
 
     entity_registry.async_update_entity_options(
         entity2.entity_id, "sensor", {"unit_of_measurement": custom_unit}
@@ -1666,7 +1669,7 @@ async def test_unit_conversion_priority_precision(
 
     state = hass.states.get(entity2.entity_id)
     assert float(state.state) == pytest.approx(custom_state)
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == custom_unit
 
     # Set a display_precision, this should have priority over
     # suggested_display_precision
@@ -1821,7 +1824,7 @@ async def test_unit_conversion_priority_suggested_unit_change(
     # time the entity was seen
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(original_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == original_unit
     # Assert the suggested unit is stored in the registry
     entry = entity_registry.async_get(entity0.entity_id)
     assert entry.unit_of_measurement == original_unit
@@ -1833,7 +1836,7 @@ async def test_unit_conversion_priority_suggested_unit_change(
     # Registered entity -> Follow suggested unit the first time the entity was seen
     state = hass.states.get(entity1.entity_id)
     assert float(state.state) == pytest.approx(float(original_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == original_unit
     # Assert the suggested unit is stored in the registry
     entry = entity_registry.async_get(entity1.entity_id)
     assert entry.unit_of_measurement == original_unit
@@ -1918,7 +1921,7 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
     # Registered entity -> Follow unit in entity registry
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(original_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit_1
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == native_unit_1
     # Assert the suggested unit is stored in the registry
     entry = entity_registry.async_get(entity0.entity_id)
     assert entry.unit_of_measurement == native_unit_1
@@ -1930,7 +1933,7 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
     # Registered entity -> Follow unit in entity registry
     state = hass.states.get(entity1.entity_id)
     assert float(state.state) == pytest.approx(float(original_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit_1
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == native_unit_1
     # Assert the suggested unit is stored in the registry
     entry = entity_registry.async_get(entity0.entity_id)
     assert entry.unit_of_measurement == native_unit_1
@@ -2248,7 +2251,7 @@ async def test_unit_conversion_priority_legacy_conversion_removed(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(original_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == original_unit
 
 
 def test_device_classes_aligned() -> None:
@@ -2853,7 +2856,9 @@ async def test_unit_conversion_update(
     # Registered entity -> Follow automatic unit conversion
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == automatic_state_1
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit_1
+    assert (
+        state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == automatic_unit_1
+    )
     # Assert the automatic unit conversion is stored in the registry
     entry = entity_registry.async_get(entity0.entity_id)
     assert entry.options["sensor.private"] == {
@@ -2862,7 +2867,9 @@ async def test_unit_conversion_update(
 
     state = hass.states.get(entity1.entity_id)
     assert float(state.state) == automatic_state_1
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit_1
+    assert (
+        state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == automatic_unit_1
+    )
     # Assert the automatic unit conversion is stored in the registry
     entry = entity_registry.async_get(entity1.entity_id)
     assert entry.options["sensor.private"] == {
@@ -2872,7 +2879,7 @@ async def test_unit_conversion_update(
     # Registered entity with suggested unit
     state = hass.states.get(entity2.entity_id)
     assert float(state.state) == suggested_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == suggested_unit
     # Assert the suggested unit is stored in the registry
     entry = entity_registry.async_get(entity2.entity_id)
     assert entry.options["sensor.private"] == {
@@ -2881,7 +2888,7 @@ async def test_unit_conversion_update(
 
     state = hass.states.get(entity3.entity_id)
     assert float(state.state) == suggested_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == suggested_unit
     # Assert the suggested unit is stored in the registry
     entry = entity_registry.async_get(entity3.entity_id)
     assert entry.options["sensor.private"] == {
@@ -2896,7 +2903,7 @@ async def test_unit_conversion_update(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == custom_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == custom_unit
 
     entity_registry.async_update_entity_options(
         entity2.entity_id, "sensor", {"unit_of_measurement": custom_unit}
@@ -2905,7 +2912,7 @@ async def test_unit_conversion_update(
 
     state = hass.states.get(entity2.entity_id)
     assert float(state.state) == custom_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == custom_unit
 
     # Change unit system, states and units should be unchanged
     hass.config.units = unit_system_2
@@ -2913,19 +2920,21 @@ async def test_unit_conversion_update(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == custom_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == custom_unit
 
     state = hass.states.get(entity1.entity_id)
     assert float(state.state) == automatic_state_1
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit_1
+    assert (
+        state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == automatic_unit_1
+    )
 
     state = hass.states.get(entity2.entity_id)
     assert float(state.state) == custom_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == custom_unit
 
     state = hass.states.get(entity3.entity_id)
     assert float(state.state) == suggested_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == suggested_unit
 
     # Update suggested unit
     async_update_suggested_units(hass)
@@ -2936,19 +2945,21 @@ async def test_unit_conversion_update(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == custom_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == custom_unit
 
     state = hass.states.get(entity1.entity_id)
     assert float(state.state) == automatic_state_2
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit_2
+    assert (
+        state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == automatic_unit_2
+    )
 
     state = hass.states.get(entity2.entity_id)
     assert float(state.state) == custom_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == custom_unit
 
     state = hass.states.get(entity3.entity_id)
     assert float(state.state) == suggested_state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == suggested_unit
 
     # Entity 4 still has a pending request to refresh entity options
     entry = entity_registry.async_get(entity4_entity_id)
@@ -2962,7 +2973,9 @@ async def test_unit_conversion_update(
 
     state = hass.states.get(entity4_entity_id)
     assert float(state.state) == automatic_state_2
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit_2
+    assert (
+        state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == automatic_unit_2
+    )
 
     entry = entity_registry.async_get(entity4_entity_id)
     assert "sensor.private" not in entry.options
@@ -3222,7 +3235,7 @@ async def test_suggested_unit_guard_valid_unit(
     # Unit of measurement should set to the suggested unit of measurement
     state = hass.states.get(entity.entity_id)
     assert float(state.state) == expect_value
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == suggested_unit
 
     # Assert the suggested unit of measurement is stored in the registry
     entry = entity_registry.async_get(entity.entity_id)

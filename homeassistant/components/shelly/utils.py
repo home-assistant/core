@@ -8,6 +8,7 @@ from aiohttp.web import Request, WebSocketResponse
 from aioshelly.ble import get_device_from_model_id
 from aioshelly.ble.manufacturer_data import parse_shelly_manufacturer_data
 from aioshelly.block_device import COAP, Block, BlockDevice
+from aioshelly.common import use_ssl
 from aioshelly.const import (
     BLOCK_GENERATIONS,
     BLU_TRV_IDENTIFIER,
@@ -28,12 +29,18 @@ from aioshelly.const import (
 from aioshelly.exceptions import NotInitialized
 from aioshelly.rpc_device import RpcDevice, WsServer
 from aioshelly.rpc_device.models import ShellyLedStripEffect
+from awesomeversion import AwesomeVersion
 from yarl import URL
 
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.const import CONF_MODEL, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
@@ -77,11 +84,12 @@ from .const import (
     SHIX3_1_INPUTS_EVENTS_TYPES,
     VIRTUAL_COMPONENTS,
     WALL_DISPLAY_RELEASE_URL,
+    WALL_DISPLAY_UI_MIN_FIRMWARE,
     All_LIGHT_TYPES,
 )
 
 if TYPE_CHECKING:
-    from .coordinator import ShellyConfigEntry
+    from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 
 
 @callback
@@ -587,6 +595,19 @@ def brightness_to_percentage(brightness: int) -> int:
     return int(100 * (brightness + 1) / 255)
 
 
+def is_rpc_wall_display_brightness_supported(
+    coordinator: ShellyRpcCoordinator,
+) -> bool:
+    """Return true if the device has a supported Wall Display brightness config."""
+    device = coordinator.device
+    return (
+        coordinator.model.startswith(SHELLY_WALL_DISPLAY_MODEL_PREFIX)
+        and "brightness" in device.config.get("ui", {})
+        and AwesomeVersion(device.shelly["ver"])
+        >= AwesomeVersion(WALL_DISPLAY_UI_MIN_FIRMWARE)
+    )
+
+
 def percentage_to_brightness(percentage: int) -> int:
     """Convert percentage to brightness level."""
     return round(255 * percentage / 100)
@@ -658,6 +679,18 @@ def get_host(host: str) -> str:
     return host
 
 
+def get_device_url(data: Mapping[str, Any]) -> str:
+    """Get the base URL of the device from config entry data."""
+    port = get_http_port(data)
+    return str(
+        URL.build(
+            scheme="https" if use_ssl(port) else "http",
+            host=data[CONF_HOST],
+            port=port,
+        )
+    )
+
+
 @callback
 def async_remove_shelly_rpc_entities(
     hass: HomeAssistant, domain: str, mac: str, keys: list[str]
@@ -668,6 +701,15 @@ def async_remove_shelly_rpc_entities(
         if entity_id := entity_reg.async_get_entity_id(domain, DOMAIN, f"{mac}-{key}"):
             LOGGER.debug("Removing entity: %s", entity_id)
             entity_reg.async_remove(entity_id)
+
+
+def get_virtual_component_view(component_config: dict[str, Any]) -> str:
+    """Return the view of a virtual component, the platform follows from it."""
+    # The Wall Display sends no meta and firmware 2.2.0 can leave out the view;
+    # without one only a button component gets an entity
+    ui = (component_config.get("meta") or {}).get("ui") or {}
+    view: str = ui.get("view", "button")
+    return view
 
 
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
@@ -681,9 +723,7 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
             k
             for k, v in config.items()
             if k.startswith(comp_type)
-            # default to button view if not set, workaround for Wall Display
-            and v.get("meta", {"ui": {"view": "button"}})["ui"]["view"]
-            in component["modes"]
+            and get_virtual_component_view(v) in component["modes"]
         )
 
     return ids
@@ -692,8 +732,7 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
 def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> bool:
     """Return true if the virtual component view match the platform."""
     component = DYNAMIC_COMPONENTS_MAP[platform]
-    view = config[key]["meta"]["ui"]["view"]
-    return view in component["modes"]
+    return get_virtual_component_view(config[key]) in component["modes"]
 
 
 def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
