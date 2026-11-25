@@ -4,10 +4,11 @@ import asyncio
 import logging
 from typing import Any, override
 
-from pyplexilent import Device, Plexilent, PlexilentError
+from pyplexilent import Device, Plexilent, PlexilentAuthError, PlexilentError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
@@ -44,6 +45,8 @@ class PlexilentCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         try:
             async with self._lock:
                 devices = await self.client.devices()
+        except PlexilentAuthError as err:
+            raise ConfigEntryAuthFailed from err
         except PlexilentError as err:
             raise UpdateFailed(f"Error talking to the Plexilent cloud: {err}") from err
         return {device.id: device for device in devices}

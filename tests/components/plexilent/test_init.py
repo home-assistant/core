@@ -9,6 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.plexilent.const import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -35,12 +36,37 @@ async def test_setup_retry_unload(
 async def test_setup_auth_failed(
     hass: HomeAssistant, client: MagicMock, entry: MockConfigEntry
 ) -> None:
-    """A rejected login at setup is handled as a failed update."""
+    """A rejected refresh token fails setup without retrying."""
     client.devices.side_effect = PlexilentAuthError
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_ERROR
     assert not hass.config_entries.flow.async_progress()
+
+
+async def test_poll_auth_failed(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A rejected refresh token makes lights unavailable and stops polling."""
+    entity_id = "light.gate"
+    await setup_integration(hass, entry)
+    assert hass.states.is_state(entity_id, STATE_ON)
+
+    client.devices.side_effect = PlexilentAuthError
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert client.devices.await_count == 2
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+    assert not hass.config_entries.flow.async_progress()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert client.devices.await_count == 2
 
 
 async def test_new_device(
