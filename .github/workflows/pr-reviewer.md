@@ -185,8 +185,8 @@ Read these files in `/tmp/gh-aw/agent/` instead of calling GitHub for the same d
   - `reviewed_head`: the commit of your last complete review, or null.
   - `reason`: why not to review, when set.
 - `pr.json`: number, title, body, author, head SHA, base branch and labels.
-- `pr.diff`: the PR diff, without test snapshot (`.ambr`) files.
-- `since-review.diff`: the changes on the PR branch since `reviewed_head`, in the files the PR changed then or changes now. Only when `review` is true and `reviewed_head` is set; missing when GitHub refused it. It also holds changes merged in from `dev` to those files: ignore those not in `pr.diff`.
+- `pr.diff`: the PR diff, with the test snapshot (`.ambr`) files last, or without them when they are too long to check.
+- `since-review.diff`: the changes on the PR branch since `reviewed_head`, in the files the PR changed then or changes now, test snapshots last as in `pr.diff`. Only when `review` is true and `reviewed_head` is set; missing when GitHub refused it. It also holds changes merged in from `dev` to those files: ignore those not in `pr.diff`.
 - `reviews.json`, `review-comments.json`, `issue-comments.json`: every review, review comment and PR conversation comment. In reviews and review comments, `ours: true` marks yours. A review of yours with `complete: false` was cut short before its body was posted. A review comment's `thread` is the ID of its thread's first comment.
 - `threads.json`: the resolved and outdated state of each review thread, by `thread`.
 
@@ -207,6 +207,7 @@ When `task.review` is false, post nothing, call `noop` with a one-line reason, a
 - Read the existing reviews and comments. Skip points already raised.
 - With earlier reviews of yours, also cut short ones: check each change you requested in them against the head. This makes it a re-review.
 - With a `reviewed_head`: review the changes in `since-review.diff` (all of `pr.diff` if it's missing).
+- Check the test snapshot changes last, after the code. Each must follow from the code changes: flag those that don't, such as a changed unique ID, entity name, unit or device class.
 
 ## Posting a review
 

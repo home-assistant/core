@@ -727,25 +727,47 @@ def test_already_reviewed(gh: FakeGh, collector: Collector) -> None:
     collector.assert_skipped(f"#{NUMBER} was already reviewed at {HEAD}")
 
 
-def test_pr_diff_without_snapshots(gh: FakeGh, collector: Collector) -> None:
-    """Test pr.diff drops the test snapshots and keeps the other files as is."""
+def test_snapshots_last(gh: FakeGh, collector: Collector) -> None:
+    """Test the test snapshots go last in pr.diff, the files otherwise as is."""
     init = file_diff("homeassistant/components/demo/__init__.py")
     sensor = file_diff(
         SENSOR, '+    _attr_name = "Température"\n\\ No newline at end of file'
     )
-    gh.reply(
-        COMPARE_HEAD,
-        Reply(
-            init
-            + file_diff(SNAPSHOT)
-            + sensor
-            + file_diff("tests/components/demo/snapshots/test_init.ambr")
-        ),
-    )
+    sensor_snapshot = file_diff(SNAPSHOT, "+  'state': 'Température',")
+    init_snapshot = file_diff("tests/components/demo/snapshots/test_init.ambr")
+    gh.reply(COMPARE_HEAD, Reply(init + sensor_snapshot + sensor + init_snapshot))
 
     collector.run()
 
-    assert (collector.out_dir / "pr.diff").read_bytes() == init + sensor
+    assert (
+        collector.out_dir / "pr.diff"
+    ).read_bytes() == init + sensor + sensor_snapshot + init_snapshot
+
+
+def snapshot_diff(lines: int) -> bytes:
+    """Return a diff of the snapshot file with the given number of lines."""
+    # file_diff adds 5 header lines and 1 context line.
+    return file_diff(SNAPSHOT, "\n".join(["+  'state': '21.5',"] * (lines - 6)))
+
+
+@pytest.mark.parametrize(
+    ("lines", "kept"),
+    [
+        pytest.param(collect.MAX_SNAPSHOT_DIFF_LINES, True, id="at-limit"),
+        pytest.param(collect.MAX_SNAPSHOT_DIFF_LINES + 1, False, id="over-limit"),
+    ],
+)
+def test_snapshots_size(
+    gh: FakeGh, collector: Collector, lines: int, kept: bool
+) -> None:
+    """Test the test snapshots are left out of pr.diff when too long to check."""
+    snapshots = snapshot_diff(lines)
+    gh.reply(COMPARE_HEAD, Reply(PR_DIFF + snapshots))
+
+    collector.run()
+
+    collector.assert_reviewed()
+    assert ((collector.out_dir / "pr.diff").read_bytes() == PR_DIFF + snapshots) is kept
 
 
 def test_only_snapshots(gh: FakeGh, collector: Collector) -> None:
@@ -756,7 +778,7 @@ def test_only_snapshots(gh: FakeGh, collector: Collector) -> None:
     collector.run()
 
     collector.assert_skipped(f"No diff for #{NUMBER} outside test snapshots")
-    assert (collector.out_dir / "pr.diff").read_bytes() == b""
+    assert not (collector.out_dir / "pr.diff").exists()
 
 
 @pytest.mark.usefixtures("earlier_review")
@@ -801,8 +823,44 @@ def test_re_review_function_context_changed(gh: FakeGh, collector: Collector) ->
 
 
 @pytest.mark.usefixtures("earlier_review")
+def test_re_review_snapshots_changed(gh: FakeGh, collector: Collector) -> None:
+    """Test a pull request that only changed test snapshots since our review is reviewed."""
+    gh.reply(COMPARE_HEAD, Reply(PR_DIFF + file_diff(SNAPSHOT, "+  'state': '21.5',")))
+    gh.reply(
+        COMPARE_REVIEWED,
+        Reply(PR_DIFF + file_diff(SNAPSHOT, "+  'state': '20.0',")),
+    )
+
+    collector.run()
+
+    collector.assert_reviewed(REVIEWED)
+
+
+@pytest.mark.usefixtures("earlier_review")
+def test_re_review_only_long_snapshots_changed(
+    gh: FakeGh, collector: Collector
+) -> None:
+    """Test a pull request that only changed test snapshots too long to check is skipped."""
+    gh.reply(
+        COMPARE_HEAD,
+        Reply(PR_DIFF + snapshot_diff(collect.MAX_SNAPSHOT_DIFF_LINES + 1)),
+    )
+    gh.reply(
+        COMPARE_REVIEWED,
+        Reply(PR_DIFF + file_diff(SNAPSHOT, "+  'state': '20.0',")),
+    )
+
+    collector.run()
+
+    collector.assert_skipped(f"The diff of #{NUMBER} is unchanged since {REVIEWED}")
+
+
+@pytest.mark.usefixtures("earlier_review")
 def test_since_review_diff_files(gh: FakeGh, collector: Collector) -> None:
-    """Test the diff since our review keeps only the files of the pull request."""
+    """Test the diff since our review keeps only the files of the pull request.
+
+    Its test snapshots go last.
+    """
     light = "homeassistant/components/demo/light.py"
     switch = "homeassistant/components/demo/switch.py"
     gh.reply(
@@ -816,14 +874,16 @@ def test_since_review_diff_files(gh: FakeGh, collector: Collector) -> None:
     in_pr_diff = file_diff(light)
     in_reviewed_diff = file_diff(switch, "-value = 2")
     in_both = file_diff(SENSOR, "-value = 3\n+value = 2")
+    snapshot = file_diff(SNAPSHOT, "+  'state': '21.5',")
     gh.reply(
         COMPARE_SINCE_REVIEW,
         Reply(
             in_pr_diff
+            + snapshot
             + in_reviewed_diff
             + in_both
             + file_diff("homeassistant/core.py")
-            + file_diff(SNAPSHOT, "+  'state': '21.5',")
+            + file_diff("tests/components/demo/snapshots/test_light.ambr")
         ),
     )
 
@@ -831,7 +891,39 @@ def test_since_review_diff_files(gh: FakeGh, collector: Collector) -> None:
 
     assert (
         collector.out_dir / "since-review.diff"
-    ).read_bytes() == in_pr_diff + in_reviewed_diff + in_both
+    ).read_bytes() == in_pr_diff + in_reviewed_diff + in_both + snapshot
+
+
+@pytest.mark.usefixtures("earlier_review")
+def test_since_review_diff_without_snapshots(gh: FakeGh, collector: Collector) -> None:
+    """Test the diff since our review leaves out the test snapshots when pr.diff does."""
+    gh.reply(
+        COMPARE_HEAD,
+        Reply(PR_DIFF + snapshot_diff(collect.MAX_SNAPSHOT_DIFF_LINES + 1)),
+    )
+    gh.reply(
+        COMPARE_SINCE_REVIEW,
+        Reply(SINCE_REVIEW_DIFF + file_diff(SNAPSHOT, "+  'state': '21.5',")),
+    )
+
+    collector.run()
+
+    assert (collector.out_dir / "pr.diff").read_bytes() == PR_DIFF
+    assert (collector.out_dir / "since-review.diff").read_bytes() == SINCE_REVIEW_DIFF
+
+
+@pytest.mark.usefixtures("earlier_review")
+def test_since_review_diff_long_snapshots(gh: FakeGh, collector: Collector) -> None:
+    """Test the diff since our review keeps the test snapshots of pr.diff, however long."""
+    gh.reply(COMPARE_HEAD, Reply(PR_DIFF + file_diff(SNAPSHOT, "+  'state': '21.5',")))
+    snapshots = snapshot_diff(collect.MAX_SNAPSHOT_DIFF_LINES + 1)
+    gh.reply(COMPARE_SINCE_REVIEW, Reply(SINCE_REVIEW_DIFF + snapshots))
+
+    collector.run()
+
+    assert (
+        collector.out_dir / "since-review.diff"
+    ).read_bytes() == SINCE_REVIEW_DIFF + snapshots
 
 
 @pytest.mark.usefixtures("earlier_review")

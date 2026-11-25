@@ -32,6 +32,7 @@ MARKER = "workflow_id: pr-reviewer,"
 COMPLETE_MARKER = "completed_review: true"
 MAX_CHANGED_LINES = 5000
 MAX_CHANGED_FILES = 100
+MAX_SNAPSHOT_DIFF_LINES = 4000
 FILE_DIFF_START = re.compile(rb"^(?=diff --git )", re.MULTILINE)
 INDEX_LINE = re.compile(rb"^index .*\n?", re.MULTILINE)
 HUNK_RANGES = re.compile(rb"^@@ -[0-9,]+ \+[0-9,]+ @@", re.MULTILINE)
@@ -96,7 +97,7 @@ def diff_paths(diff: bytes) -> set[bytes]:
 
 
 def pr_diff(repo: str, base: str, head: str, paths: set[bytes] | None = None) -> bytes:
-    """Return the diff from base to head, as GitHub shows it, without test snapshots.
+    """Return the diff from base to head, as GitHub shows it.
 
     With paths, only the diffs of those files are kept.
     """
@@ -108,9 +109,25 @@ def pr_diff(repo: str, base: str, head: str, paths: set[bytes] | None = None) ->
     return b"".join(
         file_diff
         for file_diff in FILE_DIFF_START.split(diff)
-        if not diff_path(file_diff).endswith(b".ambr")
-        and (paths is None or diff_path(file_diff) in paths)
+        if paths is None or diff_path(file_diff) in paths
     )
+
+
+def split_snapshots(diff: bytes) -> tuple[bytes, bytes]:
+    """Split a diff into that of the code and that of the test snapshots."""
+    code: list[bytes] = []
+    snapshots: list[bytes] = []
+    for file_diff in FILE_DIFF_START.split(diff):
+        (snapshots if diff_path(file_diff).endswith(b".ambr") else code).append(
+            file_diff
+        )
+    return b"".join(code), b"".join(snapshots)
+
+
+def review_diff(diff: bytes, with_snapshots: bool) -> bytes:
+    """Return a diff with its test snapshots last, or without them."""
+    code_diff, snapshot_diff = split_snapshots(diff)
+    return code_diff + snapshot_diff if with_snapshots else code_diff
 
 
 def diff_id(diff: bytes) -> str:
@@ -272,22 +289,29 @@ def collect(
         raise Skip(f"#{number} was already reviewed at {head_sha}")
 
     diff = pr_diff(repo, base, head_sha)
-    (out / "pr.diff").write_bytes(diff)
-    if not diff:
+    code_diff, snapshot_diff = split_snapshots(diff)
+    if not code_diff:
         raise Skip(f"No diff for #{number} outside test snapshots")
+    # The review leaves out test snapshots too long to check.
+    with_snapshots = snapshot_diff.count(b"\n") <= MAX_SNAPSHOT_DIFF_LINES
+    (out / "pr.diff").write_bytes(review_diff(diff, with_snapshots))
     if reviewed_head:
         # Merges from dev bring in changes to any file: keep the PR's files, then and now.
         paths = diff_paths(diff)
         # A diff GitHub refuses counts as changed.
         with suppress(subprocess.CalledProcessError):
             reviewed_diff = pr_diff(repo, base, reviewed_head)
-            # Only dev merged in since the last review: the pull request's diff is unchanged.
-            if diff_id(reviewed_diff) == diff_id(diff):
+            # Only dev merged in since the last review: the diff to review is unchanged.
+            if diff_id(review_diff(reviewed_diff, with_snapshots)) == diff_id(
+                review_diff(diff, with_snapshots)
+            ):
                 raise Skip(f"The diff of #{number} is unchanged since {reviewed_head}")
             paths |= diff_paths(reviewed_diff)
         with suppress(subprocess.CalledProcessError):
             (out / "since-review.diff").write_bytes(
-                pr_diff(repo, reviewed_head, head_sha, paths)
+                review_diff(
+                    pr_diff(repo, reviewed_head, head_sha, paths), with_snapshots
+                )
             )
     return head_sha, reviewed_head
 
