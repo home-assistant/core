@@ -239,6 +239,7 @@ homeassistant.components.flexit.*
 homeassistant.components.flexit_bacnet.*
 homeassistant.components.flic_button.*
 homeassistant.components.flow_it.*
+homeassistant.components.fluss.*
 homeassistant.components.flux_led.*
 homeassistant.components.folder_watcher.*
 homeassistant.components.foreca.*

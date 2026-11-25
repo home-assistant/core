@@ -62,7 +62,8 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
         if device_id in self._status_errors:
             self._status_errors.discard(device_id)
             LOGGER.info("Status for %s is available again", device_id)
-        return response["status"]
+        status: dict[str, Any] = response["status"]
+        return status
 
     @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
