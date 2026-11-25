@@ -209,6 +209,43 @@ def _add_water_valve_notification_values(node_state: NodeDataType) -> NodeDataTy
     return updated_state
 
 
+def _add_water_alarm_notification_values(node_state: NodeDataType) -> NodeDataType:
+    """Return a node state with more Water Alarm notification values."""
+    updated_state = copy.deepcopy(node_state)
+    sensor_status_value = next(
+        value_data
+        for value_data in updated_state["values"]
+        if value_data.get("commandClass") == 113
+        and value_data.get("property") == "Water Alarm"
+        and value_data.get("propertyKey") == "Sensor status"
+    )
+    for property_key, states in (
+        ("Maintenance status", {"0": "idle", "5": "Replace water filter"}),
+        # zwave-js replaces the state id with the enum values for these variables.
+        (
+            "Water flow alarm status",
+            {
+                "0": "idle",
+                "1": "No data",
+                "2": "Below low threshold",
+                "3": "Above high threshold",
+                "4": "Max",
+            },
+        ),
+        (
+            "Pump status",
+            {"0": "idle", "10": "Sump pump active", "11": "Sump pump failure"},
+        ),
+    ):
+        value_data = copy.deepcopy(sensor_status_value)
+        value_data["propertyKey"] = value_data["propertyKeyName"] = property_key
+        value_data["metadata"]["label"] = property_key
+        value_data["metadata"]["states"] = states
+        value_data["value"] = 0
+        updated_state["values"].append(value_data)
+    return updated_state
+
+
 def _set_opening_state_metadata_states(
     node_state: dict[str, Any], states: dict[str, str]
 ) -> dict[str, Any]:
@@ -1803,6 +1840,152 @@ async def test_co2_gas_notification_sensors_state_update(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
+
+
+@pytest.fixture(name="zooz_zac36_water_alarm")
+def zooz_zac36_water_alarm_fixture(
+    client: MagicMock, zooz_zac36_titan_valve_actuator_state: NodeDataType
+) -> Node:
+    """Load Zooz ZAC36 Titan valve actuator node with more Water Alarm values."""
+    node = Node(
+        client,
+        _add_water_alarm_notification_values(zooz_zac36_titan_valve_actuator_state),
+    )
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "device_class", "entity_category"),
+    [
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_water_leak_detected",
+            BinarySensorDeviceClass.MOISTURE,
+            None,
+            id="water_leak_detected",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_below_low_threshold",
+            BinarySensorDeviceClass.MOISTURE,
+            None,
+            id="water_flow_alarm_below_low_threshold",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_sump_pump_active",
+            BinarySensorDeviceClass.MOISTURE,
+            None,
+            id="sump_pump_active",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_sump_pump_failure",
+            BinarySensorDeviceClass.PROBLEM,
+            EntityCategory.DIAGNOSTIC,
+            id="sump_pump_failure",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_replace_water_filter",
+            None,
+            EntityCategory.DIAGNOSTIC,
+            id="replace_water_filter",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("zooz_zac36_water_alarm", "integration")
+async def test_water_alarm_notification_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    device_class: BinarySensorDeviceClass | None,
+    entity_category: EntityCategory | None,
+) -> None:
+    """Test Water Alarm notification sensors."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is entity_category
+    assert entity_entry.disabled_by is None
+
+
+@pytest.mark.usefixtures("zooz_zac36_water_alarm", "integration")
+async def test_water_alarm_notification_sensors_count(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that only non-idle states create Water Alarm entities."""
+    assert (
+        len(
+            [
+                entry
+                for entry in entity_registry.entities.values()
+                if entry.domain == BINARY_SENSOR_DOMAIN
+                and "-113-0-Water Alarm-" in entry.unique_id
+            ]
+        )
+        == 8
+    )
+
+
+@pytest.mark.parametrize(
+    ("property_key", "new_value", "entity_id"),
+    [
+        pytest.param(
+            "Sensor status",
+            2,
+            "binary_sensor.titan_water_valve_actuator_water_leak_detected",
+            id="water_leak_detected",
+        ),
+        pytest.param(
+            "Pump status",
+            11,
+            "binary_sensor.titan_water_valve_actuator_sump_pump_failure",
+            id="sump_pump_failure",
+        ),
+    ],
+)
+async def test_water_alarm_notification_sensors_state_update(
+    hass: HomeAssistant,
+    zooz_zac36_water_alarm: Node,
+    integration: MockConfigEntry,
+    property_key: str,
+    new_value: int,
+    entity_id: str,
+) -> None:
+    """Test Water Alarm notification sensors turn on and off for their state."""
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    for prev_value, value, expected_state in (
+        (0, new_value, STATE_ON),
+        (new_value, 0, STATE_OFF),
+    ):
+        zooz_zac36_water_alarm.receive_event(
+            Event(
+                type="value updated",
+                data={
+                    "source": "node",
+                    "event": "value updated",
+                    "nodeId": zooz_zac36_water_alarm.node_id,
+                    "args": {
+                        "commandClassName": "Notification",
+                        "commandClass": 113,
+                        "endpoint": 0,
+                        "property": "Water Alarm",
+                        "propertyKey": property_key,
+                        "newValue": value,
+                        "prevValue": prev_value,
+                        "propertyName": "Water Alarm",
+                        "propertyKeyName": property_key,
+                    },
+                },
+            )
+        )
+        await hass.async_block_till_done()
+
+        assert (state := hass.states.get(entity_id))
+        assert state.state == expected_state
 
 
 async def test_hoppe_ehandle_connectsense(
