@@ -115,11 +115,13 @@ class Light(HomeAccessory):
             self.chars.append(CHAR_COLOR_TEMPERATURE)
 
         # Adaptive lighting transitions both brightness and colour temperature,
-        # so it is only offered when the light supports both.
+        # so it is only offered when the light can really change its colour
+        # temperature. WHITE and RGBW lights also get the characteristic, but
+        # with a single value, so there is no curve to follow.
         self._adaptive_lighting_enabled = bool(
             self.config.get(CONF_ADAPTIVE_LIGHTING)
             and self.brightness_supported
-            and CHAR_COLOR_TEMPERATURE in self.chars
+            and (self.color_temp_supported or self.rgbww_supported)
         )
         if self._adaptive_lighting_enabled:
             self.chars.extend(ADAPTIVE_LIGHTING_CHARS)

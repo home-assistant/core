@@ -255,6 +255,35 @@ async def test_adaptive_lighting_is_off_without_the_option(
     assert acc.adaptive_lighting is None
 
 
+@pytest.mark.parametrize(
+    ("color_mode", "adaptive_offered"),
+    [
+        (ColorMode.COLOR_TEMP, True),
+        (ColorMode.RGBWW, True),
+        (ColorMode.RGBW, False),
+        (ColorMode.WHITE, False),
+    ],
+)
+async def test_adaptive_lighting_needs_an_adjustable_colour_temperature(
+    hass: HomeAssistant, hk_driver, color_mode: ColorMode, adaptive_offered: bool
+) -> None:
+    """WHITE and RGBW lights only select the white channel, so there is no curve."""
+    hass.states.async_set(
+        "light.demo",
+        STATE_ON,
+        {
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [color_mode],
+            LightEntityStateAttribute.BRIGHTNESS: 255,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Light(
+        hass, hk_driver, "Light", "light.demo", 1, {CONF_ADAPTIVE_LIGHTING: True}
+    )
+
+    assert (acc.adaptive_lighting is not None) is adaptive_offered
+
+
 async def test_a_failed_write_is_sent_again_at_the_same_point(
     hass: HomeAssistant, hk_driver
 ) -> None:
