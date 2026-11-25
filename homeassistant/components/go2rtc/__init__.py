@@ -11,7 +11,7 @@ from secrets import token_hex
 import shutil
 from tempfile import mkdtemp
 from typing import override
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 
 from aiohttp import ClientSession, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
@@ -135,6 +135,8 @@ CONFIG_SCHEMA = probatio.Schema(
 _DATA_GO2RTC: HassKey[Go2RtcConfig] = HassKey(DOMAIN)
 _RETRYABLE_ERRORS = (ClientConnectionError, ServerConnectionError)
 # Seconds before each retry of the stream updates, the last repeating
+# Time limit for one camera's stream update, after which it's retried
+_UPDATE_TIMEOUT = 10
 _UPDATE_RETRY_DELAYS = (5, 15, 30, 60, 300)
 type Go2RtcConfigEntry = ConfigEntry[WebRTCProvider]
 
@@ -338,6 +340,11 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._supported_schemes: set[str] = set()
         self._added_stream_sources: dict[str, str] = {}
         self._restreamed_cameras: dict[str, Camera] = {}
+        # The sources last added to go2rtc per camera: once running, go2rtc
+        # reports a source's connection, not the source that was added
+        self._added_sources: dict[str, list[str]] = {}
+        self._stopping = False
+        self._rerun_updates = False
         self._stream_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
         # Cameras whose go2rtc stream must be updated, and the retry state
         self._pending_updates: dict[str, Camera] = {}
@@ -478,6 +485,8 @@ class WebRTCProvider(CameraWebRTCProvider):
     @callback
     def async_restore_restreams(self) -> None:
         """Add the restreams again to the managed server, which restarted."""
+        # The restarted server has none of the sources added before
+        self._added_sources.clear()
         self._pending_updates.update(self._restreamed_cameras)
         self._start_updates()
 
@@ -496,13 +505,22 @@ class WebRTCProvider(CameraWebRTCProvider):
 
     @callback
     def _start_updates(self, *, retry: bool = False) -> None:
-        """Start the pending stream updates, in place of any earlier attempt.
+        """Start the pending stream updates.
 
-        Each attempt reads the cameras' current sources, so the latest wins.
+        Each attempt reads the cameras' current sources, so the latest wins. A
+        running attempt isn't cancelled, as go2rtc may already have its write,
+        but runs again once done.
         """
-        self._stop_updates()
+        if self._stopping:
+            return
         if not retry:
             self._update_attempt = 0
+        if self._update_task and not self._update_task.done():
+            self._rerun_updates = True
+            return
+        if self._cancel_update_retry:
+            self._cancel_update_retry()
+            self._cancel_update_retry = None
         self._update_task = self._hass.async_create_task(
             self._async_update_pending(), "go2rtc stream updates"
         )
@@ -523,25 +541,11 @@ class WebRTCProvider(CameraWebRTCProvider):
         HLS and recording keep reading a restream without asking for it again,
         so a failure is retried until it succeeds.
         """
-        failed: list[str] = []
-        for identifier, camera in list(self._pending_updates.items()):
-            if identifier not in self._pending_updates:
-                # Unregistered while an earlier camera was updated
-                continue
-            try:
-                async with self._stream_locks[identifier]:
-                    # Only a stream go2rtc has; others get the current source
-                    # when they are next used
-                    if (
-                        identifier in self._restreamed_cameras
-                        or identifier in self._added_stream_sources
-                    ):
-                        await self._update_stream_source_locked(camera)
-            except Go2RtcClientError, HomeAssistantError, TimeoutError:
-                # Not logged, as the error can carry the source's credentials
-                failed.append(camera.entity_id)
-                continue
-            self._pending_updates.pop(identifier, None)
+        while True:
+            self._rerun_updates = False
+            failed = await self._async_update_pending_once()
+            if not self._rerun_updates:
+                break
         self._update_task = None
         if not failed:
             if self._update_attempt:
@@ -560,6 +564,39 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._cancel_update_retry = async_call_later(
             self._hass, delay, self._async_retry_updates
         )
+
+    async def _async_update_pending_once(self) -> list[str]:
+        """Update each pending camera's stream, returning those that failed."""
+        failed: list[str] = []
+        for identifier in list(self._pending_updates):
+            # Taken off first, so a change during the update is kept for the
+            # next run
+            if (camera := self._pending_updates.pop(identifier, None)) is None:
+                # Unregistered while an earlier camera was updated
+                continue
+            try:
+                # A stalled camera mustn't hold up the others
+                async with (
+                    asyncio.timeout(_UPDATE_TIMEOUT),
+                    self._stream_locks[identifier],
+                ):
+                    # Only a stream go2rtc has; others get the current source
+                    # when they are next used
+                    if (
+                        identifier in self._restreamed_cameras
+                        or identifier in self._added_stream_sources
+                    ):
+                        await self._update_stream_source_locked(camera)
+            except Go2RtcClientError, HomeAssistantError, TimeoutError:
+                # Not logged, as the error can carry the source's credentials
+                failed.append(camera.entity_id)
+                # Unless unregistered meanwhile
+                if (
+                    identifier in self._restreamed_cameras
+                    or identifier in self._added_stream_sources
+                ):
+                    self._pending_updates.setdefault(identifier, camera)
+        return failed
 
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""
@@ -635,25 +672,69 @@ class WebRTCProvider(CameraWebRTCProvider):
         # FFmpeg reads go2rtc's restream instead (async_get_stream_source),
         # with AAC audio transcoded only while someone reads it. A camera that
         # gained a source of its own may still have a worker reading it.
-        if not ffmpeg_source or identifier in self._restreamed_cameras:
+        # Only the managed server restreams
+        if self._managed and (
+            not ffmpeg_source or identifier in self._restreamed_cameras
+        ):
             sources.append(aac_source)
 
         streams = await self._rest_client.streams.list()
 
-        if (
-            (stream := streams.get(identifier)) is None
-            or not any(
-                self._is_added_stream_source(identifier, stream_source, producer.url)
+        if (stream := streams.get(identifier)) is None:
+            add = True
+        elif (added := self._added_sources.get(identifier)) is not None:
+            # Also when go2rtc has a source that isn't ours, e.g. one changed
+            # outside Home Assistant
+            add = added != sources or not all(
+                self._is_own_producer(identifier, stream_source, sources, producer.url)
                 for producer in stream.producers
             )
-            # The AAC transcode must follow whether FFmpeg may read the restream
-            or (aac_source in sources)
-            != any(producer.url == aac_source for producer in stream.producers)
-        ):
+        else:
+            # Not added by this provider, e.g. after a reload: compare with the
+            # sources go2rtc has, which are reported as added until they run
+            add = not any(
+                self._is_added_stream_source(identifier, stream_source, producer.url)
+                for producer in stream.producers
+            ) or (aac_source in sources) != any(
+                producer.url == aac_source for producer in stream.producers
+            )
+        if add:
             await self._rest_client.streams.add(identifier, sources)
         # Also when go2rtc has the stream already, e.g. after a reload, so
         # later source changes reach it
         self._added_stream_sources[identifier] = stream_source
+        self._added_sources[identifier] = sources
+
+    def _is_own_producer(
+        self,
+        identifier: str,
+        stream_source: str,
+        sources: list[str],
+        producer_url: str | None,
+    ) -> bool:
+        """Return if a producer go2rtc reports is one of the sources added.
+
+        go2rtc reports a running source as its connection: without a URL for
+        some native sources, or with the URL FFmpeg reads, which is go2rtc's own
+        restream for a transcode of the stream.
+        """
+        if not producer_url or producer_url in sources:
+            return True
+        if self._is_added_stream_source(identifier, stream_source, producer_url):
+            return True
+        url = urlparse(producer_url)
+        if (
+            url.scheme == "rtsp"
+            and url.hostname in ("127.0.0.1", "localhost")
+            and url.path == f"/{identifier}"
+        ):
+            return True
+        # The input of an FFmpeg source, e.g. one transformed for orientation
+        return any(
+            producer_url == source.removeprefix(f"{_FFMPEG}:").partition("#")[0]
+            for source in sources
+            if source.startswith(f"{_FFMPEG}:")
+        )
 
     def _is_added_stream_source(
         self, identifier: str, stream_source: str, producer_url: str
@@ -696,6 +777,8 @@ class WebRTCProvider(CameraWebRTCProvider):
 
     async def teardown(self) -> None:
         """Tear down the provider."""
+        # A restart signalled while this waits mustn't start another attempt
+        self._stopping = True
         task = self._update_task
         self._stop_updates()
         if task:
@@ -726,6 +809,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         # lock stays, so a camera registered again under the identifier uses it
         async with self._stream_locks[identifier]:
             self._added_stream_sources.pop(identifier, None)
+            self._added_sources.pop(identifier, None)
             self._restreamed_cameras.pop(identifier, None)
         if identifier in await self._rest_client.preload.list():
             await self._rest_client.preload.disable(identifier)

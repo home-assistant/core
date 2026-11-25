@@ -595,9 +595,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 # The camera has a native WebRTC implementation
                 frontend_stream_types.add(StreamType.WEB_RTC)
             else:
-                # Without the stream integration, which may load after the
-                # camera, media players fall back to the MJPEG proxy, as before
-                # the provider could restream the camera
+                # HLS of a provider's restream needs the stream integration,
+                # which may load after the camera; without it, media players
+                # use the MJPEG proxy
                 if self._supports_hls and (
                     not self._hls_needs_restream
                     or "stream" in self.hass.config.components

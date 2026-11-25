@@ -280,7 +280,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             stream_prefs = await prefs.get_dynamic_stream_settings(camera.entity_id)
             if not stream_prefs.preload_stream:
                 continue
-            stream = await camera.async_create_stream()
+            try:
+                stream = await camera.async_create_stream()
+            except HomeAssistantError as err:
+                # One camera's stream, e.g. a WebRTC provider's restream, mustn't
+                # stop the others from preloading
+                _LOGGER.warning(
+                    "Unable to preload stream of %s: %s", camera.entity_id, err
+                )
+                continue
             if not stream:
                 continue
             stream.add_provider("hls")
