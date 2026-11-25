@@ -3157,11 +3157,18 @@ async def test_light_area_same_name(
 
 @pytest.mark.usefixtures("init_components")
 @pytest.mark.parametrize(
-    ("named_light_name", "named_light_area", "text", "expected_entity_ids"),
+    (
+        "named_light_name",
+        "named_light_area",
+        "named_light_device_area",
+        "text",
+        "expected_entity_ids",
+    ),
     [
         pytest.param(
             "light",
             "bedroom",
+            None,
             "turn on the light",
             {"light.named"},
             id="implicit_area_name_inside",
@@ -3169,6 +3176,7 @@ async def test_light_area_same_name(
         pytest.param(
             "light",
             "kitchen",
+            None,
             "turn on the light",
             {"light.bedroom_ceiling"},
             id="implicit_area_name_outside",
@@ -3176,13 +3184,23 @@ async def test_light_area_same_name(
         pytest.param(
             "light",
             None,
+            None,
             "turn on the light",
             {"light.bedroom_ceiling"},
             id="implicit_area_name_unassigned",
         ),
         pytest.param(
             "light",
+            None,
+            "bedroom",
+            "turn on the light",
+            {"light.named"},
+            id="implicit_area_name_inside_device",
+        ),
+        pytest.param(
+            "light",
             "kitchen",
+            None,
             "turn on the kitchen light",
             {"light.named"},
             id="spoken_area_name_inside",
@@ -3190,6 +3208,7 @@ async def test_light_area_same_name(
         pytest.param(
             "light",
             "bedroom",
+            None,
             "turn on the kitchen light",
             {"light.kitchen_ceiling"},
             id="spoken_area_name_outside",
@@ -3197,6 +3216,7 @@ async def test_light_area_same_name(
         pytest.param(
             "light",
             "kitchen",
+            None,
             "turn on the light on the downstairs floor",
             {"light.named"},
             id="spoken_floor_name_inside",
@@ -3204,6 +3224,7 @@ async def test_light_area_same_name(
         pytest.param(
             "light",
             "bedroom",
+            None,
             "turn on the light on the downstairs floor",
             {"light.kitchen_ceiling"},
             id="spoken_floor_name_outside",
@@ -3211,6 +3232,7 @@ async def test_light_area_same_name(
         pytest.param(
             "kitchen light",
             "bedroom",
+            None,
             "turn on the kitchen light",
             {"light.named"},
             id="spoken_area_in_name_outside",
@@ -3218,6 +3240,7 @@ async def test_light_area_same_name(
         pytest.param(
             "desk",
             "kitchen",
+            None,
             "turn on the desk",
             {"light.named"},
             id="no_alternative",
@@ -3227,10 +3250,12 @@ async def test_light_area_same_name(
 async def test_name_match_scope(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     floor_registry: fr.FloorRegistry,
     named_light_name: str,
     named_light_area: str | None,
+    named_light_device_area: str | None,
     text: str,
     expected_entity_ids: set[str],
 ) -> None:
@@ -3245,10 +3270,19 @@ async def test_name_match_scope(
     area_registry.async_update(area_bedroom.id, floor_id=floor_upstairs.floor_id)
     area_ids = {"kitchen": area_kitchen.id, "bedroom": area_bedroom.id, None: None}
 
-    for object_id, name, area_id in (
-        ("kitchen_ceiling", "kitchen ceiling", area_kitchen.id),
-        ("bedroom_ceiling", "bedroom ceiling", area_bedroom.id),
-        ("named", named_light_name, area_ids[named_light_area]),
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    named_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("demo", "named")}
+    )
+    device_registry.async_update_device(
+        named_device.id, area_id=area_ids[named_light_device_area]
+    )
+
+    for object_id, name, area_id, device_id in (
+        ("kitchen_ceiling", "kitchen ceiling", area_kitchen.id, None),
+        ("bedroom_ceiling", "bedroom ceiling", area_bedroom.id, None),
+        ("named", named_light_name, area_ids[named_light_area], named_device.id),
     ):
         entry = entity_registry.async_get_or_create(
             "light",
@@ -3256,8 +3290,12 @@ async def test_name_match_scope(
             object_id,
             suggested_object_id=object_id,
             original_name=name,
+            device_id=device_id,
         )
-        entity_registry.async_update_entity(entry.entity_id, area_id=area_id)
+        # The alias keeps the device name out of the name of the entity
+        entity_registry.async_update_entity(
+            entry.entity_id, area_id=area_id, aliases=[name]
+        )
         hass.states.async_set(entry.entity_id, STATE_OFF, {ATTR_FRIENDLY_NAME: name})
 
     satellite = entity_registry.async_get_or_create("assist_satellite", "demo", "sat")

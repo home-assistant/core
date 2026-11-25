@@ -501,6 +501,9 @@ class DefaultAgent(ConversationEntity):
         if response is None:
             # Match intents
             intent_results = await self.async_recognize_intents(user_input)
+
+            # A result with unmatched entities is never returned with others,
+            # so the first one is enough to decide on the gazetteer
             intent_result = intent_results[0] if intent_results else None
 
             if intent_result is None or intent_result.unmatched_entities:
