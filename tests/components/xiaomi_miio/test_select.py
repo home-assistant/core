@@ -170,8 +170,8 @@ async def test_select_led_brightness_reversed_models(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_OPTION: "bright", ATTR_ENTITY_ID: entity_id},
+        SelectService.SELECT_OPTION,
+        {SelectServiceArgument.OPTION: "bright", TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -183,8 +183,8 @@ async def test_select_led_brightness_reversed_models(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_OPTION: "dim", ATTR_ENTITY_ID: entity_id},
+        SelectService.SELECT_OPTION,
+        {SelectServiceArgument.OPTION: "dim", TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
