@@ -8,13 +8,19 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from pydanfossair.commands import ReadCommand
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.components.danfoss_air.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
+
+YAML_CONFIG = {DOMAIN: {CONF_HOST: "192.0.2.1"}}
 
 
 async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
@@ -48,12 +54,13 @@ def _unavailable(hass: HomeAssistant) -> list[str]:
 
 async def test_unavailable_when_connection_lost(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     mock_danfoss_client: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test entities go unavailable when the CCM is unreachable, and recover."""
-    await setup_integration(hass)
+    await setup_integration(hass, mock_config_entry)
     await _poll(hass, freezer)
     entity_ids = hass.states.async_entity_ids()
     assert entity_ids
@@ -102,6 +109,7 @@ AUTOMATIC_BYPASS = "switch.danfoss_air_automatic_bypass"
 )
 async def test_overlapping_polls_wait_for_fetch(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     mock_danfoss_client: MagicMock,
     connected_before: bool,
@@ -110,7 +118,7 @@ async def test_overlapping_polls_wait_for_fetch(
 ) -> None:
     """Test entities polled during a fetch get the outcome of that fetch."""
     read_values = mock_danfoss_client.command.side_effect
-    await setup_integration(hass)
+    await setup_integration(hass, mock_config_entry)
     if not connected_before:
         mock_danfoss_client.command.side_effect = OSError("No route to host")
     await _poll(hass, freezer)
@@ -150,3 +158,95 @@ async def test_overlapping_polls_wait_for_fetch(
     )
     # Both polls shared one fetch.
     assert _fetch_count(mock_danfoss_client) == fetches_before + 1
+
+
+@pytest.mark.usefixtures("mock_danfoss_client")
+async def test_load_unload_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test loading and unloading the config entry."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(HUMIDITY).state == "57.25"
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_entry_not_ready(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_danfoss_client: MagicMock,
+) -> None:
+    """Test setup is retried when the CCM module cannot be reached."""
+    mock_danfoss_client.command.side_effect = OSError("No route to host")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_danfoss_client")
+async def test_import_from_yaml(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the YAML configuration is imported and a deprecation issue is raised."""
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data == {CONF_HOST: "192.0.2.1"}
+    assert entries[0].state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+
+
+@pytest.mark.usefixtures("mock_danfoss_client")
+async def test_import_from_yaml_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an already imported YAML configuration only raises the deprecation issue."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        (OSError("No route to host"), "cannot_connect"),
+        (ValueError("Unexpected"), "unknown"),
+    ],
+)
+async def test_import_from_yaml_fails(
+    hass: HomeAssistant,
+    mock_danfoss_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    side_effect: Exception,
+    reason: str,
+) -> None:
+    """Test a failed YAML import raises an import issue instead of the deprecation issue."""
+    mock_danfoss_client.command.side_effect = side_effect
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == []
+    assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_yaml_import_issue_{reason}"
+    )

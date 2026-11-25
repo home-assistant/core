@@ -1,10 +1,14 @@
 """Fixtures for the Danfoss Air tests."""
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pydanfossair.commands import ReadCommand, UpdateCommand
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.components.danfoss_air.const import DOMAIN
+from homeassistant.const import CONF_HOST
 
 # Register values as reported by a Danfoss Air A2, keyed by ReadCommand name.
 READ_VALUES: dict[str, float | bool] = {
@@ -35,10 +39,33 @@ def _command(command: ReadCommand | UpdateCommand) -> float | bool:
 
 @pytest.fixture
 def mock_danfoss_client() -> Generator[MagicMock]:
-    """Mock the pydanfossair client."""
-    with patch(
-        "homeassistant.components.danfoss_air.DanfossClient", autospec=True
-    ) as mock_client:
+    """Mock the pydanfossair client in the integration and the config flow."""
+    with (
+        patch(
+            "homeassistant.components.danfoss_air.DanfossClient", autospec=True
+        ) as mock_client,
+        patch(
+            "homeassistant.components.danfoss_air.config_flow.DanfossClient",
+            new=mock_client,
+        ),
+    ):
         client = mock_client.return_value
         client.command.side_effect = _command
         yield client
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a Danfoss Air config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN, title="Danfoss Air", data={CONF_HOST: "192.0.2.1"}
+    )
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Skip setting up the config entry."""
+    with patch(
+        "homeassistant.components.danfoss_air.async_setup_entry", return_value=None
+    ) as mock_setup:
+        yield mock_setup

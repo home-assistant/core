@@ -1,0 +1,31 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Danfoss Air CCM module."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure the Danfoss Air CCM module is reachable and restart Home Assistant to try again, or remove the `{domain}` configuration from your `configuration.yaml` and set up the integration through the UI.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error importing your YAML configuration.\n\nRemove the `{domain}` configuration from your `configuration.yaml` and set up the integration through the UI.",
+      "title": "The {integration_title} YAML configuration import failed"
+    }
+  }
+}
