@@ -518,6 +518,36 @@ async def test_legacy_entry_waits_for_a_lamp_it_had_set_up(
     assert _flows_in_progress(hass) == NEW_LAMP_FLOWS
 
 
+async def test_pending_legacy_entry_does_not_hold_back_other_lamps(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a new lamp is offered while the legacy entry waits for its own lamps."""
+
+    await setup_light(hass, mock_govee_api)
+    legacy_entry = create_legacy_entry(hass)
+    _register_legacy_light(
+        device_registry,
+        entity_registry,
+        legacy_entry,
+        create_device(mock_govee_api, ip="192.168.1.102", fingerprint="offline"),
+    )
+    await hass.config_entries.async_setup(legacy_entry.entry_id)
+    assert legacy_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+    scan_reply(
+        mock_govee_api,
+        create_device(
+            mock_govee_api, ip="192.168.1.101", fingerprint="new_lamp", sku="H615B"
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert _flows_in_progress(hass) == NEW_LAMP_FLOWS
+
+
 async def test_user_scan_leaves_lamps_to_the_pending_legacy_entry(
     hass: HomeAssistant,
     mock_govee_api: AsyncMock,
@@ -572,13 +602,23 @@ async def test_disabled_legacy_entry_keeps_its_lamps(
     )
     await setup_light(hass, mock_govee_api)
 
-    scan_reply(mock_govee_api, owned)
+    assert not scan_reply(mock_govee_api, owned)
     scan_reply(mock_govee_api, new_device)
     await hass.async_block_till_done()
 
+    assert owned not in mock_govee_api.devices
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert [flow["context"]["unique_id"] for flow in flows] == ["new_lamp"]
+    assert _flows_in_progress(hass) == NEW_LAMP_FLOWS
+
+    # Once the disabled entry is gone, its lamp is offered like a new one.
+    assert await hass.config_entries.async_remove(legacy_entry.entry_id)
+    scan_reply(mock_govee_api, owned)
+    await hass.async_block_till_done()
+
+    assert (
+        config_entries.SOURCE_INTEGRATION_DISCOVERY,
+        "owned",
+    ) in _flows_in_progress(hass)
 
 
 async def test_scan_waits_for_late_replies(
@@ -613,6 +653,8 @@ async def test_scan_waits_for_late_replies(
 
     assert legacy_entry.unique_id == "asdawdqwdqwd"
     assert hass.states.get("light.h615a").state == STATE_OFF
+    # The lamp the entry took is not offered as well.
+    assert not _flows_in_progress(hass)
 
 
 async def test_remove_leftover_device(

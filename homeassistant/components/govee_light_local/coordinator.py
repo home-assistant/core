@@ -248,7 +248,8 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         entry = self.hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, fingerprint
         )
-        if entry is not None and (entry.source == SOURCE_IGNORE or entry.disabled_by):
+        owner = entry or self._async_get_registry_owner(fingerprint)
+        if owner is not None and (owner.source == SOURCE_IGNORE or owner.disabled_by):
             # Left untracked, so it counts as new once that entry is removed.
             self._controller.remove_device(device)
             return False
@@ -262,11 +263,30 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             # For a retrying entry the flow aborts, stores the address and
             # retries the entry now.
             and (entry is None or entry.state is ConfigEntryState.SETUP_RETRY)
-            # Its lamps are offered once it has become the entry of one of them.
-            and async_get_legacy_entry(self.hass) is None
+            # The entry being split offers what its scan finds once it has
+            # become the entry of one of the lamps.
+            and (
+                (legacy_entry := async_get_legacy_entry(self.hass)) is None
+                or legacy_entry.state is not ConfigEntryState.SETUP_IN_PROGRESS
+            )
         ):
             self._async_create_flow(device)
         return True
+
+    @callback
+    def _async_get_registry_owner(self, fingerprint: str) -> ConfigEntry | None:
+        """Return the entry that has the lamp in the device registry, if any."""
+        device_registry = dr.async_get(self.hass)
+        return next(
+            (
+                entry
+                for entry in self.hass.config_entries.async_entries(DOMAIN)
+                if device_registry.async_get_device_by_identifier(
+                    (DOMAIN, fingerprint), entry.entry_id
+                )
+            ),
+            None,
+        )
 
     @callback
     def async_offer_devices(self, devices: list[GoveeDevice]) -> bool:
@@ -291,19 +311,9 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
 
         Return False if the lamp is left to the entry that had set it up.
         """
-        device_registry = dr.async_get(self.hass)
-        owner = next(
-            (
-                entry
-                for entry in self.hass.config_entries.async_entries(DOMAIN)
-                if device_registry.async_get_device_by_identifier(
-                    (DOMAIN, device.fingerprint), entry.entry_id
-                )
-            ),
-            None,
-        )
-        if owner is not None and (owner.disabled_by or _is_legacy_entry(owner)):
-            # Its entry is disabled, or adds its lamps itself once it is split.
+        owner = self._async_get_registry_owner(device.fingerprint)
+        if owner is not None and _is_legacy_entry(owner):
+            # It adds its lamps itself once it is split.
             return False
         discovery_flow.async_create_flow(
             self.hass,
