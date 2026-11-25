@@ -495,7 +495,9 @@ async def test_domain_blueprints_load_only_in_folder(
 ) -> None:
     """Test a blueprint is not loaded from outside the blueprint folder."""
     with (
-        patch("homeassistant.util.yaml.load_yaml") as load_yaml,
+        patch(
+            "homeassistant.components.blueprint.models.yaml_util.load_yaml_dict"
+        ) as load_yaml,
         pytest.raises(errors.FailedToLoad, match="not in the blueprint folder"),
     ):
         await domain_bps.async_get_blueprint(blueprint_path)
