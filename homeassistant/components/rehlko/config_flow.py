@@ -81,9 +81,7 @@ class RehlkoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
         existing_data = reauth_entry.data
-        description_placeholders: dict[str, str] = {
-            CONF_EMAIL: existing_data[CONF_EMAIL]
-        }
+        description_placeholders: dict[str, str] = {"email": existing_data[CONF_EMAIL]}
         if user_input is not None:
             errors, _ = await self._async_validate_or_error(
                 {**existing_data, **user_input}

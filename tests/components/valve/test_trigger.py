@@ -3,12 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.valve import ATTR_IS_CLOSED, DOMAIN, ValveState
-from homeassistant.components.valve.trigger import TRIGGERS
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
@@ -21,36 +16,40 @@ from tests.components.common import (
     target_entities,
 )
 
+from homeassistant.components.valve import DOMAIN, ValveEntityStateAttribute, ValveState
+from homeassistant.components.valve.trigger import TRIGGERS
+from homeassistant.core import HomeAssistant
+
 TRIGGER_STATES = [
     *parametrize_trigger_states(
         trigger="valve.closed",
         target_states=[
-            (ValveState.CLOSED, {ATTR_IS_CLOSED: True}),
-            (ValveState.CLOSING, {ATTR_IS_CLOSED: True}),
-            (ValveState.OPENING, {ATTR_IS_CLOSED: True}),
+            (ValveState.CLOSED, {ValveEntityStateAttribute.IS_CLOSED: True}),
+            (ValveState.CLOSING, {ValveEntityStateAttribute.IS_CLOSED: True}),
+            (ValveState.OPENING, {ValveEntityStateAttribute.IS_CLOSED: True}),
         ],
         other_states=[
-            (ValveState.CLOSING, {ATTR_IS_CLOSED: False}),
-            (ValveState.OPEN, {ATTR_IS_CLOSED: False}),
-            (ValveState.OPENING, {ATTR_IS_CLOSED: False}),
+            (ValveState.CLOSING, {ValveEntityStateAttribute.IS_CLOSED: False}),
+            (ValveState.OPEN, {ValveEntityStateAttribute.IS_CLOSED: False}),
+            (ValveState.OPENING, {ValveEntityStateAttribute.IS_CLOSED: False}),
         ],
         extra_invalid_states=[
-            (ValveState.OPEN, {ATTR_IS_CLOSED: None}),
+            (ValveState.OPEN, {ValveEntityStateAttribute.IS_CLOSED: None}),
             (ValveState.OPEN, {}),
         ],
     ),
     *parametrize_trigger_states(
         trigger="valve.opened",
         target_states=[
-            (ValveState.OPEN, {ATTR_IS_CLOSED: False}),
-            (ValveState.OPENING, {ATTR_IS_CLOSED: False}),
-            (ValveState.CLOSING, {ATTR_IS_CLOSED: False}),
+            (ValveState.OPEN, {ValveEntityStateAttribute.IS_CLOSED: False}),
+            (ValveState.OPENING, {ValveEntityStateAttribute.IS_CLOSED: False}),
+            (ValveState.CLOSING, {ValveEntityStateAttribute.IS_CLOSED: False}),
         ],
         other_states=[
-            (ValveState.CLOSED, {ATTR_IS_CLOSED: True}),
+            (ValveState.CLOSED, {ValveEntityStateAttribute.IS_CLOSED: True}),
         ],
         extra_invalid_states=[
-            (ValveState.CLOSED, {ATTR_IS_CLOSED: None}),
+            (ValveState.CLOSED, {ValveEntityStateAttribute.IS_CLOSED: None}),
             (ValveState.CLOSED, {}),
         ],
     ),

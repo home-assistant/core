@@ -3,7 +3,7 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.condition import Condition, make_entity_state_condition
 
-from . import DOMAIN, STATUS_ACTIVE, STATUS_IDLE, STATUS_PAUSED
+from .const import DOMAIN, STATUS_ACTIVE, STATUS_IDLE, STATUS_PAUSED
 
 CONDITIONS: dict[str, type[Condition]] = {
     "is_active": make_entity_state_condition(DOMAIN, STATUS_ACTIVE),

@@ -1,0 +1,13 @@
+{
+  "domain": "benq_projector_infrared",
+  "name": "BenQ Projector Infrared",
+  "categories": ["media_entertainment.tv_streaming"],
+  "codeowners": ["@rrooggiieerr"],
+  "config_flow": true,
+  "connectivity": ["infrared"],
+  "dependencies": ["infrared"],
+  "documentation": "https://www.home-assistant.io/integrations/benq_projector_infrared",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "silver"
+}

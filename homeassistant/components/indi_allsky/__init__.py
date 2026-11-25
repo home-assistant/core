@@ -13,7 +13,7 @@ _PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -> None:
     """Set up INDI Allsky from a config entry."""
     coordinator = IndiAllSkyDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -27,9 +27,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

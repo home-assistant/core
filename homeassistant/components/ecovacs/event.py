@@ -11,7 +11,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import EcovacsConfigEntry
+from .controller import EcovacsConfigEntry
 from .entity import EcovacsEntity
 from .util import get_name_key
 

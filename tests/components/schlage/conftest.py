@@ -6,14 +6,13 @@ from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 from pyschlage.lock import Lock
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.schlage.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import MockSchlageConfigEntry
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -64,7 +63,7 @@ async def mock_add_config_entry(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.schlage.async_setup_entry", return_value=True
+        "homeassistant.components.schlage.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -72,14 +71,18 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_schlage() -> Generator[Mock]:
     """Mock pyschlage.Schlage."""
-    with patch("pyschlage.Schlage", autospec=True) as mock_schlage:
+    with patch(
+        "homeassistant.components.schlage.pyschlage.Schlage", autospec=True
+    ) as mock_schlage:
         yield mock_schlage.return_value
 
 
 @pytest.fixture
 def mock_pyschlage_auth() -> Generator[Mock]:
     """Mock pyschlage.Auth."""
-    with patch("pyschlage.Auth", autospec=True) as mock_auth:
+    with patch(
+        "homeassistant.components.schlage.pyschlage.Auth", autospec=True
+    ) as mock_auth:
         mock_auth.return_value.user_id = "abc123"
         yield mock_auth.return_value
 
@@ -107,6 +110,7 @@ def mock_lock_attrs() -> dict[str, Any]:
         "battery_level": 20,
         "auto_lock_time": 15,
         "firmware_version": "1.0",
+        "serial_number": "d34db33f",
         "lock_and_leave_enabled": True,
         "beeper_enabled": True,
         "connected": True,

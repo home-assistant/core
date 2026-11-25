@@ -52,6 +52,17 @@
       }
     }
   },
+  "exceptions": {
+    "value_pattern_mismatch": {
+      "message": "Value {value} for {entity_id} doesn't match pattern {pattern}."
+    },
+    "value_too_long": {
+      "message": "Value {value} for {entity_id} is too long (maximum length {max})."
+    },
+    "value_too_short": {
+      "message": "Value {value} for {entity_id} is too short (minimum length {min})."
+    }
+  },
   "services": {
     "set_value": {
       "description": "Sets the value of a text entity.",

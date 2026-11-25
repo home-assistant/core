@@ -1,0 +1,190 @@
+{
+  "applianceInfo": {
+    "serialNumber": "24200001",
+    "pnc": "956006956",
+    "brand": "ELECTROLUX",
+    "deviceType": "AIR_PURIFIER",
+    "model": "PURE500",
+    "variant": "TM1",
+    "colour": "URBAN_GREY"
+  },
+  "capabilities": {
+    "ErrCommSensorDisplayBrd": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "active": {},
+        "not active": {},
+        "was active": {}
+      }
+    },
+    "ErrImpellerStuck": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "active": {},
+        "not active": {},
+        "was active": {}
+      }
+    },
+    "ErrPmNotResp": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "active": {},
+        "not active": {},
+        "was active": {}
+      }
+    },
+    "Fanspeed": {
+      "access": "readwrite",
+      "max": 3,
+      "min": 1,
+      "schedulable": true,
+      "step": 1,
+      "type": "int"
+    },
+    "FilterLife_1": {
+      "access": "read",
+      "max": 100,
+      "min": 0,
+      "type": "int"
+    },
+    "SafetyLock": {
+      "access": "readwrite",
+      "default": false,
+      "type": "boolean",
+      "values": {
+        "False": {},
+        "True": {}
+      }
+    },
+    "SchedulingState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "aborted": {},
+        "done": {},
+        "not set": {},
+        "ongoing": {}
+      }
+    },
+    "SignalStrength": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "EXCELLENT": {},
+        "FAIR": {},
+        "GOOD": {},
+        "WEAK": {}
+      }
+    },
+    "UILight": {
+      "access": "readwrite",
+      "default": true,
+      "schedulable": true,
+      "type": "boolean",
+      "values": {
+        "False": {},
+        "True": {}
+      }
+    },
+    "Workmode": {
+      "access": "readwrite",
+      "schedulable": true,
+      "triggers": [
+        {
+          "action": {
+            "Fanspeed": {
+              "access": "readwrite",
+              "disabled": true,
+              "max": 3,
+              "min": 1,
+              "step": 1,
+              "type": "int"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "Smart",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "Fanspeed": {
+              "access": "readwrite",
+              "max": 3,
+              "min": 1,
+              "step": 1,
+              "type": "int"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "Manual",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "Fanspeed": {
+              "access": "readwrite",
+              "disabled": true,
+              "max": 2,
+              "min": 1,
+              "step": 1,
+              "type": "int"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "Quiet",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "Fanspeed": {
+              "access": "readwrite",
+              "disabled": true,
+              "type": "int"
+            },
+            "SafetyLock": {
+              "access": "readwrite",
+              "default": false,
+              "disabled": true,
+              "type": "boolean",
+              "values": {
+                "False": {},
+                "True": {}
+              }
+            },
+            "UILight": {
+              "access": "readwrite",
+              "default": false,
+              "disabled": true,
+              "type": "boolean",
+              "values": {
+                "False": {},
+                "True": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "PowerOff",
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "Manual": {},
+        "PowerOff": {},
+        "Quiet": {},
+        "Smart": {}
+      }
+    }
+  }
+}

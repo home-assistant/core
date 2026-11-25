@@ -4,12 +4,12 @@ from typing import Any, override
 
 from pyfibaro.fibaro_device import DeviceModel
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FibaroConfigEntry
+from . import FibaroConfigEntry, FibaroController
 from .entity import FibaroEntity
 
 
@@ -21,7 +21,10 @@ async def async_setup_entry(
     """Set up the Fibaro switches."""
     controller = entry.runtime_data
     async_add_entities(
-        [FibaroSwitch(device) for device in controller.fibaro_devices[Platform.SWITCH]],
+        [
+            FibaroSwitch(device, controller)
+            for device in controller.fibaro_devices[Platform.SWITCH]
+        ],
         True,
     )
 
@@ -29,10 +32,11 @@ async def async_setup_entry(
 class FibaroSwitch(FibaroEntity, SwitchEntity):
     """Representation of a Fibaro Switch."""
 
-    def __init__(self, fibaro_device: DeviceModel) -> None:
-        """Initialize the Fibaro device."""
-        super().__init__(fibaro_device)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+    def __init__(
+        self, fibaro_device: DeviceModel, controller: FibaroController
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(fibaro_device, controller, use_child_device_info=True)
 
     @override
     def turn_on(self, **kwargs: Any) -> None:

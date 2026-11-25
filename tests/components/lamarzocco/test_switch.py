@@ -6,21 +6,16 @@ from unittest.mock import MagicMock, patch
 from pylamarzocco.const import MachineState, SmartStandByType, WidgetType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import WAKE_UP_SLEEP_ENTRY_IDS, async_init_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_switches(
@@ -68,9 +63,9 @@ async def test_switches_actions(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: f"switch.{serial_number}{entity_name}",
+            TargetKey.ENTITY_ID: f"switch.{serial_number}{entity_name}",
         },
         blocking=True,
     )
@@ -80,9 +75,9 @@ async def test_switches_actions(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {
-            ATTR_ENTITY_ID: f"switch.{serial_number}{entity_name}",
+            TargetKey.ENTITY_ID: f"switch.{serial_number}{entity_name}",
         },
         blocking=True,
     )
@@ -117,9 +112,9 @@ async def test_auto_on_off_switches(
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             {
-                ATTR_ENTITY_ID: (
+                TargetKey.ENTITY_ID: (
                     f"switch.{serial_number}_auto_on_off_{wake_up_sleep_entry_id}"
                 ),
             },
@@ -138,9 +133,9 @@ async def test_auto_on_off_switches(
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             {
-                ATTR_ENTITY_ID: (
+                TargetKey.ENTITY_ID: (
                     f"switch.{serial_number}_auto_on_off_{wake_up_sleep_entry_id}"
                 ),
             },
@@ -177,9 +172,9 @@ async def test_switch_exceptions(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             {
-                ATTR_ENTITY_ID: f"switch.{serial_number}",
+                TargetKey.ENTITY_ID: f"switch.{serial_number}",
             },
             blocking=True,
         )
@@ -188,9 +183,9 @@ async def test_switch_exceptions(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             {
-                ATTR_ENTITY_ID: f"switch.{serial_number}",
+                TargetKey.ENTITY_ID: f"switch.{serial_number}",
             },
             blocking=True,
         )
@@ -203,9 +198,9 @@ async def test_switch_exceptions(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             {
-                ATTR_ENTITY_ID: f"switch.{serial_number}_auto_on_off_os2oswx",
+                TargetKey.ENTITY_ID: f"switch.{serial_number}_auto_on_off_os2oswx",
             },
             blocking=True,
         )

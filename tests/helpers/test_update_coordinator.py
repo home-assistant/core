@@ -10,6 +10,7 @@ import weakref
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import requests
 
 from homeassistant import config_entries
@@ -24,8 +25,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import frame, update_coordinator
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +55,11 @@ KNOWN_ERRORS: list[tuple[Exception, type[Exception], str]] = [
         update_coordinator.UpdateFailed(),
         update_coordinator.UpdateFailed,
         "Error fetching test data",
+    ),
+    (
+        update_coordinator.UpdateFailedUnreachable(),
+        update_coordinator.UpdateFailedUnreachable,
+        "test is unavailable",
     ),
     (
         ConfigEntryNotReady(),
@@ -312,6 +316,32 @@ async def test_refresh_known_errors(
     assert crd.last_update_success is False
     assert isinstance(crd.last_exception, err_msg[1])
     assert err_msg[2] in caplog.text
+
+
+async def test_refresh_update_failed_unreachable(
+    crd: update_coordinator.DataUpdateCoordinator[int],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test UpdateFailedUnreachable is logged once at info level."""
+    await crd.async_refresh()
+    caplog.clear()
+
+    crd.update_method = AsyncMock(
+        side_effect=update_coordinator.UpdateFailedUnreachable("Device is off")
+    )
+    await crd.async_refresh()
+
+    assert crd.last_update_success is False
+    assert [
+        (r.levelno, r.message) for r in caplog.records if r.levelno >= logging.INFO
+    ] == [(logging.INFO, "test is unavailable: Device is off")]
+
+    # Not logged again while still unavailable
+    caplog.clear()
+    await crd.async_refresh()
+
+    assert crd.last_update_success is False
+    assert "test is unavailable" not in caplog.text
 
 
 async def test_refresh_fail_unknown(
@@ -588,6 +618,21 @@ async def test_update_locks(
     await crd.async_shutdown()
 
 
+async def test_data_or_none(
+    crd: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
+    """Test data_or_none before and after the first successful update."""
+    assert crd.data_or_none is None
+
+    await crd.async_refresh()
+    assert crd.data_or_none == 1
+
+    crd.update_method = AsyncMock(side_effect=update_coordinator.UpdateFailed)
+    await crd.async_refresh()
+    assert crd.last_update_success is False
+    assert crd.data_or_none == 1
+
+
 async def test_refresh_recover(
     crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -857,6 +902,69 @@ async def test_async_config_entry_first_refresh_not_ready(
             None,
             id="plain_exception_no_translation_attrs",
         ),
+        pytest.param(
+            update_coordinator.UpdateFailed("boom"),
+            None,
+            None,
+            None,
+            id="update_failed_without_translation_attrs",
+        ),
+        pytest.param(
+            TimeoutError(),
+            "homeassistant",
+            "update_failed_timeout",
+            None,
+            id="timeout",
+        ),
+        pytest.param(
+            requests.exceptions.Timeout(),
+            "homeassistant",
+            "update_failed_timeout",
+            None,
+            id="requests_timeout",
+        ),
+        pytest.param(
+            urllib.error.URLError("timed out"),
+            "homeassistant",
+            "update_failed_timeout",
+            None,
+            id="urllib_timeout",
+        ),
+        pytest.param(
+            urllib.error.URLError(TimeoutError("timed out")),
+            "homeassistant",
+            "update_failed_timeout",
+            None,
+            id="urllib_wrapped_timeout",
+        ),
+        pytest.param(
+            aiohttp.ServerTimeoutError(),
+            "homeassistant",
+            "update_failed_timeout",
+            None,
+            id="aiohttp_timeout",
+        ),
+        pytest.param(
+            aiohttp.ClientError(),
+            "homeassistant",
+            "update_failed",
+            None,
+            id="aiohttp_client_error",
+        ),
+        pytest.param(
+            requests.exceptions.RequestException(),
+            "homeassistant",
+            "update_failed",
+            None,
+            id="requests_error",
+        ),
+        pytest.param(
+            urllib.error.URLError("something"),
+            "homeassistant",
+            "update_failed",
+            None,
+            id="urllib_error",
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -871,7 +979,10 @@ async def test_async_config_entry_first_refresh_translation_key_propagation(
     expected_translation_placeholders: dict[str, str] | None,
     method: str,
 ) -> None:
-    """Test that translation attributes from the cause are propagated to ConfigEntryNotReady."""
+    """Test the translation attributes of the ConfigEntryNotReady raised on failure.
+
+    They come from the cause, or from core for errors the coordinator handles.
+    """
     entry = MockConfigEntry()
     entry._async_set_state(
         hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
@@ -885,6 +996,51 @@ async def test_async_config_entry_first_refresh_translation_key_propagation(
     assert exc_info.value.translation_domain == expected_translation_domain
     assert exc_info.value.translation_key == expected_translation_key
     assert exc_info.value.translation_placeholders == expected_translation_placeholders
+
+
+@pytest.mark.parametrize(
+    ("cause", "expected_retry_after"),
+    [
+        pytest.param(
+            update_coordinator.UpdateFailed(retry_after=60),
+            60,
+            id="update_failed",
+        ),
+        pytest.param(
+            ConfigEntryNotReady(retry_after=120),
+            120,
+            id="config_entry_not_ready",
+        ),
+        pytest.param(
+            update_coordinator.UpdateFailed(),
+            None,
+            id="update_failed_without_retry_after",
+        ),
+        pytest.param(Exception("boom"), None, id="plain_exception"),
+    ],
+)
+@pytest.mark.parametrize(
+    "method",
+    ["update_method", "setup_method"],
+)
+async def test_async_config_entry_first_refresh_retry_after_propagation(
+    hass: HomeAssistant,
+    cause: Exception,
+    expected_retry_after: float | None,
+    method: str,
+) -> None:
+    """Test that retry_after from the cause is propagated to ConfigEntryNotReady."""
+    entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
+    )
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+    setattr(crd, method, AsyncMock(side_effect=cause))
+
+    with pytest.raises(ConfigEntryNotReady) as exc_info:
+        await crd.async_config_entry_first_refresh()
+
+    assert exc_info.value.retry_after == expected_retry_after
 
 
 async def test_async_config_entry_first_refresh_success(hass: HomeAssistant) -> None:

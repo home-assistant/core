@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable, Collection, Coroutine
 import contextlib
-import datetime
+import datetime as dt
 from functools import partial
 import logging
 import time
@@ -22,7 +22,7 @@ from sonos_websocket.exception import SonosWebsocketError
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -147,7 +147,7 @@ class SonosSpeaker:
 
         # Battery
         self.battery_info: dict[str, Any] = {}
-        self._last_battery_event: datetime.datetime | None = None
+        self._last_battery_event: dt.datetime | None = None
         self._battery_poll_timer: Callable | None = None
 
         # Volume / Sound
@@ -340,9 +340,10 @@ class SonosSpeaker:
         return self._share_link_plugin
 
     @property
-    def subscription_address(self) -> str:
+    def subscription_address(self) -> str | None:
         """Return the current subscription callback address."""
-        assert len(self._subscriptions) > 0
+        if not self._subscriptions:
+            return None
         addr, port = self._subscriptions[0].event_listener.address
         return ":".join([addr, str(port)])
 
@@ -384,6 +385,10 @@ class SonosSpeaker:
             self._subscription_lock = asyncio.Lock()
 
         async with self._subscription_lock:
+            # The device can be disabled while setup is still in progress
+            if self.device_disabled:
+                await self._async_offline()
+                return
             try:
                 await self._async_subscribe()
             except SonosSubscriptionsFailed:
@@ -661,9 +666,23 @@ class SonosSpeaker:
             [("InstanceID", 0), ("Channel", "Master")], timeout=1
         )
 
+    @property
+    def device_disabled(self) -> bool:
+        """Return if the speaker's device is disabled in the device registry."""
+        device = dr.async_get(self.hass).async_get_device_by_identifier(
+            (DOMAIN, self.uid), self.config_entry.entry_id
+        )
+        return device is not None and device.disabled
+
     @callback
     def speaker_activity(self, source: str) -> None:
         """Track the last activity on this speaker, set availability and resubscribe."""
+        if not self.available and self.device_disabled:
+            _LOGGER.debug(
+                "Activity on disabled %s from %s, ignoring", self.zone_name, source
+            )
+            return
+
         if self._resub_cooldown_expires_at:
             if time.monotonic() < self._resub_cooldown_expires_at:
                 _LOGGER.debug(
@@ -684,7 +703,7 @@ class SonosSpeaker:
             self.hass.async_create_task(self.async_subscribe(), eager_start=True)
 
     @callback
-    def async_check_activity(self, now: datetime.datetime) -> None:
+    def async_check_activity(self, now: dt.datetime) -> None:
         """Validate availability of the speaker based on recent activity."""
         if not self.available:
             return
@@ -835,7 +854,7 @@ class SonosSpeaker:
             return self.power_source != "BATTERY"
         return None
 
-    async def async_poll_battery(self, now: datetime.datetime | None = None) -> None:
+    async def async_poll_battery(self, now: dt.datetime | None = None) -> None:
         """Poll the device for the current battery state."""
         if not self.available:
             return
@@ -1239,8 +1258,11 @@ class SonosSpeaker:
         speakers_set = {s for s in speakers if s.soco_snapshot}
         if missing_snapshots := set(speakers) - speakers_set:
             raise HomeAssistantError(
-                "Restore failed, speakers are missing snapshots:"
-                f" {[s.zone_name for s in missing_snapshots]}"
+                translation_domain=DOMAIN,
+                translation_key="restore_missing_snapshots",
+                translation_placeholders={
+                    "speakers": ", ".join(s.zone_name for s in missing_snapshots)
+                },
             )
 
         if with_group:

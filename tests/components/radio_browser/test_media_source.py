@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from radios import FilterBy, Order, RadioBrowserConnectionError, RadioBrowserError
 
 from homeassistant.components import media_source
@@ -13,8 +14,6 @@ from homeassistant.components.radio_browser.media_source import async_get_media_
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 DOMAIN = "radio_browser"
 

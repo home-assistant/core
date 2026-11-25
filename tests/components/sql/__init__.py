@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.recorder import CONF_DB_URL
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -29,8 +31,6 @@ from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
 )
-
-from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
     CONF_QUERY: "SELECT 5 as value",

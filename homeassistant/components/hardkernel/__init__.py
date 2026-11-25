@@ -9,7 +9,7 @@ from homeassistant.helpers.hassio import is_hassio
 from .const import DOMAIN
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a Hardkernel config entry."""
     if not is_hassio(hass):
         # Not running under supervisor, Home Assistant may have been migrated
@@ -33,5 +33,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="unsupported_board",
             translation_placeholders={"board": str(board)},
         )
-
-    return True

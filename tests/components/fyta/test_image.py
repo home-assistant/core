@@ -8,6 +8,13 @@ from freezegun.api import FrozenDateTimeFactory
 from fyta_cli.fyta_exceptions import FytaConnectionError, FytaPlantError
 from fyta_cli.fyta_models import Plant
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fyta.const import DOMAIN
@@ -18,14 +25,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import setup_platform
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
-from tests.typing import ClientSessionGenerator
 
 
 async def test_all_entities(

@@ -50,7 +50,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> None:
     """Set up Peblar from a config entry."""
     # Set up connection to the Peblar charger
     peblar = Peblar(
@@ -116,9 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
     # Forward the setup to the platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> None:
     """Unload Peblar config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

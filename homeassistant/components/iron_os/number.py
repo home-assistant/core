@@ -24,7 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import IronOSConfigEntry
 from .const import (
     MAX_TEMP,
     MAX_TEMP_F,
@@ -33,7 +32,7 @@ from .const import (
     MIN_TEMP,
     MIN_TEMP_F,
 )
-from .coordinator import IronOSCoordinators
+from .coordinator import IronOSConfigEntry, IronOSCoordinators
 from .entity import IronOSBaseEntity
 
 PARALLEL_UPDATES = 0

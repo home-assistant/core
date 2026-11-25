@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import PlatformNotReady, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -394,9 +394,12 @@ class YamahaDeviceZone(MediaPlayerEntity):
         """Set the current scene."""
         try:
             self.zctrl.scene = scene
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except AssertionError:
-            _LOGGER.warning("Scene '%s' does not exist!", scene)
+        except AssertionError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="scene_not_found",
+                translation_placeholders={"scene": scene},
+            ) from err
 
     @override
     def select_sound_mode(self, sound_mode: str) -> None:

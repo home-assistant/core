@@ -6,12 +6,11 @@ from unittest.mock import MagicMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.lovelace import DOMAIN, _validate_url_slug
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture

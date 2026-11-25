@@ -4,29 +4,23 @@ from unittest.mock import AsyncMock, patch
 
 from pyhelty import FanMode, HeltyError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import make_data
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FAN_ENTITY = "fan.vmc_soggiorno"
 
@@ -69,8 +63,8 @@ async def test_fan_set_preset(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: FAN_ENTITY, ATTR_PRESET_MODE: "boost"},
+        FanService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: FAN_ENTITY, FanServiceArgument.PRESET_MODE: "boost"},
         blocking=True,
     )
     mock_helty_client.async_set_fan_mode.assert_awaited_with(FanMode.BOOST)
@@ -92,8 +86,8 @@ async def test_fan_set_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: FAN_ENTITY, ATTR_PERCENTAGE: percentage},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: FAN_ENTITY, FanServiceArgument.PERCENTAGE: percentage},
         blocking=True,
     )
     mock_helty_client.async_set_fan_mode.assert_awaited_with(expected)
@@ -109,8 +103,8 @@ async def test_fan_set_percentage_zero_turns_off(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: FAN_ENTITY, ATTR_PERCENTAGE: 0},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: FAN_ENTITY, FanServiceArgument.PERCENTAGE: 0},
         blocking=True,
     )
     mock_helty_client.async_set_fan_mode.assert_awaited_with(FanMode.OFF)
@@ -125,12 +119,15 @@ async def test_fan_turn_off_and_on(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: FAN_ENTITY}, blocking=True
+        FAN_DOMAIN,
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: FAN_ENTITY},
+        blocking=True,
     )
     mock_helty_client.async_set_fan_mode.assert_awaited_with(FanMode.OFF)
 
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: FAN_ENTITY}, blocking=True
+        FAN_DOMAIN, FanService.TURN_ON, {TargetKey.ENTITY_ID: FAN_ENTITY}, blocking=True
     )
     mock_helty_client.async_set_fan_mode.assert_awaited_with(FanMode.LOW)
 
@@ -145,8 +142,8 @@ async def test_fan_turn_on_with_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: FAN_ENTITY, ATTR_PERCENTAGE: 100},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: FAN_ENTITY, FanServiceArgument.PERCENTAGE: 100},
         blocking=True,
     )
     mock_helty_client.async_set_fan_mode.assert_awaited_with(FanMode.MAX)
@@ -162,8 +159,11 @@ async def test_fan_turn_on_with_preset(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: FAN_ENTITY, ATTR_PRESET_MODE: "free_cooling"},
+        FanService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: FAN_ENTITY,
+            FanServiceArgument.PRESET_MODE: "free_cooling",
+        },
         blocking=True,
     )
     mock_helty_client.async_set_fan_mode.assert_awaited_with(FanMode.FREE_COOLING)
@@ -182,7 +182,7 @@ async def test_fan_set_mode_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: FAN_ENTITY, ATTR_PRESET_MODE: "boost"},
+            FanService.SET_PRESET_MODE,
+            {TargetKey.ENTITY_ID: FAN_ENTITY, FanServiceArgument.PRESET_MODE: "boost"},
             blocking=True,
         )

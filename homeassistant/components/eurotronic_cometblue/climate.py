@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
 from .entity import CometBlueBluetoothEntity
 
@@ -132,8 +133,8 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
 
         if self.preset_mode == PRESET_AWAY:
             raise ServiceValidationError(
-                "Cannot adjust TRV remotely, manually"
-                " disable 'holiday' mode on TRV first"
+                translation_domain=DOMAIN,
+                translation_key="cannot_adjust_during_holiday",
             )
 
         await self.coordinator.send_command(
@@ -156,12 +157,6 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
 
-        if self.preset_modes and preset_mode not in self.preset_modes:
-            raise ServiceValidationError(f"Unsupported preset_mode '{preset_mode}'")
-        if preset_mode in [PRESET_NONE, PRESET_AWAY]:
-            raise ServiceValidationError(
-                f"Unable to set preset '{preset_mode}', display only."
-            )
         if preset_mode == PRESET_ECO:
             return await self.async_set_temperature(
                 temperature=self._device_eco_setpoint
@@ -172,7 +167,14 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
             )
         if preset_mode == PRESET_BOOST:
             return await self.async_set_temperature(temperature=MAX_TEMP)
-        return None
+
+        # PRESET_NONE and PRESET_AWAY are display-only presets
+        # Other presets are blocked by self._valid_mode_or_raise
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="display_only_preset",
+            translation_placeholders={"preset_mode": preset_mode},
+        )
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -182,11 +184,8 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
             return await self.async_set_temperature(temperature=MIN_TEMP)
         if hvac_mode == HVACMode.HEAT:
             return await self.async_set_temperature(temperature=MAX_TEMP)
-        if hvac_mode == HVACMode.AUTO:
-            return await self.async_set_temperature(
-                temperature=self._device_eco_setpoint
-            )
-        raise ServiceValidationError(f"Unknown HVAC mode '{hvac_mode}'")
+        # Other presets are blocked by self._valid_mode_or_raise
+        return await self.async_set_temperature(temperature=self._device_eco_setpoint)
 
     @override
     async def async_turn_on(self) -> None:

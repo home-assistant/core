@@ -9,7 +9,7 @@ from homeassistant.components.valve import (
     ValveEntity,
     ValveEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinator
@@ -57,6 +57,7 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
         )
         self._attr_unique_id = f"{coordinator.address}-{Valve.state.unique_id}"
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         self._attr_is_closed = not self.coordinator.get_cached(Valve.state)

@@ -43,7 +43,10 @@ from .utils import (
     async_remove_shelly_entity,
     format_ble_addr,
     get_device_entry_gen,
+    get_ir_device_info,
+    get_rpc_custom_name,
     get_rpc_key_id,
+    get_rpc_key_instances,
     get_virtual_component_ids,
 )
 
@@ -177,7 +180,10 @@ async def async_setup_entry(
             config_entry.entry_id,
             coordinator.mac,
             BUTTON_DOMAIN,
-            virtual_button_component_ids,
+            [
+                *virtual_button_component_ids,
+                *get_rpc_key_instances(coordinator.device.status, "ledstrip"),
+            ],
         )
 
 
@@ -309,6 +315,58 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
         await self.coordinator.device.button_trigger(self._id, "single_push")
 
 
+class RpcIrCodeButton(ShellyRpcAttributeEntity, ButtonEntity):
+    """Defines a Shelly IRCode button."""
+
+    entity_description: RpcButtonDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcButtonDescription,
+    ) -> None:
+        """Initialize IRCode button."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if (custom_name := get_rpc_custom_name(coordinator.device, key)) is not None:
+            self._attr_name = custom_name
+        else:
+            self._attr_translation_key = "ir_code"
+            self._attr_translation_placeholders = {"id": str(self._id)}
+        self._attr_device_info = get_ir_device_info(
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            coordinator.device,
+            coordinator.mac,
+            key,
+        )
+
+    @rpc_call
+    @override
+    async def async_press(self) -> None:
+        """Emit IR code."""
+        if TYPE_CHECKING:
+            assert isinstance(self.coordinator, ShellyRpcCoordinator)
+            assert self._id is not None
+
+        await self.coordinator.device.ircode_emit(self._id)
+
+
+class RpcLedStripNextEffectButton(ShellyRpcAttributeEntity, ButtonEntity):
+    """Defines a Shelly LED strip next effect button."""
+
+    entity_description: RpcButtonDescription
+    _id: int
+
+    @rpc_call
+    @override
+    async def async_press(self) -> None:
+        """Switch the LED strip to the next effect."""
+        await self.coordinator.device.ledstrip_next_effect(self._id)
+
+
 class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity):
     """Defines a Shelly RPC Smoke mute alarm button."""
 
@@ -335,34 +393,50 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
         return False
 
 
-RPC_BUTTONS = {
-    "button_generic": RpcButtonDescription(
-        key="button",
+RPC_BUTTONS = (
+    RpcButtonDescription(
+        key="button_generic",
+        components=("button",),
         role=ROLE_GENERIC,
     ),
-    "button_open": RpcButtonDescription(
-        key="button",
+    RpcButtonDescription(
+        key="button_open",
+        components=("button",),
         translation_key="open",
         entity_registry_enabled_default=False,
         role="open",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
-    "button_close": RpcButtonDescription(
-        key="button",
+    RpcButtonDescription(
+        key="button_close",
+        components=("button",),
         translation_key="close",
         entity_registry_enabled_default=False,
         role="close",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
-    "calibrate": RpcButtonDescription(
-        key="blutrv",
+    RpcButtonDescription(
+        key="calibrate",
+        components=("blutrv",),
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
         entity_class=ShellyBluTrvButton,
     ),
-    "smoke_mute": RpcButtonDescription(
-        key="smoke",
+    RpcButtonDescription(
+        key="smoke_mute",
+        components=("smoke",),
         sub_key="mute",
         translation_key="mute_alarm",
     ),
-}
+    RpcButtonDescription(
+        key="ircode",
+        components=("ircode",),
+        entity_class=RpcIrCodeButton,
+    ),
+    RpcButtonDescription(
+        key="ledstrip_next_effect",
+        components=("ledstrip",),
+        translation_key="next_effect",
+        entity_class=RpcLedStripNextEffectButton,
+    ),
+)

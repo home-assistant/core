@@ -3,13 +3,15 @@
 from datetime import time
 from typing import cast, override
 
+from midealocal.device import MideaDevice
+
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
-from .entity import MideaConfigEntry, MideaDevice, MideaEntity, midea_api_call
+from .entity import MideaConfigEntry, MideaEntity, midea_api_call
 
 PARALLEL_UPDATES = 0
 
@@ -71,7 +73,7 @@ class MideaTime(MideaEntity, TimeEntity):
             return None
 
     @override
-    def set_value(self, value: time) -> None:
+    async def async_set_value(self, value: time) -> None:
         """Set entity value."""
         with midea_api_call():
             self._device.set_attribute(self._hour_attr, value.hour)

@@ -13,13 +13,14 @@ from .coordinator import (
     IntelliClimaData,
     IntelliClimaFilterCoordinator,
 )
+from .entity import eco_devices
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.FAN, Platform.SELECT, Platform.SENSOR]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: IntelliClimaConfigEntry
-) -> bool:
+) -> None:
     """Set up IntelliClima VMC from a config entry."""
     # Create API client
     session = async_get_clientsession(hass)
@@ -37,7 +38,7 @@ async def async_setup_entry(
 
     LOGGER.debug(
         "Discovered %d IntelliClima VMC device(s)",
-        len(devices_coordinator.data.ecocomfort2_devices),
+        len(eco_devices(devices_coordinator.data)),
     )
 
     device_serials = [
@@ -52,11 +53,9 @@ async def async_setup_entry(
     # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: IntelliClimaConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

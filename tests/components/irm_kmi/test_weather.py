@@ -1,26 +1,35 @@
-"""Test for the weather entity of the IRM KMI integration."""
+"""Tests for the IRM KMI weather platform."""
 
-from typing import Any
-from unittest.mock import MagicMock
+from collections.abc import Generator
+from typing import Any, cast
+from unittest.mock import MagicMock, patch
 
 from irm_kmi_api import ExtendedForecast
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
-from homeassistant.components.weather import (
-    DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
+from homeassistant.components.irm_kmi.services import (
+    IrmKmiService,
+    IrmKmiServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN, WeatherService
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
 from .const import WEATHER_ENTITY_ID
 
-from tests.common import MockConfigEntry, snapshot_platform
+
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Load only the weather platform."""
+    with patch("homeassistant.components.irm_kmi.PLATFORMS", [Platform.WEATHER]):
+        yield
 
 
 async def _get_forecast(
@@ -29,20 +38,22 @@ async def _get_forecast(
     """Return the forecast from weather.get_forecasts."""
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {
-            ATTR_ENTITY_ID: WEATHER_ENTITY_ID,
+            TargetKey.ENTITY_ID: WEATHER_ENTITY_ID,
             "type": forecast_type,
         },
         blocking=True,
         return_response=True,
     )
-    return response[WEATHER_ENTITY_ID]["forecast"]
+    assert response is not None
+    response_data = cast(dict[str, dict[str, list[dict[str, Any]]]], response)
+    return response_data[WEATHER_ENTITY_ID]["forecast"]
 
 
 @pytest.mark.usefixtures("mock_get_forecasts_coord")
 @pytest.mark.parametrize("forecast_fixture", ["forecast_nl.json"])
-@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
+@pytest.mark.freeze_time("2026-01-25T15:30:00+01:00")
 async def test_weather_nl(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -59,9 +70,9 @@ async def test_weather_nl(
 @pytest.mark.parametrize("forecast_fixture", ["forecast_nl.json"])
 @pytest.mark.parametrize(
     "forecast_type",
-    ["daily", "hourly"],
+    ["daily", "twice_daily", "hourly"],
 )
-@pytest.mark.freeze_time("2025-09-22T15:30:00+01:00")
+@pytest.mark.freeze_time("2026-01-25T15:30:00+01:00")
 async def test_forecast_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -163,6 +174,7 @@ async def test_forecast_language(
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
+    assert device is not None
     assert device.manufacturer == expected_manufacturer
 
 
@@ -209,6 +221,7 @@ async def test_forecasts_do_not_mutate_coordinator_data(
             [(None, 2.0), (8.0, 2.0), (9.0, 3.0)],
             id="borrowed_low",
         ),
+        # Test case for https://github.com/jdejaegh/irm-kmi-ha/issues/8
         pytest.param(
             [
                 ExtendedForecast(
@@ -227,17 +240,34 @@ async def test_forecasts_do_not_mutate_coordinator_data(
             [(None, 12.0), (12.0, 8.0)],
             id="borrowed_low_swapped",
         ),
-        # Test case for https://github.com/jdejaegh/irm-kmi-ha/issues/8
+        pytest.param(
+            [
+                ExtendedForecast(
+                    datetime="2024-01-21",
+                    is_daytime=True,
+                    native_temperature=8.0,
+                    native_templow=None,
+                ),
+                ExtendedForecast(
+                    datetime="2024-01-22",
+                    is_daytime=True,
+                    native_temperature=10.0,
+                    native_templow=3.0,
+                ),
+            ],
+            [(8.0, None), (10.0, 3.0)],
+            id="consecutive_days_keep_their_own_low",
+        ),
     ],
 )
-async def test_daily_forecast_borrowed_templow(
+async def test_daily_forecast_templow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_irm_kmi_api: MagicMock,
     daily_forecast: list[ExtendedForecast],
     expected: list[tuple[float | None, float | None]],
 ) -> None:
-    """Test the daily forecast borrows the low temperature from the adjacent night."""
+    """Test how the daily forecast fills in the lowest temperature."""
     mock_irm_kmi_api.get_daily_forecast.return_value = daily_forecast
     await setup_integration(hass, mock_config_entry)
 
@@ -245,3 +275,113 @@ async def test_daily_forecast_borrowed_templow(
         (forecast.get("temperature"), forecast.get("templow"))
         for forecast in await _get_forecast(hass, "daily")
     ] == expected
+
+
+@pytest.mark.usefixtures("mock_get_forecasts_coord")
+@pytest.mark.parametrize(
+    "fields",
+    [
+        pytest.param({}, id="default"),
+        pytest.param(
+            {IrmKmiServiceArgument.INCLUDE_PAST_FORECASTS: False}, id="exclude_past"
+        ),
+        pytest.param(
+            {IrmKmiServiceArgument.INCLUDE_PAST_FORECASTS: True}, id="include_past"
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2023-12-26T18:05:00+01:00")
+async def test_get_forecasts_radar(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    fields: dict[str, bool],
+) -> None:
+    """Test the radar forecast action."""
+    await setup_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        IrmKmiService.GET_FORECASTS_RADAR,
+        {TargetKey.ENTITY_ID: WEATHER_ENTITY_ID} | fields,
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+
+@pytest.mark.freeze_time("2023-12-26T18:05:00+01:00")
+async def test_get_forecasts_radar_without_radar_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_irm_kmi_api: MagicMock,
+) -> None:
+    """Test the action raises when the radar has no usable frame."""
+    mock_irm_kmi_api.get_radar_forecast.return_value = []
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="^The rain radar reported no forecast for this location$",
+    ) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            IrmKmiService.GET_FORECASTS_RADAR,
+            {TargetKey.ENTITY_ID: WEATHER_ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "no_radar_forecast"
+
+
+@pytest.mark.usefixtures("mock_get_forecasts_coord")
+@pytest.mark.parametrize("forecast_fixture", ["forecast_nl_with_rain_on_radar.json"])
+@pytest.mark.freeze_time("2023-12-28T14:17:00+00:00")
+async def test_get_forecasts_radar_five_minute_frames(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Dutch five-minute frames start at the frame covering now."""
+    await setup_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        IrmKmiService.GET_FORECASTS_RADAR,
+        {TargetKey.ENTITY_ID: WEATHER_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    assert response is not None
+    response_data = cast(dict[str, dict[str, list[dict[str, Any]]]], response)
+    assert [
+        forecast["datetime"]
+        for forecast in response_data[WEATHER_ENTITY_ID]["forecast"]
+    ] == [
+        "2023-12-28T14:15:00+00:00",
+        "2023-12-28T14:20:00+00:00",
+        "2023-12-28T14:25:00+00:00",
+    ]
+
+
+@pytest.mark.usefixtures("mock_irm_kmi_api")
+@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
+async def test_get_forecasts_radar_converts_every_rate(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the rate and its bounds are all converted to mm/h."""
+    await setup_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        IrmKmiService.GET_FORECASTS_RADAR,
+        {
+            TargetKey.ENTITY_ID: WEATHER_ENTITY_ID,
+            IrmKmiServiceArgument.INCLUDE_PAST_FORECASTS: True,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot

@@ -70,7 +70,7 @@ class NtfyUpdateEntity(NtfyCommonBaseEntity, UpdateEntity):
         super().__init__(coordinator, description)
         self.update_checker = update_checker
         if self._attr_device_info and self.installed_version:
-            self._attr_device_info.update({"sw_version": self.installed_version})
+            self._attr_device_info.sw_version = self.installed_version
 
     @property
     @override

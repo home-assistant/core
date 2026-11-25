@@ -1,10 +1,14 @@
 """The EnergyFlip integration."""
 
-from energyflip import EnergyFlip, EnergyFlipException
+from energyflip import (
+    EnergyFlip,
+    EnergyFlipException,
+    EnergyFlipUnauthenticatedException,
+)
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 
 from .const import DOMAIN, FETCH_TIMEOUT, SOURCE_TYPES
 from .coordinator import EnergyFlipConfigEntry, EnergyFlipUpdateCoordinator
@@ -12,7 +16,7 @@ from .coordinator import EnergyFlipConfigEntry, EnergyFlipUpdateCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -> None:
     """Set up EnergyFlip from a config entry."""
     # Create the EnergyFlip client
     energyflip = EnergyFlip(
@@ -25,6 +29,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -
     # Attempt authentication. If this fails, an exception is thrown
     try:
         await energyflip.authenticate()
+    except EnergyFlipUnauthenticatedException as exception:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from exception
     except EnergyFlipException as exception:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
@@ -51,10 +60,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -
     # Offload the loading of entities to the platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -> None:
     """Unload a config entry."""
     # Forward the unloading of the entry to the platform
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

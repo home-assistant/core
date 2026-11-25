@@ -38,7 +38,7 @@ rules:
     comment: >
       There is no state in the TTS platform and we can't check poll if the TTS service is available.
   action-exceptions: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   parallel-updates: done
   test-coverage: todo
   integration-owner: done
@@ -61,7 +61,7 @@ rules:
     status: exempt
     comment: >
       This is not possible because there is no physical device.
-  diagnostics: todo
+  diagnostics: done
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow:

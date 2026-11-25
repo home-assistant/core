@@ -307,14 +307,6 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self.async_write_ha_state()
 
     @override
-    # pylint: disable-next=home-assistant-missing-super-call
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._async_update_shade_from_group)
-        )
-
-    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cancel any pending refreshes."""
         self._async_cancel_scheduled_transition_update()
@@ -325,7 +317,8 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return bool(self._scheduled_transition_update or self._forced_resync)
 
     @callback
-    def _async_update_shade_from_group(self) -> None:
+    @override
+    def _handle_coordinator_update(self) -> None:
         """Update with new data from the coordinator."""
         if self._update_in_progress:
             # If a transition is in progress the data will be wrong
@@ -392,12 +385,12 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
         return self.positions.primary + self.positions.tilt
 
     @property
-    def open_tilt_position(self) -> ShadePosition:
+    def open_tilt_shade_position(self) -> ShadePosition:
         """Return the open tilt position and required additional positions."""
         return replace(self._shade.open_position_tilt, velocity=self.positions.velocity)
 
     @property
-    def close_tilt_position(self) -> ShadePosition:
+    def close_tilt_shade_position(self) -> ShadePosition:
         """Return the close tilt position and required additional positions."""
         return replace(
             self._shade.close_position_tilt, velocity=self.positions.velocity
@@ -407,14 +400,14 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         self._async_schedule_update_for_transition(self.transition_steps)
-        await self._async_execute_move(self.close_tilt_position)
+        await self._async_execute_move(self.close_tilt_shade_position)
         self.async_write_ha_state()
 
     @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         self._async_schedule_update_for_transition(100 - self.transition_steps)
-        await self._async_execute_move(self.open_tilt_position)
+        await self._async_execute_move(self.open_tilt_shade_position)
         self.async_write_ha_state()
 
     @override
@@ -481,13 +474,13 @@ class PowerViewShadeWithTiltOnClosed(PowerViewShadeWithTiltBase):
 
     @property
     @override
-    def open_tilt_position(self) -> ShadePosition:
+    def open_tilt_shade_position(self) -> ShadePosition:
         """Return the open tilt position and required additional positions."""
         return replace(self._shade.open_position_tilt, velocity=self.positions.velocity)
 
     @property
     @override
-    def close_tilt_position(self) -> ShadePosition:
+    def close_tilt_shade_position(self) -> ShadePosition:
         """Return the close tilt position and required additional positions."""
         return replace(
             self._shade.close_position_tilt, velocity=self.positions.velocity

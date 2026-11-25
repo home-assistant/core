@@ -4,14 +4,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 from pvo import PVOutputAuthenticationError, PVOutputConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.pvoutput.const import CONF_SYSTEM_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow(

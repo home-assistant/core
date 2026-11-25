@@ -1,14 +1,15 @@
 """Tests for fan platforms."""
 
 import pytest
+from pytest_homeassistant.common import setup_test_component_platform
 
 from homeassistant.components.fan import (
-    ATTR_PRESET_MODE,
-    ATTR_PRESET_MODES,
     DOMAIN,
-    SERVICE_SET_PRESET_MODE,
     FanEntity,
+    FanEntityCapabilityAttribute,
     FanEntityFeature,
+    FanEntityStateAttribute,
+    FanService,
     NotValidPresetModeError,
 )
 from homeassistant.core import HomeAssistant
@@ -16,8 +17,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import MockFan
-
-from tests.common import setup_test_component_platform
 
 
 class BaseFan(FanEntity):
@@ -119,11 +118,14 @@ async def test_preset_mode_validation(
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.support_fan_with_preset_mode_support")
-    assert state.attributes.get(ATTR_PRESET_MODES) == ["auto", "eco"]
+    assert state.attributes.get(FanEntityCapabilityAttribute.PRESET_MODES) == [
+        "auto",
+        "eco",
+    ]
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        FanService.SET_PRESET_MODE,
         {
             "entity_id": "fan.support_fan_with_preset_mode_support",
             "preset_mode": "eco",
@@ -132,12 +134,12 @@ async def test_preset_mode_validation(
     )
 
     state = hass.states.get("fan.support_fan_with_preset_mode_support")
-    assert state.attributes.get(ATTR_PRESET_MODE) == "eco"
+    assert state.attributes.get(FanEntityStateAttribute.PRESET_MODE) == "eco"
 
     with pytest.raises(NotValidPresetModeError) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            FanService.SET_PRESET_MODE,
             {
                 "entity_id": "fan.support_fan_with_preset_mode_support",
                 "preset_mode": "invalid",

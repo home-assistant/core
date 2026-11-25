@@ -4,28 +4,22 @@ from unittest.mock import AsyncMock, Mock
 
 from besen.exceptions import CommandFailed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.besen.const import DOMAIN
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_OPTION,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import publish_besen_state
 from .conftest import charger_state, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 TEMPERATURE_UNIT_ENTITY_ID = "select.garage_temperature_unit"
 
@@ -126,8 +120,11 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: TEMPERATURE_UNIT_ENTITY_ID, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: TEMPERATURE_UNIT_ENTITY_ID,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -153,8 +150,11 @@ async def test_select_command_failure(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: TEMPERATURE_UNIT_ENTITY_ID, ATTR_OPTION: "fahrenheit"},
+            SelectService.SELECT_OPTION,
+            {
+                TargetKey.ENTITY_ID: TEMPERATURE_UNIT_ENTITY_ID,
+                SelectServiceArgument.OPTION: "fahrenheit",
+            },
             blocking=True,
         )
 

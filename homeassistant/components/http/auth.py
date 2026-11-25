@@ -23,14 +23,13 @@ from homeassistant.auth import jwt_wrapper
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.http import current_request
+from homeassistant.helpers.http import KEY_AUTHENTICATED, current_request
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.storage import Store
 
 from .auth_util import async_user_not_allowed_do_auth
 from .const import (
     DATA_SUPERVISOR_USER,
-    KEY_AUTHENTICATED,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
     is_supervisor_unix_socket_request,
@@ -144,6 +143,7 @@ async def async_setup_auth(
         if async_user_not_allowed_do_auth(hass, refresh_token.user, request):
             return False
 
+        hass.auth.async_log_access_token_usage(refresh_token, request.remote)
         request[KEY_HASS_USER] = refresh_token.user
         request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
         return True

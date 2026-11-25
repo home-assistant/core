@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.season.const import (
     DOMAIN,
@@ -23,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import UTC
-
-from tests.common import MockConfigEntry
 
 HEMISPHERE_NORTHERN = {
     "homeassistant": {"latitude": 48.864716, "longitude": 2.349014},

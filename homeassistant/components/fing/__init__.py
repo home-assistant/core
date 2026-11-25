@@ -9,7 +9,7 @@ from .coordinator import FingConfigEntry, FingDataUpdateCoordinator
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: FingConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: FingConfigEntry) -> None:
     """Set up the Fing component."""
 
     coordinator = FingDataUpdateCoordinator(hass, config_entry)
@@ -24,11 +24,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: FingConfigEntry) 
     config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: FingConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

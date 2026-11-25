@@ -1,5 +1,6 @@
 """Tests for the Samsung Infrared climate platform."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from infrared_protocols.commands.samsung_ac import (
@@ -8,15 +9,19 @@ from infrared_protocols.commands.samsung_ac import (
     SamsungACFanMode,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.samsung_infrared.const import DOMAIN
@@ -24,20 +29,24 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     STATE_ON,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-)
+_STORED_CLIMATE_DATA = {
+    "native_current_temperature": None,
+    "native_target_temperature": 25.0,
+    "native_target_temperature_high": None,
+    "native_target_temperature_low": None,
+    "native_temperature_unit": UnitOfTemperature.CELSIUS,
+}
 
 
 async def test_samsung_infrared_climate_services(hass: HomeAssistant) -> None:
@@ -70,8 +79,11 @@ async def test_samsung_infrared_climate_services(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -84,8 +96,8 @@ async def test_samsung_infrared_climate_services(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 26},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 26},
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -96,8 +108,8 @@ async def test_samsung_infrared_climate_services(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_HIGH},
+            ClimateService.SET_FAN_MODE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.FAN_MODE: FAN_HIGH},
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -137,16 +149,22 @@ async def test_samsung_infrared_climate_turn_off_sends_bare_off_command(
 
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
         mock_send_command.reset_mock()
 
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+            },
             blocking=True,
         )
 
@@ -191,11 +209,11 @@ async def test_samsung_infrared_climate_set_temperature_with_hvac_mode(
 
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_HVAC_MODE: HVACMode.COOL,
-                ATTR_TEMPERATURE: 26,
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+                ClimateServiceArgument.TEMPERATURE: 26,
             },
             blocking=True,
         )
@@ -214,8 +232,8 @@ async def test_samsung_infrared_climate_set_temperature_with_hvac_mode(
 
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 22.5},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 22.5},
             blocking=True,
         )
 
@@ -261,14 +279,17 @@ async def test_samsung_infrared_climate_set_hvac_mode_auto_normalizes_fan_mode(
 
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_HIGH},
+            ClimateService.SET_FAN_MODE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.FAN_MODE: FAN_HIGH},
             blocking=True,
         )
 
@@ -278,8 +299,11 @@ async def test_samsung_infrared_climate_set_hvac_mode_auto_normalizes_fan_mode(
 
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.AUTO},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+            },
             blocking=True,
         )
 
@@ -402,8 +426,11 @@ async def test_samsung_infrared_climate_restore_temperature_unit(
 
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.samsung_ac", ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.samsung_ac",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
 
@@ -411,8 +438,72 @@ async def test_samsung_infrared_climate_restore_temperature_unit(
         assert sent_command.target_temperature == 17
 
 
+async def test_samsung_infrared_climate_restore_data_saved(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test the native temperatures are stored along with the last on mode."""
+    remote_entity_id = "remote.living_room_ir"
+    hass.states.async_set(remote_entity_id, STATE_ON)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "infrared_emitter_entity_id": remote_entity_id,
+            "device_type": "ac",
+        },
+        unique_id="samsung_ir_ac_test",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.samsung_infrared.climate.SamsungIrClimate._send_command",
+        new_callable=AsyncMock,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            "climate",
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: "climate.samsung_ac",
+                ClimateServiceArgument.TEMPERATURE: 25,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+            },
+            blocking=True,
+        )
+
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    stored = {
+        data["state"]["entity_id"]: data["extra_data"]
+        for data in hass_storage[RESTORE_STATE_KEY]["data"]
+    }
+    assert stored["climate.samsung_ac"] == {
+        **_STORED_CLIMATE_DATA,
+        "last_on_hvac_mode": HVACMode.HEAT.value,
+    }
+
+
+@pytest.mark.parametrize(
+    ("extra_data", "expected_temperature"),
+    [
+        pytest.param(
+            {"last_on_hvac_mode": HVACMode.HEAT.value},
+            24,
+            id="legacy_extra_data_falls_back_to_attributes",
+        ),
+        pytest.param(
+            {**_STORED_CLIMATE_DATA, "last_on_hvac_mode": HVACMode.HEAT.value},
+            25,
+            id="climate_extra_data",
+        ),
+    ],
+)
 async def test_samsung_infrared_climate_turn_on_after_restart_resumes_last_mode(
     hass: HomeAssistant,
+    extra_data: dict[str, Any],
+    expected_temperature: int,
 ) -> None:
     """Test that turn_on after a restart resumes the last non-OFF mode, not COOL.
 
@@ -439,7 +530,7 @@ async def test_samsung_infrared_climate_turn_on_after_restart_resumes_last_mode(
         [
             (
                 State("climate.samsung_ac", HVACMode.OFF, {}),
-                {"last_on_hvac_mode": HVACMode.HEAT.value},
+                extra_data,
             )
         ],
     )
@@ -470,3 +561,4 @@ async def test_samsung_infrared_climate_turn_on_after_restart_resumes_last_mode(
 
         sent_command = mock_send_command.call_args[0][0]
         assert sent_command.hvac_mode == SamsungAC0292HvacMode.HEAT
+        assert sent_command.target_temperature == expected_temperature
