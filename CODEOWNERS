@@ -242,6 +242,8 @@ AGENTS.md @home-assistant/core
 /tests/components/battery/ @home-assistant/core
 /homeassistant/components/bayesian/ @HarvsG
 /tests/components/bayesian/ @HarvsG
+/homeassistant/components/benq_projector_infrared/ @rrooggiieerr
+/tests/components/benq_projector_infrared/ @rrooggiieerr
 /homeassistant/components/besen/ @moryoav
 /tests/components/besen/ @moryoav
 /homeassistant/components/binary_sensor/ @home-assistant/core
@@ -381,6 +383,8 @@ AGENTS.md @home-assistant/core
 /tests/components/cync/ @Kinachi249
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
+/homeassistant/components/daikin_infrared/ @javitonino
+/tests/components/daikin_infrared/ @javitonino
 /homeassistant/components/data_grand_lyon/ @Crocmagnon
 /tests/components/data_grand_lyon/ @Crocmagnon
 /homeassistant/components/datadog/ @bm1549
@@ -1231,6 +1235,8 @@ AGENTS.md @home-assistant/core
 /tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/microbees/ @microBeesTech
 /tests/components/microbees/ @microBeesTech
+/homeassistant/components/microsoft/ @mib1185
+/tests/components/microsoft/ @mib1185
 /homeassistant/components/midea/ @chemelli74 @rokam
 /tests/components/midea/ @chemelli74 @rokam
 /homeassistant/components/miele/ @astrandb
