@@ -81,7 +81,9 @@ rules:
     status: exempt
     comment: The climate entity uses the default mode-based icons.
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: This integration has no situation that needs the user to act through a repair issue.
   stale-devices:
     status: exempt
     comment: An entry is one gateway and its indoor unit, both removed together with the entry.
