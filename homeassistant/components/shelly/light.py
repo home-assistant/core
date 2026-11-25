@@ -655,17 +655,24 @@ class RpcShellyLedStripBackground(ShellyRpcAttributeEntity, LightEntity):
     @rpc_call
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Set the background color."""
+        """Turn on the LED strip with the background color."""
         rgb = kwargs.get(ATTR_RGB_COLOR) or self.rgb_color or (255, 255, 255)
         brightness = kwargs.get(ATTR_BRIGHTNESS) or self.brightness or 255
         await self.coordinator.device.ledstrip_set(
-            self._id, {"bg_rgb": [round(c * brightness / 255) for c in rgb]}
+            self._id,
+            {
+                "on": True,
+                "bg_rgb": list(color_util.match_max_scale((brightness,), rgb)),
+            },
         )
 
     @rpc_call
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set the background color to black."""
+        # Keep the effect's stored background color when the strip is already off
+        if not self.status["on"]:
+            return
         await self.coordinator.device.ledstrip_set(self._id, {"bg_rgb": [0, 0, 0]})
 
 
