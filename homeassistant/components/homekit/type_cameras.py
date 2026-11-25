@@ -96,10 +96,7 @@ _LOGGER = logging.getLogger(__name__)
 VIDEO_OUTPUT = (
     "-map {v_map} -an "
     "-c:v {v_codec} "
-    "{v_profile}"
-    "-tune zerolatency -pix_fmt yuv420p "
-    "-r {fps} "
-    "-b:v {v_max_bitrate}k -bufsize {v_bufsize}k -maxrate {v_max_bitrate}k "
+    "{v_options}"
     "-payload_type 99 "
     "-ssrc {v_ssrc} -f rtp "
     "-srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params {v_srtp_key} "
@@ -120,6 +117,8 @@ AUDIO_OUTPUT = (
 )
 
 RECORDING_LEVELS = ("3.1", "3.2", "4.0")
+# Keyframe interval for transcoded live streams so UDP packet loss recovers quickly.
+STREAM_KEYFRAME_SECONDS = 2
 
 RECORDING_SAMPLE_RATES = {
     AudioSampleRate.KHZ_8: 8000,
@@ -166,6 +165,62 @@ def with_input_flag(input_source: str) -> str:
     return input_source
 
 
+def _extract_video_filters(input_args: list[str]) -> tuple[list[str], list[str]]:
+    """Separate video filter options from input args, keeping ha-ffmpeg's order."""
+    # A second -vf would replace source filters such as a flip, so they run
+    # first, in the reverse order ha-ffmpeg gives them.
+    filters: list[str] = []
+    source_args: list[str] = []
+    tokens = iter(input_args)
+    for token in tokens:
+        if token in ("-vf", "-filter:v"):
+            if (value := next(tokens, None)) is None:
+                raise ValueError(f"{token} without a filter")
+            filters.insert(0, value)
+        else:
+            source_args.append(token)
+    return source_args, filters
+
+
+def _stream_video_args(
+    config: dict[str, Any],
+    stream_config: dict[str, Any],
+    input_source: str,
+) -> tuple[str, str]:
+    """Return the ffmpeg input arguments and video encoding options for a live stream."""
+    input_args = shlex.split(with_input_flag(input_source))
+    video_codec = config[CONF_VIDEO_CODEC]
+    if video_codec == VIDEO_CODEC_COPY:
+        return shlex.join(input_args), ""
+    profile = config[CONF_VIDEO_PROFILE_NAMES][
+        int.from_bytes(stream_config["v_profile_id"], byteorder="big")
+    ]
+    encoder_args = ""
+    if video_codec == VIDEO_CODEC_LIBX264:
+        level = RECORDING_LEVELS[
+            int.from_bytes(stream_config["v_level"], byteorder="big")
+        ]
+        # Hardware encoders take no level string or x264 preset/tune.
+        encoder_args = f"-level:v {level} -preset veryfast -tune zerolatency "
+    input_args, filters = _extract_video_filters(input_args)
+    width = stream_config["width"]
+    height = stream_config["height"]
+    # Downscale to the negotiated dimensions without upscaling smaller streams.
+    filters.append(
+        f"scale=min({width}\\,iw):min({height}\\,ih):"
+        "force_original_aspect_ratio=decrease:force_divisible_by=2"
+    )
+    fps = stream_config["fps"]
+    max_bitrate = stream_config["v_max_bitrate"]
+    video_options = (
+        f"-profile:v {profile} {encoder_args}-pix_fmt yuv420p "
+        f"-vf {shlex.quote(','.join(filters))} "
+        f"-r {fps} -b:v {max_bitrate}k -bufsize {max_bitrate * 2}k "
+        f"-maxrate {max_bitrate}k -bf 0 -g {fps * STREAM_KEYFRAME_SECONDS} "
+    )
+    return shlex.join(input_args), video_options
+
+
 def recording_ffmpeg_args(
     config: dict[str, Any],
     selected: SelectedRecordingConfiguration,
@@ -190,19 +245,7 @@ def recording_ffmpeg_args(
                 f"-level:v {RECORDING_LEVELS[int(video.level)]} "
                 "-preset veryfast -tune zerolatency "
             )
-        # A second -vf would replace source filters such as a flip, so they run
-        # first, in the reverse order ha-ffmpeg also gives them in live streams.
-        filters: list[str] = []
-        source_args: list[str] = []
-        tokens = iter(input_args)
-        for token in tokens:
-            if token in ("-vf", "-filter:v"):
-                if (value := next(tokens, None)) is None:
-                    raise ValueError(f"{token} without a filter")
-                filters.insert(0, value)
-            else:
-                source_args.append(token)
-        input_args = source_args
+        input_args, filters = _extract_video_filters(input_args)
         # The hub expects exactly the selected size, other aspect ratios are padded.
         filters.append(
             f"scale={attributes.width}:{attributes.height}:"
@@ -542,16 +585,13 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         if not (input_source := await self._async_get_stream_source()):
             _LOGGER.error("Camera has no stream source")
             return False
-        input_source = with_input_flag(input_source)
-        video_profile = ""
-        if self.config[CONF_VIDEO_CODEC] != VIDEO_CODEC_COPY:
-            video_profile = (
-                "-profile:v "
-                + self.config[CONF_VIDEO_PROFILE_NAMES][
-                    int.from_bytes(stream_config["v_profile_id"], byteorder="big")
-                ]
-                + " "
+        try:
+            input_source, video_options = _stream_video_args(
+                self.config, stream_config, input_source
             )
+        except (ValueError, LookupError) as err:
+            _LOGGER.error("[%s] Cannot build the stream: %s", self.entity_id, err)
+            return False
         audio_application = ""
         audio_frame_duration = ""
         if self.config[CONF_AUDIO_CODEC] == "libopus":
@@ -583,8 +623,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         output_vars = stream_config.copy()
         output_vars.update(
             {
-                "v_profile": video_profile,
-                "v_bufsize": stream_config["v_max_bitrate"] * 4,
+                "v_options": video_options,
                 "v_map": self.config[CONF_VIDEO_MAP],
                 "v_pkt_size": self.config[CONF_VIDEO_PACKET_SIZE],
                 "v_codec": self.config[CONF_VIDEO_CODEC],
