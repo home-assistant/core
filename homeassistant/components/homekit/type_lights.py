@@ -283,6 +283,7 @@ class Light(HomeAccessory):
                     self.entity_id,
                     char_values,
                 )
+                self.adaptive_lighting.discard_applied()
                 return
 
         if has_on:
@@ -356,7 +357,25 @@ class Light(HomeAccessory):
         _LOGGER.debug(
             "Calling light service with params: %s -> %s", char_values, params
         )
-        self.async_call_service(LIGHT_DOMAIN, service, params, ", ".join(events))
+        self.hass.async_create_task(
+            self._async_call_light_service(
+                service,
+                params,
+                ", ".join(events),
+                CHAR_COLOR_TEMPERATURE in char_values,
+            ),
+            eager_start=True,
+        )
+
+    async def _async_call_light_service(
+        self, service: str, params: dict[str, Any], value: str, sets_colour: bool
+    ) -> None:
+        """Call the light service and let adaptive lighting know if it failed."""
+        succeeded = await self.async_call_service_and_wait(
+            LIGHT_DOMAIN, service, params, value
+        )
+        if not succeeded and sets_colour and self.adaptive_lighting:
+            self.adaptive_lighting.discard_applied()
 
     def _warm_rgb_color(self, mireds: int) -> tuple[int, ...] | None:
         """Return the colour for a temperature below the white channel's floor.

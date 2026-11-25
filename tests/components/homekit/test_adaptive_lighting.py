@@ -61,7 +61,8 @@ from homeassistant.components.light import (
     LightServiceArgument,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 # A real schedule written by the Home app to a colour temperature light. The
@@ -252,6 +253,27 @@ async def test_adaptive_lighting_is_off_without_the_option(
     await hass.async_block_till_done()
 
     assert acc.adaptive_lighting is None
+
+
+async def test_a_failed_write_is_sent_again_at_the_same_point(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """A colour the light never received is not remembered as applied."""
+    acc = await _setup_light(hass, hk_driver)
+    assert acc.adaptive_lighting is not None
+    calls = []
+
+    async def failing_turn_on(call: ServiceCall) -> None:
+        calls.append(call)
+        raise HomeAssistantError("The bulb is unreachable")
+
+    hass.services.async_register(LIGHT_DOMAIN, "turn_on", failing_turn_on)
+
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+    await _wait_for_light_coalesce(hass)
+
+    assert len(calls) == 1
+    assert acc.adaptive_lighting._last_applied is None
 
 
 async def test_a_schedule_applies_a_colour_temperature(

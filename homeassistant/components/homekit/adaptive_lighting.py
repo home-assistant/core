@@ -787,6 +787,15 @@ class AdaptiveLightingController:
             self.disable("manual colour change")
 
     @callback
+    def discard_applied(self) -> None:
+        """Forget the last colour sent, because the light never received it.
+
+        Without this the next cycle would see the same curve point and skip
+        the write, leaving the bulb on the old colour until the curve moves.
+        """
+        self._last_applied = None
+
+    @callback
     def _handle_state_change(self, event: Event[EventStateChangedData]) -> None:
         """Apply the curve when the light changes, instead of a minute later.
 
