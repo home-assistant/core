@@ -18,19 +18,24 @@ from propcache.api import cached_property
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
 from .helpers import (
     MatterConfigEntry,
+    get_child_device_identifier,
+    get_child_device_names,
     get_device_id,
     get_discovery_key,
+    get_entity_child_device_owner,
     get_entity_unique_id,
 )
+from .semantic_tags import get_labeling_list
+from .util import get_clean_name
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -39,31 +44,6 @@ if TYPE_CHECKING:
     from .models import MatterEntityInfo
 
 LOGGER = logging.getLogger(__name__)
-
-# Due to variances in labeling implementations, labels are vendor and product specific.
-# This dictionary defines which labels to use for specific vendor/product combinations.
-# The keys are vendor IDs, the values are dictionaries with product IDs as keys
-# and lists of label names to use as values. If the value is None, no labels are used
-VENDOR_LABELING_LIST: dict[int, dict[int, list[str] | None]] = {
-    4488: {259: ["position"]},  # TP-Link Dual Outdoor Plug US
-    4874: {105: ["orientation"]},  # Eve Energy dual Outlet US
-    4961: {
-        1: ["inovelliname", "label", "name", "button"],  # Inovelli VTM31
-        2: ["label", "devicetype", "button"],  # Inovelli VTM35
-        4: None,  # Inovelli VTM36
-        16: ["label", "name", "button"],  # Inovelli VTM30
-    },
-    65521: {  # Test/DIY devices
-        32768: ["ha_entitylabel"],
-        32769: ["ha_entitylabel"],
-        32770: ["ha_entitylabel"],
-    },
-    65522: {  # Test/DIY devices
-        32768: ["ha_entitylabel"],
-        32769: ["ha_entitylabel"],
-        32770: ["ha_entitylabel"],
-    },
-}
 
 
 def catch_matter_error[_R, **P](
@@ -127,22 +107,26 @@ class MatterEntity(Entity):
         self._attr_unique_id = get_entity_unique_id(
             node_device_id, endpoint, entity_info
         )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
+        self._child_device_endpoint = get_entity_child_device_owner(
+            endpoint, entity_info.primary_attribute
         )
         self._attr_available = (
             self._endpoint.node.available and self._get_bridged_reachable()
         )
         # mark endpoint postfix if another endpoint of the same HA device has the
-        # primary attribute. Bridged endpoints only share a device with their
-        # composed parts, so this also covers a composed device behind a bridge
-        # (e.g. a bridged heat pump exposing two Thermostat endpoints).
-        if any(
+        # primary attribute; a child device's own endpoint is named by the child.
+        # Bridged endpoints only share a device with their composed parts, so this
+        # also covers a composed device behind a bridge (e.g. a bridged heat pump
+        # exposing two Thermostat endpoints).
+        owner = self._child_device_endpoint
+        if owner != self._endpoint and any(
             ep
             for ep in self._endpoint.node.endpoints.values()
             if ep != self._endpoint
             and ep.has_attribute(None, entity_info.primary_attribute)
             and get_device_id(server_info, ep) == node_device_id
+            and get_entity_child_device_owner(ep, entity_info.primary_attribute)
+            == owner
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
         # Always set translation_key for state_attributes translations.
@@ -153,25 +137,58 @@ class MatterEntity(Entity):
             if not self._name_postfix:
                 self._attr_name = None
 
-        # Matter labels can be used to modify the entity name
-        # by appending the text.
-        if name_modifier := self._get_name_modifier():
+        # Matter labels can be used to modify the entity name by appending the
+        # text. Entities on a child device are named by the child.
+        if self._child_device_endpoint is None and (
+            name_modifier := self._get_name_modifier()
+        ):
             self._name_postfix = name_modifier
 
         # make sure to update the attributes once
         self._update_from_device()
 
+    @property
+    @override
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:
+        """Return device info for this entity.
+
+        An endpoint that is split into its own child device declares that child
+        (created on demand by the entity platform); all other endpoints belong to
+        the node device.
+        """
+        server_info = cast(ServerInfoMessage, self.matter_client.server_info)
+        node_device_id = get_device_id(server_info, self._endpoint)
+        node_identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
+        # The name can only be missing if the node changed since the entity was
+        # created; the entity then stays on the node device.
+        if (child_device_endpoint := self._child_device_endpoint) is None or (
+            child_device_name := get_child_device_names(self._endpoint.node).get(
+                child_device_endpoint.endpoint_id
+            )
+        ) is None:
+            return DeviceInfo(identifiers={node_identifier})
+        # The node device is pre-created in the adapter before entities are added,
+        # so it resolves here for use as the child device's parent.
+        config_entry = cast(MatterConfigEntry, self.platform.config_entry)
+        parent_device_id = dr.async_get_device_id_by_identifier(
+            self.hass,
+            node_identifier,
+            config_entry_id=config_entry.entry_id,
+        )
+        return ChildDeviceInfo(
+            identifiers={
+                get_child_device_identifier(server_info, child_device_endpoint)
+            },
+            name=child_device_name.name,
+            translation_key=child_device_name.translation_key,
+            translation_placeholders=dict(
+                child_device_name.translation_placeholders or ()
+            ),
+            parent_device_id=parent_device_id,
+        )
+
     def _find_matching_labels(self) -> list[str]:
         """Find all labels for a Matter entity."""
-
-        device_info = self._endpoint.device_info
-        labeling_list = (
-            VENDOR_LABELING_LIST.get(device_info.vendorID, {}).get(
-                device_info.productID
-            )
-            if device_info is not None
-            else None
-        )
 
         # get the labels from the UserLabel and FixedLabel clusters
         user_label_list: list[clusters.UserLabel.Structs.LabelStruct] = (
@@ -184,10 +201,10 @@ class MatterEntity(Entity):
         )
 
         found_labels: list[str] = [
-            lbl.value
-            for label in labeling_list or []
+            value
+            for label in get_labeling_list(self._endpoint)
             for lbl in (*user_label_list, *fixed_label_list)
-            if lbl.label.lower() == label
+            if lbl.label.lower() == label and (value := get_clean_name(lbl.value))
         ]
         return found_labels
 
@@ -416,9 +433,9 @@ class MatterEntity(Entity):
             return
         entry = cast(MatterConfigEntry, self.platform.config_entry)
         # let discovery add the entity again if the device supports it later
-        entry.runtime_data.adapter.discovered_entities.discard(
-            get_discovery_key(self._endpoint, self._entity_info)
-        )
+        entry.runtime_data.adapter.discovered_entities.get(
+            (self._endpoint.node.node_id, self._endpoint.endpoint_id), set()
+        ).discard(get_discovery_key(self._endpoint, self._entity_info))
         er.async_get(self.hass).async_remove(self.entity_id)
 
     @callback
@@ -448,12 +465,19 @@ class MatterEntity(Entity):
     async def send_device_command(
         self,
         command: ClusterCommand,
+        *,
+        endpoint: MatterEndpoint | None = None,
         **kwargs: Any,
     ) -> Any:
-        """Send device command on the primary attribute's endpoint."""
+        """Send device command on the given endpoint (defaults to the primary endpoint).
+
+        `endpoint` is only needed for entities composed of multiple endpoints,
+        e.g. a Closure entity commanding one of its ClosurePanel children.
+        """
+        target_endpoint = endpoint or self._endpoint
         return await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
+            node_id=target_endpoint.node.node_id,
+            endpoint_id=target_endpoint.endpoint_id,
             command=command,
             **kwargs,
         )

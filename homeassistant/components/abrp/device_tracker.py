@@ -27,6 +27,9 @@ async def async_setup_entry(
 
     @callback
     def _add_new_trackers() -> None:
+        if garage := runtime.garage_coordinator.data:
+            # A vehicle that left took its tracker along with its device.
+            added.intersection_update(raw.vehicle_id for raw in garage)
         entities: list[AbrpDeviceTracker] = []
         for raw in runtime.garage_coordinator.data:
             vehicle_id = raw.vehicle_id
@@ -42,6 +45,9 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     entry.async_on_unload(telemetry_coordinator.async_add_listener(_add_new_trackers))
+    entry.async_on_unload(
+        runtime.garage_coordinator.async_add_listener(_add_new_trackers)
+    )
     _add_new_trackers()
 
 

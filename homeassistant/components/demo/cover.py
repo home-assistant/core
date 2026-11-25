@@ -225,14 +225,12 @@ class DemoCover(CoverEntity):
         tilt = self._tilt_position
         if tilt is None:
             return
-        if tilt in self._closed_tilt_positions:
+        closed_position = self._closed_tilt_positions[0]
+        if tilt == closed_position:
             self._stop_tilt()
             self.async_write_ha_state()
             return
 
-        closed_position = min(
-            self._closed_tilt_positions, key=lambda position: abs(position - tilt)
-        )
         self._set_tilt_position = closed_position
         self._listen_cover_tilt()
         self._requested_closing_tilt = closed_position < tilt

@@ -1,4 +1,6 @@
 ---
+# PR-triggered runs have no fixed head branch, so the CTR-021 workflow_run branch filter cannot be satisfied.
+strict: false
 name: quality-scale-reviewer
 run-name: "quality-scale-reviewer: ${{ github.event.workflow_run.display_title || format('PR #{0}', inputs.pull_request_number) }}"
 description: >
@@ -75,7 +77,7 @@ safe-outputs:
     hide-older-comments: true
   needs:
     - prepare
-  # The conclusion job comments on the pull request when the credit budget skips a run.
+  # The credit_budget_notice job comments on the pull request when the credit budget skips a run.
   report-failure-as-issue: ["!daily_ai_credits_exceeded"]
 jobs:
   prepare:
@@ -126,7 +128,7 @@ jobs:
           echo "pr_number=$(jq '.[0]' <<< "${MATCHES}")" >> "${GITHUB_OUTPUT}"
       - name: Set up Python
         if: steps.pr.outputs.skip != 'true'
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version-file: ".python-version"
           check-latest: true
@@ -184,17 +186,23 @@ jobs:
           ⏭️ The automated Integration Quality Scale review was skipped: this pull request ${SKIP_REASON}."
       - name: Upload deterministic artifact
         if: steps.prepare.outputs.skip != 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: quality-scale-reviewer-deterministic
           path: deterministic
           if-no-files-found: error
           retention-days: 7
   # The activation job evaluates the daily AI-credit budget but may not write,
-  # so the notice is posted from the conclusion job, which runs when the budget
-  # is exceeded and the agent is skipped.
-  conclusion:
-    pre-steps:
+  # and the conclusion job does not accept custom steps, so this job posts the
+  # notice when the budget is exceeded and the agent is skipped. gh-aw makes the
+  # agent job wait for every custom job, so the condition is on the step: a
+  # skipped job would skip the agent.
+  credit_budget_notice:
+    needs: [activation, prepare]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
       - name: Comment that the review was skipped by the daily AI-credit budget
         if: needs.activation.outputs.daily_ai_credits_exceeded == 'true'
         env:
@@ -223,7 +231,7 @@ concurrency:
   job-discriminator: ${{ github.run_id }}
 steps:
   - name: Download deterministic artifact
-    uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+    uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
     with:
       name: quality-scale-reviewer-deterministic
       path: /tmp/gh-aw/agent
