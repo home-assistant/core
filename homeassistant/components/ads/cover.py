@@ -184,7 +184,7 @@ class AdsCover(AdsEntity, CoverEntity):
     @override
     def available(self) -> bool:
         """Return whether the PLC runs and has sent a value."""
-        if not self._ads_hub.connected:
+        if not self._connection_available:
             return False
         if self._ads_var is not None or self._ads_var_position is not None:
             return (

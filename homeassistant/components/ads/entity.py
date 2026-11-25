@@ -138,7 +138,14 @@ class AdsEntity(Entity):
         Values that arrive while the PLC is stopped are kept, so the latest one
         shows as soon as it runs again.
         """
-        return self._ads_hub.connected and self._state_dict[STATE_KEY_STATE] is not None
+        return (
+            self._connection_available and self._state_dict[STATE_KEY_STATE] is not None
+        )
+
+    @property
+    def _connection_available(self) -> bool:
+        """Return whether the parent allows it and the PLC runs."""
+        return super().available and self._ads_hub.connected
 
     @callback
     def async_connection_changed(self) -> None:
