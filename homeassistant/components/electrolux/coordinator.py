@@ -90,7 +90,7 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
         """Handle an incoming SSE event. Event will look like: {"userId": "...", "applianceId": "...", "property": "timeToEnd", "value": 720}."""
 
         current_state = self.data
-        if not current_state:
+        if current_state is None:
             return
 
         updated_state = apply_sse_update(

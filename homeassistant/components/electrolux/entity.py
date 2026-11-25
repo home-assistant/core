@@ -70,7 +70,7 @@ class ElectroluxBaseEntity[T: ApplianceData](
     def _handle_coordinator_update(self) -> None:
         """When the coordinator updates."""
         appliance_state = self.coordinator.data
-        if not appliance_state:
+        if appliance_state is None:
             _LOGGER.warning("Appliance %s not found in update", self._appliance_id)
             return
 
