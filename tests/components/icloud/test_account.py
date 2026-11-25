@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pyicloud import PyiCloudService
 from pyicloud.const import AppleAuthError
 from pyicloud.exceptions import (
     PyiCloud2FARequiredException,
@@ -1922,3 +1923,186 @@ async def test_setup_reports_one_repair_when_recovery_fails(
     assert config_entry.state is ConfigEntryState.LOADED
     assert len(_setup_reauth_flows(hass)) == 1
     assert config_entry.runtime_data.api is None
+
+
+async def _account_with_live_service(hass: HomeAssistant) -> IcloudAccount:
+    """Set up an account with a service that reports one device."""
+    device = MockAppleDeviceWithFeatures(dict(DEVICE))
+    api = _setup_service(device)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService", return_value=api
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    return config_entry.runtime_data
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(PyiCloudFailedLoginException("rejected"), id="failed-login"),
+        pytest.param(
+            PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response)),
+            id="auth-required",
+        ),
+    ],
+)
+async def test_setup_does_not_replace_a_session_under_an_active_repair(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, error: Exception
+) -> None:
+    """Test that an active repair keeps its rejected session untouched."""
+    monkeypatch.setattr(IcloudAccount, "_reauth_pending", lambda self: True)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService", side_effect=error
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.runtime_data.api is None
+    assert _setup_reauth_flows(hass)
+
+
+async def test_setup_recovery_stands_down_when_another_poll_recovered(
+    hass: HomeAssistant,
+) -> None:
+    """Test that recovery does not replace a session another poll installed."""
+    account = await _account_with_live_service(hass)
+    rejected = account.api
+    account.api = _setup_service(MockAppleDeviceWithFeatures(dict(DEVICE)))
+
+    assert not await hass.async_add_executor_job(
+        account._recover_setup_rejection,
+        PyiCloudFailedLoginException("rejected"),
+        rejected,
+    )
+    assert account.api is not rejected
+
+
+async def test_setup_recovery_outage_keeps_the_rejected_session(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that an outage while rebuilding the service leaves repair to setup."""
+    account = await _account_with_live_service(hass)
+    rejected = account.api
+
+    def _unreachable() -> PyiCloudService:
+        raise PyiCloudConnectionException("offline")
+
+    monkeypatch.setattr(account, "_create_setup_recovery_service", _unreachable)
+    assert not await hass.async_add_executor_job(
+        account._recover_setup_rejection,
+        PyiCloudFailedLoginException("rejected"),
+        rejected,
+    )
+    assert account.api is rejected
+
+
+@pytest.mark.parametrize(
+    ("error", "keeps_session", "expected_verification"),
+    [
+        pytest.param(
+            PyiCloud2FARequiredException(USERNAME, Mock(spec=Response)),
+            True,
+            True,
+            id="challenge",
+        ),
+        pytest.param(
+            PyiCloudFailedLoginException("still rejected"), False, False, id="rejected"
+        ),
+    ],
+)
+async def test_setup_recovery_handles_a_rejected_replacement(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    error: Exception,
+    keeps_session: bool,
+    expected_verification: bool,
+) -> None:
+    """Test that a second rejection ends the bounded setup recovery."""
+    account = await _account_with_live_service(hass)
+    rejected = account.api
+    fresh = MagicMock()
+    fresh.authenticate.side_effect = error
+    monkeypatch.setattr(account, "_create_setup_recovery_service", lambda: fresh)
+
+    assert await hass.async_add_executor_job(
+        account._recover_setup_rejection,
+        PyiCloudFailedLoginException("rejected"),
+        rejected,
+    )
+    assert (account.api is fresh) is keeps_session
+    assert account.requires_verification_code is expected_verification
+    assert _setup_reauth_flows(hass)
+
+
+async def test_setup_recovery_propagates_an_unrelated_replacement_error(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that an outage during recovery is retried, not blamed on credentials."""
+    account = await _account_with_live_service(hass)
+    rejected = account.api
+    fresh = MagicMock()
+    fresh.authenticate.side_effect = ConnectionError("not an auth failure")
+    monkeypatch.setattr(account, "_create_setup_recovery_service", lambda: fresh)
+
+    with pytest.raises(ConnectionError):
+        await hass.async_add_executor_job(
+            account._recover_setup_rejection,
+            PyiCloudFailedLoginException("rejected"),
+            rejected,
+        )
+    assert account.api is rejected
+    assert not _setup_reauth_flows(hass)
+
+
+async def test_device_read_status_recovers_with_the_stored_session(
+    hass: HomeAssistant,
+) -> None:
+    """Test that an auth status from the device read gets one silent recovery."""
+    device = MockAppleDeviceWithFeatures(dict(DEVICE))
+    api = _setup_service(device)
+
+    class _RejectDeviceRead:
+        """Report one rejected devices read, then delegate to the live service."""
+
+        def __init__(self) -> None:
+            self.failed = False
+
+        @property
+        def devices(self) -> MockDevicesContainerWithFeatures:
+            if not self.failed:
+                self.failed = True
+                raise PyiCloudAPIResponseException(
+                    "Authentication required for Account.",
+                    AppleAuthError.LOGIN_TOKEN_EXPIRED,
+                )
+            return api.devices
+
+        def __getattr__(self, name: str) -> Any:
+            return getattr(api, name)
+
+    fresh = _setup_service(device)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+        side_effect=[_RejectDeviceRead(), fresh],
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.runtime_data.api is fresh
+    assert not _setup_reauth_flows(hass)
