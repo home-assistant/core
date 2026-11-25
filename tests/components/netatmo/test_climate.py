@@ -1433,8 +1433,11 @@ async def test_thermostat_preset_refreshes_home_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: CLIMATE_ENTITY_LIVINGROOM, ATTR_PRESET_MODE: PRESET_AWAY},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: CLIMATE_ENTITY_LIVINGROOM,
+            ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+        },
         blocking=True,
     )
     await _tick(hass, freezer)
@@ -1534,7 +1537,7 @@ async def test_thermostat_timed_preset_refreshes_after_end(
         DOMAIN,
         NetatmoService.SET_PRESET_MODE_WITH_END_DATETIME,
         {
-            ATTR_ENTITY_ID: CLIMATE_ENTITY_LIVINGROOM,
+            TargetKey.ENTITY_ID: CLIMATE_ENTITY_LIVINGROOM,
             ATTR_PRESET_MODE: PRESET_AWAY,
             NetatmoServiceArgument.END_DATETIME: (
                 dt_util.utcnow() + timedelta(minutes=10)
