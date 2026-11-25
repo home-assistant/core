@@ -13,7 +13,7 @@ from .demand_control import (
     demand_control_write_state,
     get_demand_control_max_power,
 )
-from .entity import DaikinEntity
+from .entity import DaikinEntity, daikin_exception_handler
 
 DEMAND_CONTROL_MAX_POWER = NumberEntityDescription(
     key="demand_control_max_power",
@@ -54,6 +54,7 @@ class DaikinDemandControlNumber(DaikinEntity, NumberEntity):
         return get_demand_control_max_power(self.device.get_demand_control())
 
     @override
+    @daikin_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Set the manual maximum power."""
         attrs = self.device.get_demand_control()

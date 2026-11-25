@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from aiohttp import ClientError
+from pydaikin.exceptions import DaikinException
 import pytest
 
 from homeassistant.components.daikin.const import DOMAIN
@@ -12,6 +14,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import EntityCategory, TargetKey
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ZoneDevice, async_setup_daikin
@@ -111,3 +114,48 @@ async def test_select_demand_control_mode(
     zone_device.set_demand_control.assert_awaited_once_with(
         en_demand=enabled, max_pow=50, mode=mode
     )
+
+
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        pytest.param(
+            DaikinException("device rejected command"), "device rejected command"
+        ),
+        pytest.param(ClientError("connection lost"), "connection lost"),
+        pytest.param(TimeoutError(), "TimeoutError"),
+    ],
+)
+async def test_select_demand_control_communication_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    zone_device: ZoneDevice,
+    error: Exception,
+    message: str,
+) -> None:
+    """Translate communication errors from demand-control select writes."""
+    zone_device.support_demand_control = True
+    zone_device.get_demand_control.return_value = {
+        "en_demand": "1",
+        "mode": "0",
+        "max_pow": "50",
+    }
+    zone_device.set_demand_control = AsyncMock(side_effect=error)
+    await async_setup_daikin(hass, zone_device)
+    entity_id = _demand_control_select_entity_id(entity_registry, zone_device.mac)
+    assert entity_id is not None
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: "auto",
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "error_communicating"
+    assert err.value.translation_placeholders == {"error": message}

@@ -15,7 +15,7 @@ from .demand_control import (
     get_demand_control_mode,
     get_demand_control_option,
 )
-from .entity import DaikinEntity
+from .entity import DaikinEntity, daikin_exception_handler
 
 DEMAND_CONTROL_MODE = SelectEntityDescription(
     key="demand_control",
@@ -53,6 +53,7 @@ class DaikinDemandControlSelect(DaikinEntity, SelectEntity):
         return get_demand_control_option(self.device.get_demand_control())
 
     @override
+    @daikin_exception_handler
     async def async_select_option(self, option: str) -> None:
         """Set the demand control mode."""
         attrs = self.device.get_demand_control()
