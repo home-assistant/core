@@ -40,6 +40,7 @@ from .const import (
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
     DOMAIN,
+    MAX_METER_OFFSET_DAYS,
     METER_TYPES,
     MeterInformation,
 )
@@ -48,6 +49,21 @@ from .services import async_setup_services
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_OFFSET = timedelta(hours=0)
+
+__all__ = [
+    "CONF_METER",
+    "CONF_SOURCE_SENSOR",
+    "CONF_TARIFF",
+    "CONF_TARIFFS",
+    "CONF_TARIFF_ENTITY",
+    "DATA_TARIFF_SENSORS",
+    "DATA_UTILITY",
+    "DEFAULT_OFFSET",
+    "DOMAIN",
+    "METER_CONFIG_SCHEMA",
+    "async_setup",
+    "max_28_days",
+]
 
 
 def validate_cron_pattern(pattern: str) -> str:
@@ -76,10 +92,10 @@ def period_or_cron(config: ConfigType) -> ConfigType:
 
 
 def max_28_days(config: timedelta) -> timedelta:
-    """Check that time period does not include more than 28 days."""
-    if config.days >= 28:
+    """Check that time period does not include more than 27 days."""
+    if config.days > MAX_METER_OFFSET_DAYS:
         raise probatio.Invalid(
-            "Unsupported offset of more than 28 days, please use a cron pattern."
+            "Unsupported offset of more than 27 days, please use a cron pattern."
         )
 
     return config
@@ -178,7 +194,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Utility Meter from a config entry."""
 
     entity_registry = er.async_get(hass)
@@ -232,25 +248,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, (Platform.SELECT, Platform.SENSOR)
         )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
     platforms_to_unload = [Platform.SENSOR]
     if entry.options.get(CONF_TARIFFS):
         platforms_to_unload.append(Platform.SELECT)
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry,
         platforms_to_unload,
-    ):
-        hass.data[DATA_UTILITY].pop(entry.entry_id)
-
-    return unload_ok
+    )
+    hass.data[DATA_UTILITY].pop(entry.entry_id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
@@ -273,8 +285,13 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     helper_config_entry_id=config_entry.entry_id,
                     source_device_id=source_device_id,
                 )
+        if config_entry.minor_version < 3:
+            # The config flow incorrectly allowed 28 days offset, clamp to 27 days
+            options[CONF_METER_OFFSET] = min(
+                options[CONF_METER_OFFSET], MAX_METER_OFFSET_DAYS
+            )
         hass.config_entries.async_update_entry(
-            config_entry, options=options, minor_version=2
+            config_entry, options=options, minor_version=3
         )
 
     _LOGGER.debug(
@@ -282,5 +299,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

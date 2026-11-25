@@ -3,14 +3,13 @@
 from typing import Any, override
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityStateAttribute,
+    LightServiceArgument,
 )
 from homeassistant.const import CONF_LIGHTS, CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -73,17 +72,6 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
                 CONF_MAX_TEMP, LIGHT_DEFAULT_MAX_KELVIN
             )
 
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
-
     @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -115,10 +103,10 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on and set brightness if provided."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS)
         if brightness and isinstance(brightness, int):
             await self.async_set_brightness(brightness)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
+        color_temp = kwargs.get(LightServiceArgument.COLOR_TEMP_KELVIN)
         if color_temp and isinstance(color_temp, int):
             await self.async_set_color_temp(color_temp)
         await self.async_turn(self.command_on)

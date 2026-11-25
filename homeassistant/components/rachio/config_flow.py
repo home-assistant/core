@@ -1,5 +1,6 @@
 """Config flow for Rachio integration."""
 
+from collections.abc import Mapping
 from http import HTTPStatus
 import logging
 from typing import Any, override
@@ -8,12 +9,7 @@ import probatio
 from rachiopy import Rachio
 from requests.exceptions import ConnectTimeout
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -30,12 +26,14 @@ from .const import (
     KEY_STATUS,
     KEY_USERNAME,
 )
+from .device import RachioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = probatio.Schema(
     {probatio.Required(probatio.Secret(CONF_API_KEY)): str}, extra=probatio.ALLOW_EXTRA
 )
+REAUTH_SCHEMA = probatio.Schema({probatio.Required(probatio.Secret(CONF_API_KEY)): str})
 
 
 async def validate_input(hass: HomeAssistant, data):
@@ -82,7 +80,6 @@ class RachioConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             try:
                 info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -90,10 +87,57 @@ class RachioConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "api_key_url": "https://app.rach.io/",
+            },
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new API key."""
+        errors = {}
+        if user_input is not None:
+            try:
+                await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                reauth_entry = self._get_reauth_entry()
+                existing_entry = (
+                    self.hass.config_entries.async_entry_for_domain_unique_id(
+                        DOMAIN, user_input[CONF_API_KEY]
+                    )
+                )
+                if existing_entry and existing_entry.entry_id != reauth_entry.entry_id:
+                    return self.async_abort(reason="already_configured")
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    unique_id=user_input[CONF_API_KEY],
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
             errors=errors,
             description_placeholders={
                 "api_key_url": "https://app.rach.io/",
@@ -114,7 +158,7 @@ class RachioConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RachioConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()

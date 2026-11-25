@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 from myuplink import Device, DevicePoint, System
 import orjson
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -21,8 +22,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.json import json_loads
 
 from .const import CLIENT_ID, CLIENT_SECRET, UNIQUE_ID
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="expires_at")

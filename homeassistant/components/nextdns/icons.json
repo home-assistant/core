@@ -243,6 +243,12 @@
       "cname_flattening": {
         "default": "mdi:tournament"
       },
+      "dns_data_exfiltration_protection": {
+        "default": "mdi:dns-outline"
+      },
+      "dns_payload_delivery_protection": {
+        "default": "mdi:dns"
+      },
       "dns_rebinding_protection": {
         "default": "mdi:dns"
       },

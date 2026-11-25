@@ -5,13 +5,12 @@ from unittest.mock import Mock
 from uuid import uuid4
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.alexa import config, smart_home
 from homeassistant.components.alexa.const import CONF_ENDPOINT, CONF_FILTER, CONF_LOCALE
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import entityfilter
-
-from tests.common import async_mock_service
 
 TEST_URL = "https://api.amazonalexa.com/v3/events"
 TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"

@@ -3,14 +3,21 @@
 from datetime import timedelta
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_get_device_automation_capabilities,
+    async_get_device_automations,
+    setup_test_component_platform,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
     DOMAIN,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
     SensorStateClass,
     device_trigger,
 )
@@ -25,14 +32,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json
 
 from .common import UNITS_OF_MEASUREMENT, MockSensor
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_get_device_automation_capabilities,
-    async_get_device_automations,
-    setup_test_component_platform,
-)
 
 
 @pytest.mark.parametrize(
@@ -204,7 +203,7 @@ async def test_get_triggers_no_unit_or_stateclass(
         DOMAIN,
         "test",
         "5678",
-        capabilities={ATTR_STATE_CLASS: state_class},
+        capabilities={SensorEntityCapabilityAttribute.STATE_CLASS: state_class},
         device_id=device_entry.id,
         unit_of_measurement=unit,
     )

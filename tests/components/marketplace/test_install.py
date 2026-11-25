@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock, patch
 import zipfile
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN
@@ -50,8 +51,6 @@ from homeassistant.loader import Integration
 from . import mocked_response
 from .conftest import MarketplaceResponses
 from .const import REPOSITORY_INTEGRATION_ID, REPOSITORY_PLUGIN_ID
-
-from tests.typing import WebSocketGenerator
 
 THEME_ID = "1296266"
 TEMPLATE_ID = "1296268"

@@ -4,13 +4,12 @@ from typing import Any
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components import http, websocket_api
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockUser
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 async def test_async_response_request_context(

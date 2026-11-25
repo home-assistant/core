@@ -2,23 +2,20 @@
 
 from freezegun.api import FrozenDateTimeFactory
 from kasa import Device, Module
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
-    ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import _mocked_device, setup_platform_for_device, snapshot_platform
 from .const import DEVICE_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_states(
@@ -87,7 +84,7 @@ async def test_fan(
     assert state.state == "off"
 
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        FAN_DOMAIN, FanService.TURN_ON, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
     fan.set_fan_speed_level.assert_called_once_with(4)
     fan.set_fan_speed_level.reset_mock()
@@ -102,15 +99,15 @@ async def test_fan(
     assert state.state == "on"
 
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        FAN_DOMAIN, FanService.TURN_OFF, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
     fan.set_fan_speed_level.assert_called_once_with(0)
     fan.set_fan_speed_level.reset_mock()
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 50},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 50},
         blocking=True,
     )
     fan.set_fan_speed_level.assert_called_once_with(2)
@@ -118,8 +115,8 @@ async def test_fan(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 25},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 25},
         blocking=True,
     )
     fan.set_fan_speed_level.assert_called_once_with(1)

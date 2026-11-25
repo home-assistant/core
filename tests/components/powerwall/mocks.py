@@ -5,6 +5,7 @@ import json
 import os
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import load_fixture
 from tesla_powerwall import (
     ApiError,
     BatteryResponse,
@@ -20,8 +21,6 @@ from tesla_powerwall import (
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonValueType
-
-from tests.common import load_fixture
 
 MOCK_GATEWAY_DIN = "111-0----2-000000000FFA"
 

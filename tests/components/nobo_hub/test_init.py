@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from pynobo import PynoboConnectionError, nobo as pynobo_nobo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nobo_hub.const import (
     CONF_OVERRIDE_TYPE,
@@ -24,8 +25,6 @@ from . import (
     fire_hub_update,
 )
 from .conftest import SERIAL, STORED_IP
-
-from tests.common import MockConfigEntry
 
 NEW_IP = "192.168.1.55"
 GLOBAL_ENTITY = "select.my_eco_hub_global_override"
@@ -370,7 +369,7 @@ async def test_zone_removed_during_disconnect_stays_unavailable_on_reconnect(
     `_attr_available = True` would briefly flip the entity to available before the
     data callback's _read_state could re-mark it unavailable.
     """
-    entity = "climate.living_room_living_room"
+    entity = "climate.living_room_heating"
     assert hass.states.get(entity).state != STATE_UNAVAILABLE
 
     await fire_hub_connection(hass, mock_nobo_hub, False)

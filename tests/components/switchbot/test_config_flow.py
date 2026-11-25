@@ -1,20 +1,42 @@
 """Test the switchbot config flow."""
 
 from collections.abc import Generator
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
-from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationError
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
+from switchbot import (
+    OAUTH_AUTHORIZE_URL,
+    OAUTH_SCOPE,
+    OAUTH_TOKEN_URL,
+    SwitchbotAccountConnectionError,
+    SwitchbotApiError,
+    SwitchbotAuthenticationError,
+)
+from yarl import URL
 
-from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+)
 from homeassistant.components.switchbot.const import (
     CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_LOCK_NIGHTLATCH,
     CONF_RETRY_COUNT,
+    DEFAULT_CURTAIN_SPEED,
+    DEFAULT_RETRY_COUNT,
+    OAUTH_CLIENT_ID,
 )
-from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IGNORE, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_BLUETOOTH,
+    SOURCE_IGNORE,
+    SOURCE_USER,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_NAME,
@@ -24,11 +46,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import (
+    CIRCULATOR_FAN_PRO_SERVICE_INFO,
+    HUB4_SERVICE_INFO,
     LOCK_ULTRA_MAX_SERVICE_INFO,
     NOT_SWITCHBOT_INFO,
+    PLUG_MINI_IT_SERVICE_INFO,
     USER_INPUT,
+    WOCURTAIN3_SERVICE_INFO,
     WOCURTAIN_SERVICE_INFO,
     WOHAND_ENCRYPTED_SERVICE_INFO,
     WOHAND_SERVICE_ALT_ADDRESS_INFO,
@@ -42,9 +69,8 @@ from . import (
     patch_async_setup_entry,
 )
 
-from tests.common import MockConfigEntry
-
 DOMAIN = "switchbot"
+OAUTH_ACCESS_TOKEN = "oauth-access-token"
 
 
 @pytest.fixture
@@ -59,12 +85,50 @@ def mock_scanners_all_passive() -> Generator[None]:
         yield
 
 
-async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
+async def _async_start_user_oauth(hass: HomeAssistant) -> ConfigFlowResult:
+    """Start OAuth from the user menu."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "oauth_login"}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["step_id"] == "auth"
+    return result
+
+
+def test_oauth_production_configuration() -> None:
+    """Test OAuth uses the SwitchBot production configuration."""
+    assert OAUTH_CLIENT_ID == "RuCCpYJPMcuZsWOfupJQYmuIPr"
+    assert OAUTH_AUTHORIZE_URL == "https://sp.oauth.switchbot.net"
+    assert (
+        OAUTH_TOKEN_URL == "https://account.api.switchbot.net/merchant/v1/oauth/token"
+    )
+    assert OAUTH_SCOPE == "api_login"
+
+
+@pytest.mark.parametrize(
+    ("service_info", "title", "sensor_type"),
+    [
+        pytest.param(WOHAND_SERVICE_INFO, "Bot EEFF", "bot", id="bot"),
+        pytest.param(HUB4_SERVICE_INFO, "Hub4 EEFF", "hub4", id="hub4"),
+    ],
+)
+async def test_bluetooth_discovery(
+    hass: HomeAssistant,
+    service_info: BluetoothServiceInfoBleak,
+    title: str,
+    sensor_type: str,
+) -> None:
     """Test discovery via bluetooth with a valid device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=WOHAND_SERVICE_INFO,
+        data=service_info,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
@@ -77,14 +141,50 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Bot EEFF"
+    assert result["title"] == title
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
-        CONF_SENSOR_TYPE: "bot",
+        CONF_SENSOR_TYPE: sensor_type,
     }
     assert result["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("service_info", "sensor_type"),
+    [
+        pytest.param(WOCURTAIN_SERVICE_INFO, "curtain", id="curtain"),
+        pytest.param(WOCURTAIN3_SERVICE_INFO, "curtain_3", id="curtain_3"),
+    ],
+)
+async def test_bluetooth_discovery_curtain_options(
+    hass: HomeAssistant,
+    service_info: BluetoothServiceInfoBleak,
+    sensor_type: str,
+) -> None:
+    """Test both curtain models get speed options and the new config version."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=service_info,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "aabbccddeeff"
+    assert result["data"][CONF_SENSOR_TYPE] == sensor_type
+    assert result["options"] == {
+        CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
+        CONF_CURTAIN_SPEED: DEFAULT_CURTAIN_SPEED,
+    }
+    assert result["result"].version == 2
+    assert result["result"].minor_version == 1
 
 
 async def test_bluetooth_discovery_requires_password(hass: HomeAssistant) -> None:
@@ -214,6 +314,44 @@ async def test_bluetooth_discovery_lock_ultra_max(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_bluetooth_discovery_circulator_fan_pro(hass: HomeAssistant) -> None:
+    """Test discovery of an encrypted Circulator Fan Pro."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=CIRCULATOR_FAN_PRO_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_key"
+
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+        patch(
+            "switchbot.SwitchbotCirculatorFanPro.verify_encryption_key",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SENSOR_TYPE] == "circulator_fan_pro"
+    assert result["result"].unique_id == "aabbccddeeff"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_bluetooth_discovery_key(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with a encrypted device."""
     result = await hass.config_entries.flow.async_init(
@@ -254,6 +392,52 @@ async def test_bluetooth_discovery_key(hass: HomeAssistant) -> None:
         CONF_KEY_ID: "ff",
         CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
         CONF_SENSOR_TYPE: "relay_switch_1pm",
+    }
+    assert result["result"].unique_id == "aabbccddeeff"
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_bluetooth_discovery_plug_mini_it_key(hass: HomeAssistant) -> None:
+    """Test discovery via bluetooth with a encrypted device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=PLUG_MINI_IT_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_key"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_key"
+    assert result["errors"] == {}
+
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+        patch(
+            "switchbot.SwitchbotRelaySwitch.verify_encryption_key", return_value=True
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Plug Mini (IT) EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_KEY_ID: "ff",
+        CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+        CONF_SENSOR_TYPE: "plug_mini_it",
     }
     assert result["result"].unique_id == "aabbccddeeff"
 
@@ -436,7 +620,7 @@ async def test_async_step_bluetooth_meter_pro_co2_not_connectable(
     assert result["title"] == "Meter Pro CO2 EEFF"
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
-        CONF_SENSOR_TYPE: "hygrometer_co2",
+        CONF_SENSOR_TYPE: "meter_pro_co2",
     }
     assert result["result"].unique_id == "aabbccddeeff"
 
@@ -619,6 +803,7 @@ async def test_user_setup_wocurtain_or_bot(hass: HomeAssistant) -> None:
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[
             NOT_SWITCHBOT_INFO,
+            HUB4_SERVICE_INFO,
             WOCURTAIN_SERVICE_INFO,
             WOHAND_SERVICE_ALT_ADDRESS_INFO,
             WOHAND_SERVICE_INFO_NOT_CONNECTABLE,
@@ -944,7 +1129,7 @@ async def test_user_setup_woencrypted_auth_switchbot_api_down(
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "api_error"
-    assert result["description_placeholders"] == {"error_detail": "Switchbot API down"}
+    assert result["description_placeholders"] is None
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
@@ -1130,7 +1315,7 @@ async def test_user_setup_wosensor(hass: HomeAssistant) -> None:
     assert result["title"] == "Meter EEFF"
     assert result["data"] == {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-        CONF_SENSOR_TYPE: "hygrometer",
+        CONF_SENSOR_TYPE: "meter",
     }
     assert result["result"].unique_id == "aabbccddeeff"
 
@@ -1286,7 +1471,7 @@ async def test_user_cloud_login_api_error(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "api_error"
-    assert result["description_placeholders"] == {"error_detail": "API is down"}
+    assert result["description_placeholders"] is None
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
@@ -1605,7 +1790,7 @@ async def test_options_flow_lock_pro(hass: HomeAssistant) -> None:
     # Test Force night_latch should be disabled by default.
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM
@@ -1649,28 +1834,35 @@ async def test_options_flow_lock_pro(hass: HomeAssistant) -> None:
     assert entry.options[CONF_LOCK_NIGHTLATCH] is True
 
 
-async def test_options_flow_curtain_speed(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("sensor_type", ["curtain", "curtain_3"])
+async def test_options_flow_curtain_speed(
+    hass: HomeAssistant, sensor_type: str
+) -> None:
     """Test updating curtain speed option."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
             CONF_NAME: "test-name",
-            CONF_SENSOR_TYPE: "curtain",
+            CONF_SENSOR_TYPE: sensor_type,
         },
         options={CONF_RETRY_COUNT: 2, CONF_CURTAIN_SPEED: 255},
         unique_id="aabbccddeeff",
+        version=2,
+        minor_version=1,
     )
     entry.add_to_hass(hass)
 
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
         assert result["errors"] is None
+
+        assert CONF_CURTAIN_SPEED in result["data_schema"].schema
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -1870,7 +2062,7 @@ async def test_user_setup_worelay_switch_1pm_auth_switchbot_api_down(
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "api_error"
-    assert result["description_placeholders"] == {"error_detail": "Switchbot API down"}
+    assert result["description_placeholders"] is None
 
 
 async def test_user_show_menu_when_passive_scanner_present(hass: HomeAssistant) -> None:
@@ -1898,7 +2090,11 @@ async def test_user_show_menu_when_passive_scanner_present(hass: HomeAssistant) 
         # Should show menu since not all scanners are active
         assert result["type"] is FlowResultType.MENU
         assert result["step_id"] == "user"
-        assert set(result["menu_options"]) == {"cloud_login", "select_device"}
+        assert set(result["menu_options"]) == {
+            "oauth_login",
+            "cloud_login",
+            "select_device",
+        }
 
         # Choose select_device from menu
         result = await hass.config_entries.flow.async_configure(
@@ -1943,7 +2139,11 @@ async def test_user_show_menu_when_no_scanners(hass: HomeAssistant) -> None:
         # Should show menu when no scanners are available
         assert result["type"] is FlowResultType.MENU
         assert result["step_id"] == "user"
-        assert set(result["menu_options"]) == {"cloud_login", "select_device"}
+        assert set(result["menu_options"]) == {
+            "oauth_login",
+            "cloud_login",
+            "select_device",
+        }
 
         # Choose select_device from menu
         result = await hass.config_entries.flow.async_configure(
@@ -1968,6 +2168,511 @@ async def test_user_show_menu_when_no_scanners(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host", "mock_scanners_all_passive")
+async def test_user_oauth_login(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test OAuth authorization, token exchange, and normal device setup."""
+    result = await _async_start_user_oauth(hass)
+    authorize_url = URL(result["url"])
+    state = authorize_url.query["state"]
+
+    assert str(authorize_url.with_query(None)) == f"{OAUTH_AUTHORIZE_URL}/"
+    assert dict(authorize_url.query) == {
+        "response_type": "code",
+        "client_id": OAUTH_CLIENT_ID,
+        "redirect_uri": config_entry_oauth2_flow.MY_AUTH_CALLBACK_PATH,
+        "state": state,
+        "scope": OAUTH_SCOPE,
+    }
+    assert "client_secret" not in authorize_url.query
+    assert "code_challenge" not in authorize_url.query
+    assert "code_challenge_method" not in authorize_url.query
+
+    client = await hass_client_no_auth()
+    response = await client.get(
+        f"/auth/external/callback?code=authorization-code&state={state}"
+    )
+    assert response.status == 200
+
+    aioclient_mock.post(
+        OAUTH_TOKEN_URL,
+        json={
+            "access_token": OAUTH_ACCESS_TOKEN,
+            "refresh_token": "refresh-token",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+            "refresh_expires_in": 2592000,
+        },
+    )
+    with (
+        patch(
+            "homeassistant.components.switchbot.config_flow.fetch_cloud_devices_by_token"
+        ) as mock_fetch_cloud_devices,
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+            return_value=[WOHAND_SERVICE_INFO],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    mock_fetch_cloud_devices.assert_awaited_once_with(ANY, OAUTH_ACCESS_TOKEN)
+    assert aioclient_mock.mock_calls == [
+        (
+            "POST",
+            URL(OAUTH_TOKEN_URL),
+            {
+                "grant_type": "authorization_code",
+                "code": "authorization-code",
+                "redirect_uri": config_entry_oauth2_flow.MY_AUTH_CALLBACK_PATH,
+                "client_id": OAUTH_CLIENT_ID,
+            },
+            None,
+        )
+    ]
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_SENSOR_TYPE: "bot",
+    }
+    assert result["result"].unique_id == "aabbccddeeff"
+    assert "token" not in result["data"]
+    assert "auth_implementation" not in result["data"]
+    mock_setup_entry.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_encrypted_device_oauth_login(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test OAuth started directly from an encrypted Bluetooth discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=WOLOCK_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+    assert result["menu_options"][0] == "encrypted_oauth"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "encrypted_oauth"}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    state = URL(result["url"]).query["state"]
+
+    client = await hass_client_no_auth()
+    response = await client.get(
+        f"/auth/external/callback?code=authorization-code&state={state}"
+    )
+    assert response.status == 200
+    aioclient_mock.post(
+        OAUTH_TOKEN_URL,
+        json={
+            "access_token": OAUTH_ACCESS_TOKEN,
+            "token_type": "Bearer",
+            "expires_in": 3600,
+        },
+    )
+
+    key_details = {
+        CONF_KEY_ID: "ff",
+        CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+    }
+    with (
+        patch_async_setup_entry(),
+        patch(
+            "switchbot.SwitchbotLock.async_retrieve_encryption_key_by_token",
+            return_value=key_details,
+        ) as mock_retrieve_key,
+        patch("switchbot.SwitchbotLock.verify_encryption_key", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    mock_retrieve_key.assert_awaited_once_with(
+        ANY, WOLOCK_SERVICE_INFO.address, OAUTH_ACCESS_TOKEN
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_KEY_ID: "ff",
+        CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+        CONF_SENSOR_TYPE: "lock",
+    }
+    assert result["result"].unique_id == "aabbccddeeff"
+    assert "token" not in result["data"]
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        pytest.param(
+            SwitchbotAuthenticationError("invalid token"),
+            "oauth_unauthorized",
+            id="authentication",
+        ),
+        pytest.param(
+            SwitchbotAccountConnectionError("API unavailable"),
+            "api_error",
+            id="connection",
+        ),
+        pytest.param(
+            SwitchbotApiError("API error"),
+            "api_error",
+            id="api",
+        ),
+        pytest.param(
+            Exception("unexpected"),
+            "unknown",
+            id="unknown",
+        ),
+    ],
+)
+async def test_encrypted_device_oauth_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    exception: Exception,
+    reason: str,
+) -> None:
+    """Test errors retrieving an encrypted device key with an OAuth token."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=WOLOCK_SERVICE_INFO,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "encrypted_oauth"}
+    )
+    state = URL(result["url"]).query["state"]
+
+    client = await hass_client_no_auth()
+    response = await client.get(
+        f"/auth/external/callback?code=authorization-code&state={state}"
+    )
+    assert response.status == 200
+    aioclient_mock.post(
+        OAUTH_TOKEN_URL,
+        json={"access_token": OAUTH_ACCESS_TOKEN, "expires_in": 3600},
+    )
+
+    with patch(
+        "switchbot.SwitchbotLock.async_retrieve_encryption_key_by_token",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert result["description_placeholders"] is None
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_scanners_all_passive")
+async def test_oauth_token_reused_for_encrypted_device(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a token from cloud discovery is reused to retrieve an encryption key."""
+    result = await _async_start_user_oauth(hass)
+    state = URL(result["url"]).query["state"]
+    client = await hass_client_no_auth()
+    response = await client.get(
+        f"/auth/external/callback?code=authorization-code&state={state}"
+    )
+    assert response.status == 200
+    aioclient_mock.post(
+        OAUTH_TOKEN_URL,
+        json={
+            "access_token": OAUTH_ACCESS_TOKEN,
+            "token_type": "Bearer",
+            "expires_in": 3600,
+        },
+    )
+
+    with (
+        patch(
+            "homeassistant.components.switchbot.config_flow.fetch_cloud_devices_by_token"
+        ),
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+            return_value=[WOLOCK_SERVICE_INFO],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    key_details = {
+        CONF_KEY_ID: "ff",
+        CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+    }
+    with (
+        patch_async_setup_entry(),
+        patch(
+            "switchbot.SwitchbotLock.async_retrieve_encryption_key_by_token",
+            return_value=key_details,
+        ) as mock_retrieve_key,
+        patch("switchbot.SwitchbotLock.verify_encryption_key", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "encrypted_oauth"}
+        )
+
+    mock_retrieve_key.assert_awaited_once_with(
+        ANY, WOLOCK_SERVICE_INFO.address, OAUTH_ACCESS_TOKEN
+    )
+    assert aioclient_mock.call_count == 1
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "aabbccddeeff"
+    assert result["data"] == {
+        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_KEY_ID: "ff",
+        CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+        CONF_SENSOR_TYPE: "lock",
+    }
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_oauth_user_rejected_authorization(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test the user rejecting SwitchBot authorization."""
+    result = await _async_start_user_oauth(hass)
+    state = URL(result["url"]).query["state"]
+    client = await hass_client_no_auth()
+    response = await client.get(
+        f"/auth/external/callback?error=access_denied&state={state}"
+    )
+    assert response.status == 200
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "user_rejected_authorize"
+    assert result["description_placeholders"] == {"error": "access_denied"}
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    "token_response",
+    [
+        pytest.param(
+            {"access_token": OAUTH_ACCESS_TOKEN},
+            id="missing-expires-in",
+        ),
+        pytest.param(
+            {"expires_in": 3600},
+            id="missing-access-token",
+        ),
+        pytest.param(
+            {"access_token": OAUTH_ACCESS_TOKEN, "expires_in": "invalid"},
+            id="invalid-expires-in",
+        ),
+    ],
+)
+async def test_oauth_invalid_token_response(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    token_response: dict[str, object],
+) -> None:
+    """Test invalid token responses abort setup."""
+    result = await _async_start_user_oauth(hass)
+    state = URL(result["url"]).query["state"]
+    client = await hass_client_no_auth()
+    response = await client.get(
+        f"/auth/external/callback?code=authorization-code&state={state}"
+    )
+    assert response.status == 200
+    aioclient_mock.post(OAUTH_TOKEN_URL, json=token_response)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    "token",
+    [
+        pytest.param({"access_token": OAUTH_ACCESS_TOKEN}, id="missing-expires-in"),
+        pytest.param({"expires_in": 3600}, id="missing-access-token"),
+    ],
+)
+async def test_oauth_malformed_library_token_not_logged(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    token: dict[str, object],
+) -> None:
+    """Test a malformed library response does not expose its access token."""
+    result = await _async_start_user_oauth(hass)
+    state = URL(result["url"]).query["state"]
+    client = await hass_client_no_auth()
+    response = await client.get(
+        f"/auth/external/callback?code=authorization-code&state={state}"
+    )
+    assert response.status == 200
+
+    with patch(
+        "homeassistant.components.switchbot.application_credentials.exchange_oauth_code",
+        return_value=token,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+    assert OAUTH_ACCESS_TOKEN not in caplog.text
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("status", "error", "reason"),
+    [
+        pytest.param(400, "invalid_grant", "oauth_unauthorized", id="client-error"),
+        pytest.param(429, "token_error", "oauth_failed", id="rate-limited"),
+        pytest.param(500, "token_error", "oauth_failed", id="server-error"),
+    ],
+)
+async def test_oauth_token_http_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    status: int,
+    error: str,
+    reason: str,
+) -> None:
+    """Test token endpoint HTTP errors abort setup."""
+    result = await _async_start_user_oauth(hass)
+    state = URL(result["url"]).query["state"]
+    client = await hass_client_no_auth()
+    response = await client.get(
+        f"/auth/external/callback?code=authorization-code&state={state}"
+    )
+    assert response.status == 200
+    aioclient_mock.post(
+        OAUTH_TOKEN_URL,
+        status=status,
+        json={"error": error},
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        pytest.param(
+            SwitchbotAuthenticationError("invalid token"),
+            "oauth_unauthorized",
+            id="authentication",
+        ),
+        pytest.param(
+            SwitchbotAccountConnectionError("API unavailable"),
+            "api_error",
+            id="connection",
+        ),
+        pytest.param(
+            SwitchbotApiError("API error"),
+            "api_error",
+            id="api",
+        ),
+        pytest.param(
+            Exception("unexpected"),
+            "unknown",
+            id="unknown",
+        ),
+    ],
+)
+async def test_oauth_cloud_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    exception: Exception,
+    reason: str,
+) -> None:
+    """Test cloud API errors after OAuth token exchange."""
+    result = await _async_start_user_oauth(hass)
+    state = URL(result["url"]).query["state"]
+    client = await hass_client_no_auth()
+    response = await client.get(
+        f"/auth/external/callback?code=authorization-code&state={state}"
+    )
+    assert response.status == 200
+    aioclient_mock.post(
+        OAUTH_TOKEN_URL,
+        json={
+            "access_token": OAUTH_ACCESS_TOKEN,
+            "expires_in": 3600,
+        },
+    )
+    with patch(
+        "homeassistant.components.switchbot.config_flow.fetch_cloud_devices_by_token",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert result["description_placeholders"] is None
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_scanners_all_passive")
+async def test_oauth_no_devices(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test OAuth login when no Bluetooth devices are found."""
+    result = await _async_start_user_oauth(hass)
+    state = URL(result["url"]).query["state"]
+    client = await hass_client_no_auth()
+    response = await client.get(
+        f"/auth/external/callback?code=authorization-code&state={state}"
+    )
+    assert response.status == 200
+    aioclient_mock.post(
+        OAUTH_TOKEN_URL,
+        json={
+            "access_token": OAUTH_ACCESS_TOKEN,
+            "expires_in": 3600,
+        },
+    )
+    with (
+        patch(
+            "homeassistant.components.switchbot.config_flow.fetch_cloud_devices_by_token"
+        ),
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+            return_value=[],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
 @pytest.mark.parametrize("sensor_type", ["lock_pro_wifi", "lock_ultra_max"])
 async def test_options_flow_lock_with_night_latch(
     hass: HomeAssistant, sensor_type: str
@@ -1989,7 +2694,7 @@ async def test_options_flow_lock_with_night_latch(
     # Test night_latch should be disabled by default.
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM

@@ -1,5 +1,6 @@
 """Tests for the Marketplace repositories."""
 
+from asyncio import CancelledError, Future, sleep
 from collections.abc import AsyncIterator
 from http import HTTPStatus
 import io
@@ -15,11 +16,24 @@ from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
 from aiogithubapi.models.release import GitHubReleaseModel
 from awesomeversion import AwesomeVersion
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_mock_service,
+    mock_integration,
+)
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 from yarl import URL
 
+from homeassistant import loader
 from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL, UrlManager
+from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.components.marketplace.base import (
     MarketplaceManager,
     RemovedRepository,
@@ -50,9 +64,10 @@ from homeassistant.components.marketplace.repositories.integration import (
 )
 from homeassistant.components.marketplace.repositories.plugin import PluginRepository
 from homeassistant.components.marketplace.repositories.theme import ThemeRepository
+from homeassistant.components.marketplace.utils.url import github_raw_file
 from homeassistant.components.marketplace.utils.validate import Validate
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import issue_registry as ir, translation
 from homeassistant.loader import IntegrationNotLoaded
 
 from . import (
@@ -65,11 +80,17 @@ from . import (
 from .conftest import MarketplaceResponses
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
 
-from tests.common import MockConfigEntry, async_mock_service
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-from tests.typing import WebSocketGenerator
-
 RATE_LIMITED = {"message": "API rate limit exceeded for 127.0.0.1."}
+BIG_FILE = github_raw_file(repository="owner/repository", ref="main", path="big")
+
+
+@pytest.fixture
+def _isolated_translations(
+    disable_translations_once: None, hass: HomeAssistant
+) -> None:
+    """Isolate data created before the shared translation fixture is disabled."""
+    cache = translation._async_get_translations_cache(hass)
+    cache.cache_data = translation._TranslationsCacheData({}, {})
 
 
 def _tree(*paths: tuple[str, bool]) -> list[GitHubGitTreeEntryModel]:
@@ -95,6 +116,23 @@ def _zip_bytes(files: dict[str, str]) -> bytes:
         for name, content in files.items():
             archive.writestr(name, content)
     return buffer.getvalue()
+
+
+def _damaged_zip_bytes(
+    files: dict[str, str], compression: int = zipfile.ZIP_DEFLATED
+) -> bytes:
+    """Return a zip archive whose compressed data can not be decompressed."""
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", compression) as archive:
+        for name, content in files.items():
+            archive.writestr(name, content * 1000)
+        info = archive.infolist()[0]
+    content = bytearray(buffer.getvalue())
+    # Past the LZMA properties header, into the compressed data itself
+    data_start = info.header_offset + 30 + len(info.filename) + 16
+    for index in range(data_start, data_start + 20):
+        content[index] ^= 0xFF
+    return bytes(content)
 
 
 def _installed_files(config_dir: Path) -> list[str]:
@@ -131,6 +169,8 @@ def test_manifest_defaults() -> None:
         pytest.param("filename", 123, id="filename-number"),
         pytest.param("persistent_directory", 5, id="persistent-directory-number"),
         pytest.param("zip_release", "yes", id="zip-release-string"),
+        pytest.param("content_in_root", 1, id="content-in-root-number"),
+        pytest.param("filename", True, id="filename-true"),
         pytest.param("name", {"en": "TEST"}, id="name-object"),
     ],
 )
@@ -140,6 +180,85 @@ def test_manifest_leaves_out_values_of_the_wrong_type(key: str, value: Any) -> N
 
     assert manifest.manifest == {"hacs": "1.0.0"}
     assert getattr(manifest, key) == getattr(RepositoryManifest(), key)
+
+
+@pytest.mark.parametrize(
+    ("key", "value", "expected"),
+    [
+        pytest.param("content_in_root", "true", True, id="content-in-root-true"),
+        pytest.param("content_in_root", "True", True, id="content-in-root-title"),
+        pytest.param("zip_release", "true", True, id="zip-release-true"),
+        pytest.param(
+            "hide_default_branch", " TRUE ", True, id="hide-default-branch-padded"
+        ),
+    ],
+)
+def test_manifest_reads_boolean_strings(
+    key: str, value: str, expected: bool, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a boolean written as a string, which HACS accepted, is read as one."""
+    manifest = RepositoryManifest.from_dict({"hacs": "1.0.0", key: value})
+
+    assert manifest.manifest == {"hacs": "1.0.0", key: expected}
+    assert getattr(manifest, key) is expected
+    assert "Ignoring" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "key",
+    ["content_in_root", "zip_release", "hide_default_branch"],
+)
+def test_manifest_reads_false_string_as_default(
+    key: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test "false" written as a string keeps the default without a warning."""
+    manifest = RepositoryManifest.from_dict({"hacs": "1.0.0", key: "false"})
+
+    assert manifest.manifest == {"hacs": "1.0.0"}
+    assert getattr(manifest, key) is False
+    assert "Ignoring" not in caplog.text
+
+
+@pytest.mark.parametrize("key", ["filename", "persistent_directory"])
+@pytest.mark.parametrize("value", [False, None])
+def test_manifest_reads_unset_string_as_not_set(
+    key: str, value: Any, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test false or null for a string, which HACS accepted, is read as not set."""
+    manifest = RepositoryManifest.from_dict({"hacs": "1.0.0", key: value})
+
+    assert manifest.manifest == {"hacs": "1.0.0"}
+    assert getattr(manifest, key) is None
+    assert "Ignoring" not in caplog.text
+
+
+@pytest.mark.parametrize("value", [False, None])
+def test_manifest_reads_unset_hacs_version_as_not_set(
+    value: Any, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test false or null for the HACS version, which HACS accepted, is read as not set."""
+    manifest = RepositoryManifest.from_dict({"name": "TEST", "hacs": value})
+
+    assert manifest.manifest == {"name": "TEST"}
+    assert manifest.hacs is None
+    assert "Ignoring" not in caplog.text
+
+
+def test_manifest_with_legacy_values_from_issue() -> None:
+    """Test the hacs.json values from the issue keep their HACS meaning."""
+    manifest = RepositoryManifest.from_dict(
+        {
+            "name": "TEST",
+            "filename": False,
+            "persistent_directory": False,
+            "content_in_root": "true",
+        }
+    )
+
+    assert manifest.manifest == {"name": "TEST", "content_in_root": True}
+    assert manifest.content_in_root is True
+    assert manifest.filename is None
+    assert manifest.persistent_directory is None
 
 
 def test_repository_data_guards_generated_fields() -> None:
@@ -1146,6 +1265,7 @@ async def test_update_repository(
     assert repository.data.installed_version == category_test_data["version_update"]
 
 
+@pytest.mark.usefixtures("_isolated_translations")
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_uninstall_repository(
     hass: HomeAssistant,
@@ -1171,6 +1291,9 @@ async def test_uninstall_repository(
 
     assert _installed_files(config_dir)
 
+    mock_integration(hass, MockModule("example"), built_in=False)
+    assert await translation.async_get_translations(hass, "en", "title", {"example"})
+
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {"type": "marketplace/repository/uninstall", "repository": repository.data.id}
@@ -1180,6 +1303,150 @@ async def test_uninstall_repository(
     assert repository.data.installed is False
     assert marketplace.repositories.list_installed == []
     assert _installed_files(config_dir) == []
+    assert bool(
+        translation.async_get_cached_translations(hass, "en", "title", "example")
+    ) is (category_test_data["category"] != RepositoryCategory.INTEGRATION)
+    assert bool(
+        await translation.async_get_translations(hass, "en", "title", {"example"})
+    ) is (category_test_data["category"] != RepositoryCategory.INTEGRATION)
+
+
+@pytest.mark.usefixtures("_isolated_translations")
+@pytest.mark.parametrize("config_flow", [False, True], ids=["yaml", "config_flow"])
+@pytest.mark.parametrize(
+    ("old_files", "new_files", "old_title", "new_title"),
+    [
+        pytest.param({}, {}, "Old name", "New name", id="manifest_title"),
+        pytest.param(
+            {"translations/en.json": {"title": "Old title"}},
+            {"translations/en.json": {"title": "New title"}},
+            "Old title",
+            "New title",
+            id="updated_translations",
+        ),
+        pytest.param(
+            {},
+            {"translations/en.json": {"title": "New title"}},
+            "Old name",
+            "New title",
+            id="added_translations",
+        ),
+        pytest.param(
+            {"translations/en.json": {"title": "Old title"}},
+            {},
+            "Old title",
+            "New name",
+            id="removed_translations",
+        ),
+    ],
+)
+async def test_update_integration_translations(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    monkeypatch: pytest.MonkeyPatch,
+    config_flow: bool,
+    old_files: dict[str, dict[str, str]],
+    new_files: dict[str, dict[str, str]],
+    old_title: str,
+    new_title: str,
+) -> None:
+    """Updated files and manifest metadata replace previously cached translations."""
+    monkeypatch.delitem(sys.modules, "custom_components", raising=False)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    assert isinstance(repository, IntegrationRepository)
+    check_content = repository.async_check_written_content
+    name, files = "Old name", old_files
+
+    async def check_content_with_translations() -> None:
+        path = Path(repository.localpath)
+        manifest_path = path / "manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest.update(name=name, config_flow=config_flow)
+        manifest_path.write_text(json.dumps(manifest))
+        repository.data.config_flow = config_flow
+        for filename, content in files.items():
+            file = path / filename
+            file.parent.mkdir(parents=True, exist_ok=True)
+            file.write_text(json.dumps(content))
+        await check_content()
+
+    with patch.object(
+        repository, "async_check_written_content", check_content_with_translations
+    ):
+        await repository.async_install_repository(ref="1.0.0")
+        assert await translation.async_get_translations(
+            hass, "en", "title", {"example"}
+        ) == {"component.example.title": old_title}
+        loaded = await loader.async_get_integration(hass, "example")
+
+        name, files = "New name", new_files
+        await repository.async_install_repository(ref="2.0.0")
+
+    assert await loader.async_get_integration(hass, "example") is loaded
+    assert await translation.async_get_translations(
+        hass, "en", "title", {"example"}
+    ) == {"component.example.title": new_title}
+
+
+@pytest.mark.usefixtures("_isolated_translations")
+@pytest.mark.parametrize("hook", ["async_post_installation", "async_post_uninstall"])
+async def test_translation_invalidation_during_rescan(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hook: str,
+) -> None:
+    """Translation requests wait for discovery instead of returning stale strings."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    mock_integration(hass, MockModule("example"), built_in=False)
+    assert await translation.async_get_translations(hass, "en", "title", {"example"})
+
+    scan: Future[dict[str, loader.Integration]] = hass.loop.create_future()
+    with patch.object(hass, "async_add_executor_job", return_value=scan):
+        reload_task = hass.async_create_task(getattr(repository, hook)())
+        await sleep(0)
+        cached_during_scan = translation.async_get_cached_translations(
+            hass, "en", "title", "example"
+        )
+        request = hass.async_create_task(
+            translation.async_get_translations(hass, "en", "title", {"example"})
+        )
+        await sleep(0)
+        request_finished_during_scan = request.done()
+
+    scan.set_result({})
+    await reload_task
+    result = await request
+
+    assert not cached_during_scan
+    assert not request_finished_during_scan
+    assert not result
+
+
+@pytest.mark.usefixtures("_isolated_translations")
+@pytest.mark.parametrize("hook", ["async_post_installation", "async_post_uninstall"])
+@pytest.mark.parametrize("error", [OSError, CancelledError])
+async def test_translation_invalidation_after_failed_rescan(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hook: str,
+    error: type[BaseException],
+) -> None:
+    """Changed resources invalidate translations even when discovery fails."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    mock_integration(hass, MockModule("example"), built_in=False)
+    assert await translation.async_get_translations(hass, "en", "title", {"example"})
+
+    with (
+        patch("homeassistant.loader._get_custom_components", side_effect=error),
+        pytest.raises(error),
+    ):
+        await getattr(repository, hook)()
+
+    assert not translation.async_get_cached_translations(hass, "en", "title", "example")
+    assert loader.DATA_CUSTOM_COMPONENTS not in hass.data
+    assert not await translation.async_get_translations(
+        hass, "en", "title", {"example"}
+    )
 
 
 @pytest.mark.parametrize("github_token", [None])
@@ -1396,7 +1663,12 @@ async def test_download_zip_release_failure(
     assert [
         (error.translation_key, error.translation_placeholders)
         for error in validate.errors
-    ] == [("file_not_downloaded", {"file": url})]
+    ] == [
+        (
+            "file_not_downloaded",
+            {"file": f"{REPOSITORY_INTEGRATION}/releases/download/1.0.0/release.zip"},
+        )
+    ]
 
 
 async def test_download_repository_zip_without_ref(
@@ -1506,7 +1778,13 @@ async def test_download_content_outside_the_repository(
     response_mocker.add(url, mocked_response(url, content=b""))
 
     await repository.download_repository_file(
-        FileInformation(url, "escaped.py", "../../escaped.py")
+        FileInformation(
+            github_raw_file(
+                repository=REPOSITORY_INTEGRATION, ref="1.0.0", path="escaped.py"
+            ),
+            "escaped.py",
+            "../../escaped.py",
+        )
     )
 
     assert repository.validate.errors[0].translation_key == "path_outside_directory"
@@ -1613,14 +1891,21 @@ async def test_download_keeps_tags_in_the_url(
     url = "https://raw.githubusercontent.com/owner/hashtags/1.0.0/tags/card.js"
     response_mocker.add(url, mocked_response(url, content=b"card"))
 
-    assert await marketplace.async_download_file(url) == b"card"
+    assert (
+        await marketplace.async_download_file(
+            github_raw_file(
+                repository="owner/hashtags", ref="1.0.0", path="tags/card.js"
+            )
+        )
+        == b"card"
+    )
 
 
 async def test_download_declines_a_declared_size_over_the_limit(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test that a response declaring more than the limit is not read."""
-    url = "https://example.com/big"
+    url = f"https://raw.githubusercontent.com/{BIG_FILE.path}"
     response_mocker.add(
         url,
         mocked_response(
@@ -1628,20 +1913,20 @@ async def test_download_declines_a_declared_size_over_the_limit(
         ),
     )
 
-    assert await marketplace.async_download_file(url) is None
+    assert await marketplace.async_download_file(BIG_FILE) is None
 
 
 async def test_download_discards_content_over_the_limit(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test that a response larger than the limit is thrown away."""
-    url = "https://example.com/big"
+    url = f"https://raw.githubusercontent.com/{BIG_FILE.path}"
     response_mocker.add(url, mocked_response(url, content=b"0123456789"))
 
     with patch(
         "homeassistant.components.marketplace.utils.response.MAX_DOWNLOAD_SIZE", 5
     ):
-        assert await marketplace.async_download_file(url) is None
+        assert await marketplace.async_download_file(BIG_FILE) is None
 
 
 class _EndlessStream:
@@ -1676,7 +1961,7 @@ async def test_download_stops_reading_at_the_limit(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test a body without a Content-Length is not read past the limit."""
-    url = "https://example.com/endless"
+    url = f"https://raw.githubusercontent.com/{BIG_FILE.path}"
     stream = _EndlessStream()
     response_mocker.add(url, _EndlessResponse(url, stream))
 
@@ -1690,7 +1975,7 @@ async def test_download_stops_reading_at_the_limit(
             100,
         ),
     ):
-        assert await marketplace.async_download_file(url) is None
+        assert await marketplace.async_download_file(BIG_FILE) is None
 
     # The chunk that passes the limit is the last one read
     assert stream.chunks_read == 11
@@ -2497,6 +2782,48 @@ async def test_install_from_the_catalog(
 
 
 @pytest.mark.parametrize("github_token", [None])
+async def test_repository_page_shows_the_readme_of_the_installed_version(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the README follows an update and an uninstall, as the page asks for it."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    client = await hass_ws_client(hass)
+
+    async def readme() -> str:
+        await client.send_json_auto_id(
+            {"type": "marketplace/repository/info", "repository_id": repository.data.id}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        return response["result"]["additional_info"]
+
+    # The catalog names 1.0.0
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
+    assert "(1.0.0)" in await readme()
+
+    # 2.0.0 is not the version of the catalog, it comes through the GitHub API
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/install",
+            "repository": repository.data.id,
+            "version": "2.0.0",
+        }
+    )
+    assert (await client.receive_json())["success"]
+    assert repository.data.installed_version == "2.0.0"
+    assert "(2.0.0)" in await readme()
+
+    await client.send_json_auto_id(
+        {"type": "marketplace/repository/uninstall", "repository": repository.data.id}
+    )
+    assert (await client.receive_json())["success"]
+    # Not installed, the page shows the README of the version the catalog names
+    assert "(1.0.0)" in await readme()
+
+
+@pytest.mark.parametrize("github_token", [None])
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_install_custom_repository(
     hass: HomeAssistant,
@@ -2652,6 +2979,48 @@ async def test_install_from_the_catalog_falls_back(
     assert repository.data.installed_version == "1.0.0"
     assert github_api_calls(aioclient_mock)
     assert _installed_files(config_dir) == expected_files
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize(
+    "archive",
+    [
+        pytest.param(b"not a zip archive", id="broken-archive"),
+        pytest.param(
+            _archive_without_content(REPOSITORY_INTEGRATION),
+            id="integration-not-in-archive",
+        ),
+    ],
+)
+async def test_install_from_the_catalog_falls_back_after_a_refresh(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
+    archive: bytes,
+) -> None:
+    """Test the GitHub API path writes to the content resolved before.
+
+    The repository page refreshes the repository first, after which the API
+    path finds the repository unchanged and does not resolve it again.
+    """
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    await repository.update_repository(ignore_issues=True, force=True)
+    url = f"https://github.com/{REPOSITORY_INTEGRATION}/archive/refs/tags/1.0.0.zip"
+    response_mocker.add(url, mocked_response(url, content=archive))
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/install",
+            "repository": repository.data.id,
+            "version": "1.0.0",
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    assert _installed_files(config_dir) == ["custom_components/example/manifest.json"]
 
 
 @pytest.mark.parametrize("github_token", [None])
@@ -3258,6 +3627,446 @@ async def test_integration_manifest_of_a_version(
             )
             == manifest
         )
+
+
+PLUGIN_ASSET_URL = (
+    f"https://github.com/{REPOSITORY_PLUGIN}/releases/download/1.0.0/plugin-basic"
+)
+ZIP_FALLBACK_FILES = [
+    "www/community/plugin-basic/plugin-basic.js",
+    "www/community/plugin-basic/plugin-basic.js.gz",
+    "www/community/plugin-basic/plugin-basic.js.map",
+]
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize(
+    ("zip_response", "resource", "installed"),
+    [
+        pytest.param(
+            {
+                "content": _zip_bytes(
+                    {"plugin-basic.js": "from zip", "translations/en.json": "{}"}
+                )
+            },
+            "from zip",
+            [
+                "www/community/plugin-basic/plugin-basic.js",
+                "www/community/plugin-basic/translations/en.json",
+            ],
+            id="zip",
+        ),
+        pytest.param(
+            {
+                "content": _zip_bytes(
+                    {
+                        "dist/plugin-basic.js": "from zip",
+                        "dist/translations/en.json": "{}",
+                        "README.md": "",
+                    }
+                )
+            },
+            "from zip",
+            [
+                "www/community/plugin-basic/plugin-basic.js",
+                "www/community/plugin-basic/translations/en.json",
+            ],
+            id="zip_with_the_resource_in_a_folder",
+        ),
+        pytest.param(
+            {"content": _zip_bytes({"dist/card/plugin-basic.js": "from zip"})},
+            "asset",
+            ZIP_FALLBACK_FILES,
+            id="zip_with_the_resource_too_deep",
+        ),
+        pytest.param(
+            {
+                "content": _zip_bytes(
+                    {"a/plugin-basic.js": "from zip", "b/plugin-basic.js": "from zip"}
+                )
+            },
+            "asset",
+            ZIP_FALLBACK_FILES,
+            id="zip_with_the_resource_in_two_folders",
+        ),
+        *(
+            pytest.param(
+                {"content": _zip_bytes({"plugin-basic.js": "", **members})},
+                "asset",
+                ZIP_FALLBACK_FILES,
+                id=f"zip_with_a_file_that_is_a_{kind}",
+            )
+            for kind, members in (
+                ("parent", {"translations": "", "translations/en.json": "{}"}),
+                ("folder_entry", {"translations": "", "translations/": ""}),
+            )
+        ),
+        pytest.param(
+            {"content": _zip_bytes({"plugin-basic.js": "", "../outside.js": ""})},
+            "asset",
+            ZIP_FALLBACK_FILES,
+            id="zip_with_a_member_outside_the_card",
+        ),
+        pytest.param(
+            {"content": b"not a zip"}, "asset", ZIP_FALLBACK_FILES, id="not_a_zip"
+        ),
+        *(
+            pytest.param(
+                {
+                    "content": _damaged_zip_bytes(
+                        {"plugin-basic.js": "from zip"}, compression
+                    )
+                },
+                "asset",
+                ZIP_FALLBACK_FILES,
+                id=f"damaged_{name}_zip",
+            )
+            for name, compression in (
+                ("deflate", zipfile.ZIP_DEFLATED),
+                ("bzip2", zipfile.ZIP_BZIP2),
+                ("lzma", zipfile.ZIP_LZMA),
+            )
+        ),
+        pytest.param(
+            {"status": HTTPStatus.NOT_FOUND},
+            "asset",
+            ZIP_FALLBACK_FILES,
+            id="zip_not_downloaded",
+        ),
+    ],
+)
+async def test_install_plugin_from_the_catalog_prefers_the_resource_zip(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
+    zip_response: dict[str, Any],
+    resource: str,
+    installed: list[str],
+) -> None:
+    """Test a release with a ZIP named like the resource installs the ZIP if usable."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    release_url = (
+        f"https://api.github.com/repos/{REPOSITORY_PLUGIN}/releases/tags/1.0.0"
+    )
+    for url, response in (
+        (f"{PLUGIN_ASSET_URL}.js", {"content": b"asset"}),
+        (f"{PLUGIN_ASSET_URL}.js.map", {"content": b"map"}),
+        (f"{PLUGIN_ASSET_URL}.zip", zip_response),
+        (
+            release_url,
+            {
+                "json_content": {
+                    "assets": [
+                        {
+                            "name": name,
+                            "browser_download_url": f"{PLUGIN_ASSET_URL}{ext}",
+                        }
+                        for name, ext in (
+                            ("plugin-basic.js", ".js"),
+                            ("plugin-basic.js.map", ".js.map"),
+                            ("plugin-basic.zip", ".zip"),
+                        )
+                    ]
+                }
+            },
+        ),
+    ):
+        response_mocker.add(url, mocked_response(url, **response))
+
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
+
+    assert _installed_files(config_dir) == installed
+    assert (
+        config_dir / "www/community/plugin-basic/plugin-basic.js"
+    ).read_text() == resource
+    assert [
+        item["url"] for item in hass.data[LOVELACE_DATA].resources.async_items()
+    ] == [_plugin_resource_url("plugin-basic.js")]
+
+
+def _plugin_resource_url(name: str) -> str:
+    """Return the URL of the dashboard resource the card registered."""
+    return f"/local/community/plugin-basic/{name}?v=1296267-1.0.0"
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize(
+    ("members", "installed"),
+    [
+        pytest.param(
+            {"plugin-basic.js": "from zip"},
+            ["www/community/plugin-basic/plugin-basic.js"],
+            id="zip",
+        ),
+        pytest.param(
+            {"other.js": "from zip"},
+            [
+                "www/community/plugin-basic/plugin-basic.js",
+                "www/community/plugin-basic/plugin-basic.js.gz",
+            ],
+            id="zip_without_the_resource",
+        ),
+    ],
+)
+async def test_install_plugin_from_github_prefers_the_resource_zip(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    aioclient_mock: AiohttpClientMocker,
+    config_dir: Path,
+    members: dict[str, str],
+    installed: list[str],
+) -> None:
+    """Test the release assets the GitHub API lists are replaced by a usable ZIP."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    # Without a release in the catalog, the install goes through the GitHub API
+    repository.data.last_version = None
+    repository.data.last_commit = "abc1234"
+    assets = [
+        {
+            "name": f"plugin-basic{ext}",
+            "browser_download_url": f"{PLUGIN_ASSET_URL}{ext}",
+            "download_count": download_count,
+        }
+        for ext, download_count in ((".js", 100), (".zip", 300))
+    ]
+    releases_url = f"https://api.github.com/repos/{REPOSITORY_PLUGIN}/releases"
+    for url, response in (
+        (f"{PLUGIN_ASSET_URL}.js", {"content": b"asset"}),
+        (f"{PLUGIN_ASSET_URL}.zip", {"content": _zip_bytes(members)}),
+        (
+            releases_url,
+            {
+                "json_content": [
+                    {"tag_name": "1.0.0", "prerelease": False, "assets": assets}
+                ]
+            },
+        ),
+        (f"{releases_url}/tags/1.0.0", {"json_content": {"assets": assets}}),
+    ):
+        response_mocker.add(url, mocked_response(url, **response), keep=True)
+    aioclient_mock.mock_calls.clear()
+
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "marketplace/repository/refresh", "repository": repository.data.id}
+    )
+    assert (await client.receive_json())["success"]
+
+    assert github_api_calls(aioclient_mock)
+    assert _installed_files(config_dir) == installed
+    assert [
+        item["url"] for item in hass.data[LOVELACE_DATA].resources.async_items()
+    ] == [_plugin_resource_url("plugin-basic.js")]
+    # Installs download the ZIP, so its downloads are the ones that count
+    assert repository.data.downloads == 300
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_plugin_downloads_are_counted_from_the_resource_zip(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the first refresh counts the ZIP, before the resource is resolved."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    url = f"https://api.github.com/repos/{REPOSITORY_PLUGIN}/releases"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url,
+            json_content=[
+                {
+                    "tag_name": "1.0.0",
+                    "prerelease": False,
+                    "assets": [
+                        {"name": "plugin-basic.js", "download_count": 100},
+                        {"name": "plugin-basic.zip", "download_count": 300},
+                    ],
+                }
+            ],
+        ),
+        keep=True,
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "marketplace/repository/refresh", "repository": repository.data.id}
+    )
+
+    assert (await client.receive_json())["success"]
+    assert repository.data.downloads == 300
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_install_plugin_from_github_prefers_a_file_over_a_zip_of_another_name(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
+) -> None:
+    """Test a ZIP named like another resource does not hide the resource file."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    repository.data.last_version = None
+    repository.data.last_commit = "abc1234"
+    assets = [
+        {
+            "name": f"plugin-basic{ext}",
+            "browser_download_url": f"{PLUGIN_ASSET_URL}{ext}",
+        }
+        for ext in (".umd.js", ".zip")
+    ]
+    releases_url = f"https://api.github.com/repos/{REPOSITORY_PLUGIN}/releases"
+    for url, response in (
+        (f"{PLUGIN_ASSET_URL}.umd.js", {"content": b"asset"}),
+        (f"{PLUGIN_ASSET_URL}.zip", {"content": _zip_bytes({"other.js": ""})}),
+        (
+            releases_url,
+            {
+                "json_content": [
+                    {"tag_name": "1.0.0", "prerelease": False, "assets": assets}
+                ]
+            },
+        ),
+        (f"{releases_url}/tags/1.0.0", {"json_content": {"assets": assets}}),
+    ):
+        response_mocker.add(url, mocked_response(url, **response), keep=True)
+
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
+
+    assert (
+        config_dir / "www/community/plugin-basic/plugin-basic.umd.js"
+    ).read_text() == "asset"
+    assert [
+        item["url"] for item in hass.data[LOVELACE_DATA].resources.async_items()
+    ] == [_plugin_resource_url("plugin-basic.umd.js")]
+
+
+def _serve_plugin_zip_alone(
+    response_mocker: MarketplaceResponses, archive: bytes
+) -> None:
+    """Serve a release that ships the dashboard resource only as a ZIP."""
+    releases_url = f"https://api.github.com/repos/{REPOSITORY_PLUGIN}/releases"
+    assets = [
+        {
+            "name": "plugin-basic.zip",
+            "browser_download_url": f"{PLUGIN_ASSET_URL}.zip",
+            "download_count": 300,
+        }
+    ]
+    for url, response in (
+        (f"{PLUGIN_ASSET_URL}.js", {"status": HTTPStatus.NOT_FOUND}),
+        (f"{PLUGIN_ASSET_URL}.zip", {"content": archive}),
+        (
+            releases_url,
+            {
+                "json_content": [
+                    {"tag_name": "1.0.0", "prerelease": False, "assets": assets}
+                ]
+            },
+        ),
+        (f"{releases_url}/tags/1.0.0", {"json_content": {"assets": assets}}),
+    ):
+        response_mocker.add(url, mocked_response(url, **response), keep=True)
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize(
+    ("last_version", "api_calls"),
+    [
+        pytest.param("1.0.0", False, id="catalog"),
+        # Without a release in the catalog, the install goes through the GitHub API
+        pytest.param(None, True, id="github"),
+    ],
+)
+async def test_install_plugin_with_only_a_zip(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    aioclient_mock: AiohttpClientMocker,
+    config_dir: Path,
+    last_version: str | None,
+    api_calls: bool,
+) -> None:
+    """Test a release with only a ZIP named like the resource installs the ZIP."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    repository.data.last_version = last_version
+    repository.data.last_commit = "abc1234"
+    _serve_plugin_zip_alone(
+        response_mocker,
+        _zip_bytes({"plugin-basic.js": "from zip", "translations/en.json": "{}"}),
+    )
+    aioclient_mock.mock_calls.clear()
+
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
+
+    assert bool(github_api_calls(aioclient_mock)) is api_calls
+    assert _installed_files(config_dir) == [
+        "www/community/plugin-basic/plugin-basic.js",
+        "www/community/plugin-basic/translations/en.json",
+    ]
+    assert [
+        item["url"] for item in hass.data[LOVELACE_DATA].resources.async_items()
+    ] == [_plugin_resource_url("plugin-basic.js")]
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize(
+    "last_version",
+    [
+        pytest.param("1.0.0", id="catalog"),
+        pytest.param(None, id="github"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("archive", "error"),
+    [
+        pytest.param(
+            _zip_bytes({"dist/card/plugin-basic.js": "from zip"}),
+            "plugin-basic.zip has no plugin-basic.js in its root or in a folder",
+            id="without_the_resource",
+        ),
+        pytest.param(
+            _zip_bytes({"plugin-basic.js": "", "../outside.js": ""}),
+            "../outside.js",
+            id="member_outside_the_card",
+        ),
+        pytest.param(
+            _damaged_zip_bytes({"plugin-basic.js": "from zip"}),
+            "plugin-basic.zip is not a valid ZIP archive",
+            id="damaged",
+        ),
+    ],
+)
+async def test_install_plugin_with_only_an_unusable_zip_is_refused(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
+    last_version: str | None,
+    archive: bytes,
+    error: str,
+) -> None:
+    """Test a ZIP without a JavaScript asset to fall back to fails the install."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    repository.data.last_version = last_version
+    repository.data.last_commit = "abc1234"
+    _serve_plugin_zip_alone(response_mocker, archive)
+
+    response = await _install(hass, hass_ws_client, repository.data.id)
+
+    assert not response["success"]
+    assert error in response["error"]["message"]
+    assert repository.data.installed is False
+    assert _installed_files(config_dir) == []
 
 
 async def test_catalog_zip_release_needs_a_domain(

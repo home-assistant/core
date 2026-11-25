@@ -3,27 +3,26 @@
 from pathlib import Path
 
 import pytest
-
-from homeassistant.components.media_player import (
-    DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
-)
-from homeassistant.components.tts import ATTR_MESSAGE, DOMAIN, Provider
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.setup import async_setup_component
-
-from .common import SUPPORT_LANGUAGES, MockTTS, MockTTSProvider
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockModule,
     assert_setup_component,
     async_mock_service,
     mock_integration,
     mock_platform,
 )
+
+from homeassistant.components.media_player import (
+    DOMAIN as MP_DOMAIN,
+    SERVICE_PLAY_MEDIA,
+)
+from homeassistant.components.tts import DOMAIN, Provider, TextToSpeechServiceArgument
+from homeassistant.const import CommonServiceArgument
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.setup import async_setup_component
+
+from .common import SUPPORT_LANGUAGES, MockTTS, MockTTSProvider
 
 
 class DefaultProvider(Provider):
@@ -156,8 +155,8 @@ async def test_service_without_cache_config(
         DOMAIN,
         "test_say",
         {
-            ATTR_ENTITY_ID: "media_player.something",
-            ATTR_MESSAGE: "There is someone at the door.",
+            CommonServiceArgument.ENTITY_ID: "media_player.something",
+            TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
         },
         blocking=True,
     )

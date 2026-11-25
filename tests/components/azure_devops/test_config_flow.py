@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.azure_devops.const import CONF_ORG, CONF_PROJECT, DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import DEVOPS_PROJECT, FIXTURE_REAUTH_INPUT, FIXTURE_USER_INPUT, UNIQUE_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:

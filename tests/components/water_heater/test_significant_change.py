@@ -2,14 +2,7 @@
 
 import pytest
 
-from homeassistant.components.water_heater import (
-    ATTR_AWAY_MODE,
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_OPERATION_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE,
-)
+from homeassistant.components.water_heater import WaterHeaterStateAttribute
 from homeassistant.components.water_heater.significant_change import (
     async_check_significant_change,
 )
@@ -31,52 +24,98 @@ async def test_significant_state_change(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("unit_system", "old_attrs", "new_attrs", "expected_result"),
     [
-        (METRIC, {ATTR_AWAY_MODE: "old_value"}, {ATTR_AWAY_MODE: "old_value"}, False),
-        (METRIC, {ATTR_AWAY_MODE: "old_value"}, {ATTR_AWAY_MODE: "new_value"}, True),
         (
             METRIC,
-            {ATTR_OPERATION_MODE: "old_value"},
-            {ATTR_OPERATION_MODE: "new_value"},
+            {WaterHeaterStateAttribute.AWAY_MODE: "old_value"},
+            {WaterHeaterStateAttribute.AWAY_MODE: "old_value"},
+            False,
+        ),
+        (
+            METRIC,
+            {WaterHeaterStateAttribute.AWAY_MODE: "old_value"},
+            {WaterHeaterStateAttribute.AWAY_MODE: "new_value"},
+            True,
+        ),
+        (
+            METRIC,
+            {WaterHeaterStateAttribute.OPERATION_MODE: "old_value"},
+            {WaterHeaterStateAttribute.OPERATION_MODE: "new_value"},
             True,
         ),
         # multiple attributes
         (
             METRIC,
-            {ATTR_AWAY_MODE: "old_value", ATTR_OPERATION_MODE: "old_value"},
-            {ATTR_AWAY_MODE: "new_value", ATTR_OPERATION_MODE: "old_value"},
+            {
+                WaterHeaterStateAttribute.AWAY_MODE: "old_value",
+                WaterHeaterStateAttribute.OPERATION_MODE: "old_value",
+            },
+            {
+                WaterHeaterStateAttribute.AWAY_MODE: "new_value",
+                WaterHeaterStateAttribute.OPERATION_MODE: "old_value",
+            },
             True,
         ),
         # float attributes
         (
             METRIC,
-            {ATTR_CURRENT_TEMPERATURE: 50.0},
-            {ATTR_CURRENT_TEMPERATURE: 50.5},
+            {WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 50.0},
+            {WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 50.5},
             True,
         ),
         (
             METRIC,
-            {ATTR_CURRENT_TEMPERATURE: 50.0},
-            {ATTR_CURRENT_TEMPERATURE: 50.4},
+            {WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 50.0},
+            {WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 50.4},
             False,
         ),
         (
             METRIC,
-            {ATTR_CURRENT_TEMPERATURE: "invalid"},
-            {ATTR_CURRENT_TEMPERATURE: 10.0},
+            {WaterHeaterStateAttribute.CURRENT_TEMPERATURE: "invalid"},
+            {WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 10.0},
             True,
         ),
         (
             METRIC,
-            {ATTR_CURRENT_TEMPERATURE: 10.0},
-            {ATTR_CURRENT_TEMPERATURE: "invalid"},
+            {WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 10.0},
+            {WaterHeaterStateAttribute.CURRENT_TEMPERATURE: "invalid"},
             False,
         ),
-        (IMPERIAL, {ATTR_TEMPERATURE: 160.0}, {ATTR_TEMPERATURE: 161}, True),
-        (IMPERIAL, {ATTR_TEMPERATURE: 160.0}, {ATTR_TEMPERATURE: 160.9}, False),
-        (METRIC, {ATTR_TARGET_TEMP_HIGH: 80.0}, {ATTR_TARGET_TEMP_HIGH: 80.5}, True),
-        (METRIC, {ATTR_TARGET_TEMP_HIGH: 80.0}, {ATTR_TARGET_TEMP_HIGH: 80.4}, False),
-        (METRIC, {ATTR_TARGET_TEMP_LOW: 30.0}, {ATTR_TARGET_TEMP_LOW: 30.5}, True),
-        (METRIC, {ATTR_TARGET_TEMP_LOW: 30.0}, {ATTR_TARGET_TEMP_LOW: 30.4}, False),
+        (
+            IMPERIAL,
+            {WaterHeaterStateAttribute.TARGET_TEMPERATURE: 160.0},
+            {WaterHeaterStateAttribute.TARGET_TEMPERATURE: 161},
+            True,
+        ),
+        (
+            IMPERIAL,
+            {WaterHeaterStateAttribute.TARGET_TEMPERATURE: 160.0},
+            {WaterHeaterStateAttribute.TARGET_TEMPERATURE: 160.9},
+            False,
+        ),
+        (
+            METRIC,
+            {WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 80.0},
+            {WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 80.5},
+            True,
+        ),
+        (
+            METRIC,
+            {WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 80.0},
+            {WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 80.4},
+            False,
+        ),
+        (
+            METRIC,
+            {WaterHeaterStateAttribute.TARGET_TEMP_LOW: 30.0},
+            {WaterHeaterStateAttribute.TARGET_TEMP_LOW: 30.5},
+            True,
+        ),
+        (
+            METRIC,
+            {WaterHeaterStateAttribute.TARGET_TEMP_LOW: 30.0},
+            {WaterHeaterStateAttribute.TARGET_TEMP_LOW: 30.4},
+            False,
+        ),
         # insignificant attributes
         (METRIC, {"unknown_attr": "old_value"}, {"unknown_attr": "old_value"}, False),
         (METRIC, {"unknown_attr": "old_value"}, {"unknown_attr": "new_value"}, False),

@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
     MultipleWeatherStationsFound,
@@ -13,8 +14,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 DOMAIN = "trafikverket_weatherstation"
 CONF_STATION = "station"
@@ -35,7 +34,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -54,6 +53,26 @@ async def test_form(hass: HomeAssistant) -> None:
         "station": "Vallby",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_already_configured(hass: HomeAssistant) -> None:
+    """Test we abort when the weather station is already configured."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234567890", CONF_STATION: "Vallby"},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "1234567891", CONF_STATION: "Vallby"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -108,7 +127,7 @@ async def test_flow_fails(
         ),
         patch(
             "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -145,7 +164,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -217,7 +236,7 @@ async def test_reauth_flow_fails(
         ),
         patch(
             "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -230,7 +249,14 @@ async def test_reauth_flow_fails(
     assert result["reason"] == "reauth_successful"
 
 
-async def test_reconfigure_flow(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "station",
+    [
+        pytest.param("Vallby_new", id="new_station"),
+        pytest.param("Vallby", id="same_station"),
+    ],
+)
+async def test_reconfigure_flow(hass: HomeAssistant, station: str) -> None:
     """Test a reconfigure flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -252,18 +278,42 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_KEY: "1234567891", CONF_STATION: "Vallby_new"},
+            {CONF_API_KEY: "1234567891", CONF_STATION: station},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data == {"api_key": "1234567891", "station": "Vallby_new"}
+    assert entry.data == {"api_key": "1234567891", "station": station}
+
+
+async def test_reconfigure_flow_already_configured(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts when the weather station is used by another entry."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234567890", CONF_STATION: "Arlanda"},
+    ).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234567890", CONF_STATION: "Vallby"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "1234567890", CONF_STATION: "Arlanda"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {"api_key": "1234567890", "station": "Vallby"}
 
 
 @pytest.mark.parametrize(
@@ -324,7 +374,7 @@ async def test_reconfigure_flow_fails(
         ),
         patch(
             "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

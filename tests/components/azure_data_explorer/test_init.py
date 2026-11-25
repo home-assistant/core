@@ -7,18 +7,17 @@ from unittest.mock import MagicMock, Mock, patch
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
 from azure.kusto.ingest import StreamDescriptor
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import azure_data_explorer
 from homeassistant.components.azure_data_explorer.const import CONF_SEND_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from . import FilterTest
 from .const import AZURE_DATA_EXPLORER_PATH, BASE_CONFIG_FULL, BASIC_OPTIONS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +74,27 @@ async def test_put_event_on_queue_with_managed_client_with_errors(
     assert log_message in caplog.text
 
 
+@pytest.mark.freeze_time("2024-01-01 00:00:00")
+async def test_send_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    entry_managed: MockConfigEntry,
+    mock_managed_streaming: Mock,
+) -> None:
+    """Test an authentication error while sending starts a reauth flow."""
+    mock_managed_streaming.side_effect = KustoAuthenticationError("test", Exception)
+
+    hass.states.async_set("sensor.test_sensor", STATE_ON)
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, datetime(2024, 1, 1, 0, 1, 0))
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry_managed.entry_id
+
+
 async def test_put_event_on_queue_with_queueing_client(
     hass: HomeAssistant,
     entry_queued: MockConfigEntry,
@@ -110,6 +130,23 @@ async def test_unload_entry(
     assert await hass.config_entries.async_unload(entry_managed.entry_id)
     mock_managed_streaming.assert_not_called()
     assert entry_managed.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_unload_auth_error_does_not_start_reauth(
+    hass: HomeAssistant,
+    entry_managed: MockConfigEntry,
+    mock_managed_streaming: Mock,
+) -> None:
+    """Test an authentication error in the final send on unload starts no reauth."""
+    mock_managed_streaming.side_effect = KustoAuthenticationError("test", Exception)
+    hass.states.async_set("sensor.test_sensor", STATE_ON)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(entry_managed.entry_id)
+    await hass.async_block_till_done()
+
+    mock_managed_streaming.assert_called_once()
+    assert not hass.config_entries.flow.async_progress()
 
 
 @pytest.mark.freeze_time("2024-01-01 00:00:00")
@@ -243,10 +280,9 @@ async def test_event(
     ("sideeffect"),
     [
         (KustoServiceError("test")),
-        (KustoAuthenticationError("test", Exception)),
         (Exception),
     ],
-    ids=["KustoServiceError", "KustoAuthenticationError", "Exception"],
+    ids=["KustoServiceError", "Exception"],
 )
 async def test_connection(
     hass: HomeAssistant, mock_execute_query: MagicMock, sideeffect: Exception
@@ -262,3 +298,26 @@ async def test_connection(
     mock_execute_query.side_effect = sideeffect
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert not hass.config_entries.flow.async_progress()
+
+
+async def test_connection_auth_failed(
+    hass: HomeAssistant, mock_execute_query: MagicMock
+) -> None:
+    """Test an authentication error starts a reauthentication flow."""
+    entry = MockConfigEntry(
+        domain=azure_data_explorer.DOMAIN,
+        data=BASE_CONFIG_FULL,
+        title="cluster",
+        options=BASIC_OPTIONS,
+    )
+    entry.add_to_hass(hass)
+    mock_execute_query.side_effect = KustoAuthenticationError("test", Exception)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id

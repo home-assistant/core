@@ -1,16 +1,22 @@
 """The test for light device automation."""
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_device_automation_capabilities,
+    async_get_device_automations,
+    async_mock_service,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.light import (
-    ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN,
     FLASH_LONG,
     FLASH_SHORT,
     ColorMode,
+    LightEntityCapabilityAttribute,
     LightEntityFeature,
 )
 from homeassistant.const import EntityCategory
@@ -18,13 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automation_capabilities,
-    async_get_device_automations,
-    async_mock_service,
-)
 
 
 async def test_get_actions(
@@ -182,7 +181,11 @@ async def test_get_action_capabilities(
             },
             0,
             0,
-            {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS]},
+            {
+                LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                    ColorMode.BRIGHTNESS
+                ]
+            },
             {},
             {
                 "turn_on": [
@@ -209,7 +212,11 @@ async def test_get_action_capabilities(
             0,
             0,
             None,
-            {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS]},
+            {
+                LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                    ColorMode.BRIGHTNESS
+                ]
+            },
             {
                 "turn_on": [
                     {
@@ -333,7 +340,11 @@ async def test_get_action_capabilities_features(
             },
             0,
             0,
-            {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS]},
+            {
+                LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                    ColorMode.BRIGHTNESS
+                ]
+            },
             {},
             {
                 "turn_on": [
@@ -360,7 +371,11 @@ async def test_get_action_capabilities_features(
             0,
             0,
             None,
-            {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS]},
+            {
+                LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                    ColorMode.BRIGHTNESS
+                ]
+            },
             {
                 "turn_on": [
                     {

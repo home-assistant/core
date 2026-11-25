@@ -2,7 +2,7 @@
 
 import probatio
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_LANGUAGE, CONF_MODE
+from homeassistant.const import CONF_LANGUAGE, CONF_MODE, CommonServiceArgument
 from homeassistant.helpers.selector import (
     ConfigEntrySelector,
     SelectSelector,
@@ -15,15 +15,12 @@ from homeassistant.helpers.selector import (
 from .const import (
     ALL_LANGUAGES,
     AVOID_OPTIONS,
-    CONF_ARRIVAL_TIME,
     CONF_AVOID,
-    CONF_DEPARTURE_TIME,
-    CONF_DESTINATION,
-    CONF_ORIGIN,
     CONF_TIME_TYPE,
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_TRAVEL_ROUTING_PREFERENCE,
     CONF_UNITS,
     DOMAIN,
     TIME_TYPES,
@@ -31,8 +28,10 @@ from .const import (
     TRANSIT_PREFS,
     TRANSPORT_TYPES,
     TRAVEL_MODES_WITHOUT_TRANSIT,
+    TRAVEL_PREFS,
     UNITS,
     UNITS_METRIC,
+    GoogleTravelTimeServiceArgument,
 )
 
 LANGUAGE_SELECTOR = SelectSelector(
@@ -79,6 +78,15 @@ TRANSIT_ROUTING_PREFERENCE_SELECTOR = SelectSelector(
     )
 )
 
+TRAVEL_ROUTING_PREFERENCE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=TRAVEL_PREFS,
+        sort=True,
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key=CONF_TRAVEL_ROUTING_PREFERENCE,
+    )
+)
+
 UNITS_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=UNITS,
@@ -99,19 +107,23 @@ TIME_TYPE_SELECTOR = SelectSelector(
 
 _SERVICE_BASE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): ConfigEntrySelector(
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
-        probatio.Required(CONF_ORIGIN): TextSelector(),
-        probatio.Required(CONF_DESTINATION): TextSelector(),
-        probatio.Optional(CONF_UNITS, default=UNITS_METRIC): UNITS_SELECTOR,
-        probatio.Optional(CONF_LANGUAGE): LANGUAGE_SELECTOR,
+        probatio.Required(GoogleTravelTimeServiceArgument.ORIGIN): TextSelector(),
+        probatio.Required(GoogleTravelTimeServiceArgument.DESTINATION): TextSelector(),
+        probatio.Optional(
+            GoogleTravelTimeServiceArgument.UNITS, default=UNITS_METRIC
+        ): UNITS_SELECTOR,
+        probatio.Optional(GoogleTravelTimeServiceArgument.LANGUAGE): LANGUAGE_SELECTOR,
     }
 )
 
 SERVICE_GET_TRAVEL_TIMES_SCHEMA = _SERVICE_BASE_SCHEMA.extend(
     {
-        probatio.Optional(CONF_MODE, default="driving"): SelectSelector(
+        probatio.Optional(
+            GoogleTravelTimeServiceArgument.MODE, default="driving"
+        ): SelectSelector(
             SelectSelectorConfig(
                 options=TRAVEL_MODES_WITHOUT_TRANSIT,
                 sort=True,
@@ -119,19 +131,33 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = _SERVICE_BASE_SCHEMA.extend(
                 translation_key=CONF_MODE,
             )
         ),
-        probatio.Optional(CONF_AVOID): AVOID_SELECTOR,
-        probatio.Optional(CONF_TRAFFIC_MODEL): TRAFFIC_MODEL_SELECTOR,
-        probatio.Optional(CONF_DEPARTURE_TIME): TimeSelector(),
+        probatio.Optional(GoogleTravelTimeServiceArgument.AVOID): AVOID_SELECTOR,
+        probatio.Optional(
+            GoogleTravelTimeServiceArgument.TRAVEL_ROUTING_PREFERENCE
+        ): TRAVEL_ROUTING_PREFERENCE_SELECTOR,
+        probatio.Optional(
+            GoogleTravelTimeServiceArgument.TRAFFIC_MODEL
+        ): TRAFFIC_MODEL_SELECTOR,
+        probatio.Optional(
+            GoogleTravelTimeServiceArgument.DEPARTURE_TIME
+        ): TimeSelector(),
     }
 )
 
+
 SERVICE_GET_TRANSIT_TIMES_SCHEMA = _SERVICE_BASE_SCHEMA.extend(
     {
-        probatio.Optional(CONF_TRANSIT_MODE): TRANSIT_MODE_SELECTOR,
         probatio.Optional(
-            CONF_TRANSIT_ROUTING_PREFERENCE
+            GoogleTravelTimeServiceArgument.TRANSIT_MODE
+        ): TRANSIT_MODE_SELECTOR,
+        probatio.Optional(
+            GoogleTravelTimeServiceArgument.TRANSIT_ROUTING_PREFERENCE
         ): TRANSIT_ROUTING_PREFERENCE_SELECTOR,
-        probatio.Exclusive(CONF_DEPARTURE_TIME, "time"): TimeSelector(),
-        probatio.Exclusive(CONF_ARRIVAL_TIME, "time"): TimeSelector(),
+        probatio.Exclusive(
+            GoogleTravelTimeServiceArgument.DEPARTURE_TIME, "time"
+        ): TimeSelector(),
+        probatio.Exclusive(
+            GoogleTravelTimeServiceArgument.ARRIVAL_TIME, "time"
+        ): TimeSelector(),
     }
 )

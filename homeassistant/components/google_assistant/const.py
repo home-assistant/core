@@ -118,7 +118,6 @@ TYPE_VACUUM = f"{PREFIX_TYPES}VACUUM"
 TYPE_VALVE = f"{PREFIX_TYPES}VALVE"
 TYPE_WATERHEATER = f"{PREFIX_TYPES}WATERHEATER"
 
-SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
 HOMEGRAPH_SCOPE = "https://www.googleapis.com/auth/homegraph"
 HOMEGRAPH_TOKEN_URL = "https://accounts.google.com/o/oauth2/token"
@@ -223,7 +222,10 @@ CHALLENGE_FAILED_PIN_NEEDED = "challengeFailedPinNeeded"
 CHALLENGE_PIN_NEEDED = "pinNeeded"
 
 STORE_AGENT_USER_IDS = "agent_user_ids"
+STORE_ENTITY_SETTINGS_VERSION = "entity_settings_version"
 STORE_GOOGLE_LOCAL_WEBHOOK_ID = "local_webhook_id"
+
+ENTITY_SETTINGS_VERSION = 2
 
 SOURCE_CLOUD = "cloud"
 SOURCE_LOCAL = "local"

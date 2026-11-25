@@ -4,10 +4,11 @@ import asyncio
 from collections.abc import Callable, Sequence
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
+from pygbl import FirmwareImage
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from universal_silabs_flasher.common import Version as FlasherVersion
 from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
-from universal_silabs_flasher.firmware import GBLImage
 from universal_silabs_flasher.flasher import YellowFlasher, Zbt1Flasher, Zbt2Flasher
 
 from homeassistant.components.hassio import (
@@ -45,8 +46,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .test_config_flow import create_mock_owner
-
-from tests.common import MockConfigEntry
 
 ZHA_CONFIG_ENTRY = MockConfigEntry(
     domain="zha",
@@ -858,7 +857,7 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
     progress_callback = Mock()
 
     async def mock_flash_firmware(
-        fw_image: GBLImage, progress_callback: Callable[[int, int], None]
+        fw_image: FirmwareImage, progress_callback: Callable[[int, int], None]
     ) -> None:
         """Mock flash firmware function."""
         await asyncio.sleep(0)
@@ -893,7 +892,9 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
                 owners=[owner1, owner2],
             ),
         ),
-        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
+        ),
         patch(
             "homeassistant.components.homeassistant_hardware.util.probe_silabs_firmware_info",
             return_value=expected_firmware_info,
@@ -971,7 +972,9 @@ async def test_async_flash_silabs_firmware_flash_failure(
                 owners=[owner1, owner2],
             ),
         ),
-        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
+        ),
         pytest.raises(HomeAssistantError, match=expected_error_msg) as exc,
     ):
         async with async_firmware_flashing_context(
@@ -1023,7 +1026,9 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
                 owners=[owner1, owner2],
             ),
         ),
-        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
+        ),
         patch(
             "homeassistant.components.homeassistant_hardware.util.probe_silabs_firmware_info",
             return_value=None,

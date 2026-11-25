@@ -1,13 +1,15 @@
 """Tests for the todo intents."""
 
+import datetime as dt
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.todo import (
-    ATTR_ITEM,
     DOMAIN,
     TodoItem,
     TodoItemStatus,
@@ -15,15 +17,11 @@ from homeassistant.components.todo import (
     intent as todo_intent,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 
 from . import MockTodoListEntity, create_mock_platform
-
-from tests.common import async_mock_service
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -56,7 +54,7 @@ async def test_add_item_intent(
         hass,
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
-        {ATTR_ITEM: {"value": " beer "}, "name": {"value": "list 1"}},
+        {"item": {"value": " beer "}, "name": {"value": "list 1"}},
         assistant=conversation.DOMAIN,
     )
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
@@ -75,7 +73,7 @@ async def test_add_item_intent(
         hass,
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
-        {ATTR_ITEM: {"value": "cheese"}, "name": {"value": "List 2"}},
+        {"item": {"value": "cheese"}, "name": {"value": "List 2"}},
         assistant=conversation.DOMAIN,
     )
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
@@ -90,7 +88,7 @@ async def test_add_item_intent(
         hass,
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
-        {ATTR_ITEM: {"value": "wine"}, "name": {"value": "lIST 2"}},
+        {"item": {"value": "wine"}, "name": {"value": "lIST 2"}},
         assistant=conversation.DOMAIN,
     )
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
@@ -158,8 +156,8 @@ async def test_add_item_intent_errors(
             "test",
             todo_intent.INTENT_LIST_ADD_ITEM,
             {
-                ATTR_ITEM: {"value": "wine"},
-                ATTR_NAME: {"value": "This list does not exist"},
+                "item": {"value": "wine"},
+                "name": {"value": "This list does not exist"},
             },
             assistant=conversation.DOMAIN,
         )
@@ -174,8 +172,8 @@ async def test_add_item_intent_errors(
             "test",
             todo_intent.INTENT_LIST_ADD_ITEM,
             {
-                ATTR_ITEM: {"value": "wine"},
-                ATTR_NAME: {"value": "List 1"},
+                "item": {"value": "wine"},
+                "name": {"value": "List 1"},
             },
             assistant=conversation.DOMAIN,
         )
@@ -187,7 +185,13 @@ async def test_complete_item_intent(
     """Test the complete item intent."""
     entity1 = MockTodoListEntity(
         [
-            TodoItem(summary="Beer", uid="1", status=TodoItemStatus.NEEDS_ACTION),
+            TodoItem(
+                summary="Beer",
+                uid="1",
+                status=TodoItemStatus.NEEDS_ACTION,
+                description="Belgian",
+                due=dt.date(2026, 11, 20),
+            ),
             TodoItem(summary="Wine", uid="2", status=TodoItemStatus.NEEDS_ACTION),
         ]
     )
@@ -207,13 +211,16 @@ async def test_complete_item_intent(
         hass,
         DOMAIN,
         todo_intent.INTENT_LIST_COMPLETE_ITEM,
-        {ATTR_ITEM: {"value": "beer"}, ATTR_NAME: {"value": "list 1"}},
+        {"item": {"value": "beer"}, "name": {"value": "list 1"}},
         assistant=conversation.DOMAIN,
     )
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
 
     assert len(entity1.items) == 2
     assert entity1.items[0].status == TodoItemStatus.COMPLETED
+    # Completing an item keeps its other fields
+    assert entity1.items[0].description == "Belgian"
+    assert entity1.items[0].due == dt.date(2026, 11, 20)
 
 
 async def test_complete_item_intent_errors(
@@ -239,8 +246,8 @@ async def test_complete_item_intent_errors(
             "test",
             todo_intent.INTENT_LIST_COMPLETE_ITEM,
             {
-                ATTR_ITEM: {"value": "wine"},
-                ATTR_NAME: {"value": "This list does not exist"},
+                "item": {"value": "wine"},
+                "name": {"value": "This list does not exist"},
             },
             assistant=conversation.DOMAIN,
         )
@@ -251,7 +258,7 @@ async def test_complete_item_intent_errors(
             hass,
             "test",
             todo_intent.INTENT_LIST_COMPLETE_ITEM,
-            {ATTR_ITEM: {"value": "bread"}, ATTR_NAME: {"value": "list 1"}},
+            {"item": {"value": "bread"}, "name": {"value": "list 1"}},
             assistant=conversation.DOMAIN,
         )
 
@@ -261,7 +268,7 @@ async def test_complete_item_intent_errors(
             hass,
             "test",
             todo_intent.INTENT_LIST_COMPLETE_ITEM,
-            {ATTR_ITEM: {"value": "beer"}, ATTR_NAME: {"value": "list 1"}},
+            {"item": {"value": "beer"}, "name": {"value": "list 1"}},
             assistant=conversation.DOMAIN,
         )
 
@@ -287,7 +294,7 @@ async def test_complete_item_intent_ha_errors(
             hass,
             DOMAIN,
             todo_intent.INTENT_LIST_COMPLETE_ITEM,
-            {ATTR_ITEM: {"value": "wine"}, ATTR_NAME: {"value": "List 1"}},
+            {"item": {"value": "wine"}, "name": {"value": "List 1"}},
             assistant=conversation.DOMAIN,
         )
 
@@ -318,7 +325,7 @@ async def test_remove_item_intent(
         hass,
         DOMAIN,
         todo_intent.INTENT_LIST_REMOVE_ITEM,
-        {ATTR_ITEM: {"value": "beer"}, ATTR_NAME: {"value": "list 1"}},
+        {"item": {"value": "beer"}, "name": {"value": "list 1"}},
         assistant=conversation.DOMAIN,
     )
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
@@ -352,8 +359,8 @@ async def test_remove_item_intent_errors(
             "test",
             todo_intent.INTENT_LIST_REMOVE_ITEM,
             {
-                ATTR_ITEM: {"value": "wine"},
-                ATTR_NAME: {"value": "This list does not exist"},
+                "item": {"value": "wine"},
+                "name": {"value": "This list does not exist"},
             },
             assistant=conversation.DOMAIN,
         )
@@ -364,6 +371,6 @@ async def test_remove_item_intent_errors(
             hass,
             "test",
             todo_intent.INTENT_LIST_REMOVE_ITEM,
-            {ATTR_ITEM: {"value": "bread"}, ATTR_NAME: {"value": "list 1"}},
+            {"item": {"value": "bread"}, "name": {"value": "list 1"}},
             assistant=conversation.DOMAIN,
         )

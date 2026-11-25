@@ -7,6 +7,7 @@ from aiohttp import ClientError
 from igloohome_api import Api as IgloohomeApi, ApiException, GetDeviceInfoResponse
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -42,7 +43,7 @@ async def async_setup_entry(
 class IgloohomeBatteryEntity(IgloohomeBaseEntity, SensorEntity):
     """Implementation of a device that has a battery."""
 
-    _attr_native_unit_of_measurement = "%"
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
     _attr_device_class = SensorDeviceClass.BATTERY
 
     def __init__(

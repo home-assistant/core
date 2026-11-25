@@ -3,10 +3,9 @@
 from time import time
 
 from bleak.backends.scanner import AdvertisementData
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-
-from tests.components.bluetooth import generate_ble_device
 
 
 def fake_service_info(name, service_uuid, manufacturer_data):

@@ -400,6 +400,20 @@ async def test_merge_response_with_empty_response(
     assert render(hass, _template) == snapshot(name="b_rendered")
 
 
+async def test_merge_response_dict_after_single_list(hass: HomeAssistant) -> None:
+    """Test a dict response following a single list response is merged."""
+
+    service_response = {
+        "calendar.sports": {"events": [{"summary": "Match"}]},
+        "weather.home": {"temperature": 20, "condition": "sunny"},
+    }
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+    assert render(hass, _template) == [
+        {"summary": "Match", "entity_id": "calendar.sports", "value_key": "events"},
+        {"temperature": 20, "condition": "sunny", "entity_id": "weather.home"},
+    ]
+
+
 async def test_response_empty_dict(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

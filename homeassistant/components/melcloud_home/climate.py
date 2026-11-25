@@ -109,7 +109,11 @@ ATW_OPERATION_TO_HVAC_ACTION: dict[ATWOperationMode, HVACAction] = {
     ATWOperationMode.HOT_WATER: HVACAction.IDLE,
     ATWOperationMode.HEAT: HVACAction.HEATING,
     ATWOperationMode.HEAT_ZONES: HVACAction.HEATING,
+    ATWOperationMode.HEATING: HVACAction.HEATING,
+    ATWOperationMode.FREEZE_STAT: HVACAction.HEATING,
+    ATWOperationMode.LEGIONELLA_PREVENTION: HVACAction.IDLE,
     ATWOperationMode.COOL: HVACAction.COOLING,
+    ATWOperationMode.COOLING: HVACAction.COOLING,
 }
 
 
@@ -167,7 +171,11 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
             | ClimateEntityFeature.TURN_ON
             | ClimateEntityFeature.TURN_OFF
         )
-        if (settings := self.unit.settings) is not None:
+        if (settings := self.unit.settings) is not None and (
+            self.unit.capabilities is None
+            or self.unit.capabilities.has_air_direction is not False
+            or self.unit.capabilities.has_swing is not False
+        ):
             if settings.get("VaneVerticalDirection") is not None:
                 features |= ClimateEntityFeature.SWING_MODE
             if settings.get("VaneHorizontalDirection") is not None:
@@ -228,17 +236,18 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     @property
     @override
     def min_temp(self) -> float:
-        """Return the minimum temperature based on the current HVAC mode."""
+        """Return the minimum temperature based on the operation mode."""
         capabilities = self.unit.capabilities
         if capabilities is not None:
-            hvac_mode = self.hvac_mode
-            if hvac_mode in (HVACMode.COOL, HVACMode.DRY):
+            # The unit keeps its operation mode while off, so the range still applies
+            operation_mode = self.unit.operation_mode
+            if operation_mode in (ATAOperationMode.COOL, ATAOperationMode.DRY):
                 if capabilities.min_temp_cool is not None:
                     return capabilities.min_temp_cool
-            elif hvac_mode == HVACMode.AUTO:
+            elif operation_mode == ATAOperationMode.AUTOMATIC:
                 if capabilities.min_temp_auto is not None:
                     return capabilities.min_temp_auto
-            elif hvac_mode == HVACMode.HEAT:
+            elif operation_mode == ATAOperationMode.HEAT:
                 if capabilities.min_temp_heat is not None:
                     return capabilities.min_temp_heat
         return super().min_temp
@@ -246,20 +255,31 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     @property
     @override
     def max_temp(self) -> float:
-        """Return the maximum temperature based on the current HVAC mode."""
+        """Return the maximum temperature based on the operation mode."""
         capabilities = self.unit.capabilities
         if capabilities is not None:
-            hvac_mode = self.hvac_mode
-            if hvac_mode in (HVACMode.COOL, HVACMode.DRY):
+            # The unit keeps its operation mode while off, so the range still applies
+            operation_mode = self.unit.operation_mode
+            if operation_mode in (ATAOperationMode.COOL, ATAOperationMode.DRY):
                 if capabilities.max_temp_cool is not None:
                     return capabilities.max_temp_cool
-            elif hvac_mode == HVACMode.AUTO:
+            elif operation_mode == ATAOperationMode.AUTOMATIC:
                 if capabilities.max_temp_auto is not None:
                     return capabilities.max_temp_auto
-            elif hvac_mode == HVACMode.HEAT:
+            elif operation_mode == ATAOperationMode.HEAT:
                 if capabilities.max_temp_heat is not None:
                     return capabilities.max_temp_heat
         return super().max_temp
+
+    @property
+    @override
+    def target_temperature_step(self) -> float | None:
+        """Return the target temperature step."""
+        if (
+            capabilities := self.unit.capabilities
+        ) is None or capabilities.has_half_degree_increments is None:
+            return super().target_temperature_step
+        return 0.5 if capabilities.has_half_degree_increments else 1.0
 
     @property
     @override
@@ -450,6 +470,16 @@ class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
             if value is not None:
                 return value
         return super().max_temp
+
+    @property
+    @override
+    def target_temperature_step(self) -> float | None:
+        """Return the target zone temperature step."""
+        if (
+            capabilities := self.unit.capabilities
+        ) is None or capabilities.has_half_degrees is None:
+            return super().target_temperature_step
+        return 0.5 if capabilities.has_half_degrees else 1.0
 
     @property
     @override

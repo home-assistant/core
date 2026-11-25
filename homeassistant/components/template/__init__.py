@@ -12,9 +12,14 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ADDITIONAL_OPTIONS, CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
 from .helpers import async_get_blueprints, process_config
+from .repairs import async_update_deprecated_template_options_issues
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
+
+__all__ = [
+    "DOMAIN",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -30,6 +35,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # since a tracked task will be waited at the end of startup
     hass.async_create_task(blueprints.async_populate(), eager_start=True)
 
+    async_update_deprecated_template_options_issues(hass, config.get(DOMAIN))
+
     if DOMAIN in config:
         await process_config(hass, config)
 
@@ -38,7 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
 
     device_id = entry.options.get(CONF_DEVICE_ID)
@@ -56,7 +63,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if (
         device_id is not None
         and device_registry.async_get(
-            device_id, include_main_devices=False, include_child_devices=False
+            device_id,
+            include_main_devices=False,
+            include_child_devices=False,
+            include_composite_devices=True,
         )
         is not None
     ):
@@ -66,6 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             DOMAIN,
             f"composite_device_id_{entry.entry_id}",
+            config_entry_id=entry.entry_id,
             data={"entry_id": entry.entry_id},
             is_fixable=True,
             severity=ir.IssueSeverity.WARNING,
@@ -88,22 +99,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, (entry.options["template_type"],)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, (entry.options["template_type"],)
     )
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle removal of a config entry."""
-    ir.async_delete_issue(hass, DOMAIN, f"composite_device_id_{entry.entry_id}")
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
 
     _LOGGER.debug(
@@ -138,5 +142,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

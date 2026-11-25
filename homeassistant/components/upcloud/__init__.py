@@ -5,7 +5,11 @@ import upcloud_api
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 
 from .const import DOMAIN
 from .coordinator import UpCloudConfigEntry, UpCloudDataUpdateCoordinator
@@ -13,7 +17,7 @@ from .coordinator import UpCloudConfigEntry, UpCloudDataUpdateCoordinator
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> None:
     """Set up the UpCloud config entry."""
 
     manager = upcloud_api.CloudManager(
@@ -23,6 +27,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> b
     try:
         await hass.async_add_executor_job(manager.authenticate)
     except upcloud_api.UpCloudAPIError as err:
+        if err.error_code == "AUTHENTICATION_FAILED":
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",
@@ -47,9 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> b
     # Forward entry setup
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> None:
     """Unload the config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

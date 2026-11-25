@@ -3,22 +3,19 @@
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyEntity,
+)
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
-    ATTR_PERCENTAGE_STEP,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_DECREASE_SPEED,
-    SERVICE_INCREASE_SPEED,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import Context, HomeAssistant, State
-
-from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 ENTITY_ID = "fan.novy_cooker_hood"
 
@@ -37,8 +34,8 @@ async def test_turn_on_calibrates_to_level_1(
     context = Context()
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         context=context,
         blocking=True,
     )
@@ -59,8 +56,8 @@ async def test_turn_on_with_percentage_calibrates_to_level(
     """turn_on with percentage targets the matching level via calibration."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, FanServiceArgument.PERCENTAGE: 50},
         blocking=True,
     )
 
@@ -79,8 +76,8 @@ async def test_set_percentage_zero_turns_off(
     """set_percentage(0) turns the fan off via the calibration sequence."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 0},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, FanServiceArgument.PERCENTAGE: 0},
         blocking=True,
     )
 
@@ -99,8 +96,8 @@ async def test_turn_off_sends_four_minuses(
     """turn_off sends 4 minus presses."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -119,8 +116,8 @@ async def test_set_percentage_calibrates(
     """set_percentage(75) sends 4 minus + 3 plus and lands at level 3."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 75},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, FanServiceArgument.PERCENTAGE: 75},
         blocking=True,
     )
 
@@ -139,8 +136,8 @@ async def test_increase_speed_sends_single_plus(
     """increase_speed sends one plus and bumps level by one (no recalibration)."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_INCREASE_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        FanService.INCREASE_SPEED,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -166,8 +163,8 @@ async def test_increase_speed_clamps_at_max(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_INCREASE_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        FanService.INCREASE_SPEED,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -192,8 +189,8 @@ async def test_decrease_speed_sends_single_minus(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_DECREASE_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        FanService.DECREASE_SPEED,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -211,8 +208,8 @@ async def test_increase_speed_with_step_sends_n_presses(
     """increase_speed with percentage_step sends N plus presses (no recalibration)."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_INCREASE_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE_STEP: 50},
+        FanService.INCREASE_SPEED,
+        {TargetKey.ENTITY_ID: ENTITY_ID, FanServiceArgument.PERCENTAGE_STEP: 50},
         blocking=True,
     )
 
@@ -237,8 +234,8 @@ async def test_decrease_speed_with_step_sends_n_presses(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_DECREASE_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE_STEP: 50},
+        FanService.DECREASE_SPEED,
+        {TargetKey.ENTITY_ID: ENTITY_ID, FanServiceArgument.PERCENTAGE_STEP: 50},
         blocking=True,
     )
 
@@ -256,8 +253,8 @@ async def test_decrease_speed_clamps_at_off(
     """decrease_speed at level 0 still sends one minus but level stays at 0."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_DECREASE_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        FanService.DECREASE_SPEED,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -283,8 +280,8 @@ async def test_set_percentage_sleeps_between_presses(
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 75},
+            FanService.SET_PERCENTAGE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, FanServiceArgument.PERCENTAGE: 75},
             blocking=True,
         )
 

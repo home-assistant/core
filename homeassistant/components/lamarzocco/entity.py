@@ -74,7 +74,7 @@ class LaMarzoccoBaseEntity(
                 (CONNECTION_BLUETOOTH, coordinator.config_entry.data[CONF_MAC])
             )
         if connections:
-            self._attr_device_info.update(DeviceInfo(connections=connections))
+            self._attr_device_info.connections = connections
 
     @property
     @override
@@ -102,6 +102,17 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
 
     entity_description: LaMarzoccoEntityDescription
 
+    def __init__(
+        self,
+        coordinator: LaMarzoccoUpdateCoordinator,
+        entity_description: LaMarzoccoEntityDescription,
+        bluetooth_coordinator: LaMarzoccoBluetoothUpdateCoordinator | None = None,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, entity_description.key)
+        self.entity_description = entity_description
+        self.bluetooth_coordinator = bluetooth_coordinator
+
     @property
     @override
     def available(self) -> bool:
@@ -119,17 +130,6 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
         if super().available:
             return self.entity_description.available_fn(self.coordinator)
         return False
-
-    def __init__(
-        self,
-        coordinator: LaMarzoccoUpdateCoordinator,
-        entity_description: LaMarzoccoEntityDescription,
-        bluetooth_coordinator: LaMarzoccoBluetoothUpdateCoordinator | None = None,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, entity_description.key)
-        self.entity_description = entity_description
-        self.bluetooth_coordinator = bluetooth_coordinator
 
     @override
     async def async_added_to_hass(self) -> None:

@@ -4,6 +4,7 @@ import math
 from typing import TYPE_CHECKING, Any
 
 import jinja2.filters
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.helpers.template.helpers import forgiving_boolean, raise_no_default
 
@@ -12,7 +13,7 @@ from .base import BaseTemplateExtension, TemplateFunction
 if TYPE_CHECKING:
     from homeassistant.helpers.template import TemplateEnvironment
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 
 class TypeCastExtension(BaseTemplateExtension):
@@ -57,19 +58,29 @@ class TypeCastExtension(BaseTemplateExtension):
         )
 
     @staticmethod
-    def forgiving_float(value: Any, default: Any = _SENTINEL) -> Any:
+    def forgiving_float[_T](
+        value: Any, default: _T | _SENTINEL = _SENTINEL
+    ) -> float | _T:
         """Try to convert value to a float."""
         try:
             return float(value)
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError:
             if default is _SENTINEL:
                 raise_no_default("float", value)
             return default
 
     @staticmethod
-    def forgiving_int(value: Any, default: Any = _SENTINEL, base: int = 10) -> Any:
+    def forgiving_int[_T](
+        value: Any, default: _T | _SENTINEL = _SENTINEL, base: int = 10
+    ) -> int | _T:
         """Try to convert value to an int, and raise if it fails."""
-        result = jinja2.filters.do_int(value, default=default, base=base)
+        result: int | _T | _SENTINEL
+        try:
+            # do_int annotates default as int but returns it unchanged
+            result = jinja2.filters.do_int(value, default=default, base=base)  # type: ignore[arg-type]
+        except OverflowError:
+            # Jinja's do_int doesn't catch this for an infinite float
+            result = default
         if result is _SENTINEL:
             raise_no_default("int", value)
         return result
@@ -79,7 +90,7 @@ class TypeCastExtension(BaseTemplateExtension):
         """Try to convert value to a float."""
         try:
             fvalue = float(value)
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError:
             return False
         if not math.isfinite(fvalue):
             return False

@@ -2,10 +2,10 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.typing import RecorderInstanceGenerator
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder
-
-from tests.typing import RecorderInstanceGenerator
 
 
 async def test_async_migration_in_progress(

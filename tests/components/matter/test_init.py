@@ -12,8 +12,11 @@ from matter_server.client.exceptions import (
     ServerVersionTooNew,
     ServerVersionTooOld,
 )
+from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_component
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.matter import (
     _derive_ble_proxy_url,
@@ -21,7 +24,12 @@ from homeassistant.components.matter import (
 )
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+    Platform,
+    __version__ as HA_VERSION,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -36,9 +44,6 @@ from .common import (
     load_and_parse_node_fixture,
     setup_integration_with_node_fixture,
 )
-
-from tests.common import MockConfigEntry, mock_component
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(name="connect_timeout")
@@ -134,6 +139,129 @@ async def test_entry_setup_unload(
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
+
+
+OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID = (
+    "00000000000004D2-0000000000000021-MatterNodeDevice-1-EveTemperatureOffset-513-16"
+)
+NEW_TEMPERATURE_OFFSET_UNIQUE_ID = (
+    "00000000000004D2-0000000000000021-MatterNodeDevice-1-TemperatureOffset-513-16"
+)
+
+
+async def test_migrate_eve_temperature_offset_unique_id(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test legacy EveTemperatureOffset entities are migrated to TemperatureOffset."""
+    node = create_node_from_fixture("eve_thermo_v4")
+    matter_client.get_nodes.return_value = [node]
+    matter_client.get_node.return_value = node
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://localhost:5580/ws"}, minor_version=1
+    )
+    entry.add_to_hass(hass)
+
+    stale_entity = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID,
+        config_entry=entry,
+        suggested_object_id="legacy_eve_temperature_offset",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
+    migrated_entity = entity_registry.async_get(stale_entity.entity_id)
+    assert migrated_entity
+    assert migrated_entity.unique_id == NEW_TEMPERATURE_OFFSET_UNIQUE_ID
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.NUMBER, DOMAIN, OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID
+        )
+        is None
+    )
+    state = hass.states.get(stale_entity.entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_migrate_eve_temperature_offset_unique_id_conflict(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration replaces a stale generic TemperatureOffset entity."""
+    node = create_node_from_fixture("eve_thermo_v4")
+    matter_client.get_nodes.return_value = [node]
+    matter_client.get_node.return_value = node
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://localhost:5580/ws"}, minor_version=1
+    )
+    entry.add_to_hass(hass)
+
+    stale_generic_entity = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        NEW_TEMPERATURE_OFFSET_UNIQUE_ID,
+        config_entry=entry,
+        suggested_object_id="stale_generic_temperature_offset",
+    )
+    eve_entity = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID,
+        config_entry=entry,
+        suggested_object_id="legacy_eve_temperature_offset",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
+    assert entity_registry.async_get(stale_generic_entity.entity_id) is None
+    migrated_entity = entity_registry.async_get(eve_entity.entity_id)
+    assert migrated_entity
+    assert migrated_entity.unique_id == NEW_TEMPERATURE_OFFSET_UNIQUE_ID
+    state = hass.states.get(eve_entity.entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_migrate_eve_temperature_offset_skipped_on_current_version(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entries already at minor version 2 keep their unique IDs on setup."""
+    node = create_node_from_fixture("eve_thermo_v4")
+    matter_client.get_nodes.return_value = [node]
+    matter_client.get_node.return_value = node
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://localhost:5580/ws"}, minor_version=2
+    )
+    entry.add_to_hass(hass)
+
+    eve_entity = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID,
+        config_entry=entry,
+        suggested_object_id="legacy_eve_temperature_offset",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    eve_entry = entity_registry.async_get(eve_entity.entity_id)
+    assert eve_entry
+    assert eve_entry.unique_id == OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID
 
 
 async def test_home_assistant_stop(
@@ -543,7 +671,9 @@ async def test_issue_registry_invalid_version(
 
     entry_state = entry.state
     assert entry_state is ConfigEntryState.SETUP_RETRY
-    assert issue_registry.async_get_issue(DOMAIN, issue_raised)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_raised)
+    assert issue
+    assert issue.config_entry_id == entry.entry_id
 
     matter_client.connect.side_effect = original_connect_side_effect
 
@@ -551,6 +681,48 @@ async def test_issue_registry_invalid_version(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, issue_raised)
+
+
+@pytest.mark.parametrize(
+    ("connect_side_effect", "issue_raised"),
+    [
+        (
+            ServerVersionTooOld("Invalid version"),
+            "server_version_version_too_old",
+        ),
+        (
+            ServerVersionTooNew("Invalid version"),
+            "server_version_version_too_new",
+        ),
+    ],
+)
+async def test_invalid_version_issue_removed_with_entry(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    connect_side_effect: Exception,
+    issue_raised: str,
+) -> None:
+    """Test the invalid version issue is deleted when the entry is removed."""
+    matter_client.connect.side_effect = connect_side_effect
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Matter",
+        data={
+            "url": "ws://host1:5581/ws",
+            "use_addon": False,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_raised)
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
     assert not issue_registry.async_get_issue(DOMAIN, issue_raised)
 
 
@@ -650,8 +822,12 @@ async def test_ipv6_disabled_repair(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    issue = issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
-    assert (issue is not None) is issue_expected
+    issues = [
+        (issue.issue_id, issue.config_entry_id)
+        for issue in issue_registry.issues.values()
+        if issue.domain == DOMAIN
+    ]
+    assert issues == [("ipv6_disabled", entry.entry_id)] * issue_expected
 
 
 async def test_ipv6_repair_not_raised_without_supervisor(
@@ -745,11 +921,66 @@ async def test_ipv6_repair_resolves_on_reload(
     assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
 
 
+async def test_ipv6_repair_ignored_issue_linked_and_kept_ignored(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an ignored unlinked IPv6 repair stays ignored once linked."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "ipv6_disabled",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="ipv6_disabled",
+    )
+    ir.async_ignore_issue(hass, DOMAIN, "ipv6_disabled", True)
+    supervisor_client = MagicMock()
+    supervisor_client.network.info = AsyncMock(
+        return_value=MagicMock(
+            interfaces=[
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.DISABLED
+                )
+            ]
+        )
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.matter.is_hassio", return_value=True),
+        patch(
+            "homeassistant.components.matter.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+    assert issue
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.dismissed_version == HA_VERSION
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+
+
 @pytest.mark.parametrize(
-    ("stop_addon_side_effect", "entry_state"),
+    ("stop_addon_side_effect", "entry_state", "entry_reason"),
     [
-        (None, ConfigEntryState.NOT_LOADED),
-        (SupervisorError("Boom"), ConfigEntryState.FAILED_UNLOAD),
+        (None, ConfigEntryState.NOT_LOADED, None),
+        (
+            SupervisorError("Boom"),
+            ConfigEntryState.FAILED_UNLOAD,
+            "Failed to stop the Matter Server app",
+        ),
     ],
 )
 async def test_stop_addon(
@@ -761,6 +992,7 @@ async def test_stop_addon(
     stop_addon: AsyncMock,
     stop_addon_side_effect: Exception | None,
     entry_state: ConfigEntryState,
+    entry_reason: str | None,
 ) -> None:
     """Test stop the Matter add-on on entry unload if entry is disabled."""
     stop_addon.side_effect = stop_addon_side_effect
@@ -787,6 +1019,7 @@ async def test_stop_addon(
     await hass.async_block_till_done()
 
     assert entry.state is entry_state
+    assert entry.reason == entry_reason
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_matter_server")
 
@@ -964,13 +1197,13 @@ async def test_remove_config_entry_device_no_node(
     assert not device_registry.async_get(device_entry.id)
 
 
-async def test_remove_config_entry_device_rejects_child_device(
+async def test_remove_config_entry_device_allows_orphan_child_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that removing an unexpected child device is rejected."""
+    """Test that an orphan child device (its endpoint is gone) can be removed."""
     assert await async_setup_component(hass, "config", {})
     parent_device = device_registry.async_get_or_create(
         config_entry_id=integration.entry_id,
@@ -984,12 +1217,57 @@ async def test_remove_config_entry_device_rejects_child_device(
 
     client = await hass_ws_client(hass)
     response = await client.remove_device(child_device.id)
-    assert not response["success"]
-    assert (
-        response["error"]["message"]
-        == "Failed to remove device entry, rejected by integration"
+    assert response["success"]
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get(child_device.id)
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_remove_config_entry_device_rejects_active_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing a child device whose endpoint still needs one is rejected."""
+    assert await async_setup_component(hass, "config", {})
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    children = dr.async_child_entries_for_config_entry(
+        device_registry, config_entry.entry_id
     )
-    assert device_registry.async_get(child_device.id)
+    assert children
+
+    client = await hass_ws_client(hass)
+    for child in children:
+        response = await client.remove_device(child.id)
+        assert not response["success"]
+        assert device_registry.async_get(child.id)
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_get_matter_device_info_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    matter_node: MatterNode,
+) -> None:
+    """Test Matter device info resolves a child device id to its node.
+
+    This underpins the Google Assistant SYNC response and device diagnostics for
+    entities that live on a split endpoint's child device.
+    """
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    children = dr.async_child_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert children
+    expected_device_info = {
+        "unique_id": matter_node.device_info.uniqueID,
+        "vendor_id": hex(matter_node.device_info.vendorID),
+        "product_id": hex(matter_node.device_info.productID),
+    }
+    for child in children:
+        assert get_matter_device_info(hass, child.id) == expected_device_info
 
 
 async def test_get_matter_device_info(

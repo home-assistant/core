@@ -3,18 +3,18 @@
 from typing import Any
 
 import probatio
+from zha.zigbee.device import ZigbeeDevice
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 from zigpy.zcl.clusters.security import IasWd
 
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from .const import DOMAIN
+from .const import DOMAIN, ZHAService
 from .helpers import async_get_zha_device_proxy, convert_zha_error_to_ha_error
-from .services import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN
 
 # mypy: disallow-any-generics
 
@@ -64,15 +64,14 @@ INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA = INOVELLI_ALL_LED_EFFECT_SCHEMA.extend(
     }
 )
 
-ACTION_SCHEMA_MAP = {
-    INOVELLI_ALL_LED_EFFECT: INOVELLI_ALL_LED_EFFECT_SCHEMA,
-    INOVELLI_INDIVIDUAL_LED_EFFECT: INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA,
-}
-
-ACTION_SCHEMA = probatio.Any(
-    INOVELLI_ALL_LED_EFFECT_SCHEMA,
-    INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA,
-    DEFAULT_ACTION_SCHEMA,
+ACTION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        ACTION_SQUAWK: DEFAULT_ACTION_SCHEMA,
+        ACTION_WARN: DEFAULT_ACTION_SCHEMA,
+        INOVELLI_ALL_LED_EFFECT: INOVELLI_ALL_LED_EFFECT_SCHEMA,
+        INOVELLI_INDIVIDUAL_LED_EFFECT: INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA,
+    },
 )
 
 # Maps a cluster_id the device must expose to the available actions.
@@ -126,8 +125,8 @@ DEVICE_ACTION_SCHEMAS = {
 }
 
 SERVICE_NAMES = {
-    ACTION_SQUAWK: SERVICE_WARNING_DEVICE_SQUAWK,
-    ACTION_WARN: SERVICE_WARNING_DEVICE_WARN,
+    ACTION_SQUAWK: ZHAService.WARNING_DEVICE_SQUAWK,
+    ACTION_WARN: ZHAService.WARNING_DEVICE_WARN,
 }
 
 
@@ -147,17 +146,28 @@ async def async_validate_action_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate config."""
-    schema = ACTION_SCHEMA_MAP.get(config[CONF_TYPE], DEFAULT_ACTION_SCHEMA)
-    return schema(config)
+    return ACTION_SCHEMA(config)
 
 
 async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions."""
+    # Actions belong to the ZHA device, not to its child devices
+    if (
+        dr.async_get(hass).async_get(
+            device_id, include_main_devices=False, include_composite_devices=False
+        )
+        is not None
+    ):
+        return []
+
     try:
         zha_device = async_get_zha_device_proxy(hass, device_id).device
     except KeyError, AttributeError:
+        return []
+    # Green Power devices have no clusters
+    if not isinstance(zha_device, ZigbeeDevice):
         return []
     cluster_ids = {
         cluster_id

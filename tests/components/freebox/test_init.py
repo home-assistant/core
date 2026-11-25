@@ -2,19 +2,21 @@
 
 from collections.abc import Callable
 from copy import deepcopy
-from unittest.mock import ANY, Mock
+from typing import Any
+from unittest.mock import ANY, Mock, patch
 
 from aiohttp import ClientError
 from freebox_api.exceptions import HttpRequestError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_unordered import unordered
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
 from homeassistant.components.freebox import SCAN_INTERVAL
-from homeassistant.components.freebox.const import DOMAIN
+from homeassistant.components.freebox.const import CONF_REGISTRATION_NAME, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -24,9 +26,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
-from .const import DATA_HOME_GET_NODES, MOCK_HOST, MOCK_PORT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
+from .const import DATA_HOME_GET_NODES, MOCK_HOST, MOCK_PORT, MOCK_REGISTRATION_NAME
 
 MOCK_MAC = "68:A3:78:00:00:00"
 
@@ -46,6 +46,45 @@ async def test_setup(hass: HomeAssistant, router: Mock) -> None:
 
     assert router.call_count == 1
     assert router().open.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "expected_registration_name"),
+    [
+        pytest.param(
+            {
+                CONF_HOST: MOCK_HOST,
+                CONF_PORT: MOCK_PORT,
+                CONF_REGISTRATION_NAME: "chosen",
+            },
+            "chosen",
+            id="configured",
+        ),
+        pytest.param(
+            {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+            MOCK_REGISTRATION_NAME,
+            id="hostname_fallback",
+        ),
+    ],
+)
+async def test_setup_registration_name(
+    hass: HomeAssistant,
+    router: Mock,
+    entry_data: dict[str, Any],
+    expected_registration_name: str,
+) -> None:
+    """Test the device name registered on the Freebox."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=entry_data, unique_id=MOCK_HOST, version=2
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.freebox.socket.gethostname",
+        return_value=MOCK_REGISTRATION_NAME,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert router.call_args.args[0]["device_name"] == expected_registration_name
 
 
 @pytest.mark.parametrize(
@@ -102,7 +141,13 @@ async def test_setup_import(hass: HomeAssistant, router: Mock) -> None:
     assert router().open.call_count == 1
 
 
-async def test_unload_remove(hass: HomeAssistant, router: Mock) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_unload_remove(
+    hass: HomeAssistant,
+    router: Mock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test unload and remove of integration."""
     entity_id_dt = f"{DT_DOMAIN}.freebox_server_r2"
     entity_id_sensor = f"{SENSOR_DOMAIN}.freebox_server_r2_download_speed"
@@ -125,6 +170,10 @@ async def test_unload_remove(hass: HomeAssistant, router: Mock) -> None:
     assert entry.state is ConfigEntryState.LOADED
     state_dt = hass.states.get(entity_id_dt)
     assert state_dt
+    # The router tracks itself on its own device
+    device_id = entity_registry.async_get(entity_id_dt).device_id
+    assert device_id == entity_registry.async_get(entity_id_sensor).device_id
+    assert device_registry.async_get(device_id).name == "Freebox Server (r2)"
     state_sensor = hass.states.get(entity_id_sensor)
     assert state_sensor
     state_switch = hass.states.get(entity_id_switch)

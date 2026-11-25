@@ -1,6 +1,7 @@
 {
   "domain": "keyboard_remote",
   "name": "Keyboard Remote",
+  "categories": ["buttons_remotes"],
   "codeowners": ["@bendavid", "@lanrat"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/keyboard_remote",

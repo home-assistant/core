@@ -4,15 +4,18 @@ from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 
 import pytest
+from pytest_homeassistant.common import setup_test_component_platform
 
-from homeassistant.components.datetime import ATTR_DATETIME, DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, CONF_PLATFORM
+from homeassistant.components.datetime import (
+    DOMAIN,
+    DateTimeService,
+    DateTimeServiceArgument,
+)
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_PLATFORM, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import MockDateTimeEntity
-
-from tests.common import setup_test_component_platform
 
 DEFAULT_VALUE = datetime(2020, 1, 1, 12, 0, 0, tzinfo=UTC)
 
@@ -42,8 +45,11 @@ async def test_datetime(hass: HomeAssistant) -> None:
     # Test updating datetime
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_DATETIME: datetime(2022, 3, 3, 3, 4, 5), ATTR_ENTITY_ID: "datetime.test"},
+        DateTimeService.SET_VALUE,
+        {
+            DateTimeServiceArgument.DATETIME: datetime(2022, 3, 3, 3, 4, 5),
+            TargetKey.ENTITY_ID: "datetime.test",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -54,8 +60,11 @@ async def test_datetime(hass: HomeAssistant) -> None:
     # Test updating datetime with UTC timezone
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_DATETIME: "2022-03-03T03:04:05+00:00", ATTR_ENTITY_ID: "datetime.test"},
+        DateTimeService.SET_VALUE,
+        {
+            DateTimeServiceArgument.DATETIME: "2022-03-03T03:04:05+00:00",
+            TargetKey.ENTITY_ID: "datetime.test",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -66,8 +75,11 @@ async def test_datetime(hass: HomeAssistant) -> None:
     # Test updating datetime with non UTC timezone
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_DATETIME: "2022-03-03T03:04:05-05:00", ATTR_ENTITY_ID: "datetime.test"},
+        DateTimeService.SET_VALUE,
+        {
+            DateTimeServiceArgument.DATETIME: "2022-03-03T03:04:05-05:00",
+            TargetKey.ENTITY_ID: "datetime.test",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()

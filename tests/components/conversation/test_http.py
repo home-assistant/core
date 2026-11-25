@@ -7,6 +7,13 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockUser,
+    async_fire_time_changed,
+    async_mock_service,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -34,14 +41,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import MockAgent
-
-from tests.common import (
-    MockConfigEntry,
-    MockUser,
-    async_fire_time_changed,
-    async_mock_service,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 AGENT_ID_OPTIONS = [
     None,
@@ -437,15 +436,9 @@ async def test_ws_hass_agent_debug_null_result(
     """Test homeassistant agent debug websocket command with a null result."""
     client = await hass_ws_client(hass)
 
-    async def async_recognize_intent(self, user_input, *args, **kwargs):
-        if user_input.text == "bad sentence":
-            return None
-
-        return await self.async_recognize(user_input, *args, **kwargs)
-
     with patch(
-        "homeassistant.components.conversation.default_agent.DefaultAgent.async_recognize_intent",
-        async_recognize_intent,
+        "homeassistant.components.conversation.default_agent.DefaultAgent.async_recognize_intents",
+        return_value=[],
     ):
         await client.send_json_auto_id(
             {
@@ -602,6 +595,50 @@ async def test_ws_hass_agent_debug_preferred_area(
     assert msg["success"]
     results = msg["result"]["results"]
     assert results[0]["match"]
+    assert results[0]["targets"] == {office_light.entity_id: {"matched": True}}
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_ws_hass_agent_debug_name_fallback(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that debug shows the name match if nothing is in the device's area."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    bedroom_area = area_registry.async_create("bedroom")
+    office_area = area_registry.async_create("office")
+
+    office_light = entity_registry.async_get_or_create(
+        "light", "demo", "office", original_name="lights"
+    )
+    entity_registry.async_update_entity(office_light.entity_id, area_id=office_area.id)
+    hass.states.async_set(office_light.entity_id, "on")
+
+    voice_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("demo", "voice-satellite")},
+    )
+    device_registry.async_update_device(voice_device.id, area_id=bedroom_area.id)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/debug",
+            "sentences": ["turn off the lights"],
+            "device_id": voice_device.id,
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    results = msg["result"]["results"]
+    assert results[0]["match"]
+    assert results[0]["slots"] == {"name": "lights"}
     assert results[0]["targets"] == {office_light.entity_id: {"matched": True}}
 
 
@@ -834,7 +871,7 @@ async def test_ws_chat_log_index_subscription(
         now = utcnow().isoformat()
 
         with (
-            chat_session.async_get_chat_session(hass) as session,
+            chat_session.async_get_chat_session(hass, context=None) as session,
             async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         ):
             before_sub_conversation_id = session.conversation_id
@@ -877,13 +914,13 @@ async def test_ws_chat_log_index_subscription(
         }
 
         with (
-            chat_session.async_get_chat_session(hass) as session,
+            chat_session.async_get_chat_session(hass, context=None) as session,
             async_get_chat_log(hass, session, mock_conversation_input),
         ):
             conversation_id = session.conversation_id
 
         # We should receive 2 events for this newly created chat:
-        # 1. The CREATED event (fired before content is added)
+        # 1. The CREATED event, with the message of the first turn
         msg = await client.receive_json()
         assert msg == {
             "type": "event",
@@ -896,21 +933,12 @@ async def test_ws_chat_log_index_subscription(
                         "conversation_id": conversation_id,
                         "continue_conversation": False,
                         "created": now,
-                        "content": [{"role": "system", "content": "", "created": now}],
+                        "content": [
+                            {"role": "system", "content": "", "created": now},
+                            {"role": "user", "content": "Hello", "created": now},
+                        ],
                     }
                 },
-            },
-        }
-
-        # 2. The DELETED event (since no assistant message was added)
-        msg = await client.receive_json()
-        assert msg == {
-            "type": "event",
-            "id": event_id,
-            "event": {
-                "conversation_id": conversation_id,
-                "event_type": "deleted",
-                "data": {},
             },
         }
 
@@ -921,17 +949,13 @@ async def test_ws_chat_log_index_subscription(
         ):
             async_fire_time_changed(hass, fire_all=True)
 
-        # 3. The DELETED event of before sub conversation
-        msg = await client.receive_json()
-        assert msg == {
-            "type": "event",
-            "id": event_id,
-            "event": {
-                "conversation_id": before_sub_conversation_id,
-                "event_type": "deleted",
-                "data": {},
-            },
-        }
+        # 2. The DELETED events of both conversations
+        deleted = set()
+        for _ in range(2):
+            msg = await client.receive_json()
+            assert msg["event"]["event_type"] == "deleted"
+            deleted.add(msg["event"]["conversation_id"])
+        assert deleted == {before_sub_conversation_id, conversation_id}
 
 
 async def test_ws_chat_log_index_subscription_requires_admin(
@@ -956,6 +980,50 @@ async def test_ws_chat_log_index_subscription_requires_admin(
     assert msg["error"]["code"] == "unauthorized"
 
 
+async def test_ws_chat_log_subscription_during_turn(
+    hass: HomeAssistant,
+    init_components,
+    mock_conversation_input: ConversationInput,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test subscribing to a chat log while a turn is in progress."""
+    client = await hass_ws_client(hass)
+
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        conversation_id = session.conversation_id
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent("test-agent-id", "I hear you")
+        )
+
+    with (
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
+        async_get_chat_log(hass, session, mock_conversation_input),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "conversation/chat_log/subscribe",
+                "conversation_id": conversation_id,
+            }
+        )
+        msg = await client.receive_json()
+        assert msg["success"]
+
+        # The initial state includes the message of the open turn.
+        msg = await client.receive_json()
+        assert msg["event"]["event_type"] == "initial_state"
+        assert [content["role"] for content in msg["event"]["data"]["content"]] == [
+            "system",
+            "user",
+            "assistant",
+            "user",
+        ]
+
+
 async def test_ws_chat_log_subscription(
     hass: HomeAssistant,
     init_components,
@@ -969,7 +1037,7 @@ async def test_ws_chat_log_subscription(
         now = utcnow().isoformat()
 
         with (
-            chat_session.async_get_chat_session(hass) as session,
+            chat_session.async_get_chat_session(hass, context=None) as session,
             async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         ):
             conversation_id = session.conversation_id
@@ -1013,7 +1081,9 @@ async def test_ws_chat_log_subscription(
         }
 
         with (
-            chat_session.async_get_chat_session(hass, conversation_id) as session,
+            chat_session.async_get_chat_session(
+                hass, conversation_id, context=None
+            ) as session,
             async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         ):
             chat_log.async_add_assistant_content_without_tools(

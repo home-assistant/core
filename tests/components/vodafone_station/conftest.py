@@ -5,6 +5,13 @@ from datetime import UTC, datetime
 from aiovodafone.api import VodafoneStationDevice
 from aiovodafone.const import WIFI_DATA
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    Generator,
+    MockConfigEntry,
+    load_json_object_fixture,
+    patch,
+)
 from yarl import URL
 
 from homeassistant.components.vodafone_station.const import (
@@ -27,21 +34,13 @@ from .const import (
     TEST_WIFI_DATA,
 )
 
-from tests.common import (
-    AsyncMock,
-    Generator,
-    MockConfigEntry,
-    load_json_object_fixture,
-    patch,
-)
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.vodafone_station.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -130,7 +129,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_getrandbits():
     """Mock image access token which normally is randomized."""
     with patch(
-        "homeassistant.components.image.SystemRandom.getrandbits",
+        "homeassistant.components.image.entity.SystemRandom.getrandbits",
         return_value=1,
     ):
         yield

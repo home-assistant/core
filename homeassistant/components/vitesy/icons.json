@@ -24,6 +24,12 @@
       },
       "door_openings": {
         "default": "mdi:door-open"
+      },
+      "fan_speed": {
+        "default": "mdi:fan"
+      },
+      "power_level": {
+        "default": "mdi:lightning-bolt"
       }
     }
   }

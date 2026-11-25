@@ -2,15 +2,15 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.elkm1.const import CONF_AUTO_CONFIGURE, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PREFIX, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import MOCK_MAC, _patch_discovery, mock_elk
-
-from tests.common import MockConfigEntry
 
 
 def _mocked_elk_with_light() -> MagicMock:
@@ -119,6 +119,11 @@ async def test_login_failed(hass: HomeAssistant) -> None:
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert config_entry.reason == "ElkM1 login failed for elks://1.2.3.4"
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == config_entry.entry_id
 
 
 async def test_invalid_config_item(hass: HomeAssistant) -> None:
@@ -152,3 +157,4 @@ async def test_invalid_config_item(hass: HomeAssistant) -> None:
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert config_entry.reason == "Invalid configuration for area"
+    assert not hass.config_entries.flow.async_progress()

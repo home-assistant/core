@@ -3,22 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.climate.condition import CONDITIONS
-from homeassistant.components.climate.const import (
-    ATTR_HUMIDITY,
-    ATTR_HVAC_ACTION,
-    HVACAction,
-    HVACMode,
-)
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT,
-    UnitOfTemperature,
-)
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
     TargetSupport,
     assert_condition_behavior_all,
@@ -35,6 +20,16 @@ from tests.components.common import (
     target_entities,
 )
 
+from homeassistant.components.climate import ClimateEntityStateAttribute
+from homeassistant.components.climate.condition import CONDITIONS
+from homeassistant.components.climate.const import (
+    ClimateEntityCapabilityAttribute,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.const import EntityStateAttribute, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+
 
 @pytest.fixture
 async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
@@ -42,6 +37,9 @@ async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "climate")
 
 
+_CLIMATE_UNIT_ATTRIBUTES = {
+    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+}
 _HUMIDITY_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 _TEMPERATURE_THRESHOLD = {
     "threshold": {
@@ -241,18 +239,48 @@ async def test_climate_state_condition_behavior_all(
     [
         *parametrize_condition_states_any(
             condition="climate.is_cooling",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.COOLING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.COOLING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
         *parametrize_condition_states_any(
             condition="climate.is_drying",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.DRYING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
         *parametrize_condition_states_any(
             condition="climate.is_heating",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.HEATING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
     ],
 )
@@ -288,18 +316,48 @@ async def test_climate_attribute_condition_behavior_any(
     [
         *parametrize_condition_states_all(
             condition="climate.is_cooling",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.COOLING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.COOLING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
         *parametrize_condition_states_all(
             condition="climate.is_drying",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.DRYING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
         *parametrize_condition_states_all(
             condition="climate.is_heating",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.HEATING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
     ],
 )
@@ -336,14 +394,15 @@ async def test_climate_attribute_condition_behavior_all(
         *parametrize_numerical_attribute_condition_above_below_any(
             "climate.is_target_humidity",
             HVACMode.AUTO,
-            ATTR_HUMIDITY,
+            ClimateEntityStateAttribute.TARGET_HUMIDITY,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_condition_above_below_any(
             "climate.is_target_temperature",
             HVACMode.AUTO,
-            ATTR_TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -381,14 +440,15 @@ async def test_climate_numerical_condition_behavior_any(
         *parametrize_numerical_attribute_condition_above_below_all(
             "climate.is_target_humidity",
             HVACMode.AUTO,
-            ATTR_HUMIDITY,
+            ClimateEntityStateAttribute.TARGET_HUMIDITY,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_condition_above_below_all(
             "climate.is_target_temperature",
             HVACMode.AUTO,
-            ATTR_TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -418,20 +478,49 @@ async def test_climate_numerical_condition_behavior_all(
 
 async def test_climate_numerical_condition_unit_conversion(hass: HomeAssistant) -> None:
     """Test that the climate numerical condition converts units correctly."""
-    _unit_celsius = {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
-    _unit_fahrenheit = {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT}
-    _unit_invalid = {ATTR_UNIT_OF_MEASUREMENT: "not_a_valid_unit"}
+    _unit_celsius = {
+        EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS
+    }
+    _unit_fahrenheit = {
+        EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT
+    }
+    _unit_invalid = {EntityStateAttribute.UNIT_OF_MEASUREMENT: "not_a_valid_unit"}
 
     await assert_numerical_condition_unit_conversion(
         hass,
         condition="climate.is_target_temperature",
         entity_id="climate.test",
-        pass_states=[{"state": HVACMode.AUTO, "attributes": {ATTR_TEMPERATURE: 25}}],
+        pass_states=[
+            {
+                "state": HVACMode.AUTO,
+                "attributes": {
+                    ClimateEntityStateAttribute.TARGET_TEMPERATURE: 25,
+                    **_CLIMATE_UNIT_ATTRIBUTES,
+                },
+            },
+            {
+                "state": HVACMode.AUTO,
+                "attributes": {
+                    ClimateEntityStateAttribute.TARGET_TEMPERATURE: 80,
+                    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                },
+            },
+        ],
         fail_states=[
             {
                 "state": HVACMode.AUTO,
-                "attributes": {ATTR_TEMPERATURE: 20},
-            }
+                "attributes": {
+                    ClimateEntityStateAttribute.TARGET_TEMPERATURE: 20,
+                    **_CLIMATE_UNIT_ATTRIBUTES,
+                },
+            },
+            {
+                "state": HVACMode.AUTO,
+                "attributes": {
+                    ClimateEntityStateAttribute.TARGET_TEMPERATURE: 68,
+                    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                },
+            },
         ],
         numerical_condition_options=[
             {

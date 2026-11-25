@@ -11,6 +11,7 @@ from midealocal.devices.fa import DeviceAttributes as FAAttributes, MideaFADevic
 from midealocal.devices.x40 import DeviceAttributes as X40Attributes
 from midealocal.exceptions import SocketException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
@@ -22,12 +23,14 @@ from homeassistant.components.fan import (
     SERVICE_OSCILLATE,
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
+    FanService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -36,8 +39,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DummyDevice, entity_entries
 from .const import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _assert_service_call(
@@ -408,7 +409,7 @@ async def test_fan_turn_on_raises_on_device_communication_error(
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_entry.entity_id},
+            FanService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_entry.entity_id},
             blocking=True,
         )

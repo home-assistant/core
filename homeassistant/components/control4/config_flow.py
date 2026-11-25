@@ -1,5 +1,6 @@
 """Config flow for Control4 integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -9,28 +10,12 @@ from pyControl4.account import C4Account
 from pyControl4.director import C4Director
 from pyControl4.error_handling import BadCredentials, NotFound, Unauthorized
 
-from homeassistant.config_entries import (
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlowWithReload,
-)
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
-from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
 
-from . import Control4ConfigEntry
-from .const import (
-    CONF_CONTROLLER_UNIQUE_ID,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    MIN_SCAN_INTERVAL,
-)
+from .const import CONF_CONTROLLER_UNIQUE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +25,10 @@ DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_USERNAME): str,
         probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
+)
+
+REAUTH_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
 )
 
 
@@ -147,36 +136,44 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=description_placeholders,
         )
 
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(
-        config_entry: Control4ConfigEntry,
-    ) -> OptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler()
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when the account credentials fail."""
+        return await self.async_step_reauth_confirm()
 
-
-class OptionsFlowHandler(OptionsFlowWithReload):
-    """Handle a option flow for Control4."""
-
-    async def async_step_init(
+    async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle options flow."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+        """Ask for a new password."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        description_placeholders: dict[str, str] = {
+            "username": reauth_entry.data[CONF_USERNAME]
+        }
 
-        data_schema = probatio.Schema(
-            {
-                # Polling interval is user-configurable, which is no longer allowed
-                # pylint: disable-next=home-assistant-config-flow-polling-field
-                probatio.Optional(
-                    CONF_SCAN_INTERVAL,
-                    default=self.config_entry.options.get(
-                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                    ),
-                ): probatio.All(cv.positive_int, probatio.Clamp(min=MIN_SCAN_INTERVAL)),
-            }
+        if user_input is not None:
+            errors, data, connect_placeholders = await self._async_try_connect(
+                {
+                    CONF_HOST: reauth_entry.data[CONF_HOST],
+                    CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                }
+            )
+            description_placeholders.update(connect_placeholders)
+
+            if not errors and data is not None:
+                mac = data[CONF_CONTROLLER_UNIQUE_ID].split("_", 3)[2]
+                await self.async_set_unique_id(format_mac(mac))
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
+            errors=errors,
+            description_placeholders=description_placeholders,
         )
-        return self.async_show_form(step_id="init", data_schema=data_schema)

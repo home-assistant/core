@@ -8,7 +8,7 @@ from apple_weatherkit.client import (
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_KEY_ID, CONF_KEY_PEM, CONF_SERVICE_ID, CONF_TEAM_ID, DOMAIN
@@ -17,7 +17,7 @@ from .coordinator import WeatherKitConfigEntry, WeatherKitDataUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WEATHER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WeatherKitConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WeatherKitConfigEntry) -> None:
     """Set up this integration using UI."""
     coordinator = WeatherKitDataUpdateCoordinator(
         hass=hass,
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeatherKitConfigEntry) -
     try:
         await coordinator.update_supported_data_sets()
     except WeatherKitApiClientAuthenticationError as ex:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_error",
         ) from ex
@@ -45,9 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeatherKitConfigEntry) -
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WeatherKitConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WeatherKitConfigEntry) -> None:
     """Handle removal of an entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

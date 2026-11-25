@@ -2,9 +2,11 @@
 
 from typing import TypedDict
 
+from .utils.url import RemoteFile
+
 
 class DownloadableContent(TypedDict):
     """Downloadable content."""
 
-    url: str
+    url: RemoteFile
     name: str

@@ -1,6 +1,7 @@
 """Tests for Google Maps Travel Time init."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.google_travel_time.const import (
     ARRIVAL_TIME,
@@ -12,8 +13,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_OPTIONS, MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

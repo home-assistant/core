@@ -1,65 +1,40 @@
 """Sensor for checking the status of London air."""
 
-from datetime import timedelta
-from http import HTTPStatus
+from datetime import datetime
 import logging
 from typing import Any, override
 
 import probatio
-import requests
+from pylondonair import (
+    NO_SPECIES_DATA,
+    LondonAirClient,
+    LondonAirConnectionError,
+    LondonAirData,
+    LondonAirUpdateError,
+    Site,
+)
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
+from homeassistant.util import dt as dt_util
+
+from .const import AUTHORITIES, CONF_LOCATIONS, DOMAIN, INTEGRATION_TITLE, SCAN_INTERVAL
+
+BREAKS_IN_HA_VERSION = "2027.6.0"
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_LOCATIONS = "locations"
-
-SCAN_INTERVAL = timedelta(minutes=30)
-
-AUTHORITIES = [
-    "Barking and Dagenham",
-    "Barnet",
-    "Bexley",
-    "Brent",
-    "Bromley",
-    "Camden",
-    "City of London",
-    "Croydon",
-    "Ealing",
-    "Enfield",
-    "Greenwich",
-    "Hackney",
-    "Hammersmith and Fulham",
-    "Haringey",
-    "Harrow",
-    "Havering",
-    "Hillingdon",
-    "Hounslow",
-    "Islington",
-    "Kensington and Chelsea",
-    "Kingston",
-    "Lambeth",
-    "Lewisham",
-    "Merton",
-    "Newham",
-    "Redbridge",
-    "Richmond",
-    "Southwark",
-    "Sutton",
-    "Tower Hamlets",
-    "Waltham Forest",
-    "Wandsworth",
-    "Westminster",
-]
-
-URL = "http://api.erg.kcl.ac.uk/AirQuality/Hourly/MonitoringIndex/GroupName=London/Json"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -70,35 +45,95 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the London Air sensor."""
-    data = APIData()
-    data.update()
+    """Set up the London Air sensor platform from YAML."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    if result["type"] is FlowResultType.ABORT:
+        if (reason := result["reason"]) == "single_instance_allowed":
+            # Additional YAML blocks abort as single-instance; merge their locations.
+            entry = hass.config_entries.async_entries(DOMAIN)[0]
+            existing = entry.data[CONF_LOCATIONS]
+            additional = [loc for loc in config[CONF_LOCATIONS] if loc not in existing]
+            if additional:
+                hass.config_entries.async_update_entry(
+                    entry,
+                    data={**entry.data, CONF_LOCATIONS: existing + additional},
+                )
+                await hass.config_entries.async_reload(entry.entry_id)
+        else:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{reason}",
+                breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": INTEGRATION_TITLE,
+                },
+            )
+            return
 
-    add_entities((AirSensor(name, data) for name in config[CONF_LOCATIONS]), True)
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry[APIData],
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up London Air sensors from a config entry."""
+    api_data = entry.runtime_data
+    async_add_entities(
+        (AirSensor(name, api_data) for name in entry.data[CONF_LOCATIONS]),
+        update_before_add=True,
+    )
 
 
 class APIData:
     """Get the latest data for all authorities."""
 
-    def __init__(self) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the AirData object."""
-        self.data = None
+        self._client = LondonAirClient(session=async_get_clientsession(hass))
+        self.data: LondonAirData | None = None
+        self._last_update: datetime | None = None
 
-    # Update only once in scan interval.
-    @Throttle(SCAN_INTERVAL)
-    def update(self):
-        """Get the latest data from TFL."""
-        response = requests.get(URL, timeout=10)
-        if response.status_code != HTTPStatus.OK:
-            _LOGGER.warning("Invalid response from API")
-        else:
-            self.data = parse_api_response(response.json())
+    async def async_update(self) -> None:
+        """Get the latest data from the API, at most once per scan interval."""
+        now = dt_util.utcnow()
+        if self._last_update is not None and now - self._last_update <= SCAN_INTERVAL:
+            return
+        self._last_update = now
+        try:
+            self.data = await self._client.async_update()
+        except LondonAirConnectionError as err:
+            _LOGGER.warning("Could not connect to London Air API: %s", err)
+        except LondonAirUpdateError as err:
+            _LOGGER.warning("Invalid response from London Air API: %s", err)
 
 
 class AirSensor(SensorEntity):
@@ -106,117 +141,61 @@ class AirSensor(SensorEntity):
 
     _attr_icon = "mdi:cloud-outline"
 
-    def __init__(self, name, api_data):
+    def __init__(self, name: str, api_data: APIData) -> None:
         """Initialize the sensor."""
         self._attr_name = self._key = name
         self._api_data = api_data
-        self._site_data = None
-        self._updated = None
-
-    @property
-    def site_data(self):
-        """Return the dict of sites data."""
-        return self._site_data
+        self._site_data: list[dict[str, Any]] | None = None
+        self._updated: str | None = None
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return other details about the sensor state."""
-        attrs = {}
+        attrs: dict[str, Any] = {}
         attrs["updated"] = self._updated
         attrs["sites"] = len(self._site_data) if self._site_data is not None else 0
         attrs["data"] = self._site_data
         return attrs
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update the sensor."""
-        sites_status: list = []
-        self._api_data.update()
-        if self._api_data.data:
-            self._site_data = self._api_data.data[self._key]
-            self._updated = self._site_data[0]["updated"]
-            sites_status.extend(
-                site["pollutants_status"]
-                for site in self._site_data
-                if site["pollutants_status"] != "no_species_data"
-            )
-
-        if sites_status:
-            self._attr_native_value = max(set(sites_status), key=sites_status.count)
-        else:
+        await self._api_data.async_update()
+        data = self._api_data.data
+        if data is None:
             self._attr_native_value = None
+            return
+        authority = data.authorities.get(self._key)
+        sites = authority.sites if authority is not None else ()
+        self._site_data = [_site_to_dict(site) for site in sites]
+        self._updated = (
+            sites[0].updated.strftime("%Y-%m-%d %H:%M:%S") if sites else None
+        )
+        self._attr_native_value = authority.status if authority is not None else None
 
 
-def parse_species(species_data):
-    """Iterate over list of species at each site."""
-    parsed_species_data = []
-    quality_list = []
-    for species in species_data:
-        if species["@AirQualityBand"] != "No data":
-            species_dict = {}
-            species_dict["description"] = species["@SpeciesDescription"]
-            species_dict["code"] = species["@SpeciesCode"]
-            species_dict["quality"] = species["@AirQualityBand"]
-            species_dict["index"] = species["@AirQualityIndex"]
-            species_dict["summary"] = (
-                f"{species_dict['code']} is {species_dict['quality']}"
-            )
-            parsed_species_data.append(species_dict)
-            quality_list.append(species_dict["quality"])
-    return parsed_species_data, quality_list
-
-
-def parse_site(entry_sites_data):
-    """Iterate over all sites at an authority."""
-    authority_data = []
-    for site in entry_sites_data:
-        site_data = {}
-        species_data = []
-
-        site_data["updated"] = site["@BulletinDate"]
-        site_data["latitude"] = site["@Latitude"]
-        site_data["longitude"] = site["@Longitude"]
-        site_data["site_code"] = site["@SiteCode"]
-        site_data["site_name"] = site["@SiteName"].split("-")[-1].lstrip()
-        site_data["site_type"] = site["@SiteType"]
-
-        if isinstance(site["Species"], dict):
-            species_data = [site["Species"]]
-        else:
-            species_data = site["Species"]
-
-        parsed_species_data, quality_list = parse_species(species_data)
-
-        if not parsed_species_data:
-            parsed_species_data.append("no_species_data")
-        site_data["pollutants"] = parsed_species_data
-
-        if quality_list:
-            site_data["pollutants_status"] = max(
-                set(quality_list), key=quality_list.count
-            )
-            site_data["number_of_pollutants"] = len(quality_list)
-        else:
-            site_data["pollutants_status"] = "no_species_data"
-            site_data["number_of_pollutants"] = 0
-
-        authority_data.append(site_data)
-    return authority_data
-
-
-def parse_api_response(response):
-    """Parse return dict or list of data from API."""
-    data = dict.fromkeys(AUTHORITIES)
-    for authority in AUTHORITIES:
-        for entry in response["HourlyAirQualityIndex"]["LocalAuthority"]:
-            if entry["@LocalAuthorityName"] == authority:
-                entry_sites_data = []
-                if "Site" in entry:
-                    if isinstance(entry["Site"], dict):
-                        entry_sites_data = [entry["Site"]]
-                    else:
-                        entry_sites_data = entry["Site"]
-
-                data[authority] = parse_site(entry_sites_data)
-
-    return data
+def _site_to_dict(site: Site) -> dict[str, Any]:
+    """Convert a library site into the attribute dict format."""
+    pollutants: list[dict[str, str] | str] = [
+        {
+            "description": pollutant.description,
+            "code": pollutant.code,
+            "quality": pollutant.quality,
+            "index": pollutant.index,
+            "summary": pollutant.summary,
+        }
+        for pollutant in site.pollutants
+    ]
+    if not pollutants:
+        pollutants = [NO_SPECIES_DATA]
+    return {
+        "updated": site.updated.strftime("%Y-%m-%d %H:%M:%S"),
+        "latitude": site.latitude,
+        "longitude": site.longitude,
+        "site_code": site.site_code,
+        "site_name": site.site_name,
+        "site_type": site.site_type,
+        "pollutants": pollutants,
+        "pollutants_status": site.status,
+        "number_of_pollutants": site.number_of_pollutants,
+    }

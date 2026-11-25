@@ -9,18 +9,25 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus.exceptions import NeoPoolConnectionError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_TIME, Platform
+from homeassistant.components.time import (
+    DOMAIN as TIME_DOMAIN,
+    TimeService,
+    TimeServiceArgument,
+)
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform as ep, entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA, _read_all_timers
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 FLUSH = timedelta(seconds=5)
 PARTIAL = timedelta(seconds=2)
@@ -58,8 +65,8 @@ def _time_entity(hass: HomeAssistant, entity_id: str) -> Any:
 async def _set_time(hass: HomeAssistant, entity_id: str, value: dt_time) -> None:
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {"entity_id": entity_id, ATTR_TIME: value},
+        TimeService.SET_VALUE,
+        {"entity_id": entity_id, TimeServiceArgument.TIME: value},
         blocking=True,
     )
 
@@ -979,6 +986,68 @@ async def test_client_close_waits_for_all_overlapping_flushes(
     assert close_saw_write_active is False
 
 
+@pytest.mark.parametrize(
+    ("occupied_relay", "hidden_aux_number"),
+    [(4, 1), (5, 2), (6, 3), (7, 4)],
+)
+async def test_aux_timer_absent_when_relay_assigned_to_function(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_neopool_client: MagicMock,
+    mock_config_entry_timers: MockConfigEntry,
+    occupied_relay: int,
+    hidden_aux_number: int,
+) -> None:
+    """AUX timers are suppressed when their relay serves a built-in function.
+
+    The option is enabled (mock_config_entry_timers), so this exercises the
+    entity-level safety net, not the option gate.
+    """
+    data = {**mock_neopool_client.async_read_all.return_value}
+    data["MBF_PAR_PH_BASE_RELAY_GPIO"] = occupied_relay
+    mock_neopool_client.async_read_all = AsyncMock(return_value=data)
+    with patch("homeassistant.components.neopool.PLATFORMS", [Platform.TIME]):
+        await setup_integration(hass, mock_config_entry_timers)
+
+    all_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry_timers.entry_id
+    )
+    present_aux_suffixes = {
+        suffix
+        for n in range(1, 5)
+        for suffix in (
+            f"relay_aux{n}_start",
+            f"relay_aux{n}_stop",
+            f"relay_aux{n}b_start",
+            f"relay_aux{n}b_stop",
+        )
+        if any(
+            e.domain == TIME_DOMAIN and e.unique_id.endswith(f"_{suffix}")
+            for e in all_entries
+        )
+    }
+    hidden_suffixes = {
+        f"relay_aux{hidden_aux_number}_start",
+        f"relay_aux{hidden_aux_number}_stop",
+        f"relay_aux{hidden_aux_number}b_start",
+        f"relay_aux{hidden_aux_number}b_stop",
+    }
+    assert not (present_aux_suffixes & hidden_suffixes)
+    # The other three AUX relays stay free and keep their timers.
+    free_aux_numbers = {1, 2, 3, 4} - {hidden_aux_number}
+    expected_free = {
+        suffix
+        for n in free_aux_numbers
+        for suffix in (
+            f"relay_aux{n}_start",
+            f"relay_aux{n}_stop",
+            f"relay_aux{n}b_start",
+            f"relay_aux{n}b_stop",
+        )
+    }
+    assert expected_free.issubset(present_aux_suffixes)
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_neopool_client")
 async def test_all_entities(
     hass: HomeAssistant,
@@ -1010,3 +1079,32 @@ async def test_setup_when_modules_absent(
     await snapshot_platform(
         hass, entity_registry, snapshot, mock_config_entry_timers.entry_id
     )
+
+
+async def test_aux_timer_becomes_unavailable_when_relay_occupied_mid_run(
+    hass: HomeAssistant,
+    mock_neopool_client: MagicMock,
+    mock_config_entry_timers: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """AUX timer becomes unavailable when its relay is claimed mid-run.
+
+    The supported_fn gate runs only at setup. The available property must
+    re-evaluate it on every coordinator update so that an occupied relay
+    makes existing entities unavailable instead of leaving them writable
+    with stale values.
+    """
+    with patch("homeassistant.components.neopool.PLATFORMS", [Platform.TIME]):
+        await setup_integration(hass, mock_config_entry_timers)
+
+    entity_id = _time_entity_id(hass, mock_config_entry_timers, "relay_aux1_start")
+    assert hass.states.get(entity_id) is not None
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    occupied_data = {**MOCK_POOL_DATA, "MBF_PAR_HEATING_GPIO": 4}  # relay 4 == AUX1
+    mock_neopool_client.async_read_all.return_value = occupied_data
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

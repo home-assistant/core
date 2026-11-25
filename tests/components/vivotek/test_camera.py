@@ -5,11 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from libpyvivotek.vivotek import VivotekCameraError
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import (
-    SERVICE_DISABLE_MOTION,
-    SERVICE_ENABLE_MOTION,
+    CameraService,
     async_get_image,
     async_get_stream_source,
 )
@@ -20,8 +20,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_all_entities(
@@ -152,14 +150,14 @@ async def test_camera_motion_detection_methods(
 
     await hass.services.async_call(
         "camera",
-        SERVICE_ENABLE_MOTION,
+        CameraService.ENABLE_MOTION_DETECTION,
         {"entity_id": "camera.vivotek_camera"},
         blocking=True,
     )
 
     await hass.services.async_call(
         "camera",
-        SERVICE_DISABLE_MOTION,
+        CameraService.DISABLE_MOTION_DETECTION,
         {"entity_id": "camera.vivotek_camera"},
         blocking=True,
     )

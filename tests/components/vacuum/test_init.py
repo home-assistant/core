@@ -4,21 +4,20 @@ from dataclasses import asdict
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    mock_integration,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.vacuum import (
     DOMAIN,
-    SERVICE_CLEAN_AREA,
-    SERVICE_CLEAN_SPOT,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SEND_COMMAND,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
+    VacuumService,
 )
 from homeassistant.components.vacuum.services import _async_clean_area
 from homeassistant.core import Context, HomeAssistant, ServiceCall
@@ -32,23 +31,15 @@ from . import (
     help_async_unload_entry,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    mock_integration,
-    setup_test_component_platform,
-)
-
 
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_CLEAN_SPOT, VacuumActivity.CLEANING),
-        (SERVICE_PAUSE, VacuumActivity.PAUSED),
-        (SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
-        (SERVICE_START, VacuumActivity.CLEANING),
-        (SERVICE_STOP, VacuumActivity.IDLE),
+        (VacuumService.CLEAN_SPOT, VacuumActivity.CLEANING),
+        (VacuumService.PAUSE, VacuumActivity.PAUSED),
+        (VacuumService.RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (VacuumService.START, VacuumActivity.CLEANING),
+        (VacuumService.STOP, VacuumActivity.IDLE),
     ],
 )
 async def test_state_services(
@@ -109,7 +100,7 @@ async def test_fan_speed(hass: HomeAssistant, config_flow_fixture: None) -> None
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_FAN_SPEED,
+        VacuumService.SET_FAN_SPEED,
         {"entity_id": mock_vacuum.entity_id, "fan_speed": "high"},
         blocking=True,
     )
@@ -152,7 +143,7 @@ async def test_locate(hass: HomeAssistant, config_flow_fixture: None) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_LOCATE,
+        VacuumService.LOCATE,
         {"entity_id": mock_vacuum.entity_id},
         blocking=True,
     )
@@ -201,7 +192,7 @@ async def test_send_command(hass: HomeAssistant, config_flow_fixture: None) -> N
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_COMMAND,
+        VacuumService.SEND_COMMAND,
         {
             "entity_id": mock_vacuum.entity_id,
             "command": "add_str",
@@ -265,7 +256,7 @@ async def test_clean_area_service(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CLEAN_AREA,
+        VacuumService.CLEAN_AREA,
         {"entity_id": mock_vacuum.entity_id, "cleaning_area_id": targeted_areas},
         blocking=True,
     )
@@ -297,7 +288,7 @@ async def test_clean_area_not_configured(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAN_AREA,
+            VacuumService.CLEAN_AREA,
             {"entity_id": mock_vacuum.entity_id, "cleaning_area_id": ["area_1"]},
             blocking=True,
         )
@@ -372,7 +363,7 @@ async def test_clean_area_no_segments(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAN_AREA,
+            VacuumService.CLEAN_AREA,
             {
                 "entity_id": [mock_vacuum.entity_id, mock_vacuum_2.entity_id],
                 "cleaning_area_id": [*targeted_areas, "area_3"],
@@ -441,7 +432,7 @@ async def test_clean_area_no_registry_entry(hass: HomeAssistant) -> None:
     call = ServiceCall(
         hass,
         DOMAIN,
-        SERVICE_CLEAN_AREA,
+        VacuumService.CLEAN_AREA,
         {"cleaning_area_id": ["area_1"]},
         context=Context(),
     )

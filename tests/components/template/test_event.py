@@ -5,10 +5,20 @@ from itertools import chain
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    mock_restore_cache,
+)
+from pytest_homeassistant.plugins import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import event, template
-from homeassistant.components.template.const import CONF_ATTRIBUTES, CONF_PICTURE
+from homeassistant.components.template.const import (
+    CONF_ATTRIBUTES,
+    CONF_PICTURE,
+    EVENT_DEPRECATED_ATTRIBUTES,
+)
 from homeassistant.components.template.coordinator import TriggerUpdateCoordinator
 from homeassistant.components.template.event import (
     CONF_EVENT_TYPE,
@@ -26,8 +36,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.template import Template
 
 from .conftest import (
@@ -39,6 +53,7 @@ from .conftest import (
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
+    get_issues_with_prefix,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
@@ -46,9 +61,6 @@ from .conftest import (
     setup_mock_template_entity_restore_state,
     setup_restore_template_entity,
 )
-
-from tests.common import MockConfigEntry, MockEntityPlatform, mock_restore_cache
-from tests.conftest import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_ATTRIBUTE_ENTITY_ID = "sensor.test_attribute"
@@ -161,6 +173,118 @@ async def test_setup_config_entry(
     state = hass.states.get(TEST_EVENT.entity_id)
     assert state is not None
     assert state == snapshot
+
+
+@pytest.mark.freeze_time(TEST_FROZEN_INPUT)
+async def test_doorbell_with_ring_event_type_in_template(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a templated doorbell entity with 'ring' does not log a warning.
+
+    event_types is resolved asynchronously by the template after the entity
+    is added to hass, so the warning must not be based on its not-yet-rendered
+    initial value.
+    """
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": TEST_EVENT.object_id,
+            "device_class": "doorbell",
+            "event_type": "{{ 'ring' }}",
+            "event_types": "{{ ['ring', 'rung'] }}",
+            "template_type": event.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "does not support the 'ring' event type" not in caplog.text
+
+
+@pytest.mark.freeze_time(TEST_FROZEN_INPUT)
+async def test_doorbell_with_resolved_empty_event_types_in_template(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a templated doorbell entity whose event_types resolves to [] warns.
+
+    An empty list is a legitimate, fully-rendered result (see
+    test_event_types_template), not a sign that the template hasn't rendered
+    yet, so it must still be checked for the 'ring' event type.
+    """
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": TEST_EVENT.object_id,
+            "device_class": "doorbell",
+            "event_type": "{{ 'ring' }}",
+            "event_types": "{{ [] }}",
+            "template_type": event.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "does not support the 'ring' event type" in caplog.text
+
+
+@pytest.mark.freeze_time(TEST_FROZEN_INPUT)
+@pytest.mark.parametrize(
+    ("event_types_template", "expect_warning"),
+    [
+        ("{{ ['ring', 'rung'] }}", False),
+        ("{{ [] }}", True),
+    ],
+)
+async def test_doorbell_event_types_cold_start(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    event_types_template: str,
+    expect_warning: bool,
+) -> None:
+    """Test the doorbell check across a real cold start.
+
+    On a real Home Assistant startup, entities are added (and their initial
+    state is written) before EVENT_HOMEASSISTANT_START fires, so templates
+    like event_types are not rendered yet at that first write. That must not
+    be mistaken for event_types having resolved to [].
+    """
+    hass.set_state(CoreState.not_running)
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": TEST_EVENT.object_id,
+            "device_class": "doorbell",
+            "event_type": "{{ 'ring' }}",
+            "event_types": event_types_template,
+            "template_type": event.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "does not support the 'ring' event type" not in caplog.text
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert ("does not support the 'ring' event type" in caplog.text) == expect_warning
 
 
 @pytest.mark.freeze_time(TEST_FROZEN_INPUT)
@@ -752,3 +876,102 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_EVENT.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+def get_deprecated_attributes_issues(
+    issue_registry: ir.IssueRegistry,
+) -> list[ir.IssueEntry]:
+    """Return the deprecated attributes issues."""
+    return get_issues_with_prefix(
+        issue_registry, EVENT_DEPRECATED_ATTRIBUTES.translation_key
+    )
+
+
+@pytest.mark.parametrize(
+    ("count", "config", "options"),
+    [
+        pytest.param(
+            1,
+            {**TEST_EVENT_CONFIG, "attributes": {"device_class": "button"}},
+            "- `attributes: device_class` → `device_class`",
+            id="device_class",
+        ),
+        pytest.param(
+            1,
+            {
+                **TEST_EVENT_CONFIG,
+                "attributes": {"event_type": TEST_EVENT_TYPE_TEMPLATE},
+            },
+            "- `attributes: event_type` → `event_type`",
+            id="event_type",
+        ),
+        pytest.param(
+            1,
+            {
+                **TEST_EVENT_CONFIG,
+                "attributes": {"event_types": TEST_EVENT_TYPES_TEMPLATE},
+            },
+            "- `attributes: event_types` → `event_types`",
+            id="event_types",
+        ),
+        pytest.param(
+            1,
+            {
+                **TEST_EVENT_CONFIG,
+                "attributes": {
+                    "event_type": TEST_EVENT_TYPE_TEMPLATE,
+                    "event_types": TEST_EVENT_TYPES_TEMPLATE,
+                },
+            },
+            "- `attributes: event_type` → `event_type`\n- `attributes: event_types` → `event_types`",
+            id="event_type_and_event_types",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_base_event")
+async def test_deprecated_attributes_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, options: str
+) -> None:
+    """Test a repair issue is created for attributes that have a dedicated option."""
+    issues = get_deprecated_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.6.0"
+    assert issues[0].is_fixable is False
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].learn_more_url == (
+        "https://www.home-assistant.io/integrations/template/#event"
+    )
+    assert issues[0].translation_key == EVENT_DEPRECATED_ATTRIBUTES.translation_key
+    assert issues[0].translation_placeholders == {
+        "identifier": f"name: {TEST_EVENT.object_id}",
+        "options": options,
+    }
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        pytest.param(
+            1,
+            {**TEST_EVENT_CONFIG, "attributes": {"other": "{{ 1 }}"}},
+            id="dedicated_option",
+        ),
+        pytest.param(
+            1,
+            {**TEST_EVENT_CONFIG, "attributes": "{{ {'event_type': 'single'} }}"},
+            id="attributes_template",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_base_event")
+async def test_no_deprecated_attributes_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test no repair issue is created for dedicated options or allowed attributes."""
+    assert get_deprecated_attributes_issues(issue_registry) == []

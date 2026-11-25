@@ -42,7 +42,7 @@ rules:
   action-exceptions:
     status: todo
     comment: XthingsCloudApiError is not handled in lock, switch and light actions
-  reauthentication-flow: todo
+  reauthentication-flow: done
   parallel-updates: todo
   test-coverage: todo
   integration-owner: done
