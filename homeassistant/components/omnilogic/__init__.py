@@ -6,7 +6,7 @@ from omnilogic import LoginException, OmniLogic, OmniLogicException
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmniLogicConfigEntry) ->
         await api.connect()
         await api.get_telemetry_data()
     except LoginException as error:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="login_failed",
         ) from error

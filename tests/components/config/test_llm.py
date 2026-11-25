@@ -21,13 +21,20 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import config as config_component
 from homeassistant.components.config.llm import (
     ConfigureFlowTool,
+    CreateFloorTool,
+    DeleteFloorTool,
     GetConfigEntriesTool,
     GetCoreConfigTool,
+    GetEntitySettingsTool,
+    GetFloorSettingsTool,
     GetFlowsInProgressTool,
     ReloadConfigEntryTool,
+    RemoveEntityTool,
     SearchIntegrationsTool,
     StartFlowTool,
     UpdateCoreConfigTool,
+    UpdateEntitySettingsTool,
+    UpdateFloorSettingsTool,
     async_get_tools,
 )
 from homeassistant.config_entries import (
@@ -42,8 +49,21 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError, DependencyError
-from homeassistant.helpers import config_entry_oauth2_flow, llm, selector, translation
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    DependencyError,
+    HomeAssistantError,
+)
+from homeassistant.helpers import (
+    area_registry as ar,
+    config_entry_oauth2_flow,
+    entity_registry as er,
+    floor_registry as fr,
+    label_registry as lr,
+    llm,
+    selector,
+    translation,
+)
 from homeassistant.setup import async_setup_component
 
 TEST_DOMAIN = "test_llm_config"
@@ -110,6 +130,13 @@ async def test_async_get_tools(
         "config__configure_flow",
         "config__get_core_config",
         "config__update_core_config",
+        "config__get_entity_settings",
+        "config__update_entity_settings",
+        "config__remove_entity",
+        "config__get_floor_settings",
+        "config__update_floor_settings",
+        "config__create_floor",
+        "config__delete_floor",
     ]
     assert ha_tools.prompt is None
 
@@ -124,6 +151,13 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         StartFlowTool(),
         ConfigureFlowTool(),
         UpdateCoreConfigTool(),
+        GetEntitySettingsTool(),
+        UpdateEntitySettingsTool(),
+        RemoveEntityTool(),
+        GetFloorSettingsTool(),
+        UpdateFloorSettingsTool(),
+        CreateFloorTool(),
+        DeleteFloorTool(),
     ]
     assert {
         tool.name: probatio.to_openapi(tool.parameters) for tool in tools
@@ -2031,6 +2065,543 @@ async def test_update_core_config_invalid_args(
     tool = UpdateCoreConfigTool()
     with pytest.raises(probatio.Invalid):
         await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
+
+
+@pytest.fixture
+def entity_tools() -> dict[str, llm.Tool]:
+    """Return the entity registry tools by name."""
+    return {
+        tool.name: tool
+        for tool in (
+            GetEntitySettingsTool(),
+            UpdateEntitySettingsTool(),
+            RemoveEntityTool(),
+        )
+    }
+
+
+async def test_get_entity_settings(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
+    entity_tools: dict[str, llm.Tool],
+) -> None:
+    """Test getting the settings of an entity."""
+    area = area_registry.async_create("Kitchen")
+    label = label_registry.async_create("Energy")
+    entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "1234",
+        suggested_object_id="coffee",
+        original_name="Coffee maker",
+        original_device_class="outlet",
+    )
+    entity_registry.async_update_entity(
+        "switch.coffee",
+        area_id=area.id,
+        aliases=[er.COMPUTED_NAME, "Espresso"],
+        labels={label.label_id},
+        name="Coffee",
+    )
+
+    tool = entity_tools["config__get_entity_settings"]
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"entity_id": "switch.coffee"}), llm_context
+    )
+    assert result == llm.ToolResult(
+        data={
+            "result": {
+                "entity_id": "switch.coffee",
+                "full_name": "Coffee",
+                "name": "Coffee",
+                "original_name": "Coffee maker",
+                "icon": None,
+                "area_id": area.id,
+                "device_id": None,
+                "device_class": None,
+                "original_device_class": "outlet",
+                "disabled_by": None,
+                "hidden_by": None,
+                "aliases": [None, "Espresso"],
+                "labels": [label.label_id],
+                "platform": "test",
+            }
+        }
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Entity 'switch.unknown' not found. Entities without a unique ID "
+        "have no settings.",
+    ):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"entity_id": "switch.unknown"}), llm_context
+        )
+
+
+async def test_update_entity_settings(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
+    entity_tools: dict[str, llm.Tool],
+) -> None:
+    """Test updating the settings of an entity."""
+    area = area_registry.async_create("Kitchen")
+    label = label_registry.async_create("Energy")
+    entity_registry.async_get_or_create(
+        "switch", "test", "1234", suggested_object_id="coffee"
+    )
+    entity_registry.async_update_entity("switch.coffee", name="Coffee")
+
+    tool = entity_tools["config__update_entity_settings"]
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "entity_id": "switch.coffee",
+                "name": None,
+                "icon": "mdi:coffee",
+                "area_id": area.id,
+                "device_class": "outlet",
+                "hidden_by": "user",
+                "aliases": [None, " Espresso "],
+                "labels": [label.label_id],
+                "new_entity_id": "switch.espresso",
+            },
+        ),
+        llm_context,
+    )
+    assert not result.error
+    assert result.data["result"]["entity_id"] == "switch.espresso"
+    assert result.data["result"]["hidden_by"] == "user"
+
+    entry = entity_registry.async_get("switch.espresso")
+    assert entry is not None
+    assert entry.name is None
+    assert entry.icon == "mdi:coffee"
+    assert entry.area_id == area.id
+    assert entry.device_class == "outlet"
+    assert entry.hidden_by is er.RegistryEntryHider.USER
+    assert entry.aliases == [er.COMPUTED_NAME, "Espresso"]
+    assert entry.labels == {label.label_id}
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"entity_id": "switch.espresso", "hidden_by": None}),
+        llm_context,
+    )
+    assert not result.error
+    assert entity_registry.async_get("switch.espresso").hidden_by is None
+
+    # An empty name names the entity after its device only
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"entity_id": "switch.espresso", "name": ""}),
+        llm_context,
+    )
+    assert not result.error
+    assert entity_registry.async_get("switch.espresso").name == ""
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "error"),
+    [
+        pytest.param(
+            {"entity_id": "switch.unknown", "name": "Coffee"},
+            "Entity 'switch.unknown' not found. Entities without a unique ID have "
+            "no settings.",
+            id="unknown_entity",
+        ),
+        pytest.param(
+            {"entity_id": "switch.coffee", "area_id": "garage"},
+            "Area 'garage' not found.",
+            id="unknown_area",
+        ),
+        pytest.param(
+            {"entity_id": "switch.coffee", "labels": ["b", "a"]},
+            "Labels not found: a, b",
+            id="unknown_labels",
+        ),
+        pytest.param(
+            {"entity_id": "switch.coffee", "new_entity_id": "switch.taken"},
+            "Entity with this ID is already registered",
+            id="entity_id_taken",
+        ),
+    ],
+)
+async def test_update_entity_settings_errors(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    entity_registry: er.EntityRegistry,
+    entity_tools: dict[str, llm.Tool],
+    tool_args: dict[str, Any],
+    error: str,
+) -> None:
+    """Test errors when updating the settings of an entity."""
+    entity_registry.async_get_or_create(
+        "switch", "test", "1234", suggested_object_id="coffee"
+    )
+    entity_registry.async_get_or_create(
+        "switch", "test", "5678", suggested_object_id="taken"
+    )
+
+    tool = entity_tools["config__update_entity_settings"]
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
+    assert str(exc_info.value) == error
+
+
+@pytest.mark.parametrize(
+    "invalid_args",
+    [
+        pytest.param({"name": "Coffee"}, id="missing_entity_id"),
+        pytest.param({"entity_id": "switch.coffee", "disabled_by": "integration"}),
+        pytest.param({"entity_id": "switch.coffee", "icon": "lamp"}),
+        pytest.param({"entity_id": "switch.coffee", "new_entity_id": "coffee"}),
+        pytest.param({"entity_id": "switch.coffee", "unknown": "value"}),
+    ],
+)
+async def test_update_entity_settings_invalid_args(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    entity_tools: dict[str, llm.Tool],
+    invalid_args: dict[str, Any],
+) -> None:
+    """Test that invalid arguments raise probatio.Invalid."""
+    tool = entity_tools["config__update_entity_settings"]
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
+
+
+@pytest.mark.parametrize(
+    ("supports_unload", "note"),
+    [
+        (True, "The integration reloads in 30 seconds to add the entity."),
+        (False, "Home Assistant must restart to add the entity."),
+    ],
+)
+async def test_update_entity_settings_enable(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    entity_registry: er.EntityRegistry,
+    entity_tools: dict[str, llm.Tool],
+    supports_unload: bool,
+    note: str,
+) -> None:
+    """Test that enabling an entity tells how the entity is added."""
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=True)
+            if supports_unload
+            else None,
+        ),
+    )
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    entity_registry.async_get_or_create(
+        "switch",
+        TEST_DOMAIN,
+        "1234",
+        suggested_object_id="coffee",
+        config_entry=config_entry,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    tool = entity_tools["config__update_entity_settings"]
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"entity_id": "switch.coffee", "disabled_by": None}),
+        llm_context,
+    )
+    assert not result.error
+    assert result.data["result"]["disabled_by"] is None
+    assert result.data["result"]["note"] == note
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"entity_id": "switch.coffee", "disabled_by": "user"}),
+        llm_context,
+    )
+    assert not result.error
+    assert result.data["result"]["disabled_by"] == "user"
+    assert "note" not in result.data["result"]
+    assert (
+        entity_registry.async_get("switch.coffee").disabled_by
+        is er.RegistryEntryDisabler.USER
+    )
+
+
+async def test_remove_entity(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    entity_registry: er.EntityRegistry,
+    entity_tools: dict[str, llm.Tool],
+) -> None:
+    """Test removing an entity that its integration no longer provides."""
+    entity_registry.async_get_or_create(
+        "switch", "test", "1234", suggested_object_id="provided"
+    )
+    entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "5678",
+        suggested_object_id="disabled",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    entity_registry.async_get_or_create(
+        "switch", "test", "9012", suggested_object_id="restored"
+    )
+    hass.states.async_set("switch.provided", "on")
+    hass.states.async_set("switch.restored", "unavailable", {"restored": True})
+
+    tool = entity_tools["config__remove_entity"]
+    for entity_id in ("switch.provided", "switch.disabled"):
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await tool.async_call(
+                hass, llm.ToolInput(tool.name, {"entity_id": entity_id}), llm_context
+            )
+        assert str(exc_info.value) == (
+            f"Entity '{entity_id}' is still provided by its integration, or is "
+            "disabled. Only entities that their integration no longer provides "
+            "can be removed."
+        )
+        assert entity_registry.async_get(entity_id) is not None
+
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"entity_id": "switch.restored"}), llm_context
+    )
+    assert result == llm.ToolResult(data={"result": {"entity_id": "switch.restored"}})
+    assert entity_registry.async_get("switch.restored") is None
+
+    with pytest.raises(HomeAssistantError, match="not found"):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"entity_id": "switch.unknown"}), llm_context
+        )
+
+
+@pytest.fixture
+def floor_tools() -> dict[str, llm.Tool]:
+    """Return the floor registry tools by name."""
+    return {
+        tool.name: tool
+        for tool in (
+            GetFloorSettingsTool(),
+            UpdateFloorSettingsTool(),
+            CreateFloorTool(),
+            DeleteFloorTool(),
+        )
+    }
+
+
+async def test_create_and_get_floor(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    floor_registry: fr.FloorRegistry,
+    floor_tools: dict[str, llm.Tool],
+) -> None:
+    """Test creating a floor and getting its settings."""
+    tool = floor_tools["config__create_floor"]
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "name": " Basement ",
+                "aliases": ["Cellar", " Downstairs "],
+                "icon": "mdi:home-floor-negative-1",
+                "level": -1,
+            },
+        ),
+        llm_context,
+    )
+    settings = {
+        "floor_id": "basement",
+        "name": "Basement",
+        "aliases": ["Cellar", "Downstairs"],
+        "icon": "mdi:home-floor-negative-1",
+        "level": -1,
+    }
+    assert result == llm.ToolResult(data={"result": settings})
+    assert floor_registry.async_get_floor("basement") is not None
+
+    tool = floor_tools["config__get_floor_settings"]
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"floor_id": "basement"}), llm_context
+    )
+    assert result == llm.ToolResult(data={"result": settings})
+
+    with pytest.raises(HomeAssistantError, match="Floor 'attic' not found."):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"floor_id": "attic"}), llm_context
+        )
+
+    tool = floor_tools["config__create_floor"]
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"name": "basement"}), llm_context
+        )
+    assert str(exc_info.value) == "The name basement (basement) is already in use"
+
+
+async def test_update_floor_settings(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    floor_registry: fr.FloorRegistry,
+    floor_tools: dict[str, llm.Tool],
+) -> None:
+    """Test updating the settings of a floor."""
+    floor = floor_registry.async_create(
+        "First floor", aliases={"Upstairs"}, icon="mdi:home-floor-1", level=1
+    )
+
+    tool = floor_tools["config__update_floor_settings"]
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "floor_id": floor.floor_id,
+                "name": "Top floor",
+                "aliases": ["Attic"],
+                "icon": None,
+                "level": None,
+            },
+        ),
+        llm_context,
+    )
+    assert result == llm.ToolResult(
+        data={
+            "result": {
+                "floor_id": floor.floor_id,
+                "name": "Top floor",
+                "aliases": ["Attic"],
+                "icon": None,
+                "level": None,
+            }
+        }
+    )
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"floor_id": floor.floor_id, "level": 2}),
+        llm_context,
+    )
+    assert not result.error
+    updated = floor_registry.async_get_floor(floor.floor_id)
+    assert updated is not None
+    assert updated.name == "Top floor"
+    assert updated.aliases == {"Attic"}
+    assert updated.level == 2
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "error"),
+    [
+        pytest.param(
+            {"floor_id": "attic", "name": "Attic"},
+            "Floor 'attic' not found.",
+            id="unknown_floor",
+        ),
+        pytest.param(
+            {"floor_id": "first_floor", "name": "ground floor"},
+            "The name ground floor (groundfloor) is already in use",
+            id="name_in_use",
+        ),
+    ],
+)
+async def test_update_floor_settings_errors(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    floor_registry: fr.FloorRegistry,
+    floor_tools: dict[str, llm.Tool],
+    tool_args: dict[str, Any],
+    error: str,
+) -> None:
+    """Test errors when updating the settings of a floor."""
+    floor_registry.async_create("First floor")
+    floor_registry.async_create("Ground floor")
+
+    tool = floor_tools["config__update_floor_settings"]
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
+    assert str(exc_info.value) == error
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "invalid_args"),
+    [
+        pytest.param("config__create_floor", {}, id="create_missing_name"),
+        pytest.param("config__create_floor", {"name": " "}, id="create_empty_name"),
+        pytest.param(
+            "config__create_floor", {"name": "Attic", "level": "top"}, id="bad_level"
+        ),
+        pytest.param(
+            "config__create_floor", {"name": "Attic", "icon": "attic"}, id="bad_icon"
+        ),
+        pytest.param(
+            "config__update_floor_settings", {"name": "Attic"}, id="missing_floor_id"
+        ),
+        pytest.param(
+            "config__update_floor_settings",
+            {"floor_id": "attic", "name": None},
+            id="update_null_name",
+        ),
+        pytest.param(
+            "config__update_floor_settings",
+            {"floor_id": "attic", "aliases": [""]},
+            id="empty_alias",
+        ),
+        pytest.param("config__delete_floor", {}, id="delete_missing_floor_id"),
+    ],
+)
+async def test_floor_tools_invalid_args(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    floor_tools: dict[str, llm.Tool],
+    tool_name: str,
+    invalid_args: dict[str, Any],
+) -> None:
+    """Test that invalid arguments raise probatio.Invalid."""
+    tool = floor_tools[tool_name]
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
+
+
+async def test_delete_floor(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+    floor_tools: dict[str, llm.Tool],
+) -> None:
+    """Test deleting a floor keeps its areas."""
+    floor = floor_registry.async_create("First floor")
+    area = area_registry.async_create("Bedroom", floor_id=floor.floor_id)
+
+    tool = floor_tools["config__delete_floor"]
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"floor_id": floor.floor_id}), llm_context
+    )
+    assert result == llm.ToolResult(data={"result": {"floor_id": floor.floor_id}})
+    assert floor_registry.async_get_floor(floor.floor_id) is None
+    updated_area = area_registry.async_get_area(area.id)
+    assert updated_area is not None
+    assert updated_area.floor_id is None
+
+    with pytest.raises(HomeAssistantError, match="Floor 'first_floor' not found."):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"floor_id": floor.floor_id}), llm_context
+        )
 
 
 async def test_get_config_entries_flow_capabilities(

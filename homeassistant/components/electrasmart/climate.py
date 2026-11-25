@@ -23,12 +23,11 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, PRESET_NONE, PRESET_SHABAT, UNAVAILABLE_THRESH_SEC
+from .const import PRESET_NONE, PRESET_SHABAT
 from .coordinator import ElectraSmartConfigEntry, ElectraSmartCoordinator
+from .entity import ElectraEntity
 
 FAN_ELECTRA_TO_HASS = {
     OperationMode.FAN_SPEED_AUTO: FAN_AUTO,
@@ -90,7 +89,7 @@ async def async_setup_entry(
     )
 
 
-class ElectraClimateEntity(CoordinatorEntity[ElectraSmartCoordinator], ClimateEntity):
+class ElectraClimateEntity(ElectraEntity, ClimateEntity):
     """Define an Electra climate."""
 
     _attr_fan_modes = ELECTRA_FAN_MODES
@@ -99,15 +98,13 @@ class ElectraClimateEntity(CoordinatorEntity[ElectraSmartCoordinator], ClimateEn
     _attr_min_temp = MIN_TEMP
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = ELECTRA_MODES
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(
         self, coordinator: ElectraSmartCoordinator, device: ElectraAirConditioner
     ) -> None:
         """Initialize Electra climate entity."""
-        super().__init__(coordinator)
-        self._device = device
+        super().__init__(coordinator, device)
         self._attr_unique_id = device.mac
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
@@ -135,32 +132,9 @@ class ElectraClimateEntity(CoordinatorEntity[ElectraSmartCoordinator], ClimateEn
             PRESET_SHABAT,
         ]
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.mac)},
-            connections={(CONNECTION_NETWORK_MAC, device.mac)},
-            name=device.name,
-            model=device.model,
-            manufacturer=device.manufactor,
-        )
-
         self._was_available = True
 
         _LOGGER.debug("Added %s Electra AC device", device.name)
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if the AC is available.
-
-        The coordinator reports a failed poll as a successful refresh, so its
-        availability says nothing about a single AC. Report an AC that has
-        stopped sending telemetry as unavailable instead of serving the state
-        it last reported.
-        """
-        return (
-            not self._device.is_disconnected(UNAVAILABLE_THRESH_SEC)
-            and super().available
-        )
 
     @override
     async def async_added_to_hass(self) -> None:
