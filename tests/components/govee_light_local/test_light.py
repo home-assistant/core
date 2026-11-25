@@ -36,7 +36,7 @@ from homeassistant.components.light import (
     LightServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -89,6 +89,18 @@ async def test_light_unknown_device(
     assert light is not None
 
     assert light.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id},
+        blocking=True,
+    )
+
+    light = hass.states.get("light.XYZK")
+    assert light is not None
+    assert light.state == STATE_ON
+    assert light.attributes[ATTR_COLOR_MODE] == ColorMode.ONOFF
 
 
 @pytest.mark.parametrize(
@@ -718,6 +730,33 @@ async def test_device_availability(
     # A status response refreshes lastseen and fires the entity callback, so
     # the device recovers without waiting for another coordinator poll.
     device.update(_status_response())
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.H615A")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+async def test_light_unavailable_when_update_fails(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the light is unavailable while the status request fails."""
+    await setup_light(hass, mock_govee_api)
+
+    mock_govee_api.send_update_message.side_effect = OSError
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.H615A")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_govee_api.send_update_message.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
 
     state = hass.states.get("light.H615A")
