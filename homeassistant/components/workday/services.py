@@ -1,5 +1,7 @@
 """Services for the Workday integration."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -8,8 +10,17 @@ from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 
-SERVICE_CHECK_DATE = "check_date"
-CHECK_DATE = "check_date"
+
+class WorkdayService(StrEnum):
+    """Store keys for Workday services."""
+
+    CHECK_DATE = "check_date"
+
+
+class WorkdayServiceArgument(StrEnum):
+    """Store keys for Workday service arguments."""
+
+    CHECK_DATE = "check_date"
 
 
 @callback
@@ -19,9 +30,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_CHECK_DATE,
+        WorkdayService.CHECK_DATE,
         entity_domain=BINARY_SENSOR_DOMAIN,
-        schema={probatio.Required(CHECK_DATE): cv.date},
+        schema={probatio.Required(WorkdayServiceArgument.CHECK_DATE): cv.date},
         func="check_date",
         supports_response=SupportsResponse.ONLY,
     )

@@ -16,6 +16,7 @@ from pytest_homeassistant.common import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
@@ -166,7 +167,9 @@ def mock_helper_integration(
             hass,
             helper_config_entry_id=helper_config_entry.entry_id,
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
-            source_device_id=source_entity_entry.device_id,
+            source_device_id=async_entity_id_to_device_id(
+                hass, helper_config_entry.options["source"]
+            ),
             source_entity_id_or_uuid=helper_config_entry.options["source"],
             source_entity_removed=source_entity_removed,
         )
@@ -459,6 +462,120 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
 
     # Check we got the expected events
     assert events == ["update"]
+
+
+@pytest.mark.parametrize("use_entity_registry_id", [True, False])
+@pytest.mark.usefixtures("mock_helper_flow", "mock_helper_integration")
+async def test_async_handle_source_entity_changes_source_entity_added_to_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    helper_config_entry: MockConfigEntry,
+    helper_entity_entry: er.RegistryEntry,
+    source_device: dr.DeviceEntry,
+    source_entity_entry: er.RegistryEntry,
+    async_remove_entry: AsyncMock,
+    async_unload_entry: AsyncMock,
+    set_source_entity_id_or_uuid: Mock,
+) -> None:
+    """Test the source entity is added to a device when it had none."""
+    entity_registry.async_update_entity(source_entity_entry.entity_id, device_id=None)
+    entity_registry.async_update_entity(helper_entity_entry.entity_id, device_id=None)
+
+    assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    events = track_entity_registry_actions(hass, helper_entity_entry.entity_id)
+
+    # Add the source entity to a device
+    entity_registry.async_update_entity(
+        source_entity_entry.entity_id, device_id=source_device.id
+    )
+    await hass.async_block_till_done()
+    async_remove_entry.assert_not_called()
+    async_unload_entry.assert_called_once()
+    set_source_entity_id_or_uuid.assert_not_called()
+
+    # Check that the helper entity is linked to the device
+    helper_entity_entry = entity_registry.async_get(helper_entity_entry.entity_id)
+    assert helper_entity_entry.device_id == source_device.id
+
+    # Check that the helper config entry is not removed
+    assert helper_config_entry.entry_id in hass.config_entries.async_entry_ids()
+
+    # Check we got the expected events
+    assert events == ["update"]
+
+
+@pytest.mark.parametrize("use_entity_registry_id", [True, False])
+@pytest.mark.usefixtures("mock_helper_flow", "mock_helper_integration")
+async def test_async_handle_source_entity_changes_source_device_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    helper_config_entry: MockConfigEntry,
+    helper_entity_entry: er.RegistryEntry,
+    source_device: dr.DeviceEntry,
+    source_entity_entry: er.RegistryEntry,
+    async_remove_entry: AsyncMock,
+    async_unload_entry: AsyncMock,
+    set_source_entity_id_or_uuid: Mock,
+) -> None:
+    """Test the helper is not reloaded when the source entity's device is removed.
+
+    The entity registry already unlinks the helper entity from the removed device.
+    The helper still follows the source entity when it is later added to a device.
+    """
+    # Link the source entity to a device owned by another config entry, so removing
+    # the device unlinks the source entity instead of removing it
+    other_config_entry = MockConfigEntry()
+    other_config_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:FF")},
+    )
+    entity_registry.async_update_entity(
+        source_entity_entry.entity_id, device_id=other_device.id
+    )
+    entity_registry.async_update_entity(
+        helper_entity_entry.entity_id, device_id=other_device.id
+    )
+
+    assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    events = track_entity_registry_actions(hass, helper_entity_entry.entity_id)
+
+    device_registry.async_remove_device(other_device.id)
+    await hass.async_block_till_done()
+    async_remove_entry.assert_not_called()
+    async_unload_entry.assert_not_called()
+    set_source_entity_id_or_uuid.assert_not_called()
+
+    # Check that both entities are unlinked from the removed device
+    assert entity_registry.async_get(source_entity_entry.entity_id).device_id is None
+    assert entity_registry.async_get(helper_entity_entry.entity_id).device_id is None
+
+    # Check that the helper config entry is not removed
+    assert helper_config_entry.entry_id in hass.config_entries.async_entry_ids()
+
+    # Check we got the expected events
+    assert events == ["update"]
+
+    # Add the source entity to another device
+    entity_registry.async_update_entity(
+        source_entity_entry.entity_id, device_id=source_device.id
+    )
+    await hass.async_block_till_done()
+    async_remove_entry.assert_not_called()
+    async_unload_entry.assert_called_once()
+    set_source_entity_id_or_uuid.assert_not_called()
+
+    # Check that the helper entity is linked to the device
+    helper_entity_entry = entity_registry.async_get(helper_entity_entry.entity_id)
+    assert helper_entity_entry.device_id == source_device.id
+
+    # Check we got the expected events
+    assert events == ["update", "update"]
 
 
 @pytest.mark.parametrize(

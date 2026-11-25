@@ -35,6 +35,11 @@ from .entity import TractiveEntity
 
 PARALLEL_UPDATES = 0
 
+# Statuses Tractive reports while it has no value for a health metric
+HEALTH_STATUSES_WITHOUT_VALUE = frozenset(
+    {"calculating_baseline", "not_enough_data_today", "not_synced_yet"}
+)
+
 
 @dataclass(frozen=True, kw_only=True)
 class TractiveSensorEntityDescription(SensorEntityDescription):
@@ -71,6 +76,8 @@ class TractiveSensor(TractiveEntity, SensorEntity):
             else self._pet_status
         )
         value: StateType = getattr(status, self.entity_description.key)
+        if value in HEALTH_STATUSES_WITHOUT_VALUE:
+            return None
         return value
 
 
@@ -142,6 +149,27 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         device_class=SensorDeviceClass.WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TractiveSensorEntityDescription(
+        key="resting_heart_rate_status",
+        translation_key="resting_heart_rate_status",
+        health_sensor=True,
+        device_class=SensorDeviceClass.ENUM,
+        options=["elevated", "normal"],
+    ),
+    TractiveSensorEntityDescription(
+        key="resting_respiratory_rate_status",
+        translation_key="resting_respiratory_rate_status",
+        health_sensor=True,
+        device_class=SensorDeviceClass.ENUM,
+        options=["elevated", "normal"],
+    ),
+    TractiveSensorEntityDescription(
+        key="scratch_status",
+        translation_key="scratch_status",
+        health_sensor=True,
+        device_class=SensorDeviceClass.ENUM,
+        options=["infrequent", "normal"],
     ),
 )
 

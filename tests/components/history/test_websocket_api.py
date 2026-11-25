@@ -16,9 +16,11 @@ from pytest_homeassistant.components.recorder.common import (
     async_wait_recording_done,
 )
 from pytest_homeassistant.typing import WebSocketGenerator
+from sqlalchemy.exc import OperationalError
 
 from homeassistant.components import history
 from homeassistant.components.history import DOMAIN, websocket_api
+from homeassistant.components.recorder import history as recorder_history
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_STATE_CHANGED,
@@ -576,6 +578,81 @@ async def test_history_stream_historical_only(
         },
         "id": 1,
         "type": "event",
+    }
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_history_stream_end_time_ignores_failed_stream(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the end time only uses the states read again after streaming fails."""
+    now = dt_util.utcnow()
+    await async_setup_component(hass, DOMAIN, {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "on")
+    sensor_one_last_updated_timestamp = hass.states.get(
+        "sensor.one"
+    ).last_updated_timestamp
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.two", "off")
+    sensor_two_last_updated_timestamp = hass.states.get(
+        "sensor.two"
+    ).last_updated_timestamp
+    await async_wait_recording_done(hass)
+    end_time = dt_util.utcnow()
+
+    def _yield_discarded_state_then_fail(
+        *args: Any, **kwargs: Any
+    ) -> Iterator[tuple[str, list[dict[str, Any]]]]:
+        yield (
+            "sensor.one",
+            [{"lu": (end_time + timedelta(days=1)).timestamp(), "s": "on"}],
+        )
+        raise OperationalError("SELECT", {}, Exception())
+
+    attempts = iter(
+        [_yield_discarded_state_then_fail, recorder_history._iter_entity_states]
+    )
+
+    def _next_attempt(*args: Any, **kwargs: Any) -> Any:
+        return next(attempts)(*args, **kwargs)
+
+    client = await hass_ws_client()
+    with patch.object(
+        recorder_history,
+        "_iter_entity_states",
+        side_effect=_next_attempt,
+    ) as mock_iter_entity_states:
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "history/stream",
+                "entity_ids": ["sensor.one", "sensor.two"],
+                "start_time": now.isoformat(),
+                "end_time": end_time.isoformat(),
+                "include_start_time_state": True,
+                "significant_changes_only": False,
+                "no_attributes": True,
+                "minimal_response": True,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+
+        response = await client.receive_json()
+
+    assert mock_iter_entity_states.call_count == 2
+    assert response["event"] == {
+        "end_time": pytest.approx(sensor_two_last_updated_timestamp),
+        "start_time": pytest.approx(now.timestamp()),
+        "states": {
+            "sensor.one": [
+                {"lu": pytest.approx(sensor_one_last_updated_timestamp), "s": "on"}
+            ],
+            "sensor.two": [
+                {"lu": pytest.approx(sensor_two_last_updated_timestamp), "s": "off"}
+            ],
+        },
     }
 
 

@@ -1,5 +1,6 @@
 """Support for Tuya cameras."""
 
+import asyncio
 from dataclasses import dataclass
 from typing import override
 
@@ -15,6 +16,7 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
     CameraEntityFeature,
 )
+from homeassistant.components.stream import Stream
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,6 +25,8 @@ from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity, TuyaEntityDescription
 
+_STREAM_SOURCE_TIMEOUT = 10
+
 
 @dataclass(frozen=True)
 class TuyaCameraEntityDescription(TuyaEntityDescription, CameraEntityDescription):
@@ -30,6 +34,7 @@ class TuyaCameraEntityDescription(TuyaEntityDescription, CameraEntityDescription
 
 
 CAMERAS: dict[DeviceCategory, TuyaCameraEntityDescription] = {
+    DeviceCategory.CDSXJ: TuyaCameraEntityDescription(key=""),
     DeviceCategory.DGHSXJ: TuyaCameraEntityDescription(key=""),
     DeviceCategory.SP: TuyaCameraEntityDescription(key=""),
 }
@@ -85,6 +90,7 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self._attr_model = device.product_name
         self._motion_detection_switch = definition.motion_detection_switch
         self._recording_status = definition.recording_status
+        self._stream_creation_lock = asyncio.Lock()
 
     @property
     @override
@@ -101,6 +107,26 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         if (status := self._read_wrapper(self._motion_detection_switch)) is not None:
             return status
         return False
+
+    @override
+    async def async_create_stream(self) -> Stream | None:
+        """Refresh an idle or failed stream without replacing its Stream object."""
+        async with self._stream_creation_lock:
+            if (stream := self.stream) is None:
+                return await super().async_create_stream()
+
+            if stream.outputs() and stream.available:
+                return stream
+
+            async with asyncio.timeout(_STREAM_SOURCE_TIMEOUT):
+                source = await self.stream_source()
+            if not source:
+                return None
+
+            # Keep existing viewers and providers while restarting the worker
+            # with a new single-use Tuya source.
+            stream.update_source(source)
+            return stream
 
     @override
     async def stream_source(self) -> str | None:

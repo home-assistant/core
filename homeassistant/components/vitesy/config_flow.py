@@ -88,6 +88,33 @@ class VitesyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the credentials of the configured account."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            email = user_input[CONF_EMAIL]
+            user_id = await self._async_validate_input(
+                email, user_input[CONF_PASSWORD], errors
+            )
+            if user_id is not None:
+                await self.async_set_unique_id(user_id)
+                self._abort_if_unique_id_mismatch(reason="reconfigure_account_mismatch")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, title=email, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                {CONF_EMAIL: reconfigure_entry.data[CONF_EMAIL]},
+            ),
+            errors=errors,
+        )
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:

@@ -4,17 +4,26 @@ from collections.abc import Callable
 from enum import StrEnum
 from itertools import chain
 import logging
+import math
 from typing import Any
 
 import probatio
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.condition import ConditionsChecker
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trace import trace_get
-from homeassistant.helpers.typing import TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+
+from .const import CONF_DEFAULT_ENTITY_ID, DEFAULT_NAMES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +31,42 @@ _LOGGER = logging.getLogger(__name__)
 # from cv.boolean and are used to produce logger errors for the user.
 RESULT_ON = ("1", "true", "yes", "on", "enable")
 RESULT_OFF = ("0", "false", "no", "off", "disable")
+
+
+def entity_config_identifier(platform: Platform, entity_config: ConfigType) -> str:
+    """Return the most specific user facing identifier for an entity config."""
+    default_name = DEFAULT_NAMES[platform]
+    if (
+        (name := entity_config.get(CONF_NAME))
+        and isinstance(name, Template)
+        and name.template != default_name
+    ):
+        return f"{CONF_NAME}: {name.template}"
+    if default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID):
+        return f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
+    if unique_id := entity_config.get(CONF_UNIQUE_ID):
+        return f"{CONF_UNIQUE_ID}: {unique_id}"
+    return f"{CONF_NAME}: {default_name}"
+
+
+def entity_config_repair_identifier(
+    platform: Platform,
+    entity_config: ConfigType,
+    section_unique_id: str | None = None,
+) -> str:
+    """Return the most stable identifier of an entity config for a repair issue.
+
+    Entities can share a name but not a unique_id, so unlike
+    entity_config_identifier the unique_id and default_entity_id win over the name.
+    """
+    if unique_id := entity_config.get(CONF_UNIQUE_ID):
+        # Matches the unique_id the entity is created with
+        if section_unique_id:
+            unique_id = f"{section_unique_id}-{unique_id}"
+        return f"{CONF_UNIQUE_ID}: {unique_id}"
+    if default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID):
+        return f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
+    return entity_config_identifier(platform, entity_config)
 
 
 class BlockedTemplateAttributes:
@@ -277,24 +322,28 @@ def number(
         if check_result_for_none(result, **kwargs):
             return None
 
-        if (result_type := type(result)) is bool:
+        if type(result) is bool:
             log_validation_result_error(entity, attribute, result, message)
             return None
 
         if isinstance(result, (float, int)):
             value = result
-            if return_type is int and result_type is float:
-                value = int(value)
-            elif return_type is float and result_type is int:
-                value = float(value)
         else:
             try:
                 value = probatio.Coerce(float)(result)
-                if return_type is int:
-                    value = int(value)
             except probatio.Invalid:
                 log_validation_result_error(entity, attribute, result, message)
                 return None
+
+        # int() raises on NaN and infinity
+        if isinstance(value, float) and not math.isfinite(value):
+            log_validation_result_error(entity, attribute, result, message)
+            return None
+
+        if return_type is int and isinstance(value, float):
+            value = int(value)
+        elif return_type is float and isinstance(value, int):
+            value = float(value)
 
         if minimum is None and maximum is None:
             return value
