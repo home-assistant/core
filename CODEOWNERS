@@ -242,6 +242,8 @@ AGENTS.md @home-assistant/core
 /tests/components/battery/ @home-assistant/core
 /homeassistant/components/bayesian/ @HarvsG
 /tests/components/bayesian/ @HarvsG
+/homeassistant/components/benq_projector_infrared/ @rrooggiieerr
+/tests/components/benq_projector_infrared/ @rrooggiieerr
 /homeassistant/components/besen/ @moryoav
 /tests/components/besen/ @moryoav
 /homeassistant/components/binary_sensor/ @home-assistant/core
