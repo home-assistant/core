@@ -4,7 +4,7 @@ from typing import Any, override
 
 from dali.address import GearShort
 from dali.exceptions import DALISequenceError, ResponseError, TransmissionError
-from dali.gear.general import DAPC
+from dali.gear.general import DAPC, QueryActualLevel
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -19,6 +19,7 @@ from .coordinator import (
     DaliGearData,
     _brightness_to_dali_level,
     _dali_level_to_brightness,
+    _response_value,
 )
 
 PARALLEL_UPDATES = 1
@@ -104,11 +105,12 @@ class DaliLight(CoordinatorEntity[DaliCoordinator], LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         gear_data = self.coordinator.data[self._address]
-        if ATTR_BRIGHTNESS not in kwargs and gear_data.level:
-            # Already on: re-sending the reported brightness would round-trip a
-            # raw level through the coarser 1-255 axis and could dim the light.
-            return
         try:
+            if ATTR_BRIGHTNESS not in kwargs and await self._async_is_lit():
+                # Already on: re-sending the reported brightness would round-trip
+                # a raw level through the coarser 1-255 axis and could dim it.
+                await self.coordinator.async_update_gear(self._address)
+                return
             brightness = max(1, min(kwargs.get(ATTR_BRIGHTNESS, 255), 255))
             level = _brightness_to_dali_level(
                 brightness, gear_data.linear_dimming, gear_data.min_level
@@ -131,6 +133,19 @@ class DaliLight(CoordinatorEntity[DaliCoordinator], LightEntity):
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from err
+
+    async def _async_is_lit(self) -> bool:
+        """Return whether the gear is on, read from the bus.
+
+        The coordinator data can be up to a poll interval old, and another DALI
+        controller may have switched the gear off since.
+        """
+        level = _response_value(
+            await self.coordinator.driver.send(
+                QueryActualLevel(GearShort(self._address))
+            )
+        )
+        return level is not None and 0 < level < 255
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:

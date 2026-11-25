@@ -215,6 +215,33 @@ async def test_turn_on_from_off_goes_full(
     assert state.attributes[ATTR_BRIGHTNESS] == 255
 
 
+async def test_turn_on_after_external_switch_off(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_driver: FakeDaliDriver,
+) -> None:
+    """Test turning on works when another controller switched off between polls."""
+    await _setup(hass, mock_config_entry)
+    entity_id = _entity_id(entity_registry, mock_config_entry, LOGARITHMIC_GEAR)
+    # Another DALI controller switches the gear off; the poll has not seen it.
+    mock_driver.levels[LOGARITHMIC_GEAR] = 0
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    assert [command.power for command in _sent_dapc(mock_driver)] == [254]
+    assert mock_driver.levels[LOGARITHMIC_GEAR] == 254
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 255
+
+
 async def test_turn_off(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -255,8 +282,11 @@ async def test_unknown_level(
     ("service", "service_data"),
     [
         (SERVICE_TURN_ON, {ATTR_BRIGHTNESS: 255}),
+        # Without a brightness, the level query before the command fails.
+        (SERVICE_TURN_ON, {}),
         (SERVICE_TURN_OFF, {}),
     ],
+    ids=["turn_on_brightness", "turn_on", "turn_off"],
 )
 @pytest.mark.parametrize(
     "error",
