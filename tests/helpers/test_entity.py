@@ -489,6 +489,42 @@ async def test_async_parallel_updates_with_one(hass: HomeAssistant) -> None:
         test_lock.release()
 
 
+async def test_update_cancelled_while_waiting_for_parallel_updates(
+    hass: HomeAssistant,
+) -> None:
+    """Test a cancelled update does not block later updates."""
+    updates = 0
+    semaphore = asyncio.Semaphore(1)
+
+    class AsyncEntity(entity.Entity):
+        """Test entity."""
+
+        def __init__(self) -> None:
+            """Initialize Async test entity."""
+            self.entity_id = "sensor.test"
+            self.hass = hass
+            self.parallel_updates = semaphore
+
+        async def async_update(self) -> None:
+            """Test update."""
+            nonlocal updates
+            updates += 1
+
+    ent = AsyncEntity()
+
+    await semaphore.acquire()
+    task = hass.async_create_task(ent.async_device_update())
+    await asyncio.sleep(0)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    semaphore.release()
+
+    await ent.async_device_update()
+
+    assert updates == 1
+
+
 async def test_async_parallel_updates_with_two(hass: HomeAssistant) -> None:
     """Test parallel updates with 2 (parallel)."""
     updates = []
