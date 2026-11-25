@@ -718,8 +718,18 @@ async def test_preload_stream(hass: HomeAssistant, mock_create_stream: Mock) -> 
 
 
 @pytest.mark.usefixtures("mock_stream")
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(HomeAssistantError("Unable to restream"), id="error"),
+        pytest.param(TimeoutError(), id="timeout"),
+    ],
+)
 async def test_preload_stream_continues_after_error(
-    hass: HomeAssistant, mock_create_stream: Mock, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mock_create_stream: Mock,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
 ) -> None:
     """Test one camera's error doesn't stop the others' streams preloading."""
     demo_settings = camera.DynamicStreamSettings(preload_stream=True)
@@ -729,7 +739,7 @@ async def test_preload_stream_continues_after_error(
     async def _create_stream(self: camera.Camera) -> Any:
         if not failed:
             failed.append(self.entity_id)
-            raise HomeAssistantError("Unable to restream")
+            raise error
         return await original(self)
 
     with (

@@ -345,6 +345,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._added_sources: dict[str, list[str]] = {}
         self._stopping = False
         self._rerun_updates = False
+        self._server_restarts = 0
         self._stream_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
         # Cameras whose go2rtc stream must be updated, and the retry state
         self._pending_updates: dict[str, Camera] = {}
@@ -473,6 +474,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         """
         if not self._managed:
             return None
+        restarts = self._server_restarts
         try:
             await self._update_stream_source(camera)
         except Go2RtcClientError:
@@ -482,6 +484,10 @@ class WebRTCProvider(CameraWebRTCProvider):
         # A restarted server has lost the stream, but HLS and recording keep
         # reading its address
         self._restreamed_cameras[identifier] = camera
+        if self._server_restarts != restarts:
+            # The server restarted during the update, maybe after the stream was
+            # added, and restored the restreams without this one
+            self.async_refresh_stream_source(camera)
         return (
             f"rtsp://127.0.0.1:{HA_MANAGED_RTSP_PORT}/"
             f"{quote(identifier, safe='')}?video&audio=aac"
@@ -490,6 +496,7 @@ class WebRTCProvider(CameraWebRTCProvider):
     @callback
     def async_restore_restreams(self) -> None:
         """Add the restreams again to the managed server, which restarted."""
+        self._server_restarts += 1
         # The restarted server has none of the sources added before
         self._added_sources.clear()
         self._pending_updates.update(self._restreamed_cameras)

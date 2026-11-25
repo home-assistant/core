@@ -1928,6 +1928,39 @@ async def test_restreams_restored_after_server_restart(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_restart_during_restream_request(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test a restart while a restream is set up still gets the stream added."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    identifier = get_camera_identifier(camera)
+    camera.set_stream_source(None)
+    server_streams: dict[str, Stream] = {}
+    restarted = False
+
+    async def add_stream(name: str, sources: list[str]) -> None:
+        nonlocal restarted
+        server_streams[name] = Stream([Producer(source) for source in sources])
+        if not restarted:
+            # The server restarts just after adding the stream
+            restarted = True
+            server_streams.clear()
+            async_dispatcher_send(hass, SIGNAL_SERVER_RESTARTED)
+
+    rest_client.streams.add.side_effect = add_stream
+    rest_client.streams.list.side_effect = lambda: server_streams
+
+    with patch.object(camera, "webrtc_source", return_value="rtsp://native"):
+        assert await camera.webrtc_provider.async_get_stream_source(camera)
+        await hass.async_block_till_done()
+
+    assert identifier in server_streams
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_restreams_restore_retried(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
