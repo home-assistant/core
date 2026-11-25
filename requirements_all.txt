@@ -229,6 +229,9 @@ aioazuredevops==2.2.2
 # homeassistant.components.baf
 aiobafi6==0.9.0
 
+# homeassistant.components.bambu_lab
+aiobambulab==0.0.1
+
 # homeassistant.components.amazon_polly
 # homeassistant.components.aws
 # homeassistant.components.aws_s3
@@ -797,6 +800,9 @@ btsmarthub-devicelist==0.2.3
 # homeassistant.components.buienradar
 buienradar==1.0.9
 
+# homeassistant.components.busybar
+busylib[aiohttp]==2.6.1
+
 # homeassistant.components.dhcp
 cached-ipaddress==1.1.2
 
@@ -1354,7 +1360,7 @@ hole==0.9.2
 holidays==0.109
 
 # homeassistant.components.frontend
-home-assistant-frontend==20261028.8
+home-assistant-frontend==20261125.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.10.27
@@ -1459,7 +1465,7 @@ insteon-frontend-home-assistant==0.7.0
 intellifire4py==4.5.6
 
 # homeassistant.components.intesis_modbus
-intesis-gw-modbus==0.3.0
+intesis-gw-modbus==0.3.1
 
 # homeassistant.components.iometer
 iometer==1.0.2
@@ -1523,7 +1529,7 @@ kiwiki-client==0.1.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.11.8.11926
+knx-frontend==2026.11.25.154408
 
 # homeassistant.components.knx
 knx-telegram-store[sqlite,postgres]==0.16.0
@@ -1662,6 +1668,9 @@ medcom-ble==0.1.1
 
 # homeassistant.components.melnor
 melnor-bluetooth==0.0.25
+
+# homeassistant.components.meraki
+meraki==4.7.0
 
 # homeassistant.components.message_bird
 messagebird==1.2.1
@@ -3300,7 +3309,7 @@ systembridgeconnector==5.29.0
 tailscale==1.0.0
 
 # homeassistant.components.tank_utility
-tank-utility==1.5.1
+tank-utility==1.5.3
 
 # homeassistant.components.tapsaff
 tapsaff==0.2.1
@@ -3640,10 +3649,10 @@ zeroconf==0.154.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha-quirks==2.4.1
+zha-quirks==2.5.0
 
 # homeassistant.components.zha
-zha==2.4.3
+zha==2.5.0
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.21

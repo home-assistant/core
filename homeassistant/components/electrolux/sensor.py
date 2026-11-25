@@ -45,7 +45,6 @@ from electrolux_group_developer_sdk.feature_constants import (
     TIME_TO_END,
     TVOC,
     WATER_FILTER_STATE,
-    WATER_HARDNESS,
     ZONE_RESIDUAL_HEAT_STATE,
 )
 
@@ -485,14 +484,6 @@ CARE_ELECTROLUX_SENSORS: tuple[
         },
     ),
     _get_remote_control_description(),
-    ElectroluxEnumSensorDescription(
-        key="water_hardness",
-        translation_key="water_hardness",
-        exists_fn=lambda appliance: appliance.is_feature_supported(WATER_HARDNESS),
-        value_fn=lambda appliance: appliance.get_current_water_hardness(),
-        feature_name=WATER_HARDNESS,
-        known_values={"soft", "medium", "hard"},
-    ),
     ElectroluxSensorDescription(
         key="start_at",
         translation_key="start_at",
