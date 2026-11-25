@@ -317,6 +317,8 @@ class VeluxBlind(VeluxCover):
             | CoverEntityFeature.SET_TILT_POSITION
             | CoverEntityFeature.STOP_TILT
         )
+        self._attr_open_tilt_position = 100 - node.open_orientation_target
+        self._attr_closed_tilt_positions = [0, 100]
 
     @property
     @override

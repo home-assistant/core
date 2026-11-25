@@ -7,6 +7,7 @@
     },
     "error": {
       "accept_terms_failed": "Failed to accept the updated terms of service",
+      "account_locked": "Apple reported this Apple Account as locked. Unlock it at account.apple.com before trying again.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "send_verification_code": "Failed to send verification code",
