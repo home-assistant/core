@@ -3,7 +3,7 @@
 from collections.abc import Callable, Iterator
 from time import monotonic
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, _Call, call, patch
 
 from bleak.exc import BleakError
 from bmx_ble import BM2Generation
@@ -161,16 +161,33 @@ async def test_bluetooth_discovery(
 
 
 @pytest.mark.parametrize(
-    ("validation", "reason"),
-    [("not_bm2", "not_supported"), ("cannot_validate", "cannot_validate")],
+    ("validation", "reason", "clear_calls"),
+    [
+        pytest.param("not_bm2", "not_supported", [], id="not_bm2"),
+        pytest.param(
+            "cannot_validate", "cannot_validate", [call(ANY, ADDRESS)], id="retry"
+        ),
+    ],
 )
 async def test_bluetooth_discovery_rejected(
-    hass: HomeAssistant, service_info: MagicMock, validation: str, reason: str
+    hass: HomeAssistant,
+    service_info: MagicMock,
+    validation: str,
+    reason: str,
+    clear_calls: list[_Call],
 ) -> None:
-    """Discovery only offers positively identified BM2 devices."""
-    result = await _discovery_form(hass, service_info, validation)
+    """Discovery only offers positively identified BM2 devices.
+
+    An inconclusive check clears the match history so a later advertisement
+    can rediscover the device.
+    """
+    with patch.object(
+        config_flow, "async_clear_address_from_match_history"
+    ) as clear_history:
+        result = await _discovery_form(hass, service_info, validation)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+    assert clear_history.mock_calls == clear_calls
 
 
 async def test_bluetooth_duplicate(

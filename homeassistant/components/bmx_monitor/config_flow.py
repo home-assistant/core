@@ -22,6 +22,7 @@ import probatio
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
+    async_clear_address_from_match_history,
     async_discovered_service_info,
 )
 from homeassistant.config_entries import (
@@ -225,6 +226,8 @@ class BMxConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_supported")
 
         if validation == "cannot_validate":
+            # Let a later advertisement retry discovery once the BM2 is reachable.
+            async_clear_address_from_match_history(self.hass, discovery_info.address)
             return self.async_abort(reason="cannot_validate")
 
         self._discovery_info = discovery_info
