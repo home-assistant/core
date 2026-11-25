@@ -573,6 +573,8 @@ async def _async_resolve_local_control(
             DOMAIN,
             failed_issue_id,
             is_fixable=False,
+            config_entry_id=entry.entry_id,
+            config_subentry_id=subentry_id,
             severity=ir.IssueSeverity.WARNING,
             translation_key=ISSUE_LOCAL_CONTROL_FAILED,
             translation_placeholders={
@@ -644,7 +646,7 @@ async def _async_rediscover_gateway(
     issue_id = gateway_issue_id(entry.entry_id, site_id)
     try:
         host = await cloud_energy_site.find_gateway_address()
-    except (ClientError, TeslaFleetError) as err:
+    except (ClientError, TeslaFleetError, TimeoutError) as err:
         LOGGER.debug(
             "Gateway address lookup failed for energy site %s: %s", site_id, err
         )

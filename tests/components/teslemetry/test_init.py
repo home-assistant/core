@@ -1599,6 +1599,11 @@ async def test_local_control_failure_falls_back_to_cloud(
         "site": "Energy Site",
         "key_file": "tesla_powerwall.key",
     }
+    assert issue.config_entry_id == entry.entry_id
+    assert (
+        issue.config_subentry_id
+        == entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+    )
 
 
 @pytest.mark.parametrize(
@@ -1957,6 +1962,11 @@ async def test_local_gateway_rediscovered_through_cloud(
         ),
         pytest.param(
             PowerwallConnectionError("unreachable"), ClientError(), id="client_error"
+        ),
+        pytest.param(
+            PowerwallConnectionError("unreachable"),
+            TimeoutError(),
+            id="lookup_timeout",
         ),
         pytest.param(
             PowerwallProtocolError("Login failed (404)"),
