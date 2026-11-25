@@ -771,6 +771,40 @@ async def test_set_temperature_out_of_range(
             CONF_WATER_HEATERS: [
                 {
                     **BASE_CONFIG,
+                    CONF_ONOFF_REGISTER: ONOFF_ADDRESS,
+                    CONF_OPERATION_MODE_REGISTER: MODE_REGISTER_CONFIG,
+                    CONF_TARGET_TEMP_SCALE: 0.001,
+                },
+            ]
+        },
+    ],
+)
+async def test_set_temperature_not_encodable(
+    hass: HomeAssistant, mock_modbus_ha: mock.AsyncMock
+) -> None:
+    """Test a register value outside the data type is rejected before anything is written."""
+    with pytest.raises(ServiceValidationError, match="cannot be written"):
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            WaterHeaterService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                WaterHeaterServiceArgument.TEMPERATURE: 50,
+                WaterHeaterServiceArgument.OPERATION_MODE: STATE_ECO,
+            },
+            blocking=True,
+        )
+    mock_modbus_ha.write_register.assert_not_called()
+    mock_modbus_ha.write_registers.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_WATER_HEATERS: [
+                {
+                    **BASE_CONFIG,
                     CONF_TEMPERATURE_UNIT: "F",
                     CONF_MIN_TEMP: 95,
                     CONF_MAX_TEMP: 150,

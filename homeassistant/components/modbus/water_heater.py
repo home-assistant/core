@@ -216,8 +216,6 @@ class ModbusWaterHeater(ModbusStructEntity, WaterHeaterEntity):
                     "max_temp": str(self.max_temp),
                 },
             )
-        if (operation_mode := kwargs.get(ATTR_OPERATION_MODE)) is not None:
-            await self.async_handle_set_operation_mode(operation_mode)
         target_temperature = (
             temperature - self._target_temp_offset
         ) / self._target_temp_scale
@@ -232,7 +230,14 @@ class ModbusWaterHeater(ModbusStructEntity, WaterHeaterEntity):
                 target_temperature = math.floor(high)
             elif target_temperature < low:
                 target_temperature = math.ceil(low)
-        as_bytes = struct.pack(self._structure, target_temperature)
+        try:
+            as_bytes = struct.pack(self._structure, target_temperature)
+        except struct.error, OverflowError:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="temp_not_encodable",
+                translation_placeholders={"temperature": str(temperature)},
+            ) from None
         registers = self._swap_registers(
             [
                 int.from_bytes(as_bytes[i : i + 2], "big")
@@ -240,6 +245,8 @@ class ModbusWaterHeater(ModbusStructEntity, WaterHeaterEntity):
             ],
             0,
         )
+        if (operation_mode := kwargs.get(ATTR_OPERATION_MODE)) is not None:
+            await self.async_handle_set_operation_mode(operation_mode)
         if len(registers) == 1 and not self._target_temperature_write_registers:
             result = await self._hub.async_pb_call(
                 self._device_address,

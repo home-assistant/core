@@ -16,6 +16,9 @@
     "not_loaded": {
       "message": "Modbus is not loaded, so this action cannot be performed."
     },
+    "temp_not_encodable": {
+      "message": "Provided temperature {temperature} cannot be written to the target temperature register with the configured data type, scale and offset."
+    },
     "temp_out_of_range": {
       "message": "Provided temperature {temperature} is not valid. Accepted range is {min_temp} to {max_temp}."
     },
