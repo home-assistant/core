@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from goslideapi.goslideapi import ClientConnectionError
+import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -126,6 +127,7 @@ async def test_open_cover(
         blocking=True,
     )
     mock_slide_api.slide_open.assert_called_once()
+    assert hass.states.get("cover.slide_bedroom").state == CoverState.OPENING
 
 
 async def test_close_cover(
@@ -145,6 +147,44 @@ async def test_close_cover(
         blocking=True,
     )
     mock_slide_api.slide_close.assert_called_once()
+    assert hass.states.get("cover.slide_bedroom").state == CoverState.CLOSING
+
+
+@pytest.mark.parametrize(
+    ("service", "api_method", "data"),
+    [
+        (CoverService.OPEN, "slide_open", {}),
+        (CoverService.CLOSE, "slide_close", {}),
+        (
+            CoverService.SET_POSITION,
+            "slide_set_position",
+            {CoverServiceArgument.POSITION: 0},
+        ),
+    ],
+)
+async def test_command_failure_keeps_state(
+    hass: HomeAssistant,
+    mock_slide_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    api_method: str,
+    data: dict[str, int],
+) -> None:
+    """Test a failed command does not change the cover state."""
+    await setup_platform(hass, mock_config_entry, [Platform.COVER])
+    getattr(mock_slide_api, api_method).side_effect = ClientConnectionError
+
+    with pytest.raises(ClientConnectionError):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            service,
+            {TargetKey.ENTITY_ID: "cover.slide_bedroom", **data},
+            blocking=True,
+        )
+
+    assert hass.states.get("cover.slide_bedroom").state == CoverState.OPEN
+
+    assert mock_config_entry.runtime_data.data["state"] == CoverState.OPEN
 
 
 async def test_stop_cover(
