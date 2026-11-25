@@ -4,7 +4,12 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import ANY, call
 
-from aioesphomeapi import APIClient, VoiceAssistantFeature, VoiceAssistantTimerEventType
+from aioesphomeapi import (
+    APIClient,
+    APIConnectionError,
+    VoiceAssistantFeature,
+    VoiceAssistantTimerEventType,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
@@ -332,6 +337,39 @@ async def test_timers_resent_on_reconnect(
         call(UPDATED, kept["timer_id"], "kept", 300, 275, True),
         call(UPDATED, new["timer_id"], "new", 30, 5, True),
     ]
+
+
+@pytest.mark.usefixtures("freezer")
+async def test_cancel_retried_after_failed_send(
+    hass: HomeAssistant, mock_client: APIClient, mock_device: MockESPHomeDevice
+) -> None:
+    """Test a cancellation that could not be sent is sent on the next reconnect."""
+    entity_id = _timer_list_entity_id(hass, mock_device)
+    assert entity_id is not None
+    result = await _call(hass, entity_id, "create_timer", duration={"seconds": 60})
+    timer_id = result["timer_id"]
+    await mock_device.mock_disconnect(expected_disconnect=False)
+    await hass.async_block_till_done()
+    await _call(hass, entity_id, "cancel_timer", timer_id=timer_id)
+
+    # The connection drops again while the cancellation is being sent
+    mock_client.send_voice_assistant_timer_event.reset_mock()
+    mock_client.send_voice_assistant_timer_event.side_effect = APIConnectionError(
+        "Connection lost"
+    )
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+    await mock_device.mock_disconnect(expected_disconnect=False)
+    await hass.async_block_till_done()
+
+    mock_client.send_voice_assistant_timer_event.side_effect = None
+    mock_client.send_voice_assistant_timer_event.reset_mock()
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+
+    mock_client.send_voice_assistant_timer_event.assert_called_once_with(
+        CANCELLED, timer_id, None, 0, 0, False
+    )
 
 
 async def test_nothing_resent_without_timers(

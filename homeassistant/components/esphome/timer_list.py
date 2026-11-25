@@ -1,9 +1,10 @@
 """Timer lists for ESPHome voice satellites."""
 
+import logging
 import math
 from typing import TYPE_CHECKING, override
 
-from aioesphomeapi import VoiceAssistantTimerEventType
+from aioesphomeapi import APIConnectionError, VoiceAssistantTimerEventType
 
 from homeassistant.components.timer_list import (
     InMemoryTimerListEntity,
@@ -19,6 +20,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import TIMER_LIST_KEY
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -169,6 +172,16 @@ class EsphomeTimerList(InMemoryTimerListEntity):
         is_active: bool,
     ) -> None:
         """Send a timer event to the device and track what it shows."""
+        try:
+            self._entry_data.client.send_voice_assistant_timer_event(
+                event_type, timer_id, name, total_seconds, seconds_left, is_active
+            )
+        except APIConnectionError as err:
+            # The next reconnect brings the device up to date
+            _LOGGER.debug("Could not send timer event for %s: %s", timer_id, err)
+            return
+        # Only once sent, so a timer is still cancelled on the next reconnect
+        # if the connection drops while it is being cancelled
         if event_type in (
             VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED,
             VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED,
@@ -176,6 +189,3 @@ class EsphomeTimerList(InMemoryTimerListEntity):
             self._device_timers.pop(timer_id, None)
         else:
             self._device_timers[timer_id] = name
-        self._entry_data.client.send_voice_assistant_timer_event(
-            event_type, timer_id, name, total_seconds, seconds_left, is_active
-        )
