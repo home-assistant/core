@@ -1,3 +1,5 @@
+"""Tests for the MELCloud device configuration cache."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
