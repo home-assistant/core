@@ -25,6 +25,8 @@ from homeassistant.helpers import area_registry as ar, integration_platform
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component, async_wait_component
+from homeassistant.util import json as json_util
+from homeassistant.util.file import WriteError
 
 from .const import (
     DEFAULT_AREAS,
@@ -164,7 +166,12 @@ class _BaseOnboardingStepView(BaseOnboardingView):
     async def _async_mark_done(self, hass: HomeAssistant) -> None:
         """Mark step as done."""
         self._data["done"].append(self.step)
-        await self._store.async_save(self._data)
+        try:
+            await self._store.async_save(self._data)
+        except json_util.SerializationError, WriteError:
+            # Roll back so a retry is not rejected once storage recovers
+            self._data["done"].remove(self.step)
+            raise
 
         if set(self._data["done"]) == set(STEPS):
             data: OnboardingData = hass.data[DOMAIN]
