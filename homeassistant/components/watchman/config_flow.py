@@ -1,6 +1,5 @@
 """Config flow for Kingspan Watchman SENSiT."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -57,83 +56,6 @@ class SENSiTFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._errors["base"] = error
 
         return await self._show_config_form(step_id="user", defaults=user_input)
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Handle reconfiguration of an existing entry."""
-        self._errors = {}
-        reconfigure_entry = self._get_reconfigure_entry()
-
-        if user_input is not None:
-            username = user_input[CONF_USERNAME]
-            password = user_input[CONF_PASSWORD]
-
-            await self.async_set_unique_id(username.casefold())
-            self._abort_if_unique_id_mismatch()
-
-            error = await self._test_credentials(username, password)
-            if error is None:
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    title=username,
-                    data_updates={
-                        **reconfigure_entry.data,
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                    },
-                )
-
-            self._errors["base"] = error
-
-        defaults = {
-            CONF_USERNAME: reconfigure_entry.data.get(CONF_USERNAME, ""),
-            CONF_PASSWORD: reconfigure_entry.data.get(CONF_PASSWORD, ""),
-        }
-        return await self._show_config_form(
-            step_id="reconfigure",
-            defaults=user_input or defaults,
-        )
-
-    async def async_step_reauth(
-        self, _entry_data: Mapping[str, Any]
-    ) -> config_entries.ConfigFlowResult:
-        """Perform reauth upon an API authentication error."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Confirm and handle the re-authentication flow."""
-        self._errors = {}
-        reauth_entry = self._get_reauth_entry()
-
-        if user_input is not None:
-            username = user_input[CONF_USERNAME]
-            password = user_input[CONF_PASSWORD]
-            if username.casefold() != reauth_entry.data[CONF_USERNAME].casefold():
-                self._errors["base"] = "wrong_account"
-            else:
-                error = await self._test_credentials(username, password)
-                if error is None:
-                    return self.async_update_reload_and_abort(
-                        reauth_entry,
-                        data_updates={
-                            **reauth_entry.data,
-                            CONF_USERNAME: username,
-                            CONF_PASSWORD: password,
-                        },
-                    )
-                self._errors["base"] = error
-
-        defaults = {
-            CONF_USERNAME: reauth_entry.data.get(CONF_USERNAME, ""),
-            CONF_PASSWORD: "",
-        }
-        return await self._show_config_form(
-            step_id="reauth_confirm",
-            defaults=user_input or defaults,
-        )
 
     @staticmethod
     @callback
