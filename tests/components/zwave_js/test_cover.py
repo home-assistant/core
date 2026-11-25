@@ -24,6 +24,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverService,
     CoverServiceArgument,
@@ -1283,6 +1284,12 @@ async def test_iblinds_v3_cover(
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert ATTR_CURRENT_TILT_POSITION in state.attributes
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
+    # The open slat value 50 of the 0-99 scale reads back as 51
+    assert state.attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] == 51
+    assert state.attributes[CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS] == [
+        0,
+        100,
+    ]
 
     await hass.services.async_call(
         COVER_DOMAIN,
