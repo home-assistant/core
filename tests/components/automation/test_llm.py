@@ -276,3 +276,42 @@ async def test_get_config_only_automations(
         await tool.async_call(
             hass, llm.ToolInput(tool.name, {"entity_id": "script.test"}), llm_context
         )
+
+
+async def test_get_config_of_blueprint_automation(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test an automation made from a blueprint returns the blueprint and inputs."""
+    use_blueprint = {
+        "path": "test_event_service.yaml",
+        "input": {
+            "trigger_event": "blueprint_event",
+            "service_to_call": "test.automation",
+            "a_number": 5,
+        },
+    }
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "id": "from_blueprint",
+                "alias": "From blueprint",
+                "use_blueprint": use_blueprint,
+            }
+        },
+    )
+
+    tool = GetConfigTool()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"entity_id": "automation.from_blueprint"}),
+        llm_context,
+    )
+
+    assert hass.states.get("automation.from_blueprint").state == "on"
+    assert result.data["config"] == {
+        "id": "from_blueprint",
+        "alias": "From blueprint",
+        "use_blueprint": use_blueprint,
+    }
