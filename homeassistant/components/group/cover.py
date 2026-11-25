@@ -1,5 +1,6 @@
 """Platform allowing several cover to be grouped into one cover."""
 
+from itertools import chain
 from typing import Any, override
 
 import probatio
@@ -8,6 +9,7 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverEntityStateAttribute,
     CoverService,
@@ -34,7 +36,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
-from .util import mean_position, reduce_attribute
+from .util import find_state_attributes, mean_position, reduce_attribute
 
 KEY_OPEN_CLOSE = "open_close"
 KEY_STOP = "stop"
@@ -174,6 +176,8 @@ class CoverGroup(GroupEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the covers up."""
         data: dict[str, Any] = {TargetKey.ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
+        if (speed := kwargs.get(CoverServiceArgument.SPEED)) is not None:
+            data[CoverServiceArgument.SPEED] = speed
         await self.hass.services.async_call(
             COVER_DOMAIN,
             CoverService.OPEN,
@@ -186,6 +190,8 @@ class CoverGroup(GroupEntity, CoverEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Move the covers down."""
         data: dict[str, Any] = {TargetKey.ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
+        if (speed := kwargs.get(CoverServiceArgument.SPEED)) is not None:
+            data[CoverServiceArgument.SPEED] = speed
         await self.hass.services.async_call(
             COVER_DOMAIN,
             CoverService.CLOSE,
@@ -213,6 +219,8 @@ class CoverGroup(GroupEntity, CoverEntity):
             TargetKey.ENTITY_ID: self._covers[KEY_POSITION],
             CoverServiceArgument.POSITION: kwargs[CoverServiceArgument.POSITION],
         }
+        if (speed := kwargs.get(CoverServiceArgument.SPEED)) is not None:
+            data[CoverServiceArgument.SPEED] = speed
         await self.hass.services.async_call(
             COVER_DOMAIN,
             CoverService.SET_POSITION,
@@ -322,6 +330,17 @@ class CoverGroup(GroupEntity, CoverEntity):
             reduce=mean_position,
         )
 
+        # Keep member order so each integration's speeds stay in their order
+        member_states = list(
+            filter(None, (self.hass.states.get(x) for x in self._entity_ids))
+        )
+        all_speeds = find_state_attributes(
+            member_states, CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS
+        )
+        self._attr_supported_speeds = (
+            list(dict.fromkeys(chain.from_iterable(all_speeds))) or None
+        )
+
         tilt_covers = self._tilts[KEY_POSITION]
         all_tilt_states = [self.hass.states.get(x) for x in tilt_covers]
         tilt_states: list[State] = list(filter(None, all_tilt_states))
@@ -337,6 +356,8 @@ class CoverGroup(GroupEntity, CoverEntity):
         supported_features |= CoverEntityFeature.STOP if self._covers[KEY_STOP] else 0
         if self._covers[KEY_POSITION]:
             supported_features |= CoverEntityFeature.SET_POSITION
+        if self._attr_supported_speeds:
+            supported_features |= CoverEntityFeature.SPEED
         if self._tilts[KEY_OPEN_CLOSE]:
             supported_features |= (
                 CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT

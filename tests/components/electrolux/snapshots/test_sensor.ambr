@@ -431,68 +431,6 @@
     'state': '100',
   })
 # ---
-# name: test_sensor[sensor.dish_washer-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'hard',
-        'medium',
-        'soft',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('electrolux', '911438421_03:33109002-443E07338CF5')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.dish_washer',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'water_hardness',
-    'unique_id': '911438421_03:33109002-443E07338CF5_water_hardness',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.dish_washer-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dish Washer',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'hard',
-        'medium',
-        'soft',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.dish_washer',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensor[sensor.dish_washer_appliance_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -857,68 +795,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.31666666666667',
-  })
-# ---
-# name: test_sensor[sensor.dryer-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'hard',
-        'medium',
-        'soft',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('electrolux', '999120000_00:74852244-443E0704101F')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.dryer',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'water_hardness',
-    'unique_id': '999120000_00:74852244-443E0704101F_water_hardness',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.dryer-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'hard',
-        'medium',
-        'soft',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.dryer',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'medium',
   })
 # ---
 # name: test_sensor[sensor.dryer_appliance_state-entry]

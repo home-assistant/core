@@ -891,7 +891,7 @@ denon-rs232==4.3.1
 denonavr==1.3.3
 
 # homeassistant.components.devialet
-devialet==1.5.7
+devialet==1.5.9
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.19.1
@@ -1459,7 +1459,7 @@ insteon-frontend-home-assistant==0.7.0
 intellifire4py==4.5.6
 
 # homeassistant.components.intesis_modbus
-intesis-gw-modbus==0.3.0
+intesis-gw-modbus==0.3.1
 
 # homeassistant.components.iometer
 iometer==1.0.2
@@ -3640,10 +3640,10 @@ zeroconf==0.154.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha-quirks==2.4.1
+zha-quirks==2.5.0
 
 # homeassistant.components.zha
-zha==2.4.3
+zha==2.5.0
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.21

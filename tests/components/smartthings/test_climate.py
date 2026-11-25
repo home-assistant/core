@@ -3,7 +3,13 @@
 from typing import Any
 from unittest.mock import AsyncMock, call
 
-from pysmartthings import Attribute, Capability, Command, Status
+from pysmartthings import (
+    Attribute,
+    Capability,
+    Command,
+    SmartThingsConnectionError,
+    Status,
+)
 from pysmartthings.models import HealthStatus
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -230,6 +236,35 @@ async def test_ac_set_hvac_mode_turns_on(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_ac_set_hvac_mode_switch_on_fails(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test no mode is sent when turning on the AC fails."""
+    devices.execute_device_command.side_effect = SmartThingsConnectionError(
+        "Command failed"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(SmartThingsConnectionError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+            },
+            blocking=True,
+        )
+    assert devices.execute_device_command.mock_calls == [
+        call(
+            "96a5ef74-5832-a84b-f1f7-ca799957065d", Capability.SWITCH, Command.ON, MAIN
+        ),
+    ]
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_hvac_mode_auto_uses_aicomfort(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -370,17 +405,17 @@ async def test_ac_set_temperature_and_hvac_mode_auto_uses_aicomfort(
     assert devices.execute_device_command.mock_calls == [
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.THERMOSTAT_COOLING_SETPOINT,
-            Command.SET_COOLING_SETPOINT,
-            MAIN,
-            argument=23.0,
-        ),
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.AIR_CONDITIONER_MODE,
             Command.SET_AIR_CONDITIONER_MODE,
             MAIN,
             argument="aIComfort",
+        ),
+        call(
+            "96a5ef74-5832-a84b-f1f7-ca799957065d",
+            Capability.THERMOSTAT_COOLING_SETPOINT,
+            Command.SET_COOLING_SETPOINT,
+            MAIN,
+            argument=23.0,
         ),
     ]
 
@@ -494,7 +529,10 @@ async def test_ac_set_temperature_and_hvac_mode_while_off(
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setting AC temperature and HVAC mode while off."""
+    """Test setting AC temperature and HVAC mode while off.
+
+    The device is turned on once, then gets the mode, then the setpoint.
+    """
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -516,23 +554,17 @@ async def test_ac_set_temperature_and_hvac_mode_while_off(
         ),
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.THERMOSTAT_COOLING_SETPOINT,
-            Command.SET_COOLING_SETPOINT,
-            MAIN,
-            argument=23.0,
-        ),
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.SWITCH,
-            Command.ON,
-            MAIN,
-        ),
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.AIR_CONDITIONER_MODE,
             Command.SET_AIR_CONDITIONER_MODE,
             MAIN,
             argument="auto",
+        ),
+        call(
+            "96a5ef74-5832-a84b-f1f7-ca799957065d",
+            Capability.THERMOSTAT_COOLING_SETPOINT,
+            Command.SET_COOLING_SETPOINT,
+            MAIN,
+            argument=23.0,
         ),
     ]
 
@@ -560,17 +592,17 @@ async def test_ac_set_temperature_and_hvac_mode(
     assert devices.execute_device_command.mock_calls == [
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.THERMOSTAT_COOLING_SETPOINT,
-            Command.SET_COOLING_SETPOINT,
-            MAIN,
-            argument=23.0,
-        ),
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.AIR_CONDITIONER_MODE,
             Command.SET_AIR_CONDITIONER_MODE,
             MAIN,
             argument="auto",
+        ),
+        call(
+            "96a5ef74-5832-a84b-f1f7-ca799957065d",
+            Capability.THERMOSTAT_COOLING_SETPOINT,
+            Command.SET_COOLING_SETPOINT,
+            MAIN,
+            argument=23.0,
         ),
     ]
 
