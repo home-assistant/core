@@ -15,6 +15,8 @@ from homeassistant.util import dt as dt_util
 from .const import ADVICE_LEVELS, DOMAIN
 from .coordinator import StookwijzerConfigEntry, StookwijzerCoordinator
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

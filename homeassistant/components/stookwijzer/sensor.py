@@ -21,6 +21,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import ADVICE_LEVELS, DOMAIN
 from .coordinator import StookwijzerConfigEntry, StookwijzerCoordinator
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(kw_only=True, frozen=True)
 class StookwijzerSensorDescription(SensorEntityDescription):
