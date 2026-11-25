@@ -98,6 +98,9 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         self._api = api
         self.lock = lock
         self.device_name = config_entry.data[CONF_NAME]
+        self._lock_online = lock.online
+        if not self._lock_online:
+            _LOGGER.info("LOQED lock %s is unavailable", self.device_name)
 
     @override
     async def _async_update_data(self) -> StatusMessage:
@@ -116,6 +119,7 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         # Lock.online reads raw_data. Replace it, like Lock.update() does, so a
         # lock_online flag set by an earlier webhook does not outlive this status.
         self.lock.raw_data = dict(data)
+        self._async_log_lock_availability()
         return data
 
     async def _handle_webhook(
@@ -137,8 +141,20 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             _LOGGER.warning("Incorrect callback received:: %s", event_data)
             return None
 
+        self._async_log_lock_availability()
         self.async_update_listeners()
         return None
+
+    @callback
+    def _async_log_lock_availability(self) -> None:
+        """Log once when the lock goes offline and once when it comes back."""
+        if self.lock.online == self._lock_online:
+            return
+        self._lock_online = self.lock.online
+        if self._lock_online:
+            _LOGGER.info("LOQED lock %s is back online", self.device_name)
+        else:
+            _LOGGER.info("LOQED lock %s is unavailable", self.device_name)
 
     async def ensure_webhooks(self) -> None:
         """Register webhook on LOQED bridge."""

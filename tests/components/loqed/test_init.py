@@ -132,12 +132,43 @@ async def test_entity_unavailable_when_lock_offline(
     assert state.state != STATE_UNAVAILABLE
 
 
-async def test_lock_offline_at_setup_is_unavailable(
+async def test_webhook_logs_lock_availability_once(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test going offline and coming back online are each logged once."""
+    await async_setup_component(hass, "http", {"http": {}})
+    client = await hass_client_no_auth()
+    message = await async_load_fixture(hass, "battery_update.json", DOMAIN)
+    online_states = iter([False, False, True, True])
+
+    async def receive_webhook(*args: Any) -> dict[str, Any]:
+        lock.online = next(online_states)
+        return {}
+
+    lock.receiveWebhook = AsyncMock(side_effect=receive_webhook)
+
+    for _ in range(4):
+        await client.post(
+            f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}",
+            data=message,
+            headers={"timestamp": "1653304609", "hash": "hash"},
+        )
+
+    assert caplog.text.count("LOQED lock Home is unavailable") == 1
+    assert caplog.text.count("LOQED lock Home is back online") == 1
+
+
+async def test_lock_offline_at_setup_is_logged(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     lock: loqed.Lock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a lock that is already offline at setup is unavailable."""
+    """Test a lock that is already offline at setup is logged and unavailable."""
     config_entry.add_to_hass(hass)
     lock.online = False
     lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
@@ -151,6 +182,7 @@ async def test_lock_offline_at_setup_is_unavailable(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+    assert caplog.text.count("LOQED lock Home is unavailable") == 1
     state = hass.states.get("lock.home")
     assert state
     assert state.state == STATE_UNAVAILABLE
@@ -164,6 +196,7 @@ async def test_refresh_updates_lock_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     status_has_lock_online: bool,
 ) -> None:
     """Test a status refresh updates availability after a missed webhook."""
@@ -209,6 +242,7 @@ async def test_refresh_updates_lock_availability(
         state = hass.states.get("lock.home")
         assert state
         assert state.state == LockState.UNLOCKED
+        assert caplog.text.count("LOQED lock Home is back online") == 1
 
         mock_get_lock_details.return_value = offline_status
         await hass.services.async_call(
@@ -225,6 +259,7 @@ async def test_refresh_updates_lock_availability(
     state = hass.states.get("lock.home")
     assert state
     assert state.state == STATE_UNAVAILABLE
+    assert caplog.text.count("LOQED lock Home is unavailable") == 2
 
 
 async def test_setup_webhook_in_bridge(

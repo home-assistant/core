@@ -42,11 +42,7 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: todo
-    comment: >-
-      Depends on entity-unavailable. Lock.online is used for availability,
-      but transitions are not yet logged.
+  log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow: done
   test-coverage: done
