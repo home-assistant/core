@@ -609,7 +609,11 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                         gateway_ip=_host_ip,
                         gateway_port=user_input[CONF_PORT],
                         local_ip=_local_ip,
-                        route_back=route_back,
+                        # requested over UDP - use route back for TCP types
+                        # to also reach gateways behind NAT
+                        route_back=(
+                            selected_tunneling_type != CONF_KNX_TUNNELING or route_back
+                        ),
                     )
                 except CommunicationError:
                     errors["base"] = "cannot_connect"

@@ -560,7 +560,7 @@ async def test_routing_secure_keyfile(
 
 
 @pytest.mark.parametrize(
-    ("user_input", "config_entry_data"),
+    ("user_input", "config_entry_data", "description_route_back"),
     [
         (
             {
@@ -582,6 +582,7 @@ async def test_routing_secure_keyfile(
                 CONF_KNX_SECURE_USER_ID: None,
                 CONF_KNX_SECURE_USER_PASSWORD: None,
             },
+            False,
         ),
         (
             {
@@ -605,6 +606,7 @@ async def test_routing_secure_keyfile(
                 CONF_KNX_SECURE_USER_ID: None,
                 CONF_KNX_SECURE_USER_PASSWORD: None,
             },
+            True,
         ),
         (
             {
@@ -626,6 +628,7 @@ async def test_routing_secure_keyfile(
                 CONF_KNX_SECURE_USER_ID: None,
                 CONF_KNX_SECURE_USER_PASSWORD: None,
             },
+            True,
         ),
     ],
 )
@@ -637,8 +640,9 @@ async def test_tunneling_setup_manual(
     gateway_scanner_mock: MagicMock,
     hass: HomeAssistant,
     knx_setup,
-    user_input,
-    config_entry_data,
+    user_input: dict[str, Any],
+    config_entry_data: dict[str, Any],
+    description_route_back: bool,
 ) -> None:
     """Test tunneling if no gateway was found found (or `manual` option was chosen)."""
     result = await hass.config_entries.flow.async_init(
@@ -666,11 +670,18 @@ async def test_tunneling_setup_manual(
                 user_input[CONF_KNX_TUNNELING_TYPE] == CONF_KNX_TUNNELING_TCP
             ),
         ),
-    ):
+    ) as request_description_mock:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input,
         )
+    # the description is requested over UDP - TCP always uses route back
+    request_description_mock.assert_awaited_once_with(
+        gateway_ip="192.168.0.1",
+        gateway_port=3675,
+        local_ip=None,
+        route_back=description_route_back,
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "KNX"
     assert result["data"] == config_entry_data
