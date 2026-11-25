@@ -504,6 +504,7 @@ async def test_dead_link_fails_the_refresh(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_config_entry.runtime_data.readings.last_update_success is False
+    assert not mock_modbus_unit.connected
 
     state = hass.states.get(POWER_ENTITY)
     assert state is not None
@@ -525,6 +526,7 @@ async def test_dead_link_fails_the_refresh(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert attempts == 1
+    assert not mock_modbus_unit.connected
 
 
 async def test_another_inverter_on_the_address_fails_the_refresh(
@@ -591,9 +593,10 @@ async def test_settings_failure_does_not_block_setup(
     with patch(
         "homeassistant.components.solaredge_modbus.SolarEdge.async_update_settings",
         side_effect=SolarEdgeConnectionError("timed out"),
-    ):
+    ) as update_settings:
         await _setup(hass, mock_config_entry)
 
+    assert update_settings.call_count == 1
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(POWER_ENTITY) is not None
 
