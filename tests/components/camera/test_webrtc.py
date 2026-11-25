@@ -845,6 +845,7 @@ async def test_provider_stream_source(hass: HomeAssistant) -> None:
 
     unregister = async_register_webrtc_provider(hass, RestreamProvider())
     await hass.async_block_till_done()
+    hass.config.components.add("stream")
 
     assert await camera.stream_source() is None
     with (
@@ -867,8 +868,13 @@ async def test_provider_stream_source(hass: HomeAssistant) -> None:
 
         # The provider can't restream the camera anymore
         stream.stop = AsyncMock()
+        stream.remove_provider = AsyncMock()
+        recorder = Mock()
+        stream.outputs.return_value = {"recorder": recorder}
         restream = None
         assert await camera.async_create_stream() is None
+        # The outputs end as when they go idle, so a recording finishes
+        stream.remove_provider.assert_awaited_once_with(recorder)
         stream.stop.assert_awaited_once()
         # Kept, as stop() leaves a preloaded worker running
         assert camera.stream is stream
@@ -960,3 +966,31 @@ async def test_provider_stream_source_default() -> None:
     assert await SomeTestProvider().async_get_stream_source(Mock()) is None
     # Nor refresh anything
     SomeTestProvider().async_refresh_stream_source(Mock())
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_provider_stream_source_needs_stream_integration(
+    hass: HomeAssistant,
+) -> None:
+    """Test a provider's restream doesn't offer HLS without the stream integration.
+
+    Media players then keep using the MJPEG proxy.
+    """
+    camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+
+    class RestreamProvider(SomeTestProvider):
+        @callback
+        def async_supports_stream_source(self, camera: Camera) -> bool:
+            return True
+
+    unregister = async_register_webrtc_provider(hass, RestreamProvider())
+    await hass.async_block_till_done()
+
+    assert "stream" not in hass.config.components
+    with patch.object(camera, "webrtc_source", return_value="native://camera"):
+        await camera.async_refresh_providers()
+        assert camera.webrtc_provider is not None
+        assert camera.camera_capabilities.frontend_stream_types == {StreamType.WEB_RTC}
+
+    unregister()
+    await hass.async_block_till_done()

@@ -258,8 +258,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                     else:
                         source = await self._async_get_webrtc_provider_stream_source()
                 if not source:
-                    # Stops the outputs but keeps the stream: a preloaded worker
-                    # keeps running, so it resumes with the restream later
+                    # Ends the outputs as when they go idle, so a recording
+                    # finishes, but keeps the stream: a preloaded worker keeps
+                    # running, so it resumes with the restream later
+                    for output in list(self.stream.outputs().values()):
+                        await self.stream.remove_provider(output)
                     await self.stream.stop()
                     return None
                 if source != self.stream.source:
@@ -534,7 +537,13 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # so other cameras aren't asked for theirs here
         if not _has_own_webrtc_source(self) or await self.stream_source():
             return True
-        return provider is not None and provider.async_supports_stream_source(self)
+        # Without the stream integration, media players fall back to the MJPEG
+        # proxy, as before the provider could restream the camera
+        return (
+            provider is not None
+            and "stream" in self.hass.config.components
+            and provider.async_supports_stream_source(self)
+        )
 
     async def _async_get_supported_webrtc_provider[_T](
         self, fn: Callable[[HomeAssistant, Camera], Coroutine[None, None, _T | None]]
