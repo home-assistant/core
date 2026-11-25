@@ -97,3 +97,71 @@ async def test_repair_flow_without_entry(hass: HomeAssistant) -> None:
     )
 
     assert isinstance(flow, ConfirmRepairFlow)
+
+
+async def test_repair_flow_keeps_country_options(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test the fix flow stores the country specific options."""
+    assert await async_setup_component(hass, "repairs", {})
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test",
+        data={"country": "SE"},
+        options={"categories": ["bogus"], "include_sundays": True},
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(
+        client, DOMAIN, f"unsupported_categories_{entry.entry_id}"
+    )
+    result = await process_repair_fix_flow(
+        client,
+        result["flow_id"],
+        {"categories": ["bank"], "include_sundays": True},
+    )
+
+    assert result["type"] == "create_entry"
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.options == {"categories": ["bank"], "include_sundays": True}
+
+
+async def test_repair_flow_already_configured(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the fix flow aborts when the fixed configuration already has an entry."""
+    assert await async_setup_component(hass, "repairs", {})
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="Germany, BW",
+        data={"country": "DE", "province": "BW"},
+        minor_version=2,
+    ).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test",
+        data={"country": "DE", "province": "XX"},
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_id = f"unsupported_province_{entry.entry_id}"
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    result = await process_repair_fix_flow(
+        client, result["flow_id"], {"province": "BW"}
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data == {"country": "DE", "province": "XX"}
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)

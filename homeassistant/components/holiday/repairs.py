@@ -14,8 +14,13 @@ from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import CountrySelector, CountrySelectorConfig
 
-from .config_flow import SUPPORTED_COUNTRIES, get_entry_name, get_options_schema
-from .const import CONF_CATEGORIES, CONF_PROVINCE, ISSUE_UNSUPPORTED_COUNTRY
+from .config_flow import (
+    SUPPORTED_COUNTRIES,
+    get_entry_name,
+    get_entry_options,
+    get_options_schema,
+)
+from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN, ISSUE_UNSUPPORTED_COUNTRY
 
 
 class UnsupportedConfigurationFixFlow(RepairsFlow):
@@ -62,11 +67,20 @@ class UnsupportedConfigurationFixFlow(RepairsFlow):
         """Handle the province and categories step of a fix flow."""
         if user_input is not None:
             data = {CONF_COUNTRY: self.country}
-            options: dict[str, Any] = {}
             if province := user_input.get(CONF_PROVINCE):
                 data[CONF_PROVINCE] = province
-            if categories := user_input.get(CONF_CATEGORIES):
-                options[CONF_CATEGORIES] = categories
+            options = get_entry_options(user_input)
+            # Like the config flows, don't create a second calendar for the same holidays
+            match = {**data, **options}.items()
+            if any(
+                all(
+                    item in other.data.items() or item in other.options.items()
+                    for item in match
+                )
+                for other in self.hass.config_entries.async_entries(DOMAIN)
+                if other.entry_id != self.entry.entry_id
+            ):
+                return self.async_abort(reason="already_configured")
             title = await self.hass.async_add_executor_job(
                 get_entry_name, self.hass.config.language, self.country, province
             )

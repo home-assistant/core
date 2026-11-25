@@ -60,14 +60,23 @@
   "issues": {
     "unsupported_categories": {
       "fix_flow": {
+        "abort": {
+          "already_configured": "[%key:component::holiday::config::abort::already_configured%]"
+        },
         "step": {
           "options": {
             "data": {
               "categories": "[%key:component::holiday::config::step::options::data::categories%]",
+              "hindu_show_estimated": "[%key:component::holiday::config::step::options::data::hindu_show_estimated%]",
+              "include_sundays": "[%key:component::holiday::config::step::options::data::include_sundays%]",
+              "islamic_show_estimated": "[%key:component::holiday::config::step::options::data::islamic_show_estimated%]",
               "province": "[%key:component::holiday::config::step::options::data::province%]"
             },
             "data_description": {
               "categories": "[%key:component::holiday::config::step::options::data_description::categories%]",
+              "hindu_show_estimated": "[%key:component::holiday::config::step::options::data_description::hindu_show_estimated%]",
+              "include_sundays": "[%key:component::holiday::config::step::options::data_description::include_sundays%]",
+              "islamic_show_estimated": "[%key:component::holiday::config::step::options::data_description::islamic_show_estimated%]",
               "province": "[%key:component::holiday::config::step::options::data_description::province%]"
             },
             "description": "The holiday categories {categories} configured for {title} are no longer supported for {country} by the holidays library, so the calendar can't be set up.\n\nSelect the categories again.",
@@ -79,6 +88,9 @@
     },
     "unsupported_country": {
       "fix_flow": {
+        "abort": {
+          "already_configured": "[%key:component::holiday::config::abort::already_configured%]"
+        },
         "step": {
           "country": {
             "data": {
@@ -93,10 +105,16 @@
           "options": {
             "data": {
               "categories": "[%key:component::holiday::config::step::options::data::categories%]",
+              "hindu_show_estimated": "[%key:component::holiday::config::step::options::data::hindu_show_estimated%]",
+              "include_sundays": "[%key:component::holiday::config::step::options::data::include_sundays%]",
+              "islamic_show_estimated": "[%key:component::holiday::config::step::options::data::islamic_show_estimated%]",
               "province": "[%key:component::holiday::config::step::options::data::province%]"
             },
             "data_description": {
               "categories": "[%key:component::holiday::config::step::options::data_description::categories%]",
+              "hindu_show_estimated": "[%key:component::holiday::config::step::options::data_description::hindu_show_estimated%]",
+              "include_sundays": "[%key:component::holiday::config::step::options::data_description::include_sundays%]",
+              "islamic_show_estimated": "[%key:component::holiday::config::step::options::data_description::islamic_show_estimated%]",
               "province": "[%key:component::holiday::config::step::options::data_description::province%]"
             },
             "description": "Select the province and categories for {country}.",
@@ -108,14 +126,23 @@
     },
     "unsupported_province": {
       "fix_flow": {
+        "abort": {
+          "already_configured": "[%key:component::holiday::config::abort::already_configured%]"
+        },
         "step": {
           "options": {
             "data": {
               "categories": "[%key:component::holiday::config::step::options::data::categories%]",
+              "hindu_show_estimated": "[%key:component::holiday::config::step::options::data::hindu_show_estimated%]",
+              "include_sundays": "[%key:component::holiday::config::step::options::data::include_sundays%]",
+              "islamic_show_estimated": "[%key:component::holiday::config::step::options::data::islamic_show_estimated%]",
               "province": "[%key:component::holiday::config::step::options::data::province%]"
             },
             "data_description": {
               "categories": "[%key:component::holiday::config::step::options::data_description::categories%]",
+              "hindu_show_estimated": "[%key:component::holiday::config::step::options::data_description::hindu_show_estimated%]",
+              "include_sundays": "[%key:component::holiday::config::step::options::data_description::include_sundays%]",
+              "islamic_show_estimated": "[%key:component::holiday::config::step::options::data_description::islamic_show_estimated%]",
               "province": "[%key:component::holiday::config::step::options::data_description::province%]"
             },
             "description": "The province {province} configured for {title} is no longer supported for {country} by the holidays library, so the calendar can't be set up.\n\nSelect a supported province.",
