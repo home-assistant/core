@@ -179,6 +179,9 @@ LAKE6_TOU_TEXT_WEEKDAY_LIST_SEPARATOR: Final = ","
 # opposite direction of the usual depth of discharge definition, which is why
 # the entity is named "Backup SOC" rather than "Depth of Discharge".
 #
+# Ranges follow Local API V1.5.2. A value inside the range cannot tell a wider
+# limit apart, so the document is the only source.
+#
 # power_limit was removed in V1.5.1 and backup_charP in V1.5.2. Older firmware
 # still returns both, so they are ignored: not parsed, not exposed, never
 # written back.
