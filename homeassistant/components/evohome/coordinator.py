@@ -116,20 +116,13 @@ def _log_api_call_failure(logger: logging.Logger, err: ec2.ApiCallFailedError) -
     )
 
 
-def _log_bad_api_request(logger: logging.Logger, err: ec2.BadApiRequestError) -> None:
-    """Log (as debug) what the translated error of a rejected request leaves out."""
+def _log_bad_api_exchange(
+    logger: logging.Logger, err: ec2.BadApiRequestError | ec2.BadApiResponseError
+) -> None:
+    """Log (as debug) what the translated error of a bad request/response leaves out."""
     logger.debug(
-        "The request was rejected by the client: %s (reason=%s, details=%s)",
-        err,
-        err.reason,
-        err.details,
-    )
-
-
-def _log_bad_api_response(logger: logging.Logger, err: ec2.BadApiResponseError) -> None:
-    """Log (as debug) what the translated error of an invalid response leaves out."""
-    logger.debug(
-        "The response from the vendor's API is invalid: %s (reason=%s, details=%s)",
+        "%s: %s (reason=%s, details=%s)",
+        type(err).__name__,
         err,
         err.reason,
         err.details,
@@ -220,7 +213,7 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
             ) from err
 
         except ec2.BadApiResponseError as err:
-            _log_bad_api_response(self.logger, err)
+            _log_bad_api_exchange(self.logger, err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_response_invalid",
@@ -378,7 +371,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             ) from err
 
         except ec2.BadApiRequestError as err:  # e.g. InvalidSetModeError
-            _log_bad_api_request(self.logger, err)
+            _log_bad_api_exchange(self.logger, err)
             raise _bad_request_error(err) from err
 
         if request_refresh:  # wait a moment for system to quiesce before updating state
@@ -408,7 +401,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             ) from err
 
         except ec2.BadApiResponseError as err:
-            _log_bad_api_response(self.logger, err)
+            _log_bad_api_exchange(self.logger, err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_response_invalid",
