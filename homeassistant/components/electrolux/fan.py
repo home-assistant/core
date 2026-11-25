@@ -167,9 +167,11 @@ class AirPurifierFanEntity(ElectroluxBaseEntity[APAppliance], FanEntity):
                 percentage=percentage, low_high_range=self._speed_range
             )
         )
-        if fan_speed == 0:
+        if percentage == 0:
             await self.async_turn_off()
         else:
+            # clamp fan speed to the minimum supported value if it is below the range so appliance is only turned off if percentage is 0
+            fan_speed = max(fan_speed, self._speed_range[0])
             command = self._appliance_data.get_fan_speed_command(fan_speed)
             await self.coordinator.send_command(command)
 
