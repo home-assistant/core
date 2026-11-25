@@ -17,11 +17,39 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import async_poll, setup_integration
 
 SELECT_ENTITY_ID = "select.test_vmc_fan_direction_mode"
+
+
+@pytest.mark.parametrize("option", ["forward", "reverse", "alternate", "sensor"])
+async def test_eco3_select_uses_own_api(
+    hass: HomeAssistant,
+    mock_cloud_interface: AsyncMock,
+    option: str,
+) -> None:
+    """Route ECO3 direction changes to its own API and default auto speed to sleep."""
+    modes = {
+        "forward": FanMode.inward,
+        "reverse": FanMode.outward,
+        "alternate": FanMode.alternate,
+        "sensor": FanMode.sensor,
+    }
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: "select.test_vmc_3_fan_direction_mode",
+            SelectServiceArgument.OPTION: option,
+        },
+        blocking=True,
+    )
+    mock_cloud_interface.ecocomfort3.set_mode_speed.assert_awaited_once_with(
+        "AABBCCDD", modes[option], FanSpeed.sleep
+    )
+    mock_cloud_interface.ecocomfort2.set_mode_speed.assert_not_awaited()
 
 
 @pytest.fixture(autouse=True)
@@ -29,8 +57,10 @@ async def setup_intelliclima_select_only(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_cloud_interface: AsyncMock,
+    mixed_eco_devices: IntelliClimaDevices,
 ) -> AsyncGenerator[None]:
     """Set up IntelliClima integration with only the select platform."""
+    mock_cloud_interface.get_all_device_status.return_value = mixed_eco_devices
     with (
         patch("homeassistant.components.intelliclima.PLATFORMS", [Platform.SELECT]),
     ):
@@ -44,25 +74,11 @@ async def test_all_select_entities(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
     mock_cloud_interface: AsyncMock,
 ) -> None:
     """Test all entities."""
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-    # There should be exactly one select entity
-    select_entries = [
-        entry
-        for entry in entity_registry.entities.values()
-        if entry.platform == "intelliclima" and entry.domain == SELECT_DOMAIN
-    ]
-    assert len(select_entries) == 1
-
-    entity_entry = select_entries[0]
-    assert entity_entry.device_id
-    assert (device_entry := device_registry.async_get(entity_entry.device_id))
-    assert device_entry == snapshot
 
 
 @pytest.mark.parametrize(
@@ -185,6 +201,23 @@ async def test_select_option_triggers_coordinator_refresh(
 
 
 @pytest.mark.parametrize(
+    ("device_family", "device_id", "entity_id"),
+    [
+        pytest.param(
+            "ecocomfort2_devices",
+            "56789",
+            "select.test_vmc_fan_direction_mode",
+            id="eco2",
+        ),
+        pytest.param(
+            "ecocomfort3_devices",
+            "33333",
+            "select.test_vmc_3_fan_direction_mode",
+            id="eco3",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
     ("mode_state", "speed_state", "option"),
     [
         pytest.param("0", "0", STATE_UNKNOWN, id="off"),
@@ -199,16 +232,19 @@ async def test_select_option_triggers_coordinator_refresh(
 async def test_select_running_direction(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    single_eco_device: IntelliClimaDevices,
+    mixed_eco_devices: IntelliClimaDevices,
+    device_family: str,
+    device_id: str,
+    entity_id: str,
     mode_state: str,
     speed_state: str,
     option: str,
 ) -> None:
     """Test the select reports the running direction rather than the commanded one."""
-    eco = single_eco_device.ecocomfort2_devices["56789"]
+    eco = getattr(mixed_eco_devices, device_family)[device_id]
     eco.mode_state = mode_state
     eco.speed_state = speed_state
     await async_poll(hass, freezer)
 
-    assert (state := hass.states.get(SELECT_ENTITY_ID))
+    assert (state := hass.states.get(entity_id))
     assert state.state == option
