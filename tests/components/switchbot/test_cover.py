@@ -446,6 +446,10 @@ async def test_blindtilt_setup(
         state = hass.states.get(entity_id)
         assert state.state == CoverState.OPEN
         assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 40
+        assert state.attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] == 50
+        assert state.attributes[
+            CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS
+        ] == [0, 100]
 
 
 async def test_blindtilt_controlling(

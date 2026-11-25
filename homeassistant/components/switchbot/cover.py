@@ -193,6 +193,8 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         | CoverEntityFeature.STOP_TILT
         | CoverEntityFeature.SET_TILT_POSITION
     )
+    _attr_open_tilt_position = 50
+    _attr_closed_tilt_positions = [0, 100]
     _attr_name = None
     _attr_translation_key = "cover"
     CLOSED_UP_THRESHOLD = 80
