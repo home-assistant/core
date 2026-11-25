@@ -57,13 +57,6 @@ GATEWAY_SENSORS: Final[tuple[IntesisSensorEntityDescription, ...]] = (
         ),
     ),
     IntesisSensorEntityDescription(
-        key="error_code",
-        translation_key="error_code",
-        report_name="control",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_error_code,
-    ),
-    IntesisSensorEntityDescription(
         key="undervoltage_hours",
         translation_key="undervoltage_hours",
         report_name="status",
@@ -77,6 +70,13 @@ GATEWAY_SENSORS: Final[tuple[IntesisSensorEntityDescription, ...]] = (
 )
 
 UNIT_SENSORS: Final[tuple[IntesisSensorEntityDescription, ...]] = (
+    IntesisSensorEntityDescription(
+        key="error_code",
+        translation_key="error_code",
+        report_name="control",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_error_code,
+    ),
     IntesisSensorEntityDescription(
         key="outdoor_intake_temperature",
         translation_key="outdoor_intake_temperature",

@@ -57,20 +57,20 @@ async def test_undervoltage_time_is_disabled_by_default(
 async def test_initialising_gateway_reports_no_values(hass: HomeAssistant) -> None:
     """A gateway that just powered up says so and has no temperatures yet."""
     assert hass.states.get(PREFIX + "error").state == "initialising"
-    assert hass.states.get(PREFIX + "error_code").state == STATE_UNKNOWN
+    assert hass.states.get(UNIT_PREFIX + "error_code").state == STATE_UNKNOWN
     for key in ("outdoor_intake_temperature", "return_path_temperature"):
         assert hass.states.get(UNIT_PREFIX + key).state == STATE_UNKNOWN
     assert hass.states.get(UNIT_PREFIX + "operation_time").state == "1234"
 
 
-@pytest.mark.parametrize("registers", [{11: 5}])
+@pytest.mark.parametrize("registers", [{11: 7}])
 @pytest.mark.usefixtures("init_integration")
 async def test_unit_error_shows_the_remote_controller_code(
     hass: HomeAssistant,
 ) -> None:
     """An error of the air conditioner comes with the code its remote shows."""
     assert hass.states.get(PREFIX + "error").state == "unit_error"
-    assert hass.states.get(PREFIX + "error_code").state == "E5"
+    assert hass.states.get(UNIT_PREFIX + "error_code").state == "E7"
 
 
 @pytest.mark.parametrize("registers", [{11: 12345}])
@@ -80,7 +80,7 @@ async def test_unit_error_without_a_remote_controller_code_shows_its_number(
 ) -> None:
     """An error the library has no code for is still told apart by its number."""
     assert hass.states.get(PREFIX + "error").state == "unit_error"
-    assert hass.states.get(PREFIX + "error_code").state == "12345"
+    assert hass.states.get(UNIT_PREFIX + "error_code").state == "12345"
 
 
 @pytest.mark.parametrize("registers", [{9: 32768}])
@@ -121,9 +121,9 @@ async def test_unreachable_air_conditioner_is_reported_by_the_error_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(PREFIX + "error").state == "communication_error"
-    assert hass.states.get(PREFIX + "error_code").state == STATE_UNKNOWN
     assert hass.states.get(PREFIX + "undervoltage_time").state == "3"
     for key in (
+        "error_code",
         "operation_time",
         "outdoor_intake_temperature",
         "return_path_temperature",
