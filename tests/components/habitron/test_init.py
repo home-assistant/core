@@ -1,4 +1,4 @@
-"""Setup / unload / migration tests for the Habitron integration."""
+"""Setup and unload tests for the Habitron integration."""
 
 import asyncio
 from collections.abc import Generator
@@ -314,61 +314,6 @@ async def test_setup_entry_removes_stale_device(
     assert device_registry.async_get(stale.id) is None
 
 
-async def test_migrate_v1_entry_renames_the_host(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-    mock_coordinator_setup: None,
-    mock_coordinator_refresh: AsyncMock,
-) -> None:
-    """A v1 entry keeps working: the host key is renamed in place.
-
-    Entries created before this integration moved to core carry the
-    integration-specific ``habitron_host`` key; re-adding the hub by hand must
-    not be needed. The websocket token stays -- the custom integration reads it
-    from this same entry.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_NAME,
-        unique_id=MOCK_UDN,
-        version=1,
-        data={"habitron_host": MOCK_HOST, "websock_token": "rotated-token"},
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert (entry.version, entry.minor_version) == (2, 2)
-    assert entry.data == {CONF_HOST: MOCK_HOST, "websock_token": "rotated-token"}
-    assert entry.state is ConfigEntryState.LOADED
-
-
-async def test_migrate_v1_entry_without_the_old_key_is_a_no_op(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-    mock_coordinator_setup: None,
-    mock_coordinator_refresh: AsyncMock,
-) -> None:
-    """A v1 entry that already uses the shared key is only version-bumped."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_NAME,
-        unique_id=MOCK_UDN,
-        version=1,
-        data={CONF_HOST: MOCK_HOST},
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert (entry.version, entry.minor_version) == (2, 2)
-    assert entry.data == {CONF_HOST: MOCK_HOST}
-
-
 async def _connect_and_build(coordinator: HbtnCoordinator) -> None:
     """Build a hub reporting its MAC, as the real build would."""
     coordinator._client = AsyncMock()
@@ -415,7 +360,6 @@ async def test_setup_adopts_before_the_update_listener_exists(
         domain=DOMAIN,
         title=MOCK_NAME,
         unique_id="habitron_192.168.1.50",
-        version=2,
         data={CONF_HOST: MOCK_HOST},
     )
     entry.add_to_hass(hass)
@@ -448,8 +392,6 @@ async def test_concurrent_legacy_entries_of_one_hub_load_only_once(
             domain=DOMAIN,
             title=MOCK_NAME,
             unique_id=unique_id,
-            version=2,
-            minor_version=2,
             data={CONF_HOST: MOCK_HOST},
         )
         for unique_id in ("HBT-123456", "habitron_192.168.1.50")
@@ -506,38 +448,6 @@ async def test_cleanup_keeps_a_device_with_one_live_identifier(
     assert device_registry.async_get(stale.id) is None
 
 
-async def test_migrate_v2_entry_is_bumped_and_keeps_the_token(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-    mock_coordinator_setup: None,
-    mock_coordinator_refresh: AsyncMock,
-) -> None:
-    """A v2 entry from the custom integration is bumped, not stripped.
-
-    The bump is minor on purpose: raising the major version would make Home
-    Assistant refuse this entry if the user ever went back to the custom
-    integration, which numbers its entries 2. The websocket token is kept for
-    the same reason -- that integration reads it from this very entry, with a
-    plain subscript, so dropping it would break the fallback outright.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_NAME,
-        unique_id=MOCK_UID,
-        version=2,
-        data={CONF_HOST: MOCK_HOST, "websock_token": "rotated-token"},
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert (entry.version, entry.minor_version) == (2, 2)
-    assert entry.data == {CONF_HOST: MOCK_HOST, "websock_token": "rotated-token"}
-    assert entry.state is ConfigEntryState.LOADED
-
-
 @pytest.mark.usefixtures("setup_homeassistant", "mock_habitron_client", "mock_bus")
 async def test_rediscovery_after_migration_updates_the_live_entry(
     hass: HomeAssistant,
@@ -555,8 +465,6 @@ async def test_rediscovery_after_migration_updates_the_live_entry(
         domain=DOMAIN,
         title=MOCK_NAME,
         unique_id="HBT-123456",
-        version=2,
-        minor_version=2,
         data={CONF_HOST: MOCK_HOST},
     )
     entry.add_to_hass(hass)

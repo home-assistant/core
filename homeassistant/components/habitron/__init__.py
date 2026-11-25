@@ -1,7 +1,7 @@
 """The Habitron integration."""
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
@@ -11,16 +11,6 @@ from .coordinator import HabitronConfigEntry, HbtnCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> None:
-    """Migrate old entry data to the current version."""
-    data = {**entry.data}
-    if entry.version == 1 and "habitron_host" in data:
-        data[CONF_HOST] = data.pop("habitron_host")
-    data.pop("update_interval", None)
-    # Minor bump only, so the custom integration can still load the entry.
-    hass.config_entries.async_update_entry(entry, data=data, version=2, minor_version=2)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> None:

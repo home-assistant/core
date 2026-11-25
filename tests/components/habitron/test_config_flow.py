@@ -1815,8 +1815,6 @@ async def test_user_flow_retry_reload_dials_the_corrected_address(
         domain=DOMAIN,
         title=MOCK_NAME,
         unique_id=MOCK_UID,
-        version=ConfigFlow.VERSION,
-        minor_version=ConfigFlow.MINOR_VERSION,
         data={CONF_HOST: "192.168.1.99"},
     )
     entry.add_to_hass(hass)
