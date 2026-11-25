@@ -171,6 +171,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             type(self).async_handle_async_webrtc_offer
             != Camera.async_handle_async_webrtc_offer
         )
+        self._has_webrtc_provider_stream_source = (
+            type(self).async_webrtc_provider_stream_source
+            != Camera.async_webrtc_provider_stream_source
+        )
 
     @cached_property
     @override
@@ -270,6 +274,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         and StreamType.HLS.
         """
         return None
+
+    async def async_webrtc_provider_stream_source(self) -> str | None:
+        """Return the stream source for a WebRTC provider.
+
+        Defaults to the stream source. A camera with a native WebRTC
+        implementation handles offers itself and only gets a WebRTC provider
+        if it overrides this method, for example to fetch still images through
+        the provider from a source that the stream component can't play. Its
+        WebRTC sessions, candidates included, never go to the provider.
+        """
+        return await self.stream_source()
 
     async def async_handle_async_webrtc_offer(
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
@@ -437,9 +452,12 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         old_provider = self._webrtc_provider
         new_provider = None
 
-        # Skip all providers if the camera has a native WebRTC implementation
-        if not self._supports_native_async_webrtc:
-            # Camera doesn't have a native WebRTC implementation
+        # Skip all providers if the camera has a native WebRTC implementation,
+        # unless it has its own stream source for a provider
+        if (
+            not self._supports_native_async_webrtc
+            or self._has_webrtc_provider_stream_source
+        ):
             new_provider = await self._async_get_supported_webrtc_provider(
                 async_get_supported_provider
             )
@@ -497,7 +515,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
         """Handle a WebRTC candidate."""
-        if self._webrtc_provider:
+        # A camera with a native WebRTC implementation only uses its provider
+        # for the provider stream source, not for WebRTC sessions
+        if self._webrtc_provider and not self._supports_native_async_webrtc:
             await self._webrtc_provider.async_on_webrtc_candidate(session_id, candidate)
         else:
             raise HomeAssistantError("Cannot handle WebRTC candidate")
@@ -505,7 +525,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @callback
     def close_webrtc_session(self, session_id: str) -> None:
         """Close a WebRTC session."""
-        if self._webrtc_provider:
+        if self._webrtc_provider and not self._supports_native_async_webrtc:
             self._webrtc_provider.async_close_session(session_id)
 
     @final

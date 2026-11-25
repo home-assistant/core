@@ -1112,6 +1112,30 @@ async def test_stream_with_credentials_not_added_again(
     assert rest_client.streams.add.call_count == 3
 
 
+@pytest.mark.usefixtures("init_integration", "ws_client")
+async def test_provider_uses_webrtc_provider_stream_source(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test the provider adds the camera's WebRTC provider stream source."""
+    camera = init_test_integration
+    rest_client.streams.list.return_value = {}
+    with patch.object(
+        camera,
+        "async_webrtc_provider_stream_source",
+        return_value="rtsp://provider.source/stream",
+    ):
+        await camera.webrtc_provider.async_get_image(camera)
+    rest_client.streams.add.assert_called_once_with(
+        get_camera_identifier(camera),
+        [
+            "rtsp://provider.source/stream",
+            f"ffmpeg:{get_camera_identifier(camera)}#audio=opus#query=log_level=debug",
+        ],
+    )
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_async_get_image_go2rtc_error(
     hass: HomeAssistant,
