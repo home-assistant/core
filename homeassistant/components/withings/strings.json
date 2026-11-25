@@ -450,7 +450,7 @@
       "message": "Authentication with Withings failed. Please reauthenticate."
     },
     "invalid_weight_unit": {
-      "message": "The weight sensor's statistics have an unsupported unit. Resolve the unit issue in Developer tools > Statistics before importing weight history."
+      "message": "The weight sensor's statistics have an unsupported unit. Resolve the unit issue in Settings > Tools > Statistics before importing weight history."
     },
     "recorder_required": {
       "message": "The Recorder integration must be enabled to import weight statistics."
