@@ -351,18 +351,27 @@ def mock_webhooks_config_entry_with_message_thread() -> MockConfigEntry:
     return _mock_webhooks_config_entry(message_thread_id=987)
 
 
+def _mock_chat_subentry(message_thread_id: int | None = None) -> ConfigSubentryData:
+    """Return an allowed chat subentry of the default chat."""
+    data = {CONF_CHAT_ID: 12345678}
+    unique_id = "12345678"
+    title = "mock chat"
+    if message_thread_id is not None:
+        data[CONF_MESSAGE_THREAD_ID] = message_thread_id
+        unique_id = f"12345678:{message_thread_id}"
+        title = f"mock chat #{message_thread_id}"
+    return ConfigSubentryData(
+        unique_id=unique_id,
+        data=data,
+        subentry_type=SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
+        title=title,
+    )
+
+
 def _mock_webhooks_config_entry(
     message_thread_id: int | None = None,
 ) -> MockConfigEntry:
     """Return a mocked webhooks config entry."""
-    subentry_data = {CONF_CHAT_ID: 12345678}
-    unique_id = "12345678"
-    title = "mock chat"
-    if message_thread_id is not None:
-        subentry_data[CONF_MESSAGE_THREAD_ID] = message_thread_id
-        unique_id = f"12345678:{message_thread_id}"
-        title = f"mock chat #{message_thread_id}"
-
     return MockConfigEntry(
         unique_id="mock api key",
         domain=DOMAIN,
@@ -374,14 +383,7 @@ def _mock_webhooks_config_entry(
             CONF_TRUSTED_NETWORKS: ["127.0.0.1"],
         },
         options={ATTR_PARSER: TelegramBotParseMode.MARKDOWN},
-        subentries_data=[
-            ConfigSubentryData(
-                unique_id=unique_id,
-                data=subentry_data,
-                subentry_type=SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
-                title=title,
-            )
-        ],
+        subentries_data=[_mock_chat_subentry(message_thread_id)],
         minor_version=2,
     )
 
@@ -413,6 +415,34 @@ async def webhook_bot_with_message_thread(
     await hass.config_entries.async_setup(
         mock_webhooks_config_entry_with_message_thread.entry_id
     )
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def broadcast_bot_with_message_threads(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Set up a broadcast bot with one subentry per requested message thread.
+
+    `request.param` holds the message thread IDs of the subentries of the
+    default chat, `None` for a subentry without a message thread.
+    """
+    mock_config_entry = MockConfigEntry(
+        unique_id="mock api key",
+        domain=DOMAIN,
+        data=mock_broadcast_config_entry.data,
+        options=mock_broadcast_config_entry.options,
+        subentries_data=[
+            _mock_chat_subentry(message_thread_id)
+            for message_thread_id in request.param
+        ],
+        minor_version=mock_broadcast_config_entry.minor_version,
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
 

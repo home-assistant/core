@@ -2124,6 +2124,110 @@ async def test_send_message_to_notify_entity_with_message_thread(
         )
 
 
+@pytest.mark.parametrize(
+    (
+        "broadcast_bot_with_message_threads",
+        "service_input",
+        "expected_entity_id",
+        "expected_thread_id",
+    ),
+    [
+        pytest.param(
+            (987, None, 555),
+            {},
+            "notify.mock_chat",
+            None,
+            id="no thread requested takes the chat subentry",
+        ),
+        pytest.param(
+            (987, None, 555),
+            {TelegramBotServiceArgument.MESSAGE_THREAD_ID: 555},
+            "notify.mock_chat_555",
+            555,
+            id="thread takes the matching thread subentry",
+        ),
+        pytest.param(
+            (987, None, 555),
+            {TelegramBotServiceArgument.MESSAGE_THREAD_ID: 42},
+            "notify.mock_chat",
+            42,
+            id="unknown thread takes the chat subentry",
+        ),
+        pytest.param(
+            (987, 555),
+            {},
+            "notify.mock_chat_987",
+            987,
+            id="no thread requested takes the first thread subentry",
+        ),
+        pytest.param(
+            (987, 555),
+            {TelegramBotServiceArgument.MESSAGE_THREAD_ID: 555},
+            "notify.mock_chat_555",
+            555,
+            id="thread takes the matching thread-only subentry",
+        ),
+        pytest.param(
+            (987, 555),
+            {TelegramBotServiceArgument.MESSAGE_THREAD_ID: 42},
+            "notify.mock_chat_987",
+            42,
+            id="unknown thread takes the first thread subentry",
+        ),
+    ],
+    indirect=["broadcast_bot_with_message_threads"],
+)
+async def test_send_message_to_chat_with_message_threads(
+    hass: HomeAssistant,
+    broadcast_bot_with_message_threads: None,
+    service_input: dict[str, Any],
+    expected_entity_id: str,
+    expected_thread_id: int | None,
+) -> None:
+    """Test send message to a chat with message thread subentries."""
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.send_message",
+        AsyncMock(
+            return_value=Message(
+                message_id=12345,
+                date=dt_util.utcnow(),
+                chat=Chat(id=12345678, type=ChatType.SUPERGROUP),
+            )
+        ),
+    ) as mock_send_message:
+        response = await hass.services.async_call(
+            DOMAIN,
+            TelegramBotService.SEND_MESSAGE,
+            {
+                TelegramBotServiceArgument.CHAT_ID: 12345678,
+                TelegramBotServiceArgument.MESSAGE: "test_message",
+                **service_input,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    mock_send_message.assert_called_once_with(
+        12345678,
+        "test_message",
+        parse_mode=ParseMode.MARKDOWN,
+        disable_web_page_preview=None,
+        disable_notification=False,
+        reply_to_message_id=None,
+        reply_markup=None,
+        message_thread_id=expected_thread_id,
+    )
+    assert response == {
+        TelegramBotServiceResponse.CHATS: [
+            {
+                TelegramBotServiceResponse.CHAT_ID: 12345678,
+                TelegramBotServiceResponse.MESSAGE_ID: 12345,
+                TelegramBotServiceResponse.ENTITY_ID: expected_entity_id,
+            }
+        ]
+    }
+
+
 async def test_notify_entity_not_found(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,

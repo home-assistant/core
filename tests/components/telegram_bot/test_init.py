@@ -124,7 +124,9 @@ async def test_migrate_notify_entity_unique_id(
 
 
 def _setup_migration_entry(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    bot_ids: tuple[str, ...] = ("123456",),
 ) -> tuple[MockConfigEntry, str]:
     """Return an added minor version 3 config entry and its subentry ID."""
     mock_config_entry = MockConfigEntry(
@@ -148,21 +150,32 @@ def _setup_migration_entry(
     )
     mock_config_entry.add_to_hass(hass)
     # The v1.4 migration needs the shared bot device to derive the bot ID
-    device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "123456")},
-    )
+    for bot_id in bot_ids:
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={(DOMAIN, bot_id)},
+        )
     return mock_config_entry, next(iter(mock_config_entry.subentries))
 
 
+@pytest.mark.parametrize(
+    "bot_ids",
+    [
+        pytest.param(("123456",), id="current bot device"),
+        pytest.param(("999999", "123456"), id="previous bot device first"),
+    ],
+)
 async def test_migrate_entry_to_subentry_device_identifiers(
     hass: HomeAssistant,
     mock_external_calls: None,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    bot_ids: tuple[str, ...],
 ) -> None:
     """Test 1.3 to 1.4 migration re-keys the per-chat device in place."""
-    mock_config_entry, subentry_id = _setup_migration_entry(hass, device_registry)
+    mock_config_entry, subentry_id = _setup_migration_entry(
+        hass, device_registry, bot_ids
+    )
     bot_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "123456"), mock_config_entry.entry_id
     )
