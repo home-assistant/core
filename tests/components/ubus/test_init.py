@@ -12,25 +12,55 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from homeassistant.components.ubus.const import DOMAIN
 from homeassistant.components.ubus.device_tracker import UbusScannerEntity
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MAC_LAPTOP, MAC_PHONE
+from .conftest import MAC_LAPTOP, MAC_PHONE, MOCK_CONFIG, MOCK_HOST
 
 
 @pytest.mark.parametrize(
-    ("method", "behavior"),
+    ("method", "behavior", "dhcp_software"),
     [
-        pytest.param("connect", {"side_effect": TypeError}, id="unreachable"),
-        pytest.param("connect", {"side_effect": PermissionError}, id="access_denied"),
         pytest.param(
-            "connect", {"side_effect": None, "return_value": None}, id="no_session"
+            "connect", {"side_effect": TypeError}, "dnsmasq", id="unreachable"
+        ),
+        pytest.param(
+            "connect", {"side_effect": PermissionError}, "dnsmasq", id="access_denied"
+        ),
+        pytest.param(
+            "connect",
+            {"side_effect": None, "return_value": None},
+            "dnsmasq",
+            id="no_session",
         ),
         pytest.param(
             "get_hostapd_clients",
             {"side_effect": PermissionError},
+            "dnsmasq",
             id="session_stays_denied",
+        ),
+        pytest.param(
+            "get_hostapd", {"return_value": {}}, "dnsmasq", id="no_hostapd_data"
+        ),
+        pytest.param(
+            "get_hostapd_clients",
+            {"side_effect": ConnectionError},
+            "dnsmasq",
+            id="client_query_error",
+        ),
+        pytest.param(
+            "file_read",
+            {"side_effect": ConnectionError},
+            "dnsmasq",
+            id="dnsmasq_lease_error",
+        ),
+        pytest.param(
+            "get_dhcp_method",
+            {"side_effect": ConnectionError},
+            "odhcpd",
+            id="odhcpd_lease_error",
         ),
     ],
 )
@@ -51,6 +81,57 @@ async def test_setup_retry(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    ("ssl", "verify_ssl"),
+    [
+        pytest.param(False, False, id="http"),
+        pytest.param(True, False, id="https"),
+        pytest.param(True, True, id="https_verified"),
+    ],
+)
+async def test_ubus_client_construction(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    ssl: bool,
+    verify_ssl: bool,
+) -> None:
+    """Test the ubus client uses the configured scheme and verification."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**MOCK_CONFIG, CONF_SSL: ssl, CONF_VERIFY_SSL: verify_ssl},
+    )
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_ubus.assert_called_once_with(
+        f"{'https' if ssl else 'http'}://{MOCK_HOST}/ubus",
+        "root",
+        "password",
+        verify=verify_ssl,
+    )
+
+
+async def test_ubus_client_defaults_without_ssl_options(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an entry without the SSL options defaults to HTTP and verification."""
+    data = {**MOCK_CONFIG}
+    del data[CONF_SSL]
+    del data[CONF_VERIFY_SSL]
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, data=data)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_ubus.assert_called_once_with(
+        f"http://{MOCK_HOST}/ubus", "root", "password", verify=True
+    )
+
+
 async def test_session_refreshed_after_permission_error(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
@@ -66,6 +147,7 @@ async def test_session_refreshed_after_permission_error(
                 MAC_LAPTOP: {"authorized": True},
             }
         },
+        {"clients": {}},
     ]
 
     mock_config_entry.add_to_hass(hass)
@@ -128,8 +210,10 @@ async def test_remove_config_entry_device(
     assert device_registry.async_get(device_entry.id)
 
     clients = mock_ubus.return_value.get_hostapd_clients
-    connected = clients.return_value
-    clients.return_value = {"clients": {MAC_LAPTOP: {"authorized": True}}}
+    connected = clients.side_effect
+    clients.side_effect = lambda interface: {
+        "clients": {MAC_LAPTOP: {"authorized": True}}
+    }
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -140,7 +224,7 @@ async def test_remove_config_entry_device(
     assert not entity_registry.async_get_entity_id("device_tracker", DOMAIN, MAC_PHONE)
 
     # A removed client is tracked again when it reconnects.
-    clients.return_value = connected
+    clients.side_effect = connected
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)

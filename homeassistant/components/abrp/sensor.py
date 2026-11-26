@@ -15,7 +15,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from aioabrp import ChargingState, Metric, MetricValue, Telemetry
+from aioabrp import ChargingState, DrivingState, Metric, MetricValue, Telemetry
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,6 +25,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfEnergyDistance,
@@ -50,6 +51,13 @@ CHARGING_STATE_OPTIONS: dict[ChargingState, str] = {
     ChargingState.PLUGGED_IN: "plugged_in",
 }
 
+DRIVING_STATE_OPTIONS: dict[DrivingState, str] = {
+    DrivingState.PARK: "park",
+    DrivingState.REVERSE: "reverse",
+    DrivingState.NEUTRAL: "neutral",
+    DrivingState.DRIVE: "drive",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class AbrpTelemetrySensorEntityDescription(SensorEntityDescription):
@@ -70,11 +78,11 @@ def _numeric(metric_value: MetricValue[float] | None) -> float | None:
     return metric_value.value if metric_value is not None else None
 
 
-def _charging_state(metric_value: MetricValue[ChargingState] | None) -> str | None:
-    """Map the library ``ChargingState`` to this integration's option string."""
-    if metric_value is None:
-        return None
-    return CHARGING_STATE_OPTIONS.get(metric_value.value)
+def _option[T](
+    options: dict[T, str], metric_value: MetricValue[T] | None
+) -> str | None:
+    """Map a library enum reading to this integration's option string."""
+    return options.get(metric_value.value) if metric_value is not None else None
 
 
 SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
@@ -98,11 +106,29 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="voltage",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         metric=Metric.VOLTAGE,
         value_fn=lambda t: _numeric(t.voltage),
+    ),
+    AbrpTelemetrySensorEntityDescription(
+        key="current",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        metric=Metric.CURRENT,
+        value_fn=lambda t: _numeric(t.current),
+    ),
+    AbrpTelemetrySensorEntityDescription(
+        key="hvac_power",
+        translation_key="hvac_power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        metric=Metric.HVAC_POWER,
+        value_fn=lambda t: _numeric(t.hvac_power),
     ),
     AbrpTelemetrySensorEntityDescription(
         key="soe",
@@ -128,6 +154,7 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="calibrated_ref_cons",
+        entity_registry_enabled_default=False,
         translation_key="calibrated_ref_cons",
         device_class=SensorDeviceClass.ENERGY_DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -153,6 +180,7 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="soh",
+        entity_registry_enabled_default=False,
         translation_key="soh",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -183,12 +211,62 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
         value_fn=lambda t: _numeric(t.battery_temperature),
     ),
     AbrpTelemetrySensorEntityDescription(
+        key="external_temperature",
+        translation_key="external_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        metric=Metric.EXTERNAL_TEMPERATURE,
+        value_fn=lambda t: _numeric(t.external_temperature),
+    ),
+    AbrpTelemetrySensorEntityDescription(
+        key="cabin_temperature",
+        translation_key="cabin_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        metric=Metric.CABIN_TEMPERATURE,
+        value_fn=lambda t: _numeric(t.cabin_temperature),
+    ),
+    AbrpTelemetrySensorEntityDescription(
+        key="battery_temperature_min",
+        translation_key="battery_temperature_min",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+        metric=Metric.BATTERY_TEMPERATURE_MIN,
+        value_fn=lambda t: _numeric(t.battery_temperature_min),
+    ),
+    AbrpTelemetrySensorEntityDescription(
+        key="battery_temperature_max",
+        translation_key="battery_temperature_max",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+        metric=Metric.BATTERY_TEMPERATURE_MAX,
+        value_fn=lambda t: _numeric(t.battery_temperature_max),
+    ),
+    AbrpTelemetrySensorEntityDescription(
         key="charging_state",
         translation_key="charging_state",
         device_class=SensorDeviceClass.ENUM,
         options=list(CHARGING_STATE_OPTIONS.values()),
         metric=Metric.CHARGING_STATE,
-        value_fn=lambda t: _charging_state(t.charging_state),
+        value_fn=lambda t: _option(CHARGING_STATE_OPTIONS, t.charging_state),
+    ),
+    AbrpTelemetrySensorEntityDescription(
+        key="driving_state",
+        translation_key="driving_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(DRIVING_STATE_OPTIONS.values()),
+        metric=Metric.DRIVING_STATE,
+        value_fn=lambda t: _option(DRIVING_STATE_OPTIONS, t.driving_state),
     ),
 )
 
@@ -207,8 +285,12 @@ async def async_setup_entry(
     @callback
     def _add_new_sensors() -> None:
         """Create a sensor per ``(vehicle, metric)`` pair that now carries a value."""
+        if garage := runtime.garage_coordinator.data:
+            # A vehicle that left took its entities along with its device.
+            current = {raw.vehicle_id for raw in garage}
+            added.difference_update([key for key in added if key[0] not in current])
         entities: list[SensorEntity] = []
-        for raw, _ in runtime.garage_coordinator.data:
+        for raw in runtime.garage_coordinator.data:
             vehicle_id = raw.vehicle_id
             tlm = telemetry_coordinator.data.get(vehicle_id)
             if tlm is None:
@@ -227,11 +309,14 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     entry.async_on_unload(telemetry_coordinator.async_add_listener(_add_new_sensors))
+    entry.async_on_unload(
+        runtime.garage_coordinator.async_add_listener(_add_new_sensors)
+    )
     _add_new_sensors()
 
 
 class AbrpTelemetrySensor(AbrpVehicleEntity, SensorEntity):
-    """One telemetry sensor (soc / power / voltage / charging_state) per vehicle."""
+    """One telemetry sensor per vehicle."""
 
     entity_description: AbrpTelemetrySensorEntityDescription
 

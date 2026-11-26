@@ -36,8 +36,14 @@
   },
   "entity": {
     "binary_sensor": {
+      "arrear_outage": {
+        "name": "Arrear outage"
+      },
       "bag_full": {
         "name": "Bag full"
+      },
+      "battery_alarm": {
+        "name": "Battery alarm"
       },
       "carbon_dioxide": {
         "name": "Carbon dioxide"
@@ -48,8 +54,14 @@
       "coil_freeze": {
         "name": "Coil freeze/defrost"
       },
+      "cover_alarm": {
+        "name": "Cover alarm"
+      },
       "cover_off": {
         "name": "Cover off"
+      },
+      "current_unbalance": {
+        "name": "Current imbalance"
       },
       "defrost": {
         "name": "Defrost"
@@ -60,17 +72,41 @@
       "fall": {
         "name": "Fall"
       },
+      "feed_blocked": {
+        "name": "Feed blocked"
+      },
       "feeding": {
         "name": "Feeding"
       },
       "filter_cleaning": {
         "name": "Filter cleaning"
       },
+      "fire": {
+        "name": "Fire"
+      },
+      "food_stuck": {
+        "name": "Food stuck"
+      },
       "formaldehyde": {
         "name": "Formaldehyde"
       },
+      "high_power": {
+        "name": "High power"
+      },
       "high_temp": {
         "name": "High temperature"
+      },
+      "high_temperature_early_warning": {
+        "name": "High temperature early warning"
+      },
+      "leakage_current_alarm": {
+        "name": "Leakage current alarm"
+      },
+      "leakage_current_early_warning": {
+        "name": "Leakage current early warning"
+      },
+      "low_credit": {
+        "name": "Low credit"
       },
       "low_humidity": {
         "name": "Low humidity"
@@ -78,17 +114,83 @@
       "low_temp": {
         "name": "Low temperature"
       },
+      "magnetic_interference": {
+        "name": "Magnetic interference"
+      },
+      "meter_hardware_alarm": {
+        "name": "Meter hardware alarm"
+      },
       "methane": {
         "name": "Methane"
       },
       "motor_fault": {
         "name": "Motor fault"
       },
+      "no_credit": {
+        "name": "No credit"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "overcurrent_early_warning": {
+        "name": "Overcurrent early warning"
+      },
+      "overload": {
+        "name": "Overload"
+      },
+      "overpower": {
+        "name": "Overpower"
+      },
+      "overpower_early_warning": {
+        "name": "Overpower early warning"
+      },
+      "overvoltage": {
+        "name": "Overvoltage"
+      },
+      "overvoltage_early_warning": {
+        "name": "Overvoltage early warning"
+      },
+      "phase_a_overpower": {
+        "name": "Phase A overpower"
+      },
+      "phase_a_underpower": {
+        "name": "Phase A underpower"
+      },
+      "phase_b_overpower": {
+        "name": "Phase B overpower"
+      },
+      "phase_b_underpower": {
+        "name": "Phase B underpower"
+      },
+      "phase_c_overpower": {
+        "name": "Phase C overpower"
+      },
+      "phase_c_underpower": {
+        "name": "Phase C underpower"
+      },
+      "phase_loss": {
+        "name": "Phase loss"
+      },
       "pm25": {
         "name": "PM2.5"
       },
+      "power_factor_abnormal": {
+        "name": "Power factor abnormal"
+      },
+      "power_outage": {
+        "name": "Power outage"
+      },
       "pressure": {
         "name": "Pressure"
+      },
+      "self_test": {
+        "name": "Self-test"
+      },
+      "short_circuit": {
+        "name": "Short circuit"
+      },
+      "surge": {
+        "name": "Surge"
       },
       "tankfull": {
         "name": "Tank full"
@@ -96,8 +198,26 @@
       "temp_error": {
         "name": "Temperature error"
       },
+      "temperature_difference": {
+        "name": "Temperature difference fault"
+      },
+      "terminal_alarm": {
+        "name": "Terminal alarm"
+      },
       "tilt": {
         "name": "Tilt"
+      },
+      "total_overpower": {
+        "name": "Total overpower"
+      },
+      "total_underpower": {
+        "name": "Total underpower"
+      },
+      "undervoltage": {
+        "name": "Undervoltage"
+      },
+      "undervoltage_early_warning": {
+        "name": "Undervoltage early warning"
       },
       "valve": {
         "name": "Valve"
@@ -228,6 +348,9 @@
       },
       "heat_preservation_time": {
         "name": "Heat preservation time"
+      },
+      "height": {
+        "name": "Height"
       },
       "indexed_cook_temperature": {
         "name": "Cooking temperature {index}"
@@ -552,6 +675,17 @@
           "smart": "Smart"
         }
       },
+      "power_on_behavior": {
+        "name": "Power-on behavior",
+        "state": {
+          "last": "Previous state",
+          "memory": "[%key:component::tuya::entity::select::power_on_behavior::state::last%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "power_off": "[%key:common::state::off%]",
+          "power_on": "[%key:common::state::on%]"
+        }
+      },
       "pump_mode": {
         "name": "Mode"
       },
@@ -570,17 +704,6 @@
         "state": {
           "1": "Record events only",
           "2": "Continuous recording"
-        }
-      },
-      "relay_status": {
-        "name": "Power-on behavior",
-        "state": {
-          "last": "Previous state",
-          "memory": "[%key:component::tuya::entity::select::relay_status::state::last%]",
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]",
-          "power_off": "[%key:common::state::off%]",
-          "power_on": "[%key:common::state::on%]"
         }
       },
       "siren_mode": {
@@ -790,6 +913,14 @@
       "flow_temperature": {
         "name": "Flow temperature"
       },
+      "food_level": {
+        "name": "Food level",
+        "state": {
+          "full": "Full",
+          "lack": "Empty",
+          "less": "Low"
+        }
+      },
       "formaldehyde": {
         "name": "[%key:component::tuya::entity::binary_sensor::formaldehyde::name%]"
       },
@@ -817,6 +948,9 @@
       "indexed_temperature_external": {
         "name": "Probe temperature channel {index}"
       },
+      "inlet_temperature": {
+        "name": "Inlet temperature"
+      },
       "inverter_output_power": {
         "name": "Inverter output power"
       },
@@ -836,6 +970,9 @@
       },
       "last_watering_time": {
         "name": "Last watering time"
+      },
+      "leakage_current": {
+        "name": "Leakage current"
       },
       "lifetime_battery_charge_energy": {
         "name": "Lifetime battery charge energy"
@@ -890,6 +1027,9 @@
           "standby": "[%key:common::state::standby%]",
           "work": "Working"
         }
+      },
+      "outlet_temperature": {
+        "name": "Outlet temperature"
       },
       "outside_temperature": {
         "name": "Outside temperature"
@@ -977,6 +1117,9 @@
       },
       "pv_channel_power": {
         "name": "PV channel {index} power"
+      },
+      "reactive_power": {
+        "name": "[%key:component::sensor::entity_component::reactive_power::name%]"
       },
       "remaining_time": {
         "name": "Remaining time"
@@ -1291,8 +1434,23 @@
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
     },
+    "cannot_connect": {
+      "message": "Unable to connect to the Tuya cloud."
+    },
+    "command_not_accepted": {
+      "message": "The Tuya cloud does not accept this command or value for this device (error {code})."
+    },
+    "command_rate_limited": {
+      "message": "The Tuya cloud is limiting requests, try again later."
+    },
     "command_rejected": {
       "message": "The Tuya cloud rejected the command."
+    },
+    "command_rejected_with_reason": {
+      "message": "The Tuya cloud rejected the command (error {code})."
+    },
+    "command_sign_invalid": {
+      "message": "The Tuya cloud rejected the command because the request signature is invalid."
     },
     "device_not_found": {
       "message": "Feeder with ID {device_id} could not be found."

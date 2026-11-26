@@ -11,22 +11,26 @@
       'entry_id': '1',
       'minor_version': 2,
       'options': dict({
-        'add_holidays': list([
-          '2022-12-01',
-          '2022-12-05,2022-12-15',
-        ]),
         'country': 'DE',
+        'country_settings': dict({
+          'language': 'de',
+          'province': 'BW',
+        }),
+        'custom_holidays': dict({
+          'add_holidays': list([
+            '2022-12-01',
+            '2022-12-05,2022-12-15',
+          ]),
+          'remove_holidays': list([
+            '2022-12-04',
+            '2022-12-24,2022-12-26',
+          ]),
+        }),
         'days_offset': 0,
         'excludes': list([
           'sat',
           'sun',
           'holiday',
-        ]),
-        'language': 'de',
-        'province': 'BW',
-        'remove_holidays': list([
-          '2022-12-04',
-          '2022-12-24,2022-12-26',
         ]),
         'workdays': list([
           'mon',
@@ -43,7 +47,7 @@
       ]),
       'title': 'Workday Sensor DE BW',
       'unique_id': None,
-      'version': 1,
+      'version': 2,
     }),
   })
 # ---

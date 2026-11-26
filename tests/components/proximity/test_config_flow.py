@@ -67,7 +67,8 @@ async def test_user_flow(
             user_input=user_input,
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] == expected_result
+        assert result["data"] == {}
+        assert result["options"] == expected_result
 
         zone = hass.states.get(user_input[CONF_ZONE])
         assert result["title"] == zone.name
@@ -108,7 +109,8 @@ async def test_options_flow(
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         title="home",
-        data={
+        version=2,
+        options={
             CONF_ZONE: "zone.home",
             CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
             CONF_IGNORED_ZONES: ["zone.work"],
@@ -134,8 +136,8 @@ async def test_options_flow(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config.data == {CONF_ZONE: "zone.home", **user_input}
-    assert mock_config.options == {}
+    assert mock_config.data == {}
+    assert mock_config.options == {CONF_ZONE: "zone.home", **user_input}
     assert mock_setup_entry.call_count == expected_setup_calls
 
 
@@ -150,7 +152,8 @@ async def test_abort_duplicated_entry(hass: HomeAssistant) -> None:
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         title="home",
-        data=DATA,
+        version=2,
+        options=DATA,
         unique_id=f"{DOMAIN}_home",
     )
     mock_config.add_to_hass(hass)
@@ -176,7 +179,8 @@ async def test_avoid_duplicated_title(hass: HomeAssistant) -> None:
     MockConfigEntry(
         domain=DOMAIN,
         title="home",
-        data={
+        version=2,
+        options={
             CONF_ZONE: "zone.home",
             CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
             CONF_IGNORED_ZONES: ["zone.work"],
@@ -188,7 +192,8 @@ async def test_avoid_duplicated_title(hass: HomeAssistant) -> None:
     MockConfigEntry(
         domain=DOMAIN,
         title="home 3",
-        data={
+        version=2,
+        options={
             CONF_ZONE: "zone.home",
             CONF_TRACKED_ENTITIES: ["device_tracker.test2"],
             CONF_IGNORED_ZONES: ["zone.work"],

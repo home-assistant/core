@@ -34,6 +34,8 @@
         'SysMode': 'cool',
         'SysOn': 'on',
         'SysType': 'iZone310',
+        'Tag1': '**REDACTED**',
+        'Tag2': '**REDACTED**',
         'Temp': '22.0',
       }),
       'zones': list([

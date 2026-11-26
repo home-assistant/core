@@ -1,4 +1,6 @@
 ---
+# PR-triggered runs have no fixed head branch, so the CTR-021 workflow_run branch filter cannot be satisfied.
+strict: false
 on:
   workflow_run:
     workflows: ["Check requirements (deterministic)"]
@@ -47,7 +49,7 @@ jobs:
     steps:
       - name: Download deterministic-results artifact
         id: download
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: check-requirements-deterministic
           path: /tmp/deterministic
@@ -58,33 +60,31 @@ jobs:
         run: |
           echo "skip=$(jq -r '.skip_aw' /tmp/deterministic/results.json)" >> "${GITHUB_OUTPUT}"
           echo "pr_number=$(jq -r '.pr_number' /tmp/deterministic/results.json)" >> "${GITHUB_OUTPUT}"
+  verify_comment:
+    needs: [prepare, safe_outputs]
+    if: always() && github.event.workflow_run.conclusion == 'success' && needs.prepare.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify the agent posted a review comment
+        env:
+          COMMENT_ID: ${{ needs.safe_outputs.outputs.comment_id }}
+        run: |
+          if [ -z "${COMMENT_ID}" ]; then
+            echo "::error::Agent did not emit an add_comment safe-output; no review comment was posted to the PR."
+            exit 1
+          fi
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.id }}
   cancel-in-progress: true
 steps:
   - name: Download deterministic-results artifact
     if: github.event.workflow_run.conclusion == 'success'
-    uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+    uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
     with:
       name: check-requirements-deterministic
       path: /tmp/gh-aw/deterministic
       run-id: ${{ github.event.workflow_run.id }}
       github-token: ${{ secrets.GITHUB_TOKEN }}
-post-steps:
-  - name: Verify agent produced an add_comment safe-output
-    if: always() && github.event.workflow_run.conclusion == 'success'
-    run: |
-      OUTPUT=/tmp/gh-aw/agent_output.json
-      if [ ! -f "${OUTPUT}" ]; then
-        echo "::error::Agent output file ${OUTPUT} is missing; the agent did not run to completion."
-        exit 1
-      fi
-      if ! grep -q '"add_comment"' "${OUTPUT}"; then
-        echo "::error::Agent did not emit an add_comment safe-output; no review comment was posted to the PR."
-        echo "Agent output:"
-        cat "${OUTPUT}"
-        exit 1
-      fi
 description: >
   Resolves the deterministic-stage artifact's NEEDS_AGENT checks for changed
   Python package requirements on PRs targeting the core repo, then posts the

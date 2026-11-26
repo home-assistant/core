@@ -30,8 +30,6 @@ set_system_mode:
         duration:
           enable_second: false
 
-refresh_system:
-
 set_zone_override:
   target:
     entity:

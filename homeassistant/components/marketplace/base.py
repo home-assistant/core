@@ -596,6 +596,8 @@ class MarketplaceManager:
                         gzip.open(compressed, "wb") as f_out,
                     ):
                         shutil.copyfileobj(f_in, f_out)
+                    # mkstemp creates the file readable by its owner only
+                    shutil.copymode(file_path, compressed)
                     os.replace(compressed, f"{file_path}.gz")
                 finally:
                     if os.path.exists(compressed):
@@ -820,7 +822,9 @@ class MarketplaceManager:
         if RepositoryFile.REPOSITORY_MANIFEST in probe.treefiles and (
             manifest := await probe.async_get_repository_manifest()
         ):
-            probe.repository_manifest = RepositoryManifest.from_dict(manifest)
+            probe.repository_manifest = RepositoryManifest.from_dict(
+                manifest, probe.data.full_name
+            )
 
         categories: list[RepositoryCategory] = []
         for category, repository_class in REPOSITORY_CLASSES.items():

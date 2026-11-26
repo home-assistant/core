@@ -9,19 +9,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritzbox.const import COLOR_MODE, COLOR_TEMP_MODE, DOMAIN
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_DEVICES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import CONF_DEVICES, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -137,8 +130,12 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_COLOR_TEMP_KELVIN: 3000},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.BRIGHTNESS: 100,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 3000,
+        },
         True,
     )
     assert device.set_state_on.call_count == 1
@@ -161,8 +158,12 @@ async def test_turn_on_color(hass: HomeAssistant, fritz: Mock) -> None:
     )
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_HS_COLOR: (100, 70)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.BRIGHTNESS: 100,
+            LightServiceArgument.HS_COLOR: (100, 70),
+        },
         True,
     )
     assert device.set_state_on.call_count == 1
@@ -191,8 +192,12 @@ async def test_turn_on_color_no_fullcolorsupport(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_HS_COLOR: (100, 70)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.BRIGHTNESS: 100,
+            LightServiceArgument.HS_COLOR: (100, 70),
+        },
         True,
     )
     assert device.set_state_on.call_count == 1
@@ -214,7 +219,7 @@ async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        LIGHT_DOMAIN, LightService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_state_off.call_count == 1
 

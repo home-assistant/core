@@ -33,6 +33,7 @@ MODELS_WITH_DELAYED_ON_TRANSITION = {
 }
 
 DATA_UPDATED = "yeelight_{}_data_updated"
+DEVICE_ANNOUNCED = "yeelight_{}_announced"
 
 DEFAULT_NAME = "Yeelight"
 DEFAULT_TRANSITION = 350
@@ -53,7 +54,6 @@ CONF_NIGHTLIGHT_SWITCH = "nightlight_switch"
 ATTR_COUNT = "count"
 ATTR_ACTION = "action"
 ATTR_TRANSITIONS = "transitions"
-ATTR_MODE_MUSIC = "music_mode"
 
 ACTION_RECOVER = "recover"
 ACTION_STAY = "stay"
@@ -71,6 +71,7 @@ SSDP_ST = "wifi_bulb"
 DISCOVERY_ATTEMPTS = 3
 DISCOVERY_SEARCH_INTERVAL = timedelta(seconds=2)
 DISCOVERY_TIMEOUT = 8
+ALIVE_RECONNECT_GRACE = 15
 
 
 YEELIGHT_RGB_TRANSITION = "RGBTransition"

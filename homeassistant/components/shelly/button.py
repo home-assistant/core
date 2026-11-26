@@ -1,6 +1,6 @@
 """Button for Shelly."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, override
 
@@ -46,6 +46,7 @@ from .utils import (
     get_ir_device_info,
     get_rpc_custom_name,
     get_rpc_key_id,
+    get_rpc_key_instances,
     get_virtual_component_ids,
 )
 
@@ -58,8 +59,7 @@ class ShellyButtonDescription[
 ](ButtonEntityDescription):
     """Class to describe a Button entity."""
 
-    press_action: str
-    params: dict[str, Any] | None = None
+    press_action: Callable[[_ShellyCoordinatorT], Awaitable[None]]
 
     supported: Callable[[_ShellyCoordinatorT], bool] = lambda _: True
 
@@ -74,35 +74,38 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         key="reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
-        press_action="trigger_reboot",
+        press_action=lambda coordinator: coordinator.device.trigger_reboot(),
         supported=lambda coordinator: coordinator.sleep_period == 0,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="self_test",
         translation_key="self_test",
         entity_category=EntityCategory.DIAGNOSTIC,
-        press_action="trigger_shelly_gas_self_test",
+        press_action=lambda coordinator: (
+            coordinator.device.trigger_shelly_gas_self_test()
+        ),
         supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="mute",
         translation_key="mute_alarm",
         entity_category=EntityCategory.CONFIG,
-        press_action="trigger_shelly_gas_mute",
+        press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_mute(),
         supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="unmute",
         translation_key="unmute_alarm",
         entity_category=EntityCategory.CONFIG,
-        press_action="trigger_shelly_gas_unmute",
+        press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_unmute(),
         supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription[ShellyRpcCoordinator](
         key="turn_on_screen",
         translation_key="turn_on_the_screen",
-        press_action="wall_display_set_screen",
-        params={"value": True},
+        press_action=lambda coordinator: coordinator.device.wall_display_set_screen(
+            value=True
+        ),
         supported=lambda coordinator: coordinator.model.startswith(
             SHELLY_WALL_DISPLAY_MODEL_PREFIX
         ),
@@ -110,8 +113,9 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ShellyButtonDescription[ShellyRpcCoordinator](
         key="turn_off_screen",
         translation_key="turn_off_the_screen",
-        press_action="wall_display_set_screen",
-        params={"value": False},
+        press_action=lambda coordinator: coordinator.device.wall_display_set_screen(
+            value=False
+        ),
         supported=lambda coordinator: coordinator.model.startswith(
             SHELLY_WALL_DISPLAY_MODEL_PREFIX
         ),
@@ -179,7 +183,10 @@ async def async_setup_entry(
             config_entry.entry_id,
             coordinator.mac,
             BUTTON_DOMAIN,
-            virtual_button_component_ids,
+            [
+                *virtual_button_component_ids,
+                *get_rpc_key_instances(coordinator.device.status, "ledstrip"),
+            ],
         )
 
 
@@ -259,12 +266,7 @@ class ShellyButton(ShellyBaseButton):
     @override
     async def _press_method(self) -> None:
         """Press method."""
-        method = getattr(self.coordinator.device, self.entity_description.press_action)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
-        await method(**(self.entity_description.params or {}))
+        await self.entity_description.press_action(self.coordinator)
 
 
 class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
@@ -350,6 +352,19 @@ class RpcIrCodeButton(ShellyRpcAttributeEntity, ButtonEntity):
         await self.coordinator.device.ircode_emit(self._id)
 
 
+class RpcLedStripNextEffectButton(ShellyRpcAttributeEntity, ButtonEntity):
+    """Defines a Shelly LED strip next effect button."""
+
+    entity_description: RpcButtonDescription
+    _id: int
+
+    @rpc_call
+    @override
+    async def async_press(self) -> None:
+        """Switch the LED strip to the next effect."""
+        await self.coordinator.device.ledstrip_next_effect(self._id)
+
+
 class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity):
     """Defines a Shelly RPC Smoke mute alarm button."""
 
@@ -376,38 +391,50 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
         return False
 
 
-RPC_BUTTONS = {
-    "button_generic": RpcButtonDescription(
-        key="button",
+RPC_BUTTONS = (
+    RpcButtonDescription(
+        key="button_generic",
+        components=("button",),
         role=ROLE_GENERIC,
     ),
-    "button_open": RpcButtonDescription(
-        key="button",
+    RpcButtonDescription(
+        key="button_open",
+        components=("button",),
         translation_key="open",
         entity_registry_enabled_default=False,
         role="open",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
-    "button_close": RpcButtonDescription(
-        key="button",
+    RpcButtonDescription(
+        key="button_close",
+        components=("button",),
         translation_key="close",
         entity_registry_enabled_default=False,
         role="close",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
-    "calibrate": RpcButtonDescription(
-        key="blutrv",
+    RpcButtonDescription(
+        key="calibrate",
+        components=("blutrv",),
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
         entity_class=ShellyBluTrvButton,
     ),
-    "smoke_mute": RpcButtonDescription(
-        key="smoke",
+    RpcButtonDescription(
+        key="smoke_mute",
+        components=("smoke",),
         sub_key="mute",
         translation_key="mute_alarm",
     ),
-    "ircode": RpcButtonDescription(
+    RpcButtonDescription(
         key="ircode",
+        components=("ircode",),
         entity_class=RpcIrCodeButton,
     ),
-}
+    RpcButtonDescription(
+        key="ledstrip_next_effect",
+        components=("ledstrip",),
+        translation_key="next_effect",
+        entity_class=RpcLedStripNextEffectButton,
+    ),
+)

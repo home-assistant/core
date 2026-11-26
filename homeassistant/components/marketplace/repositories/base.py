@@ -396,8 +396,15 @@ class RepositoryManifest:
         return attr.asdict(self)
 
     @staticmethod
-    def from_dict(manifest: dict[str, Any]) -> RepositoryManifest:
-        """Set attributes from dicts."""
+    def from_dict(
+        manifest: dict[str, Any], repository: str | None = None
+    ) -> RepositoryManifest:
+        """Set attributes from dicts.
+
+        The repository it was read from is named in the warning for a value
+        that is left out, the stored data of every repository in the catalog
+        is read and not only of the ones that are installed.
+        """
         manifest_data = RepositoryManifest()
         manifest_data.manifest = {}
         for key, value in manifest.items():
@@ -406,7 +413,17 @@ class RepositoryManifest:
             try:
                 value = validator(value)
             except probatio.Invalid:
-                LOGGER.warning("Ignoring %s in hacs.json, %r is not valid", key, value)
+                if repository is None:
+                    LOGGER.warning(
+                        "Ignoring %s in hacs.json, %r is not valid", key, value
+                    )
+                else:
+                    LOGGER.warning(
+                        "Ignoring %s in hacs.json of %s, %r is not valid",
+                        key,
+                        repository,
+                        value,
+                    )
                 continue
             if value != getattr(manifest_data, key):
                 manifest_data.manifest[key] = value
@@ -642,7 +659,9 @@ class Repository:
             tree_entry_filename(entry) for entry in self.tree
         ]:
             if manifest := await self.async_get_repository_manifest():
-                self.repository_manifest = RepositoryManifest.from_dict(manifest)
+                self.repository_manifest = RepositoryManifest.from_dict(
+                    manifest, self.data.full_name
+                )
         else:
             # Every install reads it, a repository without one can not be updated
             self.validate.errors.append(
@@ -717,7 +736,9 @@ class Repository:
             tree_entry_filename(entry) for entry in self.tree
         ]:
             if manifest := await self.async_get_repository_manifest():
-                self.repository_manifest = RepositoryManifest.from_dict(manifest)
+                self.repository_manifest = RepositoryManifest.from_dict(
+                    manifest, self.data.full_name
+                )
 
         self.additional_info = await self.async_get_readme_contents()
 
@@ -1959,7 +1980,7 @@ class Repository:
         """Get the hacs.json file of the repository."""
         if (result := await self.get_repository_manifest_raw(version=version)) is None:
             return None
-        return RepositoryManifest.from_dict(result)
+        return RepositoryManifest.from_dict(result, self.data.full_name)
 
     @return_none_on_exception
     async def get_repository_manifest_raw(
@@ -2196,7 +2217,17 @@ class Repository:
 
         self._check_minimum_version(manifest)
 
-        previous_manifest = self.repository_manifest
+        # The GitHub API path may find the repository unchanged and skip
+        # resolving it again, so it needs exactly what was there before
+        previous_state = (
+            self.repository_manifest,
+            self.ref,
+            self.content.path.remote,
+            self.content.single,
+            self.tree,
+            self.tree_ref,
+            self.treefiles,
+        )
         self.repository_manifest = manifest
         self.ref = version if commit else f"tags/{version}"
         self.content.path.remote = self.remote_path
@@ -2205,9 +2236,15 @@ class Repository:
         try:
             return await self._async_resolve_catalog_content(version, commit=commit)
         except MarketplaceError:
-            self.repository_manifest = previous_manifest
-            self.content.path.remote = self.remote_path
-            self.content.single = self.single_file
+            (
+                self.repository_manifest,
+                self.ref,
+                self.content.path.remote,
+                self.content.single,
+                self.tree,
+                self.tree_ref,
+                self.treefiles,
+            ) = previous_state
             raise
 
     async def _async_resolve_catalog_content(

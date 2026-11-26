@@ -11,5 +11,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["volvocarsapi"],
   "quality_scale": "platinum",
-  "requirements": ["volvocarsapi==0.5.0"]
+  "requirements": ["volvocarsapi==0.6.0"]
 }
