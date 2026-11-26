@@ -401,7 +401,7 @@ async def test_most_complete_configuration_is_suggested(
 ) -> None:
     """Test the configuration covering most of a channel is the one suggested."""
     await knx.setup_integration()
-    basic = await create_ui_entity(
+    await create_ui_entity(
         Platform.COVER,
         {"ga_up_down": {"write": "2/1/1"}, "ga_stop": {"write": "2/1/2"}},
         {"name": "Basic"},
@@ -410,13 +410,8 @@ async def test_most_complete_configuration_is_suggested(
     await knx.assert_read("1/0/4", (0,))
 
     by_id = _by_id(await get_entity_suggestions())
-    # both configurations suggest the channels of the other, each offered once
-    assert sorted(by_id) == [
-        "cfg_1.0.1_CH-1_cover",
-        "cfg_1.0.1_CH-2_cover",
-        "cfg_1.0.2_CH-1_cover",
-        "cfg_1.0.2_CH-2_cover",
-    ]
+    # the channels that already have a cover are not offered again
+    assert sorted(by_id) == ["cfg_1.0.1_CH-2_cover", "cfg_1.0.2_CH-1_cover"]
     # the first configuration could be applied too, but it would leave the
     # position of that channel unused
     for suggestion_id in ("cfg_1.0.1_CH-2_cover", "cfg_1.0.2_CH-1_cover"):
@@ -424,12 +419,50 @@ async def test_most_complete_configuration_is_suggested(
         assert suggestion["metadata"] == {"template_entity_id": full.entity_id}
         assert "ga_position_set" in suggestion["suggestions"]["cover"]["knx"]
         assert suggestion["existing_entity_ids"] == []
-    # the channels that already have an entity are reported as such
-    assert by_id["cfg_1.0.1_CH-1_cover"]["existing_entity_ids"] == [full.entity_id]
-    assert by_id["cfg_1.0.2_CH-2_cover"]["existing_entity_ids"] == [basic.entity_id]
+
+
+@pytest.mark.usefixtures("load_project")
+async def test_channel_configured_in_yaml_is_not_suggested(
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
+) -> None:
+    """Test a channel that has a YAML entity of the platform is not offered."""
+    await knx.setup_integration(
+        {
+            "cover": {
+                "name": "YAML cover",
+                "move_long_address": "1/1/1",
+                "stop_address": "1/1/2",
+            }
+        }
+    )
+    await create_ui_entity(Platform.COVER, COVER_CONFIG)
+    await knx.assert_read("1/0/4", (0,))
+
+    by_id = _by_id(await get_entity_suggestions())
+    assert sorted(by_id) == ["cfg_1.0.2_CH-1_cover", "cfg_1.0.2_CH-2_cover"]
+
+
+@pytest.mark.usefixtures("load_project")
+async def test_channel_used_by_another_platform_is_suggested(
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
+) -> None:
+    """Test a channel used by an entity of another platform is still offered."""
+    await knx.setup_integration()
+    await create_ui_entity(Platform.COVER, COVER_CONFIG, {"name": "Cover"})
+    other = await create_ui_entity(
+        Platform.SWITCH, {"ga_switch": {"write": "1/1/1"}}, {"name": "Other"}
+    )
+    await knx.assert_read("1/0/4", (0,))
+
+    by_id = _by_id(await get_entity_suggestions())
+    assert by_id["cfg_1.0.1_CH-2_cover"]["existing_entity_ids"] == [other.entity_id]
 
     unconfigured = _by_id(await get_entity_suggestions(include_configured=False))
-    assert sorted(unconfigured) == ["cfg_1.0.1_CH-2_cover", "cfg_1.0.2_CH-1_cover"]
+    assert "cfg_1.0.1_CH-2_cover" not in unconfigured
 
 
 async def test_no_project(
