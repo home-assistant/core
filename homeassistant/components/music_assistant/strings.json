@@ -348,11 +348,6 @@
       "network_name": {
         "name": "Network name"
       }
-    },
-    "time": {
-      "sleep_timer": {
-        "name": "Sleep timer"
-      }
     }
   },
   "exceptions": {
