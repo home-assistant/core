@@ -228,7 +228,7 @@ When `task.review` is false, post nothing, call `noop` with a one-line reason, a
     ```markdown
     <details><summary>Review state</summary>
 
-    completed_review: true
+    completed-review: true
     model: <model>
     </details>
     ```

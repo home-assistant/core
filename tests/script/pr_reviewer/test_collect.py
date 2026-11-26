@@ -37,7 +37,7 @@ MARKER = (
     " run: https://github.com/home-assistant/core/actions/runs/1 -->"
 )
 COMPLETE_BLOCK = (
-    "<details><summary>Review state</summary>\n\ncompleted_review: true\n</details>"
+    "<details><summary>Review state</summary>\n\ncompleted-review: true\n</details>"
 )
 OUR_REVIEW_BODY = f"A few suggestions.\n\n{COMPLETE_BLOCK}\n\n{MARKER}"
 # gh-aw posts the inline comments of a review cut short, with only its footer.

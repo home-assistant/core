@@ -29,7 +29,8 @@ BOT = "github-actions[bot]"
 # Part of the hidden marker gh-aw adds to this workflow's review bodies.
 MARKER = "workflow_id: pr-reviewer,"
 # Closes the body of a finished review: gh-aw also posts reviews cut short.
-COMPLETE_MARKER = "completed_review: true"
+# No `_`: gh-aw escapes it in the body the agent writes.
+COMPLETE_MARKER = "completed-review: true"
 MAX_CHANGED_LINES = 5000
 MAX_CHANGED_FILES = 100
 MAX_SNAPSHOT_DIFF_LINES = 4000
