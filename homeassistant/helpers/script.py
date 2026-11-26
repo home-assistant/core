@@ -20,11 +20,8 @@ from homeassistant.components import scene
 from homeassistant.components.device_automation import action as device_action
 from homeassistant.components.logger import LOGSEVERITY
 from homeassistant.const import (
-    ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
     CONF_ALIAS,
     CONF_CHOOSE,
     CONF_CONDITION,
@@ -1904,26 +1901,32 @@ class Script:
     def referenced_labels(self) -> set[str]:
         """Return a set of referenced labels."""
         referenced_labels: set[str] = set()
-        Script._find_referenced_target(ATTR_LABEL_ID, referenced_labels, self.sequence)
+        Script._find_referenced_target(
+            TargetKey.LABEL_ID, referenced_labels, self.sequence
+        )
         return referenced_labels
 
     @cached_property
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced fooors."""
         referenced_floors: set[str] = set()
-        Script._find_referenced_target(ATTR_FLOOR_ID, referenced_floors, self.sequence)
+        Script._find_referenced_target(
+            TargetKey.FLOOR_ID, referenced_floors, self.sequence
+        )
         return referenced_floors
 
     @cached_property
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         referenced_areas: set[str] = set()
-        Script._find_referenced_target(ATTR_AREA_ID, referenced_areas, self.sequence)
+        Script._find_referenced_target(
+            TargetKey.AREA_ID, referenced_areas, self.sequence
+        )
         return referenced_areas
 
     @staticmethod
     def _find_referenced_target(
-        target: Literal["area_id", "floor_id", "label_id"],
+        target: Literal[TargetKey.AREA_ID, TargetKey.FLOOR_ID, TargetKey.LABEL_ID],
         referenced: set[str],
         sequence: Sequence[dict[str, Any]],
     ) -> None:
