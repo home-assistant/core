@@ -31,6 +31,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 
 
 async def test_not_supporting_websocket(
@@ -323,6 +324,11 @@ async def test_websocket_not_reconnected_when_home_assistant_stops(
 
     hass.set_state(CoreState.stopping)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    # Let the debounced refresh after the close run.
+    freezer.tick(REQUEST_REFRESH_DEFAULT_COOLDOWN)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Polling took over once the WebSocket closed, without reconnecting it

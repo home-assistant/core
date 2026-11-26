@@ -4,10 +4,12 @@
 hue_activate_scene:
   fields:
     group_name:
+      required: true
       example: "Living Room"
       selector:
         text:
     scene_name:
+      required: true
       example: "Energize"
       selector:
         text:

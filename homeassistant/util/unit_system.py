@@ -323,6 +323,10 @@ METRIC_SYSTEM = UnitSystem(
         # Convert non-metric volume flow rates
         (
             "volume_flow_rate",
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_HOUR,
+        ): UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        (
+            "volume_flow_rate",
             UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
         ): UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
         (
