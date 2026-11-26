@@ -1,5 +1,7 @@
 """Init tests for the Telegram Bot integration."""
 
+from unittest.mock import PropertyMock, patch
+
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -451,4 +453,56 @@ async def test_remove_chat_subentry_removes_per_chat_device(
     )
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, "123456"), mock_broadcast_config_entry.entry_id
+    )
+
+
+async def test_setup_removes_devices_of_replaced_bot(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Devices and entities of a bot replaced by a reauth are removed."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.id",
+        new_callable=PropertyMock,
+        return_value=999999,
+    ):
+        await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+        await hass.async_block_till_done()
+    await hass.config_entries.async_unload(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The reauth replaced the bot, so the entry is set up as another bot
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Only the devices of the current bot remain
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_broadcast_config_entry.entry_id
+    )
+    assert {identifier for device in devices for identifier in device.identifiers} == {
+        (DOMAIN, "123456"),
+        *(
+            (DOMAIN, f"123456_{subentry_id}")
+            for subentry_id in mock_broadcast_config_entry.subentries
+        ),
+    }
+
+    # The notify entities keep their entity IDs
+    subentry_ids = list(mock_broadcast_config_entry.subentries)
+    assert entity_registry.async_get("notify.mock_chat_1").unique_id == (
+        f"123456_{subentry_ids[0]}"
+    )
+    assert entity_registry.async_get("notify.mock_chat_2").unique_id == (
+        f"123456_{subentry_ids[1]}"
+    )
+    assert entity_registry.async_get("notify.mock_chat_1_2") is None
+    assert (
+        entity_registry.async_get_entity_id(
+            "notify", DOMAIN, f"999999_{subentry_ids[0]}"
+        )
+        is None
     )

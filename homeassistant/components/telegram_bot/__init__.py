@@ -252,9 +252,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
 
     # Create the bot device before the platforms are set up, so the per-chat devices can
     # resolve it as their via_device no matter which platform is set up first
-    dr.async_get(hass).async_get_or_create_from_info(
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create_from_info(
         config_entry_id=entry.entry_id, device_info=bot_device_info(entry, bot.id)
     )
+
+    # A reauth with a token of another bot leaves the previous bot devices behind
+    entity_registry = er.async_get(hass)
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if any(
+            domain == DOMAIN
+            and (identifier == str(bot.id) or identifier.startswith(f"{bot.id}_"))
+            for domain, identifier in device.identifiers
+        ):
+            continue
+        for entity in er.async_entries_for_device(
+            entity_registry, device.id, include_disabled_entities=True
+        ):
+            entity_registry.async_remove(entity.entity_id)
+        device_registry.async_remove_device(device.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
