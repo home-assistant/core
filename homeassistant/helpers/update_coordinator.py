@@ -724,6 +724,13 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator that persists data and restores it on creation.
 
+    Only use this when the data cannot be fetched again on startup, e.g. for push
+    or webhook based integrations, or when fetching it is costly or wakes up a
+    device; otherwise fetch fresh data instead. Restored data is set before the
+    first refresh, and entities using it are available until a refresh fails;
+    async_config_entry_first_refresh still raises ConfigEntryNotReady if the
+    first refresh fails.
+
     Data is saved periodically and on shutdown, together with that of all other
     restore coordinators. It is serialized only when saved, so replace it rather
     than mutate it in place. It must be made of dicts with str keys, lists, str,
@@ -733,14 +740,17 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     version is only restored if _restore_data migrates it. Data no live
     coordinator has owned for a week is removed.
 
-    storage_key must be stable and unique within the config entry, or the domain
-    when there is no config entry; a second live coordinator with the same key
-    raises ValueError. Coordinators with a config entry release their key on
-    unload or failed setup, but domain scoped ones only release it in
-    async_shutdown, so shut the old one down before recreating it, e.g. on a YAML
-    reload. Stored data is restored at the end of __init__, so a subclass
-    assigning self.data in its own __init__ after calling super shadows it, and
-    _restore_data cannot use attributes the subclass sets after calling super.
+    Stored data is kept per config entry, or per domain when there is no config
+    entry, and storage_key tells apart multiple coordinators within it. It must
+    be stable and unique within the config entry or domain; a second live
+    coordinator with the same key raises ValueError. Coordinators with a config
+    entry release their key on unload or failed setup, but domain scoped ones
+    only release it in async_shutdown, so shut the old one down before
+    recreating it, e.g. on a YAML reload. Stored data is restored at the end of
+    __init__, so a subclass assigning self.data in its own __init__ after calling
+    super shadows it, and _restore_data cannot use attributes the subclass sets
+    after calling super. Subclasses overriding _async_refresh_finished or
+    async_set_updated_data must call super, or data is no longer saved.
     """
 
     def __init__(
@@ -798,6 +808,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         except Exception:
             # Stored data is a cache, losing it must not fail the setup
             self.logger.exception("Error restoring stored data of %s", self.name)
+            self.async_remove_stored_data()
             return
         if restored is not None:
             self.data = restored

@@ -2826,7 +2826,7 @@ async def test_restore_data_error_drops_stored_data(
     restore_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a _restore_data that raises restores nothing instead of failing."""
+    """Test a _restore_data that raises restores nothing and removes the data."""
     await set_stored_data(hass, hass_storage, restore_entry, {"value": "stored"})
 
     class BrokenRestoreCoordinator(
@@ -2848,6 +2848,9 @@ async def test_restore_data_error_drops_stored_data(
 
     assert crd.data is None
     assert "Error restoring stored data of test" in caplog.text
+
+    await flush_restore_store(hass)
+    assert get_saved_store_data(hass_storage) == make_store_data()
 
 
 async def test_storage_key_free_after_failed_init(
