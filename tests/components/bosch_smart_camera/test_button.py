@@ -14,10 +14,10 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
-    SERVICE_PRESS,
     ButtonDeviceClass,
+    ButtonService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
+from homeassistant.const import EntityCategory, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -33,7 +33,7 @@ ENTITY_ID = "button.garden_restart"
 async def _press(hass: HomeAssistant) -> None:
     """Press the restart button."""
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        BUTTON_DOMAIN, ButtonService.PRESS, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
 
 
