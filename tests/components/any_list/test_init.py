@@ -4,7 +4,7 @@ import asyncio
 import logging
 from unittest.mock import MagicMock
 
-from aioanylist import AuthenticationError, AuthTokens, TransportError
+from aioanylist import AuthenticationError, AuthTokens, Domain, TransportError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -292,6 +292,45 @@ async def test_update_entity_does_not_restore_availability_before_catchup(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    mock_anylist_client.sync_status_listener(None)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
+async def test_setup_returns_disconnected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+) -> None:
+    """Setup retries if load returns without a connected socket."""
+    mock_anylist_client.realtime.connected.clear()
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_anylist_client.close.assert_awaited_once()
+
+
+async def test_sync_callback_preserves_outage(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+) -> None:
+    """A shopping list callback cannot recover an outage before catchup."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "todo.groceries"
+    mock_anylist_client.realtime.connected.clear()
+    mock_anylist_client.realtime_error_listener(TransportError())
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    mock_anylist_client.realtime.connected.set()
+    await mock_anylist_client.sync_listener({Domain.SHOPPING_LISTS})
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 

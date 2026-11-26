@@ -4,7 +4,7 @@ import asyncio
 from operator import attrgetter
 from unittest.mock import MagicMock
 
-from aioanylist import AnyListError, AuthenticationError, Domain
+from aioanylist import AnyListError, AuthenticationError, Domain, TransportError
 from aioanylist.proto import PB
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -20,7 +20,7 @@ from homeassistant.components.todo import (
     intent as todo_intent,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import TargetKey
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, intent
@@ -414,3 +414,34 @@ async def test_list_rename(
 
     assert (state := hass.states.get(ENTITY_ID)) is not None
     assert state.name == "Weekly shop"
+
+
+async def test_inflight_write_preserves_outage(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+) -> None:
+    """Completing a write after a disconnect cannot restore availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    async def add_item(*args: object, **kwargs: object) -> None:
+        mock_anylist_client.realtime.connected.clear()
+        mock_anylist_client.realtime_error_listener(TransportError())
+        assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_anylist_client.lists.add_item.side_effect = add_item
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Apples"},
+        target={TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    mock_anylist_client.lists.add_item.assert_awaited_once()
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_anylist_client.realtime.connected.set()
+    mock_anylist_client.sync_status_listener(None)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
