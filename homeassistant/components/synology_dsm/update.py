@@ -209,4 +209,6 @@ class SynoDSMPackageUpdateEntity(
         """Return the HTML changelog of the available version."""
         if TYPE_CHECKING:
             assert self._package is not None
-        return self._package.available_version_changelog
+        changelog = self._package.available_version_changelog
+        # DSM sometimes sends an object instead of the HTML changelog
+        return changelog if isinstance(changelog, str) else None

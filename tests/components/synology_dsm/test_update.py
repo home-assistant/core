@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -47,6 +48,7 @@ def mock_package(
     version: str,
     available_version: str | None,
     install_type: str = "",
+    changelog: Any = "<p>Fixed issues.</p>",
 ) -> SynoPackage:
     """Mock an installed package and the version available for it."""
     return SynoPackage(
@@ -59,7 +61,7 @@ def mock_package(
         None
         if available_version is None
         else {
-            "changelog": "<p>Fixed issues.</p>",
+            "changelog": changelog,
             "id": package_id,
             "version": available_version,
         },
@@ -258,13 +260,30 @@ async def test_all_package_entities_disabled(
     ]
 
 
+@pytest.mark.parametrize(
+    ("changelog", "expected"),
+    [
+        pytest.param("<p>Fixed issues.</p>", "<p>Fixed issues.</p>", id="html"),
+        pytest.param({"en": "Fixed issues."}, None, id="not_a_string"),
+    ],
+)
 async def test_package_release_notes(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_dsm: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_packages: dict[str, SynoPackage],
+    changelog: Any,
+    expected: str | None,
 ) -> None:
     """Test the release notes are the changelog of the available version."""
+    mock_packages["Node.js_v22"] = mock_package(
+        "Node.js_v22",
+        "Node.js v22",
+        "22.22.3-1010",
+        "22.23.4-1011",
+        changelog=changelog,
+    )
     await setup_integration(hass, mock_dsm, mock_config_entry)
     client = await hass_ws_client(hass)
 
@@ -272,7 +291,7 @@ async def test_package_release_notes(
         {"type": "update/release_notes", "entity_id": NODE_ENTITY_ID}
     )
     result = await client.receive_json()
-    assert result["result"]["release_notes"] == "<p>Fixed issues.</p>"
+    assert result["result"]["release_notes"] == expected
 
 
 async def test_first_visible_package_installed(
