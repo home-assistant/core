@@ -8,7 +8,12 @@ from unittest.mock import call, patch
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
 from freezegun import freeze_time
-from habluetooth import BluetoothScanningMode, HaScanner
+from habluetooth import (
+    BluetoothScanningMode,
+    DiscoveredDeviceAdvertisementData,
+    HaScanner,
+    discovered_device_advertisement_data_to_dict,
+)
 
 # pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
@@ -2140,6 +2145,94 @@ async def test_async_register_event_driven(hass: HomeAssistant) -> None:
     _inject(b"\x04", -50, 15, HCI0_SOURCE_ADDRESS)
     _inject(b"\x05", -90, 20, HCI1_SOURCE_ADDRESS)
     assert _last_payload() == b"\x04"
+
+
+EVENT_DRIVEN_ADDRESS = "44:44:33:11:23:47"
+
+
+def _stored_event_payload(payload: bytes, rssi: int, heard: float) -> dict[str, Any]:
+    """Return a remote scanner's stored advertisement of the event-driven device."""
+    return discovered_device_advertisement_data_to_dict(
+        DiscoveredDeviceAdvertisementData(
+            connectable=False,
+            expire_seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+            discovered_device_advertisement_datas={
+                EVENT_DRIVEN_ADDRESS: (
+                    generate_ble_device(EVENT_DRIVEN_ADDRESS, "event"),
+                    generate_advertisement_data(
+                        local_name="event", service_data={"fcd2": payload}, rssi=rssi
+                    ),
+                )
+            },
+            discovered_device_timestamps={EVENT_DRIVEN_ADDRESS: heard},
+        )
+    )
+
+
+@pytest.fixture
+async def stored_event_payloads(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Start Bluetooth with an older strong and a newer weak stored advertisement."""
+    now = MONOTONIC_TIME()
+    hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = {
+        "version": storage.REMOTE_SCANNER_STORAGE_VERSION,
+        "minor_version": 1,
+        "key": storage.REMOTE_SCANNER_STORAGE_KEY,
+        "data": {
+            "strong-proxy": _stored_event_payload(b"\x01", -50, now - 60),
+            "weak-proxy": _stored_event_payload(b"\x02", -90, now - 10),
+        },
+    }
+    with patch("bluetooth_adapters.systems.linux.LinuxAdapters.history", {}):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+
+
+def _event_driven_history() -> tuple[str, bytes]:
+    """Return the source and payload the manager holds for the device."""
+    service_info = _get_manager().async_last_service_info(EVENT_DRIVEN_ADDRESS, False)
+    assert service_info is not None
+    return service_info.source, service_info.service_data["fcd2"]
+
+
+@pytest.mark.usefixtures(
+    "one_adapter", "disable_new_discovery_flows", "stored_event_payloads"
+)
+async def test_register_event_driven_starts_from_newest_stored(
+    hass: HomeAssistant,
+) -> None:
+    """Registering an event-driven address replaces an older stored advertisement."""
+    # Startup keeps the strongest stored advertisement
+    assert _event_driven_history() == ("strong-proxy", b"\x01")
+
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+
+    assert _event_driven_history() == ("weak-proxy", b"\x02")
+    cancel()
+
+
+@pytest.mark.usefixtures(
+    "one_adapter", "disable_new_discovery_flows", "stored_event_payloads"
+)
+async def test_register_event_driven_keeps_live_advertisement(
+    hass: HomeAssistant,
+) -> None:
+    """An advertisement heard after startup is newer than any stored one."""
+    inject_advertisement_with_time_and_source(
+        hass,
+        generate_ble_device(EVENT_DRIVEN_ADDRESS, "event"),
+        generate_advertisement_data(
+            local_name="event", service_data={"fcd2": b"\x03"}, rssi=-50
+        ),
+        MONOTONIC_TIME(),
+        "strong-proxy",
+    )
+
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+
+    assert _event_driven_history() == ("strong-proxy", b"\x03")
+    cancel()
 
 
 @pytest.mark.usefixtures("enable_bluetooth")

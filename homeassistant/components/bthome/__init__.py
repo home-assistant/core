@@ -209,10 +209,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> No
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # only start after all platforms have had a chance to subscribe
-    entry.async_on_unload(coordinator.async_start())
+    # Registered before the start, so the replayed advertisement is the newest
     coordinator.async_set_event_driven(coordinator.sleepy_device)
     entry.async_on_unload(partial(coordinator.async_set_event_driven, False))
+    # only start after all platforms have had a chance to subscribe
+    entry.async_on_unload(coordinator.async_start())
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> None:

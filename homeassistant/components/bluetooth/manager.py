@@ -70,6 +70,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         "_callback_index",
         "_cancel_logging_listener",
         "_integration_matcher",
+        "_newest_stored_history",
         "hass",
         "storage",
     )
@@ -88,6 +89,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         self._integration_matcher = integration_matcher
         self._callback_index = BluetoothCallbackMatcherIndex()
         self._cancel_logging_listener: CALLBACK_TYPE | None = None
+        self._newest_stored_history: dict[str, BluetoothServiceInfoBleak] = {}
         super().__init__(bluetooth_adapters, slot_manager)
         self._async_logging_changed()
 
@@ -123,6 +125,22 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             return
         if service_info := self._all_history.get(address):
             self._async_trigger_matching_discovery(service_info)
+
+    @override
+    def async_register_event_driven(self, address: str) -> Callable[[], None]:
+        """Register an event-driven address, starting from its newest advertisement.
+
+        The history loaded at startup holds the strongest stored advertisement of
+        each address, which for an event-driven device can be older than one a
+        weaker scanner stored.
+        """
+        if (
+            (newest := self._newest_stored_history.pop(address, None)) is not None
+            and (current := self._all_history.get(address)) is not None
+            and newest.time > current.time
+        ):
+            self._all_history[address] = newest
+        return super().async_register_event_driven(address)
 
     @hass_callback
     def async_clear_address_from_match_history(self, address: str) -> None:
@@ -185,9 +203,11 @@ class HomeAssistantBluetoothManager(BluetoothManager):
     async def async_setup(self) -> None:
         """Set up the bluetooth manager."""
         await super().async_setup()
-        self._all_history, self._connectable_history = async_load_history_from_system(
-            self._bluetooth_adapters, self.storage
-        )
+        (
+            self._all_history,
+            self._connectable_history,
+            self._newest_stored_history,
+        ) = async_load_history_from_system(self._bluetooth_adapters, self.storage)
         self._cancel_logging_listener = self.hass.bus.async_listen(
             EVENT_LOGGING_CHANGED, self._async_logging_changed
         )

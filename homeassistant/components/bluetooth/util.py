@@ -52,14 +52,21 @@ class InvalidSource(HomeAssistantError):
 @callback
 def async_load_history_from_system(
     adapters: BluetoothAdapters, storage: BluetoothStorage
-) -> tuple[dict[str, BluetoothServiceInfoBleak], dict[str, BluetoothServiceInfoBleak]]:
+) -> tuple[
+    dict[str, BluetoothServiceInfoBleak],
+    dict[str, BluetoothServiceInfoBleak],
+    dict[str, BluetoothServiceInfoBleak],
+]:
     """Load the device and advertisement_data history.
 
-    Only loads if available on the current system.
+    Only loads if available on the current system. Returns the strongest
+    advertisement of each address, the strongest connectable one, and the
+    newest one stored by a remote scanner.
     """
     now_monotonic = monotonic_time_coarse()
     connectable_loaded_history: dict[str, BluetoothServiceInfoBleak] = {}
     all_loaded_history: dict[str, BluetoothServiceInfoBleak] = {}
+    newest_stored_history: dict[str, BluetoothServiceInfoBleak] = {}
     adapter_to_source_address = {
         adapter: details[ADAPTER_ADDRESS]
         for adapter, details in adapters.adapters.items()
@@ -108,13 +115,18 @@ def async_load_history_from_system(
                 or service_info.rssi > existing_all.rssi
             ):
                 all_loaded_history[address] = service_info
+            if (
+                not (existing_newest := newest_stored_history.get(address))
+                or service_info.time > existing_newest.time
+            ):
+                newest_stored_history[address] = service_info
             if connectable and (
                 not (existing_connectable := connectable_loaded_history.get(address))
                 or service_info.rssi > existing_connectable.rssi
             ):
                 connectable_loaded_history[address] = service_info
 
-    return all_loaded_history, connectable_loaded_history
+    return all_loaded_history, connectable_loaded_history, newest_stored_history
 
 
 @callback
