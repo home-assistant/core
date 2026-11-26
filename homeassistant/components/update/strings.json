@@ -63,11 +63,26 @@
             "true": "[%key:common::state::yes%]"
           }
         },
+        "install_phase": {
+          "name": "Install phase",
+          "state": {
+            "backing_up": "Backing up",
+            "downloading": "Downloading",
+            "finishing": "Finishing",
+            "installing": "Installing",
+            "preparing": "Preparing",
+            "restarting": "Restarting",
+            "waiting": "Waiting"
+          }
+        },
         "installed_version": {
           "name": "Installed version"
         },
         "latest_version": {
           "name": "Latest version"
+        },
+        "manual_action": {
+          "name": "Manual action"
         },
         "release_summary": {
           "name": "Release summary"
@@ -85,6 +100,9 @@
     },
     "firmware": {
       "name": "Firmware"
+    },
+    "manual_actions": {
+      "confirm_on_device": "Confirm the update on the device."
     },
     "release_notes_messages": {
       "do_not_interrupt": "Do not restart, remove power from, or otherwise interrupt the device while the update is in progress."
