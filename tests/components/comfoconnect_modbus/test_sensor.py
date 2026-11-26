@@ -12,12 +12,14 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.comfoconnect_modbus.const import SCAN_INTERVAL
+from homeassistant.components.comfoconnect_modbus.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import INPUT, seed, setup_integration
+
+CO2_ZONE_2 = "sensor.comfoair_co2_zone_2_carbon_dioxide"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -33,19 +35,31 @@ async def test_sensors(
 
 async def test_co2_zone_added_when_it_reports(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
 ) -> None:
     """Test that a CO₂ zone sensor gets created when it first reports."""
-    assert hass.states.get("sensor.comfoair_co2_zone_2") is None
+    assert hass.states.get(CO2_ZONE_2) is None
 
     seed(mock_unit, input_registers={0x0013: 455})  # CO₂ zone 2
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.comfoair_co2_zone_2").state == "455"
+    assert hass.states.get(CO2_ZONE_2).state == "455"
+    entity = entity_registry.async_get(CO2_ZONE_2)
+    assert entity
+    zone = device_registry.async_get(entity.device_id)
+    assert zone
+    assert zone.name == "CO₂ zone 2"
+    gateway = device_registry.async_get_device_by_identifier(
+        (DOMAIN, init_integration.entry_id), init_integration.entry_id
+    )
+    assert gateway
+    assert zone.parent_device_id == gateway.id
 
 
 @pytest.mark.usefixtures("mock_get_unit")
@@ -111,4 +125,7 @@ async def test_co2_zone_reading_zero_is_unknown(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.comfoair_co2_zone_1").state == STATE_UNKNOWN
+    assert (
+        hass.states.get("sensor.comfoair_co2_zone_1_carbon_dioxide").state
+        == STATE_UNKNOWN
+    )

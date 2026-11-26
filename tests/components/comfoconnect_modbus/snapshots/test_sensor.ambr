@@ -1045,7 +1045,7 @@
     'state': '30.0',
   })
 # ---
-# name: test_sensors[sensor.comfoair_co2_zone_1-entry]
+# name: test_sensors[sensor.comfoair_co2_zone_1_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1057,11 +1057,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('comfoconnect_modbus', '01K0COMFOCONNECTPRO000000')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('comfoconnect_modbus', '01K0COMFOCONNECTPRO000000_co2_zone_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.comfoair_co2_zone_1',
+    'entity_id': 'sensor.comfoair_co2_zone_1_carbon_dioxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1069,38 +1069,38 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'CO₂ zone 1',
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
-    'original_name': 'CO₂ zone 1',
+    'original_name': 'Carbon dioxide',
     'platform': 'comfoconnect_modbus',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'co2_zone',
+    'translation_key': None,
     'unique_id': '01K0COMFOCONNECTPRO000000_co2_zone_1',
     'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
-# name: test_sensors[sensor.comfoair_co2_zone_1-state]
+# name: test_sensors[sensor.comfoair_co2_zone_1_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ComfoAir CO₂ zone 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CO₂ zone 1 Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.comfoair_co2_zone_1',
+    'entity_id': 'sensor.comfoair_co2_zone_1_carbon_dioxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '640',
   })
 # ---
-# name: test_sensors[sensor.comfoair_co2_zone_3-entry]
+# name: test_sensors[sensor.comfoair_co2_zone_3_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1112,11 +1112,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('comfoconnect_modbus', '01K0COMFOCONNECTPRO000000')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('comfoconnect_modbus', '01K0COMFOCONNECTPRO000000_co2_zone_3')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.comfoair_co2_zone_3',
+    'entity_id': 'sensor.comfoair_co2_zone_3_carbon_dioxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1124,31 +1124,31 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'CO₂ zone 3',
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
-    'original_name': 'CO₂ zone 3',
+    'original_name': 'Carbon dioxide',
     'platform': 'comfoconnect_modbus',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'co2_zone',
+    'translation_key': None,
     'unique_id': '01K0COMFOCONNECTPRO000000_co2_zone_3',
     'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
-# name: test_sensors[sensor.comfoair_co2_zone_3-state]
+# name: test_sensors[sensor.comfoair_co2_zone_3_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ComfoAir CO₂ zone 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CO₂ zone 3 Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.comfoair_co2_zone_3',
+    'entity_id': 'sensor.comfoair_co2_zone_3_carbon_dioxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

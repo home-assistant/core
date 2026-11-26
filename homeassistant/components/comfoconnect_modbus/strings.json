@@ -47,6 +47,11 @@
       }
     }
   },
+  "device": {
+    "co2_zone": {
+      "name": "CO₂ zone {number}"
+    }
+  },
   "entity": {
     "sensor": {
       "active_error": {
@@ -124,9 +129,6 @@
       },
       "boost_remaining": {
         "name": "Boost time remaining"
-      },
-      "co2_zone": {
-        "name": "CO₂ zone {number}"
       },
       "comfort_temperature": {
         "name": "Comfort temperature"

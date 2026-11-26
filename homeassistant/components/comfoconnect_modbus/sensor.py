@@ -21,10 +21,18 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import (
+    ChildDeviceInfo,
+    async_get_device_id_by_identifier,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import ComfoConnectProConfigEntry
+from .const import DOMAIN
+from .coordinator import (
+    ComfoConnectProConfigEntry,
+    ComfoConnectProDataUpdateCoordinator,
+)
 from .entity import ComfoConnectProEntity, ComfoConnectProEntityDescription
 
 PARALLEL_UPDATES = 0
@@ -42,6 +50,8 @@ class ComfoConnectProSensorDescription(
     """Describe a ComfoConnect PRO sensor."""
 
     value_fn: Callable[[ComfoConnectPro], StateType]
+    # `co2_zone` puts the sensor on the child device of that CO₂ zone
+    co2_zone: int | None = None
 
 
 def _attribute(component: str, name: str) -> Callable[[ComfoConnectPro], StateType]:
@@ -156,9 +166,8 @@ def co2_sensor(zone: int) -> ComfoConnectProSensorDescription:
     """Describe the CO₂ sensor of ``zone``."""
     return ComfoConnectProSensorDescription(
         key=f"co2_zone_{zone}",
-        translation_key="co2_zone",
-        translation_placeholders={"number": str(zone)},
         component="sensors",
+        co2_zone=zone,
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
@@ -213,6 +222,26 @@ class ComfoConnectProSensor(ComfoConnectProEntity, SensorEntity):
     """Defines a ComfoConnect PRO sensor."""
 
     entity_description: ComfoConnectProSensorDescription
+
+    def __init__(
+        self,
+        coordinator: ComfoConnectProDataUpdateCoordinator,
+        entity_description: ComfoConnectProSensorDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, entity_description)
+        if (zone := entity_description.co2_zone) is not None:
+            entry = coordinator.config_entry
+            self._attr_device_info = ChildDeviceInfo(
+                identifiers={(DOMAIN, f"{entry.entry_id}_co2_zone_{zone}")},
+                translation_key="co2_zone",
+                translation_placeholders={"number": str(zone)},
+                parent_device_id=async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (DOMAIN, entry.entry_id),
+                    config_entry_id=entry.entry_id,
+                ),
+            )
 
     @property
     @override
