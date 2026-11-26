@@ -443,7 +443,7 @@ _API_CALL_FAILED_TESTS: Final = [
         pytest.param(
             evo_exc.BadApiResponseError("Invalid response"),
             UpdateFailed,
-            None,
+            "api_response_invalid",
             None,
             id="response_invalid",
         ),
@@ -454,10 +454,10 @@ async def test_setup_failed(
     config: ConfigType,
     exception: evo_exc.EvohomeError,
     error_type: type[UpdateFailed],
-    translation_key: str | None,
+    translation_key: str,
     retry_after: float | None,
 ) -> None:
-    """Test a failed setup of the account raises UpdateFailed, by the error's reason."""
+    """Test a failed setup of the account raises a translated UpdateFailed."""
 
     coordinators: list[EvoAccountCoordinator] = []
 
@@ -483,18 +483,34 @@ async def test_setup_failed(
 @pytest.mark.parametrize("install", ["default"])
 @pytest.mark.parametrize(
     ("exception", "error_type", "translation_key", "retry_after"),
-    _API_CALL_FAILED_TESTS,
+    [
+        *_API_CALL_FAILED_TESTS,
+        pytest.param(
+            evo_exc.BadApiResponseError("Invalid response"),
+            UpdateFailed,
+            "api_response_invalid",
+            None,
+            id="response_invalid",
+        ),
+        pytest.param(
+            evo_exc.StaleConfigError("Location is no longer accessible"),
+            UpdateFailed,
+            "config_stale",
+            None,
+            id="config_stale",
+        ),
+    ],
 )
 @pytest.mark.usefixtures("evohome")
-async def test_poll_api_call_failed(
+async def test_poll_failed(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    exception: evo_exc.ApiCallFailedError,
+    exception: evo_exc.EvohomeError,
     error_type: type[UpdateFailed],
     translation_key: str,
     retry_after: float | None,
 ) -> None:
-    """Test a failed poll of a location raises UpdateFailed, by the error's reason."""
+    """Test a failed poll of a location raises a translated UpdateFailed."""
 
     coordinator = hass.data[EVOHOME_DATA].coordinator
 
