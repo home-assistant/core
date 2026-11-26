@@ -48,7 +48,7 @@
             "id": "Device ID"
           },
           "data_description": {
-            "device_class": "What the switch stands for, which decides how its state is shown. Leave empty for a plain on/off state.",
+            "device_class": "Optional device class of the binary sensor. The binary sensor has no on/off state: what the switch does is reported by the `button_pressed` event.",
             "id": "The EnOcean ID of the device, as printed on it, for example FE:DC:BA:98."
           },
           "description": "Add a rocker switch, such as a wall switch. It gets a binary sensor, which you can rename afterwards, and fires the `button_pressed` event.",

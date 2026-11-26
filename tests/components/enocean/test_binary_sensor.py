@@ -371,7 +371,8 @@ async def test_yaml_import_of_two_sensors_with_the_same_id(
     ]
     issue = issue_registry.async_get_issue(
         DOMAIN,
-        f"deprecated_yaml_import_issue_already_configured_binary_sensor_{DEVICE_ADDRESS}",
+        "deprecated_yaml_import_issue_already_configured_binary_sensor_"
+        f"{DEVICE_ADDRESS}_{device_classes[not_imported] or 'none'}",
     )
     assert issue is not None
     assert issue.translation_placeholders == {
@@ -380,6 +381,53 @@ async def test_yaml_import_of_two_sensors_with_the_same_id(
         "id": DEVICE_ADDRESS,
     }
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_binary_sensor")
+
+
+@pytest.mark.usefixtures("mock_gateway")
+async def test_yaml_import_of_three_sensors_with_the_same_id(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that every sensor that is not imported gets a repair issue of its own."""
+    mock_config_entry.add_to_hass(hass)
+    device_classes = {"button": "none", "door": "door", "window": "window"}
+
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: [
+                {"platform": DOMAIN, "id": DEVICE_ID, "name": "button"},
+                {
+                    "platform": DOMAIN,
+                    "id": DEVICE_ID,
+                    "name": "door",
+                    "device_class": "door",
+                },
+                {
+                    "platform": DOMAIN,
+                    "id": DEVICE_ID,
+                    "name": "window",
+                    "device_class": "window",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    (subentry,) = mock_config_entry.subentries.values()
+    not_imported = device_classes.keys() - {subentry.title}
+    assert len(not_imported) == 2
+    for name in not_imported:
+        issue = issue_registry.async_get_issue(
+            DOMAIN,
+            "deprecated_yaml_import_issue_already_configured_binary_sensor_"
+            f"{DEVICE_ADDRESS}_{device_classes[name]}",
+        )
+        assert issue is not None
+        assert issue.translation_placeholders is not None
+        assert issue.translation_placeholders["name"] == name
 
 
 @pytest.mark.usefixtures("mock_gateway")

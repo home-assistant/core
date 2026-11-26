@@ -91,9 +91,13 @@ def async_import_yaml_device(
     elif stored.data != data:
         # A device is stored once: a second YAML entry with the same ID and other
         # settings, which used to be an entity of its own, cannot be imported.
+        # Its settings are part of the issue ID, so that every such entry gets
+        # an issue of its own.
+        settings = "_".join(str(options[key]) for key in sorted(options)) or "none"
         _async_create_issue(
             hass,
-            f"deprecated_yaml_import_issue_already_configured_{platform}_{address}",
+            "deprecated_yaml_import_issue_already_configured_"
+            f"{platform}_{address}_{settings}",
             "deprecated_yaml_import_issue_already_configured",
             {"platform": platform, "name": name, "id": address},
         )
