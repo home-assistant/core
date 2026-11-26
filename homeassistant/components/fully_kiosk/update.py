@@ -6,7 +6,12 @@ from typing import Any, cast, override
 from aiohttp import ClientError
 from fullykiosk.exceptions import FullyKioskError
 
-from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
+from homeassistant.components.update import (
+    UpdateEntity,
+    UpdateEntityFeature,
+    UpdateReleaseNotesMessage,
+    UpdateReleaseNotesMessageSeverity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -22,6 +27,12 @@ from .coordinator import (
 from .entity import FullyKioskEntity
 
 PARALLEL_UPDATES = 1
+
+RELEASE_NOTES_MESSAGE_CONFIRM_INSTALL = UpdateReleaseNotesMessage(
+    translation_domain=DOMAIN,
+    translation_key="confirm_install",
+    severity=UpdateReleaseNotesMessageSeverity.WARNING,
+)
 
 POLL_INTERVAL = 2
 POLL_TIMEOUT = 10
@@ -150,6 +161,22 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
 
     @property
     @override
+    def release_notes_messages(self) -> tuple[UpdateReleaseNotesMessage, ...]:
+        """Messages shown before the release notes."""
+        # Android only installs silently for device owners or with root
+        if self.coordinator.data.get("isDeviceOwner") or self.coordinator.data.get(
+            "isRooted"
+        ):
+            return ()
+        return (RELEASE_NOTES_MESSAGE_CONFIRM_INSTALL,)
+
+    @override
+    async def async_release_notes(self) -> str | None:
+        """Return the release summary, shown with the messages."""
+        return self.release_summary
+
+    @property
+    @override
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
         if _is_play_edition(self.coordinator.data):
@@ -158,6 +185,7 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
             UpdateEntityFeature.INSTALL
             | UpdateEntityFeature.SPECIFIC_VERSION
             | UpdateEntityFeature.PROGRESS
+            | UpdateEntityFeature.RELEASE_NOTES
         )
 
     @override

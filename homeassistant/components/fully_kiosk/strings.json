@@ -161,9 +161,17 @@
       "screensaver": {
         "name": "Screensaver"
       }
+    },
+    "update": {
+      "release_notes_messages": {
+        "confirm_install": "Fully Kiosk is neither the device owner nor rooted on this device, so someone has to confirm the installation on the device's screen before the update is installed."
+      }
     }
   },
   "exceptions": {
+    "device_unreachable": {
+      "message": "The device cannot be reached."
+    },
     "install_failed": {
       "message": "Failed to install the update."
     },

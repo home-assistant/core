@@ -20,6 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     TimestampDataUpdateCoordinator,
     UpdateFailed,
+    UpdateFailedUnreachable,
 )
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
@@ -205,3 +206,9 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 return cast(dict[str, Any], result[0])
         except FullyKioskError as error:
             raise UpdateFailed(error) from error
+        except (TimeoutError, aiohttp.ClientError) as error:
+            # Also expected while the app restarts after an update
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="device_unreachable",
+            ) from error

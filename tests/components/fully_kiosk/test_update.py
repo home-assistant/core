@@ -20,6 +20,7 @@ from pytest_homeassistant.test_util.aiohttp import (
     AiohttpClientMocker,
     AiohttpClientMockResponse,
 )
+from pytest_homeassistant.typing import WebSocketGenerator
 from yarl import URL
 
 from homeassistant.components.fully_kiosk.const import DOMAIN, UPDATE_INTERVAL
@@ -196,6 +197,7 @@ async def test_install_latest(
         UpdateEntityFeature.INSTALL
         | UpdateEntityFeature.SPECIFIC_VERSION
         | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.RELEASE_NOTES
     )
 
     async def load_apk(url: str, force_install: bool) -> None:
@@ -319,6 +321,48 @@ async def test_reinstall(
 
 
 @pytest.mark.parametrize(
+    ("device_info", "messages"),
+    [
+        pytest.param({}, [], id="rooted"),
+        pytest.param({"isRooted": False, "isDeviceOwner": True}, [], id="device_owner"),
+        pytest.param(
+            {"isRooted": False},
+            [
+                {
+                    "severity": "warning",
+                    "message": "Fully Kiosk is neither the device owner nor rooted "
+                    "on this device, so someone has to confirm the installation on "
+                    "the device's screen before the update is installed.",
+                }
+            ],
+            id="confirmation_required",
+        ),
+    ],
+    indirect=["device_info"],
+)
+async def test_release_notes(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup_integration: Callable[[], Awaitable[None]],
+    messages: list[dict[str, str]],
+) -> None:
+    """Test the release notes warn when the installation must be confirmed."""
+    await setup_integration()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "update/release_notes", "entity_id": ENTITY_ID}
+    )
+    result = await client.receive_json()
+
+    assert result["success"]
+    assert result["result"] == {
+        "release_notes": "Download Fully-Kiosk-Browser-v1.61.4.apk (7.05 MB)",
+        "messages": messages,
+    }
+
+
+@pytest.mark.parametrize(
     "device_info",
     [{"appVersionName": "1.54.1-play", "installerSource": "com.android.vending"}],
     indirect=True,
@@ -413,6 +457,7 @@ async def test_install_slow_restart(
     mock_fully_kiosk: MagicMock,
     setup_integration: Callable[[], Awaitable[None]],
     device_info: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the entity stays available until the restarted app is back."""
     await setup_integration()
@@ -437,6 +482,9 @@ async def test_install_slow_restart(
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    # The restart is expected, so it is not logged as an error
+    assert "is unavailable: The device cannot be reached" in caplog.text
+    assert not [record for record in caplog.records if record.levelname == "ERROR"]
 
 
 async def test_device_unavailable(
