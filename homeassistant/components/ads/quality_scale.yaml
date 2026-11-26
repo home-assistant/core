@@ -1,6 +1,8 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: todo
+    comment: The action is registered before the connection is made; when setup fails, calling it raises a KeyError instead of a ServiceValidationError.
   appropriate-polling:
     status: exempt
     comment: The integration is push based and does not poll.
@@ -16,7 +18,9 @@ rules:
     status: exempt
     comment: The integration does not provide conditions.
   docs-high-level-description: done
-  docs-installation-instructions: done
+  docs-installation-instructions:
+    status: todo
+    comment: The documentation does not yet describe the route to Home Assistant that the TwinCAT device needs.
   docs-removal-instructions: todo
   docs-triggers:
     status: exempt
