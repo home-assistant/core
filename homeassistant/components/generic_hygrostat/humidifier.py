@@ -19,7 +19,6 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -30,6 +29,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -634,12 +634,12 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
     async def _async_device_turn_on(self) -> None:
         """Turn humidifier toggleable device on."""
-        data = {ATTR_ENTITY_ID: self._switch_entity_id}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._switch_entity_id}
         await self.hass.services.async_call(HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data)
 
     async def _async_device_turn_off(self) -> None:
         """Turn humidifier toggleable device off."""
-        data = {ATTR_ENTITY_ID: self._switch_entity_id}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._switch_entity_id}
         await self.hass.services.async_call(
             HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data
         )
