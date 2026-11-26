@@ -56,9 +56,10 @@ async def _setup(
         hass, [(State(TEST_ENTITY_ID, "1"), {"timers": timers})]
     )
     entity = KitchenTimerList()
-    await create_mock_platform(hass, [entity])
+    # Before setup, so that anything restoring emits is recorded too
     events: list[TimerListEvent] = []
     entity.async_subscribe_updates(events.append)
+    await create_mock_platform(hass, [entity])
     return entity, events
 
 
@@ -97,7 +98,7 @@ async def test_restore_timers(
 
 @pytest.mark.freeze_time(NOW)
 async def test_restore_overdue_timer(hass: HomeAssistant) -> None:
-    """Test a timer that ran out while stopped is archived without an event."""
+    """Test a timer that ran out a while ago is archived without an event."""
     entity, events = await _setup(
         hass,
         [_stored("overdue", "active", finishes_at="2026-11-25T11:58:00+00:00")],
@@ -148,4 +149,21 @@ async def test_nothing_stored(hass: HomeAssistant) -> None:
 
     assert hass.data[DATA_COMPONENT].get_entity(TEST_ENTITY_ID) is entity
     assert entity.timers == []
+    assert hass.states.get(TEST_ENTITY_ID).state == "0"
+
+
+@pytest.mark.freeze_time(NOW)
+async def test_restore_timer_that_just_ran_out(hass: HomeAssistant) -> None:
+    """Test a timer that ran out a moment ago, as in a reload, finishes normally."""
+    entity, events = await _setup(
+        hass,
+        [_stored("just", "active", finishes_at="2026-11-25T11:59:30+00:00")],
+    )
+    await hass.async_block_till_done()
+
+    assert [(event.event_type, event.item.timer_id) for event in events] == [
+        (TimerListEventType.FINISHED, "just")
+    ]
+    (timer,) = entity.timers
+    assert timer.status == TimerStatus.FINISHED
     assert hass.states.get(TEST_ENTITY_ID).state == "0"

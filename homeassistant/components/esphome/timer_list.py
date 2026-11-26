@@ -2,7 +2,7 @@
 
 import logging
 import math
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from aioesphomeapi import APIConnectionError, VoiceAssistantTimerEventType
 
@@ -86,8 +86,6 @@ class EsphomeTimerList(RestoreTimerListEntity):
     async def async_added_to_hass(self) -> None:
         """Send timer changes to the device."""
         await super().async_added_to_hass()
-        # The device was told about the timers running before a restart
-        self._device_timers.update(self._restored_running)
         self.async_on_remove(self.async_subscribe_updates(self._async_send_event))
         self.async_on_remove(
             self._entry_data.async_subscribe_voice_assistant_subscribed(
@@ -96,6 +94,29 @@ class EsphomeTimerList(RestoreTimerListEntity):
         )
         if self._entry_data.voice_assistant_subscribed:
             self._async_sync_device()
+
+    @override
+    def _extra_stored_data(self) -> dict[str, Any]:
+        """Store which timers the device was told about."""
+        return {"device_timers": dict(self._device_timers)}
+
+    @override
+    def _restore_extra_data(self, data: dict[str, Any]) -> None:
+        """Restore which timers the device was told about.
+
+        Stored before this was, the timers that were running are the best
+        guess: the device was told about them.
+        """
+        device_timers = data.get("device_timers")
+        if isinstance(device_timers, dict):
+            self._device_timers.update(
+                {
+                    str(timer_id): name if isinstance(name, str) else None
+                    for timer_id, name in device_timers.items()
+                }
+            )
+        else:
+            self._device_timers.update(self._restored_running)
 
     @callback
     def _async_sync_device(self) -> None:

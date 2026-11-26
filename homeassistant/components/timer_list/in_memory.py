@@ -1,6 +1,6 @@
 """Timer list that keeps its timers in memory."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 import math
@@ -253,21 +253,28 @@ class TimerListExtraStoredData(ExtraStoredData):
     """Timers of a timer list, stored to restore them."""
 
     timers: list[dict[str, Any]]
+    extra: dict[str, Any] = field(default_factory=dict)
+    """What a subclass stores beside the timers."""
 
     @override
     def as_dict(self) -> dict[str, Any]:
         """Return the stored timers."""
-        return {"timers": self.timers}
+        return {**self.extra, "timers": self.timers}
+
+
+RESTORED_LATE_FINISH = timedelta(minutes=1)
+"""How long after its finish time a restored timer still finishes normally."""
 
 
 class RestoreTimerListEntity(InMemoryTimerListEntity, RestoreEntity):
     """An in-memory timer list that keeps its timers across restarts and reloads.
 
-    Active timers that should have finished while Home Assistant was not
-    running are archived as ``finished`` when they are restored, at the time
-    they should have finished. No event is emitted for them: acting on a
-    timer long after it ran out, for example by ringing, is more surprising
-    than not acting at all.
+    An active timer that should have finished while the list was not set up
+    finishes as soon as it is restored when that was a moment ago, as with a
+    reload, and is archived as ``finished`` at the time it should have
+    finished, without an event, when it was longer ago: acting on a timer long
+    after it ran out, for example by ringing, is more surprising than not
+    acting at all.
     """
 
     def __init__(self) -> None:
@@ -282,8 +289,16 @@ class RestoreTimerListEntity(InMemoryTimerListEntity, RestoreEntity):
     def extra_restore_state_data(self) -> TimerListExtraStoredData:
         """Return the timers to restore."""
         return TimerListExtraStoredData(
-            [_timer_as_stored(timer) for timer in self._timers.values()]
+            [_timer_as_stored(timer) for timer in self._timers.values()],
+            self._extra_stored_data(),
         )
+
+    def _extra_stored_data(self) -> dict[str, Any]:
+        """Return what a subclass stores beside the timers, under its own keys."""
+        return {}
+
+    def _restore_extra_data(self, data: dict[str, Any]) -> None:
+        """Restore what ``_extra_stored_data`` stored, after the timers."""
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -291,8 +306,9 @@ class RestoreTimerListEntity(InMemoryTimerListEntity, RestoreEntity):
         await super().async_added_to_hass()
         if (extra_data := await self.async_get_last_extra_data()) is None:
             return
+        stored = extra_data.as_dict()
         now = dt_util.utcnow()
-        for data in extra_data.as_dict().get("timers", []):
+        for data in stored.get("timers", []):
             try:
                 timer = _timer_from_stored(data)
             except KeyError, TypeError, ValueError:
@@ -303,12 +319,15 @@ class RestoreTimerListEntity(InMemoryTimerListEntity, RestoreEntity):
             if timer.status not in (TimerStatus.ACTIVE, TimerStatus.PAUSED):
                 continue
             self._restored_running[timer.timer_id] = timer.name
-            if timer.status == TimerStatus.PAUSED:
+            if timer.status == TimerStatus.PAUSED or timer.finishes_at is None:
                 continue
-            if timer.finishes_at is not None and timer.finishes_at > now:
+            if timer.finishes_at > now - RESTORED_LATE_FINISH:
+                # Finishes when it should, or right away if that was a moment
+                # ago, with the event it would have had
                 self._schedule(timer, timer.finishes_at)
                 continue
             timer.status = TimerStatus.FINISHED
-            timer.ended_at = timer.finishes_at or now
+            timer.ended_at = timer.finishes_at
             timer.finishes_at = None
         self._evict_archived()
+        self._restore_extra_data(stored)

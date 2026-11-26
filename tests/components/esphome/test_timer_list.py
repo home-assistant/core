@@ -2,24 +2,27 @@
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import ANY, call
+from unittest.mock import ANY, AsyncMock, call
 
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
+    APIVersion,
+    DeviceInfo,
     VoiceAssistantFeature,
     VoiceAssistantTimerEventType,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
+    MockConfigEntry,
     async_fire_time_changed,
     mock_restore_cache_with_extra_data,
 )
 
 from homeassistant.components.esphome.const import DOMAIN
 from homeassistant.components.timer_list import DOMAIN as TIMER_LIST_DOMAIN
-from homeassistant.const import Platform, TargetKey
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er, intent
 
@@ -586,3 +589,126 @@ async def test_timers_kept_on_reload(
     mock_client.send_voice_assistant_timer_event.assert_called_once_with(
         UPDATED, result["timer_id"], None, 60, 60, True
     )
+
+
+@pytest.mark.freeze_time("2026-11-25T12:00:00+00:00")
+async def test_timers_restored_while_device_offline(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a restart with the device offline restores and runs its timers."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:aa",
+        data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        title="test",
+    )
+    entry.add_to_hass(hass)
+    storage_key = f"{DOMAIN}.{entry.entry_id}"
+    hass_storage[storage_key] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": storage_key,
+        "data": {
+            "device_info": DeviceInfo(
+                name="test",
+                friendly_name="Test",
+                mac_address="11:22:33:44:55:AA",
+                esphome_version="1.0.0",
+                voice_assistant_feature_flags=TIMER_FLAGS,
+            ).to_dict(),
+            "api_version": APIVersion(99, 99).to_dict(),
+            "services": [],
+        },
+    }
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("timer_list.test_timers", "1"),
+                {
+                    "timers": [
+                        {
+                            "timer_id": "running",
+                            "name": "running",
+                            "status": "active",
+                            "created_duration": 900.0,
+                            "created_at": "2026-11-25T11:50:00+00:00",
+                            "total_duration": 900.0,
+                            "finishes_at": "2026-11-25T12:05:00+00:00",
+                            "paused_remaining": None,
+                            "ended_at": None,
+                        }
+                    ]
+                },
+            )
+        ],
+    )
+    mock_client.device_info_and_list_entities = AsyncMock(
+        side_effect=APIConnectionError("offline for test")
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("timer_list.test_timers").state == "1"
+
+    # It finishes on schedule, with nothing to tell the offline device
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("timer_list.test_timers").state == "0"
+    mock_client.send_voice_assistant_timer_event.assert_not_called()
+
+
+@pytest.mark.freeze_time("2026-11-25T12:00:00+00:00")
+async def test_timer_ended_while_away_cancelled_after_restart(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a timer the device still shows is cancelled there after a restart.
+
+    It was cancelled while the device was disconnected, before the restart, so
+    it was no longer running when the list was stored.
+    """
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("timer_list.test_timers", "0"),
+                {
+                    "timers": [
+                        {
+                            "timer_id": "gone",
+                            "name": "gone",
+                            "status": "cancelled",
+                            "created_duration": 900.0,
+                            "created_at": "2026-11-25T11:50:00+00:00",
+                            "total_duration": 900.0,
+                            "finishes_at": None,
+                            "paused_remaining": None,
+                            "ended_at": "2026-11-25T11:55:00+00:00",
+                        }
+                    ],
+                    "device_timers": {"gone": "gone"},
+                },
+            )
+        ],
+    )
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"voice_assistant_feature_flags": TIMER_FLAGS},
+    )
+    await hass.async_block_till_done()
+
+    mock_client.send_voice_assistant_timer_event.assert_called_once_with(
+        CANCELLED, "gone", "gone", 0, 0, False
+    )
+
+    # Told now, so not again on the next reconnect
+    assert hass.states.get("timer_list.test_timers").state == "0"
