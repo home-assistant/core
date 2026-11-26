@@ -209,3 +209,4 @@ class ConnectionInfo:
     wan_enabled: bool
     ipv6_active: bool
     addon_infos_supported: bool
+    wan_access_type_supported: bool
