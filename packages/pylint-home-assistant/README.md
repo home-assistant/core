@@ -1408,12 +1408,22 @@ async def test_something(hass: HomeAssistant, caplog: pytest.LogCaptureFixture):
         ...
 ```
 
-Calls with a `logger` argument are not flagged, as some code sets the level
-of its own loggers. A DEBUG call that follows `caplog.set_level` with another
-level in the same function, or that is inside a `with caplog.at_level(...)`
-block with another level, restores the DEBUG level and is not flagged
-either. Other levels, like INFO or WARNING, raise the level and are not
-checked. The checker is scoped to test modules.
+Calls with a `logger` argument, or with unpacked arguments, are not
+flagged, as some code sets the level of its own loggers. Other levels, like
+INFO or WARNING, raise the level and are not checked either.
+
+Both methods also set the level of the shared capture handler, even with a
+`logger`. A DEBUG call is not flagged when the level may be different at
+that point, which is the case when it:
+
+* follows `caplog.set_level` with another level in the same function,
+* is inside a `with caplog.at_level(...)` block with another level,
+* is in a function nested in one that sets another level, or
+* is a `with caplog.at_level(logging.DEBUG)` block whose body calls
+  `caplog.set_level` with another level, which the block undoes on exit.
+
+The checker cannot see what a fixture does to the level. Use a disable
+comment when a fixture raises it. The checker is scoped to test modules.
 
 
 ## `home_assistant_test_determinism` checker

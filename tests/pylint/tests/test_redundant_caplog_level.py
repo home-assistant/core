@@ -94,6 +94,43 @@ def test_something(caplog):
             "set_level",
             id="after_at_level_block",
         ),
+        pytest.param(
+            """
+import logging
+
+def test_something(caplog):
+    with caplog.at_level(logging.DEBUG), caplog.at_level(logging.WARNING):
+        pass
+""",
+            "at_level",
+            id="same_line_before_other_level",
+        ),
+        pytest.param(
+            """
+import logging
+
+def test_something(caplog):
+    with caplog.at_level(logging.DEBUG):
+        caplog.set_level(logging.DEBUG, logger="homeassistant.components.hue")
+        with caplog.at_level(logging.WARNING):
+            pass
+""",
+            "at_level",
+            id="block_without_persistent_other_level",
+        ),
+        pytest.param(
+            """
+import logging
+
+def test_something(caplog):
+    def helper():
+        caplog.set_level(logging.DEBUG)
+
+    helper()
+""",
+            "set_level",
+            id="nested_helper",
+        ),
     ],
 )
 def test_redundant_debug_level(
@@ -158,6 +195,94 @@ def test_something(caplog):
             pass
 """,
             id="nested_at_level",
+        ),
+        pytest.param(
+            """
+import logging
+
+def test_something(caplog):
+    with caplog.at_level(logging.WARNING), caplog.at_level(logging.DEBUG):
+        pass
+""",
+            id="same_line_after_other_level",
+        ),
+        pytest.param(
+            """
+import logging
+
+def test_something(caplog):
+    caplog.set_level(logging.WARNING, logger="homeassistant.components.hue")
+    caplog.set_level(logging.DEBUG)
+""",
+            id="restores_debug_after_named_logger_set_level",
+        ),
+        pytest.param(
+            """
+import logging
+
+def test_something(caplog):
+    with caplog.at_level(logging.WARNING, logger="homeassistant.components.hue"):
+        caplog.set_level(logging.DEBUG)
+""",
+            id="inside_named_logger_at_level",
+        ),
+        pytest.param(
+            """
+import logging
+
+def test_something(caplog):
+    with caplog.at_level(logging.DEBUG):
+        caplog.set_level(logging.WARNING)
+    assert "debug message" in caplog.text
+""",
+            id="block_undoes_set_level",
+        ),
+        pytest.param(
+            """
+import logging
+
+def test_something(caplog):
+    with caplog.at_level(logging.DEBUG):
+        caplog.set_level(logging.WARNING, logger="homeassistant.components.hue")
+""",
+            id="block_undoes_named_logger_set_level",
+        ),
+        pytest.param(
+            """
+import logging
+
+def test_something(caplog):
+    caplog.set_level(logging.WARNING)
+
+    def helper():
+        caplog.set_level(logging.DEBUG)
+
+    helper()
+""",
+            id="nested_helper_after_other_level",
+        ),
+        pytest.param(
+            """
+import logging
+
+def test_something(caplog):
+    caplog.set_level(logging.DEBUG, **{"logger": "homeassistant.components.hue"})
+    with caplog.at_level(
+        logging.DEBUG, **{"logger": "homeassistant.components.hue"}
+    ):
+        pass
+""",
+            id="unpacked_keywords",
+        ),
+        pytest.param(
+            """
+import logging
+
+def test_something(caplog):
+    caplog.set_level(**{"level": logging.WARNING})
+    caplog.set_level(logging.DEBUG)
+""",
+            id="restores_debug_after_unpacked_level",
         ),
         pytest.param(
             """

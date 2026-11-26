@@ -13,13 +13,22 @@ or::
 
 without a ``logger`` argument therefore changes nothing.
 
-Calls that pass a ``logger`` are not checked: some code sets the level of
-its own loggers, so lowering a named logger to DEBUG can be needed. Calls
-that follow ``caplog.set_level`` with another level in the same function,
-or that are inside a ``with caplog.at_level(...)`` block with another
-level, are not checked either, as they restore the DEBUG level.
+Calls that pass a ``logger``, or unpack their arguments, are not checked:
+some code sets the level of its own loggers, so lowering a named logger to
+DEBUG can be needed.
+
+Both methods also set the level of the shared capture handler, even with a
+``logger``. A DEBUG call is therefore not checked either when the level may
+be different at that point, which is the case when it:
+
+* follows ``caplog.set_level`` with another level in the same function,
+* is inside a ``with caplog.at_level(...)`` block with another level,
+* is in a function nested in one that sets another level, or
+* is a ``with caplog.at_level(logging.DEBUG)`` block whose body calls
+  ``caplog.set_level`` with another level, which the block undoes on exit.
 """
 
+from dataclasses import dataclass
 import logging
 
 from astroid import nodes
@@ -33,12 +42,23 @@ _LEVEL_METHODS = frozenset({"set_level", "at_level"})
 _DEBUG_LEVELS = frozenset({logging.DEBUG, "DEBUG"})
 
 
-def _caplog_level_call(node: nodes.Call) -> tuple[str, nodes.NodeNG] | None:
-    """Return the method and level of a root ``caplog`` level call.
+@dataclass(frozen=True, slots=True)
+class _LevelCall:
+    """A ``caplog.set_level`` or ``caplog.at_level`` call."""
 
-    Returns ``None`` when *node* is not a ``caplog.set_level`` or
-    ``caplog.at_level`` call, or when it targets a named logger.
-    """
+    method: str
+    level: nodes.NodeNG | None
+    root_logger: bool
+    unpacked: bool
+
+    @property
+    def sets_debug(self) -> bool:
+        """Return True when the call is known to set the DEBUG level."""
+        return not self.unpacked and _is_debug_level(self.level)
+
+
+def _parse_level_call(node: nodes.Call) -> _LevelCall | None:
+    """Return the parsed call, or ``None`` if it is not a caplog level call."""
     func = node.func
     if not (
         isinstance(func, nodes.Attribute)
@@ -50,25 +70,39 @@ def _caplog_level_call(node: nodes.Call) -> tuple[str, nodes.NodeNG] | None:
 
     level: nodes.NodeNG | None = node.args[0] if node.args else None
     logger: nodes.NodeNG | None = node.args[1] if len(node.args) > 1 else None
+    unpacked = any(isinstance(arg, nodes.Starred) for arg in node.args)
     for keyword in node.keywords or ():
-        if keyword.arg == "level":
+        if keyword.arg is None:
+            unpacked = True
+        elif keyword.arg == "level":
             level = keyword.value
         elif keyword.arg == "logger":
             logger = keyword.value
 
-    if level is None:
-        return None
-    if logger is not None and not (
-        isinstance(logger, nodes.Const) and logger.value is None
-    ):
-        return None
-    return func.attrname, level
+    return _LevelCall(
+        method=func.attrname,
+        level=level,
+        root_logger=logger is None
+        or (isinstance(logger, nodes.Const) and logger.value is None),
+        unpacked=unpacked,
+    )
 
 
-def _is_debug_level(level: nodes.NodeNG) -> bool:
+def _is_debug_level(level: nodes.NodeNG | None) -> bool:
     """Return True when *level* resolves to the DEBUG level."""
+    if level is None:
+        return False
     inferred = utils.safe_infer(level)
     return isinstance(inferred, nodes.Const) and inferred.value in _DEBUG_LEVELS
+
+
+def _level_calls(node: nodes.NodeNG) -> list[tuple[nodes.Call, _LevelCall]]:
+    """Return the caplog level calls in *node*, including *node* itself."""
+    return [
+        (call, parsed)
+        for call in node.nodes_of_class(nodes.Call)
+        if (parsed := _parse_level_call(call)) is not None
+    ]
 
 
 class RedundantCaplogLevelChecker(BaseChecker):
@@ -98,41 +132,71 @@ class RedundantCaplogLevelChecker(BaseChecker):
         if not self._active:
             return
 
-        if (call := _caplog_level_call(node)) is None:
-            return
-        method, level = call
-        if not _is_debug_level(level):
+        call = _parse_level_call(node)
+        if call is None or not call.root_logger or not call.sets_debug:
             return
 
-        if self._follows_other_level(node):
+        if (
+            self._follows_other_level(node)
+            or self._nested_in_other_level(node)
+            or self._block_sets_other_level(node, call)
+        ):
             return
 
         self.add_message(
             "home-assistant-tests-redundant-caplog-level",
             node=node,
-            args=(method,),
+            args=(call.method,),
         )
 
     @staticmethod
     def _follows_other_level(node: nodes.Call) -> bool:
-        """Return True when the call restores DEBUG after a higher level.
+        """Return True when an earlier call in the function sets another level.
 
-        That is the case after an earlier ``caplog.set_level`` with another
-        level, or inside a ``with caplog.at_level(...)`` block with another
-        level, as the DEBUG call then lowers the level again.
+        That is an earlier ``caplog.set_level``, or an enclosing
+        ``with caplog.at_level(...)``, for any logger, as both also set the
+        level of the shared capture handler.
         """
         ancestors = set(node.node_ancestors())
-        for other in node.frame().nodes_of_class(nodes.Call):
-            if other is node or other.lineno >= node.lineno:
+        position = (node.lineno, node.col_offset)
+        for other, parsed in _level_calls(node.frame()):
+            if other is node or parsed.sets_debug:
                 continue
-            if (call := _caplog_level_call(other)) is None:
+            if (other.lineno, other.col_offset) >= position:
                 continue
-            method, level = call
-            if _is_debug_level(level):
-                continue
-            if method == "set_level" or other.parent in ancestors:
+            if parsed.method == "set_level" or other.parent in ancestors:
                 return True
         return False
+
+    @staticmethod
+    def _nested_in_other_level(node: nodes.Call) -> bool:
+        """Return True when an enclosing function sets another level.
+
+        The level a nested function starts at depends on when it is called,
+        so any other level in an enclosing function counts.
+        """
+        frame = node.frame()
+        while not isinstance(frame.parent, (nodes.Module, nodes.ClassDef)):
+            frame = frame.parent.frame()
+            if any(not parsed.sets_debug for _, parsed in _level_calls(frame)):
+                return True
+        return False
+
+    @staticmethod
+    def _block_sets_other_level(node: nodes.Call, call: _LevelCall) -> bool:
+        """Return True when a DEBUG block's body calls ``set_level``.
+
+        ``at_level`` restores the level on exit, so without the block a
+        ``set_level`` with another level in its body would stay in effect
+        after it.
+        """
+        if call.method != "at_level" or not isinstance(node.parent, nodes.With):
+            return False
+        return any(
+            parsed.method == "set_level" and not parsed.sets_debug
+            for statement in node.parent.body
+            for _, parsed in _level_calls(statement)
+        )
 
 
 def register(linter: PyLinter) -> None:
