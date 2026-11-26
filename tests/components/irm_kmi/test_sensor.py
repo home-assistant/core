@@ -110,7 +110,9 @@ async def test_current_condition_sensor_without_its_key(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
-    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "7.2"
+    temperature_state = hass.states.get(TEMPERATURE_ENTITY_ID)
+    assert temperature_state is not None
+    assert temperature_state.state == "7.2"
 
 
 @pytest.mark.parametrize(
@@ -141,8 +143,12 @@ async def test_pollen_without_data(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == expected_state
-    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "7.2"
+    alder_state = hass.states.get(ALDER_POLLEN_ENTITY_ID)
+    temperature_state = hass.states.get(TEMPERATURE_ENTITY_ID)
+    assert alder_state is not None
+    assert temperature_state is not None
+    assert alder_state.state == expected_state
+    assert temperature_state.state == "7.2"
 
 
 @pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
@@ -164,8 +170,12 @@ async def test_pollen_unavailable_until_next_refresh(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == STATE_UNAVAILABLE
-    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "9.9"
+    alder_state = hass.states.get(ALDER_POLLEN_ENTITY_ID)
+    temperature_state = hass.states.get(TEMPERATURE_ENTITY_ID)
+    assert alder_state is not None
+    assert temperature_state is not None
+    assert alder_state.state == STATE_UNAVAILABLE
+    assert temperature_state.state == "9.9"
 
     mock_irm_kmi_api.get_pollen.side_effect = None
 
@@ -173,7 +183,9 @@ async def test_pollen_unavailable_until_next_refresh(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == PollenLevel.GREEN
+    alder_state = hass.states.get(ALDER_POLLEN_ENTITY_ID)
+    assert alder_state is not None
+    assert alder_state.state == PollenLevel.GREEN
 
 
 @pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
@@ -198,8 +210,12 @@ async def test_pollen_kept_when_forecasts_fail(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == STATE_UNAVAILABLE
-    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == PollenLevel.RED
+    temperature_state = hass.states.get(TEMPERATURE_ENTITY_ID)
+    alder_state = hass.states.get(ALDER_POLLEN_ENTITY_ID)
+    assert temperature_state is not None
+    assert alder_state is not None
+    assert temperature_state.state == STATE_UNAVAILABLE
+    assert alder_state.state == PollenLevel.RED
 
 
 @pytest.mark.parametrize(

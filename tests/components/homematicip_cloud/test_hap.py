@@ -62,10 +62,12 @@ async def test_auth_auth_check_and_register(hass: HomeAssistant) -> None:
         patch.object(
             hmip_auth.auth,
             "confirm_auth_token",
+            return_value="client-id",
         ),
     ):
         assert await hmip_auth.async_checkbutton()
         assert await hmip_auth.async_register() == "ABC"
+        assert hmip_auth.client_id == "client-id"
 
 
 async def test_auth_auth_check_and_register_with_exception(hass: HomeAssistant) -> None:
@@ -662,8 +664,7 @@ async def test_on_websocket_stale_log_format(caplog: pytest.LogCaptureFixture) -
     _set_diagnostic_defaults(hap.home)
     hap.home.websocket_message_count = Mock(return_value=42)
 
-    with caplog.at_level("DEBUG"):
-        await hap._on_websocket_stale("warning", 423.7)
+    await hap._on_websocket_stale("warning", 423.7)
 
     assert "424" in caplog.text  # %.0f rounds
     assert "message_count=42" in caplog.text

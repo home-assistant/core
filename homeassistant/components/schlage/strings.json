@@ -73,8 +73,14 @@
     "schlage_add_code_failed": {
       "message": "Failed to add PIN code to the lock."
     },
+    "schlage_auth_failed": {
+      "message": "Failed to sign in to your Schlage account."
+    },
     "schlage_code_exists": {
       "message": "A PIN code with this value already exists on the lock."
+    },
+    "schlage_command_failed": {
+      "message": "Failed to send the command to the lock."
     },
     "schlage_delete_code_failed": {
       "message": "Failed to delete PIN code from the lock."

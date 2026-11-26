@@ -6,6 +6,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant import config_entries
 from homeassistant.components.islamic_prayer_times.const import (
     CONF_CALC_METHOD,
+    CONF_ISHA_CALENDAR_END,
     CONF_LAT_ADJ_METHOD,
     CONF_MIDNIGHT_MODE,
     CONF_SCHOOL,
@@ -38,7 +39,8 @@ async def test_flow_works(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "12.34-23.45"
 
 
-async def test_options(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("isha_end", ["first_third", "half_night", "next_fajr"])
+async def test_options(hass: HomeAssistant, isha_end: str) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -57,6 +59,7 @@ async def test_options(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={
             CONF_CALC_METHOD: "makkah",
+            CONF_ISHA_CALENDAR_END: isha_end,
             CONF_LAT_ADJ_METHOD: "one_seventh",
             CONF_SCHOOL: "hanafi",
         },
@@ -67,6 +70,10 @@ async def test_options(hass: HomeAssistant) -> None:
     assert result["data"][CONF_LAT_ADJ_METHOD] == "one_seventh"
     assert result["data"][CONF_MIDNIGHT_MODE] == "standard"
     assert result["data"][CONF_SCHOOL] == "hanafi"
+    assert entry.options[CONF_ISHA_CALENDAR_END] == isha_end
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["data_schema"]({})[CONF_ISHA_CALENDAR_END] == isha_end
 
 
 async def test_integration_already_configured(hass: HomeAssistant) -> None:
