@@ -57,6 +57,7 @@ def mock_indi_allsky_client() -> Generator[AsyncMock]:
         client_instance.listen = AsyncMock()
         client_instance.disconnect = AsyncMock()
         client_instance.is_connected = False
+        client_instance.is_control_connected = False
         client_instance.register_callback = MagicMock(side_effect=register_callback)
         client_instance.callbacks = callbacks
         yield client_instance

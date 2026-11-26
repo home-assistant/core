@@ -4,6 +4,7 @@
   "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@Lash-L"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/anova",
   "integration_type": "hub",
   "iot_class": "cloud_push",

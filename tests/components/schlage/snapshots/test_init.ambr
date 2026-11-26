@@ -24,7 +24,7 @@
     'model_id': None,
     'name': 'Vault Door',
     'name_by_user': None,
-    'serial_number': None,
+    'serial_number': 'd34db33f',
     'sw_version': '1.0',
     'via_device_id': None,
   })

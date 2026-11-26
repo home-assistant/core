@@ -2,13 +2,14 @@
 
 from ast import literal_eval
 import asyncio
-from collections import deque
+from collections import UserDict, deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, Required, TypedDict, override
 
+from cryptography.x509 import Certificate
 from paho.mqtt.client import MQTTMessage
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, Platform
@@ -22,15 +23,16 @@ from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import (
-    UNDEFINED,
     ConfigType,
     DiscoveryInfoType,
     TemplateVarsType,
-    UndefinedType,
+    Undefined,
     VolSchemaType,
 )
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
+
+from .const import DOMAIN, TEMPLATE_ERRORS
 
 if TYPE_CHECKING:
     from .client import MQTT, Subscription
@@ -38,8 +40,6 @@ if TYPE_CHECKING:
     from .device_trigger import Trigger
     from .discovery import MQTTDiscoveryPayload
     from .tag import MQTTTagScanner
-
-from .const import DOMAIN, TEMPLATE_ERRORS
 
 
 class PayloadSentinel(StrEnum):
@@ -199,6 +199,38 @@ class DiscoveredDisabledEntity:
     # Entity registry index (entity_platform, "mqtt", unique_id)
     registry_key: tuple[str, str, str]
     discovery_data: DiscoveryInfoType
+
+
+class DiscoveredDisabledEntities(UserDict[tuple[str, str], DiscoveredDisabledEntity]):
+    """Discovered disabled entities by discovery hash, indexed by registry key."""
+
+    def __init__(self) -> None:
+        """Initialize the discovered disabled entities."""
+        super().__init__()
+        self._discovery_hashes: dict[tuple[str, str, str], tuple[str, str]] = {}
+
+    @override
+    def __setitem__(
+        self, discovery_hash: tuple[str, str], disabled_entity: DiscoveredDisabledEntity
+    ) -> None:
+        """Track a disabled entity."""
+        if discovery_hash in self.data:
+            del self[discovery_hash]
+        self.data[discovery_hash] = disabled_entity
+        self._discovery_hashes[disabled_entity.registry_key] = discovery_hash
+
+    @override
+    def __delitem__(self, discovery_hash: tuple[str, str]) -> None:
+        """Stop tracking a disabled entity."""
+        registry_key = self.data.pop(discovery_hash).registry_key
+        if self._discovery_hashes.get(registry_key) == discovery_hash:
+            del self._discovery_hashes[registry_key]
+
+    def get_discovery_hash(
+        self, registry_key: tuple[str, str, str]
+    ) -> tuple[str, str] | None:
+        """Return the discovery hash a disabled entity is tracked with."""
+        return self._discovery_hashes.get(registry_key)
 
 
 class MqttChildDeviceConfig(TypedDict, total=False):
@@ -369,17 +401,17 @@ class _LastPayloadJson:
 
     def __init__(self) -> None:
         self.payload: ReceivePayloadType | None = None
-        self.parsed: Any = UNDEFINED
+        self.parsed: Any = Undefined
 
-    def loads(self, payload: ReceivePayloadType) -> Any | UndefinedType:
-        """Return the payload parsed as JSON, UNDEFINED if it is not JSON."""
+    def loads(self, payload: ReceivePayloadType) -> Any | Undefined:
+        """Return the payload parsed as JSON, Undefined if it is not JSON."""
         if payload is self.payload:
             return self.parsed
         parsed: Any
         try:
             parsed = json_loads(payload)
         except JSON_DECODE_EXCEPTIONS:
-            parsed = UNDEFINED
+            parsed = Undefined
         # A bytearray can change in place, so it is never kept.
         if not isinstance(payload, bytearray):
             self.payload = payload
@@ -389,7 +421,7 @@ class _LastPayloadJson:
     def clear(self) -> None:
         """Drop the payload and its parse."""
         self.payload = None
-        self.parsed = UNDEFINED
+        self.parsed = Undefined
 
 
 LAST_PAYLOAD_JSON = _LastPayloadJson()
@@ -425,7 +457,7 @@ class MqttValueTemplate:
             return payload
 
         value_json = (
-            UNDEFINED
+            Undefined
             if self._value_template.is_static
             else LAST_PAYLOAD_JSON.loads(payload)
         )
@@ -441,7 +473,7 @@ class MqttValueTemplate:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
             # Created again when the entity_id is changed in place
-            if self._value_template.hass and (
+            if (
                 not self._template_state
                 or self._template_state.entity_id != self._entity.entity_id
             ):
@@ -544,6 +576,8 @@ class MqttData:
 
     client: MQTT
     config: list[ConfigType]
+    # The client certificate that was loaded when the client was set up
+    client_certificate: Certificate | None = None
     debug_info_entities: dict[str, EntityDebugInfo] = field(default_factory=dict)
     debug_info_triggers: dict[tuple[str, str], TriggerDebugInfo] = field(
         default_factory=dict
@@ -553,9 +587,9 @@ class MqttData:
     # Attribute `discovery_discovered_and_disabled` maps a discovery hash to
     # the disabled entity, so it can be cleaned up when an empty payload
     # is received on the topic it was discovered on.
-    discovery_discovered_and_disabled: dict[
-        tuple[str, str], DiscoveredDisabledEntity
-    ] = field(default_factory=dict)
+    discovery_discovered_and_disabled: DiscoveredDisabledEntities = field(
+        default_factory=DiscoveredDisabledEntities
+    )
     discovery_already_discovered: set[tuple[str, str]] = field(default_factory=set)
     discovery_pending_discovered: dict[tuple[str, str], PendingDiscovered] = field(
         default_factory=dict

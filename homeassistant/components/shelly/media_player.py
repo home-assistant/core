@@ -56,12 +56,13 @@ class RpcMediaPlayerDescription(RpcEntityDescription, MediaPlayerEntityDescripti
     """Class to describe a Shelly RPC media player entity."""
 
 
-RPC_MEDIA_PLAYER_ENTITIES: Final = {
-    "media": RpcMediaPlayerDescription(
+RPC_MEDIA_PLAYER_ENTITIES: Final = (
+    RpcMediaPlayerDescription(
         key="media",
+        components=("media",),
         device_class=MediaPlayerDeviceClass.SPEAKER,
     ),
-}
+)
 
 
 async def async_setup_entry(

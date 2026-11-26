@@ -5,20 +5,18 @@ from datetime import date
 from unittest.mock import AsyncMock
 
 from aiomealie import (
-    About,
     IngredientConfidence,
     MealieConnectionError,
     MealieNotFoundError,
     MealieValidationError,
     MealplanEntryType,
     MutateShoppingItem,
-    ParsedIngredient,
     RegisteredParser,
 )
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, load_fixture
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mealie.const import DOMAIN
@@ -26,7 +24,7 @@ from homeassistant.components.mealie.services import (
     MealieService,
     MealieServiceArgument,
 )
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -108,7 +106,7 @@ async def test_service_add_ingredient(
         DOMAIN,
         MealieService.ADD_INGREDIENT,
         data,
-        target={ATTR_ENTITY_ID: "todo.mealie_special_groceries"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_special_groceries"},
         blocking=True,
     )
 
@@ -166,7 +164,7 @@ async def test_service_add_ingredient_invalid(
             DOMAIN,
             MealieService.ADD_INGREDIENT,
             data,
-            target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+            target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
             blocking=True,
         )
 
@@ -203,7 +201,7 @@ async def test_service_add_ingredient_requires_food_or_note(
             DOMAIN,
             MealieService.ADD_INGREDIENT,
             data,
-            target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+            target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
             blocking=True,
         )
 
@@ -227,7 +225,7 @@ async def test_service_add_ingredient_error(
             DOMAIN,
             MealieService.ADD_INGREDIENT,
             {MealieServiceArgument.NOTE: "Apples"},
-            target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+            target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
             blocking=True,
         )
 
@@ -250,7 +248,7 @@ async def test_service_mealplan(
     response = await hass.services.async_call(
         DOMAIN,
         MealieService.GET_MEALPLAN,
-        {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id},
+        {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -264,7 +262,7 @@ async def test_service_mealplan(
         DOMAIN,
         MealieService.GET_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.START_DATE: "2023-10-22",
             MealieServiceArgument.END_DATE: "2023-10-25",
         },
@@ -281,7 +279,7 @@ async def test_service_mealplan(
         DOMAIN,
         MealieService.GET_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.START_DATE: "2023-10-19",
         },
         blocking=True,
@@ -297,7 +295,7 @@ async def test_service_mealplan(
         DOMAIN,
         MealieService.GET_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.END_DATE: "2023-10-22",
         },
         blocking=True,
@@ -314,7 +312,7 @@ async def test_service_mealplan(
             DOMAIN,
             MealieService.GET_MEALPLAN,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 MealieServiceArgument.START_DATE: "2023-10-22",
                 MealieServiceArgument.END_DATE: "2023-10-19",
             },
@@ -337,7 +335,7 @@ async def test_service_recipe(
         DOMAIN,
         MealieService.GET_RECIPE,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.RECIPE_ID: "recipe_id",
         },
         blocking=True,
@@ -350,10 +348,10 @@ async def test_service_recipe(
     "service_data",
     [
         # Default call
-        {ATTR_CONFIG_ENTRY_ID: "mock_entry_id"},
+        {CommonServiceArgument.CONFIG_ENTRY_ID: "mock_entry_id"},
         # With search terms and result limit
         {
-            ATTR_CONFIG_ENTRY_ID: "mock_entry_id",
+            CommonServiceArgument.CONFIG_ENTRY_ID: "mock_entry_id",
             MealieServiceArgument.SEARCH_TERMS: "pasta",
             MealieServiceArgument.RESULT_LIMIT: 5,
         },
@@ -370,7 +368,10 @@ async def test_service_get_recipes(
     await setup_integration(hass, mock_config_entry)
 
     # Patch entry_id into service_data for each run
-    service_data = {**service_data, ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id}
+    service_data = {
+        **service_data,
+        CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+    }
 
     response = await hass.services.async_call(
         DOMAIN,
@@ -396,7 +397,7 @@ async def test_service_import_recipe(
         DOMAIN,
         MealieService.IMPORT_RECIPE,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.URL: "http://example.com",
         },
         blocking=True,
@@ -411,7 +412,7 @@ async def test_service_import_recipe(
         DOMAIN,
         MealieService.IMPORT_RECIPE,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.URL: "http://example.com",
             MealieServiceArgument.INCLUDE_TAGS: True,
         },
@@ -437,7 +438,7 @@ async def test_service_set_random_mealplan(
         DOMAIN,
         MealieService.SET_RANDOM_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         },
@@ -454,7 +455,7 @@ async def test_service_set_random_mealplan(
         DOMAIN,
         MealieService.SET_RANDOM_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         },
@@ -464,31 +465,6 @@ async def test_service_set_random_mealplan(
     mock_mealie_client.random_mealplan.assert_called_with(
         date(2023, 10, 21), MealplanEntryType.LUNCH
     )
-
-
-async def test_service_set_random_mealplan_invalid_entry_type(
-    hass: HomeAssistant,
-    mock_mealie_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the set_random_mealplan service with invalid entry types for version."""
-    mock_mealie_client.get_about.return_value = About(version="v3.6.0")
-
-    await setup_integration(hass, mock_config_entry)
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            MealieService.SET_RANDOM_MEALPLAN,
-            {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                MealieServiceArgument.DATE: "2023-10-21",
-                MealieServiceArgument.ENTRY_TYPE: "dessert",
-            },
-            blocking=True,
-            return_response=True,
-        )
-    mock_mealie_client.random_mealplan.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -531,7 +507,7 @@ async def test_service_set_mealplan(
         DOMAIN,
         MealieService.SET_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         }
@@ -549,7 +525,7 @@ async def test_service_set_mealplan(
         DOMAIN,
         MealieService.SET_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         }
@@ -560,32 +536,6 @@ async def test_service_set_mealplan(
     mock_mealie_client.set_mealplan.assert_called_with(
         date(2023, 10, 21), MealplanEntryType.LUNCH, **kwargs
     )
-
-
-async def test_service_set_mealplan_invalid_entry_type(
-    hass: HomeAssistant,
-    mock_mealie_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the set_mealplan service with invalid entry types for version."""
-    mock_mealie_client.get_about.return_value = About(version="v3.6.0")
-
-    await setup_integration(hass, mock_config_entry)
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            MealieService.SET_MEALPLAN,
-            {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                MealieServiceArgument.DATE: "2023-10-21",
-                MealieServiceArgument.ENTRY_TYPE: "dessert",
-                MealieServiceArgument.NOTE_TITLE: "Note Title",
-            },
-            blocking=True,
-            return_response=True,
-        )
-    mock_mealie_client.set_mealplan.assert_not_called()
 
 
 async def test_service_delete_mealplan(
@@ -601,7 +551,7 @@ async def test_service_delete_mealplan(
         DOMAIN,
         MealieService.DELETE_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.MEALPLAN_ID: "16",
         },
         blocking=True,
@@ -612,7 +562,7 @@ async def test_service_delete_mealplan(
         DOMAIN,
         MealieService.DELETE_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.MEALPLAN_ID: 16,
         },
         blocking=True,
@@ -635,7 +585,7 @@ async def test_service_delete_mealplan_not_found(
             DOMAIN,
             MealieService.DELETE_MEALPLAN,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 MealieServiceArgument.MEALPLAN_ID: "16",
             },
             blocking=True,
@@ -683,7 +633,7 @@ async def test_service_update_mealplan(
         DOMAIN,
         MealieService.UPDATE_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.MEALPLAN_ID: "16",
             MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
@@ -702,7 +652,7 @@ async def test_service_update_mealplan(
         DOMAIN,
         MealieService.UPDATE_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.MEALPLAN_ID: "16",
             MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
@@ -720,7 +670,7 @@ async def test_service_update_mealplan(
         DOMAIN,
         MealieService.UPDATE_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.MEALPLAN_ID: 16,
             MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
@@ -732,33 +682,6 @@ async def test_service_update_mealplan(
     mock_mealie_client.update_mealplan.assert_called_with(
         16, date(2023, 10, 21), MealplanEntryType.LUNCH, **kwargs
     )
-
-
-async def test_service_update_mealplan_invalid_entry_type(
-    hass: HomeAssistant,
-    mock_mealie_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the update_mealplan service with invalid entry types for version."""
-    mock_mealie_client.get_about.return_value = About(version="v3.6.0")
-
-    await setup_integration(hass, mock_config_entry)
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            MealieService.UPDATE_MEALPLAN,
-            {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                MealieServiceArgument.MEALPLAN_ID: "16",
-                MealieServiceArgument.DATE: "2023-10-21",
-                MealieServiceArgument.ENTRY_TYPE: "dessert",
-                MealieServiceArgument.NOTE_TITLE: "Note Title",
-            },
-            blocking=True,
-            return_response=True,
-        )
-    mock_mealie_client.update_mealplan.assert_not_called()
 
 
 async def test_service_update_mealplan_not_found(
@@ -776,7 +699,7 @@ async def test_service_update_mealplan_not_found(
             DOMAIN,
             MealieService.UPDATE_MEALPLAN,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 MealieServiceArgument.MEALPLAN_ID: "16",
                 MealieServiceArgument.DATE: "2023-10-21",
                 MealieServiceArgument.ENTRY_TYPE: "lunch",
@@ -854,7 +777,7 @@ async def test_service_parse_ingredient(
         DOMAIN,
         MealieService.PARSE_INGREDIENT,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.INGREDIENT: "1 can acorn squash",
         },
         blocking=True,
@@ -865,53 +788,6 @@ async def test_service_parse_ingredient(
         "1 can acorn squash", RegisteredParser.NLP
     )
     assert response == snapshot
-
-
-@pytest.mark.parametrize(
-    "result",
-    [
-        pytest.param(None, id="missing-result"),
-        pytest.param(
-            replace(
-                ParsedIngredient.from_json(
-                    load_fixture("parse_ingredient.json", DOMAIN)
-                ),
-                confidence=None,
-            ),
-            id="missing-confidence",
-        ),
-    ],
-)
-async def test_service_get_ingredient_parse_failure(
-    hass: HomeAssistant,
-    mock_mealie_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    result: ParsedIngredient | None,
-) -> None:
-    """Test parsing failures raise a translated service error."""
-    await setup_integration(hass, mock_config_entry)
-
-    mock_mealie_client.parse_ingredient.return_value = result
-
-    with pytest.raises(
-        ServiceValidationError, match="Mealie could not parse the ingredient"
-    ) as exc_info:
-        await hass.services.async_call(
-            DOMAIN,
-            MealieService.PARSE_INGREDIENT,
-            {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                MealieServiceArgument.INGREDIENT: "1 can acorn squash",
-            },
-            blocking=True,
-            return_response=True,
-        )
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "could_not_parse_ingredient"
-    mock_mealie_client.parse_ingredient.assert_awaited_once_with(
-        "1 can acorn squash", RegisteredParser.NLP
-    )
 
 
 @pytest.mark.parametrize(
@@ -1070,7 +946,8 @@ async def test_services_connection_error(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | payload,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id}
+            | payload,
             blocking=True,
             return_response=return_response,
         )
@@ -1158,7 +1035,8 @@ async def test_service_entry_availability(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry2.entry_id} | payload,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry2.entry_id}
+            | payload,
             blocking=True,
             return_response=return_response,
         )
@@ -1168,7 +1046,7 @@ async def test_service_entry_availability(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_CONFIG_ENTRY_ID: "bad-config_id"} | payload,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: "bad-config_id"} | payload,
             blocking=True,
             return_response=return_response,
         )

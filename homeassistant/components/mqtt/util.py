@@ -9,6 +9,7 @@ from pathlib import Path
 import tempfile
 from typing import Any
 
+from cryptography.x509 import Certificate, load_pem_x509_certificate
 import probatio
 
 from homeassistant import config as conf_util
@@ -242,8 +243,9 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
 
     try:
         async with asyncio.timeout(AVAILABILITY_TIMEOUT):
-            # Await the client setup or an error state was received
-            return await state_reached_future
+            # Await the client setup or an error state was received,
+            # a timeout must not cancel the future for other waiters and retries
+            return await asyncio.shield(state_reached_future)
     except TimeoutError:
         return False
 
@@ -335,6 +337,19 @@ def valid_publish_topic(topic: Any) -> str:
     if "+" in validated_topic or "#" in validated_topic:
         raise probatio.Invalid("Wildcards cannot be used in topic names")
     return validated_topic
+
+
+def valid_encoding(value: Any) -> str:
+    """Validate a payload encoding, an empty string passes the raw payload."""
+    encoding = cv.string(value)
+    if not encoding:
+        return encoding
+    # An empty string skips the codec lookup, so encode a character
+    try:
+        "a".encode(encoding)
+    except LookupError as err:
+        raise probatio.Invalid(f"Unknown payload encoding '{encoding}'") from err
+    return encoding
 
 
 def entity_category_without_config(value: Any) -> EntityCategory:
@@ -439,6 +454,19 @@ def get_file_path(option: str, default: str | None = None) -> str | None:
         return default
 
     return str(temp_dir / option)
+
+
+def load_certificate_file(certificate_file: str) -> Certificate | None:
+    """Load a PEM encoded certificate file."""
+    try:
+        with open(certificate_file, "rb") as file:
+            data = file.read()
+    except OSError:
+        return None
+    try:
+        return load_pem_x509_certificate(data)
+    except ValueError:
+        return None
 
 
 def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:

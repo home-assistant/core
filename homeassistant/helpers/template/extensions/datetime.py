@@ -3,6 +3,8 @@
 from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Sentinel as sentinel
+
 from homeassistant.helpers.template.helpers import raise_no_default
 from homeassistant.helpers.template.render_info import render_info_cv
 from homeassistant.util import dt as dt_util
@@ -12,7 +14,7 @@ from .base import BaseTemplateExtension, TemplateFunction
 if TYPE_CHECKING:
     from homeassistant.helpers.template import TemplateEnvironment
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
@@ -156,7 +158,7 @@ class DateTimeExtension(BaseTemplateExtension):
                 result = dt_util.as_local(result)
 
             return result.strftime(date_format)
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError, OSError:
             # If timestamp can't be converted
             if default is _SENTINEL:
                 raise_no_default("timestamp_custom", value)
@@ -166,7 +168,7 @@ class DateTimeExtension(BaseTemplateExtension):
         """Filter to convert given timestamp to local date/time."""
         try:
             return dt_util.as_local(dt_util.utc_from_timestamp(value)).isoformat()
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError, OSError:
             # If timestamp can't be converted
             if default is _SENTINEL:
                 raise_no_default("timestamp_local", value)
@@ -176,7 +178,7 @@ class DateTimeExtension(BaseTemplateExtension):
         """Filter to convert given timestamp to UTC date/time."""
         try:
             return dt_util.utc_from_timestamp(value).isoformat()
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError, OSError:
             # If timestamp can't be converted
             if default is _SENTINEL:
                 raise_no_default("timestamp_utc", value)
@@ -203,7 +205,7 @@ class DateTimeExtension(BaseTemplateExtension):
             # Check for a valid UNIX timestamp string, int or float
             timestamp = float(value)
             return dt_util.utc_from_timestamp(timestamp)
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError, OSError:
             # Try to parse datetime string to datetime object
             try:
                 return dt_util.parse_datetime(value, raise_on_error=True)

@@ -97,6 +97,7 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": True,
         "domain": "casper_glow",
         "local_name": "Jar*",
+        "manufacturer_id": 65535,
     },
     {
         "connectable": False,
@@ -834,6 +835,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "LD-0003",
     },
     {
+        "domain": "led_ble",
+        "local_name": "Trick-*",
+    },
+    {
         "domain": "medcom_ble",
         "service_uuid": "39b31fec-b63a-4ef7-b163-a7317872007f",
     },
@@ -931,6 +936,15 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
     },
     {
+        "connectable": False,
+        "domain": "mopeka",
+        "manufacturer_data_start": [
+            18,
+        ],
+        "manufacturer_id": 89,
+        "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
         "connectable": True,
         "domain": "motionblinds_ble",
         "local_name": "MOTION_*",
@@ -957,7 +971,42 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "okok_scale",
+        "local_name": "10:96:1A:*",
+    },
+    {
+        "connectable": False,
+        "domain": "okok_scale",
+        "local_name": "50:FB:19:*",
+    },
+    {
+        "connectable": False,
+        "domain": "okok_scale",
+        "local_name": "60:65:F4:*",
+    },
+    {
+        "connectable": False,
+        "domain": "okok_scale",
+        "local_name": "78:66:A5:*",
+    },
+    {
+        "connectable": False,
+        "domain": "okok_scale",
         "local_name": "80:F4:16:*",
+    },
+    {
+        "connectable": False,
+        "domain": "okok_scale",
+        "local_name": "98:F6:7A:*",
+    },
+    {
+        "connectable": False,
+        "domain": "okok_scale",
+        "local_name": "B4:56:5D:*",
+    },
+    {
+        "connectable": False,
+        "domain": "okok_scale",
+        "local_name": "F0:2C:59:*",
     },
     {
         "connectable": True,
@@ -1016,6 +1065,36 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "connectable": False,
+        "domain": "schlage",
+        "manufacturer_data_start": [
+            1,
+            0,
+            9,
+        ],
+        "manufacturer_id": 315,
+    },
+    {
+        "connectable": False,
+        "domain": "schlage",
+        "manufacturer_data_start": [
+            1,
+            0,
+            23,
+        ],
+        "manufacturer_id": 315,
+    },
+    {
+        "connectable": False,
+        "domain": "schlage",
+        "manufacturer_data_start": [
+            1,
+            0,
+            24,
+        ],
+        "manufacturer_id": 315,
+    },
+    {
+        "connectable": False,
         "domain": "sensirion_ble",
         "manufacturer_id": 1749,
     },
@@ -1064,6 +1143,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "shelly",
         "manufacturer_id": 2985,
+    },
+    {
+        "domain": "snooz",
+        "local_name": "Breez*",
     },
     {
         "domain": "snooz",

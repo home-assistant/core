@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -12,7 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nice_go.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_EMAIL, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
@@ -73,6 +74,27 @@ async def test_setup_failure_auth_failed(
     assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
+def _barrier_needing_firmware_update(api: AsyncMock) -> Barrier:
+    """Return a barrier whose firmware migration has not started."""
+    return Barrier(
+        id="test-device-id",
+        type="test-type",
+        controlLevel="test-control-level",
+        attr=[{"key": "test-attr", "value": "test-value"}],
+        state=BarrierState(
+            deviceId="test-device-id",
+            reported={
+                "displayName": "test-display-name",
+                "migrationStatus": "NOT_STARTED",
+            },
+            connectionState=None,
+            version=None,
+            timestamp=None,
+        ),
+        api=api,
+    )
+
+
 async def test_firmware_update_required(
     hass: HomeAssistant,
     mock_nice_go: AsyncMock,
@@ -82,39 +104,117 @@ async def test_firmware_update_required(
     """Test firmware update required."""
 
     mock_nice_go.get_all_barriers.return_value = [
-        Barrier(
-            id="test-device-id",
-            type="test-type",
-            controlLevel="test-control-level",
-            attr=[{"key": "test-attr", "value": "test-value"}],
-            state=BarrierState(
-                deviceId="test-device-id",
-                reported={
-                    "displayName": "test-display-name",
-                    "migrationStatus": "NOT_STARTED",
-                },
-                connectionState=None,
-                version=None,
-                timestamp=None,
-            ),
-            api=mock_nice_go,
-        )
+        _barrier_needing_firmware_update(mock_nice_go)
     ]
 
     await setup_integration(hass, mock_config_entry, [])
 
-    issue = issue_registry.async_get_issue(
-        DOMAIN,
-        "firmware_update_required_test-device-id",
-    )
+    issue_id = f"firmware_update_required_{mock_config_entry.entry_id}_test-device-id"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue
     assert issue.config_entry_id == mock_config_entry.entry_id
 
     await hass.config_entries.async_remove(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert not issue_registry.async_get_issue(
-        DOMAIN, "firmware_update_required_test-device-id"
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_firmware_update_required_shared_barrier(
+    hass: HomeAssistant,
+    mock_nice_go: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test each account sharing a barrier gets its own firmware issue."""
+
+    mock_nice_go.get_all_barriers.return_value = [
+        _barrier_needing_firmware_update(mock_nice_go)
+    ]
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="0123456789abcdef0123456789abcdef",
+        title="other-email",
+        data={**mock_config_entry.data, CONF_EMAIL: "other-email"},
+        version=1,
+        unique_id="other-email",
     )
+
+    await setup_integration(hass, mock_config_entry, [])
+    await setup_integration(hass, other_entry, [])
+
+    issue_id = f"firmware_update_required_{mock_config_entry.entry_id}_test-device-id"
+    other_issue_id = f"firmware_update_required_{other_entry.entry_id}_test-device-id"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.config_entry_id == mock_config_entry.entry_id
+    other_issue = issue_registry.async_get_issue(DOMAIN, other_issue_id)
+    assert other_issue
+    assert other_issue.config_entry_id == other_entry.entry_id
+
+    issue_registry.async_ignore(DOMAIN, other_issue_id, True)
+
+    # Removing one account must not delete the other account's issue
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    other_issue = issue_registry.async_get_issue(DOMAIN, other_issue_id)
+    assert other_issue
+    assert other_issue.config_entry_id == other_entry.entry_id
+    assert other_issue.dismissed_version is not None
+
+
+def _state_update(reported: str) -> dict[str, Any]:
+    """Return a websocket state update for barrier 1."""
+    return {
+        "data": {
+            "devicesStatesUpdateFeed": {
+                "item": {
+                    "deviceId": "1",
+                    "desired": '{"key": "value"}',
+                    "reported": reported,
+                    "connectionState": None,
+                    "version": None,
+                    "timestamp": None,
+                }
+            }
+        }
+    }
+
+
+async def test_firmware_update_required_resolved(
+    hass: HomeAssistant,
+    mock_nice_go: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the firmware issue is deleted once the migration has started."""
+
+    mock_nice_go.listen = MagicMock()
+
+    await setup_integration(hass, mock_config_entry, [Platform.COVER])
+    on_data = mock_nice_go.listen.call_args_list[1][0][1]
+    issue_id = f"firmware_update_required_{mock_config_entry.entry_id}_1"
+
+    await on_data(
+        _state_update(
+            '{"displayName":"Test Garage 1", "migrationStatus":"NOT_STARTED"}'
+        )
+    )
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await on_data(
+        _state_update(
+            '{"displayName":"Test Garage 1",'
+            ' "migrationStatus":"DONE",'
+            ' "barrierStatus": "1,100,0",'
+            ' "deviceFwVersion": "1.0.0",'
+            ' "lightStatus": "1,100",'
+            ' "vcnMode": false}'
+        )
+    )
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 async def test_update_refresh_token(

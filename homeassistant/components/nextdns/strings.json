@@ -189,6 +189,9 @@
       "block_9gag": {
         "name": "Block 9GAG"
       },
+      "block_algorithmically_generated_domains": {
+        "name": "Block algorithmically generated domains"
+      },
       "block_amazon": {
         "name": "Block Amazon"
       },
@@ -320,6 +323,9 @@
       },
       "block_roblox": {
         "name": "Block Roblox"
+      },
+      "block_rotating_ad_domains": {
+        "name": "Block rotating ad domains"
       },
       "block_signal": {
         "name": "Block Signal"

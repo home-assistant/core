@@ -9,19 +9,12 @@ from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.siren import (
-    ATTR_DURATION,
-    ATTR_VOLUME_LEVEL,
     DOMAIN as SIREN_DOMAIN,
+    SirenService,
+    SirenServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_ON, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -63,8 +56,8 @@ async def test_siren(
     # test siren turn on
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SirenService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     reolink_host.set_volume.assert_not_called()
@@ -72,8 +65,12 @@ async def test_siren(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VOLUME_LEVEL: 0.85, ATTR_DURATION: 2},
+        SirenService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            SirenServiceArgument.VOLUME_LEVEL: 0.85,
+            SirenServiceArgument.DURATION: 2,
+        },
         blocking=True,
     )
     reolink_host.set_volume.assert_called_with(0, 85)
@@ -82,8 +79,8 @@ async def test_siren(
     # test siren turn off
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SirenService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     reolink_host.set_siren.assert_called_with(0, False, None)
@@ -124,8 +121,12 @@ async def test_siren_turn_on_errors(
     with pytest.raises(expected):
         await hass.services.async_call(
             SIREN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VOLUME_LEVEL: 0.85, ATTR_DURATION: 2},
+            SirenService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                SirenServiceArgument.VOLUME_LEVEL: 0.85,
+                SirenServiceArgument.DURATION: 2,
+            },
             blocking=True,
         )
 
@@ -149,8 +150,8 @@ async def test_siren_turn_off_errors(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SIREN_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SirenService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -174,8 +175,8 @@ async def test_host_siren(
     # test siren turn on
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SirenService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     reolink_host.set_hub_audio.assert_not_called()
@@ -185,8 +186,8 @@ async def test_host_siren(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VOLUME_LEVEL: 0.85},
+        SirenService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, SirenServiceArgument.VOLUME_LEVEL: 0.85},
         blocking=True,
     )
     reolink_host.set_hub_audio.assert_called_with(alarm_volume=85)

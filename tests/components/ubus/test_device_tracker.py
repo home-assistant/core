@@ -1,13 +1,26 @@
 """Tests for the OpenWrt (ubus) device tracker."""
 
-from unittest.mock import MagicMock
+from datetime import timedelta
+from typing import Any
+from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.ubus.const import DOMAIN
+from homeassistant.components.ubus.coordinator import LEASE_REREAD_INTERVAL
+from homeassistant.components.ubus.device_tracker import UbusScannerEntity
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    STATE_HOME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -59,8 +72,51 @@ async def test_only_authorized_clients_are_tracked(
     }
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_client_present_when_authorized_on_one_interface(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a client appears to be "home" when authorized on at least one interface."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_HOME
+
+
+@pytest.mark.parametrize(
+    ("yaml_ssl", "expected"),
+    [
+        pytest.param({}, {CONF_SSL: False, CONF_VERIFY_SSL: True}, id="defaults"),
+        pytest.param(
+            {CONF_SSL: True},
+            {CONF_SSL: True, CONF_VERIFY_SSL: True},
+            id="ssl_verified_by_default",
+        ),
+        pytest.param(
+            {CONF_SSL: True, CONF_VERIFY_SSL: False},
+            {CONF_SSL: True, CONF_VERIFY_SSL: False},
+            id="ssl_unverified",
+        ),
+        pytest.param(
+            {CONF_SSL: True, CONF_VERIFY_SSL: True},
+            {CONF_SSL: True, CONF_VERIFY_SSL: True},
+            id="ssl_verified",
+        ),
+    ],
+)
 async def test_setup_scanner_imports_yaml(
-    hass: HomeAssistant, mock_ubus: MagicMock
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    yaml_ssl: dict[str, bool],
+    expected: dict[str, bool],
 ) -> None:
     """Test the legacy YAML platform imports itself into a config entry."""
     assert await async_setup_component(
@@ -73,6 +129,7 @@ async def test_setup_scanner_imports_yaml(
                     CONF_HOST: MOCK_HOST,
                     CONF_USERNAME: "root",
                     CONF_PASSWORD: "password",
+                    **yaml_ssl,
                 }
             ]
         },
@@ -82,7 +139,7 @@ async def test_setup_scanner_imports_yaml(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].source == SOURCE_IMPORT
-    assert entries[0].data == MOCK_CONFIG
+    assert entries[0].data == {**MOCK_CONFIG, **expected}
 
 
 async def test_setup_scanner_creates_issue_on_cannot_connect(
@@ -113,3 +170,289 @@ async def test_setup_scanner_creates_issue_on_cannot_connect(
     issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect")
     assert issue is not None
     assert issue.translation_placeholders == {"host": MOCK_HOST}
+
+
+@pytest.mark.parametrize(
+    ("dhcp_software", "method"),
+    [
+        pytest.param("dnsmasq", "file_read", id="dnsmasq"),
+        pytest.param("odhcpd", "get_dhcp_method", id="odhcpd"),
+    ],
+)
+async def test_missing_leases_keep_existing_device_name(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    method: str,
+) -> None:
+    """Test an empty lease read names only new devices after their MAC."""
+    getattr(mock_ubus.return_value, method).return_value = None
+    mock_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
+        name="my-phone",
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    phone = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), mock_config_entry.entry_id
+    )
+    laptop = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_LAPTOP), mock_config_entry.entry_id
+    )
+    assert phone is not None
+    assert phone.name == "my-phone"
+    assert laptop is not None
+    assert laptop.name == MAC_LAPTOP
+
+
+async def test_missing_uci_config_falls_back_to_mac_names(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test clients are named by MAC while the dnsmasq uci config is missing."""
+    mock_ubus.return_value.get_uci_config.return_value = None
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    phone = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), mock_config_entry.entry_id
+    )
+    assert phone is not None
+    assert phone.name == MAC_PHONE
+    laptop = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_LAPTOP), mock_config_entry.entry_id
+    )
+    assert laptop is not None
+    assert laptop.name == MAC_LAPTOP
+
+    # The hostnames are picked up on a later read once the config is available.
+    mock_ubus.return_value.get_uci_config.return_value = {
+        "values": {"cfg01": {"leasefile": "/var/dhcp/dnsmasq.leases"}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert device_registry.async_get(phone.id).name == "my-phone"
+    assert device_registry.async_get(laptop.id).name == "my-laptop"
+
+
+@pytest.mark.parametrize(
+    "enabled", [pytest.param(False, id="disabled"), pytest.param(True, id="enabled")]
+)
+@pytest.mark.parametrize(
+    "initial_leases",
+    [
+        pytest.param(None, id="empty_read"),
+        pytest.param({"data": ""}, id="no_leases"),
+        pytest.param(
+            {"data": "1600000000 aa:bb:cc:dd:ee:ff 192.168.1.10 * *"},
+            id="unknown_hostname",
+        ),
+    ],
+)
+async def test_device_renamed_when_hostname_appears(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    monkeypatch: pytest.MonkeyPatch,
+    initial_leases: dict[str, Any] | None,
+    enabled: bool,
+) -> None:
+    """Test a client without a known hostname is renamed once it has one."""
+    monkeypatch.setattr(
+        UbusScannerEntity, "_attr_entity_registry_enabled_default", enabled
+    )
+    file_read = mock_ubus.return_value.file_read
+    leases = file_read.return_value
+    file_read.return_value = initial_leases
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert (hass.states.get(entity_id) is not None) is enabled
+    phone = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), mock_config_entry.entry_id
+    )
+    assert phone is not None
+    assert phone.name == MAC_PHONE
+
+    file_read.return_value = leases
+    freezer.tick(LEASE_REREAD_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    phone = device_registry.async_get(phone.id)
+    assert phone is not None
+    assert phone.name == "my-phone"
+
+    # The leases are not reread once every client has a hostname.
+    read_count = file_read.call_count
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert file_read.call_count == read_count
+
+
+async def test_disabled_trackers_not_recreated(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test trackers which are disabled by default are only created once."""
+    mock_config_entry.add_to_hass(hass)
+    with patch.object(
+        UbusScannerEntity,
+        "__init__",
+        autospec=True,
+        side_effect=UbusScannerEntity.__init__,
+    ) as mock_init:
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        for _ in range(3):
+            freezer.tick(timedelta(seconds=30))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_init.call_count == 2
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert {e.disabled_by for e in entries} == {er.RegistryEntryDisabler.INTEGRATION}
+
+
+async def test_other_entry_device_removal_keeps_tracking(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test removing another entry's device for a tracked MAC is ignored."""
+    mock_config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
+    )
+    with patch.object(
+        UbusScannerEntity,
+        "__init__",
+        autospec=True,
+        side_effect=UbusScannerEntity.__init__,
+    ) as mock_init:
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        device_registry.async_remove_device(other_device.id)
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_init.call_count == 2
+
+
+async def test_lease_reread_throttled_for_clients_without_hostname(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the leases are reread for new clients, else only periodically."""
+    file_read = mock_ubus.return_value.file_read
+    file_read.return_value = {
+        "data": (
+            "1600000000 aa:bb:cc:dd:ee:ff 192.168.1.10 my-phone *\n"
+            "1600000000 11:22:33:44:55:66 192.168.1.11 * *"
+        )
+    }
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert file_read.call_count == 1
+
+    for _ in range(3):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    assert file_read.call_count == 1
+
+    freezer.tick(LEASE_REREAD_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert file_read.call_count == 2
+
+    mock_ubus.return_value.get_hostapd_clients.side_effect = lambda interface: {
+        "clients": {
+            MAC_PHONE: {"authorized": True},
+            MAC_LAPTOP: {"authorized": True},
+            MAC_GUEST: {"authorized": True},
+        }
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert file_read.call_count == 3
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_empty_lease_reread_keeps_known_hostnames(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a lease reread without a known client keeps its hostname."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # A new client without a hostname triggers a reread, which is empty.
+    file_read = mock_ubus.return_value.file_read
+    file_read.return_value = {"data": ""}
+    mock_ubus.return_value.get_hostapd_clients.side_effect = lambda interface: {
+        "clients": {
+            MAC_PHONE: {"authorized": True},
+            MAC_LAPTOP: {"authorized": True},
+            MAC_GUEST: {"authorized": True},
+        }
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert file_read.call_count == 2
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["host_name"] == "my-phone"
+    phone = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), mock_config_entry.entry_id
+    )
+    assert phone is not None
+    assert phone.name == "my-phone"

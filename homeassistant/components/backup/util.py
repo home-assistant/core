@@ -220,7 +220,7 @@ def _get_expected_archives(backup: AgentBackup) -> set[str]:
     for addon in backup.addons:
         expected_archives.add(addon.slug)
     for folder in backup.folders:
-        expected_archives.add(folder.value)
+        expected_archives.add(folder.value.replace("/", "_"))
     return expected_archives
 
 
@@ -491,6 +491,13 @@ class _CipherBackupStreamer:
             worker.writer.abort()
         await asyncio.gather(*(worker.done.wait() for worker in self._workers))
         await asyncio.gather(*(worker.reader.aclose() for worker in self._workers))
+        await self._hass.async_add_executor_job(self._join_workers)
+
+    def _join_workers(self) -> None:
+        """Wait for the worker threads to finish."""
+        for worker in self._workers:
+            if worker.thread.is_alive():
+                worker.thread.join()
 
 
 class DecryptedBackupStreamer(_CipherBackupStreamer):

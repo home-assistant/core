@@ -1,5 +1,7 @@
 """Tests for the BLUETTI Modbus sensor entities."""
 
+from unittest.mock import patch
+
 from bluetti_modbus_lib import PvType, get_device
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection.mock import MockModbusUnit
@@ -12,7 +14,7 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bluetti_modbus.const import SCAN_INTERVAL
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -24,6 +26,7 @@ PV_1_TYPE_ENTITY = "sensor.balco_260_pv_1_input_type"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@patch("homeassistant.components.bluetti_modbus.PLATFORMS", [Platform.SENSOR])
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

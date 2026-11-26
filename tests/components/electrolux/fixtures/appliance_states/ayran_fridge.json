@@ -1,0 +1,56 @@
+{
+  "applianceId": "999011403_00:20220412-443E07022463",
+  "connectionState": "disconnected",
+  "status": "enabled",
+  "properties": {
+    "reported": {
+      "applianceInfo": {
+        "applianceType": "CR",
+        "capabilityHash": "bf87e5b776236bf693664d892f1eeebef672df3ab1d0a56e7479ec1ece8932c4"
+      },
+      "fridge": {
+        "applianceState": "RUNNING",
+        "fanState": "ON",
+        "doorState": "CLOSED",
+        "targetTemperatureF": 39.2,
+        "targetTemperatureC": 4,
+        "fastMode": "OFF",
+        "alerts": []
+      },
+      "applianceUiSwVersion": "v4.0.4",
+      "uiLockMode": false,
+      "cpv": "00",
+      "vacationHolidayMode": "OFF",
+      "applianceMode": "NORMAL",
+      "applianceMainBoardSwVersion": "v39.00.00",
+      "coolingValveState": "1",
+      "alerts": [
+        {
+          "severity": "WARNING",
+          "acknowledgeStatus": "NOT_NEEDED",
+          "code": "AIR_SENSOR_BROKEN",
+          "applianceCode": "6"
+        }
+      ],
+      "networkInterface": {
+        "linkQualityIndicator": "VERY_GOOD",
+        "otaState": "IDLE",
+        "swVersion": "v1.9.2_hacl",
+        "niuSwUpdateCurrentDescription": "A16323312A-S00006975A",
+        "swAncAndRevision": "S00006975A"
+      },
+      "freezer": {
+        "fastMode": "OFF",
+        "applianceState": "RUNNING",
+        "fanState": "OFF",
+        "doorState": "CLOSED",
+        "targetTemperatureF": -0.3999999999999986,
+        "targetTemperatureC": -18,
+        "alerts": []
+      },
+      "reminderTime": -1,
+      "connectivityState": "disconnected",
+      "energySavingMode": "OFF"
+    }
+  }
+}

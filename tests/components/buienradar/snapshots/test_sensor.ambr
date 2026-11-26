@@ -1,0 +1,6319 @@
+# serializer version: 1
+# name: test_sensors[sensor.barometer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.barometer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Barometer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:gauge',
+    'original_name': 'Barometer',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'barometerfcname',
+    'unique_id': '51.5288505.400216barometerfcname',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.barometer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Barometer',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:gauge',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.barometer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Unstable',
+  })
+# ---
+# name: test_sensors[sensor.barometer_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.barometer_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Barometer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:gauge',
+    'original_name': 'Barometer',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'barometerfcnamenl',
+    'unique_id': '51.5288505.400216barometerfcnamenl',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.barometer_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Barometer',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:gauge',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.barometer_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Veranderlijk',
+  })
+# ---
+# name: test_sensors[sensor.barometer_value-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.barometer_value',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Barometer value',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:gauge',
+    'original_name': 'Barometer value',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'barometerfc',
+    'unique_id': '51.5288505.400216barometerfc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.barometer_value-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Barometer value',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:gauge',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.barometer_value',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_sensors[sensor.condition-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.condition',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Condition',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Condition',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'condition',
+    'unique_id': '51.5288505.400216condition',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.condition-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/c.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.condition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
+# name: test_sensors[sensor.condition_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.condition_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Condition 1d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Condition 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'condition_1d',
+    'unique_id': '51.5288505.400216condition_1d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.condition_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/f.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition 1d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.condition_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'rainy',
+  })
+# ---
+# name: test_sensors[sensor.condition_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.condition_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Condition 2d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Condition 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'condition_2d',
+    'unique_id': '51.5288505.400216condition_2d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.condition_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/a.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition 2d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.condition_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'clear',
+  })
+# ---
+# name: test_sensors[sensor.condition_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.condition_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Condition 3d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Condition 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'condition_3d',
+    'unique_id': '51.5288505.400216condition_3d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.condition_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition 3d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.condition_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
+# name: test_sensors[sensor.condition_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.condition_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Condition 4d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Condition 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'condition_4d',
+    'unique_id': '51.5288505.400216condition_4d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.condition_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition 4d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.condition_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
+# name: test_sensors[sensor.condition_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.condition_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Condition 5d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Condition 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'condition_5d',
+    'unique_id': '51.5288505.400216condition_5d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.condition_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition 5d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'cloudy',
+        'fog',
+        'rainy',
+        'snowy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.condition_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
+# name: test_sensors[sensor.condition_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'a',
+        'b',
+        'j',
+        'o',
+        'r',
+        'c',
+        'p',
+        'd',
+        'n',
+        'f',
+        'h',
+        'k',
+        'l',
+        'q',
+        'w',
+        'm',
+        'u',
+        'i',
+        'v',
+        't',
+        'g',
+        's',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.condition_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Condition code',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Condition code',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditioncode',
+    'unique_id': '51.5288505.400216conditioncode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.condition_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/c.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition code',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'a',
+        'b',
+        'j',
+        'o',
+        'r',
+        'c',
+        'p',
+        'd',
+        'n',
+        'f',
+        'h',
+        'k',
+        'l',
+        'q',
+        'w',
+        'm',
+        'u',
+        'i',
+        'v',
+        't',
+        'g',
+        's',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.condition_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'c',
+  })
+# ---
+# name: test_sensors[sensor.condition_code_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'a',
+        'b',
+        'j',
+        'o',
+        'r',
+        'c',
+        'p',
+        'd',
+        'n',
+        'f',
+        'h',
+        'k',
+        'l',
+        'q',
+        'w',
+        'm',
+        'u',
+        'i',
+        'v',
+        't',
+        'g',
+        's',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.condition_code_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Condition code 1d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Condition code 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditioncode_1d',
+    'unique_id': '51.5288505.400216conditioncode_1d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.condition_code_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/f.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition code 1d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'a',
+        'b',
+        'j',
+        'o',
+        'r',
+        'c',
+        'p',
+        'd',
+        'n',
+        'f',
+        'h',
+        'k',
+        'l',
+        'q',
+        'w',
+        'm',
+        'u',
+        'i',
+        'v',
+        't',
+        'g',
+        's',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.condition_code_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'f',
+  })
+# ---
+# name: test_sensors[sensor.condition_code_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'a',
+        'b',
+        'j',
+        'o',
+        'r',
+        'c',
+        'p',
+        'd',
+        'n',
+        'f',
+        'h',
+        'k',
+        'l',
+        'q',
+        'w',
+        'm',
+        'u',
+        'i',
+        'v',
+        't',
+        'g',
+        's',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.condition_code_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Condition code 2d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Condition code 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditioncode_2d',
+    'unique_id': '51.5288505.400216conditioncode_2d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.condition_code_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/a.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition code 2d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'a',
+        'b',
+        'j',
+        'o',
+        'r',
+        'c',
+        'p',
+        'd',
+        'n',
+        'f',
+        'h',
+        'k',
+        'l',
+        'q',
+        'w',
+        'm',
+        'u',
+        'i',
+        'v',
+        't',
+        'g',
+        's',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.condition_code_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'a',
+  })
+# ---
+# name: test_sensors[sensor.condition_code_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'a',
+        'b',
+        'j',
+        'o',
+        'r',
+        'c',
+        'p',
+        'd',
+        'n',
+        'f',
+        'h',
+        'k',
+        'l',
+        'q',
+        'w',
+        'm',
+        'u',
+        'i',
+        'v',
+        't',
+        'g',
+        's',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.condition_code_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Condition code 3d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Condition code 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditioncode_3d',
+    'unique_id': '51.5288505.400216conditioncode_3d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.condition_code_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition code 3d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'a',
+        'b',
+        'j',
+        'o',
+        'r',
+        'c',
+        'p',
+        'd',
+        'n',
+        'f',
+        'h',
+        'k',
+        'l',
+        'q',
+        'w',
+        'm',
+        'u',
+        'i',
+        'v',
+        't',
+        'g',
+        's',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.condition_code_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'b',
+  })
+# ---
+# name: test_sensors[sensor.condition_code_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'a',
+        'b',
+        'j',
+        'o',
+        'r',
+        'c',
+        'p',
+        'd',
+        'n',
+        'f',
+        'h',
+        'k',
+        'l',
+        'q',
+        'w',
+        'm',
+        'u',
+        'i',
+        'v',
+        't',
+        'g',
+        's',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.condition_code_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Condition code 4d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Condition code 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditioncode_4d',
+    'unique_id': '51.5288505.400216conditioncode_4d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.condition_code_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition code 4d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'a',
+        'b',
+        'j',
+        'o',
+        'r',
+        'c',
+        'p',
+        'd',
+        'n',
+        'f',
+        'h',
+        'k',
+        'l',
+        'q',
+        'w',
+        'm',
+        'u',
+        'i',
+        'v',
+        't',
+        'g',
+        's',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.condition_code_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'b',
+  })
+# ---
+# name: test_sensors[sensor.condition_code_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'a',
+        'b',
+        'j',
+        'o',
+        'r',
+        'c',
+        'p',
+        'd',
+        'n',
+        'f',
+        'h',
+        'k',
+        'l',
+        'q',
+        'w',
+        'm',
+        'u',
+        'i',
+        'v',
+        't',
+        'g',
+        's',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.condition_code_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Condition code 5d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Condition code 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditioncode_5d',
+    'unique_id': '51.5288505.400216conditioncode_5d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.condition_code_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Condition code 5d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'a',
+        'b',
+        'j',
+        'o',
+        'r',
+        'c',
+        'p',
+        'd',
+        'n',
+        'f',
+        'h',
+        'k',
+        'l',
+        'q',
+        'w',
+        'm',
+        'u',
+        'i',
+        'v',
+        't',
+        'g',
+        's',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.condition_code_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'b',
+  })
+# ---
+# name: test_sensors[sensor.detailed_condition-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'partlycloudy',
+        'partlycloudy-fog',
+        'partlycloudy-light-rain',
+        'partlycloudy-rain',
+        'cloudy',
+        'fog',
+        'rainy',
+        'light-rain',
+        'light-snow',
+        'partlycloudy-light-snow',
+        'partlycloudy-snow',
+        'partlycloudy-lightning',
+        'snowy',
+        'snowy-rainy',
+        'lightning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.detailed_condition',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Detailed condition',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Detailed condition',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditiondetailed',
+    'unique_id': '51.5288505.400216conditiondetailed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.detailed_condition-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/c.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Detailed condition',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'partlycloudy',
+        'partlycloudy-fog',
+        'partlycloudy-light-rain',
+        'partlycloudy-rain',
+        'cloudy',
+        'fog',
+        'rainy',
+        'light-rain',
+        'light-snow',
+        'partlycloudy-light-snow',
+        'partlycloudy-snow',
+        'partlycloudy-lightning',
+        'snowy',
+        'snowy-rainy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.detailed_condition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
+# name: test_sensors[sensor.detailed_condition_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'partlycloudy',
+        'partlycloudy-fog',
+        'partlycloudy-light-rain',
+        'partlycloudy-rain',
+        'cloudy',
+        'fog',
+        'rainy',
+        'light-rain',
+        'light-snow',
+        'partlycloudy-light-snow',
+        'partlycloudy-snow',
+        'partlycloudy-lightning',
+        'snowy',
+        'snowy-rainy',
+        'lightning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.detailed_condition_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Detailed condition 1d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Detailed condition 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditiondetailed_1d',
+    'unique_id': '51.5288505.400216conditiondetailed_1d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.detailed_condition_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/f.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Detailed condition 1d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'partlycloudy',
+        'partlycloudy-fog',
+        'partlycloudy-light-rain',
+        'partlycloudy-rain',
+        'cloudy',
+        'fog',
+        'rainy',
+        'light-rain',
+        'light-snow',
+        'partlycloudy-light-snow',
+        'partlycloudy-snow',
+        'partlycloudy-lightning',
+        'snowy',
+        'snowy-rainy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.detailed_condition_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'partlycloudy-light-rain',
+  })
+# ---
+# name: test_sensors[sensor.detailed_condition_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'partlycloudy',
+        'partlycloudy-fog',
+        'partlycloudy-light-rain',
+        'partlycloudy-rain',
+        'cloudy',
+        'fog',
+        'rainy',
+        'light-rain',
+        'light-snow',
+        'partlycloudy-light-snow',
+        'partlycloudy-snow',
+        'partlycloudy-lightning',
+        'snowy',
+        'snowy-rainy',
+        'lightning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.detailed_condition_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Detailed condition 2d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Detailed condition 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditiondetailed_2d',
+    'unique_id': '51.5288505.400216conditiondetailed_2d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.detailed_condition_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/a.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Detailed condition 2d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'partlycloudy',
+        'partlycloudy-fog',
+        'partlycloudy-light-rain',
+        'partlycloudy-rain',
+        'cloudy',
+        'fog',
+        'rainy',
+        'light-rain',
+        'light-snow',
+        'partlycloudy-light-snow',
+        'partlycloudy-snow',
+        'partlycloudy-lightning',
+        'snowy',
+        'snowy-rainy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.detailed_condition_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'clear',
+  })
+# ---
+# name: test_sensors[sensor.detailed_condition_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'partlycloudy',
+        'partlycloudy-fog',
+        'partlycloudy-light-rain',
+        'partlycloudy-rain',
+        'cloudy',
+        'fog',
+        'rainy',
+        'light-rain',
+        'light-snow',
+        'partlycloudy-light-snow',
+        'partlycloudy-snow',
+        'partlycloudy-lightning',
+        'snowy',
+        'snowy-rainy',
+        'lightning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.detailed_condition_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Detailed condition 3d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Detailed condition 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditiondetailed_3d',
+    'unique_id': '51.5288505.400216conditiondetailed_3d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.detailed_condition_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Detailed condition 3d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'partlycloudy',
+        'partlycloudy-fog',
+        'partlycloudy-light-rain',
+        'partlycloudy-rain',
+        'cloudy',
+        'fog',
+        'rainy',
+        'light-rain',
+        'light-snow',
+        'partlycloudy-light-snow',
+        'partlycloudy-snow',
+        'partlycloudy-lightning',
+        'snowy',
+        'snowy-rainy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.detailed_condition_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'partlycloudy',
+  })
+# ---
+# name: test_sensors[sensor.detailed_condition_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'partlycloudy',
+        'partlycloudy-fog',
+        'partlycloudy-light-rain',
+        'partlycloudy-rain',
+        'cloudy',
+        'fog',
+        'rainy',
+        'light-rain',
+        'light-snow',
+        'partlycloudy-light-snow',
+        'partlycloudy-snow',
+        'partlycloudy-lightning',
+        'snowy',
+        'snowy-rainy',
+        'lightning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.detailed_condition_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Detailed condition 4d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Detailed condition 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditiondetailed_4d',
+    'unique_id': '51.5288505.400216conditiondetailed_4d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.detailed_condition_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Detailed condition 4d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'partlycloudy',
+        'partlycloudy-fog',
+        'partlycloudy-light-rain',
+        'partlycloudy-rain',
+        'cloudy',
+        'fog',
+        'rainy',
+        'light-rain',
+        'light-snow',
+        'partlycloudy-light-snow',
+        'partlycloudy-snow',
+        'partlycloudy-lightning',
+        'snowy',
+        'snowy-rainy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.detailed_condition_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'partlycloudy',
+  })
+# ---
+# name: test_sensors[sensor.detailed_condition_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'partlycloudy',
+        'partlycloudy-fog',
+        'partlycloudy-light-rain',
+        'partlycloudy-rain',
+        'cloudy',
+        'fog',
+        'rainy',
+        'light-rain',
+        'light-snow',
+        'partlycloudy-light-snow',
+        'partlycloudy-snow',
+        'partlycloudy-lightning',
+        'snowy',
+        'snowy-rainy',
+        'lightning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.detailed_condition_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Detailed condition 5d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Detailed condition 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditiondetailed_5d',
+    'unique_id': '51.5288505.400216conditiondetailed_5d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.detailed_condition_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Detailed condition 5d',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'clear',
+        'partlycloudy',
+        'partlycloudy-fog',
+        'partlycloudy-light-rain',
+        'partlycloudy-rain',
+        'cloudy',
+        'fog',
+        'rainy',
+        'light-rain',
+        'light-snow',
+        'partlycloudy-light-snow',
+        'partlycloudy-snow',
+        'partlycloudy-lightning',
+        'snowy',
+        'snowy-rainy',
+        'lightning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.detailed_condition_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'partlycloudy',
+  })
+# ---
+# name: test_sensors[sensor.feel_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.feel_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Feel temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Feel temperature',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'feeltemperature',
+    'unique_id': '51.5288505.400216feeltemperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.feel_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Feel temperature',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.feel_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.1',
+  })
+# ---
+# name: test_sensors[sensor.full_condition-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.full_condition',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Full condition',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Full condition',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditionexact',
+    'unique_id': '51.5288505.400216conditionexact',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.full_condition-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/c.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Full condition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.full_condition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Heavily clouded',
+  })
+# ---
+# name: test_sensors[sensor.full_condition_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.full_condition_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Full condition 1d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Full condition 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditionexact_1d',
+    'unique_id': '51.5288505.400216conditionexact_1d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.full_condition_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/f.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Full condition 1d',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.full_condition_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Alternatingly cloudy with some light rain',
+  })
+# ---
+# name: test_sensors[sensor.full_condition_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.full_condition_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Full condition 2d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Full condition 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditionexact_2d',
+    'unique_id': '51.5288505.400216conditionexact_2d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.full_condition_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/a.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Full condition 2d',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.full_condition_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Almost fully clear (sunny/clear)',
+  })
+# ---
+# name: test_sensors[sensor.full_condition_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.full_condition_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Full condition 3d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Full condition 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditionexact_3d',
+    'unique_id': '51.5288505.400216conditionexact_3d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.full_condition_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Full condition 3d',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.full_condition_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Mix of clear and medium or low clouds',
+  })
+# ---
+# name: test_sensors[sensor.full_condition_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.full_condition_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Full condition 4d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Full condition 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditionexact_4d',
+    'unique_id': '51.5288505.400216conditionexact_4d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.full_condition_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Full condition 4d',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.full_condition_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Mix of clear and medium or low clouds',
+  })
+# ---
+# name: test_sensors[sensor.full_condition_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.full_condition_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Full condition 5d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Full condition 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'conditionexact_5d',
+    'unique_id': '51.5288505.400216conditionexact_5d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.full_condition_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Full condition 5d',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.full_condition_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Mix of clear and medium or low clouds',
+  })
+# ---
+# name: test_sensors[sensor.ground_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ground_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ground temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Ground temperature',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'groundtemperature',
+    'unique_id': '51.5288505.400216groundtemperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.ground_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ground temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ground_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.5',
+  })
+# ---
+# name: test_sensors[sensor.humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Humidity',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': 'mdi:water-percent',
+    'original_name': 'Humidity',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '51.5288505.400216humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidity',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water-percent',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '87',
+  })
+# ---
+# name: test_sensors[sensor.irradiance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.irradiance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Irradiance',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
+    'original_name': 'Irradiance',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '51.5288505.400216irradiance',
+    'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+  })
+# ---
+# name: test_sensors[sensor.irradiance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'irradiance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Irradiance',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.irradiance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '120',
+  })
+# ---
+# name: test_sensors[sensor.maximum_rain_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.maximum_rain_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Maximum rain 1d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Maximum rain 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'maxrain_1d',
+    'unique_id': '51.5288505.400216maxrain_1d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.maximum_rain_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Maximum rain 1d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maximum_rain_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.0',
+  })
+# ---
+# name: test_sensors[sensor.maximum_rain_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.maximum_rain_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Maximum rain 2d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Maximum rain 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'maxrain_2d',
+    'unique_id': '51.5288505.400216maxrain_2d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.maximum_rain_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Maximum rain 2d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maximum_rain_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.maximum_rain_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.maximum_rain_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Maximum rain 3d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Maximum rain 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'maxrain_3d',
+    'unique_id': '51.5288505.400216maxrain_3d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.maximum_rain_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Maximum rain 3d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maximum_rain_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_sensors[sensor.maximum_rain_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.maximum_rain_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Maximum rain 4d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Maximum rain 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'maxrain_4d',
+    'unique_id': '51.5288505.400216maxrain_4d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.maximum_rain_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Maximum rain 4d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maximum_rain_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_sensors[sensor.maximum_rain_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.maximum_rain_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Maximum rain 5d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Maximum rain 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'maxrain_5d',
+    'unique_id': '51.5288505.400216maxrain_5d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.maximum_rain_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Maximum rain 5d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maximum_rain_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_sensors[sensor.minimum_rain_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.minimum_rain_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum rain 1d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Minimum rain 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minrain_1d',
+    'unique_id': '51.5288505.400216minrain_1d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.minimum_rain_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Minimum rain 1d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minimum_rain_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_sensors[sensor.minimum_rain_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.minimum_rain_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum rain 2d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Minimum rain 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minrain_2d',
+    'unique_id': '51.5288505.400216minrain_2d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.minimum_rain_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Minimum rain 2d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minimum_rain_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.minimum_rain_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.minimum_rain_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum rain 3d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Minimum rain 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minrain_3d',
+    'unique_id': '51.5288505.400216minrain_3d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.minimum_rain_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Minimum rain 3d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minimum_rain_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_sensors[sensor.minimum_rain_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.minimum_rain_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum rain 4d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Minimum rain 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minrain_4d',
+    'unique_id': '51.5288505.400216minrain_4d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.minimum_rain_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Minimum rain 4d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minimum_rain_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_sensors[sensor.minimum_rain_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.minimum_rain_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum rain 5d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Minimum rain 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minrain_5d',
+    'unique_id': '51.5288505.400216minrain_5d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.minimum_rain_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Minimum rain 5d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minimum_rain_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_sensors[sensor.minimum_temperature_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.minimum_temperature_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature 1d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Minimum temperature 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mintemp_1d',
+    'unique_id': '51.5288505.400216mintemp_1d',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.minimum_temperature_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Minimum temperature 1d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minimum_temperature_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.0',
+  })
+# ---
+# name: test_sensors[sensor.minimum_temperature_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.minimum_temperature_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature 2d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Minimum temperature 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mintemp_2d',
+    'unique_id': '51.5288505.400216mintemp_2d',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.minimum_temperature_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Minimum temperature 2d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minimum_temperature_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_sensors[sensor.minimum_temperature_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.minimum_temperature_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature 3d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Minimum temperature 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mintemp_3d',
+    'unique_id': '51.5288505.400216mintemp_3d',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.minimum_temperature_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Minimum temperature 3d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minimum_temperature_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.0',
+  })
+# ---
+# name: test_sensors[sensor.minimum_temperature_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.minimum_temperature_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature 4d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Minimum temperature 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mintemp_4d',
+    'unique_id': '51.5288505.400216mintemp_4d',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.minimum_temperature_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Minimum temperature 4d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minimum_temperature_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.0',
+  })
+# ---
+# name: test_sensors[sensor.minimum_temperature_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.minimum_temperature_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature 5d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Minimum temperature 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mintemp_5d',
+    'unique_id': '51.5288505.400216mintemp_5d',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.minimum_temperature_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Minimum temperature 5d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.minimum_temperature_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.0',
+  })
+# ---
+# name: test_sensors[sensor.precipitation_forecast_average-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.precipitation_forecast_average',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Precipitation forecast average',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
+    'original_icon': None,
+    'original_name': 'Precipitation forecast average',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'precipitation_forecast_average',
+    'unique_id': '51.5288505.400216precipitation_forecast_average',
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+  })
+# ---
+# name: test_sensors[sensor.precipitation_forecast_average-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Precipitation forecast average',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.precipitation_forecast_average',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.06',
+  })
+# ---
+# name: test_sensors[sensor.precipitation_forecast_total-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.precipitation_forecast_total',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Precipitation forecast total',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Precipitation forecast total',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'precipitation_forecast_total',
+    'unique_id': '51.5288505.400216precipitation_forecast_total',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.precipitation_forecast_total-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Precipitation forecast total',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.precipitation_forecast_total',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.06',
+  })
+# ---
+# name: test_sensors[sensor.precipitation_intensity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.precipitation_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Precipitation intensity',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
+    'original_icon': None,
+    'original_name': 'Precipitation intensity',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '51.5288505.400216precipitation',
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+  })
+# ---
+# name: test_sensors[sensor.precipitation_intensity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Precipitation intensity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.precipitation_intensity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pressure',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': 'mdi:gauge',
+    'original_name': 'Pressure',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '51.5288505.400216pressure',
+    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+  })
+# ---
+# name: test_sensors[sensor.pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pressure',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:gauge',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1012.4',
+  })
+# ---
+# name: test_sensors[sensor.rain_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rain_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rain 1d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Rain 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rain_1d',
+    'unique_id': '51.5288505.400216rain_1d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.rain_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rain 1d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rain_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.5',
+  })
+# ---
+# name: test_sensors[sensor.rain_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rain_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rain 2d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Rain 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rain_2d',
+    'unique_id': '51.5288505.400216rain_2d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.rain_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rain 2d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rain_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.rain_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rain_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rain 3d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Rain 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rain_3d',
+    'unique_id': '51.5288505.400216rain_3d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.rain_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rain 3d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rain_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_sensors[sensor.rain_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rain_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rain 4d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Rain 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rain_4d',
+    'unique_id': '51.5288505.400216rain_4d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.rain_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rain 4d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rain_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_sensors[sensor.rain_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rain_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rain 5d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Rain 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rain_5d',
+    'unique_id': '51.5288505.400216rain_5d',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.rain_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rain 5d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rain_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_sensors[sensor.rain_last_24h-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rain_last_24h',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rain last 24h',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Rain last 24h',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rainlast24hour',
+    'unique_id': '51.5288505.400216rainlast24hour',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.rain_last_24h-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rain last 24h',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rain_last_24h',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.2',
+  })
+# ---
+# name: test_sensors[sensor.rain_last_hour-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rain_last_hour',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rain last hour',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Rain last hour',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rainlasthour',
+    'unique_id': '51.5288505.400216rainlasthour',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.rain_last_hour-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rain last hour',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rain_last_hour',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.rainchance_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainchance_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rainchance 1d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-pouring',
+    'original_name': 'Rainchance 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rainchance_1d',
+    'unique_id': '51.5288505.400216rainchance_1d',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.rainchance_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rainchance 1d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-pouring',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainchance_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_sensors[sensor.rainchance_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainchance_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rainchance 2d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-pouring',
+    'original_name': 'Rainchance 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rainchance_2d',
+    'unique_id': '51.5288505.400216rainchance_2d',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.rainchance_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rainchance 2d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-pouring',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainchance_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_sensors[sensor.rainchance_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainchance_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rainchance 3d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-pouring',
+    'original_name': 'Rainchance 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rainchance_3d',
+    'unique_id': '51.5288505.400216rainchance_3d',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.rainchance_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rainchance 3d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-pouring',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainchance_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_sensors[sensor.rainchance_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainchance_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rainchance 4d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-pouring',
+    'original_name': 'Rainchance 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rainchance_4d',
+    'unique_id': '51.5288505.400216rainchance_4d',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.rainchance_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rainchance 4d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-pouring',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainchance_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_sensors[sensor.rainchance_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainchance_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rainchance 5d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-pouring',
+    'original_name': 'Rainchance 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rainchance_5d',
+    'unique_id': '51.5288505.400216rainchance_5d',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.rainchance_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rainchance 5d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-pouring',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainchance_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_sensors[sensor.station_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.station_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Station name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Station name',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stationname',
+    'unique_id': '51.5288505.400216stationname',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.station_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.station_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Eindhoven (6370)',
+  })
+# ---
+# name: test_sensors[sensor.sunchance_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sunchance_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sunchance 1d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-partly-cloudy',
+    'original_name': 'Sunchance 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sunchance_1d',
+    'unique_id': '51.5288505.400216sunchance_1d',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.sunchance_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sunchance 1d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-partly-cloudy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sunchance_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
+# name: test_sensors[sensor.sunchance_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sunchance_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sunchance 2d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-partly-cloudy',
+    'original_name': 'Sunchance 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sunchance_2d',
+    'unique_id': '51.5288505.400216sunchance_2d',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.sunchance_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sunchance 2d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-partly-cloudy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sunchance_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
+# name: test_sensors[sensor.sunchance_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sunchance_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sunchance 3d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-partly-cloudy',
+    'original_name': 'Sunchance 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sunchance_3d',
+    'unique_id': '51.5288505.400216sunchance_3d',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.sunchance_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sunchance 3d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-partly-cloudy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sunchance_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '70',
+  })
+# ---
+# name: test_sensors[sensor.sunchance_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sunchance_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sunchance 4d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-partly-cloudy',
+    'original_name': 'Sunchance 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sunchance_4d',
+    'unique_id': '51.5288505.400216sunchance_4d',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.sunchance_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sunchance 4d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-partly-cloudy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sunchance_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '70',
+  })
+# ---
+# name: test_sensors[sensor.sunchance_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sunchance_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sunchance 5d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-partly-cloudy',
+    'original_name': 'Sunchance 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sunchance_5d',
+    'unique_id': '51.5288505.400216sunchance_5d',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.sunchance_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sunchance 5d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-partly-cloudy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sunchance_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '70',
+  })
+# ---
+# name: test_sensors[sensor.symbol-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.symbol',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Symbol',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Symbol',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'symbol',
+    'unique_id': '51.5288505.400216symbol',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.symbol-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/c.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Symbol',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.symbol',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Zwaar bewolkt',
+  })
+# ---
+# name: test_sensors[sensor.symbol_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.symbol_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Symbol 1d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Symbol 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'symbol_1d',
+    'unique_id': '51.5288505.400216symbol_1d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.symbol_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/f.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Symbol 1d',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.symbol_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Afwisselend bewolkt met (mogelijk) wat lichte regen',
+  })
+# ---
+# name: test_sensors[sensor.symbol_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.symbol_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Symbol 2d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Symbol 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'symbol_2d',
+    'unique_id': '51.5288505.400216symbol_2d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.symbol_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/a.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Symbol 2d',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.symbol_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Vrijwel onbewolkt (zonnig/helder)',
+  })
+# ---
+# name: test_sensors[sensor.symbol_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.symbol_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Symbol 3d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Symbol 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'symbol_3d',
+    'unique_id': '51.5288505.400216symbol_3d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.symbol_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Symbol 3d',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.symbol_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Mix van opklaringen en middelbare of lage bewolking',
+  })
+# ---
+# name: test_sensors[sensor.symbol_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.symbol_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Symbol 4d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Symbol 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'symbol_4d',
+    'unique_id': '51.5288505.400216symbol_4d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.symbol_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Symbol 4d',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.symbol_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Mix van opklaringen en middelbare of lage bewolking',
+  })
+# ---
+# name: test_sensors[sensor.symbol_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.symbol_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Symbol 5d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Symbol 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'symbol_5d',
+    'unique_id': '51.5288505.400216symbol_5d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.symbol_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://www.buienradar.nl/resources/images/icons/weather/30x30/b.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Symbol 5d',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.symbol_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Mix van opklaringen en middelbare of lage bewolking',
+  })
+# ---
+# name: test_sensors[sensor.temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '51.5288505.400216temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.2',
+  })
+# ---
+# name: test_sensors[sensor.temperature_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.temperature_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature 1d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_1d',
+    'unique_id': '51.5288505.400216temperature_1d',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.temperature_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature 1d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.temperature_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.5',
+  })
+# ---
+# name: test_sensors[sensor.temperature_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.temperature_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature 2d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_2d',
+    'unique_id': '51.5288505.400216temperature_2d',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.temperature_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature 2d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.temperature_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.5',
+  })
+# ---
+# name: test_sensors[sensor.temperature_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.temperature_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature 3d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_3d',
+    'unique_id': '51.5288505.400216temperature_3d',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.temperature_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature 3d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.temperature_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.5',
+  })
+# ---
+# name: test_sensors[sensor.temperature_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.temperature_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature 4d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_4d',
+    'unique_id': '51.5288505.400216temperature_4d',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.temperature_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature 4d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.temperature_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.5',
+  })
+# ---
+# name: test_sensors[sensor.temperature_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.temperature_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature 5d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_5d',
+    'unique_id': '51.5288505.400216temperature_5d',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.temperature_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature 5d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.temperature_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9.5',
+  })
+# ---
+# name: test_sensors[sensor.visibility-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.visibility',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Visibility',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Visibility',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'visibility',
+    'unique_id': '51.5288505.400216visibility',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensors[sensor.visibility-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Visibility',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.visibility',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.4',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:compass-outline',
+    'original_name': 'Wind direction',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'winddirection',
+    'unique_id': '51.5288505.400216winddirection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.wind_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind direction',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:compass-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ZW',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_direction_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind direction 1d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:compass-outline',
+    'original_name': 'Wind direction 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'winddirection_1d',
+    'unique_id': '51.5288505.400216winddirection_1d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind direction 1d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:compass-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_direction_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ZW',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_direction_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind direction 2d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:compass-outline',
+    'original_name': 'Wind direction 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'winddirection_2d',
+    'unique_id': '51.5288505.400216winddirection_2d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind direction 2d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:compass-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_direction_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'O',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_direction_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind direction 3d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:compass-outline',
+    'original_name': 'Wind direction 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'winddirection_3d',
+    'unique_id': '51.5288505.400216winddirection_3d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind direction 3d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:compass-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_direction_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Z',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_direction_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind direction 4d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:compass-outline',
+    'original_name': 'Wind direction 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'winddirection_4d',
+    'unique_id': '51.5288505.400216winddirection_4d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind direction 4d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:compass-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_direction_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Z',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_direction_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind direction 5d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:compass-outline',
+    'original_name': 'Wind direction 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'winddirection_5d',
+    'unique_id': '51.5288505.400216winddirection_5d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind direction 5d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:compass-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_direction_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Z',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_azimuth-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_direction_azimuth',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind direction azimuth',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
+    'original_icon': None,
+    'original_name': 'Wind direction azimuth',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windazimuth',
+    'unique_id': '51.5288505.400216windazimuth',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_azimuth-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind direction azimuth',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_direction_azimuth',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '225',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_azimuth_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_direction_azimuth_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind direction azimuth 1d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
+    'original_icon': 'mdi:compass-outline',
+    'original_name': 'Wind direction azimuth 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windazimuth_1d',
+    'unique_id': '51.5288505.400216windazimuth_1d',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_azimuth_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind direction azimuth 1d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:compass-outline',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_direction_azimuth_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '225',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_azimuth_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_direction_azimuth_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind direction azimuth 2d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
+    'original_icon': 'mdi:compass-outline',
+    'original_name': 'Wind direction azimuth 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windazimuth_2d',
+    'unique_id': '51.5288505.400216windazimuth_2d',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_azimuth_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind direction azimuth 2d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:compass-outline',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_direction_azimuth_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_azimuth_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_direction_azimuth_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind direction azimuth 3d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
+    'original_icon': 'mdi:compass-outline',
+    'original_name': 'Wind direction azimuth 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windazimuth_3d',
+    'unique_id': '51.5288505.400216windazimuth_3d',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_azimuth_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind direction azimuth 3d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:compass-outline',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_direction_azimuth_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '180',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_azimuth_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_direction_azimuth_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind direction azimuth 4d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
+    'original_icon': 'mdi:compass-outline',
+    'original_name': 'Wind direction azimuth 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windazimuth_4d',
+    'unique_id': '51.5288505.400216windazimuth_4d',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_azimuth_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind direction azimuth 4d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:compass-outline',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_direction_azimuth_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '180',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_azimuth_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_direction_azimuth_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind direction azimuth 5d',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
+    'original_icon': 'mdi:compass-outline',
+    'original_name': 'Wind direction azimuth 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windazimuth_5d',
+    'unique_id': '51.5288505.400216windazimuth_5d',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensors[sensor.wind_direction_azimuth_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind direction azimuth 5d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:compass-outline',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_direction_azimuth_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '180',
+  })
+# ---
+# name: test_sensors[sensor.wind_force-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_force',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind force',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-windy',
+    'original_name': 'Wind force',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windforce',
+    'unique_id': '51.5288505.400216windforce',
+    'unit_of_measurement': 'Bft',
+  })
+# ---
+# name: test_sensors[sensor.wind_force-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Measured': 'Fri Nov 20 04:00:00 2026',
+      'Stationname': 'Eindhoven (6370)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by buienradar.nl',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind force',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-windy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Bft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_force',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.wind_force_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_force_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind force 1d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-windy',
+    'original_name': 'Wind force 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windforce_1d',
+    'unique_id': '51.5288505.400216windforce_1d',
+    'unit_of_measurement': 'Bft',
+  })
+# ---
+# name: test_sensors[sensor.wind_force_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind force 1d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-windy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Bft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_force_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.wind_force_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_force_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind force 2d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-windy',
+    'original_name': 'Wind force 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windforce_2d',
+    'unique_id': '51.5288505.400216windforce_2d',
+    'unit_of_measurement': 'Bft',
+  })
+# ---
+# name: test_sensors[sensor.wind_force_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind force 2d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-windy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Bft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_force_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors[sensor.wind_force_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_force_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind force 3d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-windy',
+    'original_name': 'Wind force 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windforce_3d',
+    'unique_id': '51.5288505.400216windforce_3d',
+    'unit_of_measurement': 'Bft',
+  })
+# ---
+# name: test_sensors[sensor.wind_force_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind force 3d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-windy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Bft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_force_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.wind_force_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_force_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind force 4d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-windy',
+    'original_name': 'Wind force 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windforce_4d',
+    'unique_id': '51.5288505.400216windforce_4d',
+    'unit_of_measurement': 'Bft',
+  })
+# ---
+# name: test_sensors[sensor.wind_force_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind force 4d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-windy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Bft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_force_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.wind_force_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_force_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind force 5d',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-windy',
+    'original_name': 'Wind force 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windforce_5d',
+    'unique_id': '51.5288505.400216windforce_5d',
+    'unit_of_measurement': 'Bft',
+  })
+# ---
+# name: test_sensors[sensor.wind_force_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind force 5d',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:weather-windy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Bft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_force_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.wind_gust-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_gust',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind gust',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind gust',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windgust',
+    'unique_id': '51.5288505.400216windgust',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensors[sensor.wind_gust-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind gust',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_gust',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25.9',
+  })
+# ---
+# name: test_sensors[sensor.wind_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind speed',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '51.5288505.400216windspeed',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensors[sensor.wind_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind speed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '14.8',
+  })
+# ---
+# name: test_sensors[sensor.wind_speed_1d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_speed_1d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind speed 1d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed 1d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windspeed_1d',
+    'unique_id': '51.5288505.400216windspeed_1d',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensors[sensor.wind_speed_1d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind speed 1d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_speed_1d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13.0',
+  })
+# ---
+# name: test_sensors[sensor.wind_speed_2d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_speed_2d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind speed 2d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed 2d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windspeed_2d',
+    'unique_id': '51.5288505.400216windspeed_2d',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensors[sensor.wind_speed_2d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind speed 2d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_speed_2d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.4',
+  })
+# ---
+# name: test_sensors[sensor.wind_speed_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_speed_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind speed 3d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed 3d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windspeed_3d',
+    'unique_id': '51.5288505.400216windspeed_3d',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensors[sensor.wind_speed_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind speed 3d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_speed_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13.0',
+  })
+# ---
+# name: test_sensors[sensor.wind_speed_4d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_speed_4d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind speed 4d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed 4d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windspeed_4d',
+    'unique_id': '51.5288505.400216windspeed_4d',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensors[sensor.wind_speed_4d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind speed 4d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_speed_4d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13.0',
+  })
+# ---
+# name: test_sensors[sensor.wind_speed_5d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wind_speed_5d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wind speed 5d',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed 5d',
+    'platform': 'buienradar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windspeed_5d',
+    'unique_id': '51.5288505.400216windspeed_5d',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensors[sensor.wind_speed_5d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wind speed 5d',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wind_speed_5d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13.0',
+  })
+# ---

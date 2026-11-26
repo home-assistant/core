@@ -140,6 +140,8 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_homes")
 
         home = tado_me["homes"][0]
+        if home.get("generation", "").lower() == "line_x":
+            return self.async_abort(reason="tado_x_unsupported")
         unique_id = str(home["id"])
         name = home["name"]
 

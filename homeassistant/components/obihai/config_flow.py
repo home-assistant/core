@@ -134,7 +134,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="dhcp_confirm",
                 data_schema=self.discovery_schema,
-                description_placeholders={CONF_HOST: self._dhcp_discovery_info.ip},
+                description_placeholders={"host": self._dhcp_discovery_info.ip},
             )
 
         return await self.async_step_user(user_input=user_input)

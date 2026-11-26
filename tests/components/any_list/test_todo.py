@@ -3,7 +3,7 @@
 from operator import attrgetter
 from unittest.mock import MagicMock
 
-from aioanylist import AnyListError, Domain
+from aioanylist import AnyListError, AuthenticationError, Domain
 from aioanylist.proto import PB
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -17,7 +17,8 @@ from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoServices,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -61,7 +62,7 @@ async def test_add_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "Apples", ATTR_DESCRIPTION: "Honeycrisp"},
-        target={ATTR_ENTITY_ID: ENTITY_ID},
+        target={TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -89,7 +90,7 @@ async def test_update_item(
             ATTR_STATUS: "completed",
             ATTR_DESCRIPTION: "Unsweetened",
         },
-        target={ATTR_ENTITY_ID: ENTITY_ID},
+        target={TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -117,7 +118,7 @@ async def test_delete_items(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
         {ATTR_ITEM: ITEM_ID},
-        target={ATTR_ENTITY_ID: ENTITY_ID},
+        target={TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -169,12 +170,62 @@ async def test_todo_action_errors(
             TODO_DOMAIN,
             service,
             data,
-            target={ATTR_ENTITY_ID: ENTITY_ID},
+            target={TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
     assert err.value.translation_domain == "any_list"
     assert err.value.translation_key == translation_key
+
+
+@pytest.mark.parametrize(
+    ("service", "data", "method"),
+    [
+        pytest.param(
+            TodoServices.ADD_ITEM, {ATTR_ITEM: "Apples"}, "lists.add_item", id="add"
+        ),
+        pytest.param(
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: ITEM_ID, ATTR_RENAME: "Oat milk"},
+            "flush",
+            id="update",
+        ),
+        pytest.param(
+            TodoServices.REMOVE_ITEM,
+            {ATTR_ITEM: ITEM_ID},
+            "lists.bulk_remove_items",
+            id="remove",
+        ),
+    ],
+)
+async def test_todo_action_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+    service: str,
+    data: dict[str, str],
+    method: str,
+) -> None:
+    """Test an authentication error in an action starts a reauth flow."""
+    await setup_integration(hass, mock_config_entry)
+    attrgetter(method)(mock_anylist_client).side_effect = AuthenticationError()
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            service,
+            data,
+            target={TargetKey.ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert err.value.translation_domain == "any_list"
+    assert err.value.translation_key == "authentication_failed"
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_stale_list_entity_removed_on_startup(

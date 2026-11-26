@@ -23,8 +23,12 @@ from .const import REAUTH_AFTER_FAILURES, VICTRON_IDENTIFIER
 
 _LOGGER = logging.getLogger(__name__)
 
+type VictronBLEConfigEntry = ConfigEntry[
+    PassiveBluetoothProcessorCoordinator[SensorUpdate]
+]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+
+async def async_setup_entry(hass: HomeAssistant, entry: VictronBLEConfigEntry) -> None:
     """Set up Victron BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
@@ -83,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     entry.async_on_unload(coordinator.async_start())
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: VictronBLEConfigEntry) -> None:
     """Unload a config entry."""
 
     await hass.config_entries.async_unload_platforms_or_raise(entry, [Platform.SENSOR])

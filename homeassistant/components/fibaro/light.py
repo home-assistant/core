@@ -9,7 +9,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
-    ENTITY_ID_FORMAT,
     ColorMode,
     LightEntity,
     brightness_supported,
@@ -105,8 +104,7 @@ class FibaroLight(FibaroEntity, LightEntity):
             self._attr_supported_color_modes = {ColorMode.ONOFF}
             self._attr_color_mode = ColorMode.ONOFF
 
-        super().__init__(fibaro_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        super().__init__(fibaro_device, controller, use_child_device_info=True)
 
     @override
     def turn_on(self, **kwargs: Any) -> None:

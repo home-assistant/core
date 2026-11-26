@@ -64,8 +64,9 @@ async def test_camera_image_fetch_failure(
 
     mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyError("Fetch error")
 
-    with pytest.raises(HomeAssistantError, match="Unable to get image"):
+    with pytest.raises(HomeAssistantError) as err:
         await async_get_image(hass, "camera.indi_allsky_latest_capture")
+    assert err.value.translation_key == "image_unavailable"
 
 
 async def test_camera_image_fetch_auth_failure_triggers_reauth(
@@ -84,8 +85,9 @@ async def test_camera_image_fetch_auth_failure_triggers_reauth(
         patch.object(
             mock_config_entry, "async_start_reauth"
         ) as mock_async_start_reauth,
-        pytest.raises(HomeAssistantError, match="Unable to get image"),
+        pytest.raises(HomeAssistantError) as err,
     ):
         await async_get_image(hass, "camera.indi_allsky_latest_capture")
 
+    assert err.value.translation_key == "image_unavailable"
     mock_async_start_reauth.assert_called_once_with(hass)

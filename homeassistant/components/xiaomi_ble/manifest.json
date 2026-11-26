@@ -22,6 +22,7 @@
   "categories": ["sensors", "garden_plants", "health_wellbeing"],
   "codeowners": ["@Jc2k", "@Ernst79"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/xiaomi_ble",
   "integration_type": "device",

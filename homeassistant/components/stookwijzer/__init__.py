@@ -18,7 +18,7 @@ from .const import DOMAIN, LOGGER
 from .coordinator import StookwijzerConfigEntry, StookwijzerCoordinator
 from .services import async_setup_services
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.IMAGE, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -63,7 +63,8 @@ async def async_migrate_entry(
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                "location_migration_failed",
+                f"location_migration_failed_{entry.entry_id}",
+                config_entry_id=entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="location_migration_failed",

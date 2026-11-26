@@ -2,6 +2,7 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
+from collections.abc import Mapping
 from functools import partial
 from http import HTTPStatus
 import logging
@@ -20,7 +21,7 @@ from homeassistant.components.notify import (
     NotifyEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_MANUFACTURER
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -37,6 +38,7 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
+    ATTR_MANUFACTURER,
     ATTR_OS_VERSION,
     ATTR_PUSH_RATE_LIMITS,
     ATTR_PUSH_RATE_LIMITS_ERRORS,
@@ -98,26 +100,30 @@ class MobileAppNotifyEntity(NotifyEntity):
         if title is not None:
             data[ATTR_TITLE] = title
 
+        # The app may register again before a queued notification is sent
+        device_name = self._config_entry.title
+        registration = self._config_entry.data
+
         # Sends notification via local push if available
         # and fallback to cloud push if fails
-        if (webhook_id := self._config_entry.data[ATTR_WEBHOOK_ID]) in self.hass.data[
-            DOMAIN
-        ][DATA_PUSH_CHANNEL]:
+        if (webhook_id := registration[ATTR_WEBHOOK_ID]) in self.hass.data[DOMAIN][
+            DATA_PUSH_CHANNEL
+        ]:
             push_channel: PushChannel = self.hass.data[DOMAIN][DATA_PUSH_CHANNEL][
                 webhook_id
             ]
             push_channel.async_send_notification(
                 data,
-                partial(_send_message, self._session, self._config_entry),
+                partial(_send_message, self._session, device_name, registration),
             )
         # Sends notification via cloud push notification service
-        elif ATTR_PUSH_URL in self._config_entry.data[ATTR_APP_DATA]:
-            await _send_message(self._session, self._config_entry, data)
+        elif ATTR_PUSH_URL in registration[ATTR_APP_DATA]:
+            await _send_message(self._session, device_name, registration, data)
         else:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_not_connected_for_local_push_notifications",
-                translation_placeholders={"device_name": self._config_entry.title},
+                translation_placeholders={"device_name": device_name},
             )
 
     @callback
@@ -217,10 +223,18 @@ class MobileAppNotificationService(BaseNotificationService):
         for target in targets:
             entry: ConfigEntry = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target]
 
+            if entry.data[ATTR_WEBHOOK_ID] != target:
+                # The app is registering again with another webhook
+                failed_targets.append(target)
+                continue
+
             if target in local_push_channels:
+                # The app may register again before a queued notification is sent
                 local_push_channels[target].async_send_notification(
                     data,
-                    partial(self._async_send_remote_message_target, entry),
+                    partial(
+                        self._async_send_remote_message_target, entry.title, entry.data
+                    ),
                 )
                 async_dispatcher_send(self.hass, SIGNAL_RECORD_NOTIFICATION, target)
                 continue
@@ -230,7 +244,7 @@ class MobileAppNotificationService(BaseNotificationService):
                 failed_targets.append(target)
                 continue
 
-            await self._async_send_remote_message_target(entry, data)
+            await self._async_send_remote_message_target(entry.title, entry.data, data)
             async_dispatcher_send(self.hass, SIGNAL_RECORD_NOTIFICATION, target)
 
         if failed_targets:
@@ -241,16 +255,18 @@ class MobileAppNotificationService(BaseNotificationService):
             )
 
     async def _async_send_remote_message_target(
-        self, entry: ConfigEntry, data: dict[str, Any]
+        self, device_name: str, registration: Mapping[str, Any], data: dict[str, Any]
     ) -> None:
         """Send a message to a target."""
         on_success_callback: CALLBACK_TYPE | None = None
-        if entry.data[ATTR_MANUFACTURER] == MANUFACTURER_APPLE:
+        if registration[ATTR_MANUFACTURER] == MANUFACTURER_APPLE:
             data, on_success_callback = prepare_live_activity_remote_push(
-                self.hass, entry.data, data
+                self.hass, registration, data
             )
         try:
-            await _send_message(async_get_clientsession(self.hass), entry, data)
+            await _send_message(
+                async_get_clientsession(self.hass), device_name, registration, data
+            )
         except HomeAssistantError as e:
             if e.translation_key == "rate_limit_exceeded_sending_notification":
                 _LOGGER.warning(str(e))
@@ -262,30 +278,33 @@ class MobileAppNotificationService(BaseNotificationService):
 
 
 async def _send_message(
-    session: ClientSession, entry: ConfigEntry, data: dict[str, Any]
+    session: ClientSession,
+    device_name: str,
+    registration: Mapping[str, Any],
+    data: dict[str, Any],
 ) -> None:
     """Shared internal helper to send messages via cloud push notification services."""
     reg_info = {
-        ATTR_APP_ID: entry.data[ATTR_APP_ID],
-        ATTR_APP_VERSION: entry.data[ATTR_APP_VERSION],
-        ATTR_WEBHOOK_ID: entry.data[ATTR_WEBHOOK_ID],
+        ATTR_APP_ID: registration[ATTR_APP_ID],
+        ATTR_APP_VERSION: registration[ATTR_APP_VERSION],
+        ATTR_WEBHOOK_ID: registration[ATTR_WEBHOOK_ID],
     }
-    if ATTR_OS_VERSION in entry.data:
-        reg_info[ATTR_OS_VERSION] = entry.data[ATTR_OS_VERSION]
+    if ATTR_OS_VERSION in registration:
+        reg_info[ATTR_OS_VERSION] = registration[ATTR_OS_VERSION]
 
     try:
         async with asyncio.timeout(10):
             response = await session.post(
-                entry.data[ATTR_APP_DATA][ATTR_PUSH_URL],
+                registration[ATTR_APP_DATA][ATTR_PUSH_URL],
                 json={
                     **data,
-                    ATTR_PUSH_TOKEN: entry.data[ATTR_APP_DATA][ATTR_PUSH_TOKEN],
+                    ATTR_PUSH_TOKEN: registration[ATTR_APP_DATA][ATTR_PUSH_TOKEN],
                     "registration_info": reg_info,
                 },
             )
             result: dict[str, Any] = await response.json()
 
-        log_rate_limits(entry.title, result, logging.DEBUG)
+        log_rate_limits(device_name, result, logging.DEBUG)
 
         if response.status in (
             HTTPStatus.OK,
@@ -304,34 +323,34 @@ async def _send_message(
             if message[-1] not in [".", "?", "!"]:
                 message += "."
             message += " This message is generated externally to Home Assistant."
-        _LOGGER.debug("Error sending notification to %s: %s", entry.title, message)
+        _LOGGER.debug("Error sending notification to %s: %s", device_name, message)
 
         if response.status == HTTPStatus.TOO_MANY_REQUESTS:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="rate_limit_exceeded_sending_notification",
-                translation_placeholders={"device_name": entry.title},
+                translation_placeholders={"device_name": device_name},
             )
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="error_sending_notification",
-            translation_placeholders={"device_name": entry.title},
+            translation_placeholders={"device_name": device_name},
         )
     except TimeoutError as e:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="timeout_sending_notification",
-            translation_placeholders={"device_name": entry.title},
+            translation_placeholders={"device_name": device_name},
         ) from e
     except ClientError as e:
         _LOGGER.debug(
             "Error sending notification to %s [%s]:",
-            entry.title,
-            entry.data[ATTR_APP_DATA][ATTR_PUSH_URL],
+            device_name,
+            registration[ATTR_APP_DATA][ATTR_PUSH_URL],
             exc_info=True,
         )
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="error_sending_notification",
-            translation_placeholders={"device_name": entry.title},
+            translation_placeholders={"device_name": device_name},
         ) from e

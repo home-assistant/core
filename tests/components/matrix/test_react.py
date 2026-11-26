@@ -3,12 +3,7 @@
 import pytest
 
 from homeassistant.components.matrix import DOMAIN, MatrixBot
-from homeassistant.components.matrix.const import (
-    ATTR_MESSAGE_ID,
-    ATTR_REACTION,
-    ATTR_ROOM,
-    SERVICE_REACT,
-)
+from homeassistant.components.matrix.const import MatrixService, MatrixServiceArgument
 from homeassistant.core import Event, HomeAssistant
 
 from .conftest import TEST_JOINABLE_ROOMS
@@ -29,7 +24,11 @@ async def test_send_message(
 
     # Send a reaction.
     room = list(TEST_JOINABLE_ROOMS)[0]
-    data = {ATTR_MESSAGE_ID: "message_id", ATTR_ROOM: room, ATTR_REACTION: "👍"}
-    await hass.services.async_call(DOMAIN, SERVICE_REACT, data, blocking=True)
+    data = {
+        MatrixServiceArgument.MESSAGE_ID: "message_id",
+        MatrixServiceArgument.ROOM: room,
+        MatrixServiceArgument.REACTION: "👍",
+    }
+    await hass.services.async_call(DOMAIN, MatrixService.REACT, data, blocking=True)
 
     assert f"Message delivered to room '{room}'" in caplog.messages

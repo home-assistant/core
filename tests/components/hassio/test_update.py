@@ -1870,8 +1870,8 @@ async def test_release_notes_between_versions(
         }
     )
     result = await client.receive_json()
-    assert "Old updates" not in result["result"]
-    assert "New updates" in result["result"]
+    assert "Old updates" not in result["result"]["release_notes"]
+    assert "New updates" in result["result"]["release_notes"]
 
 
 async def test_release_notes_full(
@@ -1906,8 +1906,8 @@ async def test_release_notes_full(
         }
     )
     result = await client.receive_json()
-    assert "Old updates" in result["result"]
-    assert "New updates" in result["result"]
+    assert "Old updates" in result["result"]["release_notes"]
+    assert "New updates" in result["result"]["release_notes"]
 
     # Update entity without update should returns full changelog
     await client.send_json(
@@ -1918,7 +1918,7 @@ async def test_release_notes_full(
         }
     )
     result = await client.receive_json()
-    assert result["result"] == full_changelog
+    assert result["result"]["release_notes"] == full_changelog
 
 
 async def test_os_release_notes(
@@ -1949,7 +1949,7 @@ async def test_os_release_notes(
     )
     result = await client.receive_json()
     assert (
-        result["result"] == "<ha-alert alert-type='info'>"
+        result["result"]["release_notes"] == "<ha-alert alert-type='info'>"
         "A reboot is required after install for the update to take effect."
         "</ha-alert>\n"
     )
@@ -1986,7 +1986,7 @@ async def test_not_release_notes(
         }
     )
     result = await client.receive_json()
-    assert result["result"] is None
+    assert result["result"]["release_notes"] is None
 
 
 async def test_no_os_entity(
@@ -2031,7 +2031,7 @@ async def test_setting_up_core_update_when_addon_fails(
 
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
 

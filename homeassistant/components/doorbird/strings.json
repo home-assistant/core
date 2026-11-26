@@ -51,7 +51,10 @@
         "name": "Last ring"
       },
       "live": {
-        "name": "live"
+        "name": "Live"
+      },
+      "live_1080p": {
+        "name": "Live 1080p"
       }
     },
     "event": {

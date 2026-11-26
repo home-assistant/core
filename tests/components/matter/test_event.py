@@ -7,7 +7,10 @@ from matter_server.common.models import EventType, MatterNodeEvent
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.components.event import (
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -43,7 +46,7 @@ async def test_generic_switch_node(
     assert state.state == "unknown"
     assert state.name == "Mock Generic Switch Button"
     # check event_types from featuremap 14 (0b1110)
-    assert state.attributes[ATTR_EVENT_TYPES] == [
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
         "initial_press",
         "short_release",
         "long_press",
@@ -67,7 +70,7 @@ async def test_generic_switch_node(
         ),
     )
     state = hass.states.get("event.mock_generic_switch_button")
-    assert state.attributes[ATTR_EVENT_TYPE] == "initial_press"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "initial_press"
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_generic_switch_multi"])
@@ -83,7 +86,7 @@ async def test_generic_switch_multi_node(
     # name should be 'DeviceName Button (1)'
     assert state_button_1.name == "Mock Generic Switch Button (1)"
     # check event_types from featuremap 30 (0b11110) and MultiPressMax unset (default 2)
-    assert state_button_1.attributes[ATTR_EVENT_TYPES] == [
+    assert state_button_1.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
         "multi_press_1",
         "multi_press_2",
         "long_press",
@@ -97,7 +100,7 @@ async def test_generic_switch_multi_node(
     # ha_entitylabel 'Fancy Button'
     assert state_button_2.name == "Mock Generic Switch Button (Fancy Button)"
     # check event_types from featuremap 30 (0b11110) and MultiPressMax 4
-    assert state_button_2.attributes[ATTR_EVENT_TYPES] == [
+    assert state_button_2.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
         "multi_press_1",
         "multi_press_2",
         "multi_press_3",
@@ -124,7 +127,7 @@ async def test_generic_switch_multi_node(
         ),
     )
     state = hass.states.get("event.mock_generic_switch_button_1")
-    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_2"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "multi_press_2"
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_generic_switch"])
@@ -173,7 +176,7 @@ async def test_generic_switch_unknown_event(
 
     state = hass.states.get("event.mock_generic_switch_button")
     assert state.state == last_event
-    assert state.attributes[ATTR_EVENT_TYPE] == "initial_press"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "initial_press"
 
     # an event id that another cluster on the same endpoint uses, here the
     # door lock LockOperation event, which shares its id with a long press
@@ -196,4 +199,4 @@ async def test_generic_switch_unknown_event(
 
     state = hass.states.get("event.mock_generic_switch_button")
     assert state.state == last_event
-    assert state.attributes[ATTR_EVENT_TYPE] == "initial_press"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "initial_press"

@@ -31,7 +31,7 @@
   ai_task | AI Task
   auth | Auth
   binary_sensor | Binary sensor
-  cloud | Home Assistant Cloud
+  cloud | Home Assistant Link
   cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
   cloud.conversation | Unknown
@@ -85,6 +85,7 @@
   remote_enabled | True
   remote_connected | False
   remote_server | us-west-1
+  remote_client_certificate_required | False
   alexa_enabled | True
   google_enabled | False
   cloud_ice_servers_enabled | True
@@ -167,7 +168,7 @@
   ai_task | AI Task
   auth | Auth
   binary_sensor | Binary sensor
-  cloud | Home Assistant Cloud
+  cloud | Home Assistant Link
   cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
   cloud.conversation | Unknown
@@ -204,6 +205,7 @@
   remote_enabled | True
   remote_connected | False
   remote_server | us-west-1
+  remote_client_certificate_required | False
   alexa_enabled | True
   google_enabled | False
   cloud_ice_servers_enabled | True
@@ -285,6 +287,7 @@
   remote_enabled | True
   remote_connected | False
   remote_server | us-west-1
+  remote_client_certificate_required | False
   alexa_enabled | True
   google_enabled | False
   cloud_ice_servers_enabled | True

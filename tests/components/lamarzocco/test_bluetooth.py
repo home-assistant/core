@@ -99,6 +99,24 @@ async def test_bluetooth_coordinator_updates_based_on_websocket_state(
     assert mock_lamarzocco.get_dashboard_from_bluetooth.called
 
 
+@pytest.mark.usefixtures("mock_ble_device_from_address")
+async def test_bluetooth_model_info_skipped_with_cloud(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry_bluetooth: MockConfigEntry,
+) -> None:
+    """Test the model is not read over Bluetooth when the cloud provides it."""
+    # some machines report a family over Bluetooth that can't be parsed
+    mock_lamarzocco.get_model_info_from_bluetooth.side_effect = ValueError(
+        "Invalid model name: LINEA"
+    )
+
+    await async_init_integration(hass, mock_config_entry_bluetooth)
+
+    assert mock_config_entry_bluetooth.state is ConfigEntryState.LOADED
+    mock_lamarzocco.get_model_info_from_bluetooth.assert_not_called()
+
+
 @pytest.mark.parametrize(
     ("device_fixture", "entities"),
     [
@@ -316,6 +334,7 @@ async def test_setup_through_bluetooth_only(
 
     await async_init_integration(hass, mock_config_entry_bluetooth)
     assert mock_config_entry_bluetooth.state is ConfigEntryState.LOADED
+    mock_lamarzocco_bluetooth.get_model_info_from_bluetooth.assert_called_once()
 
     # Check all Bluetooth entities are available
     for entity_id in entities:
@@ -371,6 +390,7 @@ async def test_manual_offline_mode(
     )
     await hass.config_entries.async_setup(mock_config_entry_bluetooth.entry_id)
     await hass.async_block_till_done()
+    mock_lamarzocco.get_model_info_from_bluetooth.assert_called_once()
 
     main_switch = f"switch.{mock_lamarzocco.serial_number}"
     state = hass.states.get(main_switch)
@@ -669,6 +689,72 @@ async def test_shot_timer_only_connected_outside_standby(
     config_coordinator.async_set_updated_data(None)
     await hass.async_block_till_done()
     mock_lamarzocco.disconnect_bluetooth_shot_counter.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_ble_device_from_address")
+async def test_shot_timer_connects_on_power_on_despite_backoff(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry_bluetooth: MockConfigEntry,
+) -> None:
+    """Test turning the machine on connects right away after a failed attempt."""
+    mock_connect = mock_lamarzocco.connect_bluetooth_shot_counter
+    mock_connect.side_effect = [BluetoothConnectionFailed(""), True]
+    await async_init_integration(hass, mock_config_entry_bluetooth)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    config_coordinator = mock_config_entry_bluetooth.runtime_data.config_coordinator
+    machine_status = mock_lamarzocco.dashboard.config[WidgetType.CM_MACHINE_STATUS]
+    assert mock_connect.await_count == 1
+
+    # the cloud reports the machine went to standby
+    machine_status.mode = MachineMode.STANDBY
+    config_coordinator.async_set_updated_data(None)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_connect.await_count == 1
+
+    # turning it back on connects without waiting for the backoff
+    machine_status.mode = MachineMode.BREWING_MODE
+    config_coordinator.async_set_updated_data(None)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_connect.await_count == 2
+
+
+@pytest.mark.usefixtures("mock_ble_device_from_address")
+async def test_shot_timer_power_cycle_during_failing_connect(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry_bluetooth: MockConfigEntry,
+) -> None:
+    """Test a power cycle during a connect that fails retries without the backoff."""
+    connecting = asyncio.Event()
+    finish_connect = asyncio.Event()
+
+    async def first_connect_fails_slowly(*_: Any) -> bool:
+        if connecting.is_set():
+            return True
+        connecting.set()
+        await finish_connect.wait()
+        raise BluetoothConnectionFailed("")
+
+    mock_connect = mock_lamarzocco.connect_bluetooth_shot_counter
+    mock_connect.side_effect = first_connect_fails_slowly
+    await async_init_integration(hass, mock_config_entry_bluetooth)
+    await connecting.wait()
+    config_coordinator = mock_config_entry_bluetooth.runtime_data.config_coordinator
+    machine_status = mock_lamarzocco.dashboard.config[WidgetType.CM_MACHINE_STATUS]
+
+    # the machine is turned off and on again while still connecting
+    for mode in (MachineMode.STANDBY, MachineMode.BREWING_MODE):
+        machine_status.mode = mode
+        config_coordinator.async_set_updated_data(None)
+        await hass.async_block_till_done(wait_background_tasks=False)
+    assert mock_connect.await_count == 1
+
+    finish_connect.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_connect.await_count == 2
+    mock_lamarzocco.disconnect_bluetooth_shot_counter.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_ble_device_from_address")

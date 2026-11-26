@@ -12,6 +12,7 @@ from neopool_modbus.exceptions import NeoPoolError
 from neopool_modbus.registers import (
     MAX_RELAY_GPIO,
     TIMER_BLOCKS,
+    aux_relay_available,
     find_corrupted_gpio_registers,
     is_valid_relay_gpio,
 )
@@ -51,7 +52,7 @@ _TIMER_OPTIONS: dict[str, str] = {
 }
 
 
-type NeoPoolConfigEntry = ConfigEntry["NeoPoolCoordinator"]
+type NeoPoolConfigEntry = ConfigEntry[NeoPoolCoordinator]
 
 
 class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -76,6 +77,7 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
         self._corrupted_gpio_state: frozenset[tuple[str, int]] | None = None
+        self._corrupted_gpio_issue_id = f"corrupted_gpio_{entry.entry_id}"
         self._follow_up_unsub: CALLBACK_TYPE | None = None
         # Serializes masked read-modify-write across siblings sharing a register.
         self.masked_write_lock = asyncio.Lock()
@@ -141,7 +143,8 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
-                "corrupted_gpio",
+                self._corrupted_gpio_issue_id,
+                config_entry_id=self.config_entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="corrupted_gpio",
@@ -149,7 +152,7 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         else:
             # Clear a previously raised repair issue once the device is healthy.
-            ir.async_delete_issue(self.hass, DOMAIN, "corrupted_gpio")
+            ir.async_delete_issue(self.hass, DOMAIN, self._corrupted_gpio_issue_id)
 
     def _get_enabled_timers(self, data: dict[str, Any]) -> list[str]:
         """Return the timer block names to poll.
@@ -183,6 +186,12 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 data.get("MBF_PAR_LIGHTING_GPIO", 0) or 0
             ):
                 continue
+            # AUX relay occupied: the time entities gate the same check, so
+            # the timer block would have no consumer.
+            if key.startswith("relay_aux"):
+                aux_number = int(key.removeprefix("relay_aux").rstrip("b"))
+                if not aux_relay_available(aux_number, data):
+                    continue
             enabled.append(key)
         enabled += [ft for ft in _FILT_TIMERS if ft in active]
         return enabled

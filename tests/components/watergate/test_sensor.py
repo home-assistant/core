@@ -1,6 +1,7 @@
 """Tests for the Watergate sensor platform."""
 
 from collections.abc import Generator
+import copy
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -19,7 +20,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-from .const import DEFAULT_NETWORKING_STATE, DEFAULT_TELEMETRY_STATE, MOCK_WEBHOOK_ID
+from .const import (
+    DEFAULT_DEVICE_STATE_V2,
+    DEFAULT_NETWORKING_STATE,
+    DEFAULT_TELEMETRY_STATE,
+    MOCK_WEBHOOK_ID,
+)
+
+BATTERY_VOLTAGE = "sensor.sonic_battery_voltage"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -55,9 +63,11 @@ async def test_diagnostics_are_disabled_by_default(
             mock_entry.entry_id
         )
         if entry.entity_category == EntityCategory.DIAGNOSTIC
+        and entry.entity_id != BATTERY_VOLTAGE
     ]
 
     assert len(entries) == 5
+    assert all(entry.disabled for entry in entries)
     for entry in entries:
         assert entry.disabled
 
@@ -193,3 +203,48 @@ async def test_power_supply_webhook(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "battery_external"
+
+
+async def test_battery_voltage(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """Test the battery voltage is reported in volts and enabled by default."""
+    with patch("homeassistant.components.watergate.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_entry)
+
+    assert hass.states.get(BATTERY_VOLTAGE).state == "6.8"
+
+
+async def test_battery_voltage_unavailable_without_battery(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """Test the battery voltage is unavailable on a device powered only externally."""
+    state = copy.copy(DEFAULT_DEVICE_STATE_V2)
+    state.power_supply = "external"
+    mock_watergate_client.async_get_device_state_v2.return_value = state
+
+    with patch("homeassistant.components.watergate.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_entry)
+
+    assert hass.states.get(BATTERY_VOLTAGE).state == STATE_UNAVAILABLE
+
+
+async def test_battery_voltage_unavailable_when_power_request_fails(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """Test a failing power request only makes the battery voltage unavailable."""
+    mock_watergate_client.async_get_power_supply_data.side_effect = (
+        WatergateApiException("Server error")
+    )
+
+    with patch("homeassistant.components.watergate.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_entry)
+
+    assert hass.states.get(BATTERY_VOLTAGE).state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.sonic_water_temperature").state != STATE_UNAVAILABLE

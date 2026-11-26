@@ -7,10 +7,11 @@ from typing import Any, override
 from lektricowifi import Device
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_TYPE, EntityCategory
+from homeassistant.const import CONF_TYPE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import CONF_SERIAL_NUMBER
 from .coordinator import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
 from .entity import LektricoEntity
 
@@ -55,6 +56,16 @@ SWITCHS_FOR_3_PHASE_CHARGERS: tuple[LektricoSwitchEntityDescription, ...] = (
     ),
 )
 
+SWITCHS_FOR_1P7K_CHARGERS: tuple[LektricoSwitchEntityDescription, ...] = (
+    LektricoSwitchEntityDescription(
+        key="compatibility_mode",
+        translation_key="compatibility_mode",
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda data: bool(data["precise_pwm_mode"]),
+        set_value_fn=lambda device, data, value: device.set_compatibility_mode(value),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -68,13 +79,13 @@ async def async_setup_entry(
     if coordinator.device_type == Device.TYPE_3P22K:
         switchs_to_be_used = SWITCHS_FOR_ALL_CHARGERS + SWITCHS_FOR_3_PHASE_CHARGERS
     else:
-        switchs_to_be_used = SWITCHS_FOR_ALL_CHARGERS
+        switchs_to_be_used = SWITCHS_FOR_ALL_CHARGERS + SWITCHS_FOR_1P7K_CHARGERS
 
     async_add_entities(
         LektricoSwitch(
             description,
             coordinator,
-            f"{entry.data[CONF_TYPE]}_{entry.data[ATTR_SERIAL_NUMBER]}",
+            f"{entry.data[CONF_TYPE]}_{entry.data[CONF_SERIAL_NUMBER]}",
         )
         for description in switchs_to_be_used
     )

@@ -9,6 +9,7 @@ from functools import partial
 import io
 import os
 from pathlib import Path
+import re
 import shutil
 import tempfile
 from typing import TYPE_CHECKING, Any, Literal, override
@@ -26,7 +27,7 @@ import attr
 import probatio
 
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, language as language_util
 from homeassistant.util.json import json_loads_object
 
 from ..const import DOMAIN, MAX_ARCHIVE_MEMBERS, MAX_DOWNLOAD_SIZE, RELEASE_LIMIT
@@ -58,8 +59,10 @@ from ..utils.logger import LOGGER
 from ..utils.path import entry_in_directory, is_safe, resolve_in_directory
 from ..utils.tree import tree_entry_filename, tree_entry_is_directory
 from ..utils.url import (
+    RemoteFile,
     github_archive,
     github_commit_archive,
+    github_listed_release_asset,
     github_raw_file,
     github_release_asset,
     ref_version,
@@ -81,6 +84,12 @@ README_FILENAMES = (
     "README.MD",
     "README",
     "readme",
+)
+
+# A README in another language next to README.md, such as README.de.md or
+# README.pt-BR.md, named with the language tags of the translations
+TRANSLATED_README = re.compile(
+    r"readme\.([a-z]{2,3}(?:-[a-z0-9]+)*)\.md", re.IGNORECASE
 )
 
 TOPIC_FILTER = (
@@ -198,7 +207,7 @@ def _check_archive_size(archive: zipfile.ZipFile) -> None:
 class FileInformation:
     """FileInformation."""
 
-    def __init__(self, url: str, path: str, name: str) -> None:
+    def __init__(self, url: RemoteFile, path: str, name: str) -> None:
         """Initialize the file information."""
         self.download_url = url
         self.path = path
@@ -394,17 +403,34 @@ class RepositoryManifest:
         return attr.asdict(self)
 
     @staticmethod
-    def from_dict(manifest: dict[str, Any]) -> RepositoryManifest:
-        """Set attributes from dicts."""
+    def from_dict(
+        manifest: dict[str, Any], repository: str | None = None
+    ) -> RepositoryManifest:
+        """Set attributes from dicts.
+
+        The repository it was read from is named in the warning for a value
+        that is left out, the stored data of every repository in the catalog
+        is read and not only of the ones that are installed.
+        """
         manifest_data = RepositoryManifest()
         manifest_data.manifest = {}
         for key, value in manifest.items():
             if (validator := REPOSITORY_MANIFEST_VALUES.get(key)) is None:
                 continue
             try:
-                validator(value)
+                value = validator(value)
             except probatio.Invalid:
-                LOGGER.warning("Ignoring %s in hacs.json, %r is not valid", key, value)
+                if repository is None:
+                    LOGGER.warning(
+                        "Ignoring %s in hacs.json, %r is not valid", key, value
+                    )
+                else:
+                    LOGGER.warning(
+                        "Ignoring %s in hacs.json of %s, %r is not valid",
+                        key,
+                        repository,
+                        value,
+                    )
                 continue
             if value != getattr(manifest_data, key):
                 manifest_data.manifest[key] = value
@@ -477,6 +503,10 @@ class Repository:
         # The ref the tree was fetched for, its files are downloaded from there
         self.tree_ref: str | None = None
         self.treefiles: list[str] = []
+        # The files of the installed version, when it is not the one of the tree
+        self._installed_treefiles: tuple[str, list[str] | None] | None = None
+        # Pages asked for at once fetch the installed files only once
+        self._installed_treefiles_lock = Lock()
         self.ref: str | None = None
         self.logger = LOGGER
         # Two installs of one repository would write over each other's files
@@ -640,7 +670,9 @@ class Repository:
             tree_entry_filename(entry) for entry in self.tree
         ]:
             if manifest := await self.async_get_repository_manifest():
-                self.repository_manifest = RepositoryManifest.from_dict(manifest)
+                self.repository_manifest = RepositoryManifest.from_dict(
+                    manifest, self.data.full_name
+                )
         else:
             # Every install reads it, a repository without one can not be updated
             self.validate.errors.append(
@@ -715,7 +747,9 @@ class Repository:
             tree_entry_filename(entry) for entry in self.tree
         ]:
             if manifest := await self.async_get_repository_manifest():
-                self.repository_manifest = RepositoryManifest.from_dict(manifest)
+                self.repository_manifest = RepositoryManifest.from_dict(
+                    manifest, self.data.full_name
+                )
 
         self.additional_info = await self.async_get_readme_contents()
 
@@ -762,7 +796,7 @@ class Repository:
                 MarketplaceError(
                     translation_domain=DOMAIN,
                     translation_key="file_not_downloaded",
-                    translation_placeholders={"file": content["url"]},
+                    translation_placeholders={"file": str(content["url"])},
                 )
             )
             return
@@ -973,6 +1007,75 @@ class Repository:
                 return content
         return ""
 
+    async def async_get_translated_readme(self, language: str) -> str:
+        """Get the README in the language, empty when the repository has none.
+
+        Only READMEs in the tree are used, so a repository without translations
+        costs no request. An installed version that is not the one of the tree
+        costs one request for its files, once per version. The best match of the
+        language wins, as for the languages of conversation agents. It is fetched
+        for every page, like the README after a restart, so it always matches the
+        version to install.
+        """
+        treefiles = self.treefiles
+        installed = self.data.installed_version or self.data.installed_commit
+        version = installed if self.data.installed else self.tree_ref
+        # An installed repository shows the README of the installed version,
+        # which can name its translations differently than the version of the tree
+        if (
+            self.data.installed
+            and installed is not None
+            and self.tree_ref is not None
+            and installed != self.tree_ref
+        ):
+            treefiles = await self._async_get_installed_treefiles(installed)
+
+        readmes = {
+            match.group(1): filename
+            for filename in treefiles
+            if (match := TRANSLATED_README.fullmatch(filename))
+        }
+        if not (languages := language_util.matches(language, readmes)):
+            return ""
+
+        filename = readmes[languages[0]]
+        try:
+            return (
+                await self.get_documentation(filename=filename, version=version) or ""
+            )
+        except UnicodeDecodeError:
+            # README.md is still there to show
+            self.logger.warning("%s %s is not UTF-8", self.string, filename)
+            return ""
+
+    async def _async_get_installed_treefiles(self, installed: str) -> list[str]:
+        """Return the files of the installed version, the tree's when unknown.
+
+        They are fetched once per version, also when that fails, so a rate limit
+        is not asked again on every page. Pages asked for at the same time wait
+        for the first fetch instead of fetching again.
+        """
+        async with self._installed_treefiles_lock:
+            if (
+                self._installed_treefiles is None
+                or self._installed_treefiles[0] != installed
+            ):
+                files: list[str] | None
+                try:
+                    tree = await self.get_tree(installed)
+                except MarketplaceError as exception:
+                    self.logger.debug(
+                        "%s No tree for %s: %s", self.string, installed, exception
+                    )
+                    files = None
+                else:
+                    files = [entry.path for entry in tree or []]
+                self._installed_treefiles = (installed, files)
+            files = self._installed_treefiles[1]
+        if files is None:
+            return self.treefiles
+        return files
+
     def remove(self) -> None:
         """Forget the repository, its files stay where they are."""
         if self.marketplace.repositories.is_registered(repository_id=self.data.id):
@@ -1013,6 +1116,7 @@ class Repository:
 
         self.data.installed_version = None
         self.data.installed_commit = None
+        self._clear_readme_cache()
         self.async_dispatch_changed("uninstall")
 
         await self.async_remove_entity_device()
@@ -1141,7 +1245,7 @@ class Repository:
         )
 
     def async_dispatch_changed(self, action: str) -> None:
-        """Tell the panel the repository changed."""
+        """Tell the panel and the entities the repository changed."""
         self.marketplace.async_dispatch(
             MarketplaceSignal.REPOSITORY,
             {
@@ -1150,6 +1254,7 @@ class Repository:
                 "repository_id": self.data.id,
             },
         )
+        self.marketplace.coordinators[self.data.category].async_update_listeners()
 
     @contextmanager
     def _install_failure_names_the_version(self, version: str | None) -> Iterator[None]:
@@ -1176,7 +1281,18 @@ class Repository:
         """Forget the version picked for the install and end its progress."""
         self.data.selected_tag = None
         self.force_branch = False
+        # Clear it first, the panel asks for the page right after it hears of the end
+        self._clear_readme_cache()
         self._async_dispatch_install_progress(False)
+
+    def _clear_readme_cache(self) -> None:
+        """Clear the cached README, so the next info request fetches it again.
+
+        The cached README is of the version installed before, whose addresses
+        can point at files the version installed now no longer has.
+        """
+        self.additional_info = ""
+        self.updated_info = False
 
     async def async_post_installation(self) -> None:
         """Run post install steps."""
@@ -1677,7 +1793,14 @@ class Repository:
                 if ref == release.tag_name:
                     files.extend(
                         FileInformation(
-                            asset.browser_download_url, asset.name, asset.name
+                            github_listed_release_asset(
+                                repository=self.data.full_name,
+                                version=release.tag_name,
+                                filename=asset.name,
+                                url=asset.browser_download_url,
+                            ),
+                            asset.name,
+                            asset.name,
                         )
                         for asset in release.assets or []
                     )
@@ -1744,7 +1867,12 @@ class Repository:
 
         return [
             FileInformation(
-                url=asset.get("browser_download_url"),
+                url=github_listed_release_asset(
+                    repository=self.data.full_name,
+                    version=release.data.get("tag_name", version),
+                    filename=asset.get("name"),
+                    url=asset.get("browser_download_url"),
+                ),
                 path=asset.get("name"),
                 name=asset.get("name"),
             )
@@ -1911,7 +2039,9 @@ class Repository:
             return None
 
         result = await self.marketplace.async_download_file(
-            f"https://raw.githubusercontent.com/{self.data.full_name}/{target_version}/{filename}",
+            github_raw_file(
+                repository=self.data.full_name, ref=target_version, path=filename
+            ),
             nolog=True,
         )
 
@@ -1930,7 +2060,7 @@ class Repository:
         """Get the hacs.json file of the repository."""
         if (result := await self.get_repository_manifest_raw(version=version)) is None:
             return None
-        return RepositoryManifest.from_dict(result)
+        return RepositoryManifest.from_dict(result, self.data.full_name)
 
     @return_none_on_exception
     async def get_repository_manifest_raw(
@@ -1941,7 +2071,9 @@ class Repository:
         """Get the hacs.json file of the repository."""
         self.logger.debug("%s Getting hacs.json for version=%s", self.string, version)
         result = await self.marketplace.async_download_file(
-            f"https://raw.githubusercontent.com/{self.data.full_name}/{version}/hacs.json",
+            github_raw_file(
+                repository=self.data.full_name, ref=version, path="hacs.json"
+            ),
             nolog=True,
             handle_rate_limit=True,
         )
@@ -2165,7 +2297,17 @@ class Repository:
 
         self._check_minimum_version(manifest)
 
-        previous_manifest = self.repository_manifest
+        # The GitHub API path may find the repository unchanged and skip
+        # resolving it again, so it needs exactly what was there before
+        previous_state = (
+            self.repository_manifest,
+            self.ref,
+            self.content.path.remote,
+            self.content.single,
+            self.tree,
+            self.tree_ref,
+            self.treefiles,
+        )
         self.repository_manifest = manifest
         self.ref = version if commit else f"tags/{version}"
         self.content.path.remote = self.remote_path
@@ -2174,9 +2316,15 @@ class Repository:
         try:
             return await self._async_resolve_catalog_content(version, commit=commit)
         except MarketplaceError:
-            self.repository_manifest = previous_manifest
-            self.content.path.remote = self.remote_path
-            self.content.single = self.single_file
+            (
+                self.repository_manifest,
+                self.ref,
+                self.content.path.remote,
+                self.content.single,
+                self.tree,
+                self.tree_ref,
+                self.treefiles,
+            ) = previous_state
             raise
 
     async def _async_resolve_catalog_content(

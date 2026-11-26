@@ -19,14 +19,16 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_TOKEN,
     CONF_TYPE,
+    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_KEY, CONF_SN, CONF_SUBTYPE, DOMAIN, LOGGER
 from .entity import MideaConfigEntry
+from .utils import async_remove_unsupported_entities
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -44,6 +46,16 @@ _PLATFORMS: list[Platform] = [
 ]
 
 
+def _subtype_int(value: object, default: int = 0) -> int:
+    """Coerce a cloud model number into the integer subtype midealocal expects."""
+    if isinstance(value, (int, str)):
+        try:
+            return int(value)
+        except ValueError:
+            return default
+    return default
+
+
 def _create_device(data: Mapping[str, Any], ip_address: str) -> MideaDevice | None:
     """Create the device object for the given entry data and IP address."""
     return device_selector(
@@ -56,7 +68,7 @@ def _create_device(data: Mapping[str, Any], ip_address: str) -> MideaDevice | No
         data[CONF_KEY],
         ProtocolVersion(data[CONF_PROTOCOL]),
         data[CONF_MODEL],
-        data[CONF_SUBTYPE],
+        _subtype_int(data[CONF_SUBTYPE]),
         data.get(CONF_MAC, None),
         data.get(CONF_SN, None),
     )
@@ -125,9 +137,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> Non
     device.register_update(_log_availability)
     entry.async_on_unload(partial(device.unregister_update, _log_availability))
 
+    async_remove_unsupported_entities(hass, device)
+
     await device.open()
     entry.runtime_data = device
     entry.async_on_unload(device.close)
+
+    async def _async_close(_event: Event) -> None:
+        await device.close()
+
+    # Config entries are not unloaded at shutdown, so close the device here
+    # before the supervisor task is cancelled from under it.
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
+    )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
 

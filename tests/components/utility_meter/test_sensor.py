@@ -11,10 +11,7 @@ from pytest_homeassistant.common import (
     mock_restore_cache_with_extra_data,
 )
 
-from homeassistant.components.select import (
-    DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
-)
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectService
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -40,11 +37,11 @@ from homeassistant.components.utility_meter.services import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
     UnitOfEnergy,
     UnitOfVolume,
 )
@@ -161,8 +158,8 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.energy_bill", "option": "offpeak"},
+        SelectService.SELECT_OPTION,
+        {TargetKey.ENTITY_ID: "select.energy_bill", "option": "offpeak"},
         blocking=True,
     )
 
@@ -197,7 +194,7 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
         DOMAIN,
         UtilityMeterService.CALIBRATE,
         {
-            ATTR_ENTITY_ID: "sensor.energy_bill_midpeak",
+            TargetKey.ENTITY_ID: "sensor.energy_bill_midpeak",
             UtilityMeterServiceArgument.VALUE: "100",
         },
         blocking=True,
@@ -211,7 +208,7 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
         DOMAIN,
         UtilityMeterService.CALIBRATE,
         {
-            ATTR_ENTITY_ID: "sensor.energy_bill_midpeak",
+            TargetKey.ENTITY_ID: "sensor.energy_bill_midpeak",
             UtilityMeterServiceArgument.VALUE: "0.123",
         },
         blocking=True,
@@ -1664,8 +1661,8 @@ async def test_non_periodically_resetting_meter_with_tariffs(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.energy_bill", "option": "high"},
+        SelectService.SELECT_OPTION,
+        {TargetKey.ENTITY_ID: "select.energy_bill", "option": "high"},
         blocking=True,
     )
     await hass.async_block_till_done()

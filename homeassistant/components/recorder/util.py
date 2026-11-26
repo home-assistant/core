@@ -1,14 +1,18 @@
 """SQLAlchemy util functions."""
 
-from collections.abc import Callable, Generator, Sequence
+from collections.abc import Callable, Generator, Iterable, Sequence
 import contextlib
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
+import hashlib
 import logging
 import os
+from pathlib import Path
+import re
+import stat
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, NoReturn
+from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, NoReturn, cast
 
 from awesomeversion import (
     AwesomeVersion,
@@ -17,8 +21,8 @@ from awesomeversion import (
 )
 import ciso8601
 import probatio
-from sqlalchemy import inspect, text
-from sqlalchemy.engine import Result, Row
+from sqlalchemy import inspect, make_url, text
+from sqlalchemy.engine import URL, Result, Row
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.query import Query
@@ -40,7 +44,7 @@ from homeassistant.helpers.recorder import (  # noqa: F401
 )
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
+from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SupportedDialect
 from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
@@ -65,6 +69,12 @@ _LOGGER = logging.getLogger(__name__)
 RETRIES = 3
 QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
+
+CORRUPT_DATABASE_ISSUE_PREFIX = "corrupt_database_files"
+# The UTC isoformat() time that move_away_broken_database appends.
+CORRUPT_DATABASE_TIME = re.compile(
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{6})?\+00:00"
+)
 
 
 # Our minimum versions for each database
@@ -236,6 +246,33 @@ def execute_stmt_lambda_element(
     raise RuntimeError  # pragma: no cover
 
 
+def execute_stmt_lambda_element_streamed[_T](
+    session: Session,
+    stmt: StatementLambdaElement,
+    convert: Callable[[Iterable[Row], Iterable[str]], _T],
+) -> _T:
+    """Execute a StatementLambdaElement and convert the rows while they are read.
+
+    The rows and their field names are passed to convert. Rows are not kept in a
+    list, so they are freed as soon as they are converted. Errors raised while
+    reading the rows are not retried by execute_stmt_lambda_element, so all rows
+    are read again at once when reading them fails.
+    """
+    result = cast(
+        Result, execute_stmt_lambda_element(session, stmt, orm_rows=False, stream=True)
+    )
+    fields = result.keys()
+    try:
+        return convert(result, fields)
+    except SQLAlchemyError as err:
+        _LOGGER.error("Error reading rows, retrying: %s", err)
+        _rollback_read_only_session(session)
+        rows = cast(
+            Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
+        )
+        return convert(rows, fields)
+
+
 def execute_select(
     session: Session, stmt: Select, params: dict[str, Any]
 ) -> Sequence[Row]:
@@ -258,12 +295,32 @@ def execute_select(
     raise RuntimeError  # pragma: no cover
 
 
+def get_engine_db_url(db_url: str) -> URL:
+    """Return the SQLAlchemy URL to create a database engine for db_url.
+
+    A PostgreSQL URL without a driver uses psycopg2, which Home Assistant
+    installations ship, instead of SQLAlchemy's default driver, which is
+    psycopg 3 from SQLAlchemy 2.1.
+    """
+    url = make_url(db_url)
+    if url.drivername == "postgresql":
+        url = url.set(drivername="postgresql+psycopg2")
+    return url
+
+
+def is_file_sqlite_url(url: URL) -> bool:
+    """Return if the URL is for a SQLite database stored in a file."""
+    if url.get_backend_name() != "sqlite" or not url.database:
+        return False
+    return ":memory:" not in url.database
+
+
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:
     """Ensure that the database is valid or move it away."""
     dbpath = dburl_to_path(dburl)
 
-    if not os.path.exists(dbpath):
-        # Database does not exist yet, this is OK
+    if not os.path.isfile(dbpath):
+        # Database does not exist yet, or the path is not a file, like a directory
         return True
 
     if not validate_sqlite_database(dbpath):
@@ -275,7 +332,7 @@ def validate_or_move_away_sqlite_database(dburl: str) -> bool:
 
 def dburl_to_path(dburl: str) -> str:
     """Convert the db url into a filesystem path."""
-    return dburl.removeprefix(SQLITE_URL_PREFIX)
+    return make_url(dburl).database or ""
 
 
 def last_run_was_recently_clean(cursor: SQLiteCursor) -> bool:
@@ -374,6 +431,71 @@ def move_away_broken_database(dbfile: str) -> None:
         if not os.path.exists(path):
             continue
         os.rename(path, f"{path}{corrupt_postfix}")
+
+
+def find_corrupt_database_files(dbfile: str) -> dict[Path, int]:
+    """Return the files move_away_broken_database kept, with their size."""
+    # The path from a sqlite://// URL starts with //, which resolve() normalizes.
+    path = Path(dbfile).resolve()
+    postfixes = "|".join(re.escape(postfix) for postfix in SQLITE3_POSTFIXES)
+    corrupt_name = re.compile(
+        rf"{re.escape(path.name)}(?:{postfixes})\.corrupt\.{CORRUPT_DATABASE_TIME.pattern}"
+    )
+    corrupt_files: dict[Path, int] = {}
+    # Unlike glob, iterdir raises when the directory can't be listed.
+    for corrupt_file in path.parent.iterdir():
+        if not corrupt_name.fullmatch(corrupt_file.name):
+            continue
+        try:
+            file_stat = corrupt_file.stat()
+        except FileNotFoundError:
+            continue
+        if stat.S_ISREG(file_stat.st_mode):
+            corrupt_files[corrupt_file] = file_stat.st_size
+    return corrupt_files
+
+
+def delete_corrupt_database_files(dbfile: str, names: Iterable[str]) -> None:
+    """Delete the given corrupt database files next to the database."""
+    directory = Path(dbfile).resolve().parent
+    for name in names:
+        (directory / name).unlink(missing_ok=True)
+
+
+@callback
+def async_update_corrupt_database_issue(
+    hass: HomeAssistant, corrupt_files: dict[Path, int]
+) -> None:
+    """Create or delete the repair issue for kept corrupt database files."""
+    issue_id: str | None = None
+    if corrupt_files:
+        # Joined with "/", which can't be in a file name.
+        names = "/".join(sorted(file.name for file in corrupt_files))
+        # Other files get a new issue, so ignoring an older one doesn't hide them.
+        issue_id = f"{CORRUPT_DATABASE_ISSUE_PREFIX}_{hashlib.sha256(names.encode()).hexdigest()[:16]}"
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            learn_more_url="https://www.home-assistant.io/integrations/recorder/#handling-disk-corruption-and-hardware-failures",
+            translation_key="corrupt_database_files",
+            # The fix flow deletes only these files.
+            data={"files": names},
+            translation_placeholders={
+                "count": str(len(corrupt_files)),
+                "size": f"{sum(corrupt_files.values()) / 1_000_000:.1f}",
+                "path": str(next(iter(corrupt_files)).parent),
+            },
+        )
+    for domain, other_issue_id in list(ir.async_get(hass).issues):
+        if (
+            domain == DOMAIN
+            and other_issue_id.startswith(CORRUPT_DATABASE_ISSUE_PREFIX)
+            and other_issue_id != issue_id
+        ):
+            ir.async_delete_issue(hass, DOMAIN, other_issue_id)
 
 
 def execute_on_connection(dbapi_connection: DBAPIConnection, statement: str) -> None:

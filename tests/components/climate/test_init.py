@@ -21,28 +21,12 @@ from homeassistant.components.climate import (
     DOMAIN,
     ClimateEntity,
     ClimateExtraStoredData,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
     RestoreClimate,
 )
 from homeassistant.components.climate.const import (
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_FAN_MODE,
-    ATTR_HUMIDITY,
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
-    ATTR_PRESET_MODE,
-    ATTR_SWING_HORIZONTAL_MODE,
-    ATTR_SWING_MODE,
-    ATTR_TARGET_HUMIDITY_STEP,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_SWING_HORIZONTAL_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
     SWING_HORIZONTAL_OFF,
     SWING_HORIZONTAL_ON,
     ClimateEntityCapabilityAttribute,
@@ -53,9 +37,10 @@ from homeassistant.components.climate.services import (
     SET_TEMPERATURE_SCHEMA,
     _async_service_temperature_set,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import PRECISION_WHOLE, STATE_UNAVAILABLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import (
@@ -159,11 +144,17 @@ class MockClimateEntity(MockEntity, ClimateEntity):
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if ATTR_TEMPERATURE in kwargs:
-            self._attr_native_target_temperature = kwargs[ATTR_TEMPERATURE]
-        if ATTR_TARGET_TEMP_HIGH in kwargs:
-            self._attr_native_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
-            self._attr_native_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
+        if ClimateServiceArgument.TEMPERATURE in kwargs:
+            self._attr_native_target_temperature = kwargs[
+                ClimateServiceArgument.TEMPERATURE
+            ]
+        if ClimateServiceArgument.TARGET_TEMP_HIGH in kwargs:
+            self._attr_native_target_temperature_high = kwargs[
+                ClimateServiceArgument.TARGET_TEMP_HIGH
+            ]
+            self._attr_native_target_temperature_low = kwargs[
+                ClimateServiceArgument.TARGET_TEMP_LOW
+            ]
 
 
 class MockClimateEntityTestMethods(MockClimateEntity):
@@ -256,7 +247,7 @@ async def test_temperature_features_is_valid(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
                 "entity_id": "climate.test_temp",
                 "temperature": 20,
@@ -274,7 +265,7 @@ async def test_temperature_features_is_valid(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
                 "entity_id": "climate.test_range",
                 "target_temp_low": 20,
@@ -300,14 +291,16 @@ async def test_mode_validation(
 
     state = hass.states.get("climate.test")
     assert state.state == "heat"
-    assert state.attributes.get(ATTR_PRESET_MODE) == "home"
-    assert state.attributes.get(ATTR_FAN_MODE) == "auto"
-    assert state.attributes.get(ATTR_SWING_MODE) == "auto"
-    assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) == "on"
+    assert state.attributes.get(ClimateEntityStateAttribute.PRESET_MODE) == "home"
+    assert state.attributes.get(ClimateEntityStateAttribute.FAN_MODE) == "auto"
+    assert state.attributes.get(ClimateEntityStateAttribute.SWING_MODE) == "auto"
+    assert (
+        state.attributes.get(ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE) == "on"
+    )
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
             "entity_id": "climate.test",
             "preset_mode": "away",
@@ -316,7 +309,7 @@ async def test_mode_validation(
     )
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_SWING_MODE,
+        ClimateService.SET_SWING_MODE,
         {
             "entity_id": "climate.test",
             "swing_mode": "off",
@@ -325,7 +318,7 @@ async def test_mode_validation(
     )
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_SWING_HORIZONTAL_MODE,
+        ClimateService.SET_SWING_HORIZONTAL_MODE,
         {
             "entity_id": "climate.test",
             "swing_horizontal_mode": "off",
@@ -334,7 +327,7 @@ async def test_mode_validation(
     )
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_FAN_MODE,
+        ClimateService.SET_FAN_MODE,
         {
             "entity_id": "climate.test",
             "fan_mode": "off",
@@ -342,10 +335,12 @@ async def test_mode_validation(
         blocking=True,
     )
     state = hass.states.get("climate.test")
-    assert state.attributes.get(ATTR_PRESET_MODE) == "away"
-    assert state.attributes.get(ATTR_FAN_MODE) == "off"
-    assert state.attributes.get(ATTR_SWING_MODE) == "off"
-    assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) == "off"
+    assert state.attributes.get(ClimateEntityStateAttribute.PRESET_MODE) == "away"
+    assert state.attributes.get(ClimateEntityStateAttribute.FAN_MODE) == "off"
+    assert state.attributes.get(ClimateEntityStateAttribute.SWING_MODE) == "off"
+    assert (
+        state.attributes.get(ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE) == "off"
+    )
 
     with pytest.raises(
         ServiceValidationError,
@@ -353,7 +348,7 @@ async def test_mode_validation(
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
                 "entity_id": "climate.test",
                 "hvac_mode": "auto",
@@ -371,7 +366,7 @@ async def test_mode_validation(
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            ClimateService.SET_PRESET_MODE,
             {
                 "entity_id": "climate.test",
                 "preset_mode": "invalid",
@@ -390,7 +385,7 @@ async def test_mode_validation(
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_SWING_MODE,
+            ClimateService.SET_SWING_MODE,
             {
                 "entity_id": "climate.test",
                 "swing_mode": "invalid",
@@ -412,7 +407,7 @@ async def test_mode_validation(
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            ClimateService.SET_SWING_HORIZONTAL_MODE,
             {
                 "entity_id": "climate.test",
                 "swing_horizontal_mode": "invalid",
@@ -431,7 +426,7 @@ async def test_mode_validation(
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FAN_MODE,
+            ClimateService.SET_FAN_MODE,
             {
                 "entity_id": "climate.test",
                 "fan_mode": "invalid",
@@ -553,8 +548,10 @@ async def test_humidity_validation(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
-    assert state.attributes.get(ATTR_HUMIDITY) == 50
-    assert state.attributes.get(ATTR_TARGET_HUMIDITY_STEP) == 5
+    assert state.attributes.get(ClimateEntityStateAttribute.TARGET_HUMIDITY) == 50
+    assert (
+        state.attributes.get(ClimateEntityCapabilityAttribute.TARGET_HUMIDITY_STEP) == 5
+    )
 
     with pytest.raises(
         ServiceValidationError,
@@ -562,10 +559,10 @@ async def test_humidity_validation(
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_HUMIDITY,
+            ClimateService.SET_HUMIDITY,
             {
                 "entity_id": "climate.test",
-                ATTR_HUMIDITY: "1",
+                ClimateServiceArgument.HUMIDITY: "1",
             },
             blocking=True,
         )
@@ -579,10 +576,10 @@ async def test_humidity_validation(
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_HUMIDITY,
+            ClimateService.SET_HUMIDITY,
             {
                 "entity_id": "climate.test",
-                ATTR_HUMIDITY: "70",
+                ClimateServiceArgument.HUMIDITY: "70",
             },
             blocking=True,
         )
@@ -610,13 +607,17 @@ async def test_temperature_validation(
 
         def set_temperature(self, **kwargs: Any) -> None:
             """Set new target temperature."""
-            if ATTR_TEMPERATURE in kwargs:
-                self._attr_native_target_temperature = kwargs[ATTR_TEMPERATURE]
-            if ATTR_TARGET_TEMP_HIGH in kwargs:
-                self._attr_native_target_temperature_high = kwargs[
-                    ATTR_TARGET_TEMP_HIGH
+            if ClimateServiceArgument.TEMPERATURE in kwargs:
+                self._attr_native_target_temperature = kwargs[
+                    ClimateServiceArgument.TEMPERATURE
                 ]
-                self._attr_native_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
+            if ClimateServiceArgument.TARGET_TEMP_HIGH in kwargs:
+                self._attr_native_target_temperature_high = kwargs[
+                    ClimateServiceArgument.TARGET_TEMP_HIGH
+                ]
+                self._attr_native_target_temperature_low = kwargs[
+                    ClimateServiceArgument.TARGET_TEMP_LOW
+                ]
 
     test_climate = MockClimateEntityTemp(
         name="Test",
@@ -630,9 +631,9 @@ async def test_temperature_validation(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) is None
-    assert state.attributes.get(ATTR_MIN_TEMP) == 7
-    assert state.attributes.get(ATTR_MAX_TEMP) == 35
+    assert state.attributes.get(ClimateEntityStateAttribute.CURRENT_TEMPERATURE) is None
+    assert state.attributes.get(ClimateEntityCapabilityAttribute.MIN_TEMP) == 7
+    assert state.attributes.get(ClimateEntityCapabilityAttribute.MAX_TEMP) == 35
 
     with pytest.raises(
         ServiceValidationError,
@@ -640,10 +641,10 @@ async def test_temperature_validation(
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
                 "entity_id": "climate.test",
-                ATTR_TEMPERATURE: "40",
+                ClimateServiceArgument.TEMPERATURE: "40",
             },
             blocking=True,
         )
@@ -659,11 +660,11 @@ async def test_temperature_validation(
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
                 "entity_id": "climate.test",
-                ATTR_TARGET_TEMP_HIGH: "25",
-                ATTR_TARGET_TEMP_LOW: "0",
+                ClimateServiceArgument.TARGET_TEMP_HIGH: "25",
+                ClimateServiceArgument.TARGET_TEMP_LOW: "0",
             },
             blocking=True,
         )
@@ -675,18 +676,152 @@ async def test_temperature_validation(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
             "entity_id": "climate.test",
-            ATTR_TARGET_TEMP_HIGH: "25",
-            ATTR_TARGET_TEMP_LOW: "10",
+            ClimateServiceArgument.TARGET_TEMP_HIGH: "25",
+            ClimateServiceArgument.TARGET_TEMP_LOW: "10",
         },
         blocking=True,
     )
 
     state = hass.states.get("climate.test")
-    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 10
-    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25
+    assert state.attributes.get(ClimateEntityStateAttribute.TARGET_TEMP_LOW) == 10
+    assert state.attributes.get(ClimateEntityStateAttribute.TARGET_TEMP_HIGH) == 25
+
+
+async def test_temperature_validation_display_rounding(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test that temperatures at the rounded limits shown in the UI are accepted."""
+
+    class MockClimateEntityTemp(MockClimateEntity):
+        """Mock climate class with a native unit different from the configured one."""
+
+        _attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        )
+        _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
+        _attr_native_target_temperature = 72
+        _attr_native_target_temperature_low = 68
+        _attr_native_target_temperature_high = 77
+        _attr_min_temp = 61.7
+        _attr_max_temp = 89.5
+        _attr_precision = PRECISION_WHOLE
+
+        def set_temperature(self, **kwargs: Any) -> None:
+            """Set new target temperature."""
+            if ClimateServiceArgument.TEMPERATURE in kwargs:
+                self._attr_native_target_temperature = kwargs[
+                    ClimateServiceArgument.TEMPERATURE
+                ]
+            if ClimateServiceArgument.TARGET_TEMP_LOW in kwargs:
+                self._attr_native_target_temperature_low = kwargs[
+                    ClimateServiceArgument.TARGET_TEMP_LOW
+                ]
+                self._attr_native_target_temperature_high = kwargs[
+                    ClimateServiceArgument.TARGET_TEMP_HIGH
+                ]
+
+    test_climate = MockClimateEntityTemp(
+        name="Test",
+        unique_id="unique_climate_test",
+    )
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[test_climate], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    # 61.7 °F is 16.5 °C and 89.5 °F is 31.9 °C, shown rounded to whole degrees
+    state = hass.states.get("climate.test")
+    assert state.attributes.get(ClimateEntityCapabilityAttribute.MIN_TEMP) == 16
+    assert state.attributes.get(ClimateEntityCapabilityAttribute.MAX_TEMP) == 32
+
+    # 16 °C is 60.8 °F, below the native minimum, and is clamped to it
+    await hass.services.async_call(
+        DOMAIN,
+        ClimateService.SET_TEMPERATURE,
+        {"entity_id": "climate.test", ClimateServiceArgument.TEMPERATURE: 16},
+        blocking=True,
+    )
+    assert test_climate.native_target_temperature == 61.7
+
+    # 32 °C is 89.6 °F, above the native maximum, and is clamped to it
+    await hass.services.async_call(
+        DOMAIN,
+        ClimateService.SET_TEMPERATURE,
+        {"entity_id": "climate.test", ClimateServiceArgument.TEMPERATURE: 32},
+        blocking=True,
+    )
+    assert test_climate.native_target_temperature == 89.5
+
+    # The same applies to a temperature range
+    await hass.services.async_call(
+        DOMAIN,
+        ClimateService.SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test",
+            ClimateServiceArgument.TARGET_TEMP_LOW: 16,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 32,
+        },
+        blocking=True,
+    )
+    assert test_climate.native_target_temperature_low == 61.7
+    assert test_climate.native_target_temperature_high == 89.5
+
+    # Temperatures outside the shown limits are rejected
+    for temperature in (15.5, 32.5):
+        with pytest.raises(ServiceValidationError) as exc:
+            await hass.services.async_call(
+                DOMAIN,
+                ClimateService.SET_TEMPERATURE,
+                {
+                    "entity_id": "climate.test",
+                    ClimateServiceArgument.TEMPERATURE: temperature,
+                },
+                blocking=True,
+            )
+        assert exc.value.translation_key == "temp_out_of_range"
+        assert exc.value.translation_placeholders == {
+            "check_temp": str(temperature),
+            "min_temp": "16",
+            "max_temp": "32",
+        }
+    assert test_climate.native_target_temperature == 89.5
+
+    # 62 °F is 16.7 °C, shown as 17 °C. Temperatures between the native and the
+    # shown minimum are accepted as before.
+    test_climate._attr_min_temp = 62
+    test_climate.async_write_ha_state()
+    state = hass.states.get("climate.test")
+    assert state.attributes.get(ClimateEntityCapabilityAttribute.MIN_TEMP) == 17
+
+    # 16.8 °C is 62.24 °F
+    await hass.services.async_call(
+        DOMAIN,
+        ClimateService.SET_TEMPERATURE,
+        {"entity_id": "climate.test", ClimateServiceArgument.TEMPERATURE: 16.8},
+        blocking=True,
+    )
+    assert test_climate.native_target_temperature == pytest.approx(62.24)
+
+    # 16.5 °C is 61.7 °F, below both the native and the shown minimum
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            ClimateService.SET_TEMPERATURE,
+            {"entity_id": "climate.test", ClimateServiceArgument.TEMPERATURE: 16.5},
+            blocking=True,
+        )
+    assert exc.value.translation_key == "temp_out_of_range"
+    assert exc.value.translation_placeholders == {
+        "check_temp": "16.5",
+        "min_temp": "17",
+        "max_temp": "32",
+    }
 
 
 async def test_target_temp_high_higher_than_low(
@@ -709,13 +844,17 @@ async def test_target_temp_high_higher_than_low(
 
         def set_temperature(self, **kwargs: Any) -> None:
             """Set new target temperature."""
-            if ATTR_TEMPERATURE in kwargs:
-                self._attr_native_target_temperature = kwargs[ATTR_TEMPERATURE]
-            if ATTR_TARGET_TEMP_HIGH in kwargs:
-                self._attr_native_target_temperature_high = kwargs[
-                    ATTR_TARGET_TEMP_HIGH
+            if ClimateServiceArgument.TEMPERATURE in kwargs:
+                self._attr_native_target_temperature = kwargs[
+                    ClimateServiceArgument.TEMPERATURE
                 ]
-                self._attr_native_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
+            if ClimateServiceArgument.TARGET_TEMP_HIGH in kwargs:
+                self._attr_native_target_temperature_high = kwargs[
+                    ClimateServiceArgument.TARGET_TEMP_HIGH
+                ]
+                self._attr_native_target_temperature_low = kwargs[
+                    ClimateServiceArgument.TARGET_TEMP_LOW
+                ]
 
     test_climate = MockClimateEntityTemp(
         name="Test",
@@ -729,9 +868,9 @@ async def test_target_temp_high_higher_than_low(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 15
-    assert state.attributes.get(ATTR_MIN_TEMP) == 7
-    assert state.attributes.get(ATTR_MAX_TEMP) == 35
+    assert state.attributes.get(ClimateEntityStateAttribute.CURRENT_TEMPERATURE) == 15
+    assert state.attributes.get(ClimateEntityCapabilityAttribute.MIN_TEMP) == 7
+    assert state.attributes.get(ClimateEntityCapabilityAttribute.MAX_TEMP) == 35
 
     with pytest.raises(
         ServiceValidationError,
@@ -742,11 +881,11 @@ async def test_target_temp_high_higher_than_low(
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
                 "entity_id": "climate.test",
-                ATTR_TARGET_TEMP_HIGH: "15",
-                ATTR_TARGET_TEMP_LOW: "20",
+                ClimateServiceArgument.TARGET_TEMP_HIGH: "15",
+                ClimateServiceArgument.TARGET_TEMP_LOW: "20",
             },
             blocking=True,
         )
@@ -1027,7 +1166,8 @@ async def test_native_temperature_unit_conversion(
     )
     # The published unit is the one the published temperatures are converted to
     assert (
-        state.attributes[ClimateEntityStateAttribute.TEMPERATURE_UNIT] == expected_unit
+        state.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        == expected_unit
     )
 
 
@@ -1215,8 +1355,8 @@ async def test_set_temperature_service_converts_to_native_unit(
         ServiceCall(
             hass,
             DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_TEMPERATURE: service_temperature},
+            ClimateService.SET_TEMPERATURE,
+            {ClimateServiceArgument.TEMPERATURE: service_temperature},
         ),
     )
 
@@ -2099,7 +2239,7 @@ def _restored(
             US_CUSTOMARY_SYSTEM,
             {
                 **ATTRIBUTES_FAHRENHEIT,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
@@ -2112,7 +2252,7 @@ def _restored(
             METRIC_SYSTEM,
             {
                 **ATTRIBUTES_FAHRENHEIT,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
@@ -2125,7 +2265,7 @@ def _restored(
             METRIC_SYSTEM,
             {
                 **ATTRIBUTES_FAHRENHEIT,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
@@ -2162,7 +2302,7 @@ def _restored(
             METRIC_SYSTEM,
             {
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE: 20,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: "invalid",
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: "invalid",
             },
             None,
             False,
@@ -2370,3 +2510,32 @@ async def test_restore_climate_no_last_state(
     await hass.async_block_till_done()
 
     assert entity.restored is None
+
+
+async def test_temperature_unit_when_unavailable(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    register_test_integration: MockConfigEntry,
+) -> None:
+    """Test the temperature unit is kept when the entity is unavailable."""
+    entity = MockClimateEntity(name="Test", unique_id="unique_climate_test")
+    entity._attr_available = False
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test")
+    assert state.state == STATE_UNAVAILABLE
+    assert (
+        state.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        == UnitOfTemperature.CELSIUS
+    )
+    # The entity registry restores the capabilities before the entity is added
+    entry = entity_registry.async_get("climate.test")
+    assert (
+        entry.capabilities[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        == UnitOfTemperature.CELSIUS
+    )
