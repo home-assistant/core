@@ -8,9 +8,6 @@ from thinqconnect import DeviceType
 from thinqconnect.integration import ExtendedProperty
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_MEDIUM,
     PRESET_NONE,
@@ -19,9 +16,10 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -328,7 +326,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
+        if hvac_mode := kwargs.get(ClimateServiceArgument.HVAC_MODE):
             if hvac_mode == HVACMode.OFF:
                 await self.async_turn_off()
                 return
@@ -350,7 +348,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             self.property_id,
             kwargs,
         )
-        if temperature := kwargs.get(ATTR_TEMPERATURE):
+        if temperature := kwargs.get(ClimateServiceArgument.TEMPERATURE):
             if self.data.step >= 1:
                 temperature = int(temperature)
             if temperature != self.native_target_temperature:
@@ -361,8 +359,8 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
                     )
                 )
 
-        if (temperature_low := kwargs.get(ATTR_TARGET_TEMP_LOW)) and (
-            temperature_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        if (temperature_low := kwargs.get(ClimateServiceArgument.TARGET_TEMP_LOW)) and (
+            temperature_high := kwargs.get(ClimateServiceArgument.TARGET_TEMP_HIGH)
         ):
             if self.data.step >= 1:
                 temperature_low = int(temperature_low)
