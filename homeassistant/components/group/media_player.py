@@ -44,6 +44,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import GroupEntityStateAttribute
+from .util import reduce_attribute
 
 KEY_ANNOUNCE = "announce"
 KEY_CLEAR_PLAYLIST = "clear_playlist"
@@ -54,7 +55,9 @@ KEY_PLAY_MEDIA = "play_media"
 KEY_SHUFFLE = "shuffle"
 KEY_SEEK = "seek"
 KEY_TRACKS = "tracks"
-KEY_VOLUME = "volume"
+KEY_VOLUME_MUTE = "volume_mute"
+KEY_VOLUME_SET = "volume_set"
+KEY_VOLUME_STEP = "volume_step"
 
 DEFAULT_NAME = "Media Group"
 
@@ -135,7 +138,9 @@ class MediaPlayerGroup(MediaPlayerEntity):
             KEY_SHUFFLE: set(),
             KEY_SEEK: set(),
             KEY_TRACKS: set(),
-            KEY_VOLUME: set(),
+            KEY_VOLUME_MUTE: set(),
+            KEY_VOLUME_SET: set(),
+            KEY_VOLUME_STEP: set(),
         }
 
     @callback
@@ -200,14 +205,20 @@ class MediaPlayerGroup(MediaPlayerEntity):
             self._features[KEY_ON_OFF].add(entity_id)
         else:
             self._features[KEY_ON_OFF].discard(entity_id)
-        if new_features & (
-            MediaPlayerEntityFeature.VOLUME_MUTE
-            | MediaPlayerEntityFeature.VOLUME_SET
-            | MediaPlayerEntityFeature.VOLUME_STEP
-        ):
-            self._features[KEY_VOLUME].add(entity_id)
+        if new_features & MediaPlayerEntityFeature.VOLUME_MUTE:
+            self._features[KEY_VOLUME_MUTE].add(entity_id)
         else:
-            self._features[KEY_VOLUME].discard(entity_id)
+            self._features[KEY_VOLUME_MUTE].discard(entity_id)
+        if new_features & MediaPlayerEntityFeature.VOLUME_SET:
+            self._features[KEY_VOLUME_SET].add(entity_id)
+        else:
+            self._features[KEY_VOLUME_SET].discard(entity_id)
+        if new_features & (
+            MediaPlayerEntityFeature.VOLUME_SET | MediaPlayerEntityFeature.VOLUME_STEP
+        ):
+            self._features[KEY_VOLUME_STEP].add(entity_id)
+        else:
+            self._features[KEY_VOLUME_STEP].discard(entity_id)
         if new_features & MediaPlayerEntityFeature.MEDIA_ANNOUNCE:
             self._features[KEY_ANNOUNCE].add(entity_id)
         else:
@@ -354,7 +365,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         data: dict[str, Any] = {
-            TargetKey.ENTITY_ID: self._features[KEY_VOLUME],
+            TargetKey.ENTITY_ID: self._features[KEY_VOLUME_MUTE],
             MediaPlayerServiceArgument.IS_VOLUME_MUTED: mute,
         }
         await self.hass.services.async_call(
@@ -412,7 +423,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level(s)."""
         data: dict[str, Any] = {
-            TargetKey.ENTITY_ID: self._features[KEY_VOLUME],
+            TargetKey.ENTITY_ID: self._features[KEY_VOLUME_SET],
             MediaPlayerServiceArgument.VOLUME_LEVEL: volume,
         }
         await self.hass.services.async_call(
@@ -436,31 +447,34 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @override
     async def async_volume_up(self) -> None:
         """Turn volume up for media player(s)."""
-        for entity in self._features[KEY_VOLUME]:
-            volume_level = self.hass.states.get(entity).attributes[  # type: ignore[union-attr]
-                MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL
-            ]
-            if volume_level < 1:
-                await self.async_set_volume_level(min(1, volume_level + 0.1))
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._features[KEY_VOLUME_STEP]}
+        await self.hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            MediaPlayerService.VOLUME_UP,
+            data,
+            context=self._context,
+        )
 
     @override
     async def async_volume_down(self) -> None:
         """Turn volume down for media player(s)."""
-        for entity in self._features[KEY_VOLUME]:
-            volume_level = self.hass.states.get(entity).attributes[  # type: ignore[union-attr]
-                MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL
-            ]
-            if volume_level > 0:
-                await self.async_set_volume_level(max(0, volume_level - 0.1))
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._features[KEY_VOLUME_STEP]}
+        await self.hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            MediaPlayerService.VOLUME_DOWN,
+            data,
+            context=self._context,
+        )
 
     @callback
     def async_update_group_state(self) -> None:
         """Query all members and determine the media group state."""
-        states = [
-            state.state
+        member_states = [
+            state
             for entity_id in self._entities
             if (state := self.hass.states.get(entity_id)) is not None
         ]
+        states = [state.state for state in member_states]
 
         # Set group as unavailable if all members are unavailable or missing
         self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
@@ -506,15 +520,24 @@ class MediaPlayerGroup(MediaPlayerEntity):
             supported_features |= (
                 MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
             )
-        if self._features[KEY_VOLUME]:
-            supported_features |= (
-                MediaPlayerEntityFeature.VOLUME_MUTE
-                | MediaPlayerEntityFeature.VOLUME_SET
-                | MediaPlayerEntityFeature.VOLUME_STEP
-            )
+        if self._features[KEY_VOLUME_MUTE]:
+            supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
+        if self._features[KEY_VOLUME_SET]:
+            supported_features |= MediaPlayerEntityFeature.VOLUME_SET
+        if self._features[KEY_VOLUME_STEP]:
+            supported_features |= MediaPlayerEntityFeature.VOLUME_STEP
         if self._features[KEY_ANNOUNCE]:
             supported_features |= MediaPlayerEntityFeature.MEDIA_ANNOUNCE
         if self._features[KEY_ENQUEUE]:
             supported_features |= MediaPlayerEntityFeature.MEDIA_ENQUEUE
 
         self._attr_supported_features = supported_features
+        self._attr_volume_level = reduce_attribute(
+            [
+                state
+                for state in member_states
+                if state.entity_id in self._features[KEY_VOLUME_SET]
+            ],
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
+            reduce=lambda *levels: sum(levels) / len(levels),
+        )
