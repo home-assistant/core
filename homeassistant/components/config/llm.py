@@ -2143,6 +2143,11 @@ def _resolve_automation_id(hass: HomeAssistant, automation_id: str) -> str:
     """Resolve an automation id or automation entity_id to the stored config id."""
     if not automation_id.startswith("automation."):
         return automation_id
+    if (
+        (entry := er.async_get(hass).async_get(automation_id)) is not None
+        and entry.platform == "automation"
+    ):
+        return entry.unique_id
     if (state := hass.states.get(automation_id)) is None or not (
         config_id := state.attributes.get(CONF_ID)
     ):
