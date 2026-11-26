@@ -7,15 +7,23 @@ import pytest
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverService,
+    CoverState,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MockBridge, MockBridgeWithOpenCloseStopCover, async_setup_integration
+from . import (
+    MockBridge,
+    MockBridgeWithOpenCloseStopCover,
+    MockBridgeWithTiltOnlyBlind,
+    async_setup_integration,
+)
 
 
 @pytest.fixture
@@ -375,3 +383,70 @@ async def test_open_close_stop_cover_uses_raise_lower(
     )
     mock_instance.stop_cover.assert_called_once_with("805")
     mock_instance.set_value.assert_not_called()
+
+
+async def test_tilt_only_blind_open_tilt_position(hass: HomeAssistant) -> None:
+    """Test a tilt only blind is open in the middle of its tilt scale."""
+    instance = MockBridgeWithTiltOnlyBlind()
+    instance.set_tilt = AsyncMock()
+
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
+        """Return the mock bridge instance."""
+        return instance
+
+    await async_setup_integration(hass, factory)
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_wood_blind"
+
+    state = hass.states.get(cover_entity_id)
+
+    assert state is not None
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+    assert state.attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] == 50
+    assert state.attributes[CoverEntityCapabilityAttribute.TILT_START_ANGLE] == -90
+    assert state.attributes[CoverEntityCapabilityAttribute.TILT_END_ANGLE] == 90
+    assert state.attributes[CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS] == [
+        0,
+        100,
+    ]
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: cover_entity_id},
+        blocking=True,
+    )
+
+    instance.set_tilt.assert_called_once_with("806", 50)
+
+
+@pytest.mark.parametrize(
+    ("tilt", "sent_tilt"),
+    [
+        pytest.param(0, 50, id="closed_at_0"),
+        pytest.param(100, 50, id="closed_at_100"),
+        pytest.param(50, 0, id="open"),
+    ],
+)
+async def test_tilt_only_blind_toggle_tilt(
+    hass: HomeAssistant, tilt: int, sent_tilt: int
+) -> None:
+    """Test toggling the tilt opens the blind at both closed ends."""
+    instance = MockBridgeWithTiltOnlyBlind()
+    instance.set_tilt = AsyncMock()
+
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
+        """Return the mock bridge instance."""
+        return instance
+
+    await async_setup_integration(hass, factory)
+    instance.devices["806"]["tilt"] = tilt
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.TOGGLE_TILT,
+        {TargetKey.ENTITY_ID: "cover.basement_bedroom_basement_bedroom_wood_blind"},
+        blocking=True,
+    )
+
+    instance.set_tilt.assert_called_once_with("806", sent_tilt)

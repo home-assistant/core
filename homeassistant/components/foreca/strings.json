@@ -117,6 +117,18 @@
       "observed_precipitation": {
         "name": "Observed hourly precipitation"
       },
+      "observed_precipitation_12h": {
+        "name": "Observed 12-hour precipitation"
+      },
+      "observed_precipitation_24h": {
+        "name": "Observed 24-hour precipitation"
+      },
+      "observed_precipitation_3h": {
+        "name": "Observed 3-hour precipitation"
+      },
+      "observed_precipitation_6h": {
+        "name": "Observed 6-hour precipitation"
+      },
       "observed_precipitation_type": {
         "name": "Observed precipitation type",
         "state": {

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import override
+from typing import Literal, override
 
 from pyforeca import (
     AirQualityForecast,
@@ -113,6 +113,9 @@ class ForecaUpdateCoordinator(ForecaCoordinator[ForecaWeatherData]):
 class ForecaObservationCoordinator(ForecaCoordinator[Observation | None]):
     """Class to manage fetching the nearest station's observation for one location."""
 
+    _name_suffix = "observation"
+    _precipitation: Literal["hourly", "latest"] = "hourly"
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -122,7 +125,11 @@ class ForecaObservationCoordinator(ForecaCoordinator[Observation | None]):
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
-            hass, entry, subentry, client, f"{DOMAIN} {subentry.title} observation"
+            hass,
+            entry,
+            subentry,
+            client,
+            f"{DOMAIN} {subentry.title} {self._name_suffix}",
         )
 
     @override
@@ -130,12 +137,19 @@ class ForecaObservationCoordinator(ForecaCoordinator[Observation | None]):
         """Fetch the latest observation, or None where no station reports nearby."""
         try:
             return await self.client.observation_latest(
-                self.location, precipitation="hourly", rounding=0
+                self.location, precipitation=self._precipitation, rounding=0
             )
         except ForecaError as err:
             raise UpdateFailed(
                 f"Error communicating with the Foreca API: {err}"
             ) from err
+
+
+class ForecaPrecipitationTotalsCoordinator(ForecaObservationCoordinator):
+    """Class to manage fetching the nearest station's own precipitation totals."""
+
+    _name_suffix = "precipitation totals"
+    _precipitation = "latest"
 
 
 class ForecaAirQualityCoordinator(ForecaCoordinator[AirQualityForecast | None]):
@@ -176,3 +190,4 @@ class ForecaLocationCoordinators:
     weather: ForecaUpdateCoordinator
     observation: ForecaObservationCoordinator
     air_quality: ForecaAirQualityCoordinator
+    precipitation_totals: ForecaPrecipitationTotalsCoordinator

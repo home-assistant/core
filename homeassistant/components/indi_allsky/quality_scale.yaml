@@ -59,7 +59,9 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices:
+    status: exempt
+    comment: Only one device entry per config entry.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -72,7 +74,9 @@ rules:
   repair-issues:
     status: exempt
     comment: Integration does not require user intervention repairs.
-  stale-devices: todo
+  stale-devices:
+    status: exempt
+    comment: Only one device entry per config entry.
 
   # Platinum
   async-dependency: done
