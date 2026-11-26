@@ -20,7 +20,6 @@ from telegram.constants import ChatType
 
 from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
-    CONF_ALLOWED_CHAT_IDS,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_TRUSTED_NETWORKS,
@@ -29,6 +28,7 @@ from homeassistant.components.telegram_bot.const import (
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
+    SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
     TelegramBotParseMode,
 )
 from homeassistant.config_entries import ConfigSubentryData
@@ -53,13 +53,13 @@ def mock_polling_config_entry() -> MockConfigEntry:
             ConfigSubentryData(
                 unique_id="1234567890",
                 data={CONF_CHAT_ID: 12345678},
-                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                subentry_type=SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
                 title="mock chat 1",
             ),
             ConfigSubentryData(
                 unique_id="1234567890",
                 data={CONF_CHAT_ID: -123456789},
-                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                subentry_type=SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
                 title="mock chat 2",
             ),
         ],
@@ -324,13 +324,13 @@ def mock_broadcast_config_entry() -> MockConfigEntry:
             ConfigSubentryData(
                 unique_id="123456",
                 data={CONF_CHAT_ID: 123456},
-                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                subentry_type=SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
                 title="mock chat 1",
             ),
             ConfigSubentryData(
                 unique_id="654321",
                 data={CONF_CHAT_ID: 654321},
-                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                subentry_type=SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
                 title="mock chat 2",
             ),
         ],
@@ -356,7 +356,7 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
             ConfigSubentryData(
                 unique_id="12345678",
                 data={CONF_CHAT_ID: 12345678},
-                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                subentry_type=SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
                 title="mock chat",
             )
         ],

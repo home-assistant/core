@@ -23,7 +23,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -31,6 +30,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -165,7 +165,7 @@ class LightGroup(GroupEntity, LightEntity):
         data = {
             key: value for key, value in kwargs.items() if key in FORWARDED_ATTRIBUTES
         }
-        service_calls = [{**data, ATTR_ENTITY_ID: self._entity_ids}]
+        service_calls = [{**data, TargetKey.ENTITY_ID: self._entity_ids}]
 
         if (kelvin := data.get(LightServiceArgument.COLOR_TEMP_KELVIN)) is not None:
             entity_ids_by_kelvin: dict[int, list[str]] = {}
@@ -177,7 +177,7 @@ class LightGroup(GroupEntity, LightEntity):
                 {
                     **data,
                     LightServiceArgument.COLOR_TEMP_KELVIN: member_kelvin,
-                    ATTR_ENTITY_ID: entity_ids,
+                    TargetKey.ENTITY_ID: entity_ids,
                 }
                 for member_kelvin, entity_ids in entity_ids_by_kelvin.items()
             ]
@@ -224,7 +224,7 @@ class LightGroup(GroupEntity, LightEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Forward the turn_off command to all lights in the light group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._entity_ids}
 
         if LightServiceArgument.TRANSITION in kwargs:
             data[LightServiceArgument.TRANSITION] = kwargs[

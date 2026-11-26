@@ -3,6 +3,7 @@
 from typing import override
 
 from automower_ble.protocol import MowerActivity, MowerState, ResponseResult
+from bleak import BleakError
 
 from homeassistant.components import bluetooth
 from homeassistant.components.lawn_mower import (
@@ -11,10 +12,11 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HusqvarnaConfigEntry
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .coordinator import HusqvarnaCoordinator
 from .entity import HusqvarnaAutomowerBleEntity
 
@@ -103,17 +105,34 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
         self._attr_available = self._attr_activity is not None
         super()._handle_coordinator_update()
 
+    async def _async_ensure_connected(self) -> None:
+        """Reconnect to the mower if needed, raising when that fails."""
+        if self.coordinator.mower.is_connected():
+            return
+        LOGGER.debug("Trying to reconnect")
+        error = HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="reconnect_failed",
+            translation_placeholders={"address": self.coordinator.address},
+        )
+        device = bluetooth.async_ble_device_from_address(
+            self.coordinator.hass, self.coordinator.address, connectable=True
+        )
+        if device is None:
+            raise error
+        try:
+            result = await self.coordinator.mower.connect(device)
+        except (BleakError, TimeoutError) as err:
+            raise error from err
+        if result is not ResponseResult.OK:
+            raise error
+
     @override
     async def async_start_mowing(self) -> None:
         """Start mowing."""
         LOGGER.debug("Starting mower")
 
-        if not self.coordinator.mower.is_connected():
-            device = bluetooth.async_ble_device_from_address(
-                self.coordinator.hass, self.coordinator.address, connectable=True
-            )
-            if await self.coordinator.mower.connect(device) is not ResponseResult.OK:
-                return
+        await self._async_ensure_connected()
 
         await self.coordinator.mower.mower_resume()
         if self._attr_activity is LawnMowerActivity.DOCKED:
@@ -128,12 +147,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
         """Start docking."""
         LOGGER.debug("Start docking")
 
-        if not self.coordinator.mower.is_connected():
-            device = bluetooth.async_ble_device_from_address(
-                self.coordinator.hass, self.coordinator.address, connectable=True
-            )
-            if await self.coordinator.mower.connect(device) is not ResponseResult.OK:
-                return
+        await self._async_ensure_connected()
 
         await self.coordinator.mower.mower_park()
         await self.coordinator.async_request_refresh()
@@ -146,12 +160,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
         """Pause mower."""
         LOGGER.debug("Pausing mower")
 
-        if not self.coordinator.mower.is_connected():
-            device = bluetooth.async_ble_device_from_address(
-                self.coordinator.hass, self.coordinator.address, connectable=True
-            )
-            if await self.coordinator.mower.connect(device) is not ResponseResult.OK:
-                return
+        await self._async_ensure_connected()
 
         await self.coordinator.mower.mower_pause()
         await self.coordinator.async_request_refresh()

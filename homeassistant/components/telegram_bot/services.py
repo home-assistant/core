@@ -7,7 +7,7 @@ from telegram.constants import InputMediaType
 from telegram.error import TelegramError
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     HomeAssistant,
@@ -27,7 +27,6 @@ from homeassistant.util.json import JsonValueType
 
 from .bot import TelegramBotConfigEntry, TelegramNotificationService
 from .const import (
-    ATTR_CHAT_ID,
     CONF_CHAT_ID,
     DOMAIN,
     TelegramBotChatAction,
@@ -459,7 +458,11 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
     if len(errors) > 1:
         error_messages: list[str] = []
         for error, target in errors:
-            target_type = ATTR_CHAT_ID if target.isdigit() else ATTR_ENTITY_ID
+            target_type = (
+                TelegramBotServiceArgument.CHAT_ID
+                if target.isdigit()
+                else CommonServiceArgument.ENTITY_ID
+            )
             error_messages.append(f"`{target_type}` {target}: {error}")
 
         raise HomeAssistantError(

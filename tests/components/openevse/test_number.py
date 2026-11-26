@@ -19,7 +19,7 @@ from homeassistant.components.number import (
     NumberServiceArgument,
 )
 from homeassistant.components.openevse.const import DOMAIN
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -59,7 +59,7 @@ async def test_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.openevse_mock_config_charge_rate",
+            TargetKey.ENTITY_ID: "number.openevse_mock_config_charge_rate",
             NumberServiceArgument.VALUE: 32.0,
         },
         blocking=True,
@@ -156,7 +156,7 @@ async def test_set_value_raises(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.openevse_mock_config_charge_rate",
+                TargetKey.ENTITY_ID: "number.openevse_mock_config_charge_rate",
                 NumberServiceArgument.VALUE: 32.0,
             },
             blocking=True,

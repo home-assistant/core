@@ -46,8 +46,6 @@ rules:
   test-coverage:
     status: todo
     comment: |
-      test_play_media_library if statements in the tests
-      PR #147064
       test_sensor is testing both binary sensor and sensor
       tests using internals
   # Gold

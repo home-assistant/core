@@ -22,7 +22,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
+    Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -42,7 +43,8 @@ async def test_entities(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the switch entities and their states."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.netio.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -98,7 +100,7 @@ async def test_switch_optimistic_state_reconciled(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_OUTPUT_1},
+        {TargetKey.ENTITY_ID: ENTITY_OUTPUT_1},
         blocking=True,
     )
     assert hass.states.get(ENTITY_OUTPUT_1).state == STATE_OFF
@@ -125,7 +127,7 @@ async def test_switch_action_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: ENTITY_OUTPUT_1},
+            {TargetKey.ENTITY_ID: ENTITY_OUTPUT_1},
             blocking=True,
         )
 
