@@ -35,6 +35,9 @@
       "body_fat": {
         "name": "Body fat"
       },
+      "body_mass_index": {
+        "name": "Body mass index"
+      },
       "calories_consumed": {
         "name": "Calories consumed"
       },
@@ -56,6 +59,12 @@
       "floors": {
         "name": "Floors"
       },
+      "heart_rate_variability": {
+        "name": "Heart rate variability"
+      },
+      "height": {
+        "name": "Height"
+      },
       "hydration": {
         "name": "Water intake"
       },
@@ -68,11 +77,17 @@
       "moderate_activity": {
         "name": "Moderate activity"
       },
+      "oxygen_saturation": {
+        "name": "Oxygen saturation"
+      },
       "peak_active_zone_minutes": {
         "name": "Peak active zone minutes"
       },
       "protein": {
         "name": "Protein"
+      },
+      "respiratory_rate": {
+        "name": "Respiratory rate"
       },
       "resting_heart_rate": {
         "name": "Resting heart rate"
@@ -131,6 +146,9 @@
       },
       "vigorous_activity": {
         "name": "Vigorous activity"
+      },
+      "vo2_max": {
+        "name": "VO2 max"
       }
     }
   },

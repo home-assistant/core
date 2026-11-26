@@ -27,6 +27,9 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
+    "progress": {
+      "wait_for_device": "[%key:common::config_flow::progress::oauth2_wait_for_device%]"
+    },
     "step": {}
   },
   "exceptions": {

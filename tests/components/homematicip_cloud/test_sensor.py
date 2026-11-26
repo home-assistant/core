@@ -2,15 +2,22 @@
 
 from unittest.mock import patch
 
-from homematicip.base.enums import ValveState, WindowState
+from homematicip.base.enums import UserRole, ValveState, WindowState
 import pytest
 from pytest_homeassistant.common import (
+    MockConfigEntry,
     async_load_json_object_fixture,
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homematicip_cloud import DOMAIN
+from homeassistant.components.homematicip_cloud.const import (
+    HMIPC_AUTHTOKEN,
+    HMIPC_CLIENT_ID,
+    HMIPC_HAPID,
+    HMIPC_NAME,
+)
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_CONFIG_PENDING,
     ATTR_DEVICE_OVERHEATED,
@@ -57,7 +64,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
+from .helper import (
+    AUTH_TOKEN,
+    HomeFactory,
+    async_manipulate_test_data,
+    get_and_check_entity_basics,
+)
 
 
 async def test_hmip_accesspoint_status(
@@ -654,6 +666,50 @@ async def test_hmip_floor_terminal_block_mechanic_channel_1_valve_position(
     assert ha_state.attributes["icon"] == "mdi:heating-coil"
 
 
+async def test_hmip_floor_terminal_block_mechanic_channel_valve_state(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test FloorTerminalBlockMechanicChannelValveState."""
+    entity_id = "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_1_og_bad_r"
+    entity_id_ch10 = (
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_10_og_az_rechts"
+    )
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Fußbodenheizungsaktor"]
+    )
+
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "adaption_done"
+    assert (
+        ha_state.attributes["friendly_name"]
+        == "Fußbodenheizungsaktor Valve state Heizkreislauf (1) OG Bad r"
+    )
+    assert hass.states.get(entity_id_ch10).state == "adaption_done"
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+
+    await async_manipulate_test_data(
+        hass,
+        hmip_device,
+        "valveState",
+        ValveState.ADAPTION_IN_PROGRESS,
+        channel=10,
+        channel_real_index=10,
+    )
+    assert hass.states.get(entity_id).state == "adaption_done"
+    assert hass.states.get(entity_id_ch10).state == "adaption_in_progress"
+
+    await async_manipulate_test_data(
+        hass,
+        hmip_device,
+        "valveState",
+        ValveState.ERROR_POSITION,
+        channel=10,
+        channel_real_index=10,
+    )
+    assert hass.states.get(entity_id_ch10).state == "error_position"
+
+
 async def test_hmip_floor_terminal_block_valve_names_match_their_channel(
     hass: HomeAssistant,
     default_mock_hap_factory: HomeFactory,
@@ -825,7 +881,9 @@ async def test_hmip_esi_iec_unknown_channel(
 
 
 async def test_hmip_esi_gas_current_gas_flow(
-    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
 ) -> None:
     """Test ESI-IEC CurrentGasFlow."""
     entity_id = "sensor.esi_gas_currentgasflow"
@@ -840,6 +898,8 @@ async def test_hmip_esi_gas_current_gas_flow(
     )
 
     assert ha_state.state == "1.03"
+    entry = entity_registry.async_get(entity_id)
+    assert entry.options["sensor"]["suggested_display_precision"] == 2
 
 
 async def test_hmip_esi_gas_gas_volume(
@@ -1401,6 +1461,52 @@ async def test_hmip_carbon_dioxide_sensor(
     assert hass.states.get(entity_id).state == "812.0"
 
 
+async def test_hmip_client_role_sensor(
+    hass: HomeAssistant,
+    mock_connection,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the role of the own client, shown on the access point of the entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="3014F711A000000BAD0CAAAA",
+        data={
+            HMIPC_HAPID: "3014F711A000000BAD0CAAAA",
+            HMIPC_AUTHTOKEN: AUTH_TOKEN,
+            HMIPC_NAME: "",
+            HMIPC_CLIENT_ID: "00000000-0000-0000-0000-000000000000",
+        },
+    )
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS", [Platform.SENSOR]
+    ):
+        mock_hap = await HomeFactory(hass, mock_connection, entry).async_get_mock_hap(
+            test_devices=["AP1", "HOME_CONTROL_ACCESS_POINT"], test_groups=[]
+        )
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+    client = mock_hap.home.search_client_by_id("00000000-0000-0000-0000-000000000000")
+    client.userRole = UserRole.USER
+    client.fire_update_event()
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.ap1_client_role").state == "user"
+
+
+async def test_hmip_client_role_sensor_without_client_id(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Entries set up before the client ID was stored get no role sensor."""
+    await default_mock_hap_factory.async_get_mock_hap(test_devices=["AP1"])
+
+    assert not [
+        state.entity_id
+        for state in hass.states.async_all("sensor")
+        if state.entity_id.endswith("_client_role")
+    ]
+
+
 async def test_hmip_sensor_unknown_device_type(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
@@ -1520,6 +1626,18 @@ async def test_hmip_sensor_unique_ids(
         "sensor.fussbodenheizungsaktor_valve_position_4": "3014F7110000000000BBBBB1_4_ftb_valve_position",
         "sensor.fussbodenheizungsaktor_valve_position_5": "3014F7110000000000BBBBB1_5_ftb_valve_position",
         "sensor.fussbodenheizungsaktor_valve_position_6": "3014F7110000000000BBBBB1_6_ftb_valve_position",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_1_og_bad_r": "3014F7110000000000000049_1_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_2_og_bad_l": "3014F7110000000000000049_2_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_3_og_wz_rechts": "3014F7110000000000000049_3_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_4_og_wz_mitte_rechts": "3014F7110000000000000049_4_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_5_og_wz_mitte_links": "3014F7110000000000000049_5_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_6_og_wz_links": "3014F7110000000000000049_6_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_7_og_kuche": "3014F7110000000000000049_7_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_8_og_sz_rechts": "3014F7110000000000000049_8_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_9_og_sz_links": "3014F7110000000000000049_9_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_10_og_az_rechts": "3014F7110000000000000049_10_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_11_og_az_links": "3014F7110000000000000049_11_ftb_valve_state",
+        "sensor.fussbodenheizungsaktor_valve_state_heizkreislauf_12_og_bad_heizkorper": "3014F7110000000000000049_12_ftb_valve_state",
         "sensor.garage_neigungs_und_erschutterungssensor_tilt_angle": "3014F7110TILTVIBRATIONSENSOR_1_tilt_angle",
         "sensor.garage_neigungs_und_erschutterungssensor_tilt_state": "3014F7110TILTVIBRATIONSENSOR_1_tilt_state",
         "sensor.heizkorperthermostat2_heating": "3014F7110000000000000013_1_valve_position",

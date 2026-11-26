@@ -1,10 +1,14 @@
 """The EnergyFlip integration."""
 
-from energyflip import EnergyFlip, EnergyFlipException
+from energyflip import (
+    EnergyFlip,
+    EnergyFlipException,
+    EnergyFlipUnauthenticatedException,
+)
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 
 from .const import DOMAIN, FETCH_TIMEOUT, SOURCE_TYPES
 from .coordinator import EnergyFlipConfigEntry, EnergyFlipUpdateCoordinator
@@ -25,6 +29,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -
     # Attempt authentication. If this fails, an exception is thrown
     try:
         await energyflip.authenticate()
+    except EnergyFlipUnauthenticatedException as exception:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from exception
     except EnergyFlipException as exception:
         raise ConfigEntryError(
             translation_domain=DOMAIN,

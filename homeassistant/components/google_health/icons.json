@@ -4,23 +4,41 @@
       "active_zone_minutes": {
         "default": "mdi:heart-flash"
       },
+      "body_mass_index": {
+        "default": "mdi:scale-bathroom"
+      },
       "cardio_active_zone_minutes": {
         "default": "mdi:heart-flash"
       },
       "fat_burn_active_zone_minutes": {
         "default": "mdi:heart-flash"
       },
+      "heart_rate_variability": {
+        "default": "mdi:heart-flash"
+      },
+      "height": {
+        "default": "mdi:human-male-height-variant"
+      },
       "last_sync_time": {
         "default": "mdi:sync"
       },
+      "oxygen_saturation": {
+        "default": "mdi:water-percent"
+      },
       "peak_active_zone_minutes": {
         "default": "mdi:heart-flash"
+      },
+      "respiratory_rate": {
+        "default": "mdi:lungs"
       },
       "resting_heart_rate": {
         "default": "mdi:heart-pulse"
       },
       "steps": {
         "default": "mdi:walk"
+      },
+      "vo2_max": {
+        "default": "mdi:run"
       }
     }
   }

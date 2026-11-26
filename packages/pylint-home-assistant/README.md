@@ -372,8 +372,7 @@ event loop, where it must not do blocking I/O:
 ```python
 class MyEntity(CoordinatorEntity[MyCoordinator]):
     @callback
-    def _handle_coordinator_update(self) -> None:
-        ...
+    def _handle_coordinator_update(self) -> None: ...
 ```
 
 
@@ -463,8 +462,7 @@ it for the `config_entry` class annotation and `__init__` argument, so
 class MyCoordinator(DataUpdateCoordinator[MyData]):
     config_entry: MyConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None:
-        ...
+    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None: ...
 ```
 
 When the alias lives in `__init__.py`, import it in the coordinator under
@@ -839,9 +837,7 @@ cause and finish the flow, so the test proves the flow recovers:
 assert result["errors"] == {"base": "cannot_connect"}
 
 mock_client.connect.side_effect = None
-result = await hass.config_entries.flow.async_configure(
-    result["flow_id"], USER_INPUT
-)
+result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
 assert result["type"] is FlowResultType.CREATE_ENTRY
 ```
 
@@ -1198,10 +1194,10 @@ such as `CONF_USERNAME`. Integrations that need a constant can use a dedicated
 
 ```python
 # Bad
-description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]}
+description_placeholders = {CONF_USERNAME: entry.data[CONF_USERNAME]}
 
 # Good
-description_placeholders={"username": entry.data[CONF_USERNAME]}
+description_placeholders = {"username": entry.data[CONF_USERNAME]}
 
 # Bad
 self.context["title_placeholders"] = {CONF_HOST: discovery_info.host}
@@ -1368,9 +1364,7 @@ async def test_all_entities(
             entry.entity_id, disabled_by=None
         )
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await snapshot_platform(
-        hass, entity_registry, snapshot, mock_config_entry.entry_id
-    )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 ```
 
 Use the fixture instead:
@@ -1384,9 +1378,7 @@ async def test_all_entities(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     await setup_integration(hass, mock_config_entry)
-    await snapshot_platform(
-        hass, entity_registry, snapshot, mock_config_entry.entry_id
-    )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 ```
 
 Calls in nested helpers defined inside the test are checked too. Tests

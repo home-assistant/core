@@ -82,7 +82,11 @@ from homeassistant.components.zha.websocket_api import (
 )
 from homeassistant.const import ATTR_AREA_ID, ATTR_NAME, Platform
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
@@ -286,6 +290,7 @@ async def test_list_devices(zha_client) -> None:
 
 async def test_device_info_area(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., ZigbeeDevice],
@@ -319,9 +324,10 @@ async def test_device_info_area(
 
     assert zha_device_proxy.zha_device_info[ATTR_AREA_ID] is None
 
-    device_registry.async_update_device(zha_device_proxy.device_id, area_id="12345A")
+    area = area_registry.async_create("Kitchen")
+    device_registry.async_update_device(zha_device_proxy.device_id, area_id=area.id)
 
-    assert zha_device_proxy.zha_device_info[ATTR_AREA_ID] == "12345A"
+    assert zha_device_proxy.zha_device_info[ATTR_AREA_ID] == area.id
 
 
 async def test_get_zha_config(zha_client) -> None:
@@ -542,13 +548,8 @@ async def test_list_groupable_devices_device_bound_entities(
         for entity_ref in entity_refs
     }
 
-    def _no_endpoint(entity: RSSISensor) -> None:
-        raise AttributeError("device-bound entities have no endpoint")
-
-    # Device-bound entities have no endpoint once the library's compat property is gone
-    with patch.object(RSSISensor, "endpoint", property(_no_endpoint)):
-        await zha_client.send_json({ID: 10, TYPE: "zha/devices/groupable"})
-        msg = await zha_client.receive_json()
+    await zha_client.send_json({ID: 10, TYPE: "zha/devices/groupable"})
+    msg = await zha_client.receive_json()
 
     assert msg["success"]
     [endpoint] = [

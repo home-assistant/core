@@ -22,6 +22,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all binary sensors for this entry."""
+    if config_entry.runtime_data.data.location is None:
+        return
     async_add_entities(
         StarlinkDeviceTrackerEntity(config_entry.runtime_data, description)
         for description in DEVICE_TRACKERS
@@ -32,9 +34,10 @@ async def async_setup_entry(
 class StarlinkDeviceTrackerEntityDescription(TrackerEntityDescription):
     """Describes a Starlink button entity."""
 
-    latitude_fn: Callable[[StarlinkData], float]
-    longitude_fn: Callable[[StarlinkData], float]
-    altitude_fn: Callable[[StarlinkData], float]
+    latitude_fn: Callable[[StarlinkData], float | None]
+    longitude_fn: Callable[[StarlinkData], float | None]
+    altitude_fn: Callable[[StarlinkData], float | None]
+    available_fn: Callable[[StarlinkData], bool]
 
 
 DEVICE_TRACKERS = [
@@ -42,9 +45,10 @@ DEVICE_TRACKERS = [
         key="device_location",
         translation_key="device_location",
         entity_registry_enabled_default=False,
-        latitude_fn=lambda data: data.location["latitude"],
-        longitude_fn=lambda data: data.location["longitude"],
-        altitude_fn=lambda data: data.location["altitude"],
+        latitude_fn=lambda data: data.location["latitude"] if data.location else None,
+        longitude_fn=lambda data: data.location["longitude"] if data.location else None,
+        altitude_fn=lambda data: data.location["altitude"] if data.location else None,
+        available_fn=lambda data: data.location is not None,
     ),
 ]
 
@@ -53,6 +57,14 @@ class StarlinkDeviceTrackerEntity(StarlinkEntity, TrackerEntity):
     """A TrackerEntity for Starlink devices. Handles creating unique IDs."""
 
     entity_description: StarlinkDeviceTrackerEntityDescription
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.entity_description.available_fn(
+            self.coordinator.data
+        )
 
     @property
     @override

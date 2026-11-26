@@ -835,6 +835,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "LD-0003",
     },
     {
+        "domain": "led_ble",
+        "local_name": "Trick-*",
+    },
+    {
         "domain": "medcom_ble",
         "service_uuid": "39b31fec-b63a-4ef7-b163-a7317872007f",
     },
@@ -1058,6 +1062,36 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": False,
         "domain": "ruuvitag_ble",
         "local_name": "Ruuvi *",
+    },
+    {
+        "connectable": False,
+        "domain": "schlage",
+        "manufacturer_data_start": [
+            1,
+            0,
+            9,
+        ],
+        "manufacturer_id": 315,
+    },
+    {
+        "connectable": False,
+        "domain": "schlage",
+        "manufacturer_data_start": [
+            1,
+            0,
+            23,
+        ],
+        "manufacturer_id": 315,
+    },
+    {
+        "connectable": False,
+        "domain": "schlage",
+        "manufacturer_data_start": [
+            1,
+            0,
+            24,
+        ],
+        "manufacturer_id": 315,
     },
     {
         "connectable": False,

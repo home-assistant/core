@@ -1266,6 +1266,22 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getBoilerCuircuitPumpCurrentLevel(),
     ),
     ViCareSensorEntityDescription(
+        key="boiler_internal_pump_modulation",
+        translation_key="boiler_internal_pump_modulation",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        value_getter=lambda api: api.getBoilerInternalPumpCurrent(),
+    ),
+    ViCareSensorEntityDescription(
+        key="boiler_internal_pump_target_modulation",
+        translation_key="boiler_internal_pump_target_modulation",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        value_getter=lambda api: api.getBoilerInternalPumpTarget(),
+    ),
+    ViCareSensorEntityDescription(
         key="hydraulic_separator_temperature",
         translation_key="hydraulic_separator_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,

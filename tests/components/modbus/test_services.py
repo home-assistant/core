@@ -99,6 +99,29 @@ async def test_service_without_yaml_raises(
     assert "Modbus is not loaded" in str(err.value)
 
 
+@pytest.mark.usefixtures("mock_pymodbus")
+@pytest.mark.parametrize(("service", "data"), HUB_SERVICES)
+async def test_service_unknown_hub_raises(
+    hass: HomeAssistant, service: str, data: dict
+) -> None:
+    """Test the hub actions raise when the named hub is not configured."""
+    assert await async_setup_component(hass, DOMAIN, HUB_CONFIG)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {**data, ModbusServiceArgument.HUB: "unknown"},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "unknown_hub"
+    assert err.value.translation_placeholders == {"hub": "unknown"}
+    assert "Modbus hub unknown is not configured" in str(err.value)
+
+
 @pytest.mark.parametrize(("service", "data"), HUB_SERVICES)
 async def test_service_without_hubs_raises(
     hass: HomeAssistant, service: str, data: dict

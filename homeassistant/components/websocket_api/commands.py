@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_EXTERNAL_URL,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
-    SIGNAL_BOOTSTRAP_INTEGRATIONS,
+    TargetKey,
 )
 from homeassistant.core import (
     Context,
@@ -49,7 +49,6 @@ from homeassistant.helpers.condition import (
     async_subscribe_platform_events as async_subscribe_condition_platform_events,
     async_validate_condition_config,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     convert_include_exclude_filter,
@@ -136,7 +135,6 @@ def async_register_commands(
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
     async_reg(hass, handle_slugify)
-    async_reg(hass, handle_subscribe_bootstrap_integrations)
     async_reg(hass, handle_subscribe_bootstrap_progress)
     async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
@@ -226,29 +224,6 @@ def handle_subscribe_events(
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         event_type, forward_events
-    )
-
-    connection.send_result(msg["id"])
-
-
-@callback
-@decorators.websocket_command(
-    {
-        probatio.Required("type"): "subscribe_bootstrap_integrations",
-    }
-)
-def handle_subscribe_bootstrap_integrations(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Handle subscribe bootstrap integrations command."""
-
-    @callback
-    def forward_bootstrap_integrations(message: dict[str, Any]) -> None:
-        """Forward bootstrap integrations to websocket."""
-        connection.send_message(messages.event_message(msg["id"], message))
-
-    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
-        hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, forward_bootstrap_integrations
     )
 
     connection.send_result(msg["id"])
@@ -411,9 +386,24 @@ async def handle_call_service(
             translation_placeholders=err.translation_placeholders,
         )
     except HomeAssistantError as err:
-        connection.logger.error(
-            "Error during service call to %s.%s: %s", msg["domain"], msg["service"], err
-        )
+        call_data = {**msg.get("service_data", {}), **msg.get("target", {})}
+        if target := {
+            key: value for key, value in call_data.items() if key in TargetKey
+        }:
+            connection.logger.error(
+                "Error during service call to %s.%s with target %s: %s",
+                msg["domain"],
+                msg["service"],
+                target,
+                err,
+            )
+        else:
+            connection.logger.error(
+                "Error during service call to %s.%s: %s",
+                msg["domain"],
+                msg["service"],
+                err,
+            )
         connection.logger.debug("", exc_info=True)
         connection.send_error(
             msg["id"],

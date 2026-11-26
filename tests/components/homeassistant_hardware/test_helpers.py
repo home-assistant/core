@@ -313,7 +313,6 @@ async def test_firmware_callback_no_usb_device(
             "homeassistant.components.homeassistant_hardware.helpers.usb_device_from_path",
             return_value=None,
         ),
-        caplog.at_level(logging.DEBUG),
     ):
         await async_notify_firmware_info(
             hass,
@@ -354,7 +353,6 @@ async def test_firmware_callback_no_hardware_domain(
             "homeassistant.components.homeassistant_hardware.helpers.usb_device_from_path",
             return_value=usb_device,
         ),
-        caplog.at_level(logging.DEBUG),
     ):
         await async_notify_firmware_info(
             hass,

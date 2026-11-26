@@ -58,6 +58,7 @@ TEST_END = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE + 5}"
 TEST_START_TIME = datetime(TEST_YEAR, TEST_MONTH, TEST_DAY, 0, 0)
 TEST_END_TIME = datetime(TEST_YEAR, TEST_MONTH, TEST_DAY, 23, 59, 59)
 TEST_FILE_NAME = f"{TEST_START}00"
+TEST_USER_NAME = "user_cam_name"
 TEST_THUMBNAIL_TIME = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}000005"
 TEST_THUMBNAIL_TIME_BATTERY = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}000000"
 TEST_STREAM = "main"
@@ -128,10 +129,9 @@ async def test_browsing(
 ) -> None:
     """Test browsing the Reolink three."""
     entry_id = config_entry.entry_id
-    reolink_host.supported.return_value = 1
+    reolink_host.supported.side_effect = lambda ch, key: key != "replay_trigger"
     reolink_host.model = "Reolink TrackMix PoE"
     reolink_host.is_dual_lens = True
-    reolink_host.is_nvr = False
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(entry_id) is True
@@ -139,7 +139,8 @@ async def test_browsing(
 
     entries = dr.async_entries_for_config_entry(device_registry, entry_id)
     assert len(entries) > 0
-    device_registry.async_update_device(entries[0].id, name_by_user=TEST_CAM_NAME)
+    for device in entries:
+        device_registry.async_update_device(device.id, name_by_user=TEST_USER_NAME)
 
     # browse root
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
@@ -149,7 +150,7 @@ async def test_browsing(
     assert browse.title == "Reolink"
     assert browse.identifier is None
     assert browse.children[0].identifier == browse_root_id
-    assert browse.children[0].title == f"{TEST_CAM_NAME} lens 0"
+    assert browse.children[0].title == f"{TEST_USER_NAME} lens 0"
 
     # browse resolution select
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
@@ -248,8 +249,8 @@ async def test_browsing(
     reolink_host.model = TEST_HOST_MODEL
     reolink_host.is_dual_lens = False
 
-    # browse event trigger person on a NVR
-    reolink_host.is_nvr = True
+    # browse event trigger person on a device supporting replay triggers
+    reolink_host.supported.side_effect = None
     browse_event_person_id = (
         f"EVE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
         f"|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
@@ -307,7 +308,6 @@ async def test_browsing_autotrack_thumbnail(
 ) -> None:
     """Test recordings of an autotrack stream have a telephoto thumbnail."""
     entry_id = config_entry.entry_id
-    reolink_host.is_nvr = False
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(entry_id) is True
@@ -321,7 +321,9 @@ async def test_browsing_autotrack_thumbnail(
     mock_vod_file.file_name = TEST_FILE_NAME
     mock_vod_file.triggers = VOD_trigger.PERSON
     reolink_host.request_vod_files.return_value = ([], [mock_vod_file])
-    reolink_host.supported.side_effect = lambda ch, key: battery or key != "battery"
+    reolink_host.supported.side_effect = lambda ch, key: (
+        key != "replay_trigger" and (battery or key != "battery")
+    )
 
     browse_day_id = (
         f"DAY|{entry_id}|{TEST_CHANNEL}|{stream}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"

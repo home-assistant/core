@@ -92,6 +92,7 @@
       "logged_in": "Logged In",
       "relayer_connected": "Relayer connected",
       "relayer_region": "Relayer region",
+      "remote_client_certificate_required": "Remote client certificate required",
       "remote_connected": "Remote connected",
       "remote_enabled": "Remote enabled",
       "remote_server": "Remote server",

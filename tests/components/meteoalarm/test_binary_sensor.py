@@ -187,8 +187,19 @@ async def test_unavailable_when_update_fails(
 
         assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
-    # Two failed updates log one error, without a traceback.
-    assert caplog.text.count("Error fetching meteoalarm data") == 1
+    # Two failed updates log one line at info level, without a traceback.
+    records = [
+        record
+        for record in caplog.records
+        if record.name.startswith("homeassistant.components.meteoalarm")
+        and record.levelno >= logging.INFO
+    ]
+    assert [(record.levelno, record.getMessage()) for record in records] == [
+        (
+            logging.INFO,
+            f"meteoalarm is unavailable: Error fetching MeteoAlarm data: {exception}",
+        )
+    ]
     assert "Traceback" not in caplog.text
 
     mock_meteoalert.return_value.get_alert.side_effect = None

@@ -29,7 +29,7 @@ from .const import (
     DOMAIN,
     TimerListEntityFeature,
     TimerListEventType,
-    TimerListServices,
+    TimerListService,
     TimerStatus,
 )
 from .entity import TimerItem, TimerListEntity, TimerListEvent
@@ -48,7 +48,7 @@ __all__ = [
     "TimerListEntityFeature",
     "TimerListEvent",
     "TimerListEventType",
-    "TimerListServices",
+    "TimerListService",
     "TimerStatus",
     "async_get_timer_list_entity",
 ]

@@ -69,7 +69,7 @@ class AdsSelect(AdsEntity, SelectEntity):
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_INT)
-        self._ads_hub.add_device_notification(
+        await self.async_add_notification(
             self._ads_var, pyads.PLCTYPE_INT, self._handle_ads_value
         )
 

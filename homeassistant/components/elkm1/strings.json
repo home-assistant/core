@@ -38,6 +38,18 @@
         "description": "The address string must be in the form 'address[:port]' for 'secure' and 'non-secure'. Example: '192.168.1.1'. The port is optional and defaults to 2101 for 'non-secure' and 2601 for 'secure'. For the serial protocol, the address must be in the form 'tty[:baud]'. Example: '/dev/ttyS1'. The baud is optional and defaults to 115200.",
         "title": "[%key:component::elkm1::config::step::user::title%]"
       },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password of the Elk-M1 user.",
+          "username": "The name of the Elk-M1 user."
+        },
+        "description": "The Elk-M1 panel rejected the credentials. Enter the current username and password.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "reconfigure": {
         "data": {
           "address": "[%key:component::elkm1::config::step::manual_connection::data::address%]",

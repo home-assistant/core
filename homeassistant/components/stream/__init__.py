@@ -323,9 +323,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class _WorkerControl:
     """Thread-safe lifecycle control for a single stream worker thread."""
 
-    def __init__(self) -> None:
+    def __init__(self, source: str) -> None:
         """Initialize worker control."""
         self._lock = threading.Lock()
+        self._source = source
         self._stopped = False
         self._restart = False
         self.interrupt = threading.Event()
@@ -335,28 +336,36 @@ class _WorkerControl:
         """Return True once stop() has been called."""
         return self._stopped
 
+    @property
+    def is_restarting(self) -> bool:
+        """Return True if a restart is pending and the worker is not stopped."""
+        with self._lock:
+            return self._restart and not self._stopped
+
     def stop(self) -> None:
         """Permanently stop this worker."""
         with self._lock:
             self._stopped = True
             self.interrupt.set()
 
-    def request_restart(self) -> None:
-        """Interrupt the current read or retry backoff to reload the source."""
+    def request_restart(self, source: str) -> None:
+        """Update the source and interrupt the current read or retry backoff."""
         with self._lock:
+            self._source = source
             if self._stopped:
                 return
             self._restart = True
             self.interrupt.set()
 
-    def consume_restart(self) -> bool:
-        """Consume a pending restart if not stopped."""
+    def begin_attempt(self) -> tuple[str | None, bool]:
+        """Consume any pending restart and return (source, restarted)."""
         with self._lock:
-            if self._stopped or not self._restart:
-                return False
+            if self._stopped:
+                return None, False
+            restarted = self._restart
             self._restart = False
             self.interrupt.clear()
-            return True
+            return self._source, restarted
 
 
 class Stream:
@@ -481,7 +490,7 @@ class Stream:
                 # The thread must have crashed/exited. Join to clean up the
                 # previous thread.
                 self._thread.join(timeout=0)
-            control = _WorkerControl()
+            control = _WorkerControl(self.source)
             self._worker_control = control
             self._thread = threading.Thread(
                 name="stream_worker",
@@ -501,7 +510,7 @@ class Stream:
         )
         self.source = new_source
         if self._worker_control is not None:
-            self._worker_control.request_restart()
+            self._worker_control.request_restart(new_source)
 
     def _set_state(self, available: bool) -> None:
         """Set the stream state by updating the callback."""
@@ -523,12 +532,14 @@ class Stream:
         )
         wait_timeout = 0
         while True:
-            if wait_timeout and control.interrupt.wait(timeout=wait_timeout):
-                if not control.consume_restart():
-                    break
-                wait_timeout = 0
-            elif control.is_stopped:
+            if wait_timeout:
+                control.interrupt.wait(timeout=wait_timeout)
+
+            source, restarted = control.begin_attempt()
+            if source is None:
                 break
+            if restarted:
+                wait_timeout = 0
 
             start_time = time.time()
             self._set_state(True)
@@ -541,7 +552,7 @@ class Stream:
             self._diagnostics.increment("start_worker")
             try:
                 stream_worker(
-                    self.source,
+                    source,
                     self.pyav_options,
                     self._stream_settings,
                     stream_state,
@@ -553,7 +564,7 @@ class Stream:
                 self._logger.error("Error from stream worker: %s", str(err))
 
             stream_state.discontinuity()
-            if control.consume_restart():
+            if control.is_restarting:
                 wait_timeout = 0
                 continue
             if not _should_retry() or control.is_stopped:

@@ -6,10 +6,10 @@ from typing import Any, override
 from pyfreedompro import put_state
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
@@ -123,7 +123,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Async function to set position to cover."""
-        payload = {"position": kwargs[ATTR_POSITION]}
+        payload = {"position": kwargs[CoverServiceArgument.POSITION]}
         await put_state(
             self._session,
             self._api_key,

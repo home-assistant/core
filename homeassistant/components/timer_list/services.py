@@ -16,7 +16,7 @@ from .const import (
     ATTR_TIMERS,
     DATA_COMPONENT,
     TimerListEntityFeature,
-    TimerListServices,
+    TimerListService,
     TimerStatus,
 )
 from .entity import TimerListEntity
@@ -28,7 +28,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component = hass.data[DATA_COMPONENT]
 
     component.async_register_entity_service(
-        TimerListServices.CREATE_TIMER,
+        TimerListService.CREATE_TIMER,
         {
             probatio.Optional(ATTR_NAME): cv.string,
             probatio.Required(ATTR_DURATION): cv.positive_time_period,
@@ -38,31 +38,31 @@ def async_setup_services(hass: HomeAssistant) -> None:
         supports_response=SupportsResponse.OPTIONAL,
     )
     component.async_register_entity_service(
-        TimerListServices.PAUSE_TIMER,
+        TimerListService.PAUSE_TIMER,
         {probatio.Required(ATTR_TIMER_ID): cv.string},
         "async_pause_timer",
         required_features=[TimerListEntityFeature.PAUSE_TIMER],
     )
     component.async_register_entity_service(
-        TimerListServices.UNPAUSE_TIMER,
+        TimerListService.UNPAUSE_TIMER,
         {probatio.Required(ATTR_TIMER_ID): cv.string},
         "async_unpause_timer",
         required_features=[TimerListEntityFeature.PAUSE_TIMER],
     )
     component.async_register_entity_service(
-        TimerListServices.CANCEL_TIMER,
+        TimerListService.CANCEL_TIMER,
         {probatio.Required(ATTR_TIMER_ID): cv.string},
         "async_cancel_timer",
         required_features=[TimerListEntityFeature.CANCEL_TIMER],
     )
     component.async_register_entity_service(
-        TimerListServices.FINISH_TIMER,
+        TimerListService.FINISH_TIMER,
         {probatio.Required(ATTR_TIMER_ID): cv.string},
         "async_finish_timer",
         required_features=[TimerListEntityFeature.FINISH_TIMER],
     )
     component.async_register_entity_service(
-        TimerListServices.ADD_TIME,
+        TimerListService.ADD_TIME,
         {
             probatio.Required(ATTR_TIMER_ID): cv.string,
             probatio.Required(ATTR_DURATION): cv.positive_time_period,
@@ -71,7 +71,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         required_features=[TimerListEntityFeature.ADD_TIME],
     )
     component.async_register_entity_service(
-        TimerListServices.SUBTRACT_TIME,
+        TimerListService.SUBTRACT_TIME,
         {
             probatio.Required(ATTR_TIMER_ID): cv.string,
             probatio.Required(ATTR_DURATION): cv.positive_time_period,
@@ -80,13 +80,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         required_features=[TimerListEntityFeature.ADD_TIME],
     )
     component.async_register_entity_service(
-        TimerListServices.REMOVE_TIMER,
+        TimerListService.REMOVE_TIMER,
         {probatio.Required(ATTR_TIMER_ID): cv.string},
         "async_remove_timer",
         required_features=[TimerListEntityFeature.REMOVE_TIMER],
     )
     component.async_register_entity_service(
-        TimerListServices.GET_TIMERS,
+        TimerListService.GET_TIMERS,
         {
             probatio.Optional(ATTR_STATUS): probatio.All(
                 probatio.EnsureList(), [probatio.Coerce(TimerStatus)]

@@ -598,8 +598,9 @@ class OverkizConfigFlow(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle ZeroConf discovery."""
-        properties = discovery_info.properties
-        gateway_id = properties["gateway_pin"]
+        if (gateway_id := discovery_info.properties.get("gateway_pin")) is None:
+            return self.async_abort(reason="no_gateway_pin")
+
         hostname = discovery_info.hostname
 
         LOGGER.debug(

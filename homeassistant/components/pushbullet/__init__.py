@@ -3,6 +3,7 @@
 import logging
 
 from pushbullet import InvalidKeyError, PushBullet, PushbulletError
+from requests.exceptions import RequestException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -47,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushbulletConfigEntry) -
             translation_domain=DOMAIN,
             translation_key="invalid_api_key",
         ) from err
-    except PushbulletError as err:
+    except (PushbulletError, RequestException) as err:
         raise ConfigEntryNotReady from err
 
     pb_provider = PushBulletNotificationProvider(hass, pushbullet)

@@ -1,6 +1,7 @@
 """The tests for the Netatmo sensor platform."""
 
 from datetime import timedelta
+from time import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -10,11 +11,16 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netatmo import sensor
-from homeassistant.const import Platform
+from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import fake_post_request, selected_platforms, snapshot_platform_entities
+from .common import (
+    fake_post_request,
+    selected_platforms,
+    simulate_webhook,
+    snapshot_platform_entities,
+)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -50,6 +56,129 @@ async def test_indoor_sensor(
     assert hass.states.get(f"{prefix}humidity").state == "63"
     assert hass.states.get(f"{prefix}carbon_dioxide").state == "494"
     assert hass.states.get(f"{prefix}atmospheric_pressure").state == "1014.5"
+
+
+@pytest.mark.parametrize(
+    ("response", "expected_state"),
+    [
+        pytest.param(
+            {
+                "room_id": "2746182631",
+                "home": {
+                    "id": "91763b24c43d3e344f424e8b",
+                    "name": "MYHOME",
+                    "country": "DE",
+                    "rooms": [
+                        {
+                            "id": "2746182631",
+                            "name": "Livingroom",
+                            "type": "livingroom",
+                            "therm_setpoint_mode": "manual",
+                            "therm_setpoint_temperature": 21,
+                            "therm_setpoint_end_time": 1612734552,
+                        }
+                    ],
+                    "modules": [
+                        {
+                            "id": "12:34:56:00:01:ae",
+                            "name": "Livingroom",
+                            "type": "NATherm1",
+                        }
+                    ],
+                },
+                "mode": "manual",
+                "event_type": "set_point",
+                "temperature": 21,
+                "push_type": "display_change",
+            },
+            "manual",
+            id="set_point",
+        ),
+        pytest.param(
+            {
+                "event_type": "therm_mode",
+                "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "hg"},
+                "mode": "hg",
+                "previous_mode": "away",
+                "push_type": "home_event_changed",
+            },
+            "hg",
+            id="therm_mode_frost_guard",
+        ),
+        pytest.param(
+            {
+                "event_type": "therm_mode",
+                "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "away"},
+                "mode": "away",
+                "previous_mode": "hg",
+                "push_type": "home_event_changed",
+            },
+            "away",
+            id="therm_mode_away",
+        ),
+    ],
+)
+async def test_webhook_setpoint_mode_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    response: dict[str, Any],
+    expected_state: str,
+) -> None:
+    """Test the setpoint mode sensor updates immediately from webhook events."""
+    with selected_platforms([Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    entity_id = "sensor.livingroom_livingroom_setpoint_mode"
+
+    assert hass.states.get(entity_id).state == "away"
+
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(entity_id).state == expected_state
+
+
+async def test_webhook_cancel_set_point_forces_setpoint_mode_update(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test a cancel_set_point webhook event schedules an immediate poll."""
+    with selected_platforms([Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    publisher = config_entry.runtime_data.publisher["home-91763b24c43d3e344f424e8b"]
+    publisher.next_scan = time() + 1000
+
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": "home",
+                }
+            ],
+            "modules": [
+                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
+            ],
+        },
+        "mode": "home",
+        "event_type": "cancel_set_point",
+        "push_type": "display_change",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert publisher.next_scan <= time()
 
 
 async def test_weather_sensor(

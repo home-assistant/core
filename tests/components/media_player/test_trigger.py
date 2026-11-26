@@ -21,12 +21,11 @@ from pytest_homeassistant.components.common import (
 )
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
+    MediaPlayerEntityStateAttribute,
     MediaPlayerState,
 )
 from homeassistant.components.media_player.trigger import TRIGGERS
-from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 _VOLUME_CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
@@ -41,29 +40,47 @@ async def target_media_players(hass: HomeAssistant) -> dict[str, list[str]]:
 
 # is_muted=True states (mute attr True OR volume_level == 0)
 _IS_MUTED_STATES = [
-    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True}),
-    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 0}),
     (
         MediaPlayerState.PLAYING,
-        {ATTR_MEDIA_VOLUME_LEVEL: 0, ATTR_MEDIA_VOLUME_MUTED: True},
+        {MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: True},
+    ),
+    (MediaPlayerState.PLAYING, {MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 0}),
+    (
+        MediaPlayerState.PLAYING,
+        {
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 0,
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: True,
+        },
     ),
     (
         MediaPlayerState.PLAYING,
-        {ATTR_MEDIA_VOLUME_LEVEL: 0, ATTR_MEDIA_VOLUME_MUTED: False},
+        {
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 0,
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: False,
+        },
     ),
     (
         MediaPlayerState.PLAYING,
-        {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: True},
+        {
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 1,
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: True,
+        },
     ),
 ]
 
 # is_muted=False states (mute attr False/missing AND volume_level != 0)
 _IS_NOT_MUTED_STATES = [
-    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: False}),
-    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 1}),
     (
         MediaPlayerState.PLAYING,
-        {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: False},
+        {MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: False},
+    ),
+    (MediaPlayerState.PLAYING, {MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 1}),
+    (
+        MediaPlayerState.PLAYING,
+        {
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 1,
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: False,
+        },
     ),
 ]
 
@@ -349,14 +366,14 @@ async def test_media_player_state_trigger_behavior_all(
         *parametrize_numerical_attribute_changed_trigger_states(
             "media_player.volume_changed",
             MediaPlayerState.PLAYING,
-            ATTR_MEDIA_VOLUME_LEVEL,
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
             attribute_value_scale=0.01,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "media_player.volume_crossed_threshold",
             MediaPlayerState.PLAYING,
-            ATTR_MEDIA_VOLUME_LEVEL,
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
             attribute_value_scale=0.01,
             attribute_required=True,
         ),
@@ -395,7 +412,7 @@ async def test_media_player_volume_trigger_behavior_each(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "media_player.volume_crossed_threshold",
             MediaPlayerState.PLAYING,
-            ATTR_MEDIA_VOLUME_LEVEL,
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
             attribute_value_scale=0.01,
             attribute_required=True,
         ),
@@ -434,7 +451,7 @@ async def test_media_player_volume_trigger_behavior_first(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "media_player.volume_crossed_threshold",
             MediaPlayerState.PLAYING,
-            ATTR_MEDIA_VOLUME_LEVEL,
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
             attribute_value_scale=0.01,
             attribute_required=True,
         ),
@@ -504,11 +521,11 @@ async def test_media_player_trigger_ignores_limit_entity_with_wrong_unit(
         entity_id="media_player.test_player",
         reset_state={
             "state": MediaPlayerState.PLAYING,
-            "attributes": {ATTR_MEDIA_VOLUME_LEVEL: 0.0},
+            "attributes": {MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 0.0},
         },
         trigger_state={
             "state": MediaPlayerState.PLAYING,
-            "attributes": {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+            "attributes": {MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 0.5},
         },
         limit_entities=[
             (limit_entities[0], "10"),
@@ -533,7 +550,7 @@ async def test_muted_trigger_ignores_entities_without_volume_attributes(
         hass,
         "media_player.muted",
         None,
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 
@@ -544,14 +561,18 @@ async def test_muted_trigger_ignores_entities_without_volume_attributes(
 
     # Transition with volume attributes — should not fire (not muted)
     hass.states.async_set(
-        entity_id, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: False}
+        entity_id,
+        MediaPlayerState.PLAYING,
+        {MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: False},
     )
     await hass.async_block_till_done()
     assert len(calls) == 0
 
     # Transition to muted — should fire
     hass.states.async_set(
-        entity_id, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True}
+        entity_id,
+        MediaPlayerState.PLAYING,
+        {MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: True},
     )
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -566,7 +587,9 @@ async def test_muted_trigger_does_not_fire_on_losing_volume_attributes(
 
     # Start muted
     hass.states.async_set(
-        entity_id, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True}
+        entity_id,
+        MediaPlayerState.PLAYING,
+        {MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: True},
     )
     await hass.async_block_till_done()
 
@@ -574,7 +597,7 @@ async def test_muted_trigger_does_not_fire_on_losing_volume_attributes(
         hass,
         "media_player.muted",
         None,
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 
@@ -610,13 +633,15 @@ async def test_unmuted_trigger_does_not_fire_when_entity_gains_volume_attributes
         hass,
         "media_player.unmuted",
         None,
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 
     # Gain volume attributes already-unmuted — must not fire
     hass.states.async_set(
-        entity_id, MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: False}
+        entity_id,
+        MediaPlayerState.PLAYING,
+        {MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: False},
     )
     await hass.async_block_till_done()
     assert len(calls) == 0

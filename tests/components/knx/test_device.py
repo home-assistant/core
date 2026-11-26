@@ -13,7 +13,11 @@ from homeassistant.components.knx.storage.config_store import (
 )
 from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit, _patch_telegram_store
@@ -48,6 +52,48 @@ async def test_create_device(
     )
     device_id = res["result"]["id"]
     assert device_registry.async_get(device_id)
+
+
+async def test_create_device_in_area(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test creating a device in an area."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    area = area_registry.async_create("Kitchen")
+
+    await client.send_json_auto_id(
+        {"type": "knx/create_device", "name": "Test Device", "area_id": area.id}
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    device = device_registry.async_get(res["result"]["id"])
+    assert device is not None
+    assert device.area_id == area.id
+
+
+async def test_create_device_unknown_area(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test creating a device in an unknown area creates no device."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    devices = len(device_registry.devices)
+
+    await client.send_json_auto_id(
+        {"type": "knx/create_device", "name": "Test Device", "area_id": "unknown"}
+    )
+    res = await client.receive_json()
+    assert not res["success"]
+    assert res["error"]["code"] == "not_found"
+    assert len(device_registry.devices) == devices
 
 
 async def test_remove_device(
