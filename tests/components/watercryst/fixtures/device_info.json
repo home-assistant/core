@@ -1,0 +1,18 @@
+{
+  "biocatSerial": "2026123456789123",
+  "electronicsSerial": "0123456789",
+  "deviceTypeNumber": "12000273",
+  "line": "BIOCAT",
+  "series": "KLS 3000-C",
+  "hasFlowRateSensor": true,
+  "hasLeakageProtectionSystem": true,
+  "hasLimeScaleProtection": true,
+  "hasPressureSensor": true,
+  "hasTemperatureSensor": true,
+  "hasWirelessSensorOption": true,
+  "name": "HA Device",
+  "currentFirmwareVersion": "V01.05.07",
+  "currentHardwareVersion": "2",
+  "latestFirmwareVersion": "V01.08.05",
+  "systemMacAddress": "00:A2:AA:BB:CC:DD"
+}

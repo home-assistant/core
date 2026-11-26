@@ -8,9 +8,9 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.watercryst.coordinator import STATE_POLLING_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 from .common import TriggerPollFunc
 
@@ -31,16 +31,10 @@ def test_initialization(
 @pytest.mark.usefixtures("setup_integration")
 async def test_availability(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
     advance_time: TriggerPollFunc,
 ) -> None:
     """Test entities unavailability when device is offline."""
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
     for online_status in (True, False, True):
         data = copy(mock_api_client.get_state.return_value)
         data.online = online_status
@@ -48,7 +42,5 @@ async def test_availability(
 
         await advance_time(STATE_POLLING_INTERVAL)
 
-        for entry in entries:
-            state = hass.states.get(entry.entity_id)
-            assert state is not None
+        for state in hass.states.async_all(domain_filter=Platform.SENSOR):
             assert (state.state != STATE_UNAVAILABLE) is online_status

@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .common import InitIntegrationFunc, TriggerPollFunc
+from .helpers import async_load_model_fixture
 
 BIOCAT_ELECTRONICS_SERIAL = "0123456789"
 BIOCAT_SERIAL = "2026123456789123"
@@ -53,28 +54,6 @@ def default_info_response() -> DeviceResponse:
         has_pressure_sensor=True,
         has_temperature_sensor=True,
         has_wireless_sensor_option=True,
-        name=DEVICE_NAME,
-        current_firmware_version=FW_VERSION,
-        current_hardware_version=HW_VERSION,
-        latest_firmware_version=LATEST_FW_VERSION,
-        system_mac_address=SYSTEM_MAC,
-    )
-
-
-def basic_info_response() -> DeviceResponse:
-    """Basic device info response."""
-    return DeviceResponse(
-        biocat_serial=BIOCAT_SERIAL,
-        electronics_serial=BIOCAT_ELECTRONICS_SERIAL,
-        device_type_number=DEVICE_TYPE_NUMBER,
-        line=DEVICE_TYPE_LINE,
-        series=DEVICE_TYPE_SERIES,
-        has_flow_rate_sensor=False,
-        has_leakage_protection_system=False,
-        has_lime_scale_protection=False,
-        has_pressure_sensor=False,
-        has_temperature_sensor=False,
-        has_wireless_sensor_option=False,
         name=DEVICE_NAME,
         current_firmware_version=FW_VERSION,
         current_hardware_version=HW_VERSION,
@@ -182,11 +161,6 @@ def alternative_state_response() -> StateResponse:
     )
 
 
-def offline_state_response() -> StateResponse:
-    """Offline state response."""
-    return StateResponse(online=False)
-
-
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -211,7 +185,7 @@ def mock_config_entry(
 
 
 @pytest.fixture
-async def mock_api_client() -> AsyncGenerator[AsyncMock]:
+async def mock_api_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
     """Mock WATERCryst Smart Home client."""
     with (
         patch("homeassistant.components.watercryst.AsyncApiClient") as mock,
@@ -219,10 +193,18 @@ async def mock_api_client() -> AsyncGenerator[AsyncMock]:
             "homeassistant.components.watercryst.config_flow.AsyncApiClient", new=mock
         ),
     ):
+        device_info = await async_load_model_fixture(
+            hass, "device_info.json", DeviceResponse
+        )
+        measurements = await async_load_model_fixture(
+            hass, "measurements.json", MeasurementResponse
+        )
+        state = await async_load_model_fixture(hass, "state.json", StateResponse)
+
         client = mock.return_value
-        client.get_device_info = AsyncMock(return_value=default_info_response())
-        client.get_measurements = AsyncMock(return_value=default_measurement_response())
-        client.get_state = AsyncMock(return_value=default_state_response())
+        client.get_device_info = AsyncMock(return_value=device_info)
+        client.get_measurements = AsyncMock(return_value=measurements)
+        client.get_state = AsyncMock(return_value=state)
         yield client
 
 
@@ -267,3 +249,8 @@ def advance_time(
         await hass.async_block_till_done()
 
     return run
+
+
+def assert_state(hass: HomeAssistant, id: str, value: str) -> None:
+    """Assert that an entity has a given value."""
+    assert hass.states.get(id).state == value

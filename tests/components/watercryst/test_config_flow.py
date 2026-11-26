@@ -82,22 +82,22 @@ async def test_duplicate_entry(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (WTCApiCancelledError(), "cannot_connect"),
-        (WTCApiUnauthorizedError(), "invalid_auth"),
-        (WTCApiDisabledError(), "api_disabled"),
-        (WTCApiQuotaExceededError(), "cannot_connect"),
-        (WTCApiRequestError(), "cannot_connect"),
-        (WTCApiServerError(), "cannot_connect"),
-        (WTCApiTimeoutError(), "cannot_connect"),
-        (WTCApiValidationError(), "cannot_connect"),
-        (Exception(), "unknown"),
+        (WTCApiCancelledError, "cannot_connect"),
+        (WTCApiUnauthorizedError, "invalid_auth"),
+        (WTCApiDisabledError, "api_disabled"),
+        (WTCApiQuotaExceededError, "cannot_connect"),
+        (WTCApiRequestError, "cannot_connect"),
+        (WTCApiServerError, "cannot_connect"),
+        (WTCApiTimeoutError, "cannot_connect"),
+        (WTCApiValidationError, "cannot_connect"),
+        (Exception, "unknown"),
     ],
 )
 async def test_form_raise_error(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
     mock_setup_entry: AsyncMock,
-    exception: Exception,
+    exception: type[Exception],
     error: str,
 ) -> None:
     """Test config flow error handling."""
@@ -109,7 +109,7 @@ async def test_form_raise_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_api_client.get_device_info.side_effect = exception
+    mock_api_client.get_device_info.side_effect = exception()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
