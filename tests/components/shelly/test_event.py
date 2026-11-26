@@ -10,10 +10,10 @@ from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import (
-    ATTR_EVENT_TYPE,
-    ATTR_EVENT_TYPES,
     DOMAIN as EVENT_DOMAIN,
     EventDeviceClass,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
 )
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -53,10 +53,12 @@ async def test_rpc_button(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
+    assert state.attributes.get(
+        EventEntityCapabilityAttribute.EVENT_TYPES
+    ) == unordered(
         ["btn_down", "btn_up", "double_push", "long_push", "single_push", "triple_push"]
     )
-    assert state.attributes.get(ATTR_EVENT_TYPE) is None
+    assert state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) is None
     assert state.attributes.get(ATTR_DEVICE_CLASS) == EventDeviceClass.BUTTON
 
     assert (entry := entity_registry.async_get(entity_id))
@@ -79,7 +81,7 @@ async def test_rpc_button(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(entity_id))
-    assert state.attributes.get(ATTR_EVENT_TYPE) == "single_push"
+    assert state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) == "single_push"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -116,7 +118,7 @@ async def test_rpc_script_1_event(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(entity_id))
-    assert state.attributes.get(ATTR_EVENT_TYPE) == "script_start"
+    assert state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) == "script_start"
 
     inject_rpc_device_event(
         monkeypatch,
@@ -136,7 +138,7 @@ async def test_rpc_script_1_event(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(entity_id))
-    assert state.attributes.get(ATTR_EVENT_TYPE) != "unknown_event"
+    assert state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) != "unknown_event"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -199,8 +201,10 @@ async def test_block_event(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(["single", "long"])
-    assert state.attributes.get(ATTR_EVENT_TYPE) is None
+    assert state.attributes.get(
+        EventEntityCapabilityAttribute.EVENT_TYPES
+    ) == unordered(["single", "long"])
+    assert state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) is None
     assert state.attributes.get(ATTR_DEVICE_CLASS) == EventDeviceClass.BUTTON
 
     assert (entry := entity_registry.async_get(entity_id))
@@ -216,7 +220,7 @@ async def test_block_event(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(entity_id))
-    assert state.attributes.get(ATTR_EVENT_TYPE) == "long"
+    assert state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) == "long"
 
 
 async def test_block_event_single_output(
@@ -297,10 +301,19 @@ async def test_block_event_shix3_1(
     await init_integration(hass, 1, model=MODEL_I3)
 
     assert (state := hass.states.get("event.test_name_tv_leds"))
-    assert state.attributes.get(ATTR_EVENT_TYPES) == UNORDERED_EVENT_TYPES
+    assert (
+        state.attributes.get(EventEntityCapabilityAttribute.EVENT_TYPES)
+        == UNORDERED_EVENT_TYPES
+    )
 
     assert (state := hass.states.get("event.test_name_tv_spots"))
-    assert state.attributes.get(ATTR_EVENT_TYPES) == UNORDERED_EVENT_TYPES
+    assert (
+        state.attributes.get(EventEntityCapabilityAttribute.EVENT_TYPES)
+        == UNORDERED_EVENT_TYPES
+    )
 
     assert (state := hass.states.get("event.test_name_input_3"))
-    assert state.attributes.get(ATTR_EVENT_TYPES) == UNORDERED_EVENT_TYPES
+    assert (
+        state.attributes.get(EventEntityCapabilityAttribute.EVENT_TYPES)
+        == UNORDERED_EVENT_TYPES
+    )

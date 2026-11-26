@@ -37,9 +37,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: This integration does not provide an options flow.
-  docs-installation-parameters:
-    status: done
-    comment: Documented in https://github.com/home-assistant/home-assistant.io/pull/43463
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done

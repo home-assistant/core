@@ -8,17 +8,11 @@ from mysensors.sensor import Sensor
 import pytest
 
 from homeassistant.components.remote import (
-    ATTR_COMMAND,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_LEARN_COMMAND,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import ATTR_BATTERY_LEVEL, TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -40,8 +34,8 @@ async def test_ir_transceiver(
     # Test turn on
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        RemoteService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -63,8 +57,8 @@ async def test_ir_transceiver(
     # Test send command
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: "new_code"},
+        RemoteService.SEND_COMMAND,
+        {TargetKey.ENTITY_ID: entity_id, RemoteServiceArgument.COMMAND: "new_code"},
         blocking=True,
     )
 
@@ -84,8 +78,8 @@ async def test_ir_transceiver(
     # Test learn command
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_LEARN_COMMAND,
-        {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: "learn_code"},
+        RemoteService.LEARN_COMMAND,
+        {TargetKey.ENTITY_ID: entity_id, RemoteServiceArgument.COMMAND: "learn_code"},
         blocking=True,
     )
 
@@ -106,8 +100,8 @@ async def test_ir_transceiver(
     with pytest.raises(ValueError):
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_LEARN_COMMAND,
-            {ATTR_ENTITY_ID: entity_id},
+            RemoteService.LEARN_COMMAND,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -118,8 +112,8 @@ async def test_ir_transceiver(
     # Test turn off
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        RemoteService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -139,8 +133,8 @@ async def test_ir_transceiver(
     # Test turn on with new default code
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        RemoteService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 

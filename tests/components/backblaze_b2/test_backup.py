@@ -601,7 +601,6 @@ async def test_upload_with_cleanup_and_logging(
             return_value=TEST_BACKUP,
         ),
         patch("pathlib.Path.open") as mocked_open,
-        caplog.at_level(logging.DEBUG),
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         resp = await client.post(
@@ -637,7 +636,6 @@ async def test_upload_with_cleanup_and_logging(
         patch.object(
             BucketSimulator, "get_file_info_by_name", return_value=mock_file_info
         ),
-        caplog.at_level(logging.DEBUG),
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         resp = await client.post(
@@ -680,7 +678,6 @@ async def test_upload_with_cleanup_failure(
             "get_file_info_by_name",
             side_effect=B2Error("Cleanup failed"),
         ),
-        caplog.at_level(logging.DEBUG),
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         resp = await client.post(
@@ -722,7 +719,6 @@ async def test_tar_upload_failure_skips_cleanup(
             BucketSimulator,
             "get_file_info_by_name",
         ) as mock_get_file_info,
-        caplog.at_level(logging.DEBUG),
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         resp = await client.post(

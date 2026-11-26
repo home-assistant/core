@@ -93,6 +93,8 @@ def create_mock_controller(
         "Setpoint": "24.0",
         "Temp": "22.0",
         "RAS": ras_mode,
+        "Tag1": "1 Example Street",
+        "Tag2": "Exampleville",
         "CtrlZone": zone_ctrl,
         "EcoLock": "true",
         "EcoMax": "30.0",
@@ -157,6 +159,8 @@ def create_mock_zone(
     sensor_type: Zone.SensorType | None = Zone.SensorType.WIRELESS,
     rf_signal: Zone.RfSignal | None = Zone.RfSignal.FULL,
     battery_level: Zone.BatteryLevel | None = Zone.BatteryLevel.FULL,
+    damper_fault: bool | None = False,
+    sensor_fault: bool | None = False,
 ) -> Mock:
     """Create a mock Zone with configurable parameters."""
     zone = Mock(spec=Zone)
@@ -172,6 +176,8 @@ def create_mock_zone(
     zone.sensor_type = sensor_type
     zone.rf_signal = rf_signal
     zone.battery_level = battery_level
+    zone.damper_fault = damper_fault
+    zone.sensor_fault = sensor_fault
     zone._zone_data = {
         "AirStreamDeviceUId": "000000001",
         "Id": 0,

@@ -1,10 +1,12 @@
 """DataUpdateCoordinators for the SolarEdge Modbus integration."""
 
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Final, override
 
+from modbus_connection import ModbusError, ModbusUnit
 from solaredged import SolarEdge, SolarEdgeConnectionError, UpdateReport
 
 from homeassistant.config_entries import ConfigEntry
@@ -65,6 +67,7 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         hass: HomeAssistant,
         entry: SolarEdgeModbusConfigEntry,
         solaredge: SolarEdge,
+        unit: ModbusUnit,
         *,
         poll: Callable[[], Awaitable[UpdateReport]],
         interval: timedelta,
@@ -72,6 +75,7 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     ) -> None:
         """Initialize the coordinator."""
         self.solaredge = solaredge
+        self._unit = unit
         self._poll = poll
         self._silent: set[str] = set()
         super().__init__(
@@ -88,20 +92,29 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     async def _async_update_data(self) -> UpdateReport:
         """Poll the inverter, reporting what answered."""
         try:
-            report = await self._async_poll()
+            try:
+                report = await self._async_poll()
+            except UpdateFailed:
+                if self.data is None or not self.last_update_success:
+                    raise
+                # A timeout on the first sub-system aborts the poll before
+                # anything else is read, so it arrives here rather than in
+                # report.failed.
+                report = await self._async_poll()
+            else:
+                # A sub-system that just fell silent gets a second chance:
+                # SolarEdge answers a single request late often enough that one
+                # blip should not blank its entities. One that has been silent a
+                # while does not, so a sub-system that is really gone cannot
+                # double every poll from here on.
+                if report.failed.keys() - self._silent:
+                    report = await self._async_retry(report)
         except UpdateFailed:
-            if not self.last_update_success:
-                raise
-            # A timeout on the first sub-system aborts the poll before anything
-            # else is read, so it arrives here rather than in report.failed.
-            report = await self._async_poll()
-        else:
-            # A sub-system that just fell silent gets a second chance: SolarEdge
-            # answers a single request late often enough that one blip should not
-            # blank its entities. One that has been silent a while does not, so a
-            # sub-system that is really gone cannot double every poll from here on.
-            if report.failed.keys() - self._silent:
-                report = await self._async_retry(report)
+            # The inverter can stop answering on an open TCP socket without
+            # closing it; dropping the link lets the next poll reconnect.
+            with suppress(ModbusError):
+                await self._unit.disconnect()
+            raise
 
         # An address can move to another inverter, and its measurements are not
         # this one's however the entities reading them are named. Checked on

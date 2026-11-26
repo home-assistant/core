@@ -39,11 +39,12 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util.decorator import Registry
-
-if TYPE_CHECKING:
-    from . import OverkizDataConfigEntry
 
 from .const import (
     DOMAIN,
@@ -53,6 +54,9 @@ from .const import (
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_EXECUTION,
 )
+
+if TYPE_CHECKING:
+    from . import OverkizDataConfigEntry
 
 # Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[
@@ -137,16 +141,21 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 ).total_seconds(),
             ) from exception
         except MaintenanceError as exception:
-            raise UpdateFailed("Server is down for maintenance.") from exception
+            raise UpdateFailedUnreachable(
+                "Server is down for maintenance."
+            ) from exception
         except ServiceUnavailableError as exception:
-            raise UpdateFailed("Server is unavailable.") from exception
+            raise UpdateFailedUnreachable("Server is unavailable.") from exception
         except SomfyServiceError as exception:
             raise UpdateFailed("Somfy service error.") from exception
         except InvalidEventListenerIdError as exception:
             raise UpdateFailed(exception) from exception
-        except (TimeoutError, ClientConnectorError) as exception:
+        except TimeoutError as exception:
             LOGGER.debug("Failed to connect", exc_info=True)
             raise UpdateFailed("Failed to connect.") from exception
+        except ClientConnectorError as exception:
+            LOGGER.debug("Failed to connect", exc_info=True)
+            raise UpdateFailedUnreachable("Failed to connect.") from exception
         except ServerDisconnectedError:
             self.executions = {}
 

@@ -6,20 +6,35 @@ from openwrt.ubus import Ubus
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
-from .const import CONF_DHCP_SOFTWARE, DEFAULT_DHCP_SOFTWARE, DHCP_SOFTWARES, DOMAIN
+from .const import (
+    CONF_DHCP_SOFTWARE,
+    DEFAULT_DHCP_SOFTWARE,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+    DHCP_SOFTWARES,
+    DOMAIN,
+)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_USERNAME): str,
         probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
         probatio.Required(
             CONF_DHCP_SOFTWARE, default=DEFAULT_DHCP_SOFTWARE
         ): SelectSelector(
@@ -35,10 +50,12 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 def validate_connection(data: dict[str, Any]) -> None:
     """Validate that we can log in to the router with the given configuration."""
+    scheme = "https" if data.get(CONF_SSL, DEFAULT_SSL) else "http"
     ubus = Ubus(
-        f"http://{data[CONF_HOST]}/ubus",
+        f"{scheme}://{data[CONF_HOST]}/ubus",
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
+        verify=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
     )
     try:
         session_id = ubus.connect()

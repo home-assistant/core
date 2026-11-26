@@ -1,0 +1,42 @@
+# serializer version: 1
+# name: test_entry_diagnostics[v1]
+  dict({
+    'config_entry': dict({
+      'api_version': '1',
+      'database': 'home_assistant',
+      'host': 'localhost',
+      'password': '**REDACTED**',
+      'path': None,
+      'port': None,
+      'ssl': None,
+      'ssl_ca_cert': None,
+      'username': '**REDACTED**',
+      'verify_ssl': True,
+    }),
+    'writer': dict({
+      'max_retries': 0,
+      'queued_events': 0,
+      'running': True,
+      'write_errors': 0,
+    }),
+  })
+# ---
+# name: test_entry_diagnostics[v2]
+  dict({
+    'config_entry': dict({
+      'api_version': '2',
+      'bucket': 'Home Assistant',
+      'organization': '**REDACTED**',
+      'ssl_ca_cert': None,
+      'token': '**REDACTED**',
+      'url': 'https://us-west-2-1.aws.cloud2.influxdata.com',
+      'verify_ssl': True,
+    }),
+    'writer': dict({
+      'max_retries': 0,
+      'queued_events': 0,
+      'running': True,
+      'write_errors': 0,
+    }),
+  })
+# ---

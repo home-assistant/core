@@ -1,4 +1,22 @@
 {
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least"
+  },
+  "conditions": {
+    "is_being_held": {
+      "description": "Tests if one or more buttons are being held.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::button::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::button::common::condition_for_name%]"
+        }
+      },
+      "name": "Button is being held"
+    }
+  },
   "device_automation": {
     "action_type": {
       "press": "Press {entity_name} button"
@@ -21,6 +39,16 @@
       "name": "Update"
     }
   },
+  "selector": {
+    "press_count": {
+      "options": {
+        "1": "Single press",
+        "2": "Double press",
+        "3": "Triple press",
+        "4": "Quadruple press"
+      }
+    }
+  },
   "services": {
     "press": {
       "description": "Presses a button.",
@@ -39,8 +67,18 @@
       },
       "name": "Button held"
     },
+    "hold_ended": {
+      "description": "Triggers when one or more buttons are released after being held.",
+      "name": "Button hold ended"
+    },
     "pressed": {
       "description": "Triggers when one or more buttons are pressed.",
+      "fields": {
+        "press_count": {
+          "description": "How many times the button is pressed in quick succession.",
+          "name": "Number of presses"
+        }
+      },
       "name": "Button pressed"
     }
   }

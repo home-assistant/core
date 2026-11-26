@@ -20,9 +20,13 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     BEDTIME,
+    FALL_ASLEEP,
     HEART_RATE,
     HRV,
+    OUT_OF_BED,
     RESPIRATORY_RATE,
+    RESTFUL,
+    RESTLESS,
     SLEEP_DURATION,
     SLEEP_NUMBER,
     SLEEP_SCORE,
@@ -124,6 +128,46 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
             sleeper.sleep_data.end_date, time_zone
         ),
     ),
+    SleepIQSensorEntityDescription(
+        key=RESTFUL,
+        translation_key="restful",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.restful,
+    ),
+    SleepIQSensorEntityDescription(
+        key=RESTLESS,
+        translation_key="restless",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.restless,
+    ),
+    SleepIQSensorEntityDescription(
+        key=OUT_OF_BED,
+        translation_key="out_of_bed",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.out_of_bed,
+    ),
+    SleepIQSensorEntityDescription(
+        key=FALL_ASLEEP,
+        translation_key="fall_asleep",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.fall_asleep_period,
+    ),
 )
 
 
@@ -175,6 +219,8 @@ class SleepIQSensorEntity(
 ):
     """Representation of a SleepIQ sensor."""
 
+    # Icons come from icons.json, which the inherited bed icon would override.
+    _attr_icon = None
     entity_description: SleepIQSensorEntityDescription
 
     def __init__(
