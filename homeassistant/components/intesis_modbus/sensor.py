@@ -111,6 +111,7 @@ UNIT_SENSORS: Final[tuple[IntesisSensorEntityDescription, ...]] = (
         report_name="limits",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.real_setpoint,
     ),
     IntesisSensorEntityDescription(
