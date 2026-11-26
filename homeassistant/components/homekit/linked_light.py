@@ -1,5 +1,6 @@
 """Lightbulb service of an accessory, driven by a linked light entity."""
 
+from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -25,7 +26,7 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 
 from .const import (
     CHAR_BRIGHTNESS,
@@ -35,6 +36,7 @@ from .const import (
     CONF_LINKED_LIGHT,
     SERV_LIGHTBULB,
 )
+from .type_lights import CHANGE_COALESCE_TIME_WINDOW
 from .util import cleanup_name_for_homekit
 
 if TYPE_CHECKING:
@@ -54,6 +56,8 @@ class LinkedLight:
         """Add the Lightbulb service to the accessory."""
         self._accessory = accessory
         self.entity_id = entity_id
+        self._event_timer: CALLBACK_TYPE | None = None
+        self._pending_events: dict[str, Any] = {}
         color_modes = (
             state.attributes.get(LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES)
             or []
@@ -126,11 +130,23 @@ class LinkedLight:
         self.char_brightness.set_value(brightness_pct)
 
     def _set_chars(self, char_values: dict[str, Any]) -> None:
-        """Call the light services for a write from HomeKit."""
+        """Coalesce the writes from HomeKit, as the Light accessory does."""
         _LOGGER.debug("%s: Set linked light chars: %s", self.entity_id, char_values)
         # The Home app also writes ConfiguredName, on pairing and on rename
         if CHAR_ON not in char_values and CHAR_BRIGHTNESS not in char_values:
             return
+        self._pending_events.update(char_values)
+        if self._event_timer:
+            self._event_timer()
+        self._event_timer = async_call_later(
+            self._accessory.hass, CHANGE_COALESCE_TIME_WINDOW, self._async_send_events
+        )
+
+    @callback
+    def _async_send_events(self, _now: datetime) -> None:
+        """Call the light services for the coalesced writes."""
+        char_values = self._pending_events
+        self._pending_events = {}
         params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
         brightness_pct = char_values.get(CHAR_BRIGHTNESS)
         if (CHAR_ON in char_values and not char_values[CHAR_ON]) or brightness_pct == 0:

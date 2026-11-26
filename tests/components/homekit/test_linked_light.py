@@ -1,5 +1,6 @@
 """Test a light entity linked onto a fan or television accessory."""
 
+from datetime import timedelta
 import logging
 from typing import Any
 from unittest.mock import patch
@@ -8,7 +9,7 @@ from pyhap.characteristic import Characteristic
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 from pyhap.service import Service
 import pytest
-from pytest_homeassistant.common import async_mock_service
+from pytest_homeassistant.common import async_fire_time_changed, async_mock_service
 
 from homeassistant.components.fan import FanEntityFeature
 from homeassistant.components.homekit.accessories import HomeAccessory, HomeDriver
@@ -22,6 +23,7 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.components.homekit.type_air_purifiers import AirPurifier
 from homeassistant.components.homekit.type_fans import Fan
+from homeassistant.components.homekit.type_lights import CHANGE_COALESCE_TIME_WINDOW
 from homeassistant.components.homekit.type_media_players import (
     MediaPlayer,
     ReceiverMediaPlayer,
@@ -50,6 +52,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 LIGHT_ID = "light.demo_light"
 LIGHT_NAME = "Demo light"
@@ -136,6 +139,14 @@ def _set_chars(
         },
         "mock_addr",
     )
+
+
+async def _wait_for_coalesce(hass: HomeAssistant) -> None:
+    """Let the writes coalesce, then run the resulting service calls."""
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=CHANGE_COALESCE_TIME_WINDOW)
+    )
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(("acc_cls", "entity_id", "attrs"), ACCESSORIES)
@@ -354,17 +365,17 @@ async def test_linked_light_set_from_homekit(
     call_turn_off = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
 
     _set_chars(hk_driver, acc, {char_on: 0})
-    await hass.async_block_till_done()
+    await _wait_for_coalesce(hass)
     assert len(call_turn_off) == 1
     assert call_turn_off[-1].data == {ATTR_ENTITY_ID: LIGHT_ID}
 
     _set_chars(hk_driver, acc, {char_on: 1})
-    await hass.async_block_till_done()
+    await _wait_for_coalesce(hass)
     assert len(call_turn_on) == 1
     assert call_turn_on[-1].data == {ATTR_ENTITY_ID: LIGHT_ID}
 
     _set_chars(hk_driver, acc, {char_brightness: 40})
-    await hass.async_block_till_done()
+    await _wait_for_coalesce(hass)
     assert len(call_turn_on) == 2
     assert call_turn_on[-1].data == {
         ATTR_ENTITY_ID: LIGHT_ID,
@@ -372,7 +383,7 @@ async def test_linked_light_set_from_homekit(
     }
 
     _set_chars(hk_driver, acc, {char_on: 1, char_brightness: 30})
-    await hass.async_block_till_done()
+    await _wait_for_coalesce(hass)
     assert len(call_turn_on) == 3
     assert call_turn_on[-1].data == {
         ATTR_ENTITY_ID: LIGHT_ID,
@@ -380,7 +391,7 @@ async def test_linked_light_set_from_homekit(
     }
 
     _set_chars(hk_driver, acc, {char_brightness: 0})
-    await hass.async_block_till_done()
+    await _wait_for_coalesce(hass)
     assert len(call_turn_off) == 2
     assert call_turn_off[-1].data == {ATTR_ENTITY_ID: LIGHT_ID}
 
@@ -412,7 +423,7 @@ async def test_linked_light_turn_off_wins(
         acc,
         {acc.linked_light.char_on: on, acc.linked_light.char_brightness: brightness},
     )
-    await hass.async_block_till_done()
+    await _wait_for_coalesce(hass)
     assert len(call_turn_off) == 1
     assert call_turn_on == []
 
@@ -433,7 +444,7 @@ async def test_linked_light_rename_does_not_turn_on(
     _set_chars(
         hk_driver, acc, {serv_light.get_characteristic(CHAR_CONFIGURED_NAME): "Light"}
     )
-    await hass.async_block_till_done()
+    await _wait_for_coalesce(hass)
     assert call_turn_on == []
     assert call_turn_off == []
     assert events == []
@@ -505,8 +516,61 @@ async def test_linked_light_resynced_when_service_fails(
     )
 
     _set_chars(hk_driver, acc, {chars[key]: value for key, value in write.items()})
-    await hass.async_block_till_done()
+    await _wait_for_coalesce(hass)
 
     for key, value in expected.items():
         # A call that succeeds leaves the requested value until the state changes
         assert chars[key].value == (value if fails else write.get(key, value))
+
+
+@pytest.mark.parametrize(
+    ("first", "second"),
+    [
+        pytest.param({"on": 0}, {"brightness": 30}, id="off_then_brightness"),
+        pytest.param({"brightness": 0}, {"on": 1}, id="zero_brightness_then_on"),
+    ],
+)
+async def test_linked_light_turn_off_wins_across_requests(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    first: dict[str, int],
+    second: dict[str, int],
+) -> None:
+    """Test writes sent in separate requests are coalesced, and off still wins."""
+    _set_light(hass)
+    acc = await _create(
+        hass, hk_driver, Fan, FAN_ID, FAN_ATTRS, {CONF_LINKED_LIGHT: LIGHT_ID}
+    )
+    chars = {
+        "on": acc.linked_light.char_on,
+        "brightness": acc.linked_light.char_brightness,
+    }
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    call_turn_off = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
+
+    _set_chars(hk_driver, acc, {chars[key]: value for key, value in first.items()})
+    _set_chars(hk_driver, acc, {chars[key]: value for key, value in second.items()})
+    await _wait_for_coalesce(hass)
+
+    assert len(call_turn_off) == 1
+    assert call_turn_on == []
+
+
+async def test_linked_light_writes_after_window_not_coalesced(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a write sent after the coalesce window is handled on its own."""
+    _set_light(hass)
+    acc = await _create(
+        hass, hk_driver, Fan, FAN_ID, FAN_ATTRS, {CONF_LINKED_LIGHT: LIGHT_ID}
+    )
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    call_turn_off = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
+
+    _set_chars(hk_driver, acc, {acc.linked_light.char_on: 0})
+    await _wait_for_coalesce(hass)
+    _set_chars(hk_driver, acc, {acc.linked_light.char_brightness: 30})
+    await _wait_for_coalesce(hass)
+
+    assert len(call_turn_off) == 1
+    assert len(call_turn_on) == 1
