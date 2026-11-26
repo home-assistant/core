@@ -2361,6 +2361,56 @@ async def test_track_template_rate_limit(hass: HomeAssistant) -> None:
     info.async_remove()
 
 
+async def test_track_template_rate_limit_replay_of_hidden_entity(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a deferred render still runs after its entity was hidden meanwhile."""
+    hidden: set[str] = set()
+    template_refresh = Template(
+        "{{ states | selectattr('state', 'eq', 'on') | list | count }}",
+        hass,
+        entity_filter_factory=lambda: lambda entity_id: entity_id not in hidden,
+    )
+    hass.states.async_set("sensor.one", "on")
+    hass.states.async_set("sensor.two", "off")
+
+    refresh_runs = []
+
+    @ha.callback
+    def refresh_listener(
+        event: Event[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
+        refresh_runs.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass,
+        [TrackTemplate(template_refresh, None, 1)],
+        refresh_listener,
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+    assert refresh_runs == [1]
+
+    freezer.tick(0.1)
+    hass.states.async_set("sensor.two", "on")
+    await hass.async_block_till_done()
+    assert info.listeners["all"] is False
+    hidden.add("sensor.two")
+
+    freezer.tick(2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert info.listeners["all"] is True
+
+    freezer.tick(2)
+    hass.states.async_set("sensor.three", "on")
+    await hass.async_block_till_done()
+    assert refresh_runs == [1, 2]
+
+    info.async_remove()
+
+
 async def test_track_template_rate_limit_super(hass: HomeAssistant) -> None:
     """Test template rate limit with super template."""
     template_availability = Template(

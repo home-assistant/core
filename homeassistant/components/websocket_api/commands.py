@@ -9,6 +9,7 @@ from typing import Any, Literal, cast
 
 import probatio
 
+from homeassistant.auth import EVENT_USER_UPDATED
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions import entity_permission_filter
 from homeassistant.auth.permissions.const import POLICY_READ
@@ -39,7 +40,9 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import (
     config_validation as cv,
+    device_registry as dr,
     entity,
+    entity_registry as er,
     system_state as system_state_helper,
     target as target_helpers,
     template,
@@ -51,6 +54,7 @@ from homeassistant.helpers.condition import (
     async_subscribe_platform_events as async_subscribe_condition_platform_events,
     async_validate_condition_config,
 )
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -841,6 +845,10 @@ def handle_slugify(
     connection.send_result(msg["id"], {"slug": slugify(msg["text"])})
 
 
+_ENTITY_PERMISSION_KEYS = frozenset({"entity_id", "device_id"})
+_DEVICE_PERMISSION_KEYS = frozenset({"area_id", "parent_device_id"})
+
+
 @decorators.websocket_command(
     {
         probatio.Required("type"): "render_template",
@@ -936,7 +944,46 @@ async def handle_render_template(
         connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
         return
 
-    connection.subscriptions[msg["id"]] = info.async_remove
+    @callback
+    def _async_user_updated(event: Event[dict[str, Any]]) -> None:
+        if event.data["user_id"] == connection.user.id:
+            info.async_refresh()
+
+    debouncer = Debouncer(
+        hass, _LOGGER, cooldown=1, immediate=True, function=info.async_refresh
+    )
+
+    @callback
+    def _async_registry_updated(keys: frozenset[str], event: Event[Any]) -> None:
+        if (
+            event.data["action"] == "remove"
+            or (
+                event.data["action"] == "update"
+                and not keys.isdisjoint(event.data["changes"])
+            )
+        ) and entity_permission_filter(connection.user, POLICY_READ) is not None:
+            debouncer.async_schedule_call()
+
+    unsubs = [
+        hass.bus.async_listen(EVENT_USER_UPDATED, _async_user_updated),
+        hass.bus.async_listen(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            partial(_async_registry_updated, _ENTITY_PERMISSION_KEYS),
+        ),
+        hass.bus.async_listen(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            partial(_async_registry_updated, _DEVICE_PERMISSION_KEYS),
+        ),
+    ]
+
+    @callback
+    def _async_unsubscribe() -> None:
+        info.async_remove()
+        debouncer.async_shutdown()
+        for unsub in unsubs:
+            unsub()
+
+    connection.subscriptions[msg["id"]] = _async_unsubscribe
 
     connection.send_result(msg["id"])
 

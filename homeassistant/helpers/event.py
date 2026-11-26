@@ -988,6 +988,7 @@ class TrackTemplateResultInfo:
         track_template_: TrackTemplate,
         now: float,
         event: Event[EventStateChangedData] | None,
+        replayed: bool = False,
     ) -> bool | TrackTemplateResult:
         """Re-render the template if conditions match.
 
@@ -1004,7 +1005,7 @@ class TrackTemplateResultInfo:
         if event:
             info = self._info[template]
 
-            if not _event_triggers_rerender(event, info):
+            if not replayed and not _event_triggers_rerender(event, info):
                 return False
 
             had_timer = self._rate_limit.async_has_timer(template)
@@ -1134,7 +1135,9 @@ class TrackTemplateResultInfo:
                 if track_template_ == super_template:
                     continue
 
-                update = self._render_template_if_ready(track_template_, now, event)
+                update = self._render_template_if_ready(
+                    track_template_, now, event, bool(replayed)
+                )
                 info_changed |= self._apply_update(
                     updates, update, track_template_.template
                 )

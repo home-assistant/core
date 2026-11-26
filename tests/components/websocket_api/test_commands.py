@@ -1,7 +1,7 @@
 """Tests for WebSocket API commands."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from copy import deepcopy
 import io
 import logging
@@ -16,8 +16,10 @@ from pytest_homeassistant.common import (
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
+    MockGroup,
     MockModule,
     MockUser,
+    async_fire_time_changed,
     async_mock_service,
     mock_device_registry,
     mock_integration,
@@ -31,6 +33,7 @@ from pytest_homeassistant.typing import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import loader
+from homeassistant.auth.permissions.models import PermissionLookup
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.light import LightEntityFeature
@@ -76,6 +79,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
+    TrackTemplateResultInfo,
     async_track_state_change_event,
     async_track_time_interval,
 )
@@ -2769,6 +2773,475 @@ async def test_render_template_follows_permission_changes(
     hass.states.async_set(OTHER_READABLE_LIGHT, "off")
     msg = await websocket_client.receive_json()
     assert msg["event"]["result"] == "unknown off"
+
+
+async def test_render_template_renders_again_when_groups_change(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a subscribed template renders again when the user changes groups."""
+    group = MockGroup(name="Other light").add_to_hass(hass)
+    group.policy = {"entities": {"entity_ids": {OTHER_READABLE_LIGHT: True}}}
+    admin_group_ids = [group.id for group in hass_admin_user.groups]
+    hass.states.async_set(READABLE_LIGHT, "on")
+    hass.states.async_set(OTHER_READABLE_LIGHT, "on")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "render_template",
+            "template": (
+                "{{ states('light.readable') }} {{ states('light.other_readable') }}"
+            ),
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == "on on"
+
+    await hass.auth.async_update_user(hass_admin_user, group_ids=[group.id])
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == "unknown on"
+
+    await hass.auth.async_update_user(hass_admin_user, group_ids=admin_group_ids)
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == "on on"
+
+
+async def _async_add_entity_in_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> tuple[str, str, str]:
+    area = area_registry.async_create("Kitchen")
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("test", "device")}
+    )
+    device_registry.async_update_device(device.id, area_id=area.id)
+    platform = MockEntityPlatform(hass, domain="sensor", platform_name="test")
+    platform.config_entry = config_entry
+    entity = MockEntity(
+        unique_id="temperature",
+        name="Temperature",
+        device_info={"identifiers": {("test", "device")}},
+    )
+    await platform.async_add_entities([entity])
+    hass.states.async_set(entity.entity_id, "21")
+    return entity.entity_id, area.id, device.id
+
+
+@pytest.mark.parametrize(
+    "policy",
+    [
+        pytest.param(
+            lambda area_id, device_id: {"area_ids": {area_id: True}}, id="area"
+        ),
+        pytest.param(
+            lambda area_id, device_id: {"device_ids": {device_id: True}}, id="device"
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "change",
+    [
+        pytest.param(
+            lambda registry, entity_id: registry.async_remove(entity_id), id="removed"
+        ),
+        pytest.param(
+            lambda registry, entity_id: registry.async_update_entity(
+                entity_id, new_entity_id="sensor.renamed"
+            ),
+            id="renamed",
+        ),
+    ],
+)
+async def test_render_template_follows_entity_leaving_the_registry(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    policy: Callable[[str, str], dict[str, Any]],
+    change: Callable[[er.EntityRegistry, str], Any],
+) -> None:
+    """Test an entity readable through its area or device renders unknown once gone."""
+    entity_id, area_id, device_id = await _async_add_entity_in_area(
+        hass, area_registry, device_registry
+    )
+    hass_admin_user.groups = []
+    hass_admin_user.perm_lookup = PermissionLookup(entity_registry, device_registry)
+    hass_admin_user.mock_policy({"entities": policy(area_id, device_id)})
+
+    await websocket_client.send_json_auto_id(
+        {"type": "render_template", "template": f"{{{{ states('{entity_id}') }}}}"}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == 21
+
+    change(entity_registry, entity_id)
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == "unknown"
+
+
+async def test_render_template_follows_device_moving_between_areas(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an entity readable through its area follows its device between areas."""
+    entity_id, area_id, device_id = await _async_add_entity_in_area(
+        hass, area_registry, device_registry
+    )
+    hass_admin_user.groups = []
+    hass_admin_user.perm_lookup = PermissionLookup(entity_registry, device_registry)
+    hass_admin_user.mock_policy({"entities": {"area_ids": {area_id: True}}})
+
+    await websocket_client.send_json_auto_id(
+        {"type": "render_template", "template": f"{{{{ states('{entity_id}') }}}}"}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == 21
+
+    device_registry.async_update_device(device_id, area_id=None)
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == "unknown"
+
+    device_registry.async_update_device(device_id, area_id=area_id)
+    freezer.tick(1)
+    async_fire_time_changed(hass)
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == 21
+
+
+@pytest.fixture
+def track_template_refresh() -> Generator[Mock]:
+    """Spy on renders of tracked templates."""
+    with patch.object(
+        TrackTemplateResultInfo,
+        "_refresh",
+        autospec=True,
+        side_effect=TrackTemplateResultInfo._refresh,
+    ) as refresh:
+        yield callback(refresh)
+
+
+async def _async_subscribe_to_readable_light(
+    websocket_client: MockHAClientWebSocket,
+) -> int:
+    await websocket_client.send_json_auto_id(
+        {"type": "render_template", "template": "{{ states('light.readable') }}"}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    await websocket_client.receive_json()
+    return msg["id"]
+
+
+def _read_all_entities(user: MockUser) -> None:
+    user.groups = []
+    user.mock_policy({"entities": {"all": {"read": True}}})
+
+
+DEVICE_AREA_CHANGED = {
+    "action": "update",
+    "device_id": "device",
+    "changes": {"area_id": None},
+}
+
+
+@pytest.mark.parametrize(
+    ("set_up_user", "renders"),
+    [
+        pytest.param(lambda user: None, 0, id="admin"),
+        pytest.param(_read_all_entities, 0, id="read_all"),
+        pytest.param(_restrict_to_readable_lights, 1, id="restricted"),
+    ],
+)
+async def test_render_template_registry_updates_render_only_for_restricted_users(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    track_template_refresh: Mock,
+    set_up_user: Callable[[MockUser], None],
+    renders: int,
+) -> None:
+    """Test registry updates only render templates of users with restrictions."""
+    set_up_user(hass_admin_user)
+    await _async_subscribe_to_readable_light(websocket_client)
+    track_template_refresh.reset_mock()
+
+    hass.bus.async_fire(dr.EVENT_DEVICE_REGISTRY_UPDATED, DEVICE_AREA_CHANGED)
+    await hass.async_block_till_done()
+
+    assert track_template_refresh.call_count == renders
+
+
+@pytest.mark.parametrize(
+    ("event_type", "data", "renders"),
+    [
+        pytest.param(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            {"action": "create", "entity_id": "light.new"},
+            0,
+            id="entity_created",
+        ),
+        pytest.param(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            {"action": "remove", "entity_id": "light.old"},
+            1,
+            id="entity_removed",
+        ),
+        pytest.param(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            {
+                "action": "update",
+                "entity_id": "light.new",
+                "old_entity_id": "light.old",
+                "changes": {"entity_id": "light.old"},
+            },
+            1,
+            id="entity_renamed",
+        ),
+        pytest.param(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            {
+                "action": "update",
+                "entity_id": "light.lamp",
+                "changes": {"device_id": None},
+            },
+            1,
+            id="entity_device_changed",
+        ),
+        pytest.param(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            {
+                "action": "update",
+                "entity_id": "light.lamp",
+                "changes": {"area_id": None},
+            },
+            0,
+            id="entity_area_changed",
+        ),
+        pytest.param(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            {"action": "update", "entity_id": "light.lamp", "changes": {"name": None}},
+            0,
+            id="entity_name_changed",
+        ),
+        pytest.param(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            {"action": "create", "device_id": "device"},
+            0,
+            id="device_created",
+        ),
+        pytest.param(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            {
+                "action": "remove",
+                "device_id": "device",
+                "device": {"config_entry_id": None, "config_subentry_id": None},
+            },
+            1,
+            id="device_removed",
+        ),
+        pytest.param(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            DEVICE_AREA_CHANGED,
+            1,
+            id="device_area_changed",
+        ),
+        pytest.param(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            {
+                "action": "update",
+                "device_id": "device",
+                "changes": {"parent_device_id": None},
+            },
+            1,
+            id="device_parent_changed",
+        ),
+        pytest.param(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            {"action": "update", "device_id": "device", "changes": {"name": None}},
+            0,
+            id="device_name_changed",
+        ),
+    ],
+)
+async def test_render_template_registry_updates_that_can_change_permissions(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    track_template_refresh: Mock,
+    caplog: pytest.LogCaptureFixture,
+    event_type: str,
+    data: dict[str, Any],
+    renders: int,
+) -> None:
+    """Test only registry updates that can change permissions render again."""
+    _restrict_to_readable_lights(hass_admin_user)
+    await _async_subscribe_to_readable_light(websocket_client)
+    track_template_refresh.reset_mock()
+
+    hass.bus.async_fire(event_type, data)
+    await hass.async_block_till_done()
+
+    assert track_template_refresh.call_count == renders
+    assert "Error running job" not in caplog.text
+
+
+async def test_render_template_registry_updates_render_at_most_once_a_second(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    track_template_refresh: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a stream of registry updates renders once right away and once after."""
+    _restrict_to_readable_lights(hass_admin_user)
+    await _async_subscribe_to_readable_light(websocket_client)
+    track_template_refresh.reset_mock()
+
+    for _ in range(5):
+        hass.bus.async_fire(dr.EVENT_DEVICE_REGISTRY_UPDATED, DEVICE_AREA_CHANGED)
+        await asyncio.sleep(0)
+    await hass.async_block_till_done()
+    assert track_template_refresh.call_count == 1
+
+    freezer.tick(0.4)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert track_template_refresh.call_count == 1
+
+    freezer.tick(0.6)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert track_template_refresh.call_count == 2
+
+
+async def test_render_template_own_user_updates_render_right_away(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    track_template_refresh: Mock,
+) -> None:
+    """Test every update of the own user renders the template right away."""
+    await _async_subscribe_to_readable_light(websocket_client)
+    track_template_refresh.reset_mock()
+
+    await hass.auth.async_update_user(hass_admin_user, name="One")
+    await hass.auth.async_update_user(hass_admin_user, name="Two")
+
+    assert track_template_refresh.call_count == 2
+
+
+async def test_render_template_follows_registry_for_user_restricted_later(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a user restricted after subscribing follows registry updates."""
+    entity_id, area_id, device_id = await _async_add_entity_in_area(
+        hass, area_registry, device_registry
+    )
+    await websocket_client.send_json_auto_id(
+        {"type": "render_template", "template": f"{{{{ states('{entity_id}') }}}}"}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == 21
+
+    hass_admin_user.groups = []
+    hass_admin_user.perm_lookup = PermissionLookup(entity_registry, device_registry)
+    hass_admin_user.mock_policy({"entities": {"area_ids": {area_id: True}}})
+    device_registry.async_update_device(device_id, area_id=None)
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == "unknown"
+
+
+async def test_render_template_other_user_updates_do_not_render(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    track_template_refresh: Mock,
+) -> None:
+    """Test updating another user does not render the template again."""
+    _restrict_to_readable_lights(hass_admin_user)
+    other_user = MockUser().add_to_hass(hass)
+    await _async_subscribe_to_readable_light(websocket_client)
+    track_template_refresh.reset_mock()
+
+    await hass.auth.async_update_user(other_user, name="Other")
+    await hass.async_block_till_done()
+
+    assert track_template_refresh.call_count == 0
+
+
+async def test_render_template_unsubscribe_drops_pending_render(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    track_template_refresh: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test unsubscribing drops a render held back for a registry update."""
+    _restrict_to_readable_lights(hass_admin_user)
+    subscription = await _async_subscribe_to_readable_light(websocket_client)
+    hass.bus.async_fire(dr.EVENT_DEVICE_REGISTRY_UPDATED, DEVICE_AREA_CHANGED)
+    hass.bus.async_fire(dr.EVENT_DEVICE_REGISTRY_UPDATED, DEVICE_AREA_CHANGED)
+    await hass.async_block_till_done()
+    track_template_refresh.reset_mock()
+
+    await websocket_client.send_json_auto_id(
+        {"type": "unsubscribe_events", "subscription": subscription}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    freezer.tick(1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert track_template_refresh.call_count == 0
+
+
+async def test_render_template_unsubscribe_removes_permission_listeners(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test unsubscribing removes the listeners for permission changes."""
+    listeners = hass.bus.async_listeners()
+
+    await websocket_client.send_json_auto_id(
+        {"type": "render_template", "template": "{{ states('light.readable') }}"}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    subscription = msg["id"]
+    await websocket_client.receive_json()
+    assert hass.bus.async_listeners() != listeners
+
+    await websocket_client.send_json_auto_id(
+        {"type": "unsubscribe_events", "subscription": subscription}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    assert hass.bus.async_listeners() == listeners
 
 
 @pytest.mark.parametrize(
