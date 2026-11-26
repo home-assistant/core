@@ -23,6 +23,16 @@
         "description": "The Schlage integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::schlage::common::data_description_password%]",
+          "username": "[%key:component::schlage::common::data_description_username%]"
+        }
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
