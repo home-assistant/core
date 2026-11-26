@@ -104,9 +104,11 @@ class RoombaConnection:
             self._unsub_interval = async_track_time_interval(
                 self.hass, self._async_poll, PERIODIC_UPDATE_INTERVAL
             )
-        # The state was just collected during setup.
+        # Setup collected the first state, which may still be partial.
         self._session_start = self._last_message = time.monotonic()
-        self._mission_fields.update(MISSION_FIELDS)
+        reported = self.roomba.master_state.get("state", {}).get("reported", {})
+        mission = reported.get("cleanMissionStatus") or {}
+        self._mission_fields.update(MISSION_FIELDS.intersection(mission))
         self._schedule_settle()
 
     async def async_stop(self) -> None:

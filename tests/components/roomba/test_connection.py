@@ -930,3 +930,20 @@ async def test_cached_mission_does_not_pin_session(
     await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
 
     assert not periodic_roomba.connected
+
+
+async def test_partial_setup_state_is_not_mission_state(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test setup data without the full mission state does not count as it."""
+    del periodic_roomba.master_state["state"]["reported"]["cleanMissionStatus"]["cycle"]
+    await _setup(hass, mock_config_entry, continuous=False)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, SERVICE_START)
+
+    assert exc_info.value.translation_key == "no_mission_state"
+    periodic_roomba.send_command.assert_not_awaited()
