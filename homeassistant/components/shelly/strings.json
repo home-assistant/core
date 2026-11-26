@@ -247,6 +247,9 @@
       "mute_alarm": {
         "name": "Mute alarm"
       },
+      "next_effect": {
+        "name": "Next effect"
+      },
       "open": {
         "name": "Open"
       },
@@ -335,6 +338,7 @@
               "fade": "Fade",
               "freqwave": "FreqWave",
               "glitterwaves": "Glitter waves",
+              "lightning": "Lightning",
               "meteors": "Meteors",
               "pixeldance": "Pixel dance",
               "rainbow": "Rainbow",
@@ -344,6 +348,9 @@
             }
           }
         }
+      },
+      "ledstrip_background": {
+        "name": "Effect background"
       }
     },
     "number": {
@@ -926,6 +933,9 @@
     },
     "kvs_not_supported": {
       "message": "{device} does not support KVS"
+    },
+    "ledstrip_effect_no_color": {
+      "message": "Cannot set a color for {entity} because the {effect} effect does not use one"
     },
     "ota_update_connection_error": {
       "message": "Device communication error occurred while triggering OTA update for {device}"
