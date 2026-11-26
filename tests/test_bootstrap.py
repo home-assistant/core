@@ -36,10 +36,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import BASE_PLATFORMS, CONF_DEBUG, EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, Event, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers import bootstrap_progress
+from homeassistant.helpers.bootstrap_progress import (
+    BootstrapPhase,
+    BootstrapProgress,
+    async_subscribe_bootstrap_progress,
+)
 from homeassistant.helpers.translation import async_translations_loaded
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration
-from homeassistant.setup import BootstrapProgress, async_subscribe_bootstrap_progress
 
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 
@@ -807,7 +812,7 @@ async def test_setup_hass(
     log_file = Mock()
     log_no_color = Mock()
 
-    with patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000):
+    with patch.object(bootstrap_progress, "LOG_SLOW_STARTUP_INTERVAL", 5000):
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
@@ -884,8 +889,8 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
         return True
 
     with (
-        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.005),
-        patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.005),
+        patch.object(bootstrap_progress, "LOG_SLOW_STARTUP_INTERVAL", 0.005),
+        patch.object(bootstrap_progress, "SLOW_STARTUP_CHECK_INTERVAL", 0.005),
         patch(
             "homeassistant.components.frontend.async_setup",
             side_effect=_async_setup_that_blocks_startup,
@@ -1884,22 +1889,22 @@ async def test_bootstrap_progress_concurrent_setup(
         )
     )
     await all_started.wait()
-    freezer.tick(bootstrap.SLOW_STARTUP_CHECK_INTERVAL)
+    freezer.tick(bootstrap_progress.SLOW_STARTUP_CHECK_INTERVAL)
     async_fire_time_changed(hass)
     _, blocked = progress[-1]
     release.set()
     await setup_task
 
     _, first = progress[0]
-    assert first["phase"] == bootstrap.BootstrapPhase.PREPARING
+    assert first["phase"] == BootstrapPhase.PREPARING
     assert first["integrations"]["total"] is None
 
-    assert blocked["phase"] == bootstrap.BootstrapPhase.SETUP
+    assert blocked["phase"] == BootstrapPhase.SETUP
     assert set(blocked["active"]) == {"integration_a", "integration_b"}
     assert blocked["integrations"]["done"] == blocked["integrations"]["total"] - 2
 
     _, final = progress[-1]
-    assert final["phase"] == bootstrap.BootstrapPhase.WRAP_UP
+    assert final["phase"] == BootstrapPhase.WRAP_UP
     assert final["active"] == {}
     assert final["integrations"]["done"] == final["integrations"]["total"]
     assert final["integrations"]["failed"] == []
@@ -1944,12 +1949,12 @@ async def test_bootstrap_progress_failures_and_running_summary(
         # The entry sets up again once Home Assistant has started.
         await hass.async_start()
 
-    assert final["phase"] == bootstrap.BootstrapPhase.WRAP_UP
+    assert final["phase"] == BootstrapPhase.WRAP_UP
     assert final["integrations"]["done"] == final["integrations"]["total"]
     assert final["integrations"]["failed"] == ["integration_fail"]
 
     _, running = progress[-1]
-    assert running["phase"] == bootstrap.BootstrapPhase.RUNNING
+    assert running["phase"] == BootstrapPhase.RUNNING
     assert running["integrations"] == final["integrations"]
     # A late subscriber gets the summary from when Core started running.
     assert _track_bootstrap_progress(hass) == [(CoreState.running, running)]
@@ -2108,13 +2113,13 @@ async def test_bootstrap_progress_running_transition(hass: HomeAssistant) -> Non
     assert progress[0][1]["elapsed"] >= 100
     state, data = progress[-1]
     assert state is CoreState.not_running
-    assert data["phase"] == bootstrap.BootstrapPhase.WRAP_UP
+    assert data["phase"] == BootstrapPhase.WRAP_UP
 
     await hass.async_start()
 
     assert [(state, data["phase"]) for state, data in progress[-2:]] == [
-        (CoreState.starting, bootstrap.BootstrapPhase.STARTING),
-        (CoreState.running, bootstrap.BootstrapPhase.RUNNING),
+        (CoreState.starting, BootstrapPhase.STARTING),
+        (CoreState.running, BootstrapPhase.RUNNING),
     ]
     assert _track_bootstrap_progress(hass) == [progress[-1]]
 
@@ -2161,23 +2166,23 @@ async def test_bootstrap_progress_while_starting(
         await entry_setup_started.wait()
 
         message_count = len(progress)
-        freezer.tick(bootstrap.SLOW_STARTUP_CHECK_INTERVAL)
+        freezer.tick(bootstrap_progress.SLOW_STARTUP_CHECK_INTERVAL)
         async_fire_time_changed(hass)
         assert len(progress) == message_count + 1
         state, data = progress[-1]
         assert state is CoreState.starting
-        assert data["phase"] == bootstrap.BootstrapPhase.STARTING
+        assert data["phase"] == BootstrapPhase.STARTING
         assert "integration_new" in data["active"]
 
         release_start.set()
         await start_task
         _, running = progress[-1]
-        assert running["phase"] == bootstrap.BootstrapPhase.RUNNING
+        assert running["phase"] == BootstrapPhase.RUNNING
         # The kept running summary does not list the entry still setting up.
         assert running["active"] == {}
 
         message_count = len(progress)
-        freezer.tick(bootstrap.SLOW_STARTUP_CHECK_INTERVAL)
+        freezer.tick(bootstrap_progress.SLOW_STARTUP_CHECK_INTERVAL)
         async_fire_time_changed(hass)
         assert len(progress) == message_count
 
@@ -2230,10 +2235,10 @@ async def test_bootstrap_progress_late_subscriber(
     )
 
     with patch.object(
-        bootstrap._WatchPendingSetups,
+        bootstrap_progress.WatchPendingSetups,
         "_async_progress",
         autospec=True,
-        side_effect=bootstrap._WatchPendingSetups._async_progress,
+        side_effect=bootstrap_progress.WatchPendingSetups._async_progress,
     ) as build_progress:
         setup_task = hass.async_create_task(
             bootstrap._async_set_up_integrations(
@@ -2241,19 +2246,19 @@ async def test_bootstrap_progress_late_subscriber(
             )
         )
         await setup_started.wait()
-        freezer.tick(bootstrap.SLOW_STARTUP_CHECK_INTERVAL)
+        freezer.tick(bootstrap_progress.SLOW_STARTUP_CHECK_INTERVAL)
         async_fire_time_changed(hass)
         build_progress.assert_not_called()
 
         progress = _track_bootstrap_progress(hass)
         build_progress.assert_called_once()
-        freezer.tick(bootstrap.SLOW_STARTUP_CHECK_INTERVAL)
+        freezer.tick(bootstrap_progress.SLOW_STARTUP_CHECK_INTERVAL)
         async_fire_time_changed(hass)
         release.set()
         await setup_task
 
     (_, current), (_, tick), *_ = progress
-    assert current["phase"] == bootstrap.BootstrapPhase.SETUP
+    assert current["phase"] == BootstrapPhase.SETUP
     assert set(current["active"]) == {"slow_integration"}
     assert current["integrations"] == {"total": 1, "done": 0, "failed": []}
     assert tick["active"]["slow_integration"] > current["active"]["slow_integration"]
@@ -2277,7 +2282,7 @@ async def test_bootstrap_progress_listener_raises(hass: HomeAssistant) -> None:
 
     assert "normal_integration" in hass.config.components
     _, running = progress[-1]
-    assert running["phase"] == bootstrap.BootstrapPhase.RUNNING
+    assert running["phase"] == BootstrapPhase.RUNNING
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -2308,6 +2313,6 @@ async def test_bootstrap_progress_stopped_while_starting(
     assert hass.state is CoreState.stopped
 
     message_count = len(progress)
-    freezer.tick(bootstrap.SLOW_STARTUP_CHECK_INTERVAL)
+    freezer.tick(bootstrap_progress.SLOW_STARTUP_CHECK_INTERVAL)
     async_fire_time_changed(hass)
     assert len(progress) == message_count
