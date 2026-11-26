@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "control_lock": {
+        "default": "mdi:lock-outline"
+      },
       "error": {
         "default": "mdi:alert-circle",
         "state": {
@@ -9,6 +12,9 @@
       },
       "error_code": {
         "default": "mdi:alert-circle-outline"
+      },
+      "real_setpoint": {
+        "default": "mdi:thermostat"
       }
     }
   }

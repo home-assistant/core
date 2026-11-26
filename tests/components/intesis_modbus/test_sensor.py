@@ -40,16 +40,46 @@ async def test_all_sensors_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        PREFIX + "undervoltage_time",
+        UNIT_PREFIX + "control_lock",
+        UNIT_PREFIX + "input_reference_temperature",
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
-async def test_undervoltage_time_is_disabled_by_default(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+async def test_sensors_disabled_by_default(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_id: str
 ) -> None:
-    """The gateway's undervoltage counter has to be enabled by hand."""
-    entity_id = PREFIX + "undervoltage_time"
+    """The sensors few users need have to be enabled by hand."""
     assert hass.states.get(entity_id) is None
     entry = entity_registry.async_get(entity_id)
     assert entry is not None
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize("registers", [{23: 220, 46: 3, 65: 214}])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_setpoint_reference_and_lock_follow_the_gateway(
+    hass: HomeAssistant,
+) -> None:
+    """The applied setpoint, the input reference and the lock read their registers."""
+    assert hass.states.get(UNIT_PREFIX + "applied_setpoint").state == "22.0"
+    assert hass.states.get(UNIT_PREFIX + "input_reference_temperature").state == "21.4"
+    assert hass.states.get(UNIT_PREFIX + "control_lock").state == "remote_only"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_input_reference_is_unknown_without_an_external_sensor(
+    hass: HomeAssistant,
+) -> None:
+    """A unit that regulates on its own sensor reports no input reference."""
+    assert (
+        hass.states.get(UNIT_PREFIX + "input_reference_temperature").state
+        == STATE_UNKNOWN
+    )
+    assert hass.states.get(UNIT_PREFIX + "control_lock").state == "remote_unlock"
 
 
 @pytest.mark.parametrize("registers", [INITIALISING_REGISTERS])

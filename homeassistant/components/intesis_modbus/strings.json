@@ -76,6 +76,15 @@
       }
     },
     "sensor": {
+      "control_lock": {
+        "name": "Control lock",
+        "state": {
+          "lock_all": "All locked",
+          "lock_on_off": "On/off locked",
+          "remote_only": "Remote only",
+          "remote_unlock": "Remote unlocked"
+        }
+      },
       "error": {
         "name": "Error",
         "state": {
@@ -88,11 +97,17 @@
       "error_code": {
         "name": "Error code"
       },
+      "input_reference_temperature": {
+        "name": "Input reference temperature"
+      },
       "operation_hours": {
         "name": "Operation time"
       },
       "outdoor_intake_temperature": {
         "name": "Outdoor intake temperature"
+      },
+      "real_setpoint": {
+        "name": "Applied setpoint"
       },
       "return_path_temperature": {
         "name": "Return path temperature"
