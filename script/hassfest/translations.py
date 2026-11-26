@@ -376,21 +376,24 @@ _EXCEPTIONS_SCHEMA = {
 }
 
 
-RELEASE_NOTES_MESSAGES_SCHEMA = cv.schema_with_slug_keys(
+UPDATE_MESSAGES_SCHEMA = cv.schema_with_slug_keys(
     translation_value_validator,
     slug_validator=translation_key_validator,
 )
 
 
-def update_integration_only(value: Any) -> Any:
-    """Validate shared release notes messages are only defined by update."""
-    _, integration = _CURRENT_TRANSLATION.get()
-    if integration.domain != "update":
-        raise probatio.Invalid(
-            "release notes messages of other integrations belong in "
-            "entity::update::release_notes_messages"
-        )
-    return value
+def update_integration_only(key: str) -> Callable[[Any], Any]:
+    """Validate shared update messages are only defined by update."""
+
+    def validate(value: Any) -> Any:
+        _, integration = _CURRENT_TRANSLATION.get()
+        if integration.domain != "update":
+            raise probatio.Invalid(
+                f"{key} of other integrations belong in entity::update::{key}"
+            )
+        return value
+
+    return validate
 
 
 ENTITY_COMPONENT_TRANSLATION_SCHEMA = {
@@ -436,8 +439,11 @@ ENTITY_TRANSLATION_SCHEMA = {
 
 ENTITY_COMPONENT_SCHEMA = probatio.Schema(
     {
+        probatio.Optional("manual_actions"): probatio.All(
+            update_integration_only("manual_actions"), UPDATE_MESSAGES_SCHEMA
+        ),
         probatio.Optional("release_notes_messages"): probatio.All(
-            update_integration_only, RELEASE_NOTES_MESSAGES_SCHEMA
+            update_integration_only("release_notes_messages"), UPDATE_MESSAGES_SCHEMA
         ),
         probatio.Any("_", cv.slug): ENTITY_COMPONENT_TRANSLATION_SCHEMA,
     }
@@ -446,7 +452,8 @@ ENTITY_COMPONENT_SCHEMA = probatio.Schema(
 ENTITY_SCHEMA = probatio.Schema(
     {
         probatio.Optional("update"): {
-            probatio.Optional("release_notes_messages"): RELEASE_NOTES_MESSAGES_SCHEMA,
+            probatio.Optional("manual_actions"): UPDATE_MESSAGES_SCHEMA,
+            probatio.Optional("release_notes_messages"): UPDATE_MESSAGES_SCHEMA,
             translation_key_validator: ENTITY_TRANSLATION_SCHEMA,
         },
         cv.slug: cv.schema_with_slug_keys(

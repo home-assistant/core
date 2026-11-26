@@ -51,11 +51,7 @@ from homeassistant.components.websocket_api.commands import (
 )
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    CONF_EXTERNAL_URL,
-    SIGNAL_BOOTSTRAP_INTEGRATIONS,
-    EntityCategory,
-)
+from homeassistant.const import CONF_EXTERNAL_URL, EntityCategory
 from homeassistant.core import (
     Context,
     HomeAssistant,
@@ -73,7 +69,6 @@ from homeassistant.helpers import (
     system_state,
     trace,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
@@ -3931,30 +3926,6 @@ async def test_execute_script_config_error(
     assert msg["error"] == expected_error
 
 
-async def test_subscribe_unsubscribe_bootstrap_integrations(
-    hass: HomeAssistant,
-    websocket_client: MockHAClientWebSocket,
-    hass_admin_user: MockUser,
-) -> None:
-    """Test subscribe/unsubscribe bootstrap_integrations."""
-    await websocket_client.send_json_auto_id(
-        {"type": "subscribe_bootstrap_integrations"}
-    )
-
-    msg = await websocket_client.receive_json()
-    subscription = msg["id"]
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
-
-    message = {"august": 12.5, "isy994": 12.8}
-
-    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, message)
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == subscription
-    assert msg["type"] == "event"
-    assert msg["event"] == message
-
-
 async def test_subscribe_bootstrap_progress(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
@@ -4088,7 +4059,7 @@ async def test_integration_setup_info(
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
 ) -> None:
-    """Test subscribe/unsubscribe bootstrap_integrations."""
+    """Test integration setup info."""
     with patch(
         "homeassistant.components.websocket_api.commands.async_get_setup_timings",
         return_value={

@@ -5,7 +5,7 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.util import dt as dt_util
 
@@ -66,7 +66,7 @@ async def _async_reproduce_state(
     if cur_state.state == state.state:
         return
 
-    service_data = {ATTR_ENTITY_ID: state.entity_id}
+    service_data: dict[str, Any] = {TargetKey.ENTITY_ID: state.entity_id}
 
     if has_time and has_date:
         service_data[InputDatetimeServiceArgument.DATETIME] = state.state

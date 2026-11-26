@@ -385,6 +385,9 @@ SAMPLE_STRINGS = {
             },
         },
         "update": {
+            "manual_actions": {
+                "press_button": "Press {button} on the device to start the update.",
+            },
             "release_notes_messages": {
                 "network_reliability": (
                     "Review {docs_url} before starting the update."
@@ -484,34 +487,46 @@ def test_gen_strings_schema(
     assert validated == SAMPLE_STRINGS
 
 
-RELEASE_NOTES_MESSAGES_STRINGS = {
-    "entity_component": {
-        "release_notes_messages": {
-            "battery_powered_update": "Battery powered devices may take longer to update.",
+SHARED_UPDATE_MESSAGES_STRINGS = [
+    pytest.param(
+        "release_notes_messages",
+        {
+            "battery_powered_update": (
+                "Battery powered devices may take longer to update."
+            ),
         },
-    },
-}
+        id="release_notes_messages",
+    ),
+    pytest.param(
+        "manual_actions",
+        {"confirm_on_device": "Confirm the update on the device."},
+        id="manual_actions",
+    ),
+]
 
 
-def test_release_notes_messages_entity_component_update(config: Config) -> None:
-    """Test the update integration can define shared release notes messages."""
+@pytest.mark.parametrize(("key", "messages"), SHARED_UPDATE_MESSAGES_STRINGS)
+def test_shared_update_messages_entity_component_update(
+    config: Config, key: str, messages: dict[str, str]
+) -> None:
+    """Test the update integration can define shared update messages."""
     integration = get_integration("update", config)
     schema = translations.gen_strings_schema(config, integration)
+    strings = {"entity_component": {key: messages}}
 
-    assert schema(RELEASE_NOTES_MESSAGES_STRINGS) == RELEASE_NOTES_MESSAGES_STRINGS
+    assert schema(strings) == strings
 
 
-def test_release_notes_messages_entity_component_only_for_update(
-    config: Config,
+@pytest.mark.parametrize(("key", "messages"), SHARED_UPDATE_MESSAGES_STRINGS)
+def test_shared_update_messages_entity_component_only_for_update(
+    config: Config, key: str, messages: dict[str, str]
 ) -> None:
-    """Test other integrations can't define shared release notes messages."""
+    """Test other integrations can't define shared update messages."""
     integration = get_integration("test_integration", config)
     schema = translations.gen_strings_schema(config, integration)
 
-    with pytest.raises(
-        probatio.Invalid, match="entity::update::release_notes_messages"
-    ):
-        schema(RELEASE_NOTES_MESSAGES_STRINGS)
+    with pytest.raises(probatio.Invalid, match=f"entity::update::{key}"):
+        schema({"entity_component": {key: messages}})
 
 
 @pytest.mark.usefixtures("mock_core_integration")

@@ -353,7 +353,7 @@ aiokef==0.2.16
 aiokem==1.0.1
 
 # homeassistant.components.librenms
-aiolibrenms==0.0.4
+aiolibrenms==0.0.5
 
 # homeassistant.components.libresync
 aiolibresync==0.5.3
@@ -1387,7 +1387,7 @@ huawei-lte-api==3.0.0
 huum==0.8.4
 
 # homeassistant.components.hydroquebec_peak
-hydropeak-opendata==0.3.0
+hydropeak-opendata==0.4.1
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.6
@@ -2085,7 +2085,7 @@ py-schluter==0.1.7
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.12.0
+py-synologydsm-api==2.12.2
 
 # homeassistant.components.unifi_access
 py-unifi-access==1.6.2
@@ -3655,7 +3655,7 @@ zeversolar==0.3.2
 zha-quirks==2.5.0
 
 # homeassistant.components.zha
-zha==2.5.0
+zha==2.5.1
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.21

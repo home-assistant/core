@@ -98,6 +98,11 @@
         }
       }
     },
+    "update": {
+      "manual_actions": {
+        "power_cycle": "Turn {device_name} off and on again to finish the update."
+      }
+    },
     "vacuum": {
       "model_s": {
         "state_attributes": {

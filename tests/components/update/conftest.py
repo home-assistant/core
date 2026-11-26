@@ -2,7 +2,11 @@
 
 import pytest
 
-from homeassistant.components.update import UpdateEntityFeature
+from homeassistant.components.update import (
+    MANUAL_ACTION_CONFIRM_ON_DEVICE,
+    UpdateEntityFeature,
+    UpdateInstallPhase,
+)
 
 from .common import MockUpdateEntity
 
@@ -58,6 +62,8 @@ def mock_update_entities() -> list[MockUpdateEntity]:
             supported_features=UpdateEntityFeature.INSTALL
             | UpdateEntityFeature.PROGRESS,
             update_percentage=50,
+            install_phase=UpdateInstallPhase.DOWNLOADING,
+            manual_action=MANUAL_ACTION_CONFIRM_ON_DEVICE,
         ),
         MockUpdateEntity(
             name="Update Already in Progress Float",

@@ -37,11 +37,17 @@ from .const import (
     UpdateDeviceClass,
     UpdateEntityFeature,
     UpdateEntityStateAttribute,
+    UpdateInstallPhase,
     UpdateReleaseNotesMessageSeverity,
     UpdateService,
     UpdateServiceArgument,
 )
-from .entity import UpdateEntity, UpdateEntityDescription, UpdateReleaseNotesMessage
+from .entity import (
+    UpdateEntity,
+    UpdateEntityDescription,
+    UpdateManualAction,
+    UpdateReleaseNotesMessage,
+)
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,6 +62,11 @@ RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT = UpdateReleaseNotesMessage(
     translation_domain=DOMAIN,
     translation_key="do_not_interrupt",
     severity=UpdateReleaseNotesMessageSeverity.WARNING,
+)
+
+MANUAL_ACTION_CONFIRM_ON_DEVICE = UpdateManualAction(
+    translation_domain=DOMAIN,
+    translation_key="confirm_on_device",
 )
 
 
@@ -74,6 +85,7 @@ __all__ = [
     "ATTR_VERSION",
     "DEVICE_CLASSES_SCHEMA",
     "DOMAIN",
+    "MANUAL_ACTION_CONFIRM_ON_DEVICE",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
     "RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT",
@@ -84,6 +96,8 @@ __all__ = [
     "UpdateEntityDescription",
     "UpdateEntityFeature",
     "UpdateEntityStateAttribute",
+    "UpdateInstallPhase",
+    "UpdateManualAction",
     "UpdateReleaseNotesMessage",
     "UpdateReleaseNotesMessageSeverity",
     "UpdateService",
