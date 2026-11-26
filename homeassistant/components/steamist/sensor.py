@@ -4,7 +4,15 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from aiosteamist import SteamistStatus
+from aiosteamist import (
+    MODEL_550,
+    PROFILE_OFF,
+    PROFILE_SHOWER_1,
+    PROFILE_SHOWER_2,
+    PROFILE_STEAM_1,
+    PROFILE_STEAM_2,
+    SteamistStatus,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,7 +20,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTemperature, UnitOfTime
+from homeassistant.const import CONF_MODEL, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -21,10 +29,19 @@ from .entity import SteamistEntity
 
 _KEY_MINUTES_REMAIN = "minutes_remain"
 _KEY_TEMP = "temp"
+_KEY_ACTIVE_PROFILE = "active_profile"
 
 UNIT_MAPPINGS = {
     "C": UnitOfTemperature.CELSIUS,
     "F": UnitOfTemperature.FAHRENHEIT,
+}
+
+PROFILE_MAPPINGS: dict[int | None, str] = {
+    PROFILE_OFF: "off",
+    PROFILE_STEAM_1: "steam_profile_1",
+    PROFILE_STEAM_2: "steam_profile_2",
+    PROFILE_SHOWER_1: "shower_profile_1",
+    PROFILE_SHOWER_2: "shower_profile_2",
 }
 
 
@@ -32,7 +49,7 @@ UNIT_MAPPINGS = {
 class SteamistSensorEntityDescription(SensorEntityDescription):
     """Describes a Steamist sensor entity."""
 
-    value_fn: Callable[[SteamistStatus], int | None]
+    value_fn: Callable[[SteamistStatus], int | str | None]
 
 
 SENSORS: tuple[SteamistSensorEntityDescription, ...] = (
@@ -51,6 +68,14 @@ SENSORS: tuple[SteamistSensorEntityDescription, ...] = (
     ),
 )
 
+ACTIVE_PROFILE_SENSOR = SteamistSensorEntityDescription(
+    key=_KEY_ACTIVE_PROFILE,
+    translation_key="active_profile",
+    device_class=SensorDeviceClass.ENUM,
+    options=list(PROFILE_MAPPINGS.values()),
+    value_fn=lambda status: PROFILE_MAPPINGS.get(status.profile, "off"),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -59,16 +84,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors."""
     coordinator = config_entry.runtime_data
+    descriptions: list[SteamistSensorEntityDescription] = list(SENSORS)
+    if (
+        config_entry.data.get(CONF_MODEL) == MODEL_550
+        or coordinator.client.model == MODEL_550
+    ):
+        descriptions.append(ACTIVE_PROFILE_SENSOR)
     async_add_entities(
         [
             SteamistSensorEntity(coordinator, config_entry, description)
-            for description in SENSORS
+            for description in descriptions
         ]
     )
 
 
 class SteamistSensorEntity(SteamistEntity, SensorEntity):
-    """Representation of a Steamist steam switch."""
+    """Representation of a Steamist sensor."""
 
     entity_description: SteamistSensorEntityDescription
 
@@ -87,6 +118,6 @@ class SteamistSensorEntity(SteamistEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> int | None:
+    def native_value(self) -> int | str | None:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self._status)
