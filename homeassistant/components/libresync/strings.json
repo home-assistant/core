@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unsupported_hub": "This hub is built on Libre's newer {module} module, like the Stereo Hub HT and the Surround Hub, which this integration does not support yet."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -58,6 +59,9 @@
     },
     "not_connected": {
       "message": "The hub is not connected, so the command was not sent."
+    },
+    "unsupported_hub": {
+      "message": "The hub at {host} is built on Libre's newer {module} module, which this integration does not support yet."
     }
   }
 }

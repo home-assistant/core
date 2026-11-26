@@ -60,7 +60,9 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LockData]]):
         try:
             locks = await self.hass.async_add_executor_job(self.api.locks)
         except NotAuthorizedError as ex:
-            raise ConfigEntryAuthFailed from ex
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="schlage_auth_failed"
+            ) from ex
         except SchlageError as ex:
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="schlage_refresh_failed"
@@ -83,7 +85,9 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LockData]]):
         try:
             logs = lock.logs()
         except NotAuthorizedError as ex:
-            raise ConfigEntryAuthFailed from ex
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="schlage_auth_failed"
+            ) from ex
         except SchlageError as ex:
             LOGGER.debug('Failed to read logs for lock "%s": %s', lock.name, ex)
 

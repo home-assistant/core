@@ -258,6 +258,10 @@ async def test_info_overview_failures_keep_node_entities_available(
     assert state is not None
     assert state.state == "-60"
 
+    state = hass.states.get("sensor.living_outdoor_air_temperature")
+    assert state is not None
+    assert state.state == "5.5"
+
 
 @pytest.mark.parametrize(
     "initial_info_overview_result",

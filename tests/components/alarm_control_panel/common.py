@@ -10,20 +10,11 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
-from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
-    ENTITY_MATCH_ALL,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_ARM_VACATION,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
-)
+from homeassistant.const import ENTITY_MATCH_ALL, TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -33,11 +24,13 @@ async def async_alarm_disarm(
     """Send the alarm the command for disarm."""
     data = {}
     if code:
-        data[ATTR_CODE] = code
+        data[AlarmControlPanelServiceArgument.CODE] = code
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_ALARM_DISARM, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, AlarmControlPanelService.DISARM, data, blocking=True
+    )
 
 
 async def async_alarm_arm_home(
@@ -46,11 +39,13 @@ async def async_alarm_arm_home(
     """Send the alarm the command for disarm."""
     data = {}
     if code:
-        data[ATTR_CODE] = code
+        data[AlarmControlPanelServiceArgument.CODE] = code
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_HOME, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, AlarmControlPanelService.ARM_HOME, data, blocking=True
+    )
 
 
 async def async_alarm_arm_away(
@@ -59,11 +54,13 @@ async def async_alarm_arm_away(
     """Send the alarm the command for disarm."""
     data = {}
     if code:
-        data[ATTR_CODE] = code
+        data[AlarmControlPanelServiceArgument.CODE] = code
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_AWAY, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, AlarmControlPanelService.ARM_AWAY, data, blocking=True
+    )
 
 
 async def async_alarm_arm_night(
@@ -72,11 +69,13 @@ async def async_alarm_arm_night(
     """Send the alarm the command for disarm."""
     data = {}
     if code:
-        data[ATTR_CODE] = code
+        data[AlarmControlPanelServiceArgument.CODE] = code
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_NIGHT, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, AlarmControlPanelService.ARM_NIGHT, data, blocking=True
+    )
 
 
 async def async_alarm_arm_vacation(
@@ -85,12 +84,12 @@ async def async_alarm_arm_vacation(
     """Send the alarm the command for vacation mode."""
     data = {}
     if code:
-        data[ATTR_CODE] = code
+        data[AlarmControlPanelServiceArgument.CODE] = code
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_ALARM_ARM_VACATION, data, blocking=True
+        DOMAIN, AlarmControlPanelService.ARM_VACATION, data, blocking=True
     )
 
 
@@ -100,11 +99,13 @@ async def async_alarm_trigger(
     """Send the alarm the command for disarm."""
     data = {}
     if code:
-        data[ATTR_CODE] = code
+        data[AlarmControlPanelServiceArgument.CODE] = code
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_ALARM_TRIGGER, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, AlarmControlPanelService.TRIGGER, data, blocking=True
+    )
 
 
 async def async_alarm_arm_custom_bypass(
@@ -113,12 +114,12 @@ async def async_alarm_arm_custom_bypass(
     """Send the alarm the command for disarm."""
     data = {}
     if code:
-        data[ATTR_CODE] = code
+        data[AlarmControlPanelServiceArgument.CODE] = code
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_ALARM_ARM_CUSTOM_BYPASS, data, blocking=True
+        DOMAIN, AlarmControlPanelService.ARM_CUSTOM_BYPASS, data, blocking=True
     )
 
 

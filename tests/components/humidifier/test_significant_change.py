@@ -2,12 +2,7 @@
 
 import pytest
 
-from homeassistant.components.humidifier import (
-    ATTR_ACTION,
-    ATTR_CURRENT_HUMIDITY,
-    ATTR_HUMIDITY,
-    ATTR_MODE,
-)
+from homeassistant.components.humidifier import HumidifierEntityStateAttribute
 from homeassistant.components.humidifier.significant_change import (
     async_check_significant_change,
 )
@@ -23,22 +18,64 @@ async def test_significant_state_change() -> None:
 @pytest.mark.parametrize(
     ("old_attrs", "new_attrs", "expected_result"),
     [
-        ({ATTR_ACTION: "old_value"}, {ATTR_ACTION: "old_value"}, False),
-        ({ATTR_ACTION: "old_value"}, {ATTR_ACTION: "new_value"}, True),
-        ({ATTR_MODE: "old_value"}, {ATTR_MODE: "new_value"}, True),
+        (
+            {HumidifierEntityStateAttribute.ACTION: "old_value"},
+            {HumidifierEntityStateAttribute.ACTION: "old_value"},
+            False,
+        ),
+        (
+            {HumidifierEntityStateAttribute.ACTION: "old_value"},
+            {HumidifierEntityStateAttribute.ACTION: "new_value"},
+            True,
+        ),
+        (
+            {HumidifierEntityStateAttribute.MODE: "old_value"},
+            {HumidifierEntityStateAttribute.MODE: "new_value"},
+            True,
+        ),
         # multiple attributes
         (
-            {ATTR_ACTION: "old_value", ATTR_MODE: "old_value"},
-            {ATTR_ACTION: "new_value", ATTR_MODE: "old_value"},
+            {
+                HumidifierEntityStateAttribute.ACTION: "old_value",
+                HumidifierEntityStateAttribute.MODE: "old_value",
+            },
+            {
+                HumidifierEntityStateAttribute.ACTION: "new_value",
+                HumidifierEntityStateAttribute.MODE: "old_value",
+            },
             True,
         ),
         # float attributes
-        ({ATTR_CURRENT_HUMIDITY: 60.0}, {ATTR_CURRENT_HUMIDITY: 61}, True),
-        ({ATTR_CURRENT_HUMIDITY: 60.0}, {ATTR_CURRENT_HUMIDITY: 60.9}, False),
-        ({ATTR_CURRENT_HUMIDITY: "invalid"}, {ATTR_CURRENT_HUMIDITY: 60.0}, True),
-        ({ATTR_CURRENT_HUMIDITY: 60.0}, {ATTR_CURRENT_HUMIDITY: "invalid"}, False),
-        ({ATTR_HUMIDITY: 62.0}, {ATTR_HUMIDITY: 63.0}, True),
-        ({ATTR_HUMIDITY: 62.0}, {ATTR_HUMIDITY: 62.9}, False),
+        (
+            {HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 60.0},
+            {HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 61},
+            True,
+        ),
+        (
+            {HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 60.0},
+            {HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 60.9},
+            False,
+        ),
+        (
+            {HumidifierEntityStateAttribute.CURRENT_HUMIDITY: "invalid"},
+            {HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 60.0},
+            True,
+        ),
+        (
+            {HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 60.0},
+            {HumidifierEntityStateAttribute.CURRENT_HUMIDITY: "invalid"},
+            False,
+        ),
+        (
+            {HumidifierEntityStateAttribute.HUMIDITY: 62.0},
+            {HumidifierEntityStateAttribute.HUMIDITY: 63.0},
+            True,
+        ),
+        (
+            {HumidifierEntityStateAttribute.HUMIDITY: 62.0},
+            {HumidifierEntityStateAttribute.HUMIDITY: 62.9},
+            False,
+        ),
         # insignificant attributes
         ({"unknown_attr": "old_value"}, {"unknown_attr": "old_value"}, False),
         ({"unknown_attr": "old_value"}, {"unknown_attr": "new_value"}, False),

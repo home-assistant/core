@@ -45,7 +45,7 @@ async def test_diagnostics(
     assert diagnostics["entry"]["hostname"] == REDACTED
     assert diagnostics["shc"] == {
         "version": "2.0",
-        "update_state": "UP_TO_DATE",
+        "update_state": "NO_UPDATE_AVAILABLE",
         "macAddress": REDACTED,
         "ip": REDACTED,
     }

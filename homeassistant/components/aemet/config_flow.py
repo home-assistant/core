@@ -1,9 +1,8 @@
 """Config flow for AEMET OpenData."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
-from aemet_opendata.exceptions import AuthError
-from aemet_opendata.interface import AEMET, ConnectionOptions
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -14,15 +13,27 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
-    SchemaOptionsFlowHandler,
+    SchemaOptionsFlowHandlerWithReload,
 )
-from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
+from homeassistant.helpers.selector import (
+    LocationSelector,
+    LocationSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
-from .const import CONF_RADAR_UPDATES, CONF_STATION_UPDATES, DEFAULT_NAME, DOMAIN
+from .const import (
+    API_KEY_URL,
+    CONF_RADAR_UPDATES,
+    CONF_STATION_UPDATES,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 from .coordinator import AemetConfigEntry
+from .util import API_KEY_SCHEMA, async_validate_api_key
 
 OPTIONS_SCHEMA = probatio.Schema(
     {
@@ -43,7 +54,7 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             location = user_input[CONF_LOCATION]
@@ -53,12 +64,14 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
 
-            options = ConnectionOptions(user_input[CONF_API_KEY])
-            aemet = AEMET(aiohttp_client.async_get_clientsession(self.hass), options)
-            try:
-                await aemet.select_coordinates(latitude, longitude)
-            except AuthError:
-                errors["base"] = "invalid_api_key"
+            error = await async_validate_api_key(
+                self.hass,
+                user_input[CONF_API_KEY],
+                latitude,
+                longitude,
+            )
+            if error is not None:
+                errors["base"] = error
 
             if not errors:
                 return self.async_create_entry(
@@ -72,7 +85,9 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = probatio.Schema(
             {
-                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                ),
                 probatio.Required(CONF_LOCATION): LocationSelector(
                     LocationSelectorConfig(radius=False)
                 ),
@@ -92,9 +107,75 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             ),
             errors=errors,
-            description_placeholders={
-                "api_key_url": "https://opendata.aemet.es/centrodedescargas/altaUsuario"
-            },
+            description_placeholders={"api_key_url": API_KEY_URL},
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a reauthorization flow when the API key is no longer valid."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask the user for a new API key."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            entry = self._get_reauth_entry()
+            error = await async_validate_api_key(
+                self.hass,
+                user_input[CONF_API_KEY],
+                entry.data[CONF_LATITUDE],
+                entry.data[CONF_LONGITUDE],
+            )
+            if error is not None:
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(
+                    entry, data_updates={CONF_API_KEY: user_input[CONF_API_KEY]}
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=API_KEY_SCHEMA,
+            errors=errors,
+            description_placeholders={"api_key_url": API_KEY_URL},
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user replace the API key."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            entry = self._get_reconfigure_entry()
+            latitude = entry.data[CONF_LATITUDE]
+            longitude = entry.data[CONF_LONGITUDE]
+
+            await self.async_set_unique_id(f"{latitude}-{longitude}")
+            self._abort_if_unique_id_mismatch()
+
+            error = await async_validate_api_key(
+                self.hass,
+                user_input[CONF_API_KEY],
+                latitude,
+                longitude,
+            )
+            if error is not None:
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(
+                    entry, data_updates={CONF_API_KEY: user_input[CONF_API_KEY]}
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=API_KEY_SCHEMA,
+            errors=errors,
+            description_placeholders={"api_key_url": API_KEY_URL},
         )
 
     @staticmethod
@@ -102,6 +183,6 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def async_get_options_flow(
         config_entry: AemetConfigEntry,
-    ) -> SchemaOptionsFlowHandler:
+    ) -> SchemaOptionsFlowHandlerWithReload:
         """Get the options flow for this handler."""
-        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
+        return SchemaOptionsFlowHandlerWithReload(config_entry, OPTIONS_FLOW)

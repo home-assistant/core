@@ -7,7 +7,7 @@ from yeelight import Flow
 from yeelight.enums import PowerMode, SceneClass
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.typing import VolDictType
@@ -99,7 +99,7 @@ SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE: VolDictType = {
 
 async def _async_start_flow(entity, service_call):
     params = {**service_call.data}
-    params.pop(CommonServiceArgument.ENTITY_ID)
+    params.pop(TargetKey.ENTITY_ID)
     params[YeelightServiceArgument.TRANSITIONS] = transitions_config_parser(
         params[YeelightServiceArgument.TRANSITIONS]
     )

@@ -6,47 +6,42 @@ from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.number.significant_change import (
     async_check_significant_change,
 )
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
-    PERCENTAGE,
-    UnitOfTemperature,
-)
+from homeassistant.const import PERCENTAGE, EntityStateAttribute, UnitOfTemperature
 
-AQI_ATTRS = {ATTR_DEVICE_CLASS: NumberDeviceClass.AQI}
-BATTERY_ATTRS = {ATTR_DEVICE_CLASS: NumberDeviceClass.BATTERY}
-CO_ATTRS = {ATTR_DEVICE_CLASS: NumberDeviceClass.CO}
-CO2_ATTRS = {ATTR_DEVICE_CLASS: NumberDeviceClass.CO2}
-HUMIDITY_ATTRS = {ATTR_DEVICE_CLASS: NumberDeviceClass.HUMIDITY}
-MOISTURE_ATTRS = {ATTR_DEVICE_CLASS: NumberDeviceClass.MOISTURE}
-PM1_ATTRS = {ATTR_DEVICE_CLASS: NumberDeviceClass.PM1}
-PM10_ATTRS = {ATTR_DEVICE_CLASS: NumberDeviceClass.PM10}
-PM25_ATTRS = {ATTR_DEVICE_CLASS: NumberDeviceClass.PM25}
+AQI_ATTRS = {EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.AQI}
+BATTERY_ATTRS = {EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.BATTERY}
+CO_ATTRS = {EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.CO}
+CO2_ATTRS = {EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.CO2}
+HUMIDITY_ATTRS = {EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.HUMIDITY}
+MOISTURE_ATTRS = {EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.MOISTURE}
+PM1_ATTRS = {EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.PM1}
+PM10_ATTRS = {EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.PM10}
+PM25_ATTRS = {EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.PM25}
 POWER_FACTOR_ATTRS = {
-    ATTR_DEVICE_CLASS: NumberDeviceClass.POWER_FACTOR,
+    EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.POWER_FACTOR,
 }
 POWER_FACTOR_ATTRS_PERCENTAGE = {
-    ATTR_DEVICE_CLASS: NumberDeviceClass.POWER_FACTOR,
-    ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+    EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.POWER_FACTOR,
+    EntityStateAttribute.UNIT_OF_MEASUREMENT: PERCENTAGE,
 }
 TEMP_CELSIUS_ATTRS = {
-    ATTR_DEVICE_CLASS: NumberDeviceClass.TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+    EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.TEMPERATURE,
+    EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
 }
 TEMP_FREEDOM_ATTRS = {
-    ATTR_DEVICE_CLASS: NumberDeviceClass.TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+    EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.TEMPERATURE,
+    EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
 }
 TEMP_DELTA_CELSIUS_ATTRS = {
-    ATTR_DEVICE_CLASS: NumberDeviceClass.TEMPERATURE_DELTA,
-    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+    EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.TEMPERATURE_DELTA,
+    EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
 }
 TEMP_DELTA_FAHRENHEIT_ATTRS = {
-    ATTR_DEVICE_CLASS: NumberDeviceClass.TEMPERATURE_DELTA,
-    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+    EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.TEMPERATURE_DELTA,
+    EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
 }
 VOLATILE_ORGANIC_COMPOUNDS_ATTRS = {
-    ATTR_DEVICE_CLASS: NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
+    EntityStateAttribute.DEVICE_CLASS: NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
 }
 
 

@@ -5,9 +5,7 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow:
-    status: done
-    comment: Future enhancements, 1) separate manual and discovery flows, 2) allow for discovery of multiple LMS and selection of one. PR 153958
+  config-flow: done
   dependency-transparency: done
   docs-actions: done
   docs-conditions:
@@ -43,7 +41,7 @@ rules:
   devices: done
   diagnostics: todo
   discovery-update-info: todo
-  discovery: todo
+  discovery: done
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done
@@ -67,4 +65,7 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: todo
-  strict-typing: todo
+  strict-typing:
+    status: todo
+    comment: |
+      Requirement 'pysqueezebox==0.14.0' does not conform to PEP 561 (no py.typed file).

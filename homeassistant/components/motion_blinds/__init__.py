@@ -170,3 +170,20 @@ async def async_unload_entry(
             if motion_data.multicast is not None:
                 motion_data.multicast.Stop_listen()
                 motion_data.multicast = None
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: MotionBlindsConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Allow removing devices that are no longer connected to the gateway."""
+    if (runtime_data := getattr(config_entry, "runtime_data", None)) is None:
+        return False
+
+    gateway = runtime_data.gateway
+    return not any(
+        identifier[0] == DOMAIN
+        and (identifier[1] == gateway.mac or identifier[1] in gateway.device_list)
+        for identifier in device_entry.identifiers
+    )

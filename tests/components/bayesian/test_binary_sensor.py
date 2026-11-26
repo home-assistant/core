@@ -1208,6 +1208,7 @@ async def test_mirrored_observations(
     for issue in issue_registry.issues.values():
         assert issue.config_entry_id is None
         assert issue.translation_key == "manual_migration"
+        assert issue.breaks_in_ha_version is None
 
 
 MIRRORED_OBSERVATION_SUBENTRIES = [

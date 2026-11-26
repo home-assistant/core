@@ -6,13 +6,7 @@ components. Instead call the service directly.
 
 from typing import Any
 
-from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TITLE,
-    DOMAIN,
-    SERVICE_NOTIFY,
-)
+from homeassistant.components.notify import DOMAIN, NotifyService, NotifyServiceArgument
 from homeassistant.core import HomeAssistant
 
 
@@ -20,12 +14,12 @@ def send_message(
     hass: HomeAssistant, message: str, title: str | None = None, data: Any = None
 ) -> None:
     """Send a notification message."""
-    info = {ATTR_MESSAGE: message}
+    info = {NotifyServiceArgument.MESSAGE: message}
 
     if title is not None:
-        info[ATTR_TITLE] = title
+        info[NotifyServiceArgument.TITLE] = title
 
     if data is not None:
-        info[ATTR_DATA] = data
+        info[NotifyServiceArgument.DATA] = data
 
-    hass.services.call(DOMAIN, SERVICE_NOTIFY, info)
+    hass.services.call(DOMAIN, NotifyService.NOTIFY, info)

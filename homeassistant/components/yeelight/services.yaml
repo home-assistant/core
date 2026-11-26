@@ -23,10 +23,12 @@ set_color_scene:
       domain: light
   fields:
     rgb_color:
+      required: true
       example: "[255, 100, 100]"
       selector:
         color_rgb:
     brightness:
+      required: true
       selector:
         number:
           min: 0
@@ -39,10 +41,12 @@ set_hsv_scene:
       domain: light
   fields:
     hs_color:
+      required: true
       example: "[300, 70]"
       selector:
         object:
     brightness:
+      required: true
       selector:
         number:
           min: 0
@@ -55,6 +59,7 @@ set_color_temp_scene:
       domain: light
   fields:
     kelvin:
+      required: true
       selector:
         number:
           min: 1700
@@ -62,6 +67,7 @@ set_color_temp_scene:
           step: 100
           unit_of_measurement: K
     brightness:
+      required: true
       selector:
         number:
           min: 0
@@ -89,6 +95,7 @@ set_color_flow_scene:
             - "stay"
           translation_key: action
     transitions:
+      required: true
       example:
         '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition":
         [1900, 1000, 10] }]'
@@ -101,12 +108,14 @@ set_auto_delay_off_scene:
       domain: light
   fields:
     minutes:
+      required: true
       selector:
         number:
           min: 1
           max: 60
           unit_of_measurement: minutes
     brightness:
+      required: true
       selector:
         number:
           min: 0
@@ -134,6 +143,7 @@ start_flow:
             - "stay"
           translation_key: action
     transitions:
+      required: true
       example:
         '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition":
         [1900, 1000, 10] }]'

@@ -73,6 +73,7 @@ class MusicAssistantService(StrEnum):
     GET_QUEUE = "get_queue"
     SEARCH = "search"
     GET_LIBRARY = "get_library"
+    PLAY_QUEUE_ITEM = "play_queue_item"
 
 
 class MusicAssistantServiceArgument(StrEnum):
@@ -104,6 +105,7 @@ class MusicAssistantServiceArgument(StrEnum):
     ORDER_BY = "order_by"
     ALBUM_TYPE = "album_type"
     ALBUM_ARTISTS_ONLY = "album_artists_only"
+    QUEUE_ITEM_ID = "queue_item_id"
 
 
 @callback
@@ -179,9 +181,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ),
             probatio.Optional(MusicAssistantServiceArgument.ARTIST): cv.string,
             probatio.Optional(MusicAssistantServiceArgument.ALBUM): cv.string,
-            probatio.Optional(
-                MusicAssistantServiceArgument.RADIO_MODE
-            ): probatio.Coerce(bool),
+            probatio.Optional(MusicAssistantServiceArgument.RADIO_MODE): cv.boolean,
             probatio.Optional(MusicAssistantServiceArgument.SHUFFLE): cv.boolean,
             probatio.Optional(MusicAssistantServiceArgument.START_ITEM): cv.string,
             probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
@@ -207,7 +207,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     ): probatio.All(cv.entity_id, cv.entity_domain(TTS_DOMAIN)),
                     probatio.Optional(
                         MusicAssistantServiceArgument.USE_PRE_ANNOUNCE
-                    ): probatio.Coerce(bool),
+                    ): cv.boolean,
                     probatio.Optional(
                         MusicAssistantServiceArgument.PRE_ANNOUNCE_URL
                     ): cv.string,
@@ -235,9 +235,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             probatio.Optional(
                 MusicAssistantServiceArgument.SOURCE_PLAYER
             ): cv.entity_id,
-            probatio.Optional(MusicAssistantServiceArgument.AUTO_PLAY): probatio.Coerce(
-                bool
-            ),
+            probatio.Optional(MusicAssistantServiceArgument.AUTO_PLAY): cv.boolean,
         },
         func="_async_handle_transfer_queue",
     )
@@ -247,9 +245,29 @@ def async_setup_services(hass: HomeAssistant) -> None:
         MusicAssistantService.GET_QUEUE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
-        schema=None,
+        schema={
+            probatio.Optional(
+                MusicAssistantServiceArgument.LIMIT, default=0
+            ): cv.positive_int,
+            probatio.Optional(
+                MusicAssistantServiceArgument.OFFSET, default=DEFAULT_OFFSET
+            ): cv.positive_int,
+            probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
+        },
         func="_async_handle_get_queue",
         supports_response=SupportsResponse.ONLY,
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        MusicAssistantService.PLAY_QUEUE_ITEM,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
+        schema={
+            probatio.Required(MusicAssistantServiceArgument.QUEUE_ITEM_ID): cv.string,
+            probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
+        },
+        func="_async_handle_play_queue_item",
     )
 
 

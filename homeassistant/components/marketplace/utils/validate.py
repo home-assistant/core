@@ -91,7 +91,7 @@ def manifest_optional_str(value: Any) -> str | None:
 REPOSITORY_MANIFEST_VALUES: dict[str, Callable[[Any], Any]] = {
     "content_in_root": manifest_bool,
     "filename": manifest_optional_str,
-    "hacs": probatio.Schema(str),
+    "hacs": manifest_optional_str,
     "hide_default_branch": manifest_bool,
     "homeassistant": probatio.Schema(valid_version),
     "name": probatio.Schema(str),

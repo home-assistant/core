@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_ZONE,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_ANY,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import (
@@ -708,6 +709,12 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
             if zone_entity_id := config.get(CONF_OPTIONS, {}).get(CONF_ZONE):
                 referenced.add(zone_entity_id)
 
+        if options := config.get(CONF_OPTIONS):
+            if entity_ids := options.get(CONF_ENTITY_ID):
+                referenced.update(
+                    [entity_ids] if isinstance(entity_ids, str) else entity_ids
+                )
+
         entity_ids = config.get(CONF_ENTITY_ID)
 
         if isinstance(entity_ids, str):
@@ -717,7 +724,7 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
             referenced.update(entity_ids)
 
         if target_entities := _get_targets_from_condition_config(
-            config, CONF_ENTITY_ID
+            config, TargetKey.ENTITY_ID
         ):
             referenced.update(target_entities)
 
@@ -746,7 +753,15 @@ def async_extract_devices(config: ConfigType | Template) -> set[str]:
                 referenced.add(device_id)
             continue
 
-        if target_devices := _get_targets_from_condition_config(config, CONF_DEVICE_ID):
+        if options := config.get(CONF_OPTIONS):
+            if device_ids := options.get(CONF_DEVICE_ID):
+                referenced.update(
+                    [device_ids] if isinstance(device_ids, str) else device_ids
+                )
+
+        if target_devices := _get_targets_from_condition_config(
+            config, TargetKey.DEVICE_ID
+        ):
             referenced.update(target_devices)
 
     return referenced
@@ -755,7 +770,7 @@ def async_extract_devices(config: ConfigType | Template) -> set[str]:
 @callback
 def async_extract_targets(
     config: ConfigType | Template,
-    target_type: Literal["area_id", "floor_id", "label_id"],
+    target_type: Literal[TargetKey.AREA_ID, TargetKey.FLOOR_ID, TargetKey.LABEL_ID],
 ) -> set[str]:
     """Extract targets from a condition."""
     referenced: set[str] = set()
@@ -780,7 +795,7 @@ def async_extract_targets(
 @callback
 def _get_targets_from_condition_config(
     config: ConfigType,
-    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+    target: TargetKey,
 ) -> list[str]:
     """Extract targets from a condition target config, including the exclude block."""
     if not (target_conf := config.get(CONF_TARGET)):

@@ -5,11 +5,11 @@ from unittest.mock import call
 from aioesphomeapi import APIClient, DateTimeInfo, DateTimeState
 
 from homeassistant.components.datetime import (
-    ATTR_DATETIME,
     DOMAIN as DATETIME_DOMAIN,
-    SERVICE_SET_VALUE,
+    DateTimeService,
+    DateTimeServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockGenericDeviceEntryType
@@ -42,10 +42,10 @@ async def test_generic_datetime_entity(
 
     await hass.services.async_call(
         DATETIME_DOMAIN,
-        SERVICE_SET_VALUE,
+        DateTimeService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "datetime.test_my_datetime",
-            ATTR_DATETIME: "2000-01-01T01:23:45+00:00",
+            TargetKey.ENTITY_ID: "datetime.test_my_datetime",
+            DateTimeServiceArgument.DATETIME: "2000-01-01T01:23:45+00:00",
         },
         blocking=True,
     )

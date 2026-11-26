@@ -8,5 +8,5 @@
   "iot_class": "cloud_push",
   "loggers": ["minio"],
   "quality_scale": "legacy",
-  "requirements": ["minio==7.1.12"]
+  "requirements": ["minio==7.2.20"]
 }

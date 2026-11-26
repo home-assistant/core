@@ -21,7 +21,6 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import ThreemaConfigEntry
 from .client import (
     ThreemaAPIClient,
     ThreemaAuthError,
@@ -36,6 +35,7 @@ from .const import (
     DOMAIN,
     SUBENTRY_TYPE_RECIPIENT,
 )
+from .coordinator import ThreemaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -259,8 +259,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error during reauth")
                 errors["base"] = "unknown"
             else:
-                # Avoid double-reloading via both the update listener and
-                # an explicit reload (deprecated, breaks in 2026.12).
+                # The update listener reloads only a loaded entry whose data changed
                 changed = self.hass.config_entries.async_update_entry(
                     reauth_entry,
                     data={**reauth_entry.data, CONF_API_SECRET: new_api_secret},

@@ -9,16 +9,15 @@ from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.media_player import (
     DOMAIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SEARCH_MEDIA,
     BrowseMedia,
     MediaClass,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
     MediaType,
     SearchMedia,
     llm as media_player_llm,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -87,7 +86,7 @@ async def setup_integrations(hass: HomeAssistant) -> None:
         "idle",
         {
             "friendly_name": "Test media_player",
-            ATTR_SUPPORTED_FEATURES: SEARCH_PLAY_FEATURES,
+            EntityStateAttribute.SUPPORTED_FEATURES: SEARCH_PLAY_FEATURES,
         },
     )
     async_expose_entity(hass, "conversation", ENTITY_ID, True)
@@ -187,7 +186,7 @@ async def test_search_play_tools_need_features(
 ) -> None:
     """Test the search and play tools need a player that can search and play."""
     hass.states.async_set(
-        ENTITY_ID, "idle", {ATTR_SUPPORTED_FEATURES: supported_features}
+        ENTITY_ID, "idle", {EntityStateAttribute.SUPPORTED_FEATURES: supported_features}
     )
     tool_names = await _tool_names(hass)
     assert tool_names >= INTENT_TOOL_NAMES
@@ -204,7 +203,7 @@ async def test_search_media(hass: HomeAssistant) -> None:
     search_calls = async_mock_service(
         hass,
         DOMAIN,
-        SERVICE_SEARCH_MEDIA,
+        MediaPlayerService.SEARCH_MEDIA,
         response={ENTITY_ID: SearchMedia(result=[TRACK, ARTIST, ALBUM])},
     )
 
@@ -271,7 +270,7 @@ async def test_search_media_limits_results(hass: HomeAssistant) -> None:
     async_mock_service(
         hass,
         DOMAIN,
-        SERVICE_SEARCH_MEDIA,
+        MediaPlayerService.SEARCH_MEDIA,
         response={ENTITY_ID: SearchMedia(result=tracks)},
     )
 
@@ -309,7 +308,7 @@ async def test_search_media_within_result(
     search_calls = async_mock_service(
         hass,
         DOMAIN,
-        SERVICE_SEARCH_MEDIA,
+        MediaPlayerService.SEARCH_MEDIA,
         response={ENTITY_ID: SearchMedia(result=[TRACK])},
     )
 
@@ -331,7 +330,7 @@ async def test_search_media_no_results(hass: HomeAssistant) -> None:
     async_mock_service(
         hass,
         DOMAIN,
-        SERVICE_SEARCH_MEDIA,
+        MediaPlayerService.SEARCH_MEDIA,
         response={ENTITY_ID: SearchMedia(result=[])},
     )
 
@@ -360,7 +359,7 @@ async def test_search_media_no_results(hass: HomeAssistant) -> None:
 )
 async def test_play_media(hass: HomeAssistant, media: dict[str, str]) -> None:
     """Test the play tool plays the chosen item on the player."""
-    play_calls = async_mock_service(hass, DOMAIN, SERVICE_PLAY_MEDIA)
+    play_calls = async_mock_service(hass, DOMAIN, MediaPlayerService.PLAY_MEDIA)
 
     result = await _async_call_tool(
         hass, "media_player__play_media", {**media, "player_name": "Test media_player"}
@@ -376,10 +375,10 @@ async def test_blank_target_values_omitted(hass: HomeAssistant) -> None:
     search_calls = async_mock_service(
         hass,
         DOMAIN,
-        SERVICE_SEARCH_MEDIA,
+        MediaPlayerService.SEARCH_MEDIA,
         response={ENTITY_ID: SearchMedia(result=[])},
     )
-    play_calls = async_mock_service(hass, DOMAIN, SERVICE_PLAY_MEDIA)
+    play_calls = async_mock_service(hass, DOMAIN, MediaPlayerService.PLAY_MEDIA)
     blank_target = {"player_name": "", "player_area": " ", "player_floor": None}
 
     await _async_call_tool(
@@ -428,12 +427,12 @@ async def test_player_without_features_not_matched(
         "idle",
         {
             "friendly_name": "Play only",
-            ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.PLAY_MEDIA,
+            EntityStateAttribute.SUPPORTED_FEATURES: MediaPlayerEntityFeature.PLAY_MEDIA,
         },
     )
     async_expose_entity(hass, "conversation", "media_player.play_only", True)
-    search_calls = async_mock_service(hass, DOMAIN, SERVICE_SEARCH_MEDIA)
-    play_calls = async_mock_service(hass, DOMAIN, SERVICE_PLAY_MEDIA)
+    search_calls = async_mock_service(hass, DOMAIN, MediaPlayerService.SEARCH_MEDIA)
+    play_calls = async_mock_service(hass, DOMAIN, MediaPlayerService.PLAY_MEDIA)
 
     with pytest.raises(intent.MatchFailedError):
         await _async_call_tool(
@@ -479,12 +478,12 @@ async def test_play_media_target(
             "idle",
             {
                 "friendly_name": f"{area.name} speaker",
-                ATTR_SUPPORTED_FEATURES: SEARCH_PLAY_FEATURES,
+                EntityStateAttribute.SUPPORTED_FEATURES: SEARCH_PLAY_FEATURES,
             },
         )
         async_expose_entity(hass, "conversation", entry.entity_id, True)
 
-    play_calls = async_mock_service(hass, DOMAIN, SERVICE_PLAY_MEDIA)
+    play_calls = async_mock_service(hass, DOMAIN, MediaPlayerService.PLAY_MEDIA)
 
     await _async_call_tool(
         hass,
@@ -519,7 +518,7 @@ async def test_search_and_play_use_device_area(
             "idle",
             {
                 "friendly_name": f"{area.name} speaker",
-                ATTR_SUPPORTED_FEATURES: SEARCH_PLAY_FEATURES,
+                EntityStateAttribute.SUPPORTED_FEATURES: SEARCH_PLAY_FEATURES,
             },
         )
         async_expose_entity(hass, "conversation", entry.entity_id, True)
@@ -535,10 +534,10 @@ async def test_search_and_play_use_device_area(
     search_calls = async_mock_service(
         hass,
         DOMAIN,
-        SERVICE_SEARCH_MEDIA,
+        MediaPlayerService.SEARCH_MEDIA,
         response={"media_player.bedroom": SearchMedia(result=[TRACK])},
     )
-    play_calls = async_mock_service(hass, DOMAIN, SERVICE_PLAY_MEDIA)
+    play_calls = async_mock_service(hass, DOMAIN, MediaPlayerService.PLAY_MEDIA)
 
     result = await _async_call_tool(
         hass,

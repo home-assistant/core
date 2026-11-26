@@ -28,6 +28,7 @@ TO_REDACT = {
     "external_contract_id",
     "identifier",
     "last_known_vehicle_uuid",
+    "active_vehicle_uuid",
 }
 
 
