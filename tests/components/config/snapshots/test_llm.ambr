@@ -154,6 +154,20 @@
       ]),
       'type': 'object',
     }),
+    'config__delete_automation': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'automation_id': dict({
+          'description': "The id of the automation: the 'id' attribute of the automation entity, as stored in automations.yaml. The entity_id of the automation is also accepted.",
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'automation_id',
+      ]),
+      'type': 'object',
+    }),
     'config__delete_floor': dict({
       'additionalProperties': False,
       'properties': dict({
@@ -190,6 +204,20 @@
       }),
       'required': list([
         'area_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__get_automation_config': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'automation_id': dict({
+          'description': "The id of the automation: the 'id' attribute of the automation entity, as stored in automations.yaml. The entity_id of the automation is also accepted.",
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'automation_id',
       ]),
       'type': 'object',
     }),
@@ -375,6 +403,25 @@
           'type': 'string',
         }),
       }),
+      'type': 'object',
+    }),
+    'config__set_automation_config': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'automation_id': dict({
+          'description': "The id of the automation: the 'id' attribute of the automation entity, as stored in automations.yaml. The entity_id of the automation is also accepted. Leave out to create a new automation.",
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'config': dict({
+          'additionalProperties': True,
+          'description': 'The automation configuration as in automations.yaml, for example alias, description, triggers, conditions, actions and mode.',
+          'type': 'object',
+        }),
+      }),
+      'required': list([
+        'config',
+      ]),
       'type': 'object',
     }),
     'config__start_flow': dict({

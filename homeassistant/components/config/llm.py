@@ -4,6 +4,7 @@ from collections.abc import Iterable, Iterator, Mapping
 from contextlib import suppress
 import heapq
 from typing import TYPE_CHECKING, Any, Literal, override
+import uuid
 
 import probatio
 
@@ -22,7 +23,7 @@ from homeassistant.config_entries import (
     ConfigSubentry,
     SubentryFlowResult,
 )
-from homeassistant.const import ATTR_RESTORED, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import ATTR_RESTORED, CONF_ID, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, HomeAssistantError
 from homeassistant.generated.integration_categories import INTEGRATION_CATEGORIES
@@ -55,6 +56,7 @@ from homeassistant.loader import (
 )
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
+from .automation import DATA_AUTOMATION_VIEW
 from .const import DOMAIN, SUPPORTED_LABEL_THEME_COLORS
 from .core import UPDATE_CONFIG_SCHEMA, async_update_config
 
@@ -2131,6 +2133,172 @@ class UpdateDeviceSettingsTool(Tool):
         return ToolResult(data={"result": _format_device_settings(updated)})
 
 
+_AUTOMATION_ID_DESCRIPTION = (
+    "The id of the automation: the 'id' attribute of the automation entity, as "
+    "stored in automations.yaml. The entity_id of the automation is also accepted."
+)
+
+
+def _resolve_automation_id(hass: HomeAssistant, automation_id: str) -> str:
+    """Resolve an automation id or automation entity_id to the stored config id."""
+    if not automation_id.startswith("automation."):
+        return automation_id
+    if (state := hass.states.get(automation_id)) is None or not (
+        config_id := state.attributes.get(CONF_ID)
+    ):
+        raise HomeAssistantError(
+            f"Automation '{automation_id}' not found or not editable (it has no id)."
+        )
+    return str(config_id)
+
+
+class GetAutomationConfigTool(Tool):
+    """LLM Tool to read the configuration of an automation."""
+
+    name = "config__get_automation_config"
+    title = "Get automation configuration"
+    description = (
+        "Get the stored configuration of an automation (alias, description, "
+        "triggers, conditions, actions, mode). Only automations stored in "
+        "automations.yaml, i.e. those that can be edited in the UI, can be read."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required(
+                "automation_id", description=_AUTOMATION_ID_DESCRIPTION
+            ): _NON_EMPTY_STRING
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the automation configuration."""
+        automation_id = _resolve_automation_id(
+            hass, self.parameters(tool_input.tool_args)["automation_id"]
+        )
+        view = hass.data[DATA_AUTOMATION_VIEW]
+        if (config := await view.async_get_value(hass, automation_id)) is None:
+            raise HomeAssistantError(f"Automation '{automation_id}' not found.")
+        return ToolResult(data={"result": {"automation_id": automation_id, **config}})
+
+
+class SetAutomationConfigTool(Tool):
+    """LLM Tool to create or update an automation."""
+
+    name = "config__set_automation_config"
+    title = "Create or update automation"
+    description = (
+        "Create an automation, or update an existing one when automation_id is "
+        "given. The configuration is validated first and nothing is stored when it "
+        "is invalid. Keys left out of config keep their stored value, so send the "
+        "full configuration from config__get_automation_config with the changes "
+        "applied, without its id. The automation is reloaded after it is stored. "
+        "Returns the automation_id "
+        "and previous_config, the stored configuration from before the change "
+        "(null for a new automation)."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=False, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Optional(
+                "automation_id",
+                description=(
+                    _AUTOMATION_ID_DESCRIPTION
+                    + " Leave out to create a new automation."
+                ),
+            ): _NON_EMPTY_STRING,
+            probatio.Required(
+                "config",
+                description=(
+                    "The automation configuration as in automations.yaml, for "
+                    "example alias, description, triggers, conditions, actions "
+                    "and mode."
+                ),
+            ): dict,
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Validate and store the automation."""
+        args = self.parameters(tool_input.tool_args)
+        view = hass.data[DATA_AUTOMATION_VIEW]
+        if "automation_id" in args:
+            automation_id = _resolve_automation_id(hass, args["automation_id"])
+        else:
+            automation_id = uuid.uuid4().hex
+        config = dict(args["config"])
+        if config.pop(CONF_ID, automation_id) != automation_id:
+            raise HomeAssistantError(
+                "The id in config does not match the automation; leave it out of "
+                "config and use automation_id instead."
+            )
+        try:
+            await view.async_validate(hass, automation_id, config)
+        except (probatio.Invalid, HomeAssistantError) as err:
+            raise HomeAssistantError(
+                f"Invalid automation configuration: {err}"
+            ) from err
+        previous = await view.async_write_value(hass, automation_id, config)
+        return ToolResult(
+            data={
+                "result": {
+                    "automation_id": automation_id,
+                    "previous_config": previous,
+                }
+            }
+        )
+
+
+class DeleteAutomationTool(Tool):
+    """LLM Tool to delete an automation."""
+
+    name = "config__delete_automation"
+    title = "Delete automation"
+    description = (
+        "Delete the automation with the given id from the configuration. Returns "
+        "deleted_config, which config__set_automation_config can store again to "
+        "restore the automation."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required(
+                "automation_id", description=_AUTOMATION_ID_DESCRIPTION
+            ): _NON_EMPTY_STRING
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Delete the automation."""
+        automation_id = _resolve_automation_id(
+            hass, self.parameters(tool_input.tool_args)["automation_id"]
+        )
+        view = hass.data[DATA_AUTOMATION_VIEW]
+        if (deleted := await view.async_delete_value(hass, automation_id)) is None:
+            raise HomeAssistantError(f"Automation '{automation_id}' not found.")
+        return ToolResult(
+            data={"result": {"automation_id": automation_id, "deleted_config": deleted}}
+        )
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
@@ -2166,5 +2334,8 @@ def async_get_tools(
             DeleteAreaTool(),
             GetDeviceSettingsTool(),
             UpdateDeviceSettingsTool(),
+            GetAutomationConfigTool(),
+            SetAutomationConfigTool(),
+            DeleteAutomationTool(),
         ]
     )

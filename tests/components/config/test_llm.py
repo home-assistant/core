@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine, Generator
+import re
 from typing import Any, override
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -25,9 +26,11 @@ from homeassistant.components.config.llm import (
     CreateFloorTool,
     CreateLabelTool,
     DeleteAreaTool,
+    DeleteAutomationTool,
     DeleteFloorTool,
     DeleteLabelTool,
     GetAreaSettingsTool,
+    GetAutomationConfigTool,
     GetConfigEntriesTool,
     GetCoreConfigTool,
     GetDeviceSettingsTool,
@@ -38,6 +41,7 @@ from homeassistant.components.config.llm import (
     ReloadConfigEntryTool,
     RemoveEntityTool,
     SearchIntegrationsTool,
+    SetAutomationConfigTool,
     StartFlowTool,
     UpdateAreaSettingsTool,
     UpdateCoreConfigTool,
@@ -158,6 +162,9 @@ async def test_async_get_tools(
         "config__delete_area",
         "config__get_device_settings",
         "config__update_device_settings",
+        "config__get_automation_config",
+        "config__set_automation_config",
+        "config__delete_automation",
     ]
     assert ha_tools.prompt is None
 
@@ -189,6 +196,9 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         DeleteAreaTool(),
         GetDeviceSettingsTool(),
         UpdateDeviceSettingsTool(),
+        GetAutomationConfigTool(),
+        SetAutomationConfigTool(),
+        DeleteAutomationTool(),
     ]
     assert {
         tool.name: probatio.to_openapi(tool.parameters) for tool in tools
@@ -4960,3 +4970,162 @@ async def test_subentry_parent_entry_removed_mid_flow(
         data={"error": "Config entry or subentry no longer exists."}, error=True
     )
     assert hass.config_entries.subentries.async_progress() == []
+
+
+AUTOMATION_CONFIG = {
+    "alias": "Morning lights",
+    "triggers": [{"trigger": "event", "event_type": "test_event"}],
+    "actions": [{"action": "test.automation"}],
+}
+
+
+@pytest.fixture
+async def automation_api(
+    hass: HomeAssistant, llm_api: llm.APIInstance
+) -> llm.APIInstance:
+    """Set up the automation integration and return the LLM API."""
+    assert await async_setup_component(hass, "automation", {})
+    return llm_api
+
+
+async def test_automation_tools(
+    hass: HomeAssistant,
+    automation_api: llm.APIInstance,
+    hass_config_store: dict[str, Any],
+) -> None:
+    """Test creating, reading, updating and deleting an automation."""
+    hass_config_store["automations.yaml"] = []
+
+    with patch(
+        "homeassistant.components.config.llm.uuid.uuid4",
+        return_value=Mock(hex="morning"),
+    ):
+        result = await automation_api.async_call_tool(
+            llm.ToolInput(
+                "config__set_automation_config", {"config": AUTOMATION_CONFIG}
+            )
+        )
+    await hass.async_block_till_done()
+    assert result == llm.ToolResult(
+        data={"result": {"automation_id": "morning", "previous_config": None}}
+    )
+    assert hass_config_store["automations.yaml"] == [
+        {"id": "morning", **AUTOMATION_CONFIG}
+    ]
+    assert hass.states.get("automation.morning_lights") is not None
+
+    result = await automation_api.async_call_tool(
+        llm.ToolInput(
+            "config__get_automation_config",
+            {"automation_id": "automation.morning_lights"},
+        )
+    )
+    assert result == llm.ToolResult(
+        data={
+            "result": {"automation_id": "morning", "id": "morning", **AUTOMATION_CONFIG}
+        }
+    )
+
+    result = await automation_api.async_call_tool(
+        llm.ToolInput(
+            "config__set_automation_config",
+            {
+                "automation_id": "morning",
+                "config": {**AUTOMATION_CONFIG, "alias": "Evening lights"},
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert result == llm.ToolResult(
+        data={
+            "result": {
+                "automation_id": "morning",
+                "previous_config": {"id": "morning", **AUTOMATION_CONFIG},
+            }
+        }
+    )
+    assert hass_config_store["automations.yaml"] == [
+        {"id": "morning", **AUTOMATION_CONFIG, "alias": "Evening lights"}
+    ]
+
+    result = await automation_api.async_call_tool(
+        llm.ToolInput("config__delete_automation", {"automation_id": "morning"})
+    )
+    await hass.async_block_till_done()
+    assert result == llm.ToolResult(
+        data={
+            "result": {
+                "automation_id": "morning",
+                "deleted_config": {
+                    "id": "morning",
+                    **AUTOMATION_CONFIG,
+                    "alias": "Evening lights",
+                },
+            }
+        }
+    )
+    assert hass_config_store["automations.yaml"] == []
+    assert hass.states.async_entity_ids("automation") == []
+
+
+@pytest.mark.parametrize(
+    ("tool_input", "error"),
+    [
+        pytest.param(
+            llm.ToolInput(
+                "config__set_automation_config",
+                {
+                    "config": {
+                        "alias": "Broken",
+                        "triggers": [{"trigger": "unknown"}],
+                        "actions": [],
+                    }
+                },
+            ),
+            "Invalid automation configuration: Invalid trigger 'unknown' specified",
+            id="set_invalid_config",
+        ),
+        pytest.param(
+            llm.ToolInput(
+                "config__set_automation_config",
+                {
+                    "automation_id": "sun",
+                    "config": {**AUTOMATION_CONFIG, "id": "moon"},
+                },
+            ),
+            "The id in config does not match the automation",
+            id="set_mismatched_id",
+        ),
+        pytest.param(
+            llm.ToolInput("config__get_automation_config", {"automation_id": "moon"}),
+            "Automation 'moon' not found.",
+            id="get_unknown_id",
+        ),
+        pytest.param(
+            llm.ToolInput(
+                "config__get_automation_config",
+                {"automation_id": "automation.unknown"},
+            ),
+            "Automation 'automation.unknown' not found or not editable",
+            id="get_unknown_entity",
+        ),
+        pytest.param(
+            llm.ToolInput("config__delete_automation", {"automation_id": "moon"}),
+            "Automation 'moon' not found.",
+            id="delete_unknown_id",
+        ),
+    ],
+)
+async def test_automation_tools_errors(
+    automation_api: llm.APIInstance,
+    hass_config_store: dict[str, Any],
+    tool_input: llm.ToolInput,
+    error: str,
+) -> None:
+    """Test the automation tools reject bad input and leave the config alone."""
+    hass_config_store["automations.yaml"] = [{"id": "sun", **AUTOMATION_CONFIG}]
+
+    with pytest.raises(HomeAssistantError, match=re.escape(error)):
+        await automation_api.async_call_tool(tool_input)
+
+    assert hass_config_store["automations.yaml"] == [{"id": "sun", **AUTOMATION_CONFIG}]
