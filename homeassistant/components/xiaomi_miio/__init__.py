@@ -26,6 +26,7 @@ from miio import (
     FanMiot,
     FanP5,
     FanZA5,
+    HeaterMiot,
     RoborockVacuum,
     Timer,
     VacuumStatus,
@@ -64,6 +65,7 @@ from .const import (
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_FAN_MIIO,
+    MODELS_HEATER_MIOT,
     MODELS_HUMIDIFIER,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
@@ -103,6 +105,7 @@ FAN_PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+HEATER_PLATFORMS = [Platform.CLIMATE]
 HUMIDIFIER_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.HUMIDIFIER,
@@ -172,6 +175,8 @@ def get_platforms(config_entry):
             return HUMIDIFIER_PLATFORMS
         if model in MODELS_FAN:
             return FAN_PLATFORMS
+        if model in MODELS_HEATER_MIOT:
+            return HEATER_PLATFORMS
         if model in MODELS_LIGHT:
             return LIGHT_PLATFORMS
         for vacuum_model in MODELS_VACUUM:
@@ -326,6 +331,7 @@ async def async_create_miio_device_and_coordinator(
     if (
         model not in MODELS_HUMIDIFIER
         and model not in MODELS_FAN
+        and model not in MODELS_HEATER_MIOT
         and model not in MODELS_VACUUM
         and not model.startswith(ROBOROCK_GENERIC)
         and not model.startswith(ROCKROBO_GENERIC)
@@ -370,6 +376,9 @@ async def async_create_miio_device_and_coordinator(
         device = MODEL_TO_CLASS_MAP[model](host, token, lazy_discover=lazy_discover)
     elif model in MODELS_FAN_MIIO:
         device = Fan(host, token, lazy_discover=lazy_discover, model=model)
+    # Heaters
+    elif model in MODELS_HEATER_MIOT:
+        device = HeaterMiot(host, token, lazy_discover=lazy_discover, model=model)
     else:
         _LOGGER.error(
             (
