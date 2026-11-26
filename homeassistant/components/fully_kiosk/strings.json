@@ -173,6 +173,9 @@
     "device_unreachable": {
       "message": "The device cannot be reached."
     },
+    "downgrade_not_supported": {
+      "message": "Version {version} cannot be installed because it is older than the installed version."
+    },
     "install_failed": {
       "message": "Failed to install the update."
     },

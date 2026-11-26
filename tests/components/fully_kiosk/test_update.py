@@ -250,13 +250,13 @@ async def test_no_entity(
     [
         pytest.param({}, "1.61.3", "Fully-Kiosk-Browser-v1.61.3.apk", id="regular"),
         pytest.param(
-            {"appVersionName": "1.61.4-emm"},
+            {"appVersionName": "1.61.2-emm"},
             "1.61.3",
             "Fully-Kiosk-Browser-v1.61.3-emm.apk",
             id="emm",
         ),
         pytest.param(
-            {"appVersionName": "1.61.4-emm"},
+            {"appVersionName": "1.61.2-emm"},
             "1.61.3-emm",
             "Fully-Kiosk-Browser-v1.61.3-emm.apk",
             id="emm_with_suffix",
@@ -281,18 +281,35 @@ async def test_install_specific_version(
     )
 
 
-async def test_install_unknown_version(
+@pytest.mark.parametrize(
+    ("device_info", "version", "translation_key", "placeholder"),
+    [
+        pytest.param({}, "9.9.9", "version_not_found", "9.9.9", id="unknown"),
+        pytest.param(
+            {"appVersionName": "1.61.4-emm"},
+            "1.61.3",
+            "downgrade_not_supported",
+            "1.61.3-emm",
+            id="downgrade",
+        ),
+    ],
+    indirect=["device_info"],
+)
+async def test_install_unavailable_version(
     hass: HomeAssistant,
     mock_fully_kiosk: MagicMock,
     setup_integration: Callable[[], Awaitable[None]],
+    version: str,
+    translation_key: str,
+    placeholder: str,
 ) -> None:
-    """Test installing a version that is not in the feed."""
+    """Test installing a version that is not in the feed or older."""
     await setup_integration()
 
     with pytest.raises(HomeAssistantError) as excinfo:
-        await install(hass, "9.9.9")
-    assert excinfo.value.translation_key == "version_not_found"
-    assert excinfo.value.translation_placeholders == {"version": "9.9.9"}
+        await install(hass, version)
+    assert excinfo.value.translation_key == translation_key
+    assert excinfo.value.translation_placeholders == {"version": placeholder}
     mock_fully_kiosk.installRelease.assert_not_called()
 
 

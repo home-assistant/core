@@ -171,6 +171,12 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
                 translation_key="version_not_found",
                 translation_placeholders={"version": str(version)},
             )
+        if self.version_is_newer(self.installed_version, release.versionName):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="downgrade_not_supported",
+                translation_placeholders={"version": release.versionName},
+            )
 
         self._attr_in_progress = True
         self.async_write_ha_state()
