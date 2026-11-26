@@ -2545,7 +2545,8 @@ async def test_dump_periodically(
 
     freezer.tick(restore_state.STATE_DUMP_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    # Time interval jobs run as background tasks
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert get_stored_data(hass_storage, restore_entry) == {"value": "pushed"}
 
