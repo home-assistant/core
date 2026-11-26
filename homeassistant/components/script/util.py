@@ -102,15 +102,15 @@ async def async_process_config(
     def find_matches(
         scripts: list[BaseScriptEntity],
         script_configs: list[ScriptEntityConfig],
-    ) -> tuple[set[int], set[int]]:
+    ) -> dict[int, int]:
         """Find matches between a list of script entities and a list of configurations.
 
         A script or configuration is only allowed to match at most once to handle
         the case of multiple scripts with identical configuration.
 
-        Returns a tuple of sets of indices: ({script_matches}, {config_matches})
+        Returns a dict of indices: {script_idx: config_idx}
         """
-        script_matches: set[int] = set()
+        matches: dict[int, int] = {}
         config_matches: set[int] = set()
 
         for script_idx, script in enumerate(scripts):
@@ -119,24 +119,28 @@ async def async_process_config(
                     # Only allow a script config to match at most once
                     continue
                 if script_matches_config(script, script_config):
-                    # Matching ignores the blueprint inputs, so the kept entity
-                    # takes the new ones.
-                    script.raw_blueprint_inputs = script_config.raw_blueprint_inputs
-                    script_matches.add(script_idx)
+                    matches[script_idx] = config_idx
                     config_matches.add(config_idx)
                     # Only allow a script to match at most once
                     break
 
-        return script_matches, config_matches
+        return matches
 
     script_configs = await _prepare_script_config(hass, config)
     scripts: list[BaseScriptEntity] = list(component.entities)
 
     # Find scripts and configurations which have matches
-    script_matches, config_matches = find_matches(scripts, script_configs)
+    matches = find_matches(scripts, script_configs)
+    config_matches = set(matches.values())
+
+    # Matching ignores the blueprint inputs, so a kept script takes the new ones
+    for script_idx, config_idx in matches.items():
+        scripts[script_idx].raw_blueprint_inputs = script_configs[
+            config_idx
+        ].raw_blueprint_inputs
 
     removed_scripts = [
-        script for idx, script in enumerate(scripts) if idx not in script_matches
+        script for idx, script in enumerate(scripts) if idx not in matches
     ]
     # Repair issues of removed scripts are kept if the new scripts re-create them,
     # which preserves the user's ignore flag

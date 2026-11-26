@@ -185,15 +185,15 @@ async def async_process_config(
     def find_matches(
         automations: list[BaseAutomationEntity],
         automation_configs: list[AutomationEntityConfig],
-    ) -> tuple[set[int], set[int]]:
+    ) -> dict[int, int]:
         """Find matches between automation entities and configurations.
 
         An automation or configuration is only allowed to match at most once to handle
         the case of multiple automations with identical configuration.
 
-        Returns a tuple of sets of indices: ({automation_matches}, {config_matches})
+        Returns a dict of indices: {automation_idx: config_idx}
         """
-        automation_matches: set[int] = set()
+        matches: dict[int, int] = {}
         config_matches: set[int] = set()
         automation_configs_with_id: dict[str, tuple[int, AutomationEntityConfig]] = {}
         automation_configs_without_id: list[tuple[int, AutomationEntityConfig]] = []
@@ -215,12 +215,7 @@ async def async_process_config(
                     automation.unique_id
                 )
                 if automation_matches_config(automation, automation_config):
-                    # Matching ignores the blueprint inputs, so the kept entity
-                    # takes the new ones.
-                    automation.raw_blueprint_inputs = (
-                        automation_config.raw_blueprint_inputs
-                    )
-                    automation_matches.add(automation_idx)
+                    matches[automation_idx] = config_idx
                     config_matches.add(config_idx)
                 continue
 
@@ -229,21 +224,25 @@ async def async_process_config(
                     # Only allow an automation config to match at most once
                     continue
                 if automation_matches_config(automation, automation_config):
-                    automation.raw_blueprint_inputs = (
-                        automation_config.raw_blueprint_inputs
-                    )
-                    automation_matches.add(automation_idx)
+                    matches[automation_idx] = config_idx
                     config_matches.add(config_idx)
                     # Only allow an automation to match at most once
                     break
 
-        return automation_matches, config_matches
+        return matches
 
     automation_configs = await _prepare_automation_config(hass, config, None)
     automations: list[BaseAutomationEntity] = list(component.entities)
 
     # Find automations and configurations which have matches
-    automation_matches, config_matches = find_matches(automations, automation_configs)
+    matches = find_matches(automations, automation_configs)
+    config_matches = set(matches.values())
+
+    # Matching ignores the blueprint inputs, so a kept automation takes the new ones
+    for automation_idx, config_idx in matches.items():
+        automations[automation_idx].raw_blueprint_inputs = automation_configs[
+            config_idx
+        ].raw_blueprint_inputs
 
     # Replace automations which have changed config, no longer exist or were added
     await _async_replace_automations(
@@ -252,7 +251,7 @@ async def async_process_config(
         [
             automation
             for idx, automation in enumerate(automations)
-            if idx not in automation_matches
+            if idx not in matches
         ],
         [
             config
