@@ -5,12 +5,7 @@ from typing import Any, override
 
 from pyfreedompro import put_state
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
@@ -103,11 +98,13 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async function to set on to light."""
         payload: dict[str, Any] = {"on": True}
-        if ATTR_BRIGHTNESS in kwargs:
-            payload["brightness"] = round(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
-        if ATTR_HS_COLOR in kwargs:
-            payload["saturation"] = round(kwargs[ATTR_HS_COLOR][1])
-            payload["hue"] = round(kwargs[ATTR_HS_COLOR][0])
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            payload["brightness"] = round(
+                kwargs[LightServiceArgument.BRIGHTNESS] / 255 * 100
+            )
+        if LightServiceArgument.HS_COLOR in kwargs:
+            payload["saturation"] = round(kwargs[LightServiceArgument.HS_COLOR][1])
+            payload["hue"] = round(kwargs[LightServiceArgument.HS_COLOR][0])
         await put_state(
             self._session,
             self._api_key,
