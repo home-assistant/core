@@ -28,9 +28,11 @@ _FREQ_433 = 433_920_000
 _FREQ_315 = 315_000_000
 
 
-async def _setup_rf_device(hass: HomeAssistant) -> tuple[MagicMock, str]:
-    """Set up the RMPRO test device, return its api mock and RF entity_id."""
-    device = get_device("Office")
+async def _setup_rf_device(
+    hass: HomeAssistant, device_name: str = "Office"
+) -> tuple[MagicMock, str]:
+    """Set up a test device (RMPRO by default), return its api mock and RF entity_id."""
+    device = get_device(device_name)
     mock_setup = await device.setup_entry(hass)
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -68,14 +70,48 @@ async def test_radio_frequency_setup(
     assert len(rf_entities) == (1 if has_rf else 0)
 
 
-def test_encode_rf_packet() -> None:
+@pytest.mark.parametrize(
+    ("timings", "repeat_count", "expected"),
+    [
+        pytest.param(
+            [round(12 * _TICK_US), round(300 * _TICK_US), round(12 * _TICK_US)],
+            3,
+            bytes([0xB2, 0x03, 0x05, 0x00, 0x0C, 0x00, 0x01, 0x2C, 0x0C]),
+            id="inline_and_escaped",
+        ),
+        pytest.param(
+            [400, -10, 400],
+            0,
+            bytes([0xB2, 0x00, 0x03, 0x00, 0x0D, 0x01, 0x0D]),
+            id="under_half_a_tick",
+        ),
+        pytest.param(
+            [round(0xFFFF * _TICK_US)],
+            0,
+            bytes([0xB2, 0x00, 0x03, 0x00, 0x00, 0xFF, 0xFF]),
+            id="max_ticks",
+        ),
+    ],
+)
+def test_encode_rf_packet(
+    timings: list[int], repeat_count: int, expected: bytes
+) -> None:
     """Pulses are encoded inline below 256 ticks, escape-prefixed above."""
-    timings = [round(12 * _TICK_US), round(300 * _TICK_US), round(12 * _TICK_US)]
     packet = encode_rf_packet(
-        type_byte=_RF_433_TYPE_BYTE, repeat_count=3, timings_us=timings
+        type_byte=_RF_433_TYPE_BYTE, repeat_count=repeat_count, timings_us=timings
     )
-    # type byte, repeat count, payload length (le16), 12, escape (00 01 2c), 12
-    assert packet == bytes([0xB2, 0x03, 0x05, 0x00, 0x0C, 0x00, 0x01, 0x2C, 0x0C])
+    assert packet == expected
+
+
+async def test_send_command_rejects_too_long_timing(hass: HomeAssistant) -> None:
+    """A timing too long to encode is rejected before send."""
+    api, entity_id = await _setup_rf_device(hass)
+
+    command = OOKCommand(frequency=_FREQ_433, timings=[400, -3_000_000])
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await radio_frequency.async_send_command(hass, entity_id, command)
+    assert exc_info.value.translation_key == "timing_too_long"
+    api.send_data.assert_not_called()
 
 
 async def test_send_command(hass: HomeAssistant) -> None:
@@ -100,6 +136,105 @@ async def test_send_command_315_band(hass: HomeAssistant) -> None:
     await radio_frequency.async_send_command(hass, entity_id, command)
 
     assert api.send_data.call_args.args[0][0] == _RF_315_TYPE_BYTE
+
+
+@pytest.mark.parametrize(
+    ("frequency", "timings", "repeat_count", "expected"),
+    [
+        pytest.param(
+            _FREQ_433,
+            [400, -800, 400, -800],
+            0,
+            "b1c00800009f06000d1a0d1a",
+            id="433_92",
+        ),
+        pytest.param(433_420_000, [400, -800], 0, "b1c006000c9d06000d1a", id="433_42"),
+        pytest.param(_FREQ_315, [400, -800], 0, "b1c0060078ce04000d1a", id="315"),
+        pytest.param(
+            _FREQ_433,
+            [400, -800, 400, -5000],
+            3,
+            "b1c01400009f06000d1a0da40d1a0da40d1a0da40d1a0da4",
+            id="repeat_count_keeps_own_gap",
+        ),
+        pytest.param(
+            _FREQ_433,
+            [400, -800, 400],
+            1,
+            "b1c01000009f06000d1a0d0001a70d1a0d0001a7",
+            id="ends_on_pulse",
+        ),
+    ],
+)
+async def test_send_command_rm4_pro(
+    hass: HomeAssistant,
+    frequency: int,
+    timings: list[int],
+    repeat_count: int,
+    expected: str,
+) -> None:
+    """An RM4 Pro packet carries the frequency and writes out each repeat as a frame."""
+    api, entity_id = await _setup_rf_device(hass, "Garage")
+
+    command = OOKCommand(
+        frequency=frequency, timings=timings, repeat_count=repeat_count
+    )
+    await radio_frequency.async_send_command(hass, entity_id, command)
+
+    assert api.send_data.call_args == call(bytes.fromhex(expected))
+
+
+@pytest.mark.parametrize(
+    ("frequency", "expected"),
+    [
+        pytest.param(305_000_000, "b1c0060068a704000d1a", id="305"),
+        pytest.param(433_000_000, "b1c00600689b06000d1a", id="433_00"),
+        pytest.param(438_000_000, "b1c00600f0ae06000d1a", id="438"),
+    ],
+)
+async def test_send_command_rm4_pro_measured_range(
+    hass: HomeAssistant, frequency: int, expected: str
+) -> None:
+    """An RM4 Pro sends anywhere in its measured range."""
+    api, entity_id = await _setup_rf_device(hass, "Garage")
+
+    command = OOKCommand(frequency=frequency, timings=[400, -800])
+    await radio_frequency.async_send_command(hass, entity_id, command)
+
+    assert api.send_data.call_args == call(bytes.fromhex(expected))
+
+
+@pytest.mark.parametrize(
+    ("device_name", "frequency"),
+    [
+        pytest.param("Garage", 340_000_000, id="rm4_pro_340"),
+        pytest.param("Garage", 440_000_000, id="rm4_pro_440"),
+        pytest.param("Office", 433_000_000, id="rm_pro_433_00"),
+    ],
+)
+async def test_send_command_rejects_outside_model_range(
+    hass: HomeAssistant, device_name: str, frequency: int
+) -> None:
+    """A frequency outside the model's ranges is rejected before send."""
+    api, entity_id = await _setup_rf_device(hass, device_name)
+
+    command = OOKCommand(frequency=frequency, timings=[400, -800])
+    with pytest.raises(HomeAssistantError):
+        await radio_frequency.async_send_command(hass, entity_id, command)
+    api.send_data.assert_not_called()
+
+
+async def test_send_command_rm4_pro_rejects_invalid_timings(
+    hass: HomeAssistant,
+) -> None:
+    """Timings that do not start with a pulse are rejected before send."""
+    api, entity_id = await _setup_rf_device(hass, "Garage")
+
+    command = OOKCommand(frequency=_FREQ_433, timings=[-400, 800])
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await radio_frequency.async_send_command(hass, entity_id, command)
+    assert exc_info.value.translation_key == "invalid_rf_timings"
+    api.send_data.assert_not_called()
 
 
 async def test_send_command_rejects_out_of_band(hass: HomeAssistant) -> None:

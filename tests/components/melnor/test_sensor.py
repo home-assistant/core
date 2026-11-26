@@ -4,14 +4,20 @@ from datetime import timedelta
 
 from freezegun import freeze_time
 from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    FAKE_SERVICE_INFO_1,
     mock_config_entry,
     mock_melnor_device,
     patch_async_ble_device_from_address,
@@ -167,3 +173,15 @@ async def test_rssi_sensor(
         )
         assert rssi.attributes["device_class"] == SensorDeviceClass.SIGNAL_STRENGTH
         assert rssi.attributes["state_class"] == SensorStateClass.MEASUREMENT
+
+        # No advertisement has been seen from the device yet
+        assert rssi.state == STATE_UNKNOWN
+
+        inject_bluetooth_service_info(hass, FAKE_SERVICE_INFO_1)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done()
+
+        rssi = hass.states.get(entity_id)
+
+        assert rssi is not None
+        assert rssi.state == "-63"

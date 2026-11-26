@@ -242,6 +242,17 @@
     }
   },
   "issues": {
+    "missing_bluetooth_token": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Your La Marzocco account has no Bluetooth token for \"{name}\", so Home Assistant can't connect to it over Bluetooth.\n\nTo fix this, remove the machine in the La Marzocco app, add it again, and then reload the integration.\n\nIf you don't want to use Bluetooth, select **Submit** to turn off Bluetooth and offline mode for this machine.",
+            "title": "[%key:component::lamarzocco::issues::missing_bluetooth_token::title%]"
+          }
+        }
+      },
+      "title": "Bluetooth token missing for {name}"
+    },
     "unsupported_gateway_firmware": {
       "description": "Gateway firmware {gateway_version} of \"{name}\" is no longer supported by this integration, please update.",
       "title": "Unsupported gateway firmware"

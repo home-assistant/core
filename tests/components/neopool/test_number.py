@@ -18,9 +18,9 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
@@ -59,8 +59,8 @@ def _number_entity_id(
 async def _set_value(hass: HomeAssistant, entity_id: str, value: float) -> None:
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {"entity_id": entity_id, ATTR_VALUE: value},
+        NumberService.SET_VALUE,
+        {"entity_id": entity_id, NumberServiceArgument.VALUE: value},
         blocking=True,
     )
 

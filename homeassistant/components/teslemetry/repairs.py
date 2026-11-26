@@ -4,7 +4,6 @@ import asyncio
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 from bleak.exc import BleakError
 import probatio
 from tesla_fleet_api.exceptions import (
@@ -18,6 +17,7 @@ from tesla_fleet_api.exceptions import (
     is_key_rejected,
 )
 from tesla_fleet_api.router import VehicleRouter
+from tesla_fleet_api.tesla.powerwall import PowerwallAuthenticationError, PowerwallError
 
 from homeassistant.components.bluetooth import async_scanner_count
 from homeassistant.components.repairs import (
@@ -36,11 +36,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 
-from . import TeslemetryConfigEntry, _async_get_rsa_key_pem
+from . import _async_get_rsa_key_pem
 from .const import (
     BLE_DISCONNECT_TIMEOUT,
     BLE_HANDSHAKE_TIMEOUT,
+    CONF_LEGACY_GATEWAY,
     CONF_VIN,
+    ISSUE_ENERGY_SITE_NOT_PAIRED,
     ISSUE_GATEWAY_NOT_FOUND,
     ISSUE_TYPE_BLE_KEY_REJECTED,
     LOGGER,
@@ -52,6 +54,7 @@ from .helpers import (
     async_verify_local_gateway,
     cloud_energy_site,
 )
+from .models import TeslemetryConfigEntry
 
 
 class VehicleMetadataRepairFlow(RepairsFlow):
@@ -206,6 +209,45 @@ class BluetoothKeyRepairFlow(RepairsFlow):
         )
 
 
+class EnergySiteNotPairedRepairFlow(RepairsFlow):
+    """Handle a repair that clears once Teslemetry is paired with the gateway."""
+
+    def __init__(
+        self, entry: TeslemetryConfigEntry, site_id: int, placeholders: dict[str, str]
+    ) -> None:
+        """Create flow."""
+        self.entry = entry
+        self.site_id = site_id
+        self.placeholders = placeholders
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the first step of a fix flow."""
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the confirm step of a fix flow."""
+        if user_input is not None:
+            coordinator = self.entry.runtime_data.metadata_coordinator
+            await coordinator.async_refresh()
+            site = coordinator.data["energy_sites"].get(str(self.site_id), {})
+            if coordinator.last_update_success and site.get("paired"):
+                return self.async_create_entry(data={})
+            return self.async_show_form(
+                step_id="confirm",
+                description_placeholders=self.placeholders,
+                errors={"base": "not_resolved"},
+            )
+
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders=self.placeholders,
+        )
+
+
 class GatewayNotFoundRepairFlow(RepairsFlow):
     """Handle a repair that finds a local Powerwall gateway's current address."""
 
@@ -293,7 +335,11 @@ class GatewayNotFoundRepairFlow(RepairsFlow):
             assert self._subentry is not None
         try:
             await async_verify_local_gateway(
-                self.hass, host, self._subentry.data[CONF_PASSWORD], self._key_pem
+                self.hass,
+                host,
+                self._subentry.data[CONF_PASSWORD],
+                self._key_pem,
+                legacy_gateway=self._subentry.data.get(CONF_LEGACY_GATEWAY, False),
             )
         except PowerwallKeyRejectedError:
             return "key_not_approved"
@@ -340,6 +386,19 @@ async def async_create_fix_flow(
         and entry.state is ConfigEntryState.LOADED
     ):
         return VehicleMetadataRepairFlow(entry, vin, issue_type, vehicle)
+    if (
+        issue_id.startswith(f"{ISSUE_ENERGY_SITE_NOT_PAIRED}_")
+        and data is not None
+        and isinstance(entry_id := data.get("entry_id"), str)
+        and isinstance(site_id := data.get("site_id"), int)
+        and isinstance(site := data.get("site"), str)
+        and isinstance(link := data.get("link"), str)
+        and (entry := hass.config_entries.async_get_entry(entry_id)) is not None
+        and entry.state is ConfigEntryState.LOADED
+    ):
+        return EnergySiteNotPairedRepairFlow(
+            entry, site_id, {"site": site, "link": link}
+        )
     if (
         issue_id.startswith(f"{ISSUE_GATEWAY_NOT_FOUND}_")
         and data is not None

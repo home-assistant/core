@@ -6,6 +6,7 @@ from watergate_local_api.models import (
     AutoShutOffState,
     DeviceStateV2,
     NetworkingData,
+    PowerSupply,
     TelemetryData,
 )
 from watergate_local_api.models.water_meter import WaterMeter
@@ -95,6 +96,17 @@ def _auto_shut_off(auto_shut_off: AutoShutOffState) -> dict[str, Any]:
     }
 
 
+def _power(power: PowerSupply | None) -> dict[str, Any] | None:
+    """Return the power supply as a dict (only read from devices with a battery)."""
+    if power is None:
+        return None
+    return {
+        "battery": power.battery,
+        "external": power.external,
+        "batteries_voltage": power.batteries_voltage,
+    }
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: WatergateConfigEntry
 ) -> dict[str, Any]:
@@ -105,7 +117,6 @@ async def async_get_config_entry_diagnostics(
     return {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "last_update_success": coordinator.last_update_success,
-        # Without data the first refresh has not succeeded (the entry is retrying setup).
         "data": (
             async_redact_data(
                 {
@@ -113,10 +124,13 @@ async def async_get_config_entry_diagnostics(
                     "telemetry": _telemetry(data.telemetry),
                     "networking": _networking(data.networking),
                     "auto_shut_off": _auto_shut_off(data.auto_shut_off),
+                    "power": _power(data.power),
                 },
                 TO_REDACT,
             )
-            if data
+            # Without data the first refresh has not succeeded (the entry is retrying
+            # setup).
+            if data  # type: ignore[truthy-bool]
             else None
         ),
     }

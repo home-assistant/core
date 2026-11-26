@@ -7,7 +7,6 @@ import probatio
 
 from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
-    ATTR_OPERATION_MODE,
     DEFAULT_MIN_TEMP,
     STATE_ECO,
     STATE_ELECTRIC,
@@ -18,11 +17,11 @@ from homeassistant.components.water_heater import (
     WaterHeaterCapabilityAttribute,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
+    WaterHeaterServiceArgument,
     WaterHeaterStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
@@ -322,10 +321,12 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         operation_mode: str | None
-        if (operation_mode := kwargs.get(ATTR_OPERATION_MODE)) is not None:
+        if (
+            operation_mode := kwargs.get(WaterHeaterServiceArgument.OPERATION_MODE)
+        ) is not None:
             await self.async_set_operation_mode(operation_mode)
 
-        temperature: float = kwargs[ATTR_TEMPERATURE]
+        temperature: float = kwargs[WaterHeaterServiceArgument.TEMPERATURE]
         mqtt_payload = self._command_templates[CONF_TEMP_COMMAND_TEMPLATE](temperature)
         await self._publish(CONF_TEMP_COMMAND_TOPIC, mqtt_payload)
 

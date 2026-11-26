@@ -130,6 +130,7 @@ class DanfossAir(SensorEntity):
         communication with the Air CCM.
         """
         self._data.update()
+        self._attr_available = self._data.available
 
         self._attr_native_value = self._data.get_value(self._type)
         if self._attr_native_value is None:

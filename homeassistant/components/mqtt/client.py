@@ -4,7 +4,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
 import contextlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import lru_cache, partial
 from itertools import chain, groupby
 import logging
@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 import certifi
+from cryptography.x509 import Certificate
 import paho.mqtt.client as mqtt
 from paho.mqtt.matcher import MQTTMatcher
 
@@ -38,7 +39,11 @@ from homeassistant.core import (
     callback,
     get_hassjob_callable_job_type,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -56,8 +61,11 @@ from .const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
     CONF_CERTIFICATE,
+    CONF_CERTIFICATE_FILE,
     CONF_CLIENT_CERT,
+    CONF_CLIENT_CERT_FILE,
     CONF_CLIENT_KEY,
+    CONF_CLIENT_KEY_FILE,
     CONF_KEEPALIVE,
     CONF_TLS_INSECURE,
     CONF_TRANSPORT,
@@ -89,7 +97,12 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .util import EnsureJobAfterCooldown, get_file_path, mqtt_config_entry_enabled
+from .util import (
+    EnsureJobAfterCooldown,
+    get_file_path,
+    load_certificate_file,
+    mqtt_config_entry_enabled,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -332,7 +345,8 @@ class Subscription:
     job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None]
     qos: int
     encoding: str | None
-    subscription_id: int
+    # Excluded from comparison so a subscription matches its restored copy
+    subscription_id: int = field(compare=False)
 
 
 class MqttClientSetup:
@@ -347,6 +361,7 @@ class MqttClientSetup:
         """
 
         self._config = config
+        self.client_certificate: Certificate | None = None
 
     def setup(self) -> None:
         """Set up the MQTT client.
@@ -405,18 +420,27 @@ class MqttClientSetup:
             self._client.username_pw_set(username, password)
 
         if (
-            certificate := get_file_path(CONF_CERTIFICATE, config.get(CONF_CERTIFICATE))
+            certificate := config.get(CONF_CERTIFICATE_FILE)
+            or get_file_path(CONF_CERTIFICATE, config.get(CONF_CERTIFICATE))
         ) == "auto":
             certificate = certifi.where()
 
-        client_key = get_file_path(CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY))
-        client_cert = get_file_path(CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT))
+        client_key = config.get(CONF_CLIENT_KEY_FILE) or get_file_path(
+            CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY)
+        )
+        client_cert = config.get(CONF_CLIENT_CERT_FILE) or get_file_path(
+            CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT)
+        )
         tls_insecure = config.get(CONF_TLS_INSECURE)
         if transport == TRANSPORT_WEBSOCKETS:
             ws_path: str = config.get(CONF_WS_PATH, DEFAULT_WS_PATH)
             ws_headers: dict[str, str] = config.get(CONF_WS_HEADERS, {})
             self._client.ws_set_options(ws_path, ws_headers)
         if certificate is not None:
+            # Read the client certificate right before paho loads it, so the
+            # expiry check tracks the certificate that is used, also during a renewal
+            if client_cert:
+                self.client_certificate = load_certificate_file(client_cert)
             self._client.tls_set(
                 certificate,
                 certfile=client_cert,
@@ -512,6 +536,7 @@ class MQTT:
         self._reconnect_task: asyncio.Task | None = None
         self._should_reconnect: bool = True
         self._available_future: asyncio.Future[bool] | None = None
+        self.client_initialized = False
 
         self._max_qos: defaultdict[str, int] = defaultdict(int)  # topic, max qos
         self._pending_subscriptions: dict[str, int] = {}  # topic, qos
@@ -581,7 +606,16 @@ class MQTT:
             )
 
         mqttc_setup = MqttClientSetup(self.conf)
-        await self.hass.async_add_executor_job(mqttc_setup.setup)
+        try:
+            await self.hass.async_add_executor_job(mqttc_setup.setup)
+        except OSError as err:
+            # Certificate files can be missing or replaced while being renewed
+            self.cleanup()
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_load_certificates",
+                translation_placeholders={"broker": self.conf[CONF_BROKER]},
+            ) from err
         mqttc = mqttc_setup.client
         # on_socket_unregister_write and _async_on_socket_close
         # are only ever called in the event loop
@@ -609,6 +643,8 @@ class MQTT:
             )
 
         self._mqttc = mqttc
+        self._mqtt_data.client_certificate = mqttc_setup.client_certificate
+        self.client_initialized = True
 
     @callback
     def _async_reader_callback(self, client: mqtt.Client) -> None:
@@ -757,6 +793,13 @@ class MQTT:
         message_expiry_interval: int | None = None,
     ) -> None:
         """Publish a MQTT message."""
+        # The paho client is not set while the setup is retried
+        if not self.client_initialized:
+            raise HomeAssistantError(
+                translation_key="mqtt_not_setup_cannot_publish",
+                translation_domain=DOMAIN,
+                translation_placeholders={"topic": topic},
+            )
         properties = mqtt.Properties(mqtt.PacketTypes.PUBLISH)  # type: ignore[no-untyped-call]
         if message_expiry_interval is not None:
             if not self.is_mqttv5:
@@ -1033,14 +1076,30 @@ class MQTT:
 
     @callback
     def _async_remove(self, subscription: Subscription) -> None:
-        """Remove subscription."""
+        """Remove subscription from the current client.
+
+        The client is replaced when the config entry is reloaded,
+        so the subscription may be tracked by another instance.
+        """
+        mqtt_data = self._mqtt_data
+        if subscription in mqtt_data.subscriptions_to_restore:
+            # Not restored on the current client yet
+            mqtt_data.subscriptions_to_restore.remove(subscription)
+            return
+        client: MQTT = mqtt_data.client
+        client._async_remove_tracked_subscription(subscription)
+
+    @callback
+    def _async_remove_tracked_subscription(self, subscription: Subscription) -> None:
+        """Remove a subscription tracked by this client."""
         self._async_untrack_subscription(subscription)
         self._matching_subscriptions.cache_clear()
         if subscription in self._retained_topics:
             del self._retained_topics[subscription]
         # Only unsubscribe if currently connected
-        if self.connected:
-            self._async_unsubscribe(subscription.topic, subscription.subscription_id)
+        if not self.connected:
+            return
+        self._async_unsubscribe(subscription.topic, subscription.subscription_id)
 
     @callback
     def _async_unsubscribe(self, topic: str, subscription_id: int) -> None:

@@ -172,7 +172,7 @@ class OASATelematicsData:
             return
 
         # Parse results
-        results = [r for r in results if r.get("route_code") in self.route_id]
+        results = [r for r in results if str(r.get("route_code")) == str(self.route_id)]
         current_time = dt_util.utcnow()
 
         for result in results:

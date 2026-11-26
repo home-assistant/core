@@ -120,6 +120,7 @@ async def test_ecobee3_setup(hass: HomeAssistant) -> None:
                         "max_temp": 33.3,
                         "min_humidity": 20,
                         "max_humidity": 50,
+                        "temperature_unit": UnitOfTemperature.CELSIUS,
                     },
                     state="heat",
                 ),

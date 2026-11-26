@@ -13,7 +13,7 @@ from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoServices,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -107,7 +107,7 @@ async def test_add_item(
         {
             ATTR_ITEM: "soda",
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -132,7 +132,7 @@ async def test_remove_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "soda"},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
     items = await ws_get_items()
@@ -151,7 +151,7 @@ async def test_remove_item(
         {
             ATTR_ITEM: [items[0]["uid"]],
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -177,7 +177,7 @@ async def test_bulk_remove(
             {
                 ATTR_ITEM: "soda",
             },
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -195,7 +195,7 @@ async def test_bulk_remove(
         {
             ATTR_ITEM: uids,
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -221,7 +221,7 @@ async def test_update_item(
         {
             ATTR_ITEM: "soda",
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -244,7 +244,7 @@ async def test_update_item(
             ATTR_ITEM: "soda",
             ATTR_STATUS: "completed",
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -274,7 +274,7 @@ async def test_partial_update_item(
         {
             ATTR_ITEM: "soda",
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -297,7 +297,7 @@ async def test_partial_update_item(
             ATTR_ITEM: item["uid"],
             ATTR_STATUS: "completed",
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -320,7 +320,7 @@ async def test_partial_update_item(
             ATTR_ITEM: item["uid"],
             ATTR_RENAME: "other summary",
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -351,7 +351,7 @@ async def test_update_invalid_item(
                 ATTR_ITEM: "invalid-uid",
                 ATTR_RENAME: "Example task",
             },
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -400,7 +400,7 @@ async def test_move_item(
             {
                 ATTR_ITEM: f"item {i}",
             },
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -436,7 +436,7 @@ async def test_move_invalid_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "soda"},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -465,7 +465,7 @@ async def test_subscribe_item(
         {
             ATTR_ITEM: "soda",
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -501,7 +501,7 @@ async def test_subscribe_item(
             ATTR_ITEM: "soda",
             ATTR_RENAME: "milk",
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 

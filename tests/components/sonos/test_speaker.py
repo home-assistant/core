@@ -12,7 +12,7 @@ from soco.exceptions import SoCoException
 
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
-    SERVICE_MEDIA_PLAY,
+    MediaPlayerService,
 )
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.const import SCAN_INTERVAL
@@ -93,7 +93,7 @@ async def _media_play(hass: HomeAssistant, entity: str) -> None:
     """Call media play service."""
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_PLAY,
+        MediaPlayerService.MEDIA_PLAY,
         {
             "entity_id": entity,
         },

@@ -51,6 +51,9 @@
       },
       "reboot_timer": {
         "name": "Restart timer"
+      },
+      "tcp_port": {
+        "name": "IP interrupt port"
       }
     },
     "select": {
@@ -160,6 +163,9 @@
       },
       "htpcmode3": {
         "name": "HTPC mode RX3"
+      },
+      "ipinterrupt": {
+        "name": "IP interrupt"
       },
       "iractive": {
         "name": "Infrared"

@@ -46,8 +46,51 @@
     "cannot_connect": {
       "message": "Cannot connect to WebDAV server"
     },
+    "create_folder_error": {
+      "message": "Failed to create folder on WebDAV server: {message}"
+    },
+    "duplicate_destination_path": {
+      "message": "Multiple files would be uploaded to the same destination: {paths}"
+    },
+    "filenames_do_not_exist": {
+      "message": "The following files do not exist: {filenames}"
+    },
+    "invalid_destination_path": {
+      "message": "Invalid destination path `{destination_path}`"
+    },
     "invalid_username_password": {
       "message": "Invalid username or password"
+    },
+    "no_access_to_path": {
+      "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+    },
+    "no_files_match_pattern": {
+      "message": "No files match the following patterns: {patterns}"
+    },
+    "upload_error": {
+      "message": "Failed to upload to WebDAV server: {message}"
+    }
+  },
+  "services": {
+    "upload": {
+      "description": "Uploads one or more files to a WebDAV server.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The config entry representing the WebDAV server you want to upload to.",
+          "name": "Config entry ID"
+        },
+        "destination_folder": {
+          "description": "Folder on the WebDAV server, relative to the configured URL, you want to upload the files to. Will be created if it does not exist.",
+          "example": "photos/snapshots",
+          "name": "Destination folder"
+        },
+        "filename": {
+          "description": "One or more paths to files to upload. Supports wildcards, for example `/config/www/*.jpg` to upload all JPG files in a folder, or `/config/www/**/*.jpg` to also include subfolders. Subfolders matched by a wildcard are recreated inside the destination folder. The characters `*`, `?` and `[` are treated as wildcards; to upload a file whose name contains one of these characters literally, make sure the file exists under that exact name.",
+          "example": "{example_image_path}",
+          "name": "Filenames"
+        }
+      },
+      "name": "Upload files"
     }
   }
 }

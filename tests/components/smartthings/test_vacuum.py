@@ -14,11 +14,12 @@ from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_PAUSE,
     SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     VacuumActivity,
+    VacuumService,
+    VacuumServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -170,8 +171,11 @@ async def test_vacuum_set_fan_speed(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {ATTR_ENTITY_ID: "vacuum.robot_vacuum", ATTR_FAN_SPEED: "normal"},
+        VacuumService.SET_FAN_SPEED,
+        {
+            TargetKey.ENTITY_ID: "vacuum.robot_vacuum",
+            VacuumServiceArgument.FAN_SPEED: "normal",
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(

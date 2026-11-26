@@ -28,7 +28,12 @@ from homeassistant.setup import (
 )
 from homeassistant.util.async_ import create_eager_task
 
-from .config import ConfData, async_get_and_load_store, async_load_config
+from .config import (
+    ActiveConfigType,
+    ConfData,
+    async_get_and_load_store,
+    async_load_config,
+)
 from .const import (
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
@@ -39,6 +44,7 @@ from .const import (
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
     CONF_SSL_PEER_CERTIFICATE,
+    CONF_SSL_PEER_CERTIFICATE_REMOTE,
     CONF_SSL_PROFILE,
     CONF_TRUSTED_PROXIES,
     CONF_USE_X_FORWARDED_FOR,
@@ -61,6 +67,7 @@ from .server import (
     HomeAssistantHTTP,
     HomeAssistantRequest,
     StaticPathConfig,
+    async_verify_peer_certificate,
     make_server,
 )
 
@@ -193,13 +200,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 socket_env,
             )
 
+    store = await async_get_and_load_store(hass)
     server = make_server(hass, conf, supervisor_unix_socket_path)
     trial_reverted = False
     while True:
         try:
+            if (
+                store.active_config_type is ActiveConfigType.PENDING
+                and not conf.get(CONF_SSL_CERTIFICATE)
+                and conf[CONF_SSL_PEER_CERTIFICATE_REMOTE]
+            ):
+                # async_bind does not validate peer certificate if SSL certificate
+                # is not set. But it might be in use by remote access, so we
+                # validate the peer file here to revert it if invalid.
+                await async_verify_peer_certificate(
+                    hass, conf[CONF_SSL_PEER_CERTIFICATE]
+                )
             await server.async_bind()
         except (HomeAssistantError, OSError) as err:
-            store = await async_get_and_load_store(hass)
             trial_reverted = store.revert_deadline is not None
             conf = await store.async_get_fallback_config(err)
             server = make_server(hass, conf, supervisor_unix_socket_path)

@@ -527,10 +527,10 @@ class CameraImagePreview(HomeAssistantView):
         """Start a GET request."""
         _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
         flow = cast(
-            GenericIPCamConfigFlow,
+            GenericIPCamConfigFlow | None,
             self.hass.config_entries.flow._progress.get(flow_id),  # noqa: SLF001
         ) or cast(
-            GenericOptionsFlowHandler,
+            GenericOptionsFlowHandler | None,
             self.hass.config_entries.options._progress.get(flow_id),  # noqa: SLF001
         )
         if not flow:

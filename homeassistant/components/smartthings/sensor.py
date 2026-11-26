@@ -5,10 +5,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast, override
 
-from pysmartthings import Attribute, Capability, ComponentStatus, SmartThings, Status
+from pysmartthings import Attribute, Capability, SmartThings, Status
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -29,14 +28,12 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
 from .entity import SmartThingsEntity
-from .util import deprecate_entity
 
 THERMOSTAT_CAPABILITIES = {
     Capability.TEMPERATURE_MEASUREMENT,
@@ -81,10 +78,6 @@ OVEN_JOB_STATE_MAP = {
     "scheduledEnd": "scheduled_end",
     "stone_heating": "stone_heating",
     "timeHoldPreheat": "time_hold_preheat",
-}
-
-MEDIA_PLAYBACK_STATE_MAP = {
-    "fast forwarding": "fast_forwarding",
 }
 
 ROBOT_CLEANER_TURBO_MODE_STATE_MAP = {
@@ -178,7 +171,6 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     component_fn: Callable[[str], bool] | None = None
     exists_fn: Callable[[Status], bool] | None = None
     use_temperature_unit: bool = False
-    deprecated: Callable[[ComponentStatus], tuple[str, str] | None] | None = None
     component_translation_key: dict[str, str] | None = None
     presentation_fn: (
         Callable[
@@ -252,13 +244,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.VOLUME,
                 translation_key="audio_volume",
                 native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
-                deprecated=(
-                    lambda status: (
-                        ("2025.10.0", "media_player")
-                        if Capability.AUDIO_MUTE in status
-                        else None
-                    )
-                ),
+                capability_ignore_list=[{Capability.AUDIO_MUTE}],
             )
         ]
     },
@@ -610,55 +596,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    Capability.MEDIA_INPUT_SOURCE: {
-        Attribute.INPUT_SOURCE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.INPUT_SOURCE,
-                translation_key="media_input_source",
-                device_class=SensorDeviceClass.ENUM,
-                options_attribute=Attribute.SUPPORTED_INPUT_SOURCES,
-                value_fn=lambda value: value.lower() if value else None,
-                deprecated=lambda _: ("2025.10.0", "media_player"),
-            )
-        ]
-    },
-    Capability.MEDIA_PLAYBACK_REPEAT: {
-        Attribute.PLAYBACK_REPEAT_MODE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.PLAYBACK_REPEAT_MODE,
-                translation_key="media_playback_repeat",
-                deprecated=lambda _: ("2025.10.0", "media_player"),
-            )
-        ]
-    },
-    Capability.MEDIA_PLAYBACK_SHUFFLE: {
-        Attribute.PLAYBACK_SHUFFLE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.PLAYBACK_SHUFFLE,
-                translation_key="media_playback_shuffle",
-                deprecated=lambda _: ("2025.10.0", "media_player"),
-            )
-        ]
-    },
-    Capability.MEDIA_PLAYBACK: {
-        Attribute.PLAYBACK_STATUS: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.PLAYBACK_STATUS,
-                translation_key="media_playback_status",
-                options=[
-                    "paused",
-                    "playing",
-                    "stopped",
-                    "fast_forwarding",
-                    "rewinding",
-                    "buffering",
-                ],
-                device_class=SensorDeviceClass.ENUM,
-                value_fn=lambda value: MEDIA_PLAYBACK_STATE_MAP.get(value, value),
-                deprecated=lambda _: ("2025.10.0", "media_player"),
-            )
-        ]
-    },
     Capability.ODOR_SENSOR: {
         Attribute.ODOR_LEVEL: [
             SmartThingsSensorEntityDescription(
@@ -973,13 +910,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.TEMPERATURE,
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
-                deprecated=(
-                    lambda status: (
-                        ("2025.12.0", "dhw")
-                        if Capability.CUSTOM_OUTING_MODE in status
-                        else None
-                    )
-                ),
+                capability_ignore_list=[{Capability.CUSTOM_OUTING_MODE}],
                 component_fn=(
                     lambda component: (
                         component in {"freezer", "cooler", "onedoor", "cavity-01"}
@@ -1006,14 +937,8 @@ CAPABILITY_TO_SENSORS: dict[
                         Capability.AIR_CONDITIONER_MODE,
                     },
                     THERMOSTAT_CAPABILITIES,
+                    {Capability.CUSTOM_OUTING_MODE},
                 ],
-                deprecated=(
-                    lambda status: (
-                        ("2025.12.0", "dhw")
-                        if Capability.CUSTOM_OUTING_MODE in status
-                        else None
-                    )
-                ),
             )
         ]
     },
@@ -1371,87 +1296,43 @@ async def async_setup_entry(
 ) -> None:
     """Add sensors for a config entry."""
     entry_data = entry.runtime_data
-    entities = []
-
-    entity_registry = er.async_get(hass)
-
-    for device in entry_data.devices.values():  # pylint: disable=too-many-nested-blocks
-        for capability, attributes in CAPABILITY_TO_SENSORS.items():
-            for component, capabilities in device.status.items():
-                if capability in capabilities:
-                    for attribute, descriptions in attributes.items():
-                        for description in descriptions:
-                            if (
-                                (
-                                    not description.capability_ignore_list
-                                    or not any(
-                                        all(
-                                            capability in device.status[MAIN]
-                                            for capability in capability_list
-                                        )
-                                        for capability_list in (
-                                            description.capability_ignore_list
-                                        )
-                                    )
-                                )
-                                and (
-                                    not description.exists_fn
-                                    or (
-                                        component == MAIN
-                                        and description.exists_fn(
-                                            device.status[MAIN][capability][attribute]
-                                        )
-                                    )
-                                )
-                                and (
-                                    component == MAIN
-                                    or (
-                                        description.component_fn is not None
-                                        and description.component_fn(component)
-                                    )
-                                )
-                            ):
-                                if (
-                                    description.deprecated
-                                    and (
-                                        deprecation_info := description.deprecated(
-                                            device.status[MAIN]
-                                        )
-                                    )
-                                    is not None
-                                ):
-                                    version, reason = deprecation_info
-                                    if deprecate_entity(
-                                        hass,
-                                        entity_registry,
-                                        SENSOR_DOMAIN,
-                                        f"{device.device.device_id}_{MAIN}_{capability}_{attribute}_{description.key}",
-                                        f"deprecated_{reason}",
-                                        version,
-                                    ):
-                                        entities.append(
-                                            SmartThingsSensor(
-                                                entry_data.client,
-                                                device,
-                                                description,
-                                                MAIN,
-                                                capability,
-                                                attribute,
-                                            )
-                                        )
-                                    continue
-                                entities.append(
-                                    SmartThingsSensor(
-                                        entry_data.client,
-                                        device,
-                                        description,
-                                        component,
-                                        capability,
-                                        attribute,
-                                    )
-                                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        SmartThingsSensor(
+            entry_data.client,
+            device,
+            description,
+            component,
+            capability,
+            attribute,
+        )
+        for device in entry_data.devices.values()
+        for capability, attributes in CAPABILITY_TO_SENSORS.items()
+        for component, capabilities in device.status.items()
+        if capability in capabilities
+        for attribute, descriptions in attributes.items()
+        for description in descriptions
+        if (
+            not description.capability_ignore_list
+            or not any(
+                all(capability in device.status[MAIN] for capability in capability_list)
+                for capability_list in description.capability_ignore_list
+            )
+        )
+        and (
+            not description.exists_fn
+            or (
+                component == MAIN
+                and description.exists_fn(device.status[MAIN][capability][attribute])
+            )
+        )
+        and (
+            component == MAIN
+            or (
+                description.component_fn is not None
+                and description.component_fn(component)
+            )
+        )
+    )
 
 
 class SmartThingsSensor(SmartThingsEntity, SensorEntity):

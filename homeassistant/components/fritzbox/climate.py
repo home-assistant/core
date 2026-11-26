@@ -3,15 +3,15 @@
 from typing import Any, override
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
+from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -135,9 +135,11 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         self.check_active_or_lock_mode()
-        if kwargs.get(ATTR_HVAC_MODE) is HVACMode.OFF:
+        if kwargs.get(ClimateServiceArgument.HVAC_MODE) is HVACMode.OFF:
             await self.async_set_hkr_state("off")
-        elif (target_temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
+        elif (
+            target_temp := kwargs.get(ClimateServiceArgument.TEMPERATURE)
+        ) is not None:
             await self.hass.async_add_executor_job(
                 self.data.set_target_temperature, target_temp, True
             )

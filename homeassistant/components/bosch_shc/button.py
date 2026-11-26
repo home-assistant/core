@@ -4,7 +4,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from boschshcpy import SHCMotionDetector2, SHCSmokeDetector
+from boschshcpy import (
+    SHCMicromoduleDimmer,
+    SHCMotionDetector2,
+    SHCOutdoorSiren,
+    SHCSmartPlug,
+    SHCSmartPlugCompact,
+    SHCSmokeDetector,
+)
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -37,6 +44,53 @@ TAMPER_RESET_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
     translation_key="reset_tamper",
     entity_category=EntityCategory.DIAGNOSTIC,
     press_fn=lambda device: device.reset_tampered_state(),
+)
+
+SIREN_TEST_ALARM_DESCRIPTION = SHCButtonEntityDescription[SHCOutdoorSiren](
+    key="siren_test_alarm",
+    translation_key="siren_test_alarm",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    press_fn=lambda device: device.trigger_test_alarm(),
+)
+
+RESET_ENERGY_DESCRIPTION = SHCButtonEntityDescription[
+    SHCSmartPlug | SHCSmartPlugCompact
+](
+    key="reset_energy_summation",
+    translation_key="reset_energy_summation",
+    entity_category=EntityCategory.CONFIG,
+    press_fn=lambda device: device.reset_energy_summation(),
+)
+
+
+def _preview_max_brightness(device: SHCMicromoduleDimmer) -> None:
+    """Flash the dimmer's load at maximum brightness."""
+    if TYPE_CHECKING:
+        assert device.dimmer_configuration is not None
+    device.dimmer_configuration.preview_max_brightness()
+
+
+def _preview_min_brightness(device: SHCMicromoduleDimmer) -> None:
+    """Flash the dimmer's load at minimum brightness."""
+    if TYPE_CHECKING:
+        assert device.dimmer_configuration is not None
+    device.dimmer_configuration.preview_min_brightness()
+
+
+PREVIEW_MAX_BRIGHTNESS_DESCRIPTION = SHCButtonEntityDescription[SHCMicromoduleDimmer](
+    key="preview_max_brightness",
+    translation_key="preview_max_brightness",
+    entity_category=EntityCategory.CONFIG,
+    entity_registry_enabled_default=False,
+    press_fn=_preview_max_brightness,
+)
+
+PREVIEW_MIN_BRIGHTNESS_DESCRIPTION = SHCButtonEntityDescription[SHCMicromoduleDimmer](
+    key="preview_min_brightness",
+    translation_key="preview_min_brightness",
+    entity_category=EntityCategory.CONFIG,
+    entity_registry_enabled_default=False,
+    press_fn=_preview_min_brightness,
 )
 
 
@@ -72,6 +126,44 @@ async def async_setup_entry(
         )
         for device in session.device_helper.motion_detectors2
         if device.supports_tamper_reset
+    )
+    entities.extend(
+        SHCButton(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SIREN_TEST_ALARM_DESCRIPTION,
+        )
+        for device in session.device_helper.outdoor_sirens
+    )
+    entities.extend(
+        SHCButton(
+            hass=hass,
+            device=plug,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=RESET_ENERGY_DESCRIPTION,
+        )
+        for plug in (
+            *session.device_helper.smart_plugs,
+            *session.device_helper.smart_plugs_compact,
+        )
+    )
+    entities.extend(
+        SHCButton(
+            hass=hass,
+            device=dimmer,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=description,
+        )
+        for dimmer in session.device_helper.micromodule_dimmers
+        if dimmer.supports_dimmer_configuration
+        for description in (
+            PREVIEW_MAX_BRIGHTNESS_DESCRIPTION,
+            PREVIEW_MIN_BRIGHTNESS_DESCRIPTION,
+        )
     )
     async_add_entities(entities)
 

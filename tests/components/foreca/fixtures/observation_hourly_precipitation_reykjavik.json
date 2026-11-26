@@ -1,0 +1,307 @@
+{
+  "observations": [
+    {
+      "station": "Reykjavik",
+      "distance": "1 km S",
+      "time": "2026-11-06T12:00:00Z",
+      "temperature": 6,
+      "feelsLikeTemp": 4,
+      "symbol": "d200",
+      "windDirString": "SE",
+      "windDir": 150,
+      "windSpeed": 3,
+      "windGust": null,
+      "pressure": 1021,
+      "relHumidity": 76,
+      "visibility": 9999,
+      "snowDepth": null,
+      "longitude": -21.9,
+      "latitude": 64.13,
+      "elevation": 54,
+      "precip1h": [
+        {
+          "endtime": "2026-11-05T13:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T14:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T16:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T17:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T19:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T20:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T22:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T23:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T01:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T02:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T04:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T05:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T07:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T08:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T10:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T11:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        }
+      ]
+    },
+    {
+      "station": "Reykjavik",
+      "distance": "1 km S",
+      "time": "2026-11-06T12:00:00Z",
+      "temperature": 6,
+      "feelsLikeTemp": 6,
+      "symbol": null,
+      "windDirString": "SE",
+      "windDir": 150,
+      "windSpeed": 1,
+      "windGust": null,
+      "pressure": 1021,
+      "relHumidity": null,
+      "visibility": null,
+      "snowDepth": null,
+      "longitude": -21.9,
+      "latitude": 64.13,
+      "elevation": 53,
+      "precip1h": [
+        {
+          "endtime": "2026-11-05T13:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T14:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T16:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T17:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T19:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T20:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T22:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T23:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T01:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T02:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T04:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T05:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T07:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T08:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T10:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T11:00:00+00:00",
+          "accum": 0,
+          "prectype": "undefined"
+        }
+      ]
+    },
+    {
+      "station": "Keflavikurflugvollur",
+      "distance": "39 km SW",
+      "time": "2026-11-06T12:00:00Z",
+      "temperature": 5,
+      "feelsLikeTemp": 2,
+      "symbol": "d100",
+      "windDirString": "S",
+      "windDir": 190,
+      "windSpeed": 4,
+      "windGust": null,
+      "pressure": 1020,
+      "relHumidity": 81,
+      "visibility": 9999,
+      "snowDepth": 6,
+      "longitude": -22.6,
+      "latitude": 63.97,
+      "elevation": 52,
+      "precip1h": [
+        {
+          "endtime": "2026-11-05T13:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-05T14:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-05T16:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-05T17:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-05T19:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-05T20:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-05T22:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-05T23:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T01:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T02:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T04:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T05:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T07:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T08:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T10:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T11:00:00+00:00",
+          "accum": 0,
+          "prectype": "rain"
+        }
+      ]
+    }
+  ]
+}

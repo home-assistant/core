@@ -13,7 +13,7 @@ run-name: "#${{ github.event.pull_request.number }} ${{ github.event.pull_reques
 # yamllint disable-line rule:truthy
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review]
+    types: [opened, reopened, ready_for_review, synchronize]
     branches-ignore:
       - master
     paths:
@@ -30,9 +30,14 @@ jobs:
   trigger:
     name: Trigger the quality scale review
     if: ${{ !github.event.pull_request.draft }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+    runs-on: ubuntu-slim
+    timeout-minutes: 15
     steps:
+      # A newer push cancels this run through the concurrency group, and stage 2
+      # skips cancelled runs, so only the last push of a burst is reviewed.
+      - name: Wait for further pushes
+        if: github.event.action == 'synchronize'
+        run: sleep 300
       - name: Report the pull request
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}

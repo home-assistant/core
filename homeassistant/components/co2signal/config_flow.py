@@ -213,9 +213,10 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
             }
         )
-        return await self._validate_and_create(
-            "reauth_confirm", data_schema, user_input
-        )
+        data = None
+        if user_input is not None:
+            data = {**self._get_reauth_entry().data, **user_input}
+        return await self._validate_and_create("reauth_confirm", data_schema, data)
 
     async def _validate_and_create(
         self, step_id: str, data_schema: probatio.Schema, data: Mapping[str, Any] | None

@@ -23,12 +23,14 @@ from homeassistant.components.fan import (
     SERVICE_OSCILLATE,
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
+    FanService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -407,7 +409,7 @@ async def test_fan_turn_on_raises_on_device_communication_error(
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_entry.entity_id},
+            FanService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_entry.entity_id},
             blocking=True,
         )

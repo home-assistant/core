@@ -7,10 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.seventeentrack import DOMAIN
-from homeassistant.components.seventeentrack.const import (
-    SERVICE_ARCHIVE_PACKAGE,
-    SERVICE_GET_PACKAGES,
-)
+from homeassistant.components.seventeentrack.services import SeventeenTrackService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -37,7 +34,7 @@ async def test_get_packages_from_list(
     await init_integration(hass, mock_config_entry)
     service_response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_PACKAGES,
+        SeventeenTrackService.GET_PACKAGES,
         {
             CONFIG_ENTRY_ID_KEY: mock_config_entry.entry_id,
             PACKAGE_STATE_KEY: ["in_transit", "delivered"],
@@ -60,7 +57,7 @@ async def test_get_all_packages(
     await init_integration(hass, mock_config_entry)
     service_response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_PACKAGES,
+        SeventeenTrackService.GET_PACKAGES,
         {
             CONFIG_ENTRY_ID_KEY: mock_config_entry.entry_id,
         },
@@ -83,7 +80,7 @@ async def test_service_called_with_unloaded_entry(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_PACKAGES,
+            SeventeenTrackService.GET_PACKAGES,
             {
                 CONFIG_ENTRY_ID_KEY: mock_config_entry.entry_id,
             },
@@ -117,7 +114,7 @@ async def test_service_called_with_non_17track_device(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_PACKAGES,
+            SeventeenTrackService.GET_PACKAGES,
             {
                 CONFIG_ENTRY_ID_KEY: device_entry.id,
             },
@@ -137,7 +134,7 @@ async def test_archive_package(
     await init_integration(hass, mock_config_entry)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ARCHIVE_PACKAGE,
+        SeventeenTrackService.ARCHIVE_PACKAGE,
         {
             CONFIG_ENTRY_ID_KEY: mock_config_entry.entry_id,
             PACKAGE_TRACKING_NUMBER_KEY: ARCHIVE_PACKAGE_NUMBER,
@@ -160,7 +157,7 @@ async def test_packages_with_none_timestamp(
     await init_integration(hass, mock_config_entry)
     service_response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_PACKAGES,
+        SeventeenTrackService.GET_PACKAGES,
         {
             CONFIG_ENTRY_ID_KEY: mock_config_entry.entry_id,
         },

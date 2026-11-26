@@ -24,7 +24,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
@@ -35,6 +35,7 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -167,8 +168,8 @@ async def test_cover_state_settles_after_poll(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
