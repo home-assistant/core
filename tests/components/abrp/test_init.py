@@ -423,7 +423,7 @@ async def test_connection_logged_once_per_outage(
     for state in (
         *(ConnectionState.DISCONNECTED, ConnectionState.CONNECTED) * 2,
         *(ConnectionState.DISCONNECTED,) * 3,
-        ConnectionState.CONNECTED,
+        *(ConnectionState.CONNECTED, ConnectionState.DISCONNECTED) * 2,
     ):
         fire_connection(mock_telemetry_stream, ConnectionEvent(state, "closed"))
 
