@@ -988,6 +988,93 @@ async def test_late_refresh_after_subentry_removal_is_ignored(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_away_client_reports_not_home_after_restart(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    hub_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a client no router sees reports not home after a restart."""
+    mock_ubus.return_value.get_hostapd_clients.side_effect = lambda interface: {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    hub_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_HOME
+
+    # The client leaves and ages out of the keep-home window.
+    mock_ubus.return_value.get_hostapd_clients.side_effect = lambda interface: {
+        "clients": {}
+    }
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == STATE_NOT_HOME
+
+    # The restart resets the presence; the restored tracker stays live and
+    # the complete, healthy view establishes the client's absence.
+    assert await hass.config_entries.async_reload(hub_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_NOT_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_away_client_unavailable_after_restart_while_router_down(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_hub: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a client stays unavailable after a restart while its router is down."""
+    _mock, ubus = mock_ubus_by_host
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {MAC_LAPTOP: {"authorized": True}}
+    }
+    two_router_hub.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(two_router_hub.entry_id)
+    await hass.async_block_till_done()
+
+    laptop_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_LAPTOP
+    )
+    assert laptop_id is not None
+    assert hass.states.get(laptop_id).state == STATE_HOME
+
+    # Router B goes down, so the laptop's state is unverifiable.
+    ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = ConnectionError
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(laptop_id).state == STATE_UNAVAILABLE
+
+    # The restart resets the presence; the downed router might still see
+    # the laptop, so it stays unavailable.
+    assert await hass.config_entries.async_reload(two_router_hub.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(laptop_id).state == STATE_UNAVAILABLE
+
+    # Router B answers again without the laptop; the complete view
+    # establishes the absence.
+    ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = None
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {"clients": {}}
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(laptop_id).state == STATE_NOT_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_failed_unload_keeps_client_reported(
     hass: HomeAssistant,
     mock_ubus: MagicMock,

@@ -256,7 +256,19 @@ async def async_setup_entry(
         # A failed poll sees nothing new.
         for clients in coordinator.latest_views.values():
             seen.update(clients)
-        new_macs = [mac for mac in seen if mac not in tracked]
+        # Trackers this entry holds in the registry must stay live even
+        # when no router sees their client, as a restored registry entry
+        # cannot report the absence on its own.
+        owned = {
+            registry_entry.unique_id
+            for registry_entry in er.async_entries_for_config_entry(
+                entity_registry, config_entry.entry_id
+            )
+            if registry_entry.domain == DEVICE_TRACKER_DOMAIN
+            and registry_entry.platform == DOMAIN
+            and registry_entry.unique_id is not None
+        }
+        new_macs = [mac for mac in seen | owned if mac not in tracked]
         tracked.update(new_macs)
         if new_macs:
             async_add_entities(
@@ -407,7 +419,9 @@ class UbusScannerEntity(ScannerEntity):
     def available(self) -> bool:
         """Return whether the device's state is grounded on a reachable router."""
         coordinator: UbusDataUpdateCoordinator = self._config_entry.runtime_data
-        return coordinator.has_reportable_stamp(self._mac)
+        if coordinator.has_reportable_stamp(self._mac):
+            return True
+        return coordinator.known_away(self._mac)
 
     @property
     @override

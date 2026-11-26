@@ -275,6 +275,10 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         self._tick_start: float | None = None
         self._last_signature: tuple | None = None
         self._seq = 0
+        # Clients whose only stamps were released with a removed router; a
+        # client's absence cannot be verified while its last known router
+        # is unmonitored, so the set lives until the client is seen again.
+        self._ungrounded: set[str] = set()
 
     def _subentries_signature(self) -> tuple:
         """Return a signature of the entry's subentries, as polled."""
@@ -354,6 +358,9 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
                 "All routers failed to respond: "
                 + ", ".join(self.hosts[subentry_id].host for subentry_id in failed)
             )
+        # A client which loses every stamp in the merge was last seen on a
+        # router which is no longer monitored.
+        self._ungrounded = (self._ungrounded | set(old)) - set(presence)
         return presence
 
     def _reconcile_hosts(self) -> dict[str, _UbusHost]:
@@ -544,6 +551,21 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
             return False
         latest = max(stamps, key=lambda sid: stamps[sid].seq)
         return self.host_health.get(latest, True) or self.latest_stamp(mac) is not None
+
+    def known_away(self, mac: str) -> bool:
+        """Return whether the client's absence is established by the routers.
+
+        A client no router reports is known to be away only when every
+        configured router answers and it was not last seen on a router
+        which is no longer monitored.
+        """
+        return (
+            bool(self.hosts)
+            and mac not in self._ungrounded
+            and all(
+                self.host_health.get(subentry_id, True) for subentry_id in self.hosts
+            )
+        )
 
     def known_hostname(self, mac: str) -> str | None:
         """Return the most recent non-empty hostname stamped for a client."""
