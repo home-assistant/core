@@ -109,7 +109,7 @@ class LaifenCoordinator(DataUpdateCoordinator[None]):
                 self.update_interval = None
                 async_clear_advertisement_history(self.hass, self.toothbrush.address)
         self._async_update_firmware_version()
-        self.async_update_listeners()
+        self.async_set_updated_data(None)
 
     @callback
     def _async_update_firmware_version(self) -> None:

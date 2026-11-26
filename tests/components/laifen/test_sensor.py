@@ -16,11 +16,8 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import BATTERY_ENTITY_ID, DURATION_ENTITY_ID, setup_integration
 from .conftest import SESSION, STATE
-
-BATTERY_ENTITY_ID = "sensor.lftb01_p_1234_battery"
-DURATION_ENTITY_ID = "sensor.lftb01_p_1234_last_brushing_duration"
 
 
 @pytest.fixture

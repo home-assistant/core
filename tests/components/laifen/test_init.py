@@ -22,7 +22,15 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.util import dt as dt_util
 
-from . import ADDRESS, LAIFEN_SERVICE_INFO, NAME, setup_integration, wake_up
+from . import (
+    ADDRESS,
+    BATTERY_ENTITY_ID,
+    DURATION_ENTITY_ID,
+    LAIFEN_SERVICE_INFO,
+    NAME,
+    setup_integration,
+    wake_up,
+)
 from .conftest import FIRMWARE_VERSION
 
 
@@ -292,13 +300,7 @@ async def test_no_connect_after_home_assistant_stops(
     assert not mock_toothbrush.connected
 
 
-@pytest.mark.parametrize(
-    "entity_id",
-    [
-        "sensor.lftb01_p_1234_battery",
-        "sensor.lftb01_p_1234_last_brushing_duration",
-    ],
-)
+@pytest.mark.parametrize("entity_id", [BATTERY_ENTITY_ID, DURATION_ENTITY_ID])
 async def test_entities_unavailable_when_update_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -315,6 +317,25 @@ async def test_entities_unavailable_when_update_fails(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_push_restores_availability_after_failed_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_toothbrush: MagicMock,
+) -> None:
+    """Test that a pushed state restores the availability after a failed update."""
+    await setup_integration(hass, mock_config_entry)
+    await wake_up(hass)
+    mock_toothbrush.update.side_effect = RuntimeError
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
+    await hass.async_block_till_done()
+    assert hass.states.get(BATTERY_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_toothbrush.notify()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BATTERY_ENTITY_ID).state != STATE_UNAVAILABLE
 
 
 async def test_update_while_connected(
