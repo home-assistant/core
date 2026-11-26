@@ -75,6 +75,14 @@
         }
       }
     },
+    "number": {
+      "external_temperature": {
+        "name": "External temperature reference"
+      },
+      "window_timeout": {
+        "name": "Open window timeout"
+      }
+    },
     "sensor": {
       "error": {
         "name": "Error",

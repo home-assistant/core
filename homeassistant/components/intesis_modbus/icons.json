@@ -1,5 +1,13 @@
 {
   "entity": {
+    "number": {
+      "external_temperature": {
+        "default": "mdi:home-thermometer"
+      },
+      "window_timeout": {
+        "default": "mdi:timer-sand"
+      }
+    },
     "sensor": {
       "error": {
         "default": "mdi:alert-circle",
