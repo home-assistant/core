@@ -8,12 +8,24 @@
       "unsupported_location": "Apple WeatherKit does not provide data for this location."
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "key_id": "[%key:component::weatherkit::config::step::user::data::key_id%]",
+          "key_pem": "[%key:component::weatherkit::config::step::user::data::key_pem%]"
+        },
+        "data_description": {
+          "key_id": "The ID of the new WeatherKit key.",
+          "key_pem": "The contents of the new private key file (.p8)."
+        },
+        "description": "Your WeatherKit key is no longer valid. Enter a new key ID and private key.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "key_id": "Key ID",
           "key_pem": "Private key (.p8)",
           "location": "[%key:common::config_flow::data::location%]",
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "service_id": "Service ID",
           "team_id": "Apple team ID"
         },

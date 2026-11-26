@@ -65,9 +65,9 @@ class AriaQCoordinator(DataUpdateCoordinator[AriaQCoordinatorData]):
         async def _on_ws_data(data: MachineData) -> None:
             """Handle data from WebSocket."""
             _LOGGER.debug("Received WebSocket update")
-            if self.data:
-                self.data.state.data = data
-                self.async_set_updated_data(self.data)
+            if (coordinator_data := self.data_or_none) is not None:
+                coordinator_data.state.data = data
+                self.async_set_updated_data(coordinator_data)
 
         self.vmc.register_websocket_callback(_on_ws_data)
         self.vmc.websocket.start()

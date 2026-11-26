@@ -1,6 +1,7 @@
 """Test the Škoda sensor platform."""
 
-from unittest.mock import AsyncMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -15,11 +16,18 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.skoda.const import DOMAIN
 from homeassistant.components.skoda.coordinator import UPDATE_INTERVAL
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+
+
+@pytest.fixture(autouse=True)
+def platforms() -> Generator[None]:
+    """Only set up the sensor platform."""
+    with patch("homeassistant.components.skoda._PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

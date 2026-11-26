@@ -1,0 +1,8 @@
+{
+  "configured_price_spread": {
+    "amount": 800000
+  },
+  "market_time_resolution": {
+    "iso8601": "PT15M"
+  }
+}

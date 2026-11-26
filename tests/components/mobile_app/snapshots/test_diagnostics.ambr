@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'app': dict({
+      'app_id': 'io.homeassistant.mobile_app_test',
+      'app_name': 'Mobile App Tests',
+      'app_version': '1.0.0',
+    }),
+    'cloudhook': False,
+    'device': dict({
+      'manufacturer': 'mobile_app',
+      'model': 'Test',
+      'os_name': 'Linux',
+      'os_version': '1.0',
+    }),
+    'encryption': dict({
+      'no_legacy_encryption': False,
+      'supports_encryption': False,
+    }),
+    'entities': dict({
+      'binary_sensor': 1,
+      'device_tracker': 1,
+      'notify': 1,
+      'sensor': 2,
+    }),
+    'push': dict({
+      'cloud_push': True,
+      'live_activity': False,
+      'push_websocket_channel': True,
+      'websocket_channel_connected': False,
+    }),
+  })
+# ---

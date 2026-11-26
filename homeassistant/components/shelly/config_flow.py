@@ -95,6 +95,7 @@ from .utils import (
     get_coap_context,
     get_device_entry_gen,
     get_device_from_manufacturer_data,
+    get_device_url,
     get_http_port,
     get_info_auth,
     get_info_gen,
@@ -1216,10 +1217,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {"name": discovery_info.name.split(".")[0]},
-                "configuration_url": (
-                    f"{'https' if self.port == DEFAULT_HTTPS_PORT else 'http'}://"
-                    f"{discovery_info.host}"
-                ),
+                "configuration_url": get_device_url({CONF_HOST: host, CONF_PORT: port}),
             }
         )
 
@@ -1261,13 +1259,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     **self._get_ssl_entry_data(self.port, self.verify_ssl),
                 },
             )
-        self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={
-                CONF_MODEL: model,
-                CONF_HOST: self.host,
+                "model": model,
+                "host": self.host,
             },
             errors=errors,
         )

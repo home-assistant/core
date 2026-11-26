@@ -23,8 +23,11 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 
-from .const import DEVICE, MOCK_CONFIG, USER_INFO, USERNAME
+from .conftest import MockAppleDevice
+from .const import DEVICE, DEVICE_2, MOCK_CONFIG, USER_INFO, USERNAME
 
 
 class MockDevice(dict):
@@ -154,6 +157,43 @@ async def test_unique_id_set_on_setup(hass: HomeAssistant) -> None:
 
     assert config_entry.unique_id == USERNAME
     assert config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("service_2fa")
+async def test_reload_unsubscribes_platform_listeners(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test that reload detaches the old account's dispatcher listeners.
+
+    The device_new signal is keyed by username, so it survives a reload and
+    stale listeners from the previous account would otherwise pile up on it.
+    """
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(config_entry, pref_disable_polling=True)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    # The first calendars/reminders fetch runs as a background task of the
+    # config entry; waiting for it keeps the reauth flow count deterministic.
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    old_account = config_entry.runtime_data
+    signal = old_account.signal_device_new
+    dispatchers = hass.data[DATA_DISPATCHER]
+    # binary_sensor, button, device_tracker and sensor each connect one
+    # new-device listener.
+    assert len(dispatchers[signal]) == 4
+    assert len(old_account.listeners) == 4
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    new_account = config_entry.runtime_data
+    assert new_account is not old_account
+    assert old_account.listeners == []
+    # Only the new account's four listeners remain on the shared signal.
+    assert len(dispatchers[signal]) == 4
 
 
 @pytest.mark.usefixtures("service_auth_required")
@@ -1088,3 +1128,129 @@ async def test_an_undeliverable_challenge_drops_the_stored_session(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "send_verification_code"}
     assert service_2fa.return_value.session.clear_persistence.called
+
+
+@pytest.mark.usefixtures("mock_icloud_service")
+async def test_a_device_apple_stops_reporting_is_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    icloud_devices: list[MockAppleDevice],
+) -> None:
+    """Test that a device Apple stops reporting is removed with its entities.
+
+    The account polls a list of what Apple currently reports, and that list
+    can drop a device without saying so; the difference removes the device
+    and everything bound to it. The account's own service device, which
+    Apple never lists, is left alone.
+    """
+    iphone = icloud_devices[0]
+    icloud_devices.append(MockAppleDevice(DEVICE_2))
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    # The first calendars and reminders fetch runs as a background task of the
+    # config entry; waiting for it keeps it from outliving the test.
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "device1"), config_entry.entry_id
+        )
+        is not None
+    )
+    assert entity_registry.async_get("sensor.iphone_battery") is not None
+    # Calendars and to-dos hang off the account's own service device.
+    account_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{USERNAME}_account")},
+        name=config_entry.title,
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
+    icloud_devices.remove(iphone)
+    await hass.async_add_executor_job(config_entry.runtime_data.update_devices)
+    await hass.async_block_till_done()
+
+    # The iPhone follows the list; the iPad Apple still reports and the
+    # account's service device stay.
+    assert set(config_entry.runtime_data.devices) == {"device6"}
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "device1"), config_entry.entry_id
+        )
+        is None
+    )
+    assert entity_registry.async_get("sensor.iphone_battery") is None
+    assert hass.states.get("sensor.iphone_battery") is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "device6"), config_entry.entry_id
+        )
+        is not None
+    )
+    assert entity_registry.async_get("sensor.ipad_battery") is not None
+    assert device_registry.async_get(account_device.id) is account_device
+
+
+@pytest.mark.usefixtures("mock_icloud_service")
+async def test_a_device_gone_while_hass_was_stopped_is_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    icloud_devices: list[MockAppleDevice],
+) -> None:
+    """Test a device Apple stopped reporting between two runs goes.
+
+    The devices this run has fetched so far cannot tell a device that went
+    missing while Home Assistant was off, so the registry of the previous
+    run is what the report is compared against.
+    """
+    ipad = MockAppleDevice(DEVICE_2)
+    icloud_devices.append(ipad)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    # The first calendars and reminders fetch runs as a background task of the
+    # config entry; waiting for it keeps it from outliving the test.
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "device6"), config_entry.entry_id
+        )
+        is not None
+    )
+    assert entity_registry.async_get("sensor.ipad_battery") is not None
+
+    # Apple stops reporting the iPad while Home Assistant is not running.
+    icloud_devices.remove(ipad)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The iPad is gone with its entities; the iPhone Apple still reports and
+    # the account's own service device stay.
+    assert set(config_entry.runtime_data.devices) == {"device1"}
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "device6"), config_entry.entry_id
+        )
+        is None
+    )
+    assert entity_registry.async_get("sensor.ipad_battery") is None
+    assert hass.states.get("sensor.ipad_battery") is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "device1"), config_entry.entry_id
+        )
+        is not None
+    )
+    assert entity_registry.async_get("sensor.iphone_battery") is not None

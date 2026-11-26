@@ -1,7 +1,7 @@
 """Config flow for the EARN-E P1 Meter integration."""
 
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from earn_e_p1 import EarnEP1Device, discover, validate
 import probatio
@@ -137,36 +137,31 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
             device = await self._async_validate_host(host)
         except OSError:
             errors["base"] = "cannot_connect"
-            device = None
         except Exception:
             _LOGGER.exception("Unexpected error validating device")
             errors["base"] = "unknown"
-            device = None
-
-        if device is None and "base" not in errors:
+        else:
+            if device is not None:
+                await self.async_set_unique_id(device.serial)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=f"EARN-E P1 ({host})",
+                    data={CONF_HOST: host, CONF_SERIAL: device.serial},
+                )
             errors["base"] = "cannot_connect"
 
-        if errors:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=STEP_USER_DATA_SCHEMA,
-                errors=errors,
-            )
-
-        assert device is not None
-        await self.async_set_unique_id(device.serial)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=f"EARN-E P1 ({host})",
-            data={CONF_HOST: host, CONF_SERIAL: device.serial},
+        return self.async_show_form(
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
         )
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm setup of a discovered device."""
-        assert self._discovered_device is not None
+        if TYPE_CHECKING:
+            assert self._discovered_device is not None
         device = self._discovered_device
 
         if user_input is not None:
@@ -204,7 +199,6 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: validated.host, CONF_SERIAL: validated.serial},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={"host": device.host},

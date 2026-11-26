@@ -1,17 +1,20 @@
 """Provide common fixtures."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from matter_server.client.models.node import MatterNode
+from matter_server.client.models.node import MatterEndpoint, MatterNode
 from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.models import ServerInfoMessage
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.matter import DOMAIN
+from homeassistant.components.matter.discovery import async_discover_entities
+from homeassistant.components.matter.models import MatterEntityInfo
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .common import (
@@ -74,9 +77,31 @@ async def integration_fixture(
 
 
 @pytest.fixture
-async def matter_devices(hass: HomeAssistant, matter_client: MagicMock) -> None:
-    """Fixture for all Matter devices."""
-    await setup_integration_with_node_fixtures(hass, matter_client)
+async def matter_devices(
+    hass: HomeAssistant, matter_client: MagicMock, platform: Platform
+) -> AsyncGenerator[None]:
+    """Fixture for all Matter devices, with only the entities of one platform."""
+
+    def discover_platform_entities(
+        endpoint: MatterEndpoint, server_schema: int
+    ) -> Generator[MatterEntityInfo]:
+        # Discovery must see the schemas of all platforms, because a schema can
+        # claim an attribute before the schemas of later platforms see it.
+        return (
+            entity_info
+            for entity_info in async_discover_entities(endpoint, server_schema)
+            if entity_info.platform == platform
+        )
+
+    with (
+        patch("homeassistant.components.matter.SUPPORTED_PLATFORMS", (platform,)),
+        patch(
+            "homeassistant.components.matter.adapter.async_discover_entities",
+            discover_platform_entities,
+        ),
+    ):
+        await setup_integration_with_node_fixtures(hass, matter_client)
+        yield
 
 
 @pytest.fixture

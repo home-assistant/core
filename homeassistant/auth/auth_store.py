@@ -1,12 +1,14 @@
 """Storage for auth models."""
 
+import asyncio
 from datetime import timedelta
 import hmac
 import itertools
 from logging import getLogger
 from typing import Any
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
@@ -40,6 +42,9 @@ INITIAL_LOAD_SAVE_DELAY = 300
 
 DEFAULT_SAVE_DELAY = 1
 
+# Limits auth store writes caused by frequently used long-lived access tokens.
+LONG_LIVED_ACCESS_TOKEN_USAGE_SAVE_DELAY = 60
+
 
 class AuthStore:
     """Stores authentication info.
@@ -61,6 +66,7 @@ class AuthStore:
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._token_id_to_user_id: dict[str, str] = {}
+        self._usage_save_timer: asyncio.TimerHandle | None = None
 
     async def async_get_groups(self) -> list[models.Group]:
         """Retrieve all users."""
@@ -287,6 +293,36 @@ class AuthStore:
         self._async_schedule_save()
 
     @callback
+    def async_log_long_lived_access_token_usage(
+        self, refresh_token: models.RefreshToken, remote_ip: str | None = None
+    ) -> None:
+        """Update long-lived access token last used information."""
+        refresh_token.last_used_at = dt_util.utcnow()
+        refresh_token.last_used_ip = remote_ip
+        # Any save collects the usage when writing, so one timer covers all tokens
+        if self._usage_save_timer is not None:
+            return
+        if self.hass.is_stopping:
+            self._async_schedule_save()
+            return
+        self._usage_save_timer = self.hass.loop.call_later(
+            LONG_LIVED_ACCESS_TOKEN_USAGE_SAVE_DELAY, self._async_save_token_usage
+        )
+
+    @callback
+    def _async_save_token_usage(self) -> None:
+        """Save the logged long-lived access token usage."""
+        self._usage_save_timer = None
+        self._async_schedule_save()
+
+    @callback
+    def _async_flush_token_usage(self, _event: Event) -> None:
+        """Save pending long-lived access token usage on shutdown."""
+        if self._usage_save_timer is not None:
+            self._usage_save_timer.cancel()
+            self._async_save_token_usage()
+
+    @callback
     def async_set_expiry(
         self, refresh_token: models.RefreshToken, *, enable_expiry: bool
     ) -> None:
@@ -314,6 +350,10 @@ class AuthStore:
         if self._loaded:
             raise RuntimeError("Auth storage is already loaded")
         self._loaded = True
+        # Shutdown jobs run while requests are still authenticated
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_flush_token_usage
+        )
 
         dev_reg = dr.async_get(self.hass)
         ent_reg = er.async_get(self.hass)
@@ -520,6 +560,9 @@ class AuthStore:
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return the data to store."""
+        if self._usage_save_timer is not None:
+            self._usage_save_timer.cancel()
+            self._usage_save_timer = None
         users = [
             {
                 "id": user.id,

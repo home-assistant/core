@@ -77,8 +77,8 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
             CONF_FOLDER_NAME: "backups_123",
             CONF_FOLDER_ID: "my_folder_id",
         },
-        unique_id="mock_drive_id",
-        minor_version=2,
+        unique_id="MOCK_DRIVE_ID",
+        minor_version=3,
     )
 
 

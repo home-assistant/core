@@ -27,6 +27,10 @@ class CoverEntityCapabilityAttribute(StrEnum):
     """Capability attributes for cover entities."""
 
     SUPPORTED_SPEEDS = "supported_speeds"
+    OPEN_TILT_POSITION = "open_tilt_position"
+    CLOSED_TILT_POSITIONS = "closed_tilt_positions"
+    TILT_START_ANGLE = "tilt_start_angle"
+    TILT_END_ANGLE = "tilt_end_angle"
 
 
 class CoverEntityStateAttribute(StrEnum):
@@ -53,6 +57,22 @@ class CoverEntityFeature(IntFlag):
     STOP_TILT = 64
     SET_TILT_POSITION = 128
     SPEED = 256
+
+
+class CoverSpeed(StrEnum):
+    """Standard speeds for cover entities.
+
+    Without a speed, the cover moves at the device's default speed.
+    """
+
+    # Move fast
+    FAST = "fast"
+
+    # Move at a speed between slow and fast
+    MEDIUM = "medium"
+
+    # Move slowly, e.g. to be quieter
+    SLOW = "slow"
 
 
 class CoverState(StrEnum):

@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import EagleDataCoordinator, RainforestEagleConfigEntry
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(

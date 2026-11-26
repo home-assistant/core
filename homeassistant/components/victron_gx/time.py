@@ -75,8 +75,6 @@ class VictronTime(VictronBaseEntity, TimeEntity):
     @override
     async def async_set_value(self, value: time) -> None:
         """Set a new time value."""
-        if TYPE_CHECKING:
-            assert isinstance(self._metric, VictronVenusWritableMetric)
         total_minutes = VictronTime.time_to_victron_time(value)
         _LOGGER.debug(
             "Setting time %s (%d minutes) on entity: %s",
@@ -84,7 +82,7 @@ class VictronTime(VictronBaseEntity, TimeEntity):
             total_minutes,
             self._attr_unique_id,
         )
-        self._metric.set(total_minutes)
+        self._set_metric_value(total_minutes)
 
     @staticmethod
     def victron_time_to_time(value: float | None) -> time | None:

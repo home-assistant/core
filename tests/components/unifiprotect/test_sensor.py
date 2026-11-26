@@ -10,6 +10,7 @@ from uiprotect.data import (
     NVR,
     Camera,
     DeviceState,
+    DoorbellMessageType,
     Event,
     EventType,
     Light,
@@ -17,9 +18,11 @@ from uiprotect.data import (
     LightModeType,
     ModelType,
     Permission,
+    PublicLcdMessage,
     Sensor,
     WSAction,
 )
+from uiprotect.data.devices import Hotplug
 from uiprotect.data.nvr import EventMetadata
 from uiprotect.data.public_devices import SensorFeatureCapability
 from uiprotect.utils import convert_to_datetime, to_js_time
@@ -63,6 +66,7 @@ from .utils import (
     registered_keys,
     remove_entities,
     reset_objects,
+    setup_public_camera,
     setup_public_light,
     setup_public_sensor,
     time_changed,
@@ -1003,3 +1007,69 @@ async def test_public_only_sensor_added_after_setup(
 
     assert len(hass.states.async_entity_ids(Platform.SENSOR.value)) == count
     assert "already exists" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("key", "public", "expected"),
+    [
+        pytest.param("mic_level", {"mic_volume": 17}, "17", id="mic_level"),
+        pytest.param(
+            "doorbell_text",
+            {
+                "lcd_message": PublicLcdMessage(
+                    type=DoorbellMessageType.CUSTOM_MESSAGE, text="Hi"
+                )
+            },
+            "Hi",
+            id="doorbell_text",
+        ),
+    ],
+)
+async def test_sensor_camera_mirror_reads_public(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    key: str,
+    public: dict[str, Any],
+    expected: str,
+) -> None:
+    """A read-only user's camera setting mirror shows the public value."""
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
+    ]
+    setup_public_camera(ufp, **public)
+
+    await init_entry(hass, ufp, [doorbell])
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{doorbell.mac}_{key}"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == expected
+
+
+async def test_sensor_camera_mic_mirror_unavailable_with_module_only(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A hot-plugged module alone leaves the microphone mirror unavailable.
+
+    The number it is deprecated for is gated on the built-in microphone.
+    """
+    doorbell.feature_flags.has_mic = False
+    doorbell.feature_flags.hotplug = Hotplug(audio=True)
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
+    ]
+    setup_public_camera(ufp)
+
+    await init_entry(hass, ufp, [doorbell])
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{doorbell.mac}_mic_level"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

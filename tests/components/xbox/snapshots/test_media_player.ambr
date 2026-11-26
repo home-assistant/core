@@ -143,7 +143,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('xbox', 'HIJKLMN')]>,
     'disabled_by': None,
@@ -200,7 +200,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('xbox', 'ABCDEFG')]>,
     'disabled_by': None,
@@ -257,7 +257,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('xbox', 'HIJKLMN')]>,
     'disabled_by': None,
@@ -311,7 +311,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('xbox', 'ABCDEFG')]>,
     'disabled_by': None,
@@ -365,7 +365,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('xbox', 'HIJKLMN')]>,
     'disabled_by': None,
@@ -422,7 +422,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('xbox', 'ABCDEFG')]>,
     'disabled_by': None,

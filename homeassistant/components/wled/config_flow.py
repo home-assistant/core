@@ -14,6 +14,7 @@ import yarl
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
+    SOURCE_IGNORE,
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
@@ -123,12 +124,15 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         if mac := discovery_info.properties.get(CONF_MAC):
             unique_id = normalize_mac_address(mac)
             await self.async_set_unique_id(unique_id)
-            if (
-                entry := self.hass.config_entries.async_entry_for_domain_unique_id(
-                    DOMAIN, unique_id
-                )
-            ) and entry.data[CONF_HOST] == discovery_info.host:
-                return self.async_abort(reason="already_configured")
+            if entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, unique_id
+            ):
+                if entry.source == SOURCE_IGNORE:
+                    # An ignored entry carries no data, so the host comparison
+                    # below would raise before the flow could abort.
+                    return self.async_abort(reason="already_configured")
+                if entry.data[CONF_HOST] == discovery_info.host:
+                    return self.async_abort(reason="already_configured")
 
         self.discovered_host = discovery_info.host
         try:

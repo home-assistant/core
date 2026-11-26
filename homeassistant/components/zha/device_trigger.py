@@ -12,11 +12,12 @@ from homeassistant.components.homeassistant.triggers.event import EventTriggerAr
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .helpers import async_get_zha_device_proxy, get_zha_data
+from .helpers import async_get_zha_device_proxy, async_is_zha_group_device, get_zha_data
 
 CONF_SUBTYPE = "subtype"
 DEVICE = "device"
@@ -29,6 +30,15 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 def _get_device_trigger_data(hass: HomeAssistant, device_id: str) -> tuple[str, dict]:
     """Get device trigger data for a device, falling back to the cache if possible."""
+
+    # Triggers belong to the ZHA device, not to its child devices
+    if (
+        dr.async_get(hass).async_get(
+            device_id, include_main_devices=False, include_composite_devices=False
+        )
+        is not None
+    ):
+        return "", {}
 
     # First, try checking to see if the device itself is accessible
     try:
@@ -100,6 +110,9 @@ async def async_get_triggers(
 
     Make sure the device supports device automations and return the trigger list.
     """
+    if async_is_zha_group_device(hass, device_id):
+        return []
+
     try:
         _, triggers = _get_device_trigger_data(hass, device_id)
     except KeyError as err:

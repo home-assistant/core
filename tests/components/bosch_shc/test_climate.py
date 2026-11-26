@@ -15,19 +15,12 @@ from homeassistant.components.climate import (
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import ATTR_TEMPERATURE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -162,12 +155,12 @@ async def test_active_preset(
 
 
 @pytest.mark.parametrize(
-    ("hvac_mode", "attr", "value"),
+    ("hvac_mode", "control_mode", "operation_mode"),
     [
-        (HVACMode.OFF, "summer_mode", True),
-        (HVACMode.COOL, "cooling_mode", True),
-        (HVACMode.HEAT, "operation_mode", MANUAL),
-        (HVACMode.AUTO, "operation_mode", AUTOMATIC),
+        (HVACMode.OFF, "OFF", None),
+        (HVACMode.COOL, "COOLING", None),
+        (HVACMode.HEAT, "HEATING", MANUAL),
+        (HVACMode.AUTO, "HEATING", AUTOMATIC),
     ],
 )
 async def test_set_hvac_mode(
@@ -175,42 +168,43 @@ async def test_set_hvac_mode(
     mock_config_entry: MockConfigEntry,
     mock_session: MagicMock,
     hvac_mode: HVACMode,
-    attr: str,
-    value: object,
+    control_mode: str,
+    operation_mode: object,
 ) -> None:
-    """Setting an HVAC mode writes the matching device field."""
-    device = climate_control_device(supports_cooling=True)
+    """Setting an HVAC mode writes the control mode atomically."""
+    device = climate_control_device(supports_cooling=True, operation_mode=AUTOMATIC)
     mock_session.device_helper.climate_controls = [device]
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, "hvac_mode": hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "hvac_mode": hvac_mode},
         blocking=True,
     )
 
-    assert getattr(device, attr) == value
+    device.set_hvac_control_mode.assert_called_once_with(control_mode)
+    assert device.operation_mode == (operation_mode or AUTOMATIC)
 
 
-async def test_set_hvac_mode_leaves_summer_mode_and_eco(
+async def test_set_hvac_mode_leaves_off_and_eco(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_session: MagicMock,
 ) -> None:
-    """Leaving off or eco clears the blocking flags first."""
+    """Leaving off or eco clears eco and turns heating back on."""
     device = climate_control_device(summer_mode=True, low=True)
     mock_session.device_helper.climate_controls = [device]
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, "hvac_mode": HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "hvac_mode": HVACMode.HEAT},
         blocking=True,
     )
 
-    assert device.summer_mode is False
+    device.set_hvac_control_mode.assert_called_once_with("HEATING")
     assert device.low is False
     assert device.operation_mode == MANUAL
 
@@ -227,8 +221,8 @@ async def test_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22.5},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 22.5},
         blocking=True,
     )
 
@@ -248,8 +242,8 @@ async def test_set_temperature_while_off_is_ignored(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22.5},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 22.5},
         blocking=True,
     )
 
@@ -268,16 +262,16 @@ async def test_set_temperature_with_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: 22.5,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 22.5,
             "hvac_mode": HVACMode.HEAT,
         },
         blocking=True,
     )
 
-    assert device.summer_mode is False
+    device.set_hvac_control_mode.assert_called_once_with("HEATING")
     assert device.setpoint_temperature == 22.5
 
 
@@ -293,8 +287,8 @@ async def test_set_preset_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, "preset_mode": PRESET_ECO},
+        ClimateService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "preset_mode": PRESET_ECO},
         blocking=True,
     )
     assert device.boost_mode is False
@@ -302,8 +296,8 @@ async def test_set_preset_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, "preset_mode": PRESET_BOOST},
+        ClimateService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "preset_mode": PRESET_BOOST},
         blocking=True,
     )
     assert device.boost_mode is True
@@ -329,8 +323,8 @@ async def test_cancel_preset(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, "preset_mode": PRESET_NONE},
+        ClimateService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "preset_mode": PRESET_NONE},
         blocking=True,
     )
 
@@ -353,10 +347,10 @@ async def test_set_temperature_unsupported_hvac_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_TEMPERATURE: 22.5,
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.TEMPERATURE: 22.5,
                 "hvac_mode": hvac_mode,
             },
             blocking=True,
@@ -366,26 +360,77 @@ async def test_set_temperature_unsupported_hvac_mode(
     assert device.setpoint_temperature == 21.0
 
 
-async def test_turn_on_off(
+async def test_turn_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_session: MagicMock,
 ) -> None:
-    """Turn off enables summer mode, turn on returns to automatic."""
+    """Turn off switches the control mode off."""
     device = climate_control_device()
     mock_session.device_helper.climate_controls = [device]
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
-    assert device.summer_mode is True
+
+    device.set_hvac_control_mode.assert_called_once_with("OFF")
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "control_mode"),
+    [
+        ({"operation_mode": MANUAL}, "HEATING"),
+        ({"operation_mode": AUTOMATIC}, "HEATING"),
+        ({"supports_cooling": True, "cooling_mode": True}, "COOLING"),
+    ],
+)
+async def test_turn_on_resumes_previous_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    kwargs: dict[str, object],
+    control_mode: str,
+) -> None:
+    """Turn on only writes the control mode and leaves the operation mode alone."""
+    device = climate_control_device(summer_mode=True, low=True, **kwargs)
+    operation_mode = device.operation_mode
+    mock_session.device_helper.climate_controls = [device]
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
-    assert device.summer_mode is False
-    assert device.operation_mode == AUTOMATIC
+
+    device.set_hvac_control_mode.assert_called_once_with(control_mode)
+    assert device.operation_mode == operation_mode
+    assert device.low is False
+
+
+async def test_turn_on_when_already_on_does_nothing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+) -> None:
+    """Turning on a room that is already on writes nothing."""
+    device = climate_control_device(summer_mode=False)
+    mock_session.device_helper.climate_controls = [device]
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    device.set_hvac_control_mode.assert_not_called()
 
 
 HC_ENTITY_ID = "climate.floor_heating"
@@ -467,8 +512,8 @@ async def test_heating_circuit_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: HC_ENTITY_ID, "hvac_mode": hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: HC_ENTITY_ID, "hvac_mode": hvac_mode},
         blocking=True,
     )
 
@@ -487,8 +532,8 @@ async def test_heating_circuit_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: HC_ENTITY_ID, ATTR_TEMPERATURE: 24.0},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: HC_ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 24.0},
         blocking=True,
     )
 
@@ -507,10 +552,10 @@ async def test_heating_circuit_set_temperature_with_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: HC_ENTITY_ID,
-            ATTR_TEMPERATURE: 24.0,
+            TargetKey.ENTITY_ID: HC_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 24.0,
             "hvac_mode": HVACMode.HEAT,
         },
         blocking=True,
@@ -534,10 +579,10 @@ async def test_heating_circuit_set_temperature_unsupported_hvac_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: HC_ENTITY_ID,
-                ATTR_TEMPERATURE: 24.0,
+                TargetKey.ENTITY_ID: HC_ENTITY_ID,
+                ClimateServiceArgument.TEMPERATURE: 24.0,
                 "hvac_mode": HVACMode.COOL,
             },
             blocking=True,

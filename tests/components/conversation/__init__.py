@@ -56,7 +56,9 @@ async def mock_chat_log(hass: HomeAssistant) -> AsyncGenerator[MockChatLog]:
             "homeassistant.components.conversation.chat_log.ChatLog",
             MockChatLog,
         ),
-        chat_session.async_get_chat_session(hass, "mock-conversation-id") as session,
+        chat_session.async_get_chat_session(
+            hass, "mock-conversation-id", context=None
+        ) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
     ):
         yield chat_log

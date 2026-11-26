@@ -157,7 +157,7 @@ async def async_setup_entry(
                     )
                 entities.append(OVOEnergySensor(coordinator, description))
                 added_keys.add(description.key)
-        async_add_entities(entities, True)
+        async_add_entities(entities)
 
     async_discover_sensors()
     entry.async_on_unload(coordinator.async_add_listener(async_discover_sensors))

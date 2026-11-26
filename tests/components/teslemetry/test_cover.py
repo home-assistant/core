@@ -20,11 +20,18 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_STOP_COVER,
+    CoverService,
     CoverState,
 )
 from homeassistant.components.teslemetry.const import CONF_VIN, SUBENTRY_TYPE_VEHICLE
 from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ADDRESS, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_ADDRESS,
+    STATE_UNKNOWN,
+    Platform,
+    TargetKey,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -44,7 +51,7 @@ from .const import (
     VEHICLE_DATA_NONE,
 )
 
-WINDOWS_ENTITY_ID = "cover.test_windows"
+WINDOWS_ENTITY_ID = "cover.test_vent_windows"
 TONNEAU_ENTITY_ID = "cover.test_tonneau"
 BLE_ADDRESS = "AA:BB:CC:DD:EE:FF"
 TONNEAU_SERVICES = [
@@ -240,8 +247,8 @@ async def test_cover_tonneau_services(
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once_with()
@@ -255,8 +262,8 @@ async def test_cover_tonneau_services(
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.STOP,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once_with()
@@ -270,8 +277,8 @@ async def test_cover_tonneau_services(
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once_with()
@@ -404,15 +411,15 @@ async def test_cover_services(
     await setup_platform(hass, [Platform.COVER])
 
     # Vent Windows
-    entity_id = "cover.test_windows"
+    entity_id = WINDOWS_ENTITY_ID
     with patch(
         "tesla_fleet_api.teslemetry.Vehicle.window_control",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -423,8 +430,8 @@ async def test_cover_services(
         call.reset_mock()
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: ["cover.test_windows"]},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: [WINDOWS_ENTITY_ID]},
             blocking=True,
         )
         call.assert_called_once()
@@ -440,8 +447,8 @@ async def test_cover_services(
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -455,8 +462,8 @@ async def test_cover_services(
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -472,8 +479,8 @@ async def test_cover_services(
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -489,8 +496,8 @@ async def test_cover_services(
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -501,8 +508,8 @@ async def test_cover_services(
         call.reset_mock()
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -518,8 +525,8 @@ async def test_cover_services(
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -530,8 +537,8 @@ async def test_cover_services(
         call.reset_mock()
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.STOP,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -542,8 +549,8 @@ async def test_cover_services(
         call.reset_mock()
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -568,8 +575,8 @@ async def test_cover_command_errors(hass: HomeAssistant, response: dict) -> None
     ):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: ["cover.test_windows"]},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: [WINDOWS_ENTITY_ID]},
             blocking=True,
         )
 
@@ -589,8 +596,8 @@ async def test_cover_command_exception(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: ["cover.test_windows"]},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: [WINDOWS_ENTITY_ID]},
             blocking=True,
         )
 
@@ -635,7 +642,7 @@ async def test_cover_streaming(
     await hass.async_block_till_done()
 
     # Assert the entities restored their values with concrete assertions
-    assert hass.states.get("cover.test_windows").state == CoverState.CLOSED
+    assert hass.states.get(WINDOWS_ENTITY_ID).state == CoverState.CLOSED
     assert hass.states.get("cover.test_charge_port_door").state == CoverState.CLOSED
     # Frunk and trunk don't get closed state from stream, they show unknown
     assert hass.states.get("cover.test_frunk").state == "unknown"
@@ -668,7 +675,7 @@ async def test_cover_streaming(
     await hass.async_block_till_done()
 
     # Assert the entities get new values with concrete assertions
-    assert hass.states.get("cover.test_windows").state == CoverState.OPEN
+    assert hass.states.get(WINDOWS_ENTITY_ID).state == CoverState.OPEN
     # Charge port door doesn't change with CHARGE_PORT_DOOR_OPEN: False
     assert hass.states.get("cover.test_charge_port_door").state == CoverState.CLOSED
     # Frunk and trunk still show unknown (DOOR_STATE doesn't contain trunk state info)
@@ -703,7 +710,7 @@ async def test_cover_streaming(
 
     # Assert the entities get values with concrete assertions
     # Windows stay open when unknown because of previous state restoration
-    assert hass.states.get("cover.test_windows").state == CoverState.OPEN
+    assert hass.states.get(WINDOWS_ENTITY_ID).state == CoverState.OPEN
     assert hass.states.get("cover.test_charge_port_door").state == "unknown"
     assert hass.states.get("cover.test_frunk").state == "unknown"
     assert hass.states.get("cover.test_trunk").state == "unknown"
