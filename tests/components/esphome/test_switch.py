@@ -56,7 +56,7 @@ async def test_switch_generic_entity(
 async def test_switch_missing_state(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry: MockGenericDeviceEntryType,
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a switch that has no state yet is unknown rather than off."""
     entity_info = [
@@ -68,12 +68,24 @@ async def test_switch_missing_state(
     ]
     states = [SwitchState(key=1, state=False, missing_state=True)]
     user_service = []
-    await mock_generic_device_entry(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
         user_service=user_service,
         states=states,
     )
+    state = hass.states.get("switch.test_my_switch")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    mock_device.set_state(SwitchState(key=1, state=False, missing_state=False))
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.test_my_switch")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    mock_device.set_state(SwitchState(key=1, state=False, missing_state=True))
+    await hass.async_block_till_done()
     state = hass.states.get("switch.test_my_switch")
     assert state is not None
     assert state.state == STATE_UNKNOWN

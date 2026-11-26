@@ -43,7 +43,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .conftest import MockGenericDeviceEntryType
+from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
 
 async def test_climate_entity(
@@ -101,7 +101,7 @@ async def test_climate_entity(
 async def test_climate_missing_state(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry: MockGenericDeviceEntryType,
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a climate that has no state yet is unknown rather than off."""
     entity_info = [
@@ -121,11 +121,35 @@ async def test_climate_missing_state(
             missing_state=True,
         )
     ]
-    await mock_generic_device_entry(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
         states=states,
     )
+    state = hass.states.get("climate.test_my_climate")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    mock_device.set_state(
+        ClimateState(
+            key=1,
+            mode=ClimateMode.OFF,
+            missing_state=False,
+        )
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("climate.test_my_climate")
+    assert state is not None
+    assert state.state == HVACMode.OFF
+
+    mock_device.set_state(
+        ClimateState(
+            key=1,
+            mode=ClimateMode.OFF,
+            missing_state=True,
+        )
+    )
+    await hass.async_block_till_done()
     state = hass.states.get("climate.test_my_climate")
     assert state is not None
     assert state.state == STATE_UNKNOWN
