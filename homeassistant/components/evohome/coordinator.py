@@ -117,10 +117,7 @@ def _log_api_call_failure(logger: logging.Logger, err: ec2.ApiCallFailedError) -
 
 
 def _log_client_error(logger: logging.Logger, err: ec2.EvohomeError) -> None:
-    """Log (as debug) what the translated error of a client error leaves out.
-
-    A failed API call has its own helper, which also logs its status and errors.
-    """
+    """Log (as debug) what the translated error of a client error leaves out."""
     logger.debug(
         "%s: %s (reason=%s, details=%s)",
         type(err).__name__,
