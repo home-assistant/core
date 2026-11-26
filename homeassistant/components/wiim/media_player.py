@@ -71,6 +71,33 @@ PARALLEL_UPDATES = 1
 MEDIA_IMAGE_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=10)
 MAX_EQUALIZER_INITIALIZATION_ATTEMPTS = 2
 
+_GEQ_MODE_KEYS = {
+    "Acoustic": "acoustic",
+    "Bass Booster": "bass_booster",
+    "Bass Reducer": "bass_reducer",
+    "Classical": "classical",
+    "Dance": "dance",
+    "Deep": "deep",
+    "Electronic": "electronic",
+    "Flat": "flat",
+    "Game": "game",
+    "Hip-Hop": "hip_hop",
+    "Jazz": "jazz",
+    "Latin": "latin",
+    "Loudness": "loudness",
+    "Lounge": "lounge",
+    "Movie": "movie",
+    "Piano": "piano",
+    "Pop": "pop",
+    "R&B": "r_and_b",
+    "Rock": "rock",
+    "Small Speakers": "small_speakers",
+    "Spoken Word": "spoken_word",
+    "Treble Booster": "treble_booster",
+    "Treble Reducer": "treble_reducer",
+    "Vocal Booster": "vocal_booster",
+}
+
 SDK_TO_HA_STATE: dict[SDKPlayingStatus, MediaPlayerState] = {
     SDKPlayingStatus.PLAYING: MediaPlayerState.PLAYING,
     SDKPlayingStatus.PAUSED: MediaPlayerState.PAUSED,
@@ -172,6 +199,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     _attr_media_image_remotely_accessible = True
     _attr_name = None
     _attr_should_poll = False
+    _attr_translation_key = "speaker"
 
     def __init__(self, device: WiimDevice, entry: WiimConfigEntry) -> None:
         """Initialize the WiiM entity."""
@@ -184,8 +212,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._attr_repeat = RepeatMode.OFF
         self._transport_capabilities: WiimTransportCapabilities | None = None
         self._supported_features_update_in_flight = False
-        self._attr_sound_mode_list = list(device.supported_equalizer_modes) or None
-        self._attr_sound_mode = device.equalizer_mode
+        self._update_equalizer_from_sdk_cache()
         self._equalizer_initialized = not device.supports_http_api
         self._equalizer_refresh_task: asyncio.Task[None] | None = None
         self._equalizer_refresh_pending = False
@@ -406,13 +433,16 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @callback
     def _update_equalizer_from_sdk_cache(self) -> None:
         """Read this device's GEQ selection independently of group metadata."""
-        self._attr_sound_mode_list = (
-            list(self._device.supported_equalizer_modes) or None
-        )
+        modes = self._device.supported_equalizer_modes
+        # Keep both presets selectable when a custom name matches a translation key.
+        mode_keys = {
+            name: key if (key := _GEQ_MODE_KEYS.get(name, name)) not in modes else name
+            for name in modes
+        }
+        self._equalizer_mode_names = {key: name for name, key in mode_keys.items()}
+        self._attr_sound_mode_list = list(mode_keys.values()) or None
         current = self._device.equalizer_mode
-        self._attr_sound_mode = (
-            current if current in (self._attr_sound_mode_list or ()) else None
-        )
+        self._attr_sound_mode = mode_keys.get(current) if current is not None else None
 
     @callback
     def _update_ha_state_from_sdk_cache(
@@ -961,14 +991,14 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a GEQ preset for this device's current input."""
-        if sound_mode not in (self._attr_sound_mode_list or ()):
+        if (mode_name := self._equalizer_mode_names.get(sound_mode)) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_sound_mode",
                 translation_placeholders={"sound_mode": sound_mode},
             )
         try:
-            await self._device.async_set_equalizer_mode(sound_mode)
+            await self._device.async_set_equalizer_mode(mode_name)
         except (WiimException, UpnpError, aiohttp.ClientError, TimeoutError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
