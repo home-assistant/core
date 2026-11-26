@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType
 
 from .const import (
@@ -32,6 +33,11 @@ from .types import BTHomeConfigEntry
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
+
+# Service data last processed per address, kept across reloads
+LAST_PROCESSED: HassKey[dict[str, dict[str, bytes]]] = HassKey(
+    f"{DOMAIN}_last_processed"
+)
 
 
 def get_encryption_issue_id(entry_id: str) -> str:
@@ -116,6 +122,15 @@ def process_service_info(
             data=entry.data | {CONF_SLEEPY_DEVICE: data.sleepy_device},
         )
         coordinator.async_set_event_driven(data.sleepy_device)
+    last_processed = hass.data.setdefault(LAST_PROCESSED, {})
+    # A packet replayed at start that was processed before isn't a new event,
+    # unlike one received while the entry reloaded
+    already_processed = (
+        coordinator.replaying
+        and last_processed.get(service_info.address, service_info.service_data)
+        == service_info.service_data
+    )
+    last_processed[service_info.address] = service_info.service_data
     if update.events:
         address = service_info.device.address
         for device_key, event in update.events.items():
@@ -154,11 +169,10 @@ def process_service_info(
                     hass,
                     format_discovered_event_class(address),
                     event_class,
-                    None if coordinator.replaying else ble_event,
+                    None if already_processed else ble_event,
                 )
 
-            # A packet replayed from the Bluetooth history at start isn't a new event
-            if coordinator.replaying:
+            if already_processed:
                 continue
             hass.bus.async_fire(BTHOME_BLE_EVENT, ble_event)
             async_dispatcher_send(
@@ -233,3 +247,5 @@ async def async_remove_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> N
     """Remove a config entry."""
     # Issues raised before they were linked to the entry outlive it otherwise
     ir.async_delete_issue(hass, DOMAIN, get_encryption_issue_id(entry.entry_id))
+    if entry.unique_id:
+        hass.data.get(LAST_PROCESSED, {}).pop(entry.unique_id, None)

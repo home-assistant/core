@@ -393,3 +393,24 @@ async def test_reload_fires_no_event_for_last_press(hass: HomeAssistant) -> None
 
     assert [event.data["event_type"] for event in events] == ["press"]
     assert hass.states.get(BUTTON_ENTITY_ID).state == pressed
+
+
+@pytest.mark.usefixtures("proxies")
+async def test_press_during_reload_fires_event(hass: HomeAssistant) -> None:
+    """Test a press received while the entry reloads still fires an event."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=BUTTON_ADDRESS)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    events = async_capture_events(hass, BTHOME_BLE_EVENT)
+    now = time.monotonic()
+    _inject_button_payload(hass, b"\x44\x00\x01\x3a\x01", STRONG_PROXY, -60, now)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    _inject_button_payload(hass, b"\x44\x00\x02\x3a\x02", STRONG_PROXY, -60, now + 5)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert [event.data["event_type"] for event in events] == ["press", "double_press"]

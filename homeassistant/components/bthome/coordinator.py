@@ -56,7 +56,7 @@ class BTHomePassiveBluetoothProcessorCoordinator(
     @callback
     @override
     def async_start(self) -> CALLBACK_TYPE:
-        """Start the coordinator; the history it replays doesn't fire events."""
+        """Start the coordinator, flagging the history it replays."""
         self.replaying = True
         cancel = super().async_start()
         self.replaying = False
