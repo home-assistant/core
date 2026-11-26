@@ -3,8 +3,9 @@
 from typing import override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import INFRARED_BRIGHTNESS, INFRARED_LEVELS
@@ -36,6 +37,20 @@ MOOD_ENTITY = SelectEntityDescription(
 )
 
 
+@callback
+def _async_keep_infrared_select(
+    hass: HomeAssistant, coordinator: LIFXUpdateCoordinator
+) -> bool:
+    """Return whether the deprecated infrared select is still enabled on this device."""
+    # The number entity replaced the select, so a new device never gets one
+    entity_id = coordinator.async_get_entity_id(Platform.SELECT, INFRARED_BRIGHTNESS)
+    return (
+        entity_id is not None
+        and (registry_entry := er.async_get(hass).async_get(entity_id)) is not None
+        and not registry_entry.disabled
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LIFXConfigEntry,
@@ -46,7 +61,9 @@ async def async_setup_entry(
 
     entities: list[LIFXEntity] = []
 
-    if coordinator.data.capabilities.has_infrared:
+    if coordinator.data.capabilities.has_infrared and _async_keep_infrared_select(
+        hass, coordinator
+    ):
         entities.append(
             LIFXInfraredBrightnessSelectEntity(coordinator, INFRARED_BRIGHTNESS_ENTITY)
         )
@@ -86,7 +103,9 @@ class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Update the infrared brightness value."""
-        await self.coordinator.async_set_infrared_brightness(option)
+        await self.coordinator.async_set_infrared_brightness(
+            INFRARED_LEVELS[option] * 100
+        )
 
 
 class LIFXThemeSelectEntity(LIFXEntity, SelectEntity):

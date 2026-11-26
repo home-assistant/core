@@ -66,9 +66,14 @@
         "name": "Uplight"
       }
     },
-    "select": {
+    "number": {
       "infrared_brightness": {
         "name": "Infrared brightness"
+      }
+    },
+    "select": {
+      "infrared_brightness": {
+        "name": "[%key:component::lifx::entity::number::infrared_brightness::name%]"
       },
       "mood": {
         "name": "Mood",
@@ -897,6 +902,21 @@
     }
   },
   "issues": {
+    "deprecated_infrared_select": {
+      "fix_flow": {
+        "abort": {
+          "already_removed": "The infrared brightness select on {device_name} has already been removed.",
+          "in_use": "The infrared brightness select (`{entity_id}`) on {device_name} was not removed because it is still used by:\n\n{used_by}\n\n1. Change each of them to set `{replacement_entity_id}` with the **Number: Set** action instead. It takes a percentage from 0 to 100, where 0 is the same as **Disabled**.\n2. Open this repair again and select **Submit**."
+        },
+        "step": {
+          "confirm": {
+            "description": "The infrared brightness select (`{entity_id}`) on {device_name} only offers four fixed levels, so it has been replaced by `{replacement_entity_id}`, which can be set to any percentage.\n\nSelect **Submit** to remove the select.",
+            "title": "[%key:component::lifx::issues::deprecated_infrared_select::title%]"
+          }
+        }
+      },
+      "title": "The infrared brightness select on {device_name} is deprecated"
+    },
     "invalid_serial": {
       "fix_flow": {
         "step": {

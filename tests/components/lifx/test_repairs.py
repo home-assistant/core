@@ -1,5 +1,8 @@
 """Tests for LIFX repairs."""
 
+from unittest.mock import patch
+
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.repairs import (
     process_repair_fix_flow,
@@ -7,16 +10,26 @@ from pytest_homeassistant.components.repairs import (
 )
 from pytest_homeassistant.typing import ClientSessionGenerator
 
+from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.lifx import DOMAIN
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from . import IP_ADDRESS
+from . import IP_ADDRESS, LABEL, async_setup_lifx_entry
+from .helpers import (
+    INFRARED_NUMBER_ENTITY_ID,
+    INFRARED_SELECT_ENTITY_ID,
+    create_mock_infrared_light,
+    register_legacy_infrared_select,
+)
 
 MALFORMED_UNIQUE_ID = "gg:bb:cc:dd:ee:cc"
+RENAMED_SELECT_ENTITY_ID = "select.night_vision_level"
 
 
 async def _setup_malformed_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -98,3 +111,135 @@ async def test_invalid_serial_fix_flow_entry_already_removed(
     data = await process_repair_fix_flow(client, data["flow_id"])
 
     assert data["type"] == "create_entry"
+
+
+async def _setup_deprecated_select(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> str:
+    """Set up a device that still has the infrared select and return its issue."""
+    assert await async_setup_component(hass, "repairs", {})
+    register_legacy_infrared_select(entity_registry)
+    entry = await async_setup_lifx_entry(hass, create_mock_infrared_light())
+    return f"deprecated_infrared_select_{entry.entry_id}"
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param(INFRARED_SELECT_ENTITY_ID, id="original"),
+        pytest.param(RENAMED_SELECT_ENTITY_ID, id="renamed-after-the-issue"),
+    ],
+)
+async def test_deprecated_infrared_select_fix_flow_removes_select(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    entity_id: str,
+) -> None:
+    """Test confirming the repair removes the select, even after a rename."""
+    issue_id = await _setup_deprecated_select(hass, entity_registry)
+    entity_registry.async_update_entity(
+        INFRARED_SELECT_ENTITY_ID, new_entity_id=entity_id
+    )
+    client = await hass_client()
+
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {
+        "device_name": LABEL,
+        "entity_id": entity_id,
+        "replacement_entity_id": INFRARED_NUMBER_ENTITY_ID,
+    }
+
+    result = await process_repair_fix_flow(client, result["flow_id"])
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert entity_registry.async_get(entity_id) is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    assert hass.states.get(INFRARED_NUMBER_ENTITY_ID) is not None
+
+
+@pytest.mark.parametrize(
+    ("used_by_function", "used_by", "registered_domain", "expected_used_by"),
+    [
+        pytest.param(
+            "automations_with_entity",
+            ["automation.night_vision"],
+            AUTOMATION_DOMAIN,
+            "- [Night vision](/config/automation/edit/night_vision)",
+            id="registered-automation",
+        ),
+        pytest.param(
+            "scripts_with_entity",
+            ["script.night_vision"],
+            SCRIPT_DOMAIN,
+            "- [Night vision](/config/script/edit/night_vision)",
+            id="registered-script",
+        ),
+        pytest.param(
+            "automations_with_entity",
+            ["automation.not_registered"],
+            AUTOMATION_DOMAIN,
+            "- `automation.not_registered`",
+            id="unregistered-automation",
+        ),
+    ],
+)
+async def test_deprecated_infrared_select_fix_flow_keeps_a_select_in_use(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    used_by_function: str,
+    used_by: list[str],
+    registered_domain: str,
+    expected_used_by: str,
+) -> None:
+    """Test a select an automation or script uses is kept and the user told which."""
+    issue_id = await _setup_deprecated_select(hass, entity_registry)
+    entity_registry.async_get_or_create(
+        registered_domain,
+        registered_domain,
+        "night_vision",
+        suggested_object_id="night_vision",
+        original_name="Night vision",
+    )
+    client = await hass_client()
+
+    with patch(
+        f"homeassistant.components.lifx.repairs.{used_by_function}",
+        return_value=used_by,
+    ):
+        result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "in_use"
+    assert result["description_placeholders"] == {
+        "device_name": LABEL,
+        "entity_id": INFRARED_SELECT_ENTITY_ID,
+        "replacement_entity_id": INFRARED_NUMBER_ENTITY_ID,
+        "used_by": expected_used_by,
+    }
+    assert entity_registry.async_get(INFRARED_SELECT_ENTITY_ID) is not None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+
+async def test_deprecated_infrared_select_fix_flow_select_already_removed(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a select removed while the issue was open aborts and drops the issue."""
+    issue_id = await _setup_deprecated_select(hass, entity_registry)
+    entity_registry.async_remove(INFRARED_SELECT_ENTITY_ID)
+    client = await hass_client()
+
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_removed"
+    assert result["description_placeholders"] == {"device_name": LABEL}
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

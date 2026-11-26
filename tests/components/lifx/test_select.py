@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from typing import Any
+from unittest.mock import AsyncMock, patch
 
 from lifx import LifxError, Theme, ThemeLibrary
 from lifx.devices.paint_record import PaintKind
@@ -11,13 +12,19 @@ from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.const import LIFXService, LIFXServiceArgument
 from homeassistant.components.lifx.util import THEME_OPTIONS, THEME_SELECT_OPTIONS
 from homeassistant.components.select import ATTR_OPTIONS, DOMAIN as SELECT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, TargetKey
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_STARTED,
+    STATE_UNKNOWN,
+    TargetKey,
+)
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
-from . import SERIAL, async_setup_lifx_entry, async_trigger_update
+from . import LABEL, SERIAL, async_setup_lifx_entry, async_trigger_update
 from .helpers import (
+    INFRARED_NUMBER_ENTITY_ID,
     INFRARED_SELECT_ENTITY_ID,
     MockDevice,
     clear_paint_record,
@@ -28,9 +35,11 @@ from .helpers import (
     create_mock_mirror_light,
     create_mock_multizone_light,
     record_paint,
+    register_legacy_infrared_select,
 )
 
 LIGHT_ENTITY_ID = "light.my_group_my_bulb"
+AUTOMATION_ENTITY_ID = "automation.night_vision"
 THEME_ENTITY_ID = "select.my_group_my_bulb_theme"
 MOOD_ENTITY_ID = "select.my_group_my_bulb_mood"
 
@@ -346,6 +355,7 @@ async def test_infrared_brightness(
     refreshed_level: float,
 ) -> None:
     """Test typed infrared levels map to unchanged option labels."""
+    register_legacy_infrared_select(entity_registry)
     device = create_mock_infrared_light()
     await async_setup_lifx_entry(hass, device)
     entity_id = INFRARED_SELECT_ENTITY_ID
@@ -373,13 +383,6 @@ async def test_infrared_brightness(
 @pytest.mark.parametrize(
     ("factory", "method", "entity_id", "option"),
     [
-        pytest.param(
-            create_mock_infrared_light,
-            "set_infrared",
-            INFRARED_SELECT_ENTITY_ID,
-            "50%",
-            id="infrared_brightness",
-        ),
         pytest.param(
             create_mock_multizone_light,
             "apply_theme",
@@ -415,3 +418,144 @@ async def test_select_library_error_becomes_home_assistant_error(
             {ATTR_ENTITY_ID: entity_id, "option": option},
             blocking=True,
         )
+
+
+async def test_infrared_select_library_error_becomes_home_assistant_error(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a library failure on the deprecated select surfaces as an error."""
+    register_legacy_infrared_select(entity_registry)
+    device = create_mock_infrared_light()
+    await async_setup_lifx_entry(hass, device)
+    device.set_infrared.side_effect = LifxError("device unreachable")
+
+    with pytest.raises(HomeAssistantError, match="device unreachable"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            "select_option",
+            {ATTR_ENTITY_ID: INFRARED_SELECT_ENTITY_ID, "option": "50%"},
+            blocking=True,
+        )
+
+
+async def test_infrared_select_is_not_created_for_a_new_install(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a device that never had the select only gets the number."""
+    await async_setup_lifx_entry(hass, create_mock_infrared_light())
+
+    assert entity_registry.async_get(INFRARED_SELECT_ENTITY_ID) is None
+    assert hass.states.get(INFRARED_NUMBER_ENTITY_ID) is not None
+    assert not issue_registry.issues
+
+
+@pytest.mark.parametrize(
+    "used_by",
+    [
+        pytest.param([], id="unused"),
+        pytest.param([AUTOMATION_ENTITY_ID], id="used-by-an-automation"),
+    ],
+)
+async def test_existing_infrared_select_is_deprecated(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    used_by: list[str],
+) -> None:
+    """Test an enabled select is kept and reported as deprecated."""
+    select = register_legacy_infrared_select(entity_registry)
+
+    with patch(
+        "homeassistant.components.lifx.repairs.automations_with_entity",
+        return_value=used_by,
+    ):
+        entry = await async_setup_lifx_entry(hass, create_mock_infrared_light())
+
+    assert hass.states.get(INFRARED_SELECT_ENTITY_ID) is not None
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_infrared_select_{entry.entry_id}"
+    )
+    assert issue
+    assert issue.translation_key == "deprecated_infrared_select"
+    assert issue.breaks_in_ha_version == "2027.7.0"
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.severity is ir.IssueSeverity.WARNING
+    # The fix flow decides whether the select can go, so the issue stays fixable
+    assert issue.is_fixable
+    assert issue.translation_placeholders == {"device_name": LABEL}
+    assert issue.data == {
+        "select_id": select.id,
+        "device_name": LABEL,
+        "replacement_entity_id": INFRARED_NUMBER_ENTITY_ID,
+    }
+
+
+async def test_disabled_infrared_select_in_use_is_kept(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a disabled select an automation still uses is reported, not removed."""
+    register_legacy_infrared_select(entity_registry, er.RegistryEntryDisabler.USER)
+
+    with patch(
+        "homeassistant.components.lifx.repairs.automations_with_entity",
+        return_value=[AUTOMATION_ENTITY_ID],
+    ):
+        entry = await async_setup_lifx_entry(hass, create_mock_infrared_light())
+
+    assert hass.states.get(INFRARED_SELECT_ENTITY_ID) is None
+    assert entity_registry.async_get(INFRARED_SELECT_ENTITY_ID) is not None
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_infrared_select_{entry.entry_id}"
+    )
+
+
+async def test_disabled_unused_infrared_select_is_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a disabled select nothing uses is removed without an issue."""
+    register_legacy_infrared_select(entity_registry, er.RegistryEntryDisabler.USER)
+
+    await async_setup_lifx_entry(hass, create_mock_infrared_light())
+
+    assert entity_registry.async_get(INFRARED_SELECT_ENTITY_ID) is None
+    assert not issue_registry.issues
+
+
+async def test_infrared_select_removed_before_start_raises_no_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the issue waits for start and is dropped once the select is gone."""
+    hass.set_state(CoreState.not_running)
+    register_legacy_infrared_select(entity_registry)
+    entry = await async_setup_lifx_entry(hass, create_mock_infrared_light())
+    issue_id = f"deprecated_infrared_select_{entry.entry_id}"
+    # An issue raised on an earlier run is stored until it is deleted
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_infrared_select",
+        translation_placeholders={"device_name": LABEL},
+    )
+    entity_registry.async_remove(INFRARED_SELECT_ENTITY_ID)
+
+    hass.set_state(CoreState.running)
+    # Starting also kicks off the broadcast discovery this test does not want
+    with patch(
+        "homeassistant.components.lifx.discovery.async_discover_devices",
+        AsyncMock(return_value={}),
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

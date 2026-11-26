@@ -354,9 +354,9 @@ class LIFXLight(LIFXEntity, LightEntity):
         LOGGER.warning(
             (
                 "The 'infrared' attribute of 'lifx.set_state' is deprecated:"
-                " call 'select.select_option' targeting '%s' instead"
+                " call 'number.set_value' targeting '%s' instead"
             ),
-            self.coordinator.async_get_entity_id(Platform.SELECT, INFRARED_BRIGHTNESS),
+            self.coordinator.async_get_entity_id(Platform.NUMBER, INFRARED_BRIGHTNESS),
         )
 
         try:
