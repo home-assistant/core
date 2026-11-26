@@ -6,14 +6,16 @@ from logging import Logger
 from bthome_ble import BTHomeBluetoothDeviceData, SensorUpdate
 
 from homeassistant.components.bluetooth import (
+    BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
+    async_last_service_info,
 )
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothProcessorCoordinator,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .const import CONF_SLEEPY_DEVICE
 from .types import BTHomeConfigEntry
@@ -48,6 +50,31 @@ class BTHomePassiveBluetoothProcessorCoordinator(
     def sleepy_device(self) -> bool:
         """Return True if the device is a sleepy device."""
         return self.entry.data.get(CONF_SLEEPY_DEVICE, self.device_data.sleepy_device)  # type: ignore[no-any-return]
+
+    @callback
+    def async_handle_advertisement(
+        self, service_info: BluetoothServiceInfoBleak
+    ) -> None:
+        """Process a new packet of a sleepy device heard by a non-owner scanner.
+
+        The Bluetooth manager keeps a device on its current scanner for up to
+        15 minutes when no advertising interval is known, which drops the
+        packets of trigger-based devices that only another scanner hears.
+        The packet id filter of the parser drops the copies of one packet.
+        """
+        if not self.sleepy_device or self.device_data.packet_id is None:
+            return
+        if (
+            last_service_info := async_last_service_info(
+                self.hass, self.address, self.connectable
+            )
+        ) is None or last_service_info.source == service_info.source:
+            return
+        if (
+            previous := self.device_data.last_service_info
+        ) is not None and previous.service_data == service_info.service_data:
+            return
+        self._async_handle_bluetooth_event(service_info, BluetoothChange.ADVERTISEMENT)
 
 
 class BTHomePassiveBluetoothDataProcessor[_T](

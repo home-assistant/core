@@ -10,6 +10,7 @@ from homeassistant.components.bluetooth import (
     DOMAIN as BLUETOOTH_DOMAIN,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
+    async_register_advertisement_callback,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -210,6 +211,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> No
 
     # only start after all platforms have had a chance to subscribe
     entry.async_on_unload(coordinator.async_start())
+    entry.async_on_unload(
+        async_register_advertisement_callback(
+            hass, coordinator.async_handle_advertisement, address
+        )
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> None:
