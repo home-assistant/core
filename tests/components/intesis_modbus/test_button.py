@@ -134,19 +134,20 @@ async def test_buttons_stay_when_a_register_block_fails(
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("init_integration")
-async def test_unreachable_air_conditioner_takes_its_buttons(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_unreachable_air_conditioner_takes_only_its_own_buttons(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_connection: MockModbusConnection,
 ) -> None:
-    """The buttons go unavailable with the air conditioner."""
+    """The gateway can still be reset when it cannot reach the air conditioner."""
     mock_connection.for_unit(1).holding[11] = 65535
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(CLEAR).state == STATE_UNAVAILABLE
     assert hass.states.get(RESET).state == STATE_UNAVAILABLE
+    assert hass.states.get(RESET_GATEWAY).state != STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -158,18 +159,3 @@ async def test_reset_gateway_is_disabled_by_default(
     entry = entity_registry.async_get(RESET_GATEWAY)
     assert entry is not None
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_reset_gateway_stays_when_the_air_conditioner_is_unreachable(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_connection: MockModbusConnection,
-) -> None:
-    """The gateway can still be reset when it cannot reach the air conditioner."""
-    mock_connection.for_unit(1).holding[11] = 65535
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get(RESET).state == STATE_UNAVAILABLE
-    assert hass.states.get(RESET_GATEWAY).state != STATE_UNAVAILABLE
