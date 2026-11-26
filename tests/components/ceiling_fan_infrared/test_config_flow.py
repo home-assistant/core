@@ -57,6 +57,7 @@ async def test_user_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Ceiling fan via Test IR emitter"
     assert result["data"] == _expected_data(entity_registry, EMITTER_ENTITY_ID)
+    assert result["result"].unique_id is None
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_setup_entry")
@@ -103,6 +104,7 @@ async def test_user_flow_stores_the_entity_id_for_a_registry_uuid(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Ceiling fan via Test IR emitter"
     assert result["data"] == _expected_data(entity_registry, EMITTER_ENTITY_ID)
+    assert result["result"].unique_id is None
 
 
 @pytest.mark.usefixtures(
