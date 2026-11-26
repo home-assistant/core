@@ -414,3 +414,42 @@ async def test_press_during_reload_fires_event(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert [event.data["event_type"] for event in events] == ["press", "double_press"]
+
+
+@pytest.mark.usefixtures("proxies")
+async def test_press_before_first_start_fires_event(hass: HomeAssistant) -> None:
+    """Test a press heard after startup but before the entry starts fires."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=BUTTON_ADDRESS, data={CONF_SLEEPY_DEVICE: True}
+    )
+    entry.add_to_hass(hass)
+    events = async_capture_events(hass, BTHOME_BLE_EVENT)
+    _inject_button_payload(
+        hass, b"\x44\x00\x01\x3a\x01", STRONG_PROXY, -60, time.monotonic() + 1
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert [event.data["event_type"] for event in events] == ["press"]
+
+
+@pytest.mark.usefixtures("proxies")
+async def test_identical_press_during_reload_fires_event(hass: HomeAssistant) -> None:
+    """Test a later press without packet id, identical to the last, still fires."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=BUTTON_ADDRESS)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    events = async_capture_events(hass, BTHOME_BLE_EVENT)
+    now = time.monotonic()
+    _inject_button_payload(hass, b"\x44\x3a\x01", STRONG_PROXY, -60, now)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    _inject_button_payload(hass, b"\x44\x3a\x01", STRONG_PROXY, -60, now + 20)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert [event.data["event_type"] for event in events] == ["press", "press"]

@@ -10,6 +10,7 @@ from homeassistant.components.bluetooth import (
     DOMAIN as BLUETOOTH_DOMAIN,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
+    async_advertisement_restored,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -34,10 +35,12 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SE
 
 _LOGGER = logging.getLogger(__name__)
 
-# Service data last processed per address, kept across reloads
-LAST_PROCESSED: HassKey[dict[str, dict[str, bytes]]] = HassKey(
+# Service data and time last processed per address, kept across reloads
+LAST_PROCESSED: HassKey[dict[str, tuple[dict[str, bytes], float]]] = HassKey(
     f"{DOMAIN}_last_processed"
 )
+# Copies of one packet arrive within this time; the same payload after it is new
+REPEAT_SECONDS = 10
 
 
 def get_encryption_issue_id(entry_id: str) -> str:
@@ -123,14 +126,20 @@ def process_service_info(
         )
         coordinator.async_set_event_driven(data.sleepy_device)
     last_processed = hass.data.setdefault(LAST_PROCESSED, {})
-    # A packet replayed at start that was processed before isn't a new event,
-    # unlike one received while the entry reloaded
-    already_processed = (
-        coordinator.replaying
-        and last_processed.get(service_info.address, service_info.service_data)
-        == service_info.service_data
+    # A packet replayed at start isn't a new event if it was restored from
+    # before the start or already processed, unlike one heard since
+    already_processed = coordinator.replaying and (
+        async_advertisement_restored(hass, service_info)
+        or (
+            (last := last_processed.get(service_info.address)) is not None
+            and last[0] == service_info.service_data
+            and service_info.time - last[1] <= REPEAT_SECONDS
+        )
     )
-    last_processed[service_info.address] = service_info.service_data
+    last_processed[service_info.address] = (
+        service_info.service_data,
+        service_info.time,
+    )
     if update.events:
         address = service_info.device.address
         for device_key, event in update.events.items():
