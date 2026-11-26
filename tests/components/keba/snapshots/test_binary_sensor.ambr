@@ -1,4 +1,122 @@
 # serializer version: 1
+# name: test_binary_sensor_states[p30_charging.json]
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Charging State',
+        'max_charging_rate': '16.0',
+        'status': 'charging',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.keba_p30_charging_state',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+        'failsafe_timeout': '120',
+        'fallback_current': '16.0',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Failsafe Mode',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.keba_p30_failsafe_mode',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Plug',
+        'plug_locked': True,
+        'plugged_on_EV': True,
+        'plugged_on_wallbox': True,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.keba_p30_plug',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Status',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.keba_p30_status',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+  ])
+# ---
+# name: test_binary_sensor_states[p30_plugged.json]
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Charging State',
+        'max_charging_rate': '0.0',
+        'status': 'authorization rejected',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.keba_p30_charging_state',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+        'failsafe_timeout': '120',
+        'fallback_current': '16.0',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Failsafe Mode',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.keba_p30_failsafe_mode',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Plug',
+        'plug_locked': True,
+        'plugged_on_EV': True,
+        'plugged_on_wallbox': True,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.keba_p30_plug',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Status',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.keba_p30_status',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+  ])
+# ---
 # name: test_binary_sensors[binary_sensor.keba_p30_charging_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

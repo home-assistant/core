@@ -446,6 +446,69 @@ async def test_blindtilt_setup(
         state = hass.states.get(entity_id)
         assert state.state == CoverState.OPEN
         assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 40
+        assert state.attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] == 50
+        assert state.attributes[
+            CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS
+        ] == [0, 100]
+
+
+@pytest.mark.parametrize(
+    ("tilt_position", "open_calls", "close_calls"),
+    [
+        pytest.param(0, 1, 0, id="closed_down"),
+        pytest.param(100, 1, 0, id="closed_up"),
+        pytest.param(50, 0, 1, id="open"),
+    ],
+)
+async def test_blindtilt_toggle(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    tilt_position: int,
+    open_calls: int,
+    close_calls: int,
+) -> None:
+    """Test toggling the tilt opens the blind at both closed ends."""
+    inject_bluetooth_service_info(hass, WOBLINDTILT_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="blind_tilt")
+    entity_id = "cover.test_name"
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                entity_id,
+                CoverState.CLOSED,
+                {ATTR_CURRENT_TILT_POSITION: tilt_position},
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.update",
+            new=AsyncMock(return_value=True),
+        ),
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.open",
+            new=AsyncMock(return_value=True),
+        ) as mock_open,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.close",
+            new=AsyncMock(return_value=True),
+        ) as mock_close,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            CoverService.TOGGLE_TILT,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert mock_open.await_count == open_calls
+    assert mock_close.await_count == close_calls
 
 
 async def test_blindtilt_controlling(

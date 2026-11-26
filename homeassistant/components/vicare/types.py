@@ -84,6 +84,7 @@ class ViCareDevice:
     config: PyViCareDeviceConfig
     api: PyViCareDevice
     serial: str | None
+    name: str | None
     coordinator: ViCareCoordinator | None = None
 
 

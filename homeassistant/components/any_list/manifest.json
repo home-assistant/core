@@ -12,5 +12,5 @@
   "integration_type": "service",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["aioanylist==1.0.2"]
+  "requirements": ["aioanylist==1.0.3"]
 }

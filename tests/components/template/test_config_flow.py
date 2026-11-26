@@ -11,6 +11,9 @@ from pytest_unordered import unordered
 
 from homeassistant import config_entries
 from homeassistant.components.template import DOMAIN, async_setup_entry
+from homeassistant.components.template.vacuum import (
+    DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -18,6 +21,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    issue_registry as ir,
     selector,
 )
 
@@ -549,7 +553,7 @@ async def test_config_flow(
 async def test_config_flow_sensor_unit_of_measurement_context(
     hass: HomeAssistant,
 ) -> None:
-    """Test the unit of measurement field context refers to fields in the form."""
+    """Test the unit and device class field contexts refer to fields in the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -582,6 +586,15 @@ async def test_config_flow_sensor_unit_of_measurement_context(
             next(iter(fields[field_name]["selector"]))
             in allowed_context_keys[context_key]
         )
+    assert fields["device_class"]["selector"]["device_class"]["context"] == {
+        "filter_unit_of_measurement": "unit_of_measurement"
+    }
+    assert (
+        next(iter(fields["unit_of_measurement"]["selector"]))
+        in selector.DeviceClassSelector.allowed_context_keys[
+            "filter_unit_of_measurement"
+        ]
+    )
 
 
 @pytest.mark.parametrize(
@@ -1450,8 +1463,64 @@ async def test_options_light_deprecated_temperature(
     }
 
 
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        pytest.param(
+            {"fan_speeds": ["high"], "set_fan_speed": []}, id="complete_group"
+        ),
+        pytest.param({}, id="remove_group"),
+    ],
+)
+async def test_options_vacuum_incomplete_fan_speed(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    user_input: dict[str, Any],
+) -> None:
+    """Test editing a vacuum helper with incomplete fan speed options."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "vacuum",
+            "start": [],
+            "set_fan_speed": [],
+        },
+        title="My template",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    issue_id = (
+        f"{DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID}_{config_entry.entry_id}"
+    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"start": [], "set_fan_speed": [], "fan_speeds": []},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "fan_speeds_required"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"start": [], **user_input}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "name": "My template",
+        "template_type": "vacuum",
+        "start": [],
+        **user_input,
+    }
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
 def _assert_number_unit_of_measurement_context(data_schema: probatio.Schema) -> None:
-    """Assert the unit of measurement selector is filtered by the device class."""
+    """Assert the unit of measurement and device class selectors filter each other."""
     # Serialize the form the way it is sent to the frontend
     fields = {
         field["name"]: field
@@ -1467,6 +1536,15 @@ def _assert_number_unit_of_measurement_context(data_schema: probatio.Schema) -> 
         next(iter(fields["device_class"]["selector"]))
         in selector.UnitOfMeasurementSelector().allowed_context_keys[
             "filter_device_class"
+        ]
+    )
+    assert fields["device_class"]["selector"]["device_class"]["context"] == {
+        "filter_unit_of_measurement": "unit_of_measurement"
+    }
+    assert (
+        next(iter(fields["unit_of_measurement"]["selector"]))
+        in selector.DeviceClassSelector.allowed_context_keys[
+            "filter_unit_of_measurement"
         ]
     )
 
@@ -1788,6 +1866,28 @@ REQUIRED_OPTION_ERROR = (
             },
         ),
         (
+            "vacuum",
+            "",
+            {"start": [], "fan_speed": "{{ 'high' }}"},
+            {"fan_speed": REQUIRED_OPTION_ERROR.format("fan_speeds", "fan_speed")},
+        ),
+        (
+            "vacuum",
+            "",
+            {"start": [], "set_fan_speed": [], "fan_speeds": []},
+            {
+                "set_fan_speed": REQUIRED_OPTION_ERROR.format(
+                    "fan_speeds", "set_fan_speed"
+                )
+            },
+        ),
+        (
+            "vacuum",
+            "",
+            {"start": [], "fan_speeds": ["high"]},
+            {"fan_speeds": REQUIRED_OPTION_ERROR.format("set_fan_speed", "fan_speeds")},
+        ),
+        (
             "media_player",
             "",
             {"volume_up": []},
@@ -1959,6 +2059,34 @@ LIGHT_ACTIONS = {"turn_on": [], "turn_off": []}
             "volume_up_and_down_required",
             {"volume_up": []},
             id="volume_down_only",
+        ),
+        pytest.param(
+            "vacuum",
+            {"start": [], "fan_speed": "{{ 'high' }}", "set_fan_speed": []},
+            "fan_speeds_required",
+            {"fan_speeds": ["high"]},
+            id="fan_speed_without_fan_speeds",
+        ),
+        pytest.param(
+            "vacuum",
+            {"start": [], "set_fan_speed": []},
+            "fan_speeds_required",
+            {"fan_speeds": ["high"]},
+            id="set_fan_speed_without_fan_speeds",
+        ),
+        pytest.param(
+            "vacuum",
+            {"start": [], "set_fan_speed": [], "fan_speeds": []},
+            "fan_speeds_required",
+            {"fan_speeds": ["high"]},
+            id="set_fan_speed_with_empty_fan_speeds",
+        ),
+        pytest.param(
+            "vacuum",
+            {"start": [], "fan_speeds": ["high"]},
+            "set_fan_speed_required",
+            {"set_fan_speed": []},
+            id="fan_speeds_without_set_fan_speed",
         ),
     ],
 )

@@ -21,8 +21,8 @@ if TYPE_CHECKING:
     from .helpers.typing import NoEventData
 
 APPLICATION_NAME: Final = "HomeAssistant"
-MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 12
+MAJOR_VERSION: Final = 2027
+MINOR_VERSION: Final = 1
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -705,6 +705,7 @@ class UnitOfVolumeFlowRate(StrEnum):
     CUBIC_METERS_PER_HOUR = "m³/h"
     CUBIC_METERS_PER_MINUTE = "m³/min"
     CUBIC_METERS_PER_SECOND = "m³/s"
+    CUBIC_FEET_PER_HOUR = "ft³/h"
     CUBIC_FEET_PER_MINUTE = "ft³/min"
     LITERS_PER_HOUR = "L/h"
     LITERS_PER_MINUTE = "L/min"
