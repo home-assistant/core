@@ -111,17 +111,6 @@ async def test_reset_gateway_is_disabled_by_default(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_reset_gateway_does_not_wait_for_an_answer(
-    hass: HomeAssistant, mock_connection: MockModbusConnection
-) -> None:
-    """The gateway restarts without answering, which is not a failure."""
-    mock_connection.for_unit(1).fail_write(99, ModbusTimeoutError())
-    await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: RESET_GATEWAY}, blocking=True
-    )
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_reset_gateway_stays_when_the_air_conditioner_is_unreachable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

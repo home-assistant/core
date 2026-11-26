@@ -1,12 +1,10 @@
 """Buttons for the commands of an Intesis gateway and its air conditioner."""
 
 from collections.abc import Awaitable, Callable
-from contextlib import suppress
 from dataclasses import dataclass
 from typing import Final, override
 
 from intesis_gw_modbus import IntesisSingleUnitGateway
-from modbus_connection import ModbusTimeoutError
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -31,12 +29,6 @@ class IntesisButtonEntityDescription(ButtonEntityDescription):
     press_fn: Callable[[IntesisSingleUnitGateway], Awaitable[None]]
 
 
-async def _async_reset_gateway(device: IntesisSingleUnitGateway) -> None:
-    """Reset the gateway, which restarts without answering the request."""
-    with suppress(ModbusTimeoutError):
-        await device.async_reset_gateway()
-
-
 GATEWAY_BUTTONS: Final[tuple[IntesisButtonEntityDescription, ...]] = (
     IntesisButtonEntityDescription(
         key="reset_gateway",
@@ -45,7 +37,7 @@ GATEWAY_BUTTONS: Final[tuple[IntesisButtonEntityDescription, ...]] = (
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        press_fn=_async_reset_gateway,
+        press_fn=lambda device: device.async_reset_gateway(),
     ),
 )
 
