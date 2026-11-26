@@ -41,6 +41,10 @@ engine:
     group: "gh-aw-copilot-pr-reviewer-${{ needs.prepare.outputs.pr_number }}"
     queue: max
 max-daily-ai-credits: 10000
+# The custom steps check out the PR head with agent configuration from dev. gh-aw's own
+# PR checkout would replace it.
+checkout:
+  pull-request: false
 tools:
   github:
     mode: gh-proxy
