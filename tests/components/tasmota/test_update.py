@@ -21,6 +21,7 @@ from homeassistant.components.tasmota.const import (
     DEFAULT_PREFIX,
     DOMAIN,
 )
+from homeassistant.components.tasmota.coordinator import RETRY_AFTER_UPDATE_FAILURE
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
@@ -227,7 +228,7 @@ async def test_device_update_entity_github_failure(
     mock_github_latest_release_failure.return_value = AsyncMock(
         data=mock_github_release(NEWER_VERSION)
     )
-    freezer.tick(timedelta(days=1))
+    freezer.tick(timedelta(seconds=RETRY_AFTER_UPDATE_FAILURE + 10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
