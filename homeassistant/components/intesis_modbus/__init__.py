@@ -18,7 +18,7 @@ from .helpers import create_modbus_params
 
 GATEWAY_MANUFACTURER = "Intesis (HMS Networks)"
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IntesisConfigEntry) -> None:

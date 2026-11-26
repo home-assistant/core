@@ -1,0 +1,201 @@
+# serializer version: 1
+# name: test_all_switches_snapshot[switch.inmbsmhi001r000_air_conditioner_remote_controller_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('intesis_modbus', '01JTESTINTESISSINGLE000000_unit')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.inmbsmhi001r000_air_conditioner_remote_controller_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Remote controller lock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Remote controller lock',
+    'platform': 'intesis_modbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remote_controller_lock',
+    'unique_id': '01JTESTINTESISSINGLE000000_remote_controller_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_switches_snapshot[switch.inmbsmhi001r000_air_conditioner_remote_controller_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INMBSMHI001R000 air conditioner Remote controller lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.inmbsmhi001r000_air_conditioner_remote_controller_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_switches_snapshot[switch.inmbsmhi001r000_air_conditioner_window_contact-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('intesis_modbus', '01JTESTINTESISSINGLE000000_unit')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.inmbsmhi001r000_air_conditioner_window_contact',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Window contact',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Window contact',
+    'platform': 'intesis_modbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_contact',
+    'unique_id': '01JTESTINTESISSINGLE000000_window_contact',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_switches_snapshot[switch.inmbsmhi001r000_air_conditioner_window_contact-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INMBSMHI001R000 air conditioner Window contact',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.inmbsmhi001r000_air_conditioner_window_contact',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_switches_snapshot[switch.inmbsmhi001r000_gateway_disabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('intesis_modbus', '01JTESTINTESISSINGLE000000')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.inmbsmhi001r000_gateway_disabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Gateway disabled',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gateway disabled',
+    'platform': 'intesis_modbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'gateway_disabled',
+    'unique_id': '01JTESTINTESISSINGLE000000_gateway_disabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_switches_snapshot[switch.inmbsmhi001r000_gateway_disabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INMBSMHI001R000 Gateway disabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.inmbsmhi001r000_gateway_disabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_switches_snapshot[switch.inmbsmhi001r000_xy_bus_master-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('intesis_modbus', '01JTESTINTESISSINGLE000000')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.inmbsmhi001r000_xy_bus_master',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'XY bus master',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'XY bus master',
+    'platform': 'intesis_modbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'master',
+    'unique_id': '01JTESTINTESISSINGLE000000_master',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_switches_snapshot[switch.inmbsmhi001r000_xy_bus_master-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INMBSMHI001R000 XY bus master',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.inmbsmhi001r000_xy_bus_master',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

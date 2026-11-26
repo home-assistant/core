@@ -10,6 +10,20 @@
       "error_code": {
         "default": "mdi:alert-circle-outline"
       }
+    },
+    "switch": {
+      "gateway_disabled": {
+        "default": "mdi:power-plug-off"
+      },
+      "master": {
+        "default": "mdi:crown"
+      },
+      "remote_controller_lock": {
+        "default": "mdi:remote-off"
+      },
+      "window_contact": {
+        "default": "mdi:window-open-variant"
+      }
     }
   }
 }
