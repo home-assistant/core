@@ -35,14 +35,12 @@ from .entity import (
     ProtectDeviceEntity,
     ProtectEntityDescription,
     ProtectIsOnEntity,
-    ProtectNVREntity,
     ProtectPublicChannelEntity,
     ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
-from .migrate import async_is_new_private_only_entity
 from .utils import async_ufp_instance_command
 
 ATTR_PREV_MIC = "prev_mic_level"
@@ -62,15 +60,6 @@ async def _set_highfps(obj: PublicCamera, value: bool) -> None:
 
 
 CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
-    ProtectSwitchEntityDescription(
-        key="ssh",
-        translation_key="ssh_enabled",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.CONFIG,
-        ufp_value="is_ssh_enabled",
-        ufp_set_method="set_ssh",
-        ufp_perm=PermRequired.WRITE,
-    ),
     ProtectSwitchEntityDescription(
         key="status_light",
         translation_key="status_light",
@@ -332,49 +321,11 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
 
 LIGHT_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ProtectSwitchEntityDescription(
-        key="ssh",
-        translation_key="ssh_enabled",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.CONFIG,
-        ufp_value="is_ssh_enabled",
-        ufp_set_method="set_ssh",
-        ufp_perm=PermRequired.WRITE,
-    ),
-    ProtectSwitchEntityDescription(
         key="status_light",
         translation_key="status_light",
         entity_category=EntityCategory.CONFIG,
         ufp_public_value="light_device_settings.is_indicator_enabled",
         ufp_set_method="set_status_light",
-    ),
-)
-
-VIEWER_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
-    ProtectSwitchEntityDescription(
-        key="ssh",
-        translation_key="ssh_enabled",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.CONFIG,
-        ufp_value="is_ssh_enabled",
-        ufp_set_method="set_ssh",
-        ufp_perm=PermRequired.WRITE,
-    ),
-)
-
-NVR_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
-    ProtectSwitchEntityDescription(
-        key="analytics_enabled",
-        translation_key="analytics_enabled",
-        entity_category=EntityCategory.CONFIG,
-        ufp_value="is_analytics_enabled",
-        ufp_set_method="set_anonymous_analytics",
-    ),
-    ProtectSwitchEntityDescription(
-        key="insights_enabled",
-        translation_key="insights_enabled",
-        entity_category=EntityCategory.CONFIG,
-        ufp_value="is_insights_enabled",
-        ufp_set_method="set_insights",
     ),
 )
 
@@ -388,7 +339,6 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_SWITCHES,
     ModelType.LIGHT: LIGHT_SWITCHES,
     ModelType.SENSOR: SENSE_SWITCHES,
-    ModelType.VIEWPORT: VIEWER_SWITCHES,
 }
 
 _PRIVACY_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
@@ -414,12 +364,6 @@ class ProtectBaseSwitch(ProtectIsOnEntity):
 
 class ProtectSwitch(ProtectDeviceEntity, ProtectBaseSwitch, SwitchEntity):
     """A UniFi Protect Switch."""
-
-    entity_description: ProtectSwitchEntityDescription
-
-
-class ProtectNVRSwitch(ProtectNVREntity, ProtectBaseSwitch, SwitchEntity):
-    """A UniFi Protect NVR Switch."""
 
     entity_description: ProtectSwitchEntityDescription
 
@@ -552,21 +496,9 @@ async def async_setup_entry(
     entities: list[BaseProtectEntity] = []
     entities += _make_entities(ProtectSwitch, _MODEL_DESCRIPTIONS)
     entities += _make_entities(ProtectPrivacyModeSwitch, _PRIVACY_DESCRIPTIONS)
-    api = data.api
-    if not api.is_public_only:
-        # The NVR switches are private-only settings.
-        bootstrap = api.bootstrap
-        nvr = bootstrap.nvr
-        if nvr.can_write(bootstrap.auth_user) and nvr.is_insights_enabled is not None:
-            entities.extend(
-                ProtectNVRSwitch(data, device=nvr, description=switch)
-                for switch in NVR_SWITCHES
-                if not async_is_new_private_only_entity(
-                    hass, ModelType.NVR, nvr.mac, switch.key
-                )
-            )
     async_add_entities(entities)
 
+    api = data.api
     if api.has_public_bootstrap:
         for relay in api.public_bootstrap.relays.values():
             _add_relay_outputs(relay)

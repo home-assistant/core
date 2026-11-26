@@ -277,28 +277,19 @@ async def test_set_chime_paired_doorbells(
     ufp.api.update_device.assert_not_called()
 
 
-@pytest.mark.usefixtures("mock_private_only_entities_registered")
-@pytest.mark.parametrize(
-    "entity_id",
-    [
-        pytest.param("event.test_camera_1_doorbell", id="event"),
-        pytest.param("binary_sensor.test_camera_1_doorbell", id="binary_sensor"),
-    ],
-)
 async def test_set_chime_paired_doorbells_entity_target(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     chime: Chime,
     doorbell: Camera,
-    entity_id: str,
 ) -> None:
-    """The doorbell event entity and the deprecated binary sensor both pick a doorbell."""
+    """The doorbell event entity picks a doorbell."""
     setup_public_chime(ufp)
     data, camera1, _ = await _setup_chime_pairing(
         hass, entity_registry, ufp, chime, doorbell
     )
-    data["doorbells"] = {ATTR_ENTITY_ID: [entity_id]}
+    data["doorbells"] = {ATTR_ENTITY_ID: ["event.test_camera_1_doorbell"]}
 
     await hass.services.async_call(
         DOMAIN, ProtectService.SET_CHIME_PAIRED_DOORBELLS, data, blocking=True

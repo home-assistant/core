@@ -1,9 +1,11 @@
 """UniFi Protect data migrations."""
 
+from collections.abc import Iterable
 import logging
 from typing import TYPE_CHECKING, NamedTuple
 
-from uiprotect.data import Bootstrap, ModelType
+from uiprotect.data import ModelType, ProtectAdoptableDeviceModel
+from uiprotect.data.public_devices import PublicDeviceModel
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
@@ -181,16 +183,13 @@ def _async_repair_if_used(
     issue_id: str,
     translation_key: str,
     placeholders: dict[str, str] | None = None,
-    breaks_in: str | None = None,
 ) -> None:
     """Raise a repair for an entity that is going away and is still in use.
 
-    Neither a removal nor a deprecation can rewrite the user's
-    automations/scripts, so the repair lists the affected ones (the caller
-    supplies any replacement hint via ``placeholders``). Disabled entities are
-    skipped: they are not active in any automation. Pass ``breaks_in`` while the
-    entity still exists; the repair then clears itself once the last usage is
-    gone, where a removal repair has to persist.
+    A removal cannot rewrite the user's automations/scripts, so the repair
+    lists the affected ones (the caller supplies any replacement hint via
+    ``placeholders``). Disabled entities are skipped: they are not active in
+    any automation.
     """
     if entity.disabled_by is not None:
         return
@@ -199,16 +198,13 @@ def _async_repair_if_used(
         | set(scripts_with_entity(hass, entity.entity_id))
     )
     if not items:
-        if breaks_in is not None:
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
         return
     ir.async_create_issue(
         hass,
         DOMAIN,
         issue_id,
         is_fixable=False,
-        is_persistent=breaks_in is None,
-        breaks_in_ha_version=breaks_in,
+        is_persistent=True,
         config_entry_id=entity.config_entry_id,
         severity=IssueSeverity.WARNING,
         translation_key=translation_key,
@@ -422,123 +418,107 @@ def async_remove_sense_setting_mirrors(
     _async_remove_when_started(hass, entry, removals)
 
 
-# Release that removes the deprecated light mirrors.
-LIGHT_SETTING_MIRROR_BREAKS_IN = "2027.1.0"
+# Removed read-only mirrors and private API sensors, keyed by device model and
+# then by their own (platform, key), pointing at the (platform, key) of the
+# public entity that replaces them and the repair text. A ``None`` replacement
+# key is the device entity itself, whose unique_id is the bare MAC. Scoped by
+# model because other devices reuse the keys.
+type _Replacements = dict[tuple[str, str], tuple[Platform, str | None, str]]
 
-# Mirrors keyed by their own (platform, key), pointing at the (platform, key) of
-# the control that replaces them and the repair text. A ``None`` replacement
-# key is the device entity itself, whose unique_id is the bare MAC.
-type _MirrorReplacements = dict[tuple[str, str], tuple[Platform, str | None, str]]
-
-_LIGHT_MIRROR_REPLACEMENTS: _MirrorReplacements = {
-    (Platform.BINARY_SENSOR, "light"): (
-        Platform.LIGHT,
-        None,
-        "setting_mirror_deprecated",
-    ),
-    (Platform.BINARY_SENSOR, "status_light"): (
-        Platform.SWITCH,
-        "status_light",
-        "setting_mirror_deprecated",
-    ),
-    (Platform.SENSOR, "sensitivity"): (
-        Platform.NUMBER,
-        "sensitivity",
-        "setting_mirror_deprecated",
-    ),
-    # The sensor shows the raw mode, the select its own option names.
-    (Platform.SENSOR, "light_motion"): (
-        Platform.SELECT,
-        "light_motion",
-        "setting_mirror_deprecated_light_mode",
-    ),
-}
-
-
-@callback
-def async_deprecate_light_setting_mirrors(
-    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
-) -> None:
-    """Deprecate the read-only mirrors of the light controls.
-
-    The light and its controls write through the public API, which the local
-    user's write permission does not gate, so they are now available to every
-    user and the ``PermRequired.NO_WRITE`` mirrors only duplicate them.
-
-    Runs after platform setup so the repair can name the replacement.
-
-    Added in 2026.11.0
-    """
-    _async_deprecate_setting_mirrors(
-        hass,
-        entry,
-        {light.mac for light in bootstrap.lights.values()},
-        _LIGHT_MIRROR_REPLACEMENTS,
-        LIGHT_SETTING_MIRROR_BREAKS_IN,
-    )
-
-
-# Release that removes the deprecated camera mirrors.
-CAMERA_SETTING_MIRROR_BREAKS_IN = "2027.1.0"
-
-_CAMERA_MIRROR_REPLACEMENTS: _MirrorReplacements = {
-    **{
-        (Platform.BINARY_SENSOR, key): (
+_REPLACED_ENTITIES: dict[ModelType, _Replacements] = {
+    ModelType.LIGHT: {
+        (Platform.BINARY_SENSOR, "light"): (
+            Platform.LIGHT,
+            None,
+            "setting_mirror_removed",
+        ),
+        (Platform.BINARY_SENSOR, "status_light"): (
             Platform.SWITCH,
-            key,
-            "setting_mirror_deprecated",
-        )
-        for key in (
             "status_light",
-            "high_fps",
-            "osd_name",
-            "osd_date",
-            "osd_logo",
-            "osd_bitrate",
-            "smart_person",
-            "smart_vehicle",
-            "smart_animal",
-            "smart_package",
-            "smart_licenseplate",
-            "smart_smoke",
-            "smart_cmonx",
-            "smart_siren",
-            "smart_baby_cry",
-            "smart_speak",
-            "smart_bark",
-            "smart_car_alarm",
-            "smart_car_horn",
-            "smart_glass_break",
-        )
+            "setting_mirror_removed",
+        ),
+        (Platform.SENSOR, "sensitivity"): (
+            Platform.NUMBER,
+            "sensitivity",
+            "setting_mirror_removed",
+        ),
+        # The sensor showed the raw mode, the select its own option names.
+        (Platform.SENSOR, "light_motion"): (
+            Platform.SELECT,
+            "light_motion",
+            "setting_mirror_removed_light_mode",
+        ),
     },
-    # The binary sensor is on for both HDR modes the select tells apart.
-    (Platform.BINARY_SENSOR, "hdr_mode"): (
-        Platform.SELECT,
-        "hdr_mode",
-        "setting_mirror_deprecated_hdr_mode",
-    ),
-    # The number is unavailable while the microphone is disabled.
-    (Platform.SENSOR, "mic_level"): (
-        Platform.NUMBER,
-        "mic_level",
-        "setting_mirror_deprecated_mic_level",
-    ),
-    # The text entity falls back to the default message where the sensor is empty.
-    (Platform.SENSOR, "doorbell_text"): (
-        Platform.TEXT,
-        "doorbell",
-        "setting_mirror_deprecated_doorbell_text",
-    ),
+    ModelType.CAMERA: {
+        **{
+            (Platform.BINARY_SENSOR, key): (
+                Platform.SWITCH,
+                key,
+                "setting_mirror_removed",
+            )
+            for key in (
+                "status_light",
+                "high_fps",
+                "osd_name",
+                "osd_date",
+                "osd_logo",
+                "osd_bitrate",
+                "smart_person",
+                "smart_vehicle",
+                "smart_animal",
+                "smart_package",
+                "smart_licenseplate",
+                "smart_smoke",
+                "smart_cmonx",
+                "smart_siren",
+                "smart_baby_cry",
+                "smart_speak",
+                "smart_bark",
+                "smart_car_alarm",
+                "smart_car_horn",
+                "smart_glass_break",
+            )
+        },
+        # The binary sensor was on for both HDR modes the select tells apart.
+        (Platform.BINARY_SENSOR, "hdr_mode"): (
+            Platform.SELECT,
+            "hdr_mode",
+            "setting_mirror_removed_hdr_mode",
+        ),
+        # The number is unavailable while the microphone is disabled.
+        (Platform.SENSOR, "mic_level"): (
+            Platform.NUMBER,
+            "mic_level",
+            "setting_mirror_removed_mic_level",
+        ),
+        # The text entity falls back to the default message where the sensor
+        # was empty.
+        (Platform.SENSOR, "doorbell_text"): (
+            Platform.TEXT,
+            "doorbell",
+            "setting_mirror_removed_doorbell_text",
+        ),
+        (Platform.BINARY_SENSOR, "doorbell"): (
+            Platform.EVENT,
+            "doorbell",
+            "doorbell_sensor_removed",
+        ),
+        (Platform.SENSOR, "doorbell_last_trip_time"): (
+            Platform.EVENT,
+            "doorbell",
+            "last_event_sensor_removed",
+        ),
+        (Platform.SENSOR, "motion_last_trip_time"): (
+            Platform.EVENT,
+            "motion_detection",
+            "last_event_sensor_removed",
+        ),
+    },
 }
 
-
-# Release that removes the deprecated private-only entities.
-PRIVATE_ONLY_BREAKS_IN = "2027.1.0"
-
-# Device setup and device data entities that rely on the private API, keyed by
-# device model and then by (platform, key). Scoped by model because other
-# devices may reuse the keys.
-PRIVATE_ONLY_ENTITIES: dict[ModelType, frozenset[tuple[Platform, str]]] = {
+# Removed device setup and device data entities that only the private API
+# provided, keyed by device model and then by (platform, key).
+_PRIVATE_ONLY_ENTITIES: dict[ModelType, frozenset[tuple[Platform, str]]] = {
     ModelType.CAMERA: frozenset(
         {
             (Platform.SWITCH, "ssh"),
@@ -602,202 +582,69 @@ PRIVATE_ONLY_ENTITIES: dict[ModelType, frozenset[tuple[Platform, str]]] = {
 
 
 @callback
-def async_deprecate_camera_setting_mirrors(
-    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
-) -> None:
-    """Deprecate the read-only mirrors of the public camera controls.
-
-    These controls write through the public API, so every user gets them and
-    the ``PermRequired.NO_WRITE`` mirrors only duplicate them.
-
-    Runs after platform setup so the repair can name the replacement.
-
-    Added in 2026.11.0
-    """
-    _async_deprecate_setting_mirrors(
-        hass,
-        entry,
-        {camera.mac for camera in bootstrap.cameras.values()},
-        _CAMERA_MIRROR_REPLACEMENTS,
-        CAMERA_SETTING_MIRROR_BREAKS_IN,
-    )
-
-
-@callback
-def async_is_new_private_only_entity(
-    hass: HomeAssistant, model: ModelType | None, mac: str, key: str
-) -> bool:
-    """Return whether a deprecated private-only entity is not registered yet.
-
-    New installs do not get entities that are about to be removed.
-    """
-    if model is None or model not in PRIVATE_ONLY_ENTITIES:
-        return False
-    platforms = [
-        platform
-        for platform, entity_key in PRIVATE_ONLY_ENTITIES[model]
-        if entity_key == key
-    ]
-    if not platforms:
-        return False
-    registry = er.async_get(hass)
-    return not any(
-        registry.async_get_entity_id(platform, DOMAIN, f"{mac}_{key}")
-        for platform in platforms
-    )
-
-
-@callback
-def async_deprecate_private_only_entities(
-    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
-) -> None:
-    """Deprecate the entities that only the private API provides.
-
-    The official API does not provide them, and they are not requested from
-    Ubiquiti.
-
-    Waits for startup to finish: before the automations are loaded, every entity
-    looks unused and the repair would be dropped.
-
-    Added in 2026.11.0
-    """
-
-    @callback
-    def _async_deprecate(_hass: HomeAssistant) -> None:
-        models: dict[str, ModelType] = {bootstrap.nvr.mac: ModelType.NVR}
-        for devices, device_model in (
-            (bootstrap.cameras, ModelType.CAMERA),
-            (bootstrap.lights, ModelType.LIGHT),
-            (bootstrap.viewers, ModelType.VIEWPORT),
-            (bootstrap.sensors, ModelType.SENSOR),
-            (bootstrap.chimes, ModelType.CHIME),
-        ):
-            models.update(
-                dict.fromkeys((d.mac for d in devices.values()), device_model)
-            )
-        registry = er.async_get(hass)
-        for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-            mac, _, key = entity.unique_id.partition("_")
-            model = models.get(mac)
-            if (
-                model is None
-                or (entity.domain, key) not in PRIVATE_ONLY_ENTITIES[model]
-            ):
-                continue
-            _async_repair_if_used(
-                hass,
-                entity,
-                # SSH, mount type and paired camera share a unique_id across
-                # two platforms.
-                f"private_only_entity_deprecated_{entity.domain}_{entity.unique_id}",
-                "private_only_entity_deprecated",
-                breaks_in=PRIVATE_ONLY_BREAKS_IN,
-            )
-
-    entry.async_on_unload(async_at_started(hass, _async_deprecate))
-
-
-@callback
-def _async_deprecate_setting_mirrors(
+def async_remove_private_api_entities(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
-    macs: set[str],
-    replacements: _MirrorReplacements,
-    breaks_in: str,
+    nvr_mac: str,
+    devices: dict[ModelType, Iterable[ProtectAdoptableDeviceModel | PublicDeviceModel]],
 ) -> None:
-    """Raise a repair for each used mirror, pointing at its replacement.
+    """Remove the read-only mirrors and the private API only entities.
 
-    The mirror keys are shared across device types, so the match is scoped to
-    ``macs``. Waits for startup to finish, like ``_async_remove_when_started``.
+    Deprecated in 2026.11.0: the mirrors and the camera ring and motion sensors
+    are replaced by public API entities, and the official API does not provide
+    the other entities. Remove each stale entry, raising a repair first if a still-enabled one is
+    referenced by an automation or script, and drop the deprecation repair.
+
+    Runs after platform setup, like ``async_remove_sense_setting_mirrors``, so
+    the repair can name the replacement.
+
+    Added in 2027.1.0
     """
-    if not macs:
-        return
-
-    @callback
-    def _async_deprecate(_hass: HomeAssistant) -> None:
-        registry = er.async_get(hass)
-        for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-            mac, _, key = entity.unique_id.partition("_")
-            mirror = (entity.domain, key)
-            if mirror not in replacements or mac not in macs:
-                continue
-            platform, replacement_key, translation_key = replacements[mirror]
-            replacement_id = registry.async_get_entity_id(
+    models = {nvr_mac: ModelType.NVR}
+    for device_model, model_devices in devices.items():
+        models.update(
+            dict.fromkeys((device.mac for device in model_devices), device_model)
+        )
+    registry = er.async_get(hass)
+    removals: list[_Removal] = []
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        mac, _, key = entity.unique_id.partition("_")
+        if (model := models.get(mac)) is None:
+            continue
+        platform_key = (entity.domain, key)
+        replacement = _REPLACED_ENTITIES.get(model, {}).get(platform_key)
+        if replacement is None and platform_key not in _PRIVATE_ONLY_ENTITIES.get(
+            model, frozenset()
+        ):
+            continue
+        ir.async_delete_issue(
+            hass, DOMAIN, f"setting_mirror_deprecated_{entity.unique_id}"
+        )
+        ir.async_delete_issue(
+            hass,
+            DOMAIN,
+            f"private_only_entity_deprecated_{entity.domain}_{entity.unique_id}",
+        )
+        translation_key = "private_api_entity_removed"
+        placeholders: dict[str, str] | None = None
+        if replacement is not None:
+            platform, replacement_key, replacement_translation_key = replacement
+            if replacement_entity_id := registry.async_get_entity_id(
                 platform,
                 DOMAIN,
                 mac if replacement_key is None else f"{mac}_{replacement_key}",
-            )
-            # Nothing to point the repair at before the replacement exists.
-            if replacement_id is None:
-                continue
-            _async_repair_if_used(
-                hass,
-                entity,
-                f"setting_mirror_deprecated_{entity.unique_id}",
+            ):
+                translation_key = replacement_translation_key
+                placeholders = {"replacement": replacement_entity_id}
+        removals.append(
+            _Removal(
+                entity.domain,
+                entity.unique_id,
+                # SSH, mount type and paired camera share a unique_id across
+                # two platforms.
+                f"private_api_entity_removed_{entity.domain}_{entity.unique_id}",
                 translation_key,
-                {"replacement": replacement_id},
-                breaks_in=breaks_in,
+                placeholders,
             )
-
-    entry.async_on_unload(async_at_started(hass, _async_deprecate))
-
-
-# Camera entities on the private API that a public event entity replaces, keyed
-# by their own (platform, key), pointing at the event entity and the repair text.
-_RING_AND_MOTION_SENSOR_REPLACEMENTS: dict[
-    tuple[str, str], tuple[Platform, str | None, str]
-] = {
-    (Platform.BINARY_SENSOR, "doorbell"): (
-        Platform.EVENT,
-        "doorbell",
-        "doorbell_sensor_deprecated",
-    ),
-    (Platform.SENSOR, "doorbell_last_trip_time"): (
-        Platform.EVENT,
-        "doorbell",
-        "last_event_sensor_deprecated",
-    ),
-    (Platform.SENSOR, "motion_last_trip_time"): (
-        Platform.EVENT,
-        "motion_detection",
-        "last_event_sensor_deprecated",
-    ),
-}
-
-
-@callback
-def async_is_new_ring_or_motion_sensor(
-    hass: HomeAssistant, platform: Platform, mac: str, key: str
-) -> bool:
-    """Return whether a deprecated camera ring or motion sensor is not registered yet.
-
-    New installs do not get entities that are about to be removed. Matched per
-    platform: the doorbell text and event entities share the binary sensor's key.
-    """
-    if (platform, key) not in _RING_AND_MOTION_SENSOR_REPLACEMENTS:
-        return False
-    return (
-        er.async_get(hass).async_get_entity_id(platform, DOMAIN, f"{mac}_{key}") is None
-    )
-
-
-@callback
-def async_deprecate_ring_and_motion_sensors(
-    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
-) -> None:
-    """Deprecate the camera ring and motion sensors on the private API.
-
-    The doorbell and motion detection event entities cover them through the
-    public API.
-
-    Runs after platform setup so the repair can name the replacement.
-
-    Added in 2026.11.0
-    """
-    _async_deprecate_setting_mirrors(
-        hass,
-        entry,
-        {camera.mac for camera in bootstrap.cameras.values()},
-        _RING_AND_MOTION_SENSOR_REPLACEMENTS,
-        PRIVATE_ONLY_BREAKS_IN,
-    )
+        )
+    _async_remove_when_started(hass, entry, removals)

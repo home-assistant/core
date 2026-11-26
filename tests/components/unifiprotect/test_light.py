@@ -504,7 +504,7 @@ async def test_light_setup_read_only_user(
     """A read-only local user keeps the light and its public controls.
 
     They write through the API key, so the local user's write bit must not gate
-    them; the SSH switch and the paired camera still use private setters.
+    them.
     """
     ufp.api.bootstrap.auth_user.all_permissions = [
         Permission.unifi_dict_to_dict({"rawPermission": "light:read:*"})
@@ -521,14 +521,6 @@ async def test_light_setup_read_only_user(
     ):
         assert entity_registry.async_get_entity_id(
             platform, DOMAIN, f"{light.mac}_{key}"
-        ), key
-    for platform, key in (
-        (Platform.SWITCH, "ssh"),
-        (Platform.SELECT, "paired_camera"),
-    ):
-        assert (
-            entity_registry.async_get_entity_id(platform, DOMAIN, f"{light.mac}_{key}")
-            is None
         ), key
 
 

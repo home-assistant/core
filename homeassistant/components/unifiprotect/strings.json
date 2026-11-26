@@ -196,83 +196,17 @@
       "contact": {
         "name": "Contact"
       },
-      "detections_animal": {
-        "name": "Animal detection"
-      },
-      "detections_baby_cry": {
-        "name": "Baby cry detection"
-      },
-      "detections_barking": {
-        "name": "Barking detection"
-      },
-      "detections_car_alarm": {
-        "name": "Car alarm detection"
-      },
-      "detections_car_horn": {
-        "name": "Car horn detection"
-      },
-      "detections_co_alarm": {
-        "name": "CO alarm detection"
-      },
-      "detections_glass_break": {
-        "name": "Glass break detection"
-      },
-      "detections_license_plate": {
-        "name": "License plate detection"
-      },
       "detections_motion": {
         "name": "Motion detection"
       },
-      "detections_package": {
-        "name": "Package detection"
-      },
-      "detections_person": {
-        "name": "Person detection"
-      },
-      "detections_siren": {
-        "name": "Siren detection"
-      },
-      "detections_smoke": {
-        "name": "Smoke detection"
-      },
-      "detections_speaking": {
-        "name": "Speaking detection"
-      },
-      "detections_vehicle": {
-        "name": "Vehicle detection"
-      },
-      "doorbell": {
-        "name": "[%key:component::event::entity_component::doorbell::name%]"
-      },
-      "flood_light": {
-        "name": "Flood light"
-      },
       "glass_break_detected": {
         "name": "Glass break detected"
-      },
-      "hdr_mode": {
-        "name": "HDR mode"
-      },
-      "high_fps": {
-        "name": "High FPS"
       },
       "is_dark": {
         "name": "Is dark"
       },
       "object_detected": {
         "name": "Object detected"
-      },
-      "overlay_show_date": {
-        "name": "Overlay: show date"
-      },
-      "overlay_show_logo": {
-        "name": "Overlay: show logo"
-      },
-      "overlay_show_name": {
-        "name": "Overlay: show name"
-      },
-      "overlay_show_nerd_mode": {
-        "name": "Overlay: show nerd mode"
       },
       "person_detected": {
         "name": "Person detected"
@@ -288,9 +222,6 @@
       },
       "speaking_detected": {
         "name": "Speaking detected"
-      },
-      "ssh_enabled": {
-        "name": "SSH enabled"
       },
       "status_light": {
         "name": "Status light"
@@ -559,7 +490,7 @@
         "name": "Doorbell text"
       },
       "hdr_mode": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::hdr_mode::name%]",
+        "name": "HDR mode",
         "state": {
           "always": "Always on",
           "auto": "Auto",
@@ -590,21 +521,8 @@
       "liveview": {
         "name": "Liveview"
       },
-      "mount_type": {
-        "name": "Mount type",
-        "state": {
-          "door": "Door",
-          "garage": "Garage",
-          "leak": "Leak",
-          "none": "[%key:common::state::off%]",
-          "window": "Window"
-        }
-      },
       "nvr_arm_profile": {
         "name": "Alarm profile"
-      },
-      "paired_camera": {
-        "name": "Paired camera"
       },
       "ptz_patrol": {
         "name": "PTZ patrol",
@@ -630,18 +548,6 @@
       "chime_type": {
         "name": "[%key:component::unifiprotect::entity::select::chime_type::name%]"
       },
-      "cpu_temperature": {
-        "name": "CPU temperature"
-      },
-      "cpu_utilization": {
-        "name": "CPU utilization"
-      },
-      "disk_write_rate": {
-        "name": "Disk write rate"
-      },
-      "doorbell_text": {
-        "name": "[%key:component::unifiprotect::entity::select::doorbell_text::name%]"
-      },
       "fob_status": {
         "name": "Status",
         "state": {
@@ -653,9 +559,6 @@
       },
       "infrared_mode": {
         "name": "[%key:component::unifiprotect::entity::select::infrared_mode::name%]"
-      },
-      "last_doorbell_ring": {
-        "name": "Last doorbell ring"
       },
       "last_motion_detected": {
         "name": "Last motion detected"
@@ -669,44 +572,14 @@
       "last_tampering_detected": {
         "name": "Last tampering detected"
       },
-      "lens_type": {
-        "name": "Lens type"
-      },
       "license_plate_detected": {
         "name": "License plate detected",
         "state": {
           "none": "[%key:component::binary_sensor::entity_component::gas::state::off%]"
         }
       },
-      "light_mode": {
-        "name": "[%key:component::unifiprotect::entity::select::light_mode::name%]"
-      },
-      "link_speed": {
-        "name": "Link speed"
-      },
       "liveview": {
         "name": "[%key:component::unifiprotect::entity::select::liveview::name%]"
-      },
-      "memory_utilization": {
-        "name": "Memory utilization"
-      },
-      "microphone_level": {
-        "name": "[%key:component::unifiprotect::entity::number::microphone_level::name%]"
-      },
-      "motion_sensitivity": {
-        "name": "[%key:component::unifiprotect::entity::number::motion_sensitivity::name%]"
-      },
-      "mount_type": {
-        "name": "[%key:component::unifiprotect::entity::select::mount_type::name%]"
-      },
-      "oldest_recording": {
-        "name": "Oldest recording"
-      },
-      "paired_camera": {
-        "name": "[%key:component::unifiprotect::entity::select::paired_camera::name%]"
-      },
-      "received_data": {
-        "name": "Received data"
       },
       "recording_capacity": {
         "name": "Recording capacity"
@@ -726,17 +599,11 @@
       "signal_quality": {
         "name": "Signal quality"
       },
-      "storage_used": {
-        "name": "Storage used"
-      },
       "storage_utilization": {
         "name": "Storage utilization"
       },
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "transferred_data": {
-        "name": "Transferred data"
       },
       "type_continuous_video": {
         "name": "Type: continuous video"
@@ -746,9 +613,6 @@
       },
       "type_timelapse_video": {
         "name": "Type: timelapse video"
-      },
-      "uptime": {
-        "name": "Uptime"
       },
       "volume": {
         "name": "[%key:component::sensor::entity_component::volume::name%]"
@@ -761,65 +625,59 @@
       "alarm_sound_detection": {
         "name": "Alarm sound detection"
       },
-      "analytics_enabled": {
-        "name": "Analytics enabled"
-      },
       "color_night_vision": {
         "name": "Color night vision"
       },
       "detections_animal": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_animal::name%]"
+        "name": "Animal detection"
       },
       "detections_baby_cry": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_baby_cry::name%]"
+        "name": "Baby cry detection"
       },
       "detections_bark": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_barking::name%]"
+        "name": "Barking detection"
       },
       "detections_car_alarm": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_car_alarm::name%]"
+        "name": "Car alarm detection"
       },
       "detections_car_horn": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_car_horn::name%]"
+        "name": "Car horn detection"
       },
       "detections_co_alarm": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_co_alarm::name%]"
+        "name": "CO alarm detection"
       },
       "detections_glass_break": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_glass_break::name%]"
+        "name": "Glass break detection"
       },
       "detections_license_plate": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_license_plate::name%]"
+        "name": "License plate detection"
       },
       "detections_motion": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_motion::name%]"
       },
       "detections_package": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_package::name%]"
+        "name": "Package detection"
       },
       "detections_person": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_person::name%]"
+        "name": "Person detection"
       },
       "detections_siren": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_siren::name%]"
+        "name": "Siren detection"
       },
       "detections_smoke": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_smoke::name%]"
+        "name": "Smoke detection"
       },
       "detections_speak": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_speaking::name%]"
+        "name": "Speaking detection"
       },
       "detections_vehicle": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_vehicle::name%]"
+        "name": "Vehicle detection"
       },
       "high_fps": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::high_fps::name%]"
+        "name": "High FPS"
       },
       "humidity_sensor": {
         "name": "Humidity sensor"
-      },
-      "insights_enabled": {
-        "name": "Insights enabled"
       },
       "light_sensor": {
         "name": "Light sensor"
@@ -828,25 +686,22 @@
         "name": "[%key:component::binary_sensor::entity_component::motion::name%]"
       },
       "overlay_show_date": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::overlay_show_date::name%]"
+        "name": "Overlay: show date"
       },
       "overlay_show_logo": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::overlay_show_logo::name%]"
+        "name": "Overlay: show logo"
       },
       "overlay_show_name": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::overlay_show_name::name%]"
+        "name": "Overlay: show name"
       },
       "overlay_show_nerd_mode": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::overlay_show_nerd_mode::name%]"
+        "name": "Overlay: show nerd mode"
       },
       "privacy_mode": {
         "name": "Privacy mode"
       },
       "relay_output": {
         "name": "Output {output_name}"
-      },
-      "ssh_enabled": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::ssh_enabled::name%]"
       },
       "status_light": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::status_light::name%]"
@@ -962,9 +817,9 @@
       },
       "title": "Ubiquiti Cloud Users are not Supported"
     },
-    "doorbell_sensor_deprecated": {
-      "description": "The binary sensor `{entity_id}` is deprecated and will be removed in a future release. Use the event entity `{replacement}` with the **Event received** trigger instead.\n\nUpdate the following automations and scripts:\n{items}",
-      "title": "[%key:component::unifiprotect::issues::private_only_entity_deprecated::title%]"
+    "doorbell_sensor_removed": {
+      "description": "The binary sensor `{entity_id}` has been removed. Use the event entity `{replacement}` with the **Event received** trigger instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::private_api_entity_removed::title%]"
     },
     "hdr_switch_removed": {
       "description": "The HDR mode switch `{entity_id}` has been removed. It could not represent the auto HDR mode and was replaced by the HDR mode select.\n\nUpdate the following automations and scripts:\n{items}",
@@ -974,17 +829,17 @@
       "description": "The camera entity `{entity_id}` used plain RTSP, which is no longer available now that streams come from the UniFi Protect public API (RTSPS only). It has been removed; use `{replacement}` instead.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Insecure camera entity removed"
     },
-    "last_event_sensor_deprecated": {
-      "description": "The entity `{entity_id}` is deprecated and will be removed in a future release. Use the event entity `{replacement}` with the **Event received** trigger instead. The event entity's state is the time of the last event Home Assistant received.\n\nUpdate the following automations and scripts:\n{items}",
-      "title": "[%key:component::unifiprotect::issues::private_only_entity_deprecated::title%]"
+    "last_event_sensor_removed": {
+      "description": "The entity `{entity_id}` has been removed. Use the event entity `{replacement}` with the **Event received** trigger instead. The event entity's state is the time of the last event Home Assistant received.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::private_api_entity_removed::title%]"
     },
     "package_binary_sensor_removed": {
       "description": "The binary sensor `{entity_id}` for package detection has been removed. Package detection is a momentary smart-detect event, so it is now provided by the package event entity instead.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Package binary sensor removed"
     },
-    "private_only_entity_deprecated": {
-      "description": "The entity `{entity_id}` is deprecated and will be removed in a future release. It depends on a private API that the integration is phasing out.\n\nUpdate the following automations and scripts:\n{items}",
-      "title": "Entity deprecated"
+    "private_api_entity_removed": {
+      "description": "The entity `{entity_id}` has been removed. It depended on a private API that the integration is phasing out.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Entity removed"
     },
     "rtsp_disabled": {
       "fix_flow": {
@@ -1009,25 +864,25 @@
       "description": "The read-only entity `{entity_id}` has been removed. The sensor does not support this setting, so there is no replacement.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Read-only sensor setting entity removed"
     },
-    "setting_mirror_deprecated": {
-      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same state and can also change it.\n\nUpdate the following automations and scripts:\n{items}",
-      "title": "Read-only setting entity deprecated"
+    "setting_mirror_removed": {
+      "description": "The read-only entity `{entity_id}` has been removed; use `{replacement}` instead, which holds the same state and can also change it.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Read-only setting entity removed"
     },
-    "setting_mirror_deprecated_doorbell_text": {
-      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same message and can also change it. Where this entity is unknown because no message is set, it shows the default message instead.\n\nUpdate the following automations and scripts:\n{items}",
-      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
+    "setting_mirror_removed_doorbell_text": {
+      "description": "The read-only entity `{entity_id}` has been removed; use `{replacement}` instead, which holds the same message and can also change it. Where the removed entity was unknown because no message was set, it shows the default message instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_removed::title%]"
     },
-    "setting_mirror_deprecated_hdr_mode": {
-      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same setting and can also change it. Its states differ: `on` is `auto` or `always`, and `off` is `off`, so update any conditions that compare them.\n\nUpdate the following automations and scripts:\n{items}",
-      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
+    "setting_mirror_removed_hdr_mode": {
+      "description": "The read-only entity `{entity_id}` has been removed; use `{replacement}` instead, which holds the same setting and can also change it. Its states differ: `on` is `auto` or `always`, and `off` is `off`, so update any conditions that compare them.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_removed::title%]"
     },
-    "setting_mirror_deprecated_light_mode": {
-      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same setting and can also change it. Its states are named differently: `always` is `when_dark` and `off` is `manual`, so update any conditions that compare them.\n\nUpdate the following automations and scripts:\n{items}",
-      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
+    "setting_mirror_removed_light_mode": {
+      "description": "The read-only entity `{entity_id}` has been removed; use `{replacement}` instead, which holds the same setting and can also change it. Its states are named differently: `always` is `when_dark` and `off` is `manual`, so update any conditions that compare them.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_removed::title%]"
     },
-    "setting_mirror_deprecated_mic_level": {
-      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same level and can also change it. While the microphone is disabled, `{replacement}` is unavailable, so update any automations and scripts that read the level then.\n\nUpdate the following automations and scripts:\n{items}",
-      "title": "[%key:component::unifiprotect::issues::setting_mirror_deprecated::title%]"
+    "setting_mirror_removed_mic_level": {
+      "description": "The read-only entity `{entity_id}` has been removed; use `{replacement}` instead, which holds the same level and can also change it. While the microphone is disabled, `{replacement}` is unavailable, so update any automations and scripts that read the level then.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "[%key:component::unifiprotect::issues::setting_mirror_removed::title%]"
     }
   },
   "options": {

@@ -50,7 +50,6 @@ from .utils import (
     MockUFPFixture,
     adopt_devices,
     assert_entity_counts,
-    enable_entity,
     ids_from_device_description,
     init_entry,
     make_public_camera,
@@ -65,14 +64,12 @@ from .utils import (
     setup_public_sensor,
 )
 
-pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
-
 CAMERA_SWITCHES_BASIC = [
     d
     for d in CAMERA_SWITCHES
     if (
         not d.translation_key.startswith("detections_")
-        and d.key not in {"ssh", "color_night_vision", "track_person"}
+        and d.key not in {"color_night_vision", "track_person"}
     )
     or d.key
     in {
@@ -96,11 +93,11 @@ async def test_switch_camera_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 15)
+    assert_entity_counts(hass, Platform.SWITCH, 13, 13)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SWITCH, 2, 2)
+    assert_entity_counts(hass, Platform.SWITCH, 0, 0)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 15)
+    assert_entity_counts(hass, Platform.SWITCH, 13, 13)
 
 
 async def test_switch_light_remove(
@@ -110,35 +107,11 @@ async def test_switch_light_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [light])
-    assert_entity_counts(hass, Platform.SWITCH, 4, 3)
+    assert_entity_counts(hass, Platform.SWITCH, 1, 1)
     await remove_entities(hass, ufp, [light])
-    assert_entity_counts(hass, Platform.SWITCH, 2, 2)
+    assert_entity_counts(hass, Platform.SWITCH, 0, 0)
     await adopt_devices(hass, ufp, [light])
-    assert_entity_counts(hass, Platform.SWITCH, 4, 3)
-
-
-async def test_switch_nvr(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
-    """Test switch entity setup for light devices."""
-
-    await init_entry(hass, ufp, [])
-
-    assert_entity_counts(hass, Platform.SWITCH, 2, 2)
-
-    nvr = ufp.api.bootstrap.nvr
-    entity_id = "switch.unifiprotect_insights_enabled"
-
-    with patch_ufp_method(nvr, "set_insights", new_callable=AsyncMock) as mock_method:
-        await hass.services.async_call(
-            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-
-        mock_method.assert_called_once_with(True)
-
-        await hass.services.async_call(
-            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-
-        mock_method.assert_called_with(False)
+    assert_entity_counts(hass, Platform.SWITCH, 1, 1)
 
 
 async def test_switch_setup_no_perm(
@@ -214,7 +187,7 @@ async def test_switch_camera_read_only_user(
     )
 
 
-@pytest.mark.parametrize("key", ["ssh", "system_sounds", "motion"])
+@pytest.mark.parametrize("key", ["system_sounds", "motion"])
 async def test_switch_camera_read_only_user_private_setters(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -252,9 +225,9 @@ async def test_switch_setup_light(
 
     setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
-    assert_entity_counts(hass, Platform.SWITCH, 4, 3)
+    assert_entity_counts(hass, Platform.SWITCH, 1, 1)
 
-    description = LIGHT_SWITCHES[1]
+    description = LIGHT_SWITCHES[0]
 
     unique_id, entity_id = await ids_from_device_description(
         hass, Platform.SWITCH, light, description
@@ -263,23 +236,6 @@ async def test_switch_setup_light(
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert entity.unique_id == unique_id
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
-    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-
-    description = LIGHT_SWITCHES[0]
-
-    unique_id = f"{light.mac}_{description.key}"
-    entity_id = f"switch.test_light_{description.translation_key}"
-
-    entity = entity_registry.async_get(entity_id)
-    assert entity
-    assert entity.disabled is True
-    assert entity.unique_id == unique_id
-
-    await enable_entity(hass, ufp.entry.entry_id, entity_id)
 
     state = hass.states.get(entity_id)
     assert state
@@ -297,7 +253,7 @@ async def test_switch_setup_camera_all(
 
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 15)
+    assert_entity_counts(hass, Platform.SWITCH, 13, 13)
 
     for description in CAMERA_SWITCHES_BASIC:
         unique_id, entity_id = await ids_from_device_description(
@@ -313,23 +269,6 @@ async def test_switch_setup_camera_all(
         assert state.state == STATE_OFF
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    description = CAMERA_SWITCHES[0]
-
-    unique_id = f"{doorbell.mac}_{description.key}"
-    entity_id = f"switch.test_camera_{description.translation_key}"
-
-    entity = entity_registry.async_get(entity_id)
-    assert entity
-    assert entity.disabled is True
-    assert entity.unique_id == unique_id
-
-    await enable_entity(hass, ufp.entry.entry_id, entity_id)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
-    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-
 
 async def test_switch_setup_camera_none(
     hass: HomeAssistant,
@@ -341,7 +280,7 @@ async def test_switch_setup_camera_none(
 
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.SWITCH, 8, 7)
+    assert_entity_counts(hass, Platform.SWITCH, 5, 5)
 
     for description in CAMERA_SWITCHES_BASIC:
         if description.ufp_required_field is not None:
@@ -360,23 +299,6 @@ async def test_switch_setup_camera_none(
         assert state.state == STATE_OFF
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    description = CAMERA_SWITCHES[0]
-
-    unique_id = f"{camera.mac}_{description.key}"
-    entity_id = f"switch.test_camera_{description.translation_key}"
-
-    entity = entity_registry.async_get(entity_id)
-    assert entity
-    assert entity.disabled is True
-    assert entity.unique_id == unique_id
-
-    await enable_entity(hass, ufp.entry.entry_id, entity_id)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
-    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-
 
 async def test_switch_light_status(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
@@ -385,9 +307,9 @@ async def test_switch_light_status(
 
     setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
-    assert_entity_counts(hass, Platform.SWITCH, 4, 3)
+    assert_entity_counts(hass, Platform.SWITCH, 1, 1)
 
-    description = LIGHT_SWITCHES[1]
+    description = LIGHT_SWITCHES[0]
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.SWITCH, light, description
@@ -422,7 +344,7 @@ async def test_switch_light_status_public_value(
     await init_entry(hass, ufp, [light])
 
     _, entity_id = await ids_from_device_description(
-        hass, Platform.SWITCH, light, LIGHT_SWITCHES[1]
+        hass, Platform.SWITCH, light, LIGHT_SWITCHES[0]
     )
     assert hass.states.get(entity_id).state == STATE_OFF
 
@@ -442,38 +364,9 @@ async def test_switch_light_status_unavailable_without_public(
     await init_entry(hass, ufp, [light])
 
     _, entity_id = await ids_from_device_description(
-        hass, Platform.SWITCH, light, LIGHT_SWITCHES[1]
+        hass, Platform.SWITCH, light, LIGHT_SWITCHES[0]
     )
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-
-
-async def test_switch_camera_ssh(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-) -> None:
-    """Tests SSH switch for cameras."""
-
-    await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 15)
-
-    description = CAMERA_SWITCHES[0]
-
-    _, entity_id = await ids_from_device_description(
-        hass, Platform.SWITCH, doorbell, description
-    )
-    await enable_entity(hass, ufp.entry.entry_id, entity_id)
-
-    with patch_ufp_method(doorbell, "set_ssh", new_callable=AsyncMock) as mock_method:
-        await hass.services.async_call(
-            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-
-        mock_method.assert_called_once_with(True)
-
-        await hass.services.async_call(
-            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-
-        mock_method.assert_called_with(False)
 
 
 @pytest.mark.parametrize("description", CAMERA_SWITCHES_PRIVATE)
@@ -487,7 +380,7 @@ async def test_switch_camera_simple(
 
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 15)
+    assert_entity_counts(hass, Platform.SWITCH, 13, 13)
 
     assert description.ufp_set_method is not None
 
@@ -556,7 +449,7 @@ async def test_switch_camera_highfps(
 
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 15)
+    assert_entity_counts(hass, Platform.SWITCH, 13, 13)
 
     description = next(d for d in CAMERA_SWITCHES if d.key == "high_fps")
 
@@ -860,7 +753,7 @@ async def test_switch_camera_privacy(
     previous_record = doorbell.recording_settings.mode = RecordingMode.DETECTIONS
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 15)
+    assert_entity_counts(hass, Platform.SWITCH, 13, 13)
 
     description = PRIVACY_MODE_SWITCH
 
@@ -914,7 +807,7 @@ async def test_switch_camera_privacy_already_on(
 
     doorbell.add_privacy_zone()
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 16, 15)
+    assert_entity_counts(hass, Platform.SWITCH, 13, 13)
 
     description = PRIVACY_MODE_SWITCH
 
@@ -940,7 +833,7 @@ async def test_switch_turn_on_client_error(
     setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
 
-    description = LIGHT_SWITCHES[1]
+    description = LIGHT_SWITCHES[0]
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.SWITCH, light, description
@@ -972,7 +865,7 @@ async def test_switch_turn_on_not_authorized(
     setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
 
-    description = LIGHT_SWITCHES[1]
+    description = LIGHT_SWITCHES[0]
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.SWITCH, light, description
@@ -1350,7 +1243,7 @@ async def test_switch_hybrid_public_sensor_without_private_deferred(
             "smart_person",
             "set_person_detection",
             {"high_fps"},
-            {"ssh", "motion", "privacy_mode", "color_night_vision"},
+            {"motion", "privacy_mode", "color_night_vision"},
             id="camera",
         ),
         pytest.param(
@@ -1372,7 +1265,7 @@ async def test_switch_hybrid_public_sensor_without_private_deferred(
             "status_light",
             "set_status_light",
             set(),
-            {"ssh"},
+            set(),
             id="light",
         ),
     ],
@@ -1393,8 +1286,8 @@ async def test_public_only_switch_end_to_end(
 ) -> None:
     """A public-only entry builds the migrated switches from the public object.
 
-    Private-only switches and the NVR switches are absent, the device is
-    registered from public identity and commands go to the public setter.
+    Private-only switches are absent, the device is registered from public
+    identity and commands go to the public setter.
     """
     device = request.getfixturevalue(fixture_name)
     public = make(device)
@@ -1408,7 +1301,6 @@ async def test_public_only_switch_end_to_end(
     assert key in keys
     assert present_keys <= keys
     assert not keys & absent_keys
-    assert hass.states.get("switch.unifiprotect_insights_enabled") is None
 
     entity_id = entity_registry.async_get_entity_id(
         Platform.SWITCH, DOMAIN, f"{device.mac}_{key}"

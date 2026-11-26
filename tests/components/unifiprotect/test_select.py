@@ -79,8 +79,6 @@ from .utils import (
     setup_public_light,
 )
 
-pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
-
 
 async def test_select_camera_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
@@ -103,11 +101,11 @@ async def test_select_light_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [light])
-    assert_entity_counts(hass, Platform.SELECT, 2, 2)
+    assert_entity_counts(hass, Platform.SELECT, 1, 1)
     await remove_entities(hass, ufp, [light])
     assert_entity_counts(hass, Platform.SELECT, 0, 0)
     await adopt_devices(hass, ufp, [light])
-    assert_entity_counts(hass, Platform.SELECT, 2, 2)
+    assert_entity_counts(hass, Platform.SELECT, 1, 1)
 
 
 async def test_select_viewer_remove(
@@ -134,9 +132,9 @@ async def test_select_setup_light(
 
     setup_public_light(ufp, light_mode_enable_at=LightModeEnableType.DARK)
     await init_entry(hass, ufp, [light])
-    assert_entity_counts(hass, Platform.SELECT, 2, 2)
+    assert_entity_counts(hass, Platform.SELECT, 1, 1)
 
-    expected_values = ("motion_dark", "Not Paired")
+    expected_values = ("motion_dark",)
 
     for index, description in enumerate(LIGHT_SELECTS):
         unique_id, entity_id = await ids_from_device_description(
@@ -466,7 +464,7 @@ async def test_select_set_option_light_motion(
 
     setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
-    assert_entity_counts(hass, Platform.SELECT, 2, 2)
+    assert_entity_counts(hass, Platform.SELECT, 1, 1)
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.SELECT, light, LIGHT_SELECTS[0]
@@ -545,42 +543,6 @@ async def test_select_light_motion_none(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
-
-
-async def test_select_set_option_light_camera(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, camera: Camera
-) -> None:
-    """Test Paired Camera select."""
-
-    await init_entry(hass, ufp, [light, camera])
-    assert_entity_counts(hass, Platform.SELECT, 4, 4)
-
-    _, entity_id = await ids_from_device_description(
-        hass, Platform.SELECT, light, LIGHT_SELECTS[1]
-    )
-
-    camera = list(light.api.bootstrap.cameras.values())[0]
-
-    with patch_ufp_method(
-        light, "set_paired_camera", new_callable=AsyncMock
-    ) as mock_method:
-        await hass.services.async_call(
-            "select",
-            "select_option",
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: camera.name},
-            blocking=True,
-        )
-
-        mock_method.assert_called_once_with(camera)
-
-        await hass.services.async_call(
-            "select",
-            "select_option",
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Not Paired"},
-            blocking=True,
-        )
-
-        mock_method.assert_called_with(None)
 
 
 async def test_select_set_option_camera_recording(
@@ -1496,22 +1458,6 @@ async def test_public_only_select_follows_public_ws(
     assert hass.states.get(entity_id).state == after
 
 
-async def test_public_only_select_sensor_has_none(
-    entity_registry: er.EntityRegistry,
-    sensor_all: Sensor,
-    ufp_public_only: MockUFPFixture,
-    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
-) -> None:
-    """The sense selects are private-only, so a public sensor yields none."""
-    ufp_public_only.api.public_bootstrap.sensors[sensor_all.id] = make_public_sensor(
-        sensor_all, capabilities={SensorFeatureCapability.OPEN}
-    )
-
-    await setup_public_only()
-
-    assert _select_keys(entity_registry, sensor_all.mac) == set()
-
-
 async def test_public_only_select_added_after_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1551,7 +1497,7 @@ async def test_public_only_select_sense_registry_cleanup(
     ufp_public_only: MockUFPFixture,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
-    """The capability cleanup runs without a private bootstrap."""
+    """A mount type select left by full access is removed without one."""
     stale = entity_registry.async_get_or_create(
         Platform.SELECT,
         DOMAIN,

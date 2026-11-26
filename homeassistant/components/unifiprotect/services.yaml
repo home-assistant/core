@@ -35,12 +35,9 @@ set_chime_paired_doorbells:
       selector:
         target:
           entity:
-            - integration: unifiprotect
-              domain: event
-              device_class: doorbell
-            - integration: unifiprotect
-              domain: binary_sensor
-              device_class: occupancy
+            integration: unifiprotect
+            domain: event
+            device_class: doorbell
 remove_privacy_zone:
   fields:
     device_id:

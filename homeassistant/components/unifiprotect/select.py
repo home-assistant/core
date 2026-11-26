@@ -16,23 +16,17 @@ from uiprotect.data import (
     Light,
     LightModePreset,
     ModelType,
-    MountType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
     PublicHdrMode,
     RecordingMode,
-    Sensor,
     Viewer,
 )
-from uiprotect.data.public_devices import (
-    PublicCamera,
-    PublicDeviceModel,
-    SensorFeatureCapability,
-)
+from uiprotect.data.public_devices import PublicCamera, PublicDeviceModel
 from uiprotect.exceptions import GlobalAlarmManagerError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -49,7 +43,6 @@ from .entity import (
     ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
-    async_remove_unsupported_sense_entities,
 )
 from .utils import async_get_doorbell_settings_public, async_ufp_instance_command
 
@@ -76,14 +69,6 @@ CHIME_TYPES = [
     {"id": ChimeType.NONE.value, "name": "none"},
     {"id": ChimeType.MECHANICAL.value, "name": "mechanical"},
     {"id": ChimeType.DIGITAL.value, "name": "digital"},
-]
-
-MOUNT_TYPES = [
-    {"id": MountType.NONE.value, "name": MountType.NONE.value},
-    {"id": MountType.DOOR.value, "name": MountType.DOOR.value},
-    {"id": MountType.WINDOW.value, "name": MountType.WINDOW.value},
-    {"id": MountType.GARAGE.value, "name": MountType.GARAGE.value},
-    {"id": MountType.LEAK.value, "name": MountType.LEAK.value},
 ]
 
 LIGHT_MODE_MOTION = "motion"
@@ -142,26 +127,8 @@ def _get_doorbell_options(api: ProtectApiClient) -> list[dict[str, Any]]:
     ]
 
 
-def _get_paired_camera_options(api: ProtectApiClient) -> list[dict[str, Any]]:
-    options = [{"id": TYPE_EMPTY_VALUE, "name": "Not Paired"}]
-    options.extend(
-        {"id": camera.id, "name": camera.display_name or camera.type}
-        for camera in api.bootstrap.cameras.values()
-    )
-
-    return options
-
-
 def _get_viewer_current(obj: Viewer) -> str:
     return obj.liveview_id
-
-
-async def _set_paired_camera(obj: Light | Sensor, camera_id: str) -> None:
-    if camera_id == TYPE_EMPTY_VALUE:
-        camera: Camera | None = None
-    else:
-        camera = obj.api.bootstrap.cameras.get(camera_id)
-    await obj.set_paired_camera(camera)
 
 
 async def _set_doorbell_message(obj: PublicCamera, message: str) -> None:
@@ -277,38 +244,6 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_public_value="light_mode_preset",
         ufp_set_method="set_light_mode_preset",
     ),
-    ProtectSelectEntityDescription[Light](
-        key="paired_camera",
-        translation_key="paired_camera",
-        entity_category=EntityCategory.CONFIG,
-        ufp_value="camera_id",
-        ufp_options_fn=_get_paired_camera_options,
-        ufp_set_method_fn=_set_paired_camera,
-        ufp_perm=PermRequired.WRITE,
-    ),
-)
-
-SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
-    ProtectSelectEntityDescription(
-        key="mount_type",
-        translation_key="mount_type",
-        entity_category=EntityCategory.CONFIG,
-        ufp_options=MOUNT_TYPES,
-        ufp_enum_type=MountType,
-        ufp_value="mount_type",
-        ufp_set_method="set_mount_type",
-        ufp_capability=SensorFeatureCapability.OPEN,
-        ufp_perm=PermRequired.WRITE,
-    ),
-    ProtectSelectEntityDescription[Sensor](
-        key="paired_camera",
-        translation_key="paired_camera",
-        entity_category=EntityCategory.CONFIG,
-        ufp_value="camera_id",
-        ufp_options_fn=_get_paired_camera_options,
-        ufp_set_method_fn=_set_paired_camera,
-        ufp_perm=PermRequired.WRITE,
-    ),
 )
 
 VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
@@ -325,7 +260,6 @@ VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
 _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_SELECTS,
     ModelType.LIGHT: LIGHT_SELECTS,
-    ModelType.SENSOR: SENSE_SELECTS,
     ModelType.VIEWPORT: VIEWER_SELECTS,
 }
 
@@ -337,7 +271,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up number entities for UniFi Protect integration."""
     data = entry.runtime_data
-    async_remove_unsupported_sense_entities(hass, Platform.SELECT, data, SENSE_SELECTS)
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:

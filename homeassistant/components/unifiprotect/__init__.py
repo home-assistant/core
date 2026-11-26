@@ -7,7 +7,7 @@ from typing import NoReturn
 from aiohttp.client_exceptions import ServerDisconnectedError
 from uiprotect import ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
-from uiprotect.data import Bootstrap
+from uiprotect.data import Bootstrap, ModelType
 from uiprotect.data.public_devices import PublicDeviceModel, PublicNVR
 from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 
@@ -39,11 +39,8 @@ from .const import (
 )
 from .data import ProtectData, UFPConfigEntry
 from .migrate import (
-    async_deprecate_camera_setting_mirrors,
-    async_deprecate_light_setting_mirrors,
-    async_deprecate_private_only_entities,
-    async_deprecate_ring_and_motion_sensors,
     async_migrate_data,
+    async_remove_private_api_entities,
     async_remove_sense_setting_mirrors,
 )
 from .services import async_setup_services
@@ -264,10 +261,20 @@ async def _async_setup_public_only_entry(
     data_service.nvr_device_id = nvr_device.id
 
     await hass.config_entries.async_forward_entry_setups(entry, PUBLIC_ONLY_PLATFORMS)
+    public_bootstrap = protect.public_bootstrap
     async_remove_sense_setting_mirrors(
+        hass, entry, {sensor.mac for sensor in public_bootstrap.sensors.values()}
+    )
+    async_remove_private_api_entities(
         hass,
         entry,
-        {sensor.mac for sensor in protect.public_bootstrap.sensors.values()},
+        unifi_mac,
+        {
+            ModelType.CAMERA: public_bootstrap.cameras.values(),
+            ModelType.LIGHT: public_bootstrap.lights.values(),
+            ModelType.SENSOR: public_bootstrap.sensors.values(),
+            ModelType.CHIME: public_bootstrap.chimes.values(),
+        },
     )
 
 
@@ -331,10 +338,18 @@ async def _async_setup_entry(
     async_remove_sense_setting_mirrors(
         hass, entry, {sensor.mac for sensor in bootstrap.sensors.values()}
     )
-    async_deprecate_light_setting_mirrors(hass, entry, bootstrap)
-    async_deprecate_camera_setting_mirrors(hass, entry, bootstrap)
-    async_deprecate_private_only_entities(hass, entry, bootstrap)
-    async_deprecate_ring_and_motion_sensors(hass, entry, bootstrap)
+    async_remove_private_api_entities(
+        hass,
+        entry,
+        nvr.mac,
+        {
+            ModelType.CAMERA: bootstrap.cameras.values(),
+            ModelType.LIGHT: bootstrap.lights.values(),
+            ModelType.VIEWPORT: bootstrap.viewers.values(),
+            ModelType.SENSOR: bootstrap.sensors.values(),
+            ModelType.CHIME: bootstrap.chimes.values(),
+        },
+    )
     hass.http.register_view(ThumbnailProxyView(hass))
     hass.http.register_view(SnapshotProxyView(hass))
     hass.http.register_view(VideoProxyView(hass))

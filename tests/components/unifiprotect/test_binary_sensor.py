@@ -1,27 +1,17 @@
 """Test the UniFi Protect binary_sensor platform."""
 
 from collections.abc import Callable, Coroutine
-from datetime import datetime, timedelta
 from functools import partial
 from typing import Any
 from unittest.mock import Mock
 
 import pytest
-from pytest_homeassistant.common import async_capture_events
 from uiprotect.data import (
     Camera,
-    Event,
-    EventType,
     Light,
-    ModelType,
     MountType,
-    Permission,
-    PublicHdrMode,
-    RecordingMode,
     Sensor,
     SmartDetectAudioType,
-    SmartDetectObjectType,
-    VideoMode,
     WSAction,
 )
 from uiprotect.data.public_devices import SensorFeatureCapability
@@ -30,7 +20,6 @@ from uiprotect.websocket import WebsocketState
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.unifiprotect.binary_sensor import (
     CAMERA_SENSORS,
-    EVENT_SENSORS,
     LIGHT_SENSORS,
     MOUNTABLE_SENSE_SENSORS,
     SENSE_SENSORS,
@@ -41,7 +30,6 @@ from homeassistant.components.unifiprotect.number import CAMERA_NUMBERS
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
-    EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -68,8 +56,6 @@ from .utils import (
     setup_public_sensor,
 )
 
-pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
-
 LIGHT_SENSOR_WRITE = LIGHT_SENSORS[:2]
 SENSE_SENSORS_WRITE = SENSE_SENSORS[:3]
 BATTERY_LOW = next(d for d in SENSE_SENSORS if d.key == "battery_low")
@@ -86,11 +72,11 @@ async def test_binary_sensor_camera_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 7, 6)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 6, 5)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 7, 6)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 6, 5)
 
 
 async def test_binary_sensor_light_remove(
@@ -179,21 +165,7 @@ async def test_binary_sensor_setup_camera_all(
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 7, 6)
-
-    description = EVENT_SENSORS[0]
-    unique_id, entity_id = await ids_from_device_description(
-        hass, Platform.BINARY_SENSOR, doorbell, description
-    )
-
-    entity = entity_registry.async_get(entity_id)
-    assert entity
-    assert entity.unique_id == unique_id
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
-    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 6, 5)
 
     # Is Dark
     description = CAMERA_SENSORS[0]
@@ -720,7 +692,7 @@ async def test_binary_sensor_update_motion(
 
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 13, 12)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 12, 11)
 
     motion = next(d for d in CAMERA_SENSORS if d.key == "motion")
     _, entity_id = await ids_from_device_description(
@@ -896,7 +868,7 @@ async def test_binary_sensor_person_detected(
 
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 13, 13)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 12, 12)
 
     person = next(d for d in CAMERA_SENSORS if d.key == "smart_obj_person")
     _, entity_id = await ids_from_device_description(
@@ -962,52 +934,6 @@ async def test_binary_sensor_detection_disabled_unavailable(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
-async def test_binary_sensor_doorbell_ring(
-    hass: HomeAssistant,
-    ufp: MockUFPFixture,
-    doorbell: Camera,
-    unadopted_camera: Camera,
-    fixed_now: datetime,
-) -> None:
-    """The doorbell occupancy binary stays on the private ring event path."""
-
-    await init_entry(hass, ufp, [doorbell, unadopted_camera])
-
-    description = next(d for d in EVENT_SENSORS if d.key == "doorbell")
-    _, entity_id = await ids_from_device_description(
-        hass, Platform.BINARY_SENSOR, doorbell, description
-    )
-    assert hass.states.get(entity_id).state == STATE_OFF
-
-    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
-    event = Event(
-        model=ModelType.EVENT,
-        id="ring-1",
-        type=EventType.RING,
-        start=fixed_now - timedelta(seconds=1),
-        end=fixed_now,
-        smart_detect_types=[],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-        api=ufp.api,
-    )
-    new_camera = doorbell.model_copy()
-    new_camera.last_ring_event_id = event.id
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {event.id: event}
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = event
-    ufp.ws_msg(mock_msg)
-    await hass.async_block_till_done()
-
-    # A momentary ring blips on, then immediately clears.
-    ring_changes = [e for e in state_changes if e.data["entity_id"] == entity_id]
-    assert any(c.data["new_state"].state == STATE_ON for c in ring_changes)
-    assert hass.states.get(entity_id).state == STATE_OFF
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor_simultaneous_person_and_vehicle_detection(
     hass: HomeAssistant,
@@ -1025,7 +951,7 @@ async def test_binary_sensor_simultaneous_person_and_vehicle_detection(
 
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 13, 13)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 12, 12)
 
     person = next(d for d in CAMERA_SENSORS if d.key == "smart_obj_person")
     vehicle = next(d for d in CAMERA_SENSORS if d.key == "smart_obj_vehicle")
@@ -1245,90 +1171,3 @@ async def test_object_detected_needs_advertised_types(
     keys = registered_keys(entity_registry, Platform.BINARY_SENSOR, doorbell.mac)
     assert "motion" in keys
     assert "smart_obj_any" not in keys
-
-
-_CAMERA_BINARY_MIRRORS = (
-    "status_light",
-    "hdr_mode",
-    "high_fps",
-    "osd_name",
-    "osd_date",
-    "osd_logo",
-    "osd_bitrate",
-    "smart_person",
-    "smart_vehicle",
-    "smart_animal",
-    "smart_package",
-    "smart_licenseplate",
-    "smart_smoke",
-    "smart_cmonx",
-    "smart_siren",
-    "smart_baby_cry",
-    "smart_speak",
-    "smart_bark",
-    "smart_car_alarm",
-    "smart_car_horn",
-    "smart_glass_break",
-)
-
-
-def _set_private_mirrors_on(camera: Camera) -> None:
-    """Turn every mirrored setting on in the private camera."""
-    object_types = [t for t in SmartDetectObjectType if t.audio_type is None]
-    audio_types = list(SmartDetectAudioType)
-    camera.feature_flags.smart_detect_types = object_types
-    camera.feature_flags.smart_detect_audio_types = audio_types
-    camera.smart_detect_settings.object_types = object_types
-    camera.smart_detect_settings.audio_types = audio_types
-    camera.recording_settings.mode = RecordingMode.ALWAYS
-    camera.led_settings.is_enabled = True
-
-
-@pytest.mark.parametrize("key", _CAMERA_BINARY_MIRRORS)
-async def test_binary_sensor_camera_mirror_reads_public(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp: MockUFPFixture,
-    doorbell: Camera,
-    key: str,
-) -> None:
-    """A read-only user's camera setting mirror shows the public value."""
-    _set_private_mirrors_on(doorbell)
-    ufp.api.bootstrap.auth_user.all_permissions = [
-        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
-    ]
-    setup_public_camera(
-        ufp,
-        hdr_type=PublicHdrMode.OFF,
-        video_mode=VideoMode.DEFAULT,
-        object_types=[],
-        audio_types=[],
-    )
-
-    await init_entry(hass, ufp, [doorbell])
-
-    entity_id = entity_registry.async_get_entity_id(
-        Platform.BINARY_SENSOR, DOMAIN, f"{doorbell.mac}_{key}"
-    )
-    assert entity_id is not None
-    assert hass.states.get(entity_id).state == STATE_OFF
-
-
-async def test_binary_sensor_camera_hdr_mirror_on_for_auto(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp: MockUFPFixture,
-    doorbell: Camera,
-) -> None:
-    """The HDR mirror is on for the auto mode as well."""
-    ufp.api.bootstrap.auth_user.all_permissions = [
-        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
-    ]
-    setup_public_camera(ufp, hdr_type=PublicHdrMode.AUTO)
-
-    await init_entry(hass, ufp, [doorbell])
-
-    entity_id = entity_registry.async_get_entity_id(
-        Platform.BINARY_SENSOR, DOMAIN, f"{doorbell.mac}_hdr_mode"
-    )
-    assert hass.states.get(entity_id).state == STATE_ON
