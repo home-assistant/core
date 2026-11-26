@@ -327,6 +327,11 @@ class AdsHub:
                 # Gone again, so the rest would each wait the full timeout.
                 _LOGGER.debug("The ADS device stopped answering while resubscribing")
                 self._drop_connection()
+                # A subscription registered before this one may have delivered
+                # a value, which the next attempt might not refresh. The drop
+                # waited for its callbacks, so nothing arrives after this.
+                for device in self.devices:
+                    device.mark_unavailable()
                 return None
         return state[0]
 
@@ -409,7 +414,9 @@ class AdsHub:
             if self._closed:
                 _LOGGER.debug("Not writing %s, the hub is shut down", name)
                 return None
-            if not self._port_open:
+            # The probe sets LOST before the teardown closes the port, which
+            # can wait behind another deletion holding the teardown lock.
+            if not self._port_open or self._state is ConnectionState.LOST:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="not_connected",

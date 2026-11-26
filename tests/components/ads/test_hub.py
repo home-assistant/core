@@ -382,22 +382,110 @@ async def test_reconnect_stops_when_the_device_drops_again(
     mock_create_connection.assert_called_once()
 
 
-async def test_registered_subscription_not_registered_twice(
+async def test_aborted_reconnect_leaves_no_stale_value(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_pyads_connection: MagicMock,
     mock_ads_device: MockAdsDevice,
 ) -> None:
-    """Test a subscription added just before a reconnect's snapshot registers once.
+    """Test a value from a reconnect that failed halfway is not shown later.
 
-    A second registration would overwrite the first handles, and that
-    notification would stay live past removal and shutdown.
+    The next attempt can be refused that variable, for example after a
+    download removed it, and would then show the value with no notification
+    behind it.
+    """
+    mock_ads_device.values["GVL.pump"] = BOOL_TRUE
+    mock_ads_device.values["GVL.fan"] = BOOL_TRUE
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {
+            DOMAIN: ADS_CONFIG,
+            SWITCH_DOMAIN: [
+                {"platform": DOMAIN, **SWITCH_CONFIG},
+                {"platform": DOMAIN, "adsvar": "GVL.fan", "name": "Fan"},
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    client = mock_pyads_connection.return_value
+    client.read_state.return_value = None
+    await _async_advance(hass, freezer, mock_ads_device, PROBE_INTERVAL)
+
+    def _drain(*args: Any) -> None:
+        # Like the ADS library, a deletion waits for the callbacks in flight.
+        for delivery in mock_ads_device.deliveries:
+            delivery.join()
+
+    def _refuse(refused: str, err_code: int) -> Any:
+        def _add_device_notification(*args: Any) -> tuple[int, int]:
+            if args[0] == refused:
+                raise pyads.ADSError(err_code=err_code)
+            return mock_ads_device.add_device_notification(*args)
+
+        return _add_device_notification
+
+    hub = get_hub(hass)
+    register = hub._register
+
+    def _register_then_deliver(subscription_id: int) -> bool:
+        # A callback only gets the lock between two registrations, which the
+        # scheduler allows but the mock cannot force otherwise.
+        registered = register(subscription_id)
+        _drain()
+        return registered
+
+    # The pump delivers its value, then the device is gone before the fan.
+    client.read_state.return_value = (pyads.ADSSTATE_RUN, 0)
+    client.del_device_notification.side_effect = _drain
+    client.add_device_notification.side_effect = _refuse("GVL.fan", 1861)
+    with patch.object(hub, "_register", _register_then_deliver):
+        await _async_advance(hass, freezer, mock_ads_device, timedelta(seconds=5))
+    assert not hub.connected
+
+    # Back with a program that no longer has the pump.
+    client.add_device_notification.side_effect = _refuse("GVL.pump", 1808)
+    await _async_advance(hass, freezer, mock_ads_device, timedelta(seconds=10))
+
+    assert get_hub(hass).connected
+    assert hass.states.get("switch.fan").state == STATE_ON
+    assert hass.states.get(SWITCH_ID).state == STATE_UNAVAILABLE
+
+
+async def test_registered_subscription_not_registered_twice(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+) -> None:
+    """Test a subscription a reconnect registered is not registered again.
+
+    A subscription added just before a reconnect's snapshot is registered by
+    both, and nothing can be blocked between adding it and its own
+    registration, so that late registration is made directly. A second one
+    would overwrite the first handles, and that notification would stay live
+    past removal and shutdown.
     """
     hub = await _async_setup_switch(hass, mock_ads_device)
     client = mock_pyads_connection.return_value
+    client.read_state.return_value = None
+    await _async_advance(hass, freezer, mock_ads_device, PROBE_INTERVAL)
+    # Added while the connection is lost, so the reconnect registers it.
+    subscription_id = await hass.async_add_executor_job(
+        hub.add_device_notification, "GVL.fan", pyads.PLCTYPE_BOOL, MagicMock()
+    )
+    client.read_state.return_value = (pyads.ADSSTATE_RUN, 0)
+    await _async_advance(hass, freezer, mock_ads_device, timedelta(seconds=5))
+    assert hub.is_registered(subscription_id)
 
-    await hass.async_add_executor_job(hub._register, 1)
+    await hass.async_add_executor_job(hub._register, subscription_id)
 
-    client.add_device_notification.assert_called_once()
+    fan_registrations = [
+        registration
+        for registration in client.add_device_notification.call_args_list
+        if registration.args[0] == "GVL.fan"
+    ]
+    assert len(fan_registrations) == 1
 
 
 async def test_unload_stops_monitoring(
@@ -602,6 +690,55 @@ async def test_write_while_lost(
 
     assert err.value.translation_key == "not_connected"
     client.write_by_name.assert_not_called()
+
+
+async def test_write_while_the_teardown_waits(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+) -> None:
+    """Test a write fails once the connection is lost, before the port closes.
+
+    The teardown can wait behind a deletion that holds the teardown lock,
+    and the device would not answer the write meanwhile.
+    """
+    hub = await _async_setup_switch(hass, mock_ads_device)
+    client = mock_pyads_connection.return_value
+    deleting, release = threading.Event(), threading.Event()
+
+    def _slow_del_device_notification(*args: Any) -> None:
+        deleting.set()
+        release.wait(5)
+
+    client.del_device_notification.side_effect = _slow_del_device_notification
+    entity_registry.async_remove(SWITCH_ID)
+    await hass.async_add_executor_job(deleting.wait, 5)
+    probed = threading.Event()
+
+    def _lost_read_state() -> None:
+        probed.set()
+
+    client.read_state.side_effect = _lost_read_state
+    freezer.tick(PROBE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_add_executor_job(probed.wait, 5)
+    await _async_yield()
+    assert not hub.connected
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            "write_data_by_name",
+            {"adsvar": "GVL.pump", "adstype": "bool", "value": "1"},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "not_connected"
+    client.write_by_name.assert_not_called()
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_platform_waits_for_the_import(
