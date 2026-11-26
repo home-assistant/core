@@ -2,28 +2,37 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "no_appliances": "No compatible appliance is linked to this account."
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     },
     "error": {
       "account_locked": "Too many failed attempts. The account is locked for 15 minutes.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "email_not_verified": "The email address of this account is not confirmed yet. Open the link in the confirmation email, then try again.",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_auth": "The email or password is incorrect, or the account was not created in the selected country.",
+      "no_appliances": "No appliance is linked to this account here. Select the same country and language as in the app of your appliance.",
       "password_reset_required": "A password reset is required for this account. Reset it in the app of your appliance, then try again.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "user": {
+      "region": {
         "data": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "region": "Region"
+          "region": "[%key:common::config_flow::data::language%]"
         },
         "data_description": {
+          "region": "The language of the app of your appliance."
+        },
+        "description": "Accounts from your country are split by brand and language. Select the language of the app of your appliance."
+      },
+      "user": {
+        "data": {
+          "country": "[%key:common::config_flow::data::country%]",
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "country": "The country you selected when you created the account.",
           "email": "The email address of the account you use in the app of your appliance.",
-          "password": "The password of that account. It is only used to log in and is not stored.",
-          "region": "The brand and country you selected when you created the account."
+          "password": "The password of that account. It is only used to log in and is not stored."
         },
         "description": "Log in with the account you use in the app of your appliance."
       }
@@ -120,27 +129,10 @@
   "selector": {
     "region": {
       "options": {
-        "krups_de": "Krups (Germany)",
-        "krups_mx": "Krups (Mexico)",
-        "moulinex_ae": "Moulinex (United Arab Emirates)",
-        "moulinex_be": "Moulinex (Belgium)",
-        "moulinex_ch": "Moulinex (Switzerland)",
-        "moulinex_dz": "Moulinex (Algeria)",
-        "moulinex_es": "Moulinex (Spain)",
-        "moulinex_fr": "Moulinex (France)",
-        "moulinex_it": "Moulinex (Italy)",
-        "moulinex_pt": "Moulinex (Portugal)",
-        "tefal_au": "Tefal (Australia)",
-        "tefal_bg": "Tefal (Bulgaria)",
-        "tefal_cz": "Tefal (Czechia)",
-        "tefal_gb": "Tefal (United Kingdom)",
-        "tefal_hu": "Tefal (Hungary)",
-        "tefal_pl": "Tefal (Poland)",
-        "tefal_ro": "Tefal (Romania)",
-        "tefal_ru": "Tefal (Russia)",
-        "tefal_sk": "Tefal (Slovakia)",
-        "tefal_ua": "Tefal (Ukraine)",
-        "tfal_jp": "T-fal (Japan)"
+        "krups_de": "German (Krups)",
+        "moulinex_ch": "German (Moulinex)",
+        "moulinex_fr": "French",
+        "moulinex_it": "Italian"
       }
     }
   }

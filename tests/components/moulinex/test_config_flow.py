@@ -3,6 +3,7 @@
 from unittest.mock import ANY, AsyncMock
 
 from aiomoulinex import (
+    COUNTRIES,
     LoginError,
     LoginFailure,
     MoulinexAuthenticationError,
@@ -16,7 +17,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.moulinex.const import CONF_TOKENS, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION
+from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_PASSWORD, CONF_REGION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -29,10 +30,11 @@ DHCP_DISCOVERY = DhcpServiceInfo(
     ip="192.168.1.20", hostname="seb_product_1a2b", macaddress="aabbccdd1a2b"
 )
 USER_INPUT = {
-    CONF_REGION: Region.MOULINEX_FR,
+    CONF_COUNTRY: "FR",
     CONF_EMAIL: EMAIL,
     CONF_PASSWORD: PASSWORD,
 }
+SWISS_USER_INPUT = {**USER_INPUT, CONF_COUNTRY: "CH"}
 
 ERRORS = [
     *(
@@ -64,12 +66,38 @@ ERRORS = [
 
 
 async def test_regions_are_translated(hass: HomeAssistant) -> None:
-    """Every region of the library has a label in the region selector."""
+    """Every region of a country with several regions has a label."""
     translations = await async_get_translations(hass, "en", "selector", {DOMAIN})
 
     assert {
-        f"component.{DOMAIN}.selector.region.options.{region}" for region in Region
+        f"component.{DOMAIN}.selector.region.options.{region}"
+        for country in COUNTRIES
+        if len(regions := Region.for_country(country)) > 1
+        for region in regions
     } <= translations.keys()
+
+
+@pytest.mark.parametrize(
+    ("country", "suggested"),
+    [
+        pytest.param("FR", "FR", id="known"),
+        pytest.param("US", None, id="unknown"),
+    ],
+)
+async def test_user_form_suggests_country(
+    hass: HomeAssistant, country: str, suggested: str | None
+) -> None:
+    """The country of Home Assistant is suggested when a region serves it."""
+    hass.config.country = country
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    schema_key = next(
+        key for key in result["data_schema"].schema if key == CONF_COUNTRY
+    )
+    assert (schema_key.description or {}).get("suggested_value") == suggested
 
 
 @pytest.mark.usefixtures("mock_fetch_profile")
@@ -184,11 +212,11 @@ async def test_dhcp_discovery_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_login")
+@pytest.mark.usefixtures("mock_login", "mock_setup_entry")
 async def test_user_flow_no_appliances(
-    hass: HomeAssistant, mock_fetch_profile: AsyncMock
+    hass: HomeAssistant, mock_fetch_profile: AsyncMock, mock_profile: Profile
 ) -> None:
-    """An account without a compatible appliance is not set up."""
+    """An account without an appliance in the region is not set up."""
     mock_fetch_profile.return_value = Profile()
 
     result = await hass.config_entries.flow.async_init(
@@ -198,5 +226,108 @@ async def test_user_flow_no_appliances(
         result["flow_id"], USER_INPUT
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_appliances"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "no_appliances"}
+
+    mock_fetch_profile.return_value = mock_profile
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_fetch_profile")
+async def test_user_flow_region(
+    hass: HomeAssistant, mock_login: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """The user picks the region of a country served by several regions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], SWISS_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "region"
+    assert result["errors"] == {}
+    mock_login.assert_not_awaited()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_REGION: Region.KRUPS_DE}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_REGION: Region.KRUPS_DE,
+        CONF_EMAIL: EMAIL,
+        CONF_TOKENS: build_tokens().to_dict(),
+    }
+    assert result["result"].unique_id == USER_ID
+    mock_login.assert_awaited_once_with(ANY, EMAIL, PASSWORD, Region.KRUPS_DE)
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_fetch_profile", "mock_setup_entry")
+async def test_user_flow_region_login_error(
+    hass: HomeAssistant, mock_login: AsyncMock
+) -> None:
+    """A login error after picking the region leads back to the login form."""
+    mock_login.side_effect = MoulinexAuthenticationError("refused")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], SWISS_USER_INPUT
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_REGION: Region.MOULINEX_CH}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], SWISS_USER_INPUT
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_REGION: Region.MOULINEX_CH}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USER_ID
+
+
+@pytest.mark.usefixtures("mock_login", "mock_setup_entry")
+async def test_user_flow_region_no_appliances(
+    hass: HomeAssistant, mock_fetch_profile: AsyncMock, mock_profile: Profile
+) -> None:
+    """The user can pick another region when the first one has no appliance."""
+    mock_fetch_profile.return_value = Profile()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], SWISS_USER_INPUT
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_REGION: Region.MOULINEX_CH}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "region"
+    assert result["errors"] == {"base": "no_appliances"}
+
+    mock_fetch_profile.return_value = mock_profile
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_REGION: Region.MOULINEX_FR}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_REGION] == Region.MOULINEX_FR
