@@ -73,34 +73,30 @@ async def test_button_writes_its_register(
     assert [(w.address, w.values[0]) for w in writes] == [(address, value)]
 
 
-@pytest.mark.usefixtures("init_integration")
-async def test_press_failure_raises_home_assistant_error(
-    hass: HomeAssistant, mock_connection: MockModbusConnection
-) -> None:
-    """A command the gateway does not answer surfaces as an error."""
-    mock_connection.for_unit(1).fail_write(45, ModbusTimeoutError())
-    with pytest.raises(HomeAssistantError) as err:
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            ButtonService.PRESS,
-            {TargetKey.ENTITY_ID: RESET},
-            blocking=True,
-        )
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "write_failed"
-
-
+@pytest.mark.parametrize(
+    ("entity_id", "address", "error"),
+    [
+        pytest.param(RESET, 45, ModbusTimeoutError(), id="reset_error_unanswered"),
+        pytest.param(
+            RESET_GATEWAY, 99, IllegalDataAddressError(), id="reset_gateway_refused"
+        ),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_reset_gateway_the_gateway_refuses_raises(
-    hass: HomeAssistant, mock_connection: MockModbusConnection
+async def test_press_failure_raises_home_assistant_error(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    entity_id: str,
+    address: int,
+    error: Exception,
 ) -> None:
-    """A reset the gateway refuses surfaces as an error."""
-    mock_connection.for_unit(1).fail_write(99, IllegalDataAddressError())
+    """A command the gateway does not take surfaces as an error."""
+    mock_connection.for_unit(1).fail_write(address, error)
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {TargetKey.ENTITY_ID: RESET_GATEWAY},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
     assert err.value.translation_domain == DOMAIN
