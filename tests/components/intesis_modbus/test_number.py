@@ -21,7 +21,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey, UnitOfTime
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -128,31 +128,6 @@ async def test_open_window_timeout_is_written_in_whole_minutes(
         blocking=True,
     )
     assert [(w.address, w.values[0]) for w in writes] == [(13, written)]
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_open_window_timeout_keeps_its_value_in_another_unit(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_connection: MockModbusConnection,
-) -> None:
-    """A timeout shown in hours is still the 30 minutes the gateway holds."""
-    entity_registry.async_update_entity_options(
-        TIMEOUT, NUMBER_DOMAIN, {"unit_of_measurement": UnitOfTime.HOURS}
-    )
-    await hass.async_block_till_done(wait_background_tasks=True)
-    state = hass.states.get(TIMEOUT)
-    assert state.state == "0.5"
-    assert state.attributes[NumberEntityCapabilityAttribute.MAX] == 0.5
-    writes: list[WriteEvent] = []
-    mock_connection.for_unit(1).on_write(writes.append)
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        NumberService.SET_VALUE,
-        {TargetKey.ENTITY_ID: TIMEOUT, NumberServiceArgument.VALUE: 0.25},
-        blocking=True,
-    )
-    assert [(w.address, w.values[0]) for w in writes] == [(13, 15)]
 
 
 @pytest.mark.usefixtures("init_integration")

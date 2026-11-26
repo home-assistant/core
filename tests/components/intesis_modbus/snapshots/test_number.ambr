@@ -67,8 +67,8 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30.0,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
@@ -90,7 +90,7 @@
     'object_id_base': 'Open window timeout',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Open window timeout',
     'platform': 'intesis_modbus',
@@ -105,10 +105,9 @@
 # name: test_all_numbers_snapshot[number.inmbsmhi001r000_air_conditioner_open_window_timeout-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INMBSMHI001R000 air conditioner Open window timeout',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30.0,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
@@ -118,6 +117,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '30.0',
+    'state': '30',
   })
 # ---
