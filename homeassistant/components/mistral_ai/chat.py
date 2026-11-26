@@ -166,20 +166,17 @@ async def transform_stream(
                     )
                     if tool_call.id and tool_call.id != "null":
                         entry["id"] = tool_call.id
-                    if (
-                        tool_call.function
-                        and tool_call.function.name
-                        and not is_unset(tool_call.function.name)
+                    if tool_call.function.name and not is_unset(
+                        tool_call.function.name
                     ):
                         entry["name"] += tool_call.function.name
-                    if tool_call.function:
-                        arguments = tool_call.function.arguments
-                        if not is_unset(arguments) and arguments:
-                            entry["arguments"] += (
-                                arguments
-                                if isinstance(arguments, str)
-                                else json_dumps(arguments)
-                            )
+                    arguments = tool_call.function.arguments
+                    if not is_unset(arguments) and arguments:
+                        entry["arguments"] += (
+                            arguments
+                            if isinstance(arguments, str)
+                            else json_dumps(arguments)
+                        )
 
             if choice.finish_reason == "tool_calls" and current_tool_calls:
                 tool_inputs: list[llm.ToolInput] = []
