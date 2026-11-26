@@ -5,7 +5,12 @@ from typing import Any, override
 from pydeconz.models.event import EventType
 from pydeconz.models.light.siren import Siren
 
-from homeassistant.components.siren import (DOMAIN, as, SIREN_DOMAIN, SirenEntity, SirenEntityFeature, SirenServiceArgument)
+from homeassistant.components.siren import (
+    DOMAIN as SIREN_DOMAIN,
+    SirenEntity,
+    SirenEntityFeature,
+    SirenServiceArgument,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 

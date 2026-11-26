@@ -7,7 +7,13 @@ from pydeconz.models import ResourceType
 from pydeconz.models.event import EventType
 from pydeconz.models.light.cover import Cover
 
-from homeassistant.components.cover import (DOMAIN, as, COVER_DOMAIN, CoverDeviceClass, CoverEntity, CoverEntityFeature, CoverServiceArgument)
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    CoverDeviceClass,
+    CoverEntity,
+    CoverEntityFeature,
+    CoverServiceArgument,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 

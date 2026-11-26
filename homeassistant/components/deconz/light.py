@@ -8,7 +8,18 @@ from pydeconz.models.event import EventType
 from pydeconz.models.group import Group, TypedGroupAction
 from pydeconz.models.light.light import Light, LightAlert, LightColorMode, LightEffect
 
-from homeassistant.components.light import (DEFAULT_MAX_KELVIN, DEFAULT_MIN_KELVIN, DOMAIN, as, LIGHT_DOMAIN, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT, ColorMode, LightEntity, LightEntityFeature, LightServiceArgument)
+from homeassistant.components.light import (
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
+    DOMAIN as LIGHT_DOMAIN,
+    EFFECT_COLORLOOP,
+    FLASH_LONG,
+    FLASH_SHORT,
+    ColorMode,
+    LightEntity,
+    LightEntityFeature,
+    LightServiceArgument,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -294,8 +305,12 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
             if ColorMode.XY in self._attr_supported_color_modes:
                 data["xy"] = color_hs_to_xy(*kwargs[LightServiceArgument.HS_COLOR])
             else:
-                data["hue"] = int(kwargs[LightServiceArgument.HS_COLOR][0] / 360 * 65535)
-                data["saturation"] = int(kwargs[LightServiceArgument.HS_COLOR][1] / 100 * 255)
+                data["hue"] = int(
+                    kwargs[LightServiceArgument.HS_COLOR][0] / 360 * 65535
+                )
+                data["saturation"] = int(
+                    kwargs[LightServiceArgument.HS_COLOR][1] / 100 * 255
+                )
 
         if LightServiceArgument.XY_COLOR in kwargs:
             data["xy"] = kwargs[LightServiceArgument.XY_COLOR]
@@ -305,11 +320,17 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
         elif "IKEA" in self._device.manufacturer:
             data["transition_time"] = 0
 
-        if LightServiceArgument.FLASH in kwargs and kwargs[LightServiceArgument.FLASH] in FLASH_TO_DECONZ:
+        if (
+            LightServiceArgument.FLASH in kwargs
+            and kwargs[LightServiceArgument.FLASH] in FLASH_TO_DECONZ
+        ):
             data["alert"] = FLASH_TO_DECONZ[kwargs[LightServiceArgument.FLASH]]
             del data["on"]
 
-        if LightServiceArgument.EFFECT in kwargs and kwargs[LightServiceArgument.EFFECT] in EFFECT_TO_DECONZ:
+        if (
+            LightServiceArgument.EFFECT in kwargs
+            and kwargs[LightServiceArgument.EFFECT] in EFFECT_TO_DECONZ
+        ):
             data["effect"] = EFFECT_TO_DECONZ[kwargs[LightServiceArgument.EFFECT]]
 
         await self.api.set_state(id=self._device.resource_id, **data)
@@ -326,7 +347,10 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
             data["brightness"] = 0
             data["transition_time"] = int(kwargs[LightServiceArgument.TRANSITION] * 10)
 
-        if LightServiceArgument.FLASH in kwargs and kwargs[LightServiceArgument.FLASH] in FLASH_TO_DECONZ:
+        if (
+            LightServiceArgument.FLASH in kwargs
+            and kwargs[LightServiceArgument.FLASH] in FLASH_TO_DECONZ
+        ):
             data["alert"] = FLASH_TO_DECONZ[kwargs[LightServiceArgument.FLASH]]
             del data["on"]
 
