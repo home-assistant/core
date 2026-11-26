@@ -10,20 +10,13 @@ import requests
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_DISARM,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
 from homeassistant.components.concord232.alarm_control_panel import SCAN_INTERVAL
 from homeassistant.components.concord232.const import MODE_SILENT
-from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
-    CONF_CODE,
-    CONF_MODE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_CODE, CONF_MODE, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_integration
@@ -100,8 +93,8 @@ async def test_connection_error_keeps_last_state(
 @pytest.mark.parametrize(
     ("service", "expected_args"),
     [
-        (SERVICE_ALARM_ARM_HOME, ("stay",)),
-        (SERVICE_ALARM_ARM_AWAY, ("away",)),
+        (AlarmControlPanelService.ARM_HOME, ("stay",)),
+        (AlarmControlPanelService.ARM_AWAY, ("away",)),
     ],
 )
 async def test_arm_services(
@@ -117,7 +110,7 @@ async def test_arm_services(
     await hass.services.async_call(
         ALARM_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_concord232_client.arm.assert_called_once_with(*expected_args)
@@ -138,8 +131,8 @@ async def test_arm_home_silent_mode(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_HOME,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        AlarmControlPanelService.ARM_HOME,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_concord232_client.arm.assert_called_once_with("stay", "silent")
@@ -155,8 +148,8 @@ async def test_disarm(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_CODE: "1234"},
+        AlarmControlPanelService.DISARM,
+        {TargetKey.ENTITY_ID: ENTITY_ID, AlarmControlPanelServiceArgument.CODE: "1234"},
         blocking=True,
     )
     mock_concord232_client.disarm.assert_called_once_with("1234")
@@ -165,9 +158,9 @@ async def test_disarm(
 @pytest.mark.parametrize(
     ("service", "client_method"),
     [
-        (SERVICE_ALARM_ARM_HOME, "arm"),
-        (SERVICE_ALARM_ARM_AWAY, "arm"),
-        (SERVICE_ALARM_DISARM, "disarm"),
+        (AlarmControlPanelService.ARM_HOME, "arm"),
+        (AlarmControlPanelService.ARM_AWAY, "arm"),
+        (AlarmControlPanelService.DISARM, "disarm"),
     ],
 )
 @pytest.mark.parametrize(
@@ -197,7 +190,7 @@ async def test_code_validation(
     await hass.services.async_call(
         ALARM_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_CODE: code},
+        {TargetKey.ENTITY_ID: ENTITY_ID, AlarmControlPanelServiceArgument.CODE: code},
         blocking=True,
     )
     assert getattr(mock_concord232_client, client_method).called is command_sent
