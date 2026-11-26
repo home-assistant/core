@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 
@@ -177,6 +178,7 @@ BUTTON_ADDRESS = "A4:C1:38:8D:18:B2"
 STRONG_PROXY = "strong_proxy"
 WEAK_PROXY = "weak_proxy"
 WINDOW_ENTITY_ID = "binary_sensor.test_device_18b2_window"
+BUTTON_ENTITY_ID = "event.test_device_18b2_button"
 
 
 @pytest.fixture
@@ -341,3 +343,53 @@ async def test_setup_replays_accepted_packet(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert hass.states.get(WINDOW_ENTITY_ID).state == STATE_OFF
+
+
+@pytest.mark.usefixtures("proxies")
+@pytest.mark.parametrize(
+    "mock_bluetooth_storage",
+    [({}, {BUTTON_ADDRESS: (WEAK_PROXY, (b"\x44\x00\x07\x3a\x01", -90, 7200))})],
+    indirect=True,
+)
+async def test_restored_press_fires_no_event(hass: HomeAssistant) -> None:
+    """Test a press replayed from before a restart doesn't fire an event."""
+    events = async_capture_events(hass, BTHOME_BLE_EVENT)
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=BUTTON_ADDRESS, data={CONF_SLEEPY_DEVICE: True}
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert events == []
+    assert hass.states.get(BUTTON_ENTITY_ID).state == STATE_UNKNOWN
+
+    _inject_button_payload(
+        hass, b"\x44\x00\x08\x3a\x01", STRONG_PROXY, -60, time.monotonic()
+    )
+    await hass.async_block_till_done()
+
+    assert [event.data["event_type"] for event in events] == ["press"]
+    assert hass.states.get(BUTTON_ENTITY_ID).state != STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("proxies")
+async def test_reload_fires_no_event_for_last_press(hass: HomeAssistant) -> None:
+    """Test a reload doesn't fire the last press again."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=BUTTON_ADDRESS)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    events = async_capture_events(hass, BTHOME_BLE_EVENT)
+    _inject_button_payload(
+        hass, b"\x44\x00\x01\x3a\x01", STRONG_PROXY, -60, time.monotonic()
+    )
+    await hass.async_block_till_done()
+    pressed = hass.states.get(BUTTON_ENTITY_ID).state
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert [event.data["event_type"] for event in events] == ["press"]
+    assert hass.states.get(BUTTON_ENTITY_ID).state == pressed

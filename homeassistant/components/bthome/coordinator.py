@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from logging import Logger
+from typing import override
 
 from bthome_ble import BTHomeBluetoothDeviceData, SensorUpdate
 
@@ -45,11 +46,21 @@ class BTHomePassiveBluetoothProcessorCoordinator(
         # Track whether we've already logged the encryption downgrade this session.
         self.encryption_downgrade_logged = False
         self._cancel_event_driven: CALLBACK_TYPE | None = None
+        self.replaying = False
 
     @property
     def sleepy_device(self) -> bool:
         """Return True if the device is a sleepy device."""
         return self.entry.data.get(CONF_SLEEPY_DEVICE, self.device_data.sleepy_device)  # type: ignore[no-any-return]
+
+    @callback
+    @override
+    def async_start(self) -> CALLBACK_TYPE:
+        """Start the coordinator; the history it replays doesn't fire events."""
+        self.replaying = True
+        cancel = super().async_start()
+        self.replaying = False
+        return cancel
 
     @callback
     def async_set_event_driven(self, event_driven: bool) -> None:

@@ -151,9 +151,15 @@ def process_service_info(
                     | {CONF_DISCOVERED_EVENT_CLASSES: list(discovered_event_classes)},
                 )
                 async_dispatcher_send(
-                    hass, format_discovered_event_class(address), event_class, ble_event
+                    hass,
+                    format_discovered_event_class(address),
+                    event_class,
+                    None if coordinator.replaying else ble_event,
                 )
 
+            # A packet replayed from the Bluetooth history at start isn't a new event
+            if coordinator.replaying:
+                continue
             hass.bus.async_fire(BTHOME_BLE_EVENT, ble_event)
             async_dispatcher_send(
                 hass,
@@ -178,7 +184,9 @@ def format_event_dispatcher_name(
     return SignalType(f"{DOMAIN}_event_{address}_{event_class}")
 
 
-def format_discovered_event_class(address: str) -> SignalType[str, BTHomeBleEvent]:
+def format_discovered_event_class(
+    address: str,
+) -> SignalType[str, BTHomeBleEvent | None]:
     """Format a discovered event class."""
     return SignalType(f"{DOMAIN}_discovered_event_class_{address}")
 
