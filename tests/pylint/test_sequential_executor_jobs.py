@@ -230,6 +230,40 @@ async def async_setup(hass, config):
         pytest.param(
             """
 async def async_setup(hass, config):
+    await loop.run_in_executor(pools.pop(), call_a)
+    await loop.run_in_executor(pools.pop(), call_b)
+""",
+            id="executor_from_call",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await get_pool().async_add_executor_job(call_a)
+    await get_pool().async_add_executor_job(call_b)
+""",
+            id="receiver_from_call",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    future.set_result(None)
+    await hass.async_add_executor_job(call_b)
+""",
+            id="future_set_result_between_jobs",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await loop.run_in_executor(pool, call_a)
+    get_pool = lambda selected=(pool := other_pool): selected
+    await loop.run_in_executor(pool, call_b)
+""",
+            id="executor_rebound_in_lambda_default",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
     await hass.async_add_executor_job(call_a)
     cm = asyncio.timeout(10)
     await hass.async_add_executor_job(call_b)
@@ -589,6 +623,23 @@ async def async_setup(hass, config):
             """
 async def async_setup(hass, config):
     for item in items:
+        await loop.run_in_executor(pool, call_a, item)
+        callback = lambda pool: pool
+""",
+            id="executor_name_as_parameter",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await get_instance(hass).async_add_executor_job(call_a, item)
+""",
+            id="recorder_instance",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
         await hass.async_add_executor_job(call_a, item)
     else:
         await hass.async_add_executor_job(call_b)
@@ -862,6 +913,34 @@ async def async_setup(hass, config):
         del pools[0]
 """,
             id="executor_subscript_deleted",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await loop.run_in_executor(pools.pop(), call_a, item)
+""",
+            id="executor_from_call",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+        future.set_exception(err)
+""",
+            id="future_set_exception",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await loop.run_in_executor(pool, call_a, item)
+
+        def get_pool(selected=(pool := next(pools))):
+            return selected
+""",
+            id="executor_rebound_in_function_default",
         ),
     ],
 )

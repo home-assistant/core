@@ -52,6 +52,8 @@ _LOOP_ONLY_FUNCTIONS = frozenset(
         "Future",
         "get_event_loop",
         "get_running_loop",
+        "set_exception",
+        "set_result",
         "timeout",
     }
 )
@@ -71,6 +73,22 @@ def _is_hass_receiver(node: nodes.NodeNG) -> bool:
     return isinstance(node, nodes.Attribute) and node.attrname in {"hass", "_hass"}
 
 
+def _stable_executor_key(node: nodes.NodeNG) -> str | None:
+    """Return *node* as an executor key, or None if it may differ per call.
+
+    A call such as ``pools.pop()`` can return a different executor each time.
+    The recorder's ``get_instance()`` always returns the same one.
+    """
+    for call in node.nodes_of_class(nodes.Call):
+        func = call.func
+        name = func.attrname if isinstance(func, nodes.Attribute) else None
+        if isinstance(func, nodes.Name):
+            name = func.name
+        if name != "get_instance":
+            return None
+    return str(node.as_string())
+
+
 def _executor_key(call: nodes.Call) -> str | None:
     """Return the executor *call* submits work to, or None if not an executor job.
 
@@ -85,16 +103,18 @@ def _executor_key(call: nodes.Call) -> str | None:
     if func.attrname == "async_add_executor_job":
         if _is_hass_receiver(func.expr):
             return _DEFAULT_EXECUTOR
-        return str(func.expr.as_string())
+        return _stable_executor_key(func.expr)
     if func.attrname == "async_add_import_executor_job":
-        return f"import:{func.expr.as_string()}"
+        if (key := _stable_executor_key(func.expr)) is None:
+            return None
+        return f"import:{key}"
     if func.attrname == "run_in_executor":
         if not call.args:
             return None
         executor = call.args[0]
         if isinstance(executor, nodes.Const) and executor.value is None:
             return _DEFAULT_EXECUTOR
-        return str(executor.as_string())
+        return _stable_executor_key(executor)
     if (
         func.attrname == "to_thread"
         and isinstance(func.expr, nodes.Name)
@@ -281,16 +301,19 @@ def _rebinds_executor(node: nodes.NodeNG, executor: str) -> bool:
     if executor == _DEFAULT_EXECUTOR:
         return False
     expression = executor.removeprefix("import:")
-    for target in node.nodes_of_class(
-        (
-            nodes.AssignName,
-            nodes.DelName,
-            nodes.AssignAttr,
-            nodes.DelAttr,
-            nodes.Subscript,
-        ),
-        skip_klass=_NEW_SCOPE_NODES,
-    ):
+    for target in _eager_nodes(node, generator_bodies=True):
+        if not isinstance(
+            target,
+            (
+                nodes.AssignName,
+                nodes.DelName,
+                nodes.AssignAttr,
+                nodes.DelAttr,
+                nodes.Subscript,
+            ),
+        ) or isinstance(target.parent, nodes.Arguments):
+            # Parameters bind names in the scope of their function only
+            continue
         if isinstance(target, (nodes.AssignName, nodes.DelName)):
             name = target.name
         elif isinstance(target, nodes.Subscript):
