@@ -131,6 +131,40 @@ def test_something(caplog):
             "set_level",
             id="nested_helper",
         ),
+        pytest.param(
+            """
+import logging
+
+caplog.set_level(logging.DEBUG)
+""",
+            "set_level",
+            id="module_level",
+        ),
+        pytest.param(
+            """
+import logging
+
+if True:
+    def test_something(caplog):
+        caplog.set_level(logging.DEBUG)
+""",
+            "set_level",
+            id="conditionally_defined_test",
+        ),
+        pytest.param(
+            """
+import logging
+
+class TestSomething:
+    def test_other(self, caplog):
+        caplog.set_level(logging.WARNING)
+
+    def test_something(self, caplog):
+        caplog.set_level(logging.DEBUG)
+""",
+            "set_level",
+            id="other_method_sets_other_level",
+        ),
     ],
 )
 def test_redundant_debug_level(
@@ -260,6 +294,21 @@ def test_something(caplog):
     helper()
 """,
             id="nested_helper_after_other_level",
+        ),
+        pytest.param(
+            """
+import logging
+
+def test_something(caplog):
+    caplog.set_level(logging.WARNING)
+
+    class Helper:
+        def restore(self):
+            caplog.set_level(logging.DEBUG)
+
+    Helper().restore()
+""",
+            id="class_method_after_other_level",
         ),
         pytest.param(
             """

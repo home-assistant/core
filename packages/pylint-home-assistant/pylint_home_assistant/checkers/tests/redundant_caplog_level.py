@@ -176,8 +176,13 @@ class RedundantCaplogLevelChecker(BaseChecker):
         so any other level in an enclosing function counts.
         """
         frame = node.frame()
-        while not isinstance(frame.parent, (nodes.Module, nodes.ClassDef)):
+        while frame.parent is not None:
             frame = frame.parent.frame()
+            if isinstance(frame, nodes.Module):
+                return False
+            # The other methods of a class do not run before this one
+            if isinstance(frame, nodes.ClassDef):
+                continue
             if any(not parsed.sets_debug for _, parsed in _level_calls(frame)):
                 return True
         return False
