@@ -114,20 +114,12 @@ async def test_entry_from_before_the_connection_type_is_migrated(
     )
 
 
+@pytest.mark.parametrize("entry_data", [MOCK_TCP_ENTRY_DATA])
 async def test_setup_through_a_tcp_bridge(
-    hass: HomeAssistant, mock_get_unit: MagicMock
+    init_integration: MockConfigEntry, mock_get_unit: MagicMock
 ) -> None:
     """An entry for a gateway behind a bridge connects to its host and port."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_TCP_ENTRY_DATA,
-        options=MOCK_ENTRY_OPTIONS,
-        minor_version=2,
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert entry.state is ConfigEntryState.LOADED
+    assert init_integration.state is ConfigEntryState.LOADED
     assert mock_get_unit.call_args.args[2] == ModbusTcpParams(
         host="192.168.1.50", port=502
     )

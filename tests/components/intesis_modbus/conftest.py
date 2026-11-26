@@ -48,12 +48,20 @@ def entry_options() -> dict[str, Any]:
 
 
 @pytest.fixture
-def mock_config_entry(entry_options: dict[str, Any]) -> MockConfigEntry:
+def entry_data() -> dict[str, Any]:
+    """The data of the mock config entry: a gateway on a serial port."""
+    return MOCK_ENTRY_DATA
+
+
+@pytest.fixture
+def mock_config_entry(
+    entry_data: dict[str, Any], entry_options: dict[str, Any]
+) -> MockConfigEntry:
     """Mock a single-unit gateway config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="01JTESTINTESISSINGLE000000",
-        data=MOCK_ENTRY_DATA,
+        data=entry_data,
         options=entry_options,
         title="INMBSMHI001R000",
         minor_version=2,

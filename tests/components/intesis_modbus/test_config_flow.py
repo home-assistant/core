@@ -17,6 +17,7 @@ from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.intesis_modbus.const import (
     CONF_BAUDRATE,
     CONF_HAS_VANE,
@@ -25,14 +26,7 @@ from homeassistant.components.intesis_modbus.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState, ConfigFlowResult
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_TYPE,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 from homeassistant.exceptions import HomeAssistantError
@@ -1008,9 +1002,11 @@ async def test_reconfigure_of_a_loaded_entry_to_a_tcp_bridge_keeps_its_entities(
     assert init_integration.data == MOCK_TCP_ENTRY_DATA
     assert mock_get_unit.call_args.args[2] == TCP_PARAMS
     assert er.async_entries_for_config_entry(entity_registry, entry_id) == before
-    for entity in before:
-        if entity.disabled_by is None:
-            assert hass.states.get(entity.entity_id).state != STATE_UNAVAILABLE
+    assert (
+        hass.states.get("climate.inmbsmhi001r000_air_conditioner").state
+        == HVACMode.HEAT
+    )
+    assert hass.states.get("sensor.inmbsmhi001r000_error").state == "none"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
