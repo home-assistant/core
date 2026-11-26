@@ -6,7 +6,7 @@ the check is tried and tested.
 """
 
 MOCK_CORE_UPDATE_ID = "mock_core"
-MOCK_RUNNING = "2026.9.0"
+MOCK_RUNNING = "2026.9.2"
 MOCK_TARGET = "2026.12.0"
 MOCK_RELEASE_URL = "https://www.home-assistant.io/blog/2026/12/02/release-202612/"
 # The release in beta is only on the "rc" branch until it is released; the
