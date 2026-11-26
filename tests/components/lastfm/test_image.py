@@ -6,16 +6,16 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pylast import MalformedResponseError, NetworkError, PyLastError, Track, WSError
+from pylast import Track, WSError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
 
-from homeassistant.const import ATTR_ENTITY_PICTURE, Platform
+from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 
-from . import COVER_IMAGE, MockNetwork, MockUser, mock_track
+from . import COVER_IMAGE, USERNAME_1, MockNetwork, MockUser, mock_track
 from .conftest import ComponentSetup
 
 ENTITY_ID = "image.lastfm_testaccount1_now_playing"
@@ -139,80 +139,31 @@ async def test_album_art_cleared(
     assert status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-async def test_album_art_requested_once(
+async def test_image_kept_while_unavailable(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
     default_user: MockUser,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the album art is only requested when the track changes."""
+    """Test a failed update of one user does not reset the image."""
     freezer.move_to("2026-11-25T00:00:00+00:00")
-    with patch.object(
-        Track, "get_cover_image", autospec=True, return_value=COVER_IMAGE
-    ) as mock_cover:
-        await setup_integration(config_entry, default_user)
-        await _async_update(hass, freezer, default_user)
+    await setup_integration(config_entry, default_user)
 
-    assert mock_cover.call_count == 1
-    assert hass.states.get(ENTITY_ID).state == "2026-11-25T00:00:00+00:00"
-
-
-@pytest.mark.parametrize(
-    "error",
-    [
-        pytest.param(NetworkError("network", OSError()), id="network_error"),
-        pytest.param(
-            MalformedResponseError("network", ValueError()), id="malformed_response"
-        ),
-        pytest.param(
-            WSError("network", "11", "Service Offline"), id="retryable_api_error"
-        ),
-    ],
-)
-async def test_album_art_transient_error_retried(
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    config_entry: MockConfigEntry,
-    default_user: MockUser,
-    freezer: FrozenDateTimeFactory,
-    error: PyLastError,
-) -> None:
-    """Test a failed album art request is retried on the next update only."""
-    with patch.object(
-        Track, "get_cover_image", autospec=True, side_effect=error
-    ) as mock_cover:
-        await setup_integration(config_entry, default_user)
-        # Both configured users play the same track
-        assert mock_cover.call_count == 1
-        assert config_entry.runtime_data.data["testaccount1"].now_playing_image is None
-
-        mock_cover.side_effect = None
-        mock_cover.return_value = COVER_IMAGE
-        await _async_update(hass, freezer, default_user)
-
-    assert mock_cover.call_count == 2
-    assert config_entry.runtime_data.data["testaccount1"].now_playing_image == (
-        COVER_IMAGE
+    failing_user = MockUser(
+        thrown_error=WSError("network", "status", "Something strange")
     )
+    # The other user keeps updating, so the coordinator update succeeds
+    with patch(
+        "pylast.User",
+        side_effect=lambda name, _: (
+            failing_user if name == USERNAME_1 else default_user
+        ),
+    ):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
-
-async def test_album_art_permanent_error_cached(
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    config_entry: MockConfigEntry,
-    default_user: MockUser,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the album art is not requested again after a permanent error."""
-    with patch.object(
-        Track,
-        "get_cover_image",
-        autospec=True,
-        side_effect=WSError("network", "6", "Track not found"),
-    ) as mock_cover:
-        await setup_integration(config_entry, default_user)
-        await _async_update(hass, freezer, default_user)
-
-    assert mock_cover.call_count == 1
-    assert config_entry.runtime_data.data["testaccount1"].now_playing_image is None
+    await _async_update(hass, freezer, default_user)
+    assert hass.states.get(ENTITY_ID).state == "2026-11-25T00:00:00+00:00"

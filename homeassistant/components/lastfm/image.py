@@ -56,7 +56,9 @@ class LastFmNowPlayingImage(LastFmEntity, ImageEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Update the image when the album art changes."""
-        if (url := self._now_playing_image()) != self._attr_image_url:
+        if self.available and (url := self._now_playing_image()) != (
+            self._attr_image_url
+        ):
             self._attr_image_url = url
             self._cached_image = None
             self._attr_image_last_updated = dt_util.utcnow()

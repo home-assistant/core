@@ -4,14 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import override
 
-from pylast import (
-    LastFMNetwork,
-    MalformedResponseError,
-    NetworkError,
-    PyLastError,
-    Track,
-    WSError,
-)
+from pylast import LastFMNetwork, PyLastError, Track, WSError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
@@ -26,7 +19,6 @@ from .const import (
     DOMAIN,
     ERROR_CODE_INVALID_SESSION_KEY,
     ERROR_CODE_LOGIN_REQUIRED,
-    ERROR_CODES_RETRYABLE,
     LOGGER,
 )
 
@@ -80,9 +72,6 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             session_key=config_entry.options.get(CONF_SESSION_KEY, ""),
         )
         self._warned_hidden_users: set[str] = set()
-        self._cover_images: dict[tuple[str, str], str | None] = {}
-        self._previous_cover_images: dict[tuple[str, str], str | None] = {}
-        self._failed_cover_images: set[tuple[str, str]] = set()
 
     def _raise_if_auth_failed(self, error: PyLastError) -> None:
         """Raise when Last.fm rejects the stored session key."""
@@ -106,11 +95,6 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
     def _get_users_data(self) -> dict[str, LastFMUserData]:
         """Fetch the data of all users."""
         res = {}
-        # Only keep covers of tracks seen in this update to bound the cache,
-        # and retry failed requests on the next update
-        self._previous_cover_images = self._cover_images
-        self._cover_images = {}
-        self._failed_cover_images = set()
         for username in self.config_entry.options[CONF_USERS]:
             data = self._get_user_data(username)
             if data is not None:
@@ -172,29 +156,11 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
         )
 
     def _get_cover_image(self, track: Track | None) -> str | None:
-        """Return the album art of a track, requesting it once per track."""
+        """Return the album art of a track."""
         if track is None:
             return None
-        key = (str(track.artist), str(track.title))
-        if key in self._cover_images:
-            return self._cover_images[key]
-        if key in self._failed_cover_images:
-            return None
-        if key in self._previous_cover_images:
-            image = self._previous_cover_images[key]
-        else:
-            try:
-                image = track.get_cover_image()
-            except NetworkError, MalformedResponseError:
-                self._failed_cover_images.add(key)
-                return None
-            except WSError as exc:
-                if str(exc.status) in ERROR_CODES_RETRYABLE:
-                    self._failed_cover_images.add(key)
-                    return None
-                image = None
+        try:
+            return track.get_cover_image()
+        except IndexError:
             # pylast raises IndexError when Last.fm returns no images
-            except PyLastError, IndexError:
-                image = None
-        self._cover_images[key] = image
-        return image
+            return None
