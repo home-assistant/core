@@ -11,6 +11,9 @@
       "all_in_average_price": {
         "name": "Average all-in price"
       },
+      "all_in_current_hour_price": {
+        "name": "Current hour all-in price"
+      },
       "all_in_current_price": {
         "name": "Current all-in price"
       },
@@ -20,6 +23,9 @@
       "all_in_min_price": {
         "name": "Minimum all-in price"
       },
+      "all_in_next_hour_price": {
+        "name": "Next hour all-in price"
+      },
       "all_in_next_price": {
         "name": "Next all-in price"
       },
@@ -27,7 +33,7 @@
         "name": "Average market price"
       },
       "current_hour_price": {
-        "name": "Current hour"
+        "name": "Current hour market price"
       },
       "current_price": {
         "name": "Current market price"
@@ -48,7 +54,7 @@
         "name": "Minimum market price"
       },
       "next_hour_price": {
-        "name": "Next hour"
+        "name": "Next hour market price"
       },
       "next_price": {
         "name": "Next market price"
