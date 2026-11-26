@@ -12,8 +12,12 @@ from freezegun.api import FrozenDateTimeFactory
 from gcal_sync.auth import API_BASE_URL
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
+from yarl import URL
 
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS, DOMAIN
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
@@ -2017,13 +2021,20 @@ async def test_calendar_list_pagination(
             "nextSyncToken": "sync-token",
         },
     )
-    aioclient_mock.get(
-        f"{API_BASE_URL}/users/me/calendarList",
-        json={"items": [test_api_calendar], "nextPageToken": "page-2"},
-    )
+    first_page_requests: list[URL] = []
+
+    async def first_page(method: str, url: URL, data: Any) -> AiohttpClientMockResponse:
+        first_page_requests.append(url)
+        if len(first_page_requests) > 1:
+            raise ClientError
+        return AiohttpClientMockResponse(
+            method, url, json={"items": [test_api_calendar], "nextPageToken": "page-2"}
+        )
+
+    aioclient_mock.get(f"{API_BASE_URL}/users/me/calendarList", side_effect=first_page)
     mock_events_list_items([])
 
     assert await component_setup()
 
-    assert hass.states.get(TEST_ENTITY)
     assert hass.states.get("calendar.second_page_calendar")
+    assert hass.states.get(TEST_ENTITY)
