@@ -182,8 +182,13 @@ class TISSwitch(SwitchEntity):
     @callback
     def _handle_event(self, event_data: dict[str, Any]) -> None:
         """Handle incoming events from the dispatcher."""
-        # Check if the event is for this device
-        if event_data.get("device_id") == self.device_api.device_id:
+        # Check if the event is for this device. Several gateways can share the
+        # same UDP port and reuse the same bus addresses, so the event must match
+        # both the gateway it came from and the device ID.
+        if (
+            event_data.get("gateway") == self.device_api.gateway
+            and event_data.get("device_id") == self.device_api.device_id
+        ):
             self.device_api.process_update(event_data)
 
     async def async_update(self) -> None:
