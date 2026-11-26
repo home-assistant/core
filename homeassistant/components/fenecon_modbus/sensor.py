@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from typing import override
 
 from fenecon_modbus import FeneconData, GridMode, State
@@ -35,7 +34,7 @@ PARALLEL_UPDATES = 0
 class FeneconSensorEntityDescription(SensorEntityDescription):
     """Describes a Fenecon sensor entity."""
 
-    value_fn: Callable[[FeneconData], StateType | datetime]
+    value_fn: Callable[[FeneconData], StateType]
 
 
 def _power(
@@ -212,18 +211,6 @@ SENSORS: tuple[FeneconSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.grid_mode_off_grid_time,
     ),
-    FeneconSensorEntityDescription(
-        key="system_time",
-        translation_key="system_time",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda data: (
-            datetime.fromtimestamp(data.system_time_utc, UTC)
-            if data.system_time_utc is not None
-            else None
-        ),
-    ),
 )
 
 
@@ -256,6 +243,6 @@ class FeneconSensor(FeneconEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
