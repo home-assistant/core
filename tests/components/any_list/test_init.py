@@ -1,5 +1,6 @@
 """Tests for AnyList integration setup."""
 
+import asyncio
 import logging
 from unittest.mock import MagicMock
 
@@ -134,7 +135,14 @@ async def test_runtime_sync_failure_marks_entities_unavailable_and_recovers(
 
     assert hass.states.get(entity_id).state == "unavailable"
     assert (
-        caplog.text.count("Error requesting any_list data: AnyList is unreachable") == 1
+        caplog.record_tuples.count(
+            (
+                "homeassistant.components.any_list.coordinator",
+                logging.INFO,
+                "AnyList is unavailable",
+            )
+        )
+        == 1
     )
 
     status_listener(None)
@@ -166,3 +174,74 @@ async def test_runtime_auth_failure_starts_reauth(
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
     assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+async def test_socket_outage_requires_successful_catchup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+) -> None:
+    """Only fresh data on a live socket restores availability."""
+    await setup_integration(hass, mock_config_entry)
+    on_error = mock_anylist_client.realtime_error_listener
+    on_sync_status = mock_anylist_client.sync_status_listener
+
+    mock_anylist_client.realtime.connected.clear()
+    on_error(TransportError())
+    await hass.async_block_till_done()
+    assert hass.states.get("todo.groceries").state == "unavailable"
+
+    on_sync_status(None)
+    await hass.async_block_till_done()
+    assert hass.states.get("todo.groceries").state == "unavailable"
+
+    mock_anylist_client.realtime.connected.set()
+    on_sync_status(TransportError())
+    await hass.async_block_till_done()
+    assert hass.states.get("todo.groceries").state == "unavailable"
+
+    on_sync_status(None)
+    await hass.async_block_till_done()
+    assert hass.states.get("todo.groceries").state != "unavailable"
+
+
+async def test_socket_auth_failure_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+) -> None:
+    """An expired socket session can initiate reauth during reconnect."""
+    await setup_integration(hass, mock_config_entry)
+    handler = mock_anylist_client.realtime_error_listener
+    handler(AuthenticationError())
+    handler(AuthenticationError())
+    await hass.async_block_till_done()
+
+    assert hass.states.get("todo.groceries").state == "unavailable"
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+async def test_socket_setup_timeout_retries_and_closes_client(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Setup does not wait indefinitely for its first socket connection."""
+
+    async def load(**kwargs: object) -> None:
+        await asyncio.Event().wait()
+
+    mock_anylist_client.load.side_effect = load
+    monkeypatch.setattr(
+        "homeassistant.components.any_list.coordinator.SETUP_TIMEOUT", 0
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_anylist_client.close.assert_awaited_once()

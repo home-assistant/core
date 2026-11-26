@@ -1,6 +1,9 @@
 """Tests for AnyList todo entities."""
 
+import asyncio
+from collections.abc import Coroutine
 from operator import attrgetter
+from typing import Any
 from unittest.mock import MagicMock
 
 from aioanylist import AnyListError, AuthenticationError, Domain
@@ -125,6 +128,45 @@ async def test_delete_items(
     mock_anylist_client.lists.bulk_remove_items.assert_awaited_once_with(
         LIST_ID, [ITEM_ID]
     )
+
+
+async def test_parallel_writes_are_serialized(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+) -> None:
+    """Two actions cannot enter the same AnyList write path simultaneously."""
+    await setup_integration(hass, mock_config_entry)
+    entered = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_add(*args: object, **kwargs: object) -> None:
+        entered.set()
+        await release.wait()
+
+    mock_anylist_client.lists.add_item.side_effect = slow_add
+
+    def add_item(name: str) -> Coroutine[Any, Any, None]:
+        return hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.ADD_ITEM,
+            {ATTR_ITEM: name},
+            target={TargetKey.ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    first = asyncio.create_task(add_item("First"))
+    try:
+        await entered.wait()
+        second = asyncio.create_task(add_item("Second"))
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        assert mock_anylist_client.lists.add_item.await_count == 1
+    finally:
+        release.set()
+        await asyncio.gather(first, second)
+
+    assert mock_anylist_client.lists.add_item.await_count == 2
 
 
 @pytest.mark.parametrize(

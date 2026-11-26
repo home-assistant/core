@@ -1,9 +1,16 @@
 """Data coordinator for the AnyList integration."""
 
+import asyncio
 import logging
 from typing import override
 
-from aioanylist import AnyListClient, AnyListError, AuthenticationError, Domain
+from aioanylist import (
+    AnyListClient,
+    AnyListError,
+    AuthenticationError,
+    Domain,
+    TransportError,
+)
 from aioanylist.state import AnyListState
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,6 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+SETUP_TIMEOUT = 30
 
 
 type AnyListConfigEntry = ConfigEntry[AnyListDataUpdateCoordinator]
@@ -39,6 +47,7 @@ class AnyListDataUpdateCoordinator(DataUpdateCoordinator[AnyListState]):
             update_interval=None,
         )
         self.client = client
+        self._started = False
 
     @override
     async def _async_setup(self) -> None:
@@ -46,7 +55,12 @@ class AnyListDataUpdateCoordinator(DataUpdateCoordinator[AnyListState]):
         try:
             self.client.sync.add_listener(self._handle_sync)
             self.client.sync.add_status_listener(self._handle_sync_status)
-            await self.client.load(realtime=True, load_tag_data=False)
+            self.client.realtime.add_error_listener(self._handle_sync_status)
+            async with asyncio.timeout(SETUP_TIMEOUT):
+                await self.client.load(realtime=True, load_tag_data=False)
+            if not self.client.realtime.connected.is_set():
+                raise TransportError("AnyList WebSocket disconnected during setup")
+            self._started = True
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -66,33 +80,38 @@ class AnyListDataUpdateCoordinator(DataUpdateCoordinator[AnyListState]):
     @callback
     def _handle_sync_status(self, error: Exception | None) -> None:
         """Reflect AnyList aggregate sync health in coordinator availability."""
+        if not self._started:
+            return
         if error is None:
-            if not self.last_update_success:
+            if self.client.realtime.connected.is_set() and not self.last_update_success:
                 _LOGGER.info("Fetching %s data recovered", self.name)
                 self.async_set_updated_data(self.client.state)
             return
-
-        # Initial setup failures are translated by _async_setup below. Runtime failures
-        # arrive here because realtime callbacks intentionally cannot kill the socket.
-        if not self.client.ready.is_set():
-            return
         if isinstance(error, AuthenticationError):
-            self.config_entry.async_start_reauth(self.hass)
-        self.async_set_update_error(error)
+            self.config_entry.async_start_reauth_if_available(self.hass)
+
+        self.last_exception = error
+        if self.last_update_success:
+            self.last_update_success = False
+            _LOGGER.info("AnyList is unavailable")
+            _LOGGER.debug("AnyList sync or connection error", exc_info=error)
+            self.async_update_listeners()
 
     @callback
     def async_update_from_client(self) -> None:
-        """Publish the client's optimistic state after a successful mutation."""
-        self.async_set_updated_data(self.client.state)
+        """Publish a successful mutation without clearing an outage."""
+        if self.last_update_success:
+            self.async_set_updated_data(self.client.state)
 
     async def _handle_sync(self, domains: set[Domain]) -> None:
         """Handle a completed AnyList sync triggered by realtime invalidation."""
-        if Domain.SHOPPING_LISTS in domains:
+        if Domain.SHOPPING_LISTS in domains and self.last_update_success:
             self.async_set_updated_data(self.client.state)
 
     @override
     async def async_shutdown(self) -> None:
         """Shut down the AnyList client."""
+        self._started = False
         try:
             await self.client.close()
         except AnyListError, TimeoutError:

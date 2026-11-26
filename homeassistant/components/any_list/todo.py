@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import AnyListConfigEntry, AnyListDataUpdateCoordinator
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 
 def _convert_item(item: ListItem) -> TodoItem:

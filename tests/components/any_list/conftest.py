@@ -1,5 +1,6 @@
 """Common fixtures for AnyList tests."""
 
+import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -89,6 +90,9 @@ def mock_anylist_client_fixture() -> Generator[MagicMock]:
     client.sync = MagicMock()
     client.sync_listener = None
     client.sync_status_listener = None
+    client.realtime_error_listener = None
+    client.realtime.connected = asyncio.Event()
+    client.realtime.connected.set()
 
     def add_sync_listener(listener) -> None:
         client.sync_listener = listener
@@ -96,6 +100,10 @@ def mock_anylist_client_fixture() -> Generator[MagicMock]:
     def add_sync_status_listener(listener) -> None:
         client.sync_status_listener = listener
 
+    def add_realtime_error_listener(listener) -> None:
+        client.realtime_error_listener = listener
+
+    client.realtime.add_error_listener.side_effect = add_realtime_error_listener
     client.sync.add_listener.side_effect = add_sync_listener
     client.sync.add_status_listener.side_effect = add_sync_status_listener
 
