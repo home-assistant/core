@@ -48,7 +48,9 @@ def elgato_device_action[_ElgatoEntityT: ElgatoEntity, **_P](
     Elgato errors become a translated ``HomeAssistantError``.
 
     And the device is asked for its new state afterwards, outside the lock,
-    because that is another request and it has to queue like the rest.
+    because that is another request and it has to queue like the rest. This
+    refresh is not debounced: every command must show its result right away,
+    also when several commands follow each other quickly.
     """
 
     async def handler(
@@ -70,6 +72,6 @@ def elgato_device_action[_ElgatoEntityT: ElgatoEntity, **_P](
                 translation_key="unknown_error",
             ) from error
 
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     return handler

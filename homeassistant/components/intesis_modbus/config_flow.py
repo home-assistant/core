@@ -8,12 +8,7 @@ from modbus_connection import ModbusError
 import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigEntryState,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
@@ -34,6 +29,7 @@ from .const import (
     CONF_UNIT_ID,
     DOMAIN,
 )
+from .coordinator import IntesisConfigEntry
 from .helpers import create_modbus_params
 
 DEFAULT_BAUDRATE = 9600
@@ -142,7 +138,7 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_reconfigure(
-        self, entry: ConfigEntry, user_input: dict[str, Any]
+        self, entry: IntesisConfigEntry, user_input: dict[str, Any]
     ) -> tuple[dict[str, str], ConfigFlowResult | None]:
         """Probe the new link and save it, returning form errors otherwise."""
         match = {
@@ -190,7 +186,7 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_restore(
-        self, entry: ConfigEntry, unload: asyncio.Task[bool]
+        self, entry: IntesisConfigEntry, unload: asyncio.Task[bool]
     ) -> asyncio.Task[None]:
         """Load an entry again that was unloaded for a probe."""
 
