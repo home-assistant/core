@@ -486,3 +486,35 @@ async def test_reconfigure_paired_skips_pairing(
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data == MOCK_CONFIG_PAIRED | {CONF_HOST: "2.2.2.2"}
     mock_tv_pairable.pairRequest.assert_not_called()
+
+
+async def test_zeroconf_already_configured_host(
+    hass: HomeAssistant,
+    mock_tv_pairable,
+) -> None:
+    """Test zeroconf discovery aborts for a host that is already configured.
+
+    Some TVs report an empty serial number, so the flow has no unique ID
+    to match against.
+    """
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, "host": "127.0.0.1"},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname=MOCK_HOSTNAME,
+            name=MOCK_NAME,
+            port=None,
+            properties={},
+            type="_philipstv_s_rpc._tcp.local.",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_tv_pairable.getSystem.assert_not_called()

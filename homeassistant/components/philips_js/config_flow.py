@@ -240,6 +240,10 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info.host,
         )
 
+        # Some TVs report an empty serial number, so the flow can't get a
+        # unique ID. Skip TVs whose host is already configured.
+        self._async_abort_entries_match({CONF_HOST: discovery_info.host})
+
         secured_transport = discovery_info.type == "_philipstv_s_rpc._tcp.local."
         api_version = 6 if secured_transport else DEFAULT_API_VERSION
 
