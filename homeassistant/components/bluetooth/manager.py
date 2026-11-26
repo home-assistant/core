@@ -96,14 +96,10 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         # address -> last advertisement before it left the history, for addresses
         # registered as event-driven
         self._event_driven_disappeared: dict[str, BluetoothServiceInfoBleak] = {}
-        # address -> (startup entry, startup connectable entry, stored accepted)
+        # address -> (stored accepted advertisement, cancel its heard listener),
+        # until the address is registered or heard again
         self._event_driven_restore: dict[
-            str,
-            tuple[
-                BluetoothServiceInfoBleak | None,
-                BluetoothServiceInfoBleak | None,
-                BluetoothServiceInfoBleak,
-            ],
+            str, tuple[BluetoothServiceInfoBleak, CALLBACK_TYPE]
         ] = {}
         super().__init__(bluetooth_adapters, slot_manager)
         self._async_logging_changed()
@@ -146,17 +142,14 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         """Register an event-driven address, starting from its accepted advertisement.
 
         The history loaded at startup holds the strongest stored advertisement,
-        which can be older than the one accepted before the restart. Each history
-        is only replaced while it still holds its startup entry.
+        which can be older than the one accepted before the restart. The accepted
+        one is restored unless the address was heard since startup.
         """
         if (restore := self._event_driven_restore.pop(address, None)) is not None:
-            loaded, loaded_connectable, accepted = restore
-            if self._all_history.get(address) is loaded:
-                self._all_history[address] = accepted
-            if (
-                accepted.connectable
-                and self._connectable_history.get(address) is loaded_connectable
-            ):
+            accepted, cancel_heard = restore
+            cancel_heard()
+            self._all_history[address] = accepted
+            if accepted.connectable:
                 self._connectable_history[address] = accepted
         token = object()
         self._event_driven_addresses.setdefault(address, set()).add(token)
@@ -166,6 +159,14 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             token,
             super().async_register_event_driven(address),
         )
+
+    @hass_callback
+    def _async_event_driven_heard(
+        self, address: str, service_info: BluetoothServiceInfoBleak
+    ) -> None:
+        """Drop the stored accepted advertisement once the address is heard."""
+        if (restore := self._event_driven_restore.pop(address, None)) is not None:
+            restore[1]()
 
     @hass_callback
     def _async_forget_event_driven(
@@ -253,9 +254,10 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         )
         self._event_driven_restore = {
             address: (
-                self._all_history.get(address),
-                self._connectable_history.get(address),
                 accepted,
+                self.async_register_advertisement_callback(
+                    partial(self._async_event_driven_heard, address), address
+                ),
             )
             for address, accepted in self.storage.async_get_event_driven_history().items()
         }

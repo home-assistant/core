@@ -2419,6 +2419,57 @@ async def test_register_event_driven_keeps_live_advertisement(
     cancel()
 
 
+async def _expire_history(hass: HomeAssistant) -> None:
+    """Let the manager drop advertisements older than the fallback interval."""
+    with patch_bluetooth_time(
+        MONOTONIC_TIME() + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+        await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
+@pytest.mark.parametrize("restarted_bluetooth", [OLDER_STRONG_REMOTE], indirect=True)
+@pytest.mark.usefixtures("restarted_bluetooth")
+async def test_register_event_driven_after_startup_entry_expired(
+    hass: HomeAssistant,
+) -> None:
+    """A late registration restores the accepted advertisement if nothing was heard."""
+    await _expire_history(hass)
+    assert bluetooth.async_last_service_info(hass, EVENT_DRIVEN_ADDRESS, False) is None
+
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+
+    assert _event_driven_history() == ("weak-proxy", CLOSED)
+    cancel()
+
+
+@pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
+@pytest.mark.parametrize(
+    "restarted_bluetooth", [({}, {}, ("weak-proxy", CLOSED, 10, False))], indirect=True
+)
+@pytest.mark.usefixtures("restarted_bluetooth")
+async def test_register_event_driven_after_live_advertisement_expired(
+    hass: HomeAssistant,
+) -> None:
+    """An advertisement heard after startup drops the stored one, even once expired."""
+    inject_advertisement_with_time_and_source(
+        hass,
+        generate_ble_device(EVENT_DRIVEN_ADDRESS, "event"),
+        _event_advertisement(OPEN, -50),
+        MONOTONIC_TIME(),
+        "strong-proxy",
+    )
+    await _expire_history(hass)
+
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+
+    assert bluetooth.async_last_service_info(hass, EVENT_DRIVEN_ADDRESS, False) is None
+    cancel()
+
+
 @pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
 @pytest.mark.parametrize("restarted_bluetooth", [OLDER_STRONG_REMOTE], indirect=True)
 @pytest.mark.usefixtures("restarted_bluetooth")
