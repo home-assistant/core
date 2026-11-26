@@ -21,18 +21,16 @@ from homeassistant.components.insteon import (
     switch as insteon_switch,
     utils as insteon_utils,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     EVENT_HOMEASSISTANT_STOP,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -221,9 +219,12 @@ async def test_scene_turn_on_off(
     """Test turning a scene on and off triggers it through the modem."""
     await _setup(hass)
 
-    for service, state in ((SERVICE_TURN_ON, STATE_ON), (SERVICE_TURN_OFF, STATE_OFF)):
+    for service, state in (
+        (SwitchService.TURN_ON, STATE_ON),
+        (SwitchService.TURN_OFF, STATE_OFF),
+    ):
         await hass.services.async_call(
-            SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: EVENING}, blocking=True
+            SWITCH_DOMAIN, service, {TargetKey.ENTITY_ID: EVENING}, blocking=True
         )
         assert hass.states.get(EVENING).state == state
     assert scenes.triggered == [(20, True), (20, False)]
