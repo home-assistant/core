@@ -2540,7 +2540,7 @@ pynina==1.0.4
 pynintendoauth==1.0.3
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==2.6.2
+pynintendoparental==2.7.1
 
 # homeassistant.components.nobo_hub
 pynobo==1.9.0
