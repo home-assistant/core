@@ -134,15 +134,33 @@ class LinkedLight:
         params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
         brightness_pct = char_values.get(CHAR_BRIGHTNESS)
         if (CHAR_ON in char_values and not char_values[CHAR_ON]) or brightness_pct == 0:
-            self._accessory.async_call_service(
-                LIGHT_DOMAIN, LightService.TURN_OFF, params, False
-            )
+            self._async_call_light_service(LightService.TURN_OFF, params, False)
             return
         if brightness_pct is not None:
             params[LightServiceArgument.BRIGHTNESS_PCT] = brightness_pct
-        self._accessory.async_call_service(
-            LIGHT_DOMAIN, LightService.TURN_ON, params, brightness_pct or True
+        self._async_call_light_service(
+            LightService.TURN_ON, params, brightness_pct or True
         )
+
+    @callback
+    def _async_call_light_service(
+        self, service: str, params: dict[str, Any], value: Any
+    ) -> None:
+        """Call a light service without waiting for it."""
+        self._accessory.hass.async_create_task(
+            self._async_call_light_service_and_resync(service, params, value),
+            eager_start=True,
+        )
+
+    async def _async_call_light_service_and_resync(
+        self, service: str, params: dict[str, Any], value: Any
+    ) -> None:
+        """Call a light service, and resync the Lightbulb service if it fails."""
+        if not await self._accessory.async_call_service_and_wait(
+            LIGHT_DOMAIN, service, params, value
+        ):
+            # The accessory only resyncs its own entity, not the linked light
+            self._async_update_state(self._accessory.hass.states.get(self.entity_id))
 
 
 @callback

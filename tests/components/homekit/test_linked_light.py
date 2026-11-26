@@ -49,6 +49,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 LIGHT_ID = "light.demo_light"
 LIGHT_NAME = "Demo light"
@@ -465,3 +466,47 @@ async def test_linked_light_reload_on_color_modes_change(
         _set_light(hass, state=state, color_modes=color_modes)
         await hass.async_block_till_done()
     assert len(mock_reload.mock_calls) == reloads
+
+
+@pytest.mark.parametrize("fails", [True, False], ids=["fails", "succeeds"])
+@pytest.mark.parametrize(
+    ("light_state", "service", "write", "expected"),
+    [
+        pytest.param(STATE_ON, "turn_off", {"on": 0}, {"on": True}, id="turn_off"),
+        pytest.param(STATE_OFF, "turn_on", {"on": 1}, {"on": False}, id="turn_on"),
+        pytest.param(
+            STATE_ON, "turn_on", {"brightness": 30}, {"brightness": 50}, id="dim"
+        ),
+    ],
+)
+async def test_linked_light_resynced_when_service_fails(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    light_state: str,
+    service: str,
+    write: dict[str, int],
+    expected: dict[str, Any],
+    fails: bool,
+) -> None:
+    """Test a failed light service call puts the Lightbulb service back in sync."""
+    _set_light(hass, state=light_state)
+    acc = await _create(
+        hass, hk_driver, Fan, FAN_ID, FAN_ATTRS, {CONF_LINKED_LIGHT: LIGHT_ID}
+    )
+    chars = {
+        "on": acc.linked_light.char_on,
+        "brightness": acc.linked_light.char_brightness,
+    }
+    async_mock_service(
+        hass,
+        LIGHT_DOMAIN,
+        service,
+        raise_exception=HomeAssistantError("light rejected") if fails else None,
+    )
+
+    _set_chars(hk_driver, acc, {chars[key]: value for key, value in write.items()})
+    await hass.async_block_till_done()
+
+    for key, value in expected.items():
+        # A call that succeeds leaves the requested value until the state changes
+        assert chars[key].value == (value if fails else write.get(key, value))
