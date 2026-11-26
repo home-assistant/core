@@ -41,3 +41,10 @@ class DevialetCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.client.async_update()
+
+        if await self.client.async_search_allowed():
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self.client.async_discover_upnp_device(),
+                f"{DOMAIN}_upnp_discovery",
+            )

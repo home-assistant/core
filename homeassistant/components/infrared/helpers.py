@@ -32,6 +32,34 @@ from .entity import (
 _LOGGER = logging.getLogger(__name__)
 
 
+@callback
+def async_get_emitters(hass: HomeAssistant) -> list[str]:
+    """Get all infrared emitter entity IDs."""
+    component = hass.data.get(DATA_COMPONENT)
+    if component is None:
+        return []
+
+    return [
+        entity.entity_id
+        for entity in component.entities
+        if isinstance(entity, InfraredEmitterEntity)
+    ]
+
+
+@callback
+def async_get_receivers(hass: HomeAssistant) -> list[str]:
+    """Get all infrared receiver entity IDs."""
+    component = hass.data.get(DATA_COMPONENT)
+    if component is None:
+        return []
+
+    return [
+        entity.entity_id
+        for entity in component.entities
+        if isinstance(entity, InfraredReceiverEntity)
+    ]
+
+
 async def async_send_command(
     hass: HomeAssistant,
     entity_id_or_uuid: str,
