@@ -42,13 +42,16 @@ def run_upload_docker():
             LANG_ISO,
             "--convert-placeholders=false",
             "--replace-modified",
+            "--poll",
+            "--poll-timeout",
+            "5m",
         ],
         check=False,
     )
     print()
 
     if run.returncode != 0:
-        raise ExitApp("Failed to download translations")
+        raise ExitApp("Failed to upload translations")
 
 
 def run():

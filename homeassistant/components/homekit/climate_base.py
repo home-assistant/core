@@ -25,10 +25,10 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
 )
 from homeassistant.core import State, callback
 from homeassistant.util.percentage import percentage_to_ordered_list_item
@@ -180,7 +180,7 @@ class HomeKitClimateAccessory(HomeAccessory):
         Subclasses can override this to serialize their writes.
         """
         self.async_call_service(
-            CLIMATE_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id, **params}
+            CLIMATE_DOMAIN, service, {TargetKey.ENTITY_ID: self.entity_id, **params}
         )
 
     def _update_temperature_char(

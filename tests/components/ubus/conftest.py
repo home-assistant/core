@@ -75,14 +75,30 @@ def mock_ubus() -> Generator[MagicMock]:
             return "session-id"
 
         instance.connect.side_effect = _connect
-        instance.get_hostapd.return_value = {"hostapd.wlan0": {}}
-        instance.get_hostapd_clients.return_value = {
-            "clients": {
-                MAC_PHONE: {"authorized": True},
-                MAC_LAPTOP: {"authorized": True},
-                MAC_GUEST: {"authorized": False},
-            }
+        instance.get_hostapd.return_value = {
+            "hostapd.wlan0": {},
+            "hostapd.wlan1": {},
         }
+
+        # Some clients appear only in one WLAN interface.  Others (particularly
+        # clients that roam between WLAN interfaces) can appear on more than one.
+        # Authorization can be different among interface views of the same client.
+        def _hostapd_clients(interface: str):
+            if interface == "hostapd.wlan0":
+                return {
+                    "clients": {
+                        MAC_PHONE: {"authorized": True},
+                        MAC_LAPTOP: {"authorized": True},
+                    }
+                }
+            return {
+                "clients": {
+                    MAC_PHONE: {"authorized": False},
+                    MAC_GUEST: {"authorized": False},
+                }
+            }
+
+        instance.get_hostapd_clients.side_effect = _hostapd_clients
         instance.get_uci_config.return_value = {
             "values": {"cfg01": {"leasefile": "/var/dhcp/dnsmasq.leases"}}
         }

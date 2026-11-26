@@ -5,7 +5,7 @@ import logging
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ENTITY_ID, CONF_STATE
+from homeassistant.const import CONF_ENTITY_ID, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.helper_integration import (
@@ -15,16 +15,16 @@ from homeassistant.helpers.helper_integration import (
 from homeassistant.helpers.template import Template
 
 from .const import (
-    CONF_DURATION,
-    CONF_END,
     CONF_MIN_STATE_DURATION,
-    CONF_START,
+    CONF_PERIOD,
     DOMAIN,
     PLATFORMS,
     SECTION_ADDITIONAL_SETTINGS,
+    Period,
 )
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
+from .helpers import resolve_period_config
 
 type HistoryStatsConfigEntry = ConfigEntry[HistoryStatsUpdateCoordinator]
 
@@ -42,13 +42,9 @@ async def async_setup_entry(
 
     entity_id: str = entry.options[CONF_ENTITY_ID]
     entity_states: list[str] = entry.options[CONF_STATE]
-    start: str | None = entry.options.get(CONF_START)
-    end: str | None = entry.options.get(CONF_END)
+    period_config = resolve_period_config(entry.options, entry.options[CONF_TYPE])
 
-    duration: timedelta | None = None
     min_state_duration: timedelta
-    if duration_dict := entry.options.get(CONF_DURATION):
-        duration = timedelta(**duration_dict)
     additional_settings = entry.options.get(SECTION_ADDITIONAL_SETTINGS, {})
     if min_state_duration_dict := additional_settings.get(CONF_MIN_STATE_DURATION):
         min_state_duration = timedelta(**min_state_duration_dict)
@@ -59,9 +55,9 @@ async def async_setup_entry(
         hass,
         entity_id,
         entity_states,
-        Template(start, hass) if start else None,
-        Template(end, hass) if end else None,
-        duration,
+        Template(period_config.start, hass) if period_config.start else None,
+        Template(period_config.end, hass) if period_config.end else None,
+        period_config.duration,
         min_state_duration,
     )
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, entry, entry.title)
@@ -130,6 +126,14 @@ async def async_migrate_entry(
             options[SECTION_ADDITIONAL_SETTINGS] = additional
         hass.config_entries.async_update_entry(
             config_entry, options=options, version=2, minor_version=1
+        )
+
+    if config_entry.version == 2 and config_entry.minor_version < 2:
+        # Entries created before period presets keep their custom period
+        hass.config_entries.async_update_entry(
+            config_entry,
+            options={**config_entry.options, CONF_PERIOD: Period.CUSTOM},
+            minor_version=2,
         )
 
     _LOGGER.debug(
