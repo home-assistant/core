@@ -55,6 +55,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "alarm": {
+        "name": "Alarm"
+      }
+    },
     "climate": {
       "air_conditioner": {
         "state_attributes": {
