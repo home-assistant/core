@@ -28,7 +28,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    if location_path.read_text() != content:
+    if not location_path.exists() or location_path.read_text() != content:
         config.add_error(
             "locations",
             "File locations.py is not up to date. Run python3 -m script.hassfest",

@@ -639,9 +639,13 @@ async def async_get_bluetooth(hass: HomeAssistant) -> list[BluetoothMatcher]:
 
 async def async_get_locations(hass: HomeAssistant) -> dict[str, list[str]]:
     """Return the domains of the integrations serving each country."""
-    locations = {country: list(domains) for country, domains in LOCATIONS.items()}
-
     integrations = await async_get_custom_components(hass)
+    # A custom integration replaces the built-in integration with the same domain,
+    # so only the countries in the custom manifest apply.
+    locations = {
+        country: [domain for domain in domains if domain not in integrations]
+        for country, domains in LOCATIONS.items()
+    }
     for integration in integrations.values():
         if not integration.locations:
             continue

@@ -1276,6 +1276,24 @@ async def test_get_locations(hass: HomeAssistant) -> None:
         assert loader.LOCATIONS == {"NL": ["core_domain"]}
 
 
+async def test_get_locations_custom_overrides_built_in(hass: HomeAssistant) -> None:
+    """Verify a custom integration replaces the locations of a built-in one."""
+    custom_integration = loader.Integration(
+        hass,
+        "custom_components.core_domain",
+        None,
+        {"name": "core_domain", "domain": "core_domain", "locations": ["BE"]},
+    )
+
+    with (
+        patch.dict(loader.LOCATIONS, {"NL": ["core_domain"]}, clear=True),
+        patch("homeassistant.loader.async_get_custom_components") as mock_get,
+    ):
+        mock_get.return_value = {"core_domain": custom_integration}
+        locations = await loader.async_get_locations(hass)
+        assert locations == {"NL": [], "BE": ["core_domain"]}
+
+
 async def test_get_usb(hass: HomeAssistant) -> None:
     """Verify that custom components with usb matchers are found."""
     test_1_integration = _get_test_integration_with_usb_matcher(hass, "test_1", True)

@@ -35,3 +35,11 @@ def test_generate(config: Config) -> None:
     assert config.errors == []
     assert '"BE": [\n        "test_1",\n    ],' in content
     assert '"NL": [\n        "test_1",\n        "test_2",\n    ],' in content
+
+
+def test_validate_missing_file(config: Config) -> None:
+    """Test a missing locations file is reported as fixable."""
+    location.validate({}, config)
+
+    assert len(config.errors) == 1
+    assert config.errors[0].fixable

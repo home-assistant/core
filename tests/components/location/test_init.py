@@ -10,6 +10,7 @@ from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerato
 from homeassistant.components.location.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import locations as generated_locations
+from homeassistant.loader import Integration
 from homeassistant.setup import async_setup_component
 
 
@@ -66,6 +67,32 @@ async def test_country_updated(
 
     await hass.config.async_update(country="BE")
     assert await _get_integrations(client) == {"belgian": ["BE"]}
+
+
+async def test_custom_integration_installed(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test custom integrations installed after setup are returned."""
+    hass.config.country = "BE"
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+
+    assert await _get_integrations(client) == {"belgian": ["BE"]}
+
+    custom_integration = Integration(
+        hass,
+        "custom_components.custom",
+        None,
+        {"name": "custom", "domain": "custom", "locations": ["BE"]},
+    )
+    with patch(
+        "homeassistant.loader.async_get_custom_components",
+        return_value={"custom": custom_integration},
+    ):
+        assert await _get_integrations(client) == {
+            "belgian": ["BE"],
+            "custom": ["BE"],
+        }
 
 
 async def test_requires_admin(
