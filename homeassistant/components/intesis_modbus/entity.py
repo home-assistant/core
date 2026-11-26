@@ -40,7 +40,12 @@ class IntesisEntity(CoordinatorEntity[IntesisCoordinator | IntesisUnitCoordinato
         return super().available and self._report_name in self.coordinator.data.updated
 
     async def _async_write(self, write: Callable[[], Awaitable[None]]) -> None:
-        """Run one write against the gateway, then ask for a refresh."""
+        """Run one write against the gateway, then read back what it took.
+
+        The gateway is polled at once, also after a write that failed: a
+        debounced refresh would leave the state from before the write in place
+        until the next poll, and a failed write may have been applied in part.
+        """
         try:
             await write()
         except ModbusError as err:
@@ -48,4 +53,5 @@ class IntesisEntity(CoordinatorEntity[IntesisCoordinator | IntesisUnitCoordinato
                 translation_domain=DOMAIN,
                 translation_key="write_failed",
             ) from err
-        await self.coordinator.async_request_refresh()
+        finally:
+            await self.coordinator.config_entry.runtime_data.gateway.async_refresh()
