@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from functools import partial
 import itertools
 import logging
@@ -39,6 +40,8 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import discovery_flow, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.start import async_at_started
 from homeassistant.util.package import is_docker_env
 
 from .const import (
@@ -64,6 +67,10 @@ from .util import async_load_history_from_system
 
 _LOGGER = logging.getLogger(__name__)
 
+# After Home Assistant started, integrations get this long to register their
+# event-driven addresses again before the startup registrations are released
+EVENT_DRIVEN_CLAIM_SECONDS = 600
+
 
 @dataclass(slots=True)
 class _PendingRestore:
@@ -80,6 +87,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
 
     __slots__ = (
         "_callback_index",
+        "_cancel_event_driven_release",
         "_cancel_logging_listener",
         "_event_driven_addresses",
         "_event_driven_disappeared",
@@ -113,6 +121,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         # address -> release the event-driven registration made at startup
         self._event_driven_early: dict[str, CALLBACK_TYPE] = {}
         self._history_loaded_time = 0.0
+        self._cancel_event_driven_release: list[CALLBACK_TYPE] = []
         super().__init__(bluetooth_adapters, slot_manager)
         self._async_logging_changed()
 
@@ -176,6 +185,25 @@ class HomeAssistantBluetoothManager(BluetoothManager):
     ) -> bool:
         """Return if an advertisement was restored from before the start."""
         return service_info.time <= self._history_loaded_time
+
+    @hass_callback
+    def _async_schedule_event_driven_release(self, hass: HomeAssistant) -> None:
+        """Release unclaimed startup registrations once integrations had time."""
+        self._cancel_event_driven_release.append(
+            async_call_later(
+                hass, EVENT_DRIVEN_CLAIM_SECONDS, self._async_release_event_driven
+            )
+        )
+
+    @hass_callback
+    def _async_release_event_driven(self, _now: datetime | None = None) -> None:
+        """Release startup registrations no integration registered again."""
+        for release in self._event_driven_early.values():
+            release()
+        self._event_driven_early.clear()
+        for pending in self._event_driven_restore.values():
+            pending.cancel_heard()
+        self._event_driven_restore.clear()
 
     @hass_callback
     def _async_event_driven_heard(
@@ -292,6 +320,10 @@ class HomeAssistantBluetoothManager(BluetoothManager):
                     partial(self._async_event_driven_heard, address), address
                 ),
             )
+        if self._event_driven_early:
+            self._cancel_event_driven_release.append(
+                async_at_started(self.hass, self._async_schedule_event_driven_release)
+            )
         self._cancel_logging_listener = self.hass.bus.async_listen(
             EVENT_LOGGING_CHANGED, self._async_logging_changed
         )
@@ -395,6 +427,8 @@ class HomeAssistantBluetoothManager(BluetoothManager):
     def async_stop(self, event: Event | None = None) -> None:
         """Stop the Bluetooth integration at shutdown."""
         _LOGGER.debug("Stopping bluetooth manager")
+        for cancel in self._cancel_event_driven_release:
+            cancel()
         self._async_save_scanner_histories()
         history: dict[str, BluetoothServiceInfoBleak] = {}
         for address in self._event_driven_addresses.keys() | self._event_driven_early:
