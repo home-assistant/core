@@ -9,21 +9,18 @@ from typing import TYPE_CHECKING, Any, Self, override
 import probatio
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     ENTITY_ID_FORMAT,
     ClimateEntity,
     ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
     PRECISION_HALVES,
@@ -774,8 +771,8 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         }
         write_state = False
 
-        breadcrumb = f"{SET_TEMPERATURE_ACTION} {ATTR_HVAC_MODE}"
-        if (hvac_value := kwargs.get(ATTR_HVAC_MODE)) and (
+        breadcrumb = f"{SET_TEMPERATURE_ACTION} {ClimateServiceArgument.HVAC_MODE}"
+        if (hvac_value := kwargs.get(ClimateServiceArgument.HVAC_MODE)) and (
             hvac_mode := tcv.strenum(self, breadcrumb, HVACMode)(hvac_value)
         ) is not None:
             self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
@@ -789,17 +786,17 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         for option, attr, param in (
             (
                 CONF_TARGET_TEMPERATURE,
-                ATTR_TEMPERATURE,
+                ClimateServiceArgument.TEMPERATURE,
                 "temperature",
             ),
             (
                 CONF_TARGET_TEMPERATURE_HIGH,
-                ATTR_TARGET_TEMP_HIGH,
+                ClimateServiceArgument.TARGET_TEMP_HIGH,
                 "target_temp_high",
             ),
             (
                 CONF_TARGET_TEMPERATURE_LOW,
-                ATTR_TARGET_TEMP_LOW,
+                ClimateServiceArgument.TARGET_TEMP_LOW,
                 "target_temp_low",
             ),
         ):

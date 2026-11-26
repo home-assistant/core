@@ -2005,6 +2005,19 @@ def _error_messages(caplog: pytest.LogCaptureFixture) -> list[str]:
             " 'actions': [{'not_an_action': 1}]}",
             "validation_failed_schema",
         ),
+        (
+            # A null key, which YAML gives for `~:`, next to a renamed key
+            {
+                None: "oops",
+                "trigger": {"trigger": "not_a_platform"},
+                "actions": [],
+            },
+            "could not be validated",
+            "not a valid option at '[None]'. Got 'oops'\n"
+            "Invalid trigger 'not_a_platform' specified at 'trigger'."
+            " Got {'trigger': 'not_a_platform'}",
+            "validation_failed_schema",
+        ),
     ],
 )
 async def test_automation_bad_config_validation(

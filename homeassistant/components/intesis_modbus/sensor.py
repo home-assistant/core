@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final, override
 
-from intesis_gw_modbus import ErrorState, IntesisSingleUnitGateway
+from intesis_gw_modbus import ControlLock, ErrorState, IntesisSingleUnitGateway
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -94,6 +94,35 @@ UNIT_SENSORS: Final[tuple[IntesisSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.return_path_temperature,
+    ),
+    IntesisSensorEntityDescription(
+        key="input_reference_temperature",
+        translation_key="input_reference_temperature",
+        report_name="temperatures",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.input_reference_temperature,
+    ),
+    IntesisSensorEntityDescription(
+        key="real_setpoint",
+        translation_key="real_setpoint",
+        report_name="limits",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.real_setpoint,
+    ),
+    IntesisSensorEntityDescription(
+        key="control_lock",
+        translation_key="control_lock",
+        report_name="lock",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        options=[lock.value for lock in ControlLock],
+        value_fn=lambda device: device.control_lock,
     ),
     IntesisSensorEntityDescription(
         key="operation_hours",

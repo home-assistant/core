@@ -14,6 +14,9 @@ from homeassistant.components.knx.storage.entity_suggestions.ga_mapping import (
     ChannelMapping,
     ChannelRef,
     MappedAddress,
+    SourceAddress,
+    build_project_index,
+    derive_channel_mappings,
 )
 from homeassistant.const import Platform
 
@@ -23,6 +26,7 @@ from .conftest import KNXTestKit
 APP_COVER = "M-0001_A-COVER"
 APP_SWITCH = "M-0001_A-SWITCH"
 APP_BUTTON = "M-0002_A-BUTTON"
+APP_DALI = "M-0003_A-DALI"
 
 
 def _flags(write: bool = False, transmit: bool = False, read: bool = False) -> dict:
@@ -66,7 +70,12 @@ def _com_object(
     }
 
 
-def _device(name: str, application: str, channels: list[str] | None = None) -> dict:
+def _device(
+    name: str,
+    application: str,
+    channels: list[str] | None = None,
+    group_object_tree: list[dict] | None = None,
+) -> dict:
     return {
         "name": name,
         "hardware_name": name,
@@ -85,6 +94,19 @@ def _device(name: str, application: str, channels: list[str] | None = None) -> d
             }
             for channel in channels or []
         },
+        "group_object_tree": group_object_tree or [],
+    }
+
+
+def _node(
+    node_type: str, identifier: str, name: str, numbers: list[int], device: str
+) -> dict:
+    return {
+        "type": node_type,
+        "identifier": identifier,
+        "name": name,
+        "communication_object_ids": [f"{device}/O-{number}" for number in numbers],
+        "nodes": [],
     }
 
 
@@ -204,14 +226,89 @@ _BUTTON_OBJECTS = [
     ),
 ]
 
-_ALL_OBJECTS = _COVER_OBJECTS + _SWITCH_OBJECTS + _BUTTON_OBJECTS
+# a lighting gateway whose channels offer the brightness and the white colour
+# component with objects of the same function text - only the folder they are
+# placed in tells them apart
+_GATEWAY_OBJECTS = [
+    obj
+    for channel, base, addresses in (("CH-1", 30, "5/0"), ("CH-2", 40, "5/1"))
+    for obj in (
+        _com_object(
+            base, "1.0.20", "Switch", [f"{addresses}/1"], channel=channel, write=True
+        ),
+        _com_object(
+            base + 1,
+            "1.0.20",
+            "Dim absolute",
+            [f"{addresses}/2"],
+            channel=channel,
+            dpts=DPT_PERCENT,
+            write=True,
+        ),
+        _com_object(
+            base + 2,
+            "1.0.20",
+            "Status dim value",
+            [f"{addresses}/3"],
+            channel=channel,
+            dpts=DPT_PERCENT,
+            transmit=True,
+            read=True,
+        ),
+        _com_object(
+            base + 3,
+            "1.0.20",
+            "Dim absolute",
+            [f"{addresses}/4"],
+            channel=channel,
+            dpts=DPT_PERCENT,
+            write=True,
+        ),
+        _com_object(
+            base + 4,
+            "1.0.20",
+            "Status dim value",
+            [f"{addresses}/5"],
+            channel=channel,
+            dpts=DPT_PERCENT,
+            transmit=True,
+            read=True,
+        ),
+    )
+]
+_GATEWAY_TREE = [
+    _node("Channel", channel, f"Group {channel}", [], "1.0.20")
+    | {
+        "nodes": [
+            _node(
+                "Folder",
+                f"PB-{base}",
+                "Behaviour",
+                [base, base + 1, base + 2],
+                "1.0.20",
+            ),
+            _node(
+                "Folder",
+                f"PB-{base + 3}",
+                "Colour control",
+                [base + 3, base + 4],
+                "1.0.20",
+            ),
+        ]
+    }
+    for channel, base in (("CH-1", 30), ("CH-2", 40))
+]
+
+_ALL_OBJECTS = _COVER_OBJECTS + _SWITCH_OBJECTS + _BUTTON_OBJECTS + _GATEWAY_OBJECTS
 
 
-def _project() -> dict[str, Any]:
-    """Build a project out of the objects above."""
+def _project(
+    objects: list[dict] | None = None, devices: dict[str, dict] | None = None
+) -> dict[str, Any]:
+    """Build a project - out of the objects above unless others are given."""
     communication_objects = {
-        f"{com_object['device_address']}/O-{index}": com_object
-        for index, com_object in enumerate(_ALL_OBJECTS)
+        f"{com_object['device_address']}/O-{com_object['number']}": com_object
+        for com_object in (_ALL_OBJECTS if objects is None else objects)
     }
     group_addresses: dict[str, Any] = {}
     for com_object_id, com_object in communication_objects.items():
@@ -238,13 +335,17 @@ def _project() -> dict[str, Any]:
             "group_address_style": "ThreeLevel",
         },
         "group_addresses": group_addresses,
-        "devices": {
+        "devices": devices
+        or {
             "1.0.1": _device("Cover actuator", APP_COVER, ["CH-1", "CH-2"]),
             "1.0.2": _device("Cover actuator 2", APP_COVER, ["CH-1", "CH-2"]),
             "1.0.10": _device("Switch actuator", APP_SWITCH),
             "1.0.11": _device("Switch actuator 2", APP_SWITCH),
             "1.0.12": _device("Switch actuator 3", APP_SWITCH),
             "1.1.1": _device("Push button", APP_BUTTON, ["CH-1", "CH-2"]),
+            "1.0.20": _device(
+                "Lighting gateway", APP_DALI, ["CH-1", "CH-2"], _GATEWAY_TREE
+            ),
         },
         "communication_objects": communication_objects,
     }
@@ -401,7 +502,7 @@ async def test_most_complete_configuration_is_suggested(
 ) -> None:
     """Test the configuration covering most of a channel is the one suggested."""
     await knx.setup_integration()
-    basic = await create_ui_entity(
+    await create_ui_entity(
         Platform.COVER,
         {"ga_up_down": {"write": "2/1/1"}, "ga_stop": {"write": "2/1/2"}},
         {"name": "Basic"},
@@ -410,13 +511,8 @@ async def test_most_complete_configuration_is_suggested(
     await knx.assert_read("1/0/4", (0,))
 
     by_id = _by_id(await get_entity_suggestions())
-    # both configurations suggest the channels of the other, each offered once
-    assert sorted(by_id) == [
-        "cfg_1.0.1_CH-1_cover",
-        "cfg_1.0.1_CH-2_cover",
-        "cfg_1.0.2_CH-1_cover",
-        "cfg_1.0.2_CH-2_cover",
-    ]
+    # the channels that already have a cover are not offered again
+    assert sorted(by_id) == ["cfg_1.0.1_CH-2_cover", "cfg_1.0.2_CH-1_cover"]
     # the first configuration could be applied too, but it would leave the
     # position of that channel unused
     for suggestion_id in ("cfg_1.0.1_CH-2_cover", "cfg_1.0.2_CH-1_cover"):
@@ -424,12 +520,296 @@ async def test_most_complete_configuration_is_suggested(
         assert suggestion["metadata"] == {"template_entity_id": full.entity_id}
         assert "ga_position_set" in suggestion["suggestions"]["cover"]["knx"]
         assert suggestion["existing_entity_ids"] == []
-    # the channels that already have an entity are reported as such
-    assert by_id["cfg_1.0.1_CH-1_cover"]["existing_entity_ids"] == [full.entity_id]
-    assert by_id["cfg_1.0.2_CH-2_cover"]["existing_entity_ids"] == [basic.entity_id]
+
+
+@pytest.mark.usefixtures("load_project")
+async def test_channel_configured_in_yaml_is_not_suggested(
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
+) -> None:
+    """Test a channel that has a YAML entity of the platform is not offered."""
+    await knx.setup_integration(
+        {
+            "cover": {
+                "name": "YAML cover",
+                "move_long_address": "1/1/1",
+                "stop_address": "1/1/2",
+            }
+        }
+    )
+    await create_ui_entity(Platform.COVER, COVER_CONFIG)
+    await knx.assert_read("1/0/4", (0,))
+
+    by_id = _by_id(await get_entity_suggestions())
+    assert sorted(by_id) == ["cfg_1.0.2_CH-1_cover", "cfg_1.0.2_CH-2_cover"]
+
+
+@pytest.mark.usefixtures("load_project")
+async def test_channel_used_by_another_platform_is_suggested(
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
+) -> None:
+    """Test a channel used by an entity of another platform is still offered."""
+    await knx.setup_integration()
+    await create_ui_entity(Platform.COVER, COVER_CONFIG, {"name": "Cover"})
+    other = await create_ui_entity(
+        Platform.SWITCH, {"ga_switch": {"write": "1/1/1"}}, {"name": "Other"}
+    )
+    await knx.assert_read("1/0/4", (0,))
+
+    by_id = _by_id(await get_entity_suggestions())
+    assert by_id["cfg_1.0.1_CH-2_cover"]["existing_entity_ids"] == [other.entity_id]
 
     unconfigured = _by_id(await get_entity_suggestions(include_configured=False))
-    assert sorted(unconfigured) == ["cfg_1.0.1_CH-2_cover", "cfg_1.0.2_CH-1_cover"]
+    assert "cfg_1.0.1_CH-2_cover" not in unconfigured
+
+
+@pytest.mark.parametrize(
+    ("with_tree", "brightness"),
+    [
+        (True, {"write": "5/1/2", "state": "5/1/3", "passive": []}),
+        # project data stored by an older parser has no group object tree - an
+        # ambiguous function is left out rather than guessed
+        (False, None),
+    ],
+)
+async def test_functions_told_apart_by_folders(
+    hass_storage: dict[str, Any],
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
+    with_tree: bool,
+    brightness: dict[str, Any] | None,
+) -> None:
+    """Test objects of the same function are matched by the folder they are in."""
+    project = _project()
+    if not with_tree:
+        for device in project["devices"].values():
+            del device["group_object_tree"]
+    hass_storage[KNX_PROJECT_STORAGE_KEY] = {"version": 1, "data": project}
+    await knx.setup_integration()
+    await create_ui_entity(
+        Platform.LIGHT,
+        {
+            "ga_switch": {"write": "5/0/1"},
+            "ga_brightness": {"write": "5/0/2", "state": "5/0/3"},
+        },
+    )
+    await knx.assert_read("5/0/3", (0,))
+
+    by_id = _by_id(await get_entity_suggestions())
+    assert list(by_id) == ["cfg_1.0.20_CH-2_light"]
+    suggestion = by_id["cfg_1.0.20_CH-2_light"]["suggestions"]["light"]
+    assert suggestion["knx"]["ga_switch"] == {
+        "write": "5/1/1",
+        "state": None,
+        "passive": [],
+    }
+    assert suggestion["knx"].get("ga_brightness") == brightness
+    assert suggestion["unmatched"] == (
+        [] if brightness else ["ga_brightness.state", "ga_brightness.write"]
+    )
+
+
+def _folder_project(
+    objects: list[dict], tree: list[dict], channels: list[str] | None = None
+) -> dict[str, Any]:
+    """Build a project of a single device with a group object tree."""
+    return _project(
+        objects,
+        {"1.0.30": _device("Gateway", APP_DALI, channels or ["CH-1", "CH-2"], tree)},
+    )
+
+
+def _dim_object(number: int, channel: str, address: str, **kwargs: Any) -> dict:
+    return _com_object(
+        number,
+        "1.0.30",
+        kwargs.pop("function_text", "Dim absolute"),
+        [address],
+        channel=channel,
+        dpts=DPT_PERCENT,
+        write=True,
+        **kwargs,
+    )
+
+
+def _folder(name: str, numbers: list[int], nodes: list[dict] | None = None) -> dict:
+    return _node("Folder", f"PB-{name}-{numbers}", name, numbers, "1.0.30") | {
+        "nodes": nodes or []
+    }
+
+
+def _channel(identifier: str, nodes: list[dict]) -> dict:
+    return _node("Channel", identifier, identifier, [], "1.0.30") | {"nodes": nodes}
+
+
+def test_lone_match_in_other_folder_is_not_used() -> None:
+    """Test an object of the same function text in another folder is no match.
+
+    Only linked objects are part of project data, so the brightness object of
+    a channel may be missing while its colour object of the same text is not.
+    """
+    project = _folder_project(
+        [
+            _dim_object(1, "CH-1", "6/0/1", function_text="Switch"),
+            _dim_object(2, "CH-1", "6/0/2"),
+            _dim_object(11, "CH-2", "6/1/1", function_text="Switch"),
+            _dim_object(13, "CH-2", "6/1/3"),
+        ],
+        [
+            _channel("CH-1", [_folder("Behaviour", [1, 2])]),
+            _channel(
+                "CH-2", [_folder("Behaviour", [11]), _folder("Colour control", [13])]
+            ),
+        ],
+    )
+    mappings = derive_channel_mappings(
+        build_project_index(project),
+        [
+            SourceAddress("switch", "6/0/1", "write"),
+            SourceAddress("brightness", "6/0/2", "write"),
+        ],
+    )
+    assert len(mappings) == 1
+    assert mappings[0].target == ChannelRef("1.0.30", "CH-2")
+    assert mappings[0].addresses == {"switch": MappedAddress("6/1/1")}
+    assert mappings[0].unmatched == ["brightness"]
+
+
+def test_lone_match_without_folder_is_used() -> None:
+    """Test folders only rule a match out if both objects are in one."""
+    project = _folder_project(
+        [_dim_object(2, "CH-1", "6/0/2"), _dim_object(12, "CH-2", "6/1/2")],
+        # the object of CH-2 is placed directly in its channel
+        [_channel("CH-1", [_folder("Behaviour", [2])])],
+    )
+    mappings = derive_channel_mappings(
+        build_project_index(project),
+        [SourceAddress("brightness", "6/0/2", "write")],
+    )
+    assert [mapping.addresses for mapping in mappings] == [
+        {"brightness": MappedAddress("6/1/2")}
+    ]
+
+
+def test_folders_of_one_channel_only_are_not_compared() -> None:
+    """Test folders named after their channel don't rule a match out.
+
+    Names may be specific to a channel - eg. a module instance "ECG 4" or a text
+    entered for the channel - so they can't tell functions apart.
+    """
+    project = _folder_project(
+        [_dim_object(2, "CH-1", "6/0/2"), _dim_object(12, "CH-2", "6/1/2")],
+        [
+            _channel("CH-1", [_folder("Behaviour", [2])]),
+            _channel("CH-2", [_folder("ECG 4", [], [_folder("Behaviour", [12])])]),
+        ],
+    )
+    mappings = derive_channel_mappings(
+        build_project_index(project),
+        [SourceAddress("brightness", "6/0/2", "write")],
+    )
+    assert [mapping.addresses for mapping in mappings] == [
+        {"brightness": MappedAddress("6/1/2")}
+    ]
+
+
+def test_nested_folders_are_compared_as_path() -> None:
+    """Test folders of the same name below different folders are told apart."""
+    project = _folder_project(
+        [
+            _dim_object(2, "CH-1", "6/0/2"),
+            _dim_object(12, "CH-2", "6/1/2"),
+            _dim_object(13, "CH-2", "6/1/3"),
+        ],
+        [
+            _channel("CH-1", [_folder("Colour control", [], [_folder("Dim", [2])])]),
+            _channel(
+                "CH-2",
+                [
+                    _folder("Behaviour", [], [_folder("Dim", [12])]),
+                    _folder("Colour control", [], [_folder("Dim", [13])]),
+                ],
+            ),
+        ],
+    )
+    mappings = derive_channel_mappings(
+        build_project_index(project),
+        [SourceAddress("white", "6/0/2", "write")],
+    )
+    assert [mapping.addresses for mapping in mappings] == [
+        {"white": MappedAddress("6/1/3")}
+    ]
+
+
+def test_module_instances_told_apart_by_folders() -> None:
+    """Test objects of the same module definition are matched by their folder."""
+    module_def = {"definition": "MD-1", "root_number": 1}
+    project = _folder_project(
+        [
+            _dim_object(2, "CH-1", "6/0/2", module_def=module_def),
+            # the function texts differ - only the module identifies these
+            _dim_object(
+                12, "CH-2", "6/1/2", module_def=module_def, function_text="Dim %"
+            ),
+            _dim_object(
+                13, "CH-2", "6/1/3", module_def=module_def, function_text="Dim %"
+            ),
+        ],
+        [
+            _channel("CH-1", [_folder("Behaviour", [2])]),
+            _channel(
+                "CH-2", [_folder("Colour control", [13]), _folder("Behaviour", [12])]
+            ),
+        ],
+    )
+    mappings = derive_channel_mappings(
+        build_project_index(project),
+        [SourceAddress("brightness", "6/0/2", "write")],
+    )
+    assert [mapping.addresses for mapping in mappings] == [
+        {"brightness": MappedAddress("6/1/2")}
+    ]
+
+
+def test_folder_index() -> None:
+    """Test folders are indexed relative to the channel they are in."""
+    project = _folder_project(
+        [
+            _dim_object(1, "CH-1", "6/0/1"),
+            _dim_object(2, "CH-1", "6/0/2"),
+            _dim_object(3, "CH-1", "6/0/3"),
+            _com_object(4, "1.0.30", "Central", ["6/0/4"], write=True),
+        ],
+        [
+            # 99 is not part of the project - eg. data of another parser version
+            _folder("General", [4, 99]),
+            _folder(
+                "Outputs",
+                [],
+                [
+                    _node("Channel", "CH-1", "Group 1", [1], "1.0.30")
+                    | {
+                        "nodes": [
+                            _folder("Behaviour", [2], [_folder("Dim", [3])]),
+                        ]
+                    }
+                ],
+            ),
+        ],
+        ["CH-1"],
+    )
+    assert build_project_index(project).folders == {
+        # a folder that is in no channel
+        ("1.0.30", 4): ("General",),
+        # folders above a channel are not part of the path;
+        # object 1 is placed directly in its channel
+        ("1.0.30", 2): ("Behaviour",),
+        ("1.0.30", 3): ("Behaviour", "Dim"),
+    }
 
 
 async def test_no_project(

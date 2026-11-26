@@ -179,6 +179,9 @@
     "firmware_update_failed": {
       "message": "Firmware update failed for {device_name}."
     },
+    "firmware_update_timeout": {
+      "message": "Firmware update timed out for {device_name}."
+    },
     "firmware_version_already_installed": {
       "message": "Firmware version {version} is already installed on {device_name}."
     },

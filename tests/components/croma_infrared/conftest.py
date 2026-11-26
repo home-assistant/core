@@ -28,7 +28,6 @@ def mock_config_entry() -> MockConfigEntry:
         entry_id="01JTEST0000000000000000000",
         title="Croma TV",
         data={CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID},
-        unique_id=MOCK_INFRARED_EMITTER_ENTITY_ID,
     )
 
 

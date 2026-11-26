@@ -9,6 +9,6 @@
   "documentation": "https://www.home-assistant.io/integrations/willow",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["pywillow==0.1.2"]
 }

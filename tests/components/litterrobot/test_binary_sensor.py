@@ -97,13 +97,24 @@ async def test_litter_robot_5_binary_sensors(
     )
 
 
+@pytest.mark.parametrize(
+    "account_fixture",
+    [
+        pytest.param("mock_account", id="litter_robot_3"),
+        pytest.param("mock_account_with_litterrobot_4", id="litter_robot_4"),
+        pytest.param("mock_account_with_litterrobot_5", id="litter_robot_5"),
+        pytest.param("mock_account_with_feederrobot", id="feeder_robot"),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_litter_robot_5_online_sensor(
+async def test_online_sensor(
     hass: HomeAssistant,
-    mock_account_with_litterrobot_5: MagicMock,
+    request: pytest.FixtureRequest,
+    account_fixture: str,
 ) -> None:
-    """Tests Litter-Robot 5 online binary sensor (diagnostic, disabled by default)."""
-    await setup_integration(hass, mock_account_with_litterrobot_5, BINARY_SENSOR_DOMAIN)
+    """Tests the online binary sensor for each robot type."""
+    account: MagicMock = request.getfixturevalue(account_fixture)
+    await setup_integration(hass, account, BINARY_SENSOR_DOMAIN)
 
     state = hass.states.get("binary_sensor.test_online")
     assert state
