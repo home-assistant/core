@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylutron import OccupancyGroup
+from pylutron import MotionSensor, OccupancyGroup
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -120,6 +120,9 @@ def mock_lutron() -> Generator[MagicMock]:
         occ_group.legacy_uuid = "occ_legacy_uuid"
         occ_group.state = OccupancyGroup.State.VACANT
         area.occupancy_group = occ_group
+
+        # Mock the motion sensor that reports to the occupancy group
+        area.sensors = [MagicMock(spec=MotionSensor)]
 
         yield client
 

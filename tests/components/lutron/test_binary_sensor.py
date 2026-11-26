@@ -60,3 +60,17 @@ async def test_binary_sensor_update(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_binary_sensor_not_created_without_motion_sensor(
+    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test no occupancy sensor is created for an area without a motion sensor."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_lutron.areas[0].sensors = []
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test_area_test_occupancy_occupancy") is None
