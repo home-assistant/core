@@ -765,7 +765,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.11
 
 # homeassistant.components.bosch_smart_camera
-bosch-shc-camera-client==0.8.1
+bosch-shc-camera-client==0.8.2
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.6.27
