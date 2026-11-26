@@ -270,13 +270,17 @@ async def test_set_position(
     assert len(mock_slide_api.slide_set_position.mock_calls) == 2
 
 
-@pytest.mark.parametrize("invert", [False, True])
 @pytest.mark.parametrize(
-    ("position", "expected_state"),
+    ("invert", "device_pos", "position", "expected_state"),
     [
-        pytest.param(20, CoverState.CLOSING, id="closing"),
-        pytest.param(80, CoverState.OPENING, id="opening"),
-        pytest.param(50, CoverState.OPEN, id="unchanged"),
+        pytest.param(False, 0.3, 20, CoverState.CLOSING, id="closing"),
+        pytest.param(False, 0.3, 80, CoverState.OPENING, id="opening"),
+        pytest.param(False, 0.3, 70, CoverState.OPEN, id="unchanged"),
+        pytest.param(True, 0.3, 20, CoverState.CLOSING, id="closing_inverted"),
+        pytest.param(True, 0.3, 80, CoverState.OPENING, id="opening_inverted"),
+        pytest.param(True, 0.3, 30, CoverState.OPEN, id="unchanged_inverted"),
+        pytest.param(False, 0.05, 100, CoverState.OPEN, id="rounded_open"),
+        pytest.param(False, 0.95, 0, CoverState.CLOSED, id="rounded_closed"),
     ],
 )
 async def test_set_position_direction(
@@ -284,6 +288,7 @@ async def test_set_position_direction(
     mock_slide_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
     invert: bool,
+    device_pos: float,
     position: int,
     expected_state: CoverState,
 ) -> None:
@@ -292,7 +297,7 @@ async def test_set_position_direction(
     hass.config_entries.async_update_entry(
         mock_config_entry, options={CONF_INVERT_POSITION: invert}
     )
-    mock_slide_api.slide_info.return_value = {**get_data(), "pos": 0.5}
+    mock_slide_api.slide_info.return_value = {**get_data(), "pos": device_pos}
     await setup_platform(hass, mock_config_entry, [Platform.COVER])
 
     await hass.services.async_call(
