@@ -325,6 +325,11 @@ async def test_websocket_not_reconnected_when_home_assistant_stops(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
+    # Let the debounced refresh after the close run.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     # Polling took over once the WebSocket closed, without reconnecting it
     assert mock_wled.update.call_count == update_count + 1
     assert mock_wled.connect.call_count == 2
