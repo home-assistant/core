@@ -29,7 +29,7 @@ from homeassistant.components.imou.camera import (
 from homeassistant.components.imou.const import PARAM_HEADER_DETECT
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import CONF_VERIFY_SSL, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -208,6 +208,34 @@ async def test_camera_stream_source(
     assert call is not None
     assert call.args[1] == expected_resolution
     assert call.args[2] == PYIMOUAPI_LIVE_PROTOCOL
+    assert PYIMOUAPI_LIVE_PROTOCOL == "http"
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                channel_id="1",
+                button_keys=(),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_camera_disables_stream_ssl_verification(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Cloud HLS segment hosts present a certificate ffmpeg rejects."""
+    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    camera = get_camera_from_entity_id(hass, entity_id)
+
+    assert camera.stream_options[CONF_VERIFY_SSL] is False
 
 
 @pytest.mark.parametrize(

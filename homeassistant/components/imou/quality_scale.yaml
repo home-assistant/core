@@ -80,7 +80,7 @@ rules:
   # Platinum
   async-dependency:
     status: done
-    comment: pyimouapi 1.4.4 performs Open Platform calls with aiohttp.
+    comment: pyimouapi 1.4.5 performs Open Platform calls with aiohttp.
   inject-websession:
     status: done
     comment: Setup and the config flow use Home Assistant's shared client session and do not close it.
