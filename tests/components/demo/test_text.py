@@ -6,19 +6,12 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.text import (
-    ATTR_MAX,
-    ATTR_MIN,
-    ATTR_PATTERN,
-    ATTR_VALUE,
     DOMAIN as TEXT_DOMAIN,
-    SERVICE_SET_VALUE,
+    TextEntityCapabilityAttribute,
+    TextService,
+    TextServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_MODE,
-    MAX_LENGTH_STATE_STATE,
-    Platform,
-)
+from homeassistant.const import MAX_LENGTH_STATE_STATE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -48,18 +41,18 @@ def test_setup_params(hass: HomeAssistant) -> None:
     """Test the initial parameters."""
     state = hass.states.get(ENTITY_TEXT)
     assert state.state == "Hello world"
-    assert state.attributes[ATTR_MIN] == 0
-    assert state.attributes[ATTR_MAX] == MAX_LENGTH_STATE_STATE
-    assert state.attributes[ATTR_PATTERN] is None
-    assert state.attributes[ATTR_MODE] == "text"
+    assert state.attributes[TextEntityCapabilityAttribute.MIN] == 0
+    assert state.attributes[TextEntityCapabilityAttribute.MAX] == MAX_LENGTH_STATE_STATE
+    assert state.attributes[TextEntityCapabilityAttribute.PATTERN] is None
+    assert state.attributes[TextEntityCapabilityAttribute.MODE] == "text"
 
 
 async def test_set_value(hass: HomeAssistant) -> None:
     """Test set value service."""
     await hass.services.async_call(
         TEXT_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ENTITY_TEXT, ATTR_VALUE: "new"},
+        TextService.SET_VALUE,
+        {TargetKey.ENTITY_ID: ENTITY_TEXT, TextServiceArgument.VALUE: "new"},
         blocking=True,
     )
     state = hass.states.get(ENTITY_TEXT)

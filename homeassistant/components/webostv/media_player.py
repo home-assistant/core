@@ -120,14 +120,21 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
 
         if tv_state.is_on or not self._supported_features:
             supported = SUPPORT_WEBOSTV
+            volume_status = tv_state.volume_status
             if tv_state.sound_output == "external_speaker":
                 supported = supported | SUPPORT_WEBOSTV_VOLUME
-            elif tv_state.sound_output != "lineout":
+            # webOS reports volume -1 when the sound output has no volume control
+            elif (
+                tv_state.sound_output != "lineout" and volume_status.get("volume") != -1
+            ):
                 supported = supported | SUPPORT_WEBOSTV_VOLUME
-                volume_status = tv_state.volume_status
-                # webOS 22+ reports volumeSyncable, webOS 4.x supportvolume,
-                # webOS 5/6 neither, so keep volume set when unknown
-                if volume_status.get(
+                # The TV speaker always supports volume set, also when combined
+                # with an output that does not. For other outputs webOS 22+
+                # reports volumeSyncable, webOS 4.x supportvolume, webOS 5/6
+                # neither, so keep volume set when unknown
+                if volume_status.get("soundOutput", "").startswith(
+                    "tv_"
+                ) or volume_status.get(
                     "volumeSyncable", volume_status.get("supportvolume", True)
                 ):
                     supported = supported | MediaPlayerEntityFeature.VOLUME_SET
@@ -146,7 +153,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
         self._attr_is_volume_muted = cast(bool, tv_state.muted)
 
         self._attr_volume_level = None
-        if tv_state.volume is not None:
+        if tv_state.volume is not None and tv_state.volume >= 0:
             self._attr_volume_level = tv_state.volume / 100.0
 
         self._attr_source = self._current_source

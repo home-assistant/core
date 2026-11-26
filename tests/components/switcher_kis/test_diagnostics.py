@@ -9,7 +9,7 @@ from syrupy.filters import props
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
-from .consts import DUMMY_WATER_HEATER_DEVICE
+from .consts import DUMMY_TOKEN, DUMMY_USERNAME, DUMMY_WATER_HEATER_DEVICE
 
 
 async def test_diagnostics(
@@ -20,7 +20,7 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    entry = await init_integration(hass)
+    entry = await init_integration(hass, DUMMY_USERNAME, DUMMY_TOKEN)
     device = DUMMY_WATER_HEATER_DEVICE
     monkeypatch.setattr(device, "last_data_update", "2022-09-28T16:42:12.706017")
     mock_bridge.mock_callbacks([device])

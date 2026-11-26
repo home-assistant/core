@@ -79,4 +79,7 @@ rules:
   # Platinum
   async-dependency: todo
   inject-websession: todo
-  strict-typing: todo
+  strict-typing:
+    status: todo
+    comment: |
+      Requirement 'guntamatic==1.12.0' does not conform to PEP 561 (no py.typed file).

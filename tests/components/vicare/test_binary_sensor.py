@@ -99,6 +99,33 @@ async def test_holiday(
     assert hass.states.get("sensor.model0_holiday_at_home_start").state == STATE_UNKNOWN
 
 
+async def test_boiler_internal_pump(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the internal pump of the boiler while it runs."""
+    vicare = MockPyViCare([Fixture({"type:heatpump"}, "vicare/Vitocal250A.json")])
+    pump = next(
+        feature
+        for feature in vicare.services["gateway0"]._features["deviceId0"]
+        if feature["feature"] == "heating.boiler.pumps.internal"
+    )
+    pump["properties"]["status"]["value"] = "on"
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=vicare),
+        patch(f"{MODULE}.PLATFORMS", [Platform.BINARY_SENSOR]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entity_id = "binary_sensor.model0_internal_pump"
+    await async_update_entity(hass, entity_id)
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
 async def test_room_window_and_condensation_risk(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

@@ -14,32 +14,25 @@ from syrupy.filters import props
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_VOLUME_SET,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 from homeassistant.components.shelly.media_player import (
     CONTENT_TYPE_AUDIO,
     CONTENT_TYPE_RADIO,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_BUFFERING,
     STATE_IDLE,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -213,8 +206,8 @@ async def test_rpc_media_player_audio_file(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PAUSE,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        MediaPlayerService.MEDIA_PAUSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["media"]["playback"], "enable", False)
@@ -226,8 +219,8 @@ async def test_rpc_media_player_audio_file(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        MediaPlayerService.MEDIA_PLAY,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["media"]["playback"], "enable", True)
@@ -239,8 +232,8 @@ async def test_rpc_media_player_audio_file(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_STOP,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        MediaPlayerService.MEDIA_STOP,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["media"]["playback"], "enable", False)
@@ -265,8 +258,8 @@ async def test_rpc_media_player_actions(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_NEXT_TRACK,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        MediaPlayerService.MEDIA_NEXT_TRACK,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -274,8 +267,8 @@ async def test_rpc_media_player_actions(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PREVIOUS_TRACK,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -284,8 +277,8 @@ async def test_rpc_media_player_actions(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        MediaPlayerService.VOLUME_SET,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5},
         blocking=True,
     )
 
@@ -293,11 +286,11 @@ async def test_rpc_media_player_actions(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_AUDIO,
-            ATTR_MEDIA_CONTENT_ID: "12",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: CONTENT_TYPE_AUDIO,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "12",
         },
         blocking=True,
     )
@@ -306,11 +299,11 @@ async def test_rpc_media_player_actions(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_RADIO,
-            ATTR_MEDIA_CONTENT_ID: "2",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: CONTENT_TYPE_RADIO,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "2",
         },
         blocking=True,
     )
@@ -335,11 +328,11 @@ async def test_rpc_media_player_play_media_errors(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_RADIO,
-                ATTR_MEDIA_CONTENT_ID: "invalid",
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: CONTENT_TYPE_RADIO,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "invalid",
             },
             blocking=True,
         )
@@ -349,11 +342,11 @@ async def test_rpc_media_player_play_media_errors(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: "invalid",
-                ATTR_MEDIA_CONTENT_ID: "1",
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "invalid",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "1",
             },
             blocking=True,
         )

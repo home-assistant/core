@@ -33,7 +33,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_JOIN,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     RepeatMode,
 )
 from homeassistant.const import (
@@ -50,6 +51,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_STOP,
     SERVICE_REPEAT_SET,
     STATE_PLAYING,
+    TargetKey,
 )
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -264,10 +266,10 @@ async def test_join_renamed_entity_id(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
-                ATTR_ENTITY_ID: RENAMED_ENTITY_ID,
-                ATTR_GROUP_MEMBERS: [RENAMED_ENTITY_ID],
+                TargetKey.ENTITY_ID: RENAMED_ENTITY_ID,
+                MediaPlayerServiceArgument.GROUP_MEMBERS: [RENAMED_ENTITY_ID],
             },
             blocking=True,
         )
@@ -276,8 +278,11 @@ async def test_join_renamed_entity_id(
         with pytest.raises(ServiceValidationError):
             await hass.services.async_call(
                 MEDIA_PLAYER_DOMAIN,
-                SERVICE_JOIN,
-                {ATTR_ENTITY_ID: RENAMED_ENTITY_ID, ATTR_GROUP_MEMBERS: [ENTITY_ID]},
+                MediaPlayerService.JOIN,
+                {
+                    TargetKey.ENTITY_ID: RENAMED_ENTITY_ID,
+                    MediaPlayerServiceArgument.GROUP_MEMBERS: [ENTITY_ID],
+                },
                 blocking=True,
             )
 

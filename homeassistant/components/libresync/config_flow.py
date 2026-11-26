@@ -1,9 +1,15 @@
 """Config flow for the LibreSync integration."""
 
+import asyncio
 from typing import Any, override
 from urllib.parse import urlparse
 
-from aiolibresync import DiscoveredDevice, async_probe, async_probe_control
+from aiolibresync import (
+    DiscoveredDevice,
+    async_probe,
+    async_probe_control,
+    async_query_lssdp,
+)
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -15,6 +21,7 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
+from . import unsupported_module
 from .const import DEFAULT_NAME, DOMAIN
 
 STEP_USER_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): TextSelector()})
@@ -37,7 +44,14 @@ class LibreSyncConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
-            device = await async_probe(host)
+            device, info = await asyncio.gather(
+                async_probe(host), async_query_lssdp(host)
+            )
+            if (module := unsupported_module(info)) is not None:
+                return self.async_abort(
+                    reason="unsupported_hub",
+                    description_placeholders={"module": module},
+                )
             if device is None:
                 errors["base"] = "cannot_connect"
             elif not device.udn:
@@ -66,7 +80,14 @@ class LibreSyncConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(udn)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
-        if not await async_probe_control(host):
+        reachable, info = await asyncio.gather(
+            async_probe_control(host), async_query_lssdp(host)
+        )
+        if (module := unsupported_module(info)) is not None:
+            return self.async_abort(
+                reason="unsupported_hub", description_placeholders={"module": module}
+            )
+        if not reachable:
             return self.async_abort(reason="cannot_connect")
 
         self._discovered = DiscoveredDevice(

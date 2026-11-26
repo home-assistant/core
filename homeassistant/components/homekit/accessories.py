@@ -67,6 +67,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
     UnitOfTemperature,
     __version__,
 )
@@ -129,9 +130,12 @@ from .const import (
     TYPE_FAUCET,
     TYPE_HEATER_COOLER,
     TYPE_OUTLET,
+    TYPE_SET_TOP_BOX,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
+    TYPE_STREAMING_STICK,
     TYPE_SWITCH,
+    TYPE_TELEVISION,
     TYPE_THERMOSTAT,
     TYPE_VALVE,
 )
@@ -162,6 +166,11 @@ FAN_TYPES = {
 CLIMATE_TYPES = {
     TYPE_HEATER_COOLER: "HeaterCooler",
     TYPE_THERMOSTAT: "Thermostat",
+}
+MEDIA_PLAYER_TYPES = {
+    TYPE_SET_TOP_BOX: "SetTopBoxMediaPlayer",
+    TYPE_STREAMING_STICK: "StreamingStickMediaPlayer",
+    TYPE_TELEVISION: "TelevisionMediaPlayer",
 }
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
@@ -350,7 +359,7 @@ def get_accessory(  # noqa: C901
             MediaPlayerDeviceClass.TV,
             MediaPlayerDeviceClass.PROJECTOR,
         ):
-            a_type = "TelevisionMediaPlayer"
+            a_type = MEDIA_PLAYER_TYPES[config.get(CONF_TYPE, TYPE_TELEVISION)]
         elif validate_media_player_features(state, feature_list):
             a_type = "MediaPlayer"
 
@@ -807,7 +816,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         requested action.
         """
         event_data = {
-            ATTR_ENTITY_ID: service_data.get(ATTR_ENTITY_ID, self.entity_id),
+            ATTR_ENTITY_ID: service_data.get(TargetKey.ENTITY_ID, self.entity_id),
             ATTR_DISPLAY_NAME: self.display_name,
             ATTR_SERVICE: service,
             ATTR_VALUE: value,
@@ -934,6 +943,21 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         self._bridge_name = bridge_name
         self._entry_title = entry_title
         self.iid_storage = iid_storage
+
+    @ha_callback
+    def async_update_accessories_hash(self) -> bool:
+        """Update the accessories hash, advertising a new config number if changed."""
+        old_hash = self.state.accessories_hash
+        new_hash = self.accessories_hash
+        if self.state.set_accessories_hash(new_hash):
+            _LOGGER.debug(
+                "Updating HomeKit accessories hash from %s -> %s", old_hash, new_hash
+            )
+            self.async_persist()
+            self.async_update_advertisement()
+            return True
+        _LOGGER.debug("HomeKit accessories hash is unchanged: %s", new_hash)
+        return False
 
     @pyhap_callback  # type: ignore[untyped-decorator]
     def pair(

@@ -2,11 +2,12 @@
 
 from collections.abc import Callable, Coroutine
 from functools import partial
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from pytest_homeassistant.typing import WebSocketGenerator
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from soco.data_structures import SearchResult
 from syrupy.assertion import SnapshotAssertion
 
@@ -623,3 +624,101 @@ async def test_search_media_invalid_media_content_type(
     assert response["error"]["translation_placeholders"] == {
         "media_content_type": "movie"
     }
+
+
+@pytest.mark.parametrize(
+    ("media_content_type", "media_content_id"),
+    [
+        pytest.param(
+            MediaType.TRACK,
+            "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3",
+            id="music_service_track",
+        ),
+        pytest.param(
+            MediaType.TRACK,
+            "x-file-cifs://server/Music/Abbey%20Road/01%20-%20Come%20Together.mp3",
+            id="local_library_track",
+        ),
+        pytest.param(
+            MediaType.ALBUM,
+            "A:ALBUM/Abbey%20Road",
+            id="album",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_browse_image_url_round_trip(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    media_content_type: str,
+    media_content_id: str,
+) -> None:
+    """Test the browse thumbnail URL hands the exact content id back to the proxy."""
+    entity_comp = hass.data["entity_components"]["media_player"]
+    player = entity_comp.get_entity("media_player.zone_a")
+    url = get_thumbnail_url_full(
+        player.media,
+        False,
+        player.get_browse_image_url,
+        media_content_type,
+        media_content_id,
+    )
+
+    client = await hass_client()
+    with patch.object(
+        player, "async_get_browse_image", return_value=(b"image", "image/jpeg")
+    ) as mock_get_browse_image:
+        resp = await client.get(url)
+
+    assert resp.status == HTTPStatus.OK
+    mock_get_browse_image.assert_awaited_once_with(
+        media_content_type, media_content_id, None
+    )
+
+
+@pytest.mark.parametrize(
+    ("track_uri", "expected_query"),
+    [
+        pytest.param(
+            "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3",
+            "s=1&u=x-sonos-spotify%3Aspotify%253atrack%253a5bcTCx%3Fsid%3D12"
+            "%26flags%3D8224%26sn%3D3",
+            id="music_service",
+        ),
+        pytest.param(
+            "x-sonosapi-hls-static:track-%3esoundcloud%3atracks%3a1610992905"
+            "?sid=160&flags=8232&sn=25",
+            "s=1&u=x-sonosapi-hls-static%3Atrack-%253esoundcloud%253atracks"
+            "%253a1610992905%3Fsid%3D160%26flags%3D8232%26sn%3D25",
+            id="soundcloud",
+        ),
+        pytest.param(
+            "x-file-cifs://server/Music/Abbey%20Road/01%20-%20Come%20Together.mp3",
+            "u=x-file-cifs%3A%2F%2Fserver%2FMusic%2FAbbey%2520Road%2F01%2520-"
+            "%2520Come%2520Together.mp3",
+            id="local_library",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_browse_image_for_track(
+    hass: HomeAssistant,
+    track_uri: str,
+    expected_query: str,
+) -> None:
+    """Test a track's browse image is fetched from the art URL built from its URI."""
+    entity_comp = hass.data["entity_components"]["media_player"]
+    player = entity_comp.get_entity("media_player.zone_a")
+    player.media.library.build_album_art_full_uri = Mock(
+        side_effect=lambda path: f"http://192.168.42.2:1400{path}"
+    )
+
+    with patch.object(
+        player, "_async_fetch_image", return_value=(b"image", "image/jpeg")
+    ) as mock_fetch:
+        result = await player.async_get_browse_image(MediaType.TRACK, track_uri)
+
+    assert result == (b"image", "image/jpeg")
+    mock_fetch.assert_awaited_once_with(
+        f"http://192.168.42.2:1400/getaa?{expected_query}"
+    )

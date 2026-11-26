@@ -1,0 +1,266 @@
+"""Tests for the scene LLM tools."""
+
+from unittest.mock import patch
+
+import probatio
+import pytest
+from pytest_homeassistant.common import MockUser
+
+from homeassistant.components.scene import DOMAIN, Scene
+from homeassistant.components.scene.const import DATA_COMPONENT
+from homeassistant.components.scene.llm import (
+    GetConfigTool,
+    ListScenesTool,
+    async_get_tools,
+)
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import (
+    area_registry as ar,
+    category_registry as cr,
+    entity_registry as er,
+    label_registry as lr,
+    llm,
+)
+from homeassistant.setup import async_setup_component
+from homeassistant.util.json import JsonObjectType
+
+EXPECTED_SCENES = [
+    {"entity_id": "scene.bedtime", "name": "Bedtime", "last_activated": None},
+    {
+        "entity_id": "scene.broken",
+        "name": "Broken",
+        "last_activated": None,
+        "available": False,
+    },
+    {
+        "entity_id": "scene.movie_night",
+        "name": "Movie night",
+        "last_activated": "2026-11-24T12:00:00+00:00",
+        "area": "Living room",
+        "category": "Evening",
+        "labels": ["Cozy", "TV"],
+    },
+]
+
+
+@pytest.fixture
+def llm_context() -> llm.LLMContext:
+    """Return an LLM context."""
+    return llm.LLMContext(
+        platform="test",
+        context=None,
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+
+
+@pytest.fixture
+async def setup_scenes(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    category_registry: cr.CategoryRegistry,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Set up an activated scene, a scene never activated and an unavailable one."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "id": "movie",
+                    "name": "Movie night",
+                    "icon": "mdi:movie",
+                    "entities": {"light.tv": {"state": "on", "brightness": 50}},
+                },
+                {"name": "Bedtime", "entities": {"light.tv": "off"}},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    entity_registry.async_update_entity(
+        "scene.movie_night",
+        area_id=area_registry.async_create("Living room").id,
+        categories={
+            DOMAIN: category_registry.async_create(
+                scope=DOMAIN, name="Evening"
+            ).category_id
+        },
+        labels={label_registry.async_create(name).label_id for name in ("TV", "Cozy")},
+    )
+    await hass.services.async_call(
+        DOMAIN, "turn_on", {"entity_id": "scene.movie_night"}, blocking=True
+    )
+    hass.states.async_set(
+        "scene.broken", STATE_UNAVAILABLE, {"friendly_name": "Broken"}
+    )
+
+
+async def _call(
+    hass: HomeAssistant, llm_context: llm.LLMContext, tool_args: JsonObjectType
+) -> JsonObjectType:
+    """Call the tool and return its result."""
+    tool = ListScenesTool()
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, tool_args), llm_context
+    )
+    assert result.error is False
+    return result.data
+
+
+async def test_async_get_tools(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test the tool is only provided for the Home Assistant API."""
+    assert async_get_tools(hass, llm_context, llm.LLM_API_ASSIST) is None
+
+    tools = async_get_tools(hass, llm_context, llm.LLM_API_HOME_ASSISTANT)
+    assert tools is not None
+    assert [tool.name for tool in tools.tools] == [
+        "scene__list_scenes",
+        "scene__get_config",
+    ]
+
+
+@pytest.mark.freeze_time("2026-11-24 12:00:00+00:00")
+@pytest.mark.usefixtures("setup_scenes")
+async def test_list_scenes(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+    """Test listing the scenes sorted by name."""
+    assert await _call(hass, llm_context, {}) == {
+        "scenes": EXPECTED_SCENES,
+        "total": 3,
+    }
+
+
+@pytest.mark.freeze_time("2026-11-24 12:00:00+00:00")
+@pytest.mark.usefixtures("setup_scenes")
+async def test_list_scenes_pages(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test the next_offset points to the next page."""
+    with patch("homeassistant.components.scene.llm._LIMIT", 2):
+        first = await _call(hass, llm_context, {})
+        second = await _call(hass, llm_context, {"offset": first["next_offset"]})
+
+    assert first == {"scenes": EXPECTED_SCENES[:2], "total": 3, "next_offset": 2}
+    assert second == {"scenes": EXPECTED_SCENES[2:], "total": 3}
+
+
+@pytest.mark.parametrize("offset", [-1, "first"])
+async def test_invalid_offset(
+    hass: HomeAssistant, llm_context: llm.LLMContext, offset: object
+) -> None:
+    """Test an invalid offset is rejected by the schema."""
+    tool = ListScenesTool()
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"offset": offset}), llm_context
+        )
+
+
+async def test_call_through_api(
+    hass: HomeAssistant, hass_admin_user: MockUser, llm_context: llm.LLMContext
+) -> None:
+    """Test the tool is available through the Home Assistant API."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    assert await async_setup_component(hass, "llm", {})
+    llm_context.context = Context(user_id=hass_admin_user.id)
+
+    api = await llm.async_get_api(hass, llm.LLM_API_HOME_ASSISTANT, llm_context)
+    tool = next(tool for tool in api.tools if tool.name == "scene__list_scenes")
+    assert tool.integration == DOMAIN
+    assert await api.async_call_tool(llm.ToolInput(tool.name, {})) == llm.ToolResult(
+        data={"scenes": [], "total": 0}
+    )
+
+
+@pytest.mark.usefixtures("setup_scenes")
+async def test_get_config(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+    """Test getting the configuration of a scene made in Home Assistant."""
+    tool = GetConfigTool()
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"entity_id": "scene.movie_night"}), llm_context
+    )
+
+    assert result == llm.ToolResult(
+        data={
+            "entity_id": "scene.movie_night",
+            "config": {
+                "name": "Movie night",
+                "id": "movie",
+                "icon": "mdi:movie",
+                "entities": {"light.tv": {"state": "on", "brightness": 50}},
+            },
+        }
+    )
+
+
+@pytest.mark.usefixtures("setup_scenes")
+async def test_get_config_attribute_named_state(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test an attribute named state does not hide the state the scene sets."""
+    hass.states.async_set("sensor.mode", "eco", {"state": "attribute"})
+    await hass.services.async_call(
+        DOMAIN,
+        "create",
+        {"scene_id": "snapshot", "snapshot_entities": ["sensor.mode"]},
+        blocking=True,
+    )
+    tool = GetConfigTool()
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"entity_id": "scene.snapshot"}), llm_context
+    )
+
+    assert result.data["config"]["entities"]["sensor.mode"]["state"] == "eco"
+
+
+class _IntegrationScene(Scene):
+    """A scene that comes from an integration."""
+
+    _attr_name = "Hue scene"
+
+    def activate(self, **kwargs: object) -> None:
+        """Activate the scene."""
+
+
+@pytest.mark.usefixtures("setup_scenes")
+async def test_get_config_of_integration_scene(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test a scene that comes from an integration has no configuration."""
+    await hass.data[DATA_COMPONENT].async_add_entities([_IntegrationScene()])
+    tool = GetConfigTool()
+    with pytest.raises(HomeAssistantError, match="comes from an integration"):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"entity_id": "scene.hue_scene"}),
+            llm_context,
+        )
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "error"),
+    [
+        ("scene.broken", HomeAssistantError),
+        ("scene.unknown", HomeAssistantError),
+        ("light.tv", probatio.Invalid),
+    ],
+)
+@pytest.mark.usefixtures("setup_scenes")
+async def test_get_config_not_found(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    entity_id: str,
+    error: type[Exception],
+) -> None:
+    """Test an unknown scene or another domain is rejected."""
+    tool = GetConfigTool()
+    with pytest.raises(error):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"entity_id": entity_id}), llm_context
+        )

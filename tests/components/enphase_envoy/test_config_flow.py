@@ -1306,7 +1306,6 @@ async def test_form_configure_no_solar_on(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test user step no solar mode passed to Envoy setup."""
-    caplog.set_level(logging.DEBUG)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from opendata_transport import OpendataTransport
+from opendata_transport import OpendataTransport, OpendataTransportLocation
 from opendata_transport.exceptions import (
     OpendataTransportConnectionError,
     OpendataTransportError,
@@ -27,6 +27,8 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_DESTINATION,
     CONF_START,
+    CONF_STATIONS,
+    CONF_STOPS_AT,
     CONF_TIME_FIXED,
     CONF_TIME_MODE,
     CONF_TIME_OFFSET,
@@ -37,12 +39,18 @@ from .const import (
     DEFAULT_TIME_STATION,
     DOMAIN,
     IS_ARRIVAL_OPTIONS,
+    MAX_STATIONS,
     MAX_VIA,
     PLACEHOLDERS,
     TIME_MODE_OPTIONS,
     TRANSPORTATION_OPTIONS,
 )
-from .helper import offset_opendata, unique_id_from_config
+from .helper import (
+    offset_opendata,
+    title_from_stations,
+    unique_id_from_config,
+    unique_id_from_stations,
+)
 
 USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -58,7 +66,7 @@ USER_DATA_SCHEMA = probatio.Schema(
             SelectSelectorConfig(
                 options=TRANSPORTATION_OPTIONS,
                 multiple=True,
-                mode=SelectSelectorMode.LIST,
+                mode=SelectSelectorMode.DROPDOWN,
                 translation_key="transportations",
             ),
         ),
@@ -76,6 +84,22 @@ USER_DATA_SCHEMA = probatio.Schema(
                 options=IS_ARRIVAL_OPTIONS,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key="time_station",
+            ),
+        ),
+    }
+)
+STATIONBOARD_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_STATIONS): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                multiple=True,
+            ),
+        ),
+        probatio.Optional(CONF_STOPS_AT): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                multiple=True,
             ),
         ),
     }
@@ -101,7 +125,15 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Async user step to set up the connection."""
+        """Async user step to select what to set up."""
+        return self.async_show_menu(
+            step_id="user", menu_options=["connection", "stationboard"]
+        )
+
+    async def async_step_connection(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Async step to set up the connection."""
         errors: dict[str, str] = {}
         if user_input is not None:
             if CONF_VIA in user_input and len(user_input[CONF_VIA]) > MAX_VIA:
@@ -126,9 +158,49 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
 
         return self.async_show_form(
-            step_id="user",
+            step_id="connection",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=USER_DATA_SCHEMA,
+                suggested_values=user_input,
+            ),
+            errors=errors,
+            description_placeholders=PLACEHOLDERS,
+        )
+
+    async def async_step_stationboard(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Async step to set up the stationboard."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            entered: list[str] = user_input[CONF_STATIONS]
+            if not entered:
+                errors["base"] = "bad_config"
+            elif len(entered) > MAX_STATIONS:
+                errors["base"] = "too_many_stations"
+            else:
+                stations, err = await self.fetch_station_names(entered)
+                stops_at: list[str] = []
+                if not err:
+                    stops_at, err = await self.fetch_station_names(
+                        user_input.get(CONF_STOPS_AT, [])
+                    )
+                if err:
+                    errors["base"] = err
+                else:
+                    await self.async_set_unique_id(
+                        unique_id_from_stations(stations, stops_at)
+                    )
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=title_from_stations(stations, stops_at),
+                        data={CONF_STATIONS: stations, CONF_STOPS_AT: stops_at},
+                    )
+
+        return self.async_show_form(
+            step_id="stationboard",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STATIONBOARD_DATA_SCHEMA,
                 suggested_values=user_input,
             ),
             errors=errors,
@@ -210,3 +282,25 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unknown error")
             return "unknown"
         return None
+
+    async def fetch_station_names(
+        self, stations: list[str]
+    ) -> tuple[list[str], str | None]:
+        """Look up the name of each station as the API returns it and an error."""
+        session = async_get_clientsession(self.hass)
+        names: list[str] = []
+        for station in stations:
+            opendata = OpendataTransportLocation(session, query=station)
+            try:
+                await opendata.async_get_data()
+            except OpendataTransportConnectionError:
+                return [], "cannot_connect"
+            except OpendataTransportError:
+                return [], "bad_config"
+            except Exception:
+                _LOGGER.exception("Unknown error")
+                return [], "unknown"
+            if not opendata.locations:
+                return [], "bad_config"
+            names.append(opendata.locations[0]["name"])
+        return list(dict.fromkeys(names)), None

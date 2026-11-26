@@ -3,10 +3,15 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from apple_weatherkit.client import WeatherKitApiClientError
+from apple_weatherkit.client import (
+    WeatherKitApiClientAuthenticationError,
+    WeatherKitApiClientError,
+)
 from freezegun.api import FrozenDateTimeFactory
 from pytest_homeassistant.common import async_fire_time_changed
 
+from homeassistant.components.weatherkit.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
@@ -93,3 +98,25 @@ async def test_update_recovers_after_failure(
     state = hass.states.get("weather.home")
     assert state
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_update_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an authentication error during an update starts reauthentication."""
+    with mock_weather_response():
+        entry = await init_integration(hass)
+
+    with patch(
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_weather_data",
+        side_effect=WeatherKitApiClientAuthenticationError,
+    ):
+        freezer.tick(timedelta(minutes=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id

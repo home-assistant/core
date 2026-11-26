@@ -22,7 +22,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterService,
     WaterHeaterServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_OFF
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -61,7 +61,7 @@ async def test_airzone_water_heater_turn_on_off(hass: HomeAssistant) -> None:
             WATER_HEATER_DOMAIN,
             WaterHeaterService.TURN_OFF,
             {
-                ATTR_ENTITY_ID: "water_heater.airzone_dhw",
+                TargetKey.ENTITY_ID: "water_heater.airzone_dhw",
             },
             blocking=True,
         )
@@ -83,7 +83,7 @@ async def test_airzone_water_heater_turn_on_off(hass: HomeAssistant) -> None:
             WATER_HEATER_DOMAIN,
             WaterHeaterService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "water_heater.airzone_dhw",
+                TargetKey.ENTITY_ID: "water_heater.airzone_dhw",
             },
             blocking=True,
         )
@@ -111,7 +111,7 @@ async def test_airzone_water_heater_set_operation(hass: HomeAssistant) -> None:
             WATER_HEATER_DOMAIN,
             WaterHeaterService.SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: "water_heater.airzone_dhw",
+                TargetKey.ENTITY_ID: "water_heater.airzone_dhw",
                 WaterHeaterServiceArgument.OPERATION_MODE: STATE_OFF,
             },
             blocking=True,
@@ -135,7 +135,7 @@ async def test_airzone_water_heater_set_operation(hass: HomeAssistant) -> None:
             WATER_HEATER_DOMAIN,
             WaterHeaterService.SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: "water_heater.airzone_dhw",
+                TargetKey.ENTITY_ID: "water_heater.airzone_dhw",
                 WaterHeaterServiceArgument.OPERATION_MODE: STATE_PERFORMANCE,
             },
             blocking=True,
@@ -159,7 +159,7 @@ async def test_airzone_water_heater_set_operation(hass: HomeAssistant) -> None:
             WATER_HEATER_DOMAIN,
             WaterHeaterService.SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: "water_heater.airzone_dhw",
+                TargetKey.ENTITY_ID: "water_heater.airzone_dhw",
                 WaterHeaterServiceArgument.OPERATION_MODE: STATE_ECO,
             },
             blocking=True,
@@ -189,7 +189,7 @@ async def test_airzone_water_heater_set_temp(hass: HomeAssistant) -> None:
             WATER_HEATER_DOMAIN,
             WaterHeaterService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "water_heater.airzone_dhw",
+                TargetKey.ENTITY_ID: "water_heater.airzone_dhw",
                 WaterHeaterServiceArgument.TEMPERATURE: 35,
             },
             blocking=True,
@@ -215,7 +215,7 @@ async def test_airzone_water_heater_set_temp_error(hass: HomeAssistant) -> None:
             WATER_HEATER_DOMAIN,
             WaterHeaterService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "water_heater.airzone_dhw",
+                TargetKey.ENTITY_ID: "water_heater.airzone_dhw",
                 WaterHeaterServiceArgument.TEMPERATURE: 80,
             },
             blocking=True,

@@ -270,14 +270,15 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
         )
 
 
-RPC_LINKEDGO_THERMOSTAT: dict[str, RpcClimateDescription] = {
-    "linkedgo_thermostat_climate": RpcClimateDescription(
-        key="number",
+RPC_LINKEDGO_THERMOSTAT: tuple[RpcClimateDescription, ...] = (
+    RpcClimateDescription(
+        key="linkedgo_thermostat_climate",
+        components=("number",),
         sub_key="value",
         role="target_temperature",
         models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
-}
+)
 
 
 async def async_setup_entry(

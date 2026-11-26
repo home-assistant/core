@@ -13,16 +13,14 @@ from homeassistant.components.harmony.services import (
     HarmonyServiceArgument,
 )
 from homeassistant.components.remote import (
-    ATTR_ACTIVITY,
     ATTR_COMMAND,
     ATTR_DEVICE,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     DEFAULT_HOLD_SECS,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    RemoteService,
+    RemoteServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -101,8 +99,8 @@ async def test_remote_toggles(
     # turn off remote
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE},
+        RemoteService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_REMOTE},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -114,8 +112,8 @@ async def test_remote_toggles(
     # turn on remote, restoring the last activity
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE},
+        RemoteService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_REMOTE},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -127,8 +125,11 @@ async def test_remote_toggles(
     # send new activity command, with activity name
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_ACTIVITY: "Play Music"},
+        RemoteService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_REMOTE,
+            RemoteServiceArgument.ACTIVITY: "Play Music",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -140,8 +141,11 @@ async def test_remote_toggles(
     # send new activity command, with activity id
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_ACTIVITY: ACTIVITIES_TO_IDS["Watch TV"]},
+        RemoteService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_REMOTE,
+            RemoteServiceArgument.ACTIVITY: ACTIVITIES_TO_IDS["Watch TV"],
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -396,7 +400,7 @@ async def _send_commands_and_wait(
 ) -> None:
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
+        RemoteService.SEND_COMMAND,
         service_data,
         blocking=True,
     )

@@ -15,7 +15,7 @@ from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration
+from . import get_entity_id, init_integration
 
 
 async def test_entities(
@@ -32,20 +32,22 @@ async def test_entities(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "entity_num"),
+    ("unique_id", "entity_num"),
     [
-        ("cover.basement_covername", 0),
-        ("cover.basement_covernamenopos", 1),
+        ("1234-9", 0),
+        ("12345-11", 1),
     ],
 )
 async def test_actions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    entity_id: str,
+    entity_registry: er.EntityRegistry,
+    unique_id: str,
     entity_num: int,
 ) -> None:
     """Test the cover actions."""
     await init_integration(hass, config_entry)
+    entity_id = get_entity_id(entity_registry, COVER_DOMAIN, unique_id)
     entity = config_entry.runtime_data.controller.get_all_cover()[entity_num]
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -74,14 +76,16 @@ async def test_position(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_cover: AsyncMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the set_postion over action."""
     await init_integration(hass, config_entry)
+    entity_id = get_entity_id(entity_registry, COVER_DOMAIN, "1234-9")
     await hass.services.async_call(
         COVER_DOMAIN,
         CoverService.SET_POSITION,
         {
-            TargetKey.ENTITY_ID: "cover.basement_covername",
+            TargetKey.ENTITY_ID: entity_id,
             CoverServiceArgument.POSITION: 25,
         },
         blocking=True,

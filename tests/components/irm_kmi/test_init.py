@@ -27,13 +27,14 @@ async def test_load_unload_config_entry(
     """Test the IRM KMI configuration entry loading/unloading."""
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    loaded_state = mock_config_entry.state
+    assert loaded_state is ConfigEntryState.LOADED
     assert {
         entity.domain
         for entity in er.async_entries_for_config_entry(
             entity_registry, mock_config_entry.entry_id
         )
-    } == {"sensor", "weather"}
+    } == {"binary_sensor", "image", "sensor", "weather"}
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -124,7 +125,9 @@ async def test_entity_unavailable_after_grace_period(
     """Test that the last known data is only served for the grace period."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(WEATHER_ENTITY_ID).state != STATE_UNAVAILABLE
+    state = hass.states.get(WEATHER_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
     mock_get_forecasts_coord.side_effect = IrmKmiApiError
 
@@ -132,19 +135,25 @@ async def test_entity_unavailable_after_grace_period(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(WEATHER_ENTITY_ID).state != STATE_UNAVAILABLE
+    state = hass.states.get(WEATHER_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
     freezer.tick(timedelta(minutes=7))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(WEATHER_ENTITY_ID).state != STATE_UNAVAILABLE
+    state = hass.states.get(WEATHER_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
     freezer.tick(timedelta(minutes=7))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(WEATHER_ENTITY_ID).state == STATE_UNAVAILABLE
+    state = hass.states.get(WEATHER_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
     mock_get_forecasts_coord.side_effect = None
 
@@ -152,7 +161,9 @@ async def test_entity_unavailable_after_grace_period(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(WEATHER_ENTITY_ID).state != STATE_UNAVAILABLE
+    state = hass.states.get(WEATHER_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
@@ -165,7 +176,9 @@ async def test_grace_period_starts_at_the_last_usable_data(
     """Test the grace period runs from the last refresh that produced data."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(WEATHER_ENTITY_ID).state != STATE_UNAVAILABLE
+    state = hass.states.get(WEATHER_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
     mock_irm_kmi_api.get_daily_forecast.side_effect = TypeError
 
@@ -173,7 +186,9 @@ async def test_grace_period_starts_at_the_last_usable_data(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(WEATHER_ENTITY_ID).state == STATE_UNAVAILABLE
+    state = hass.states.get(WEATHER_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
     mock_irm_kmi_api.refresh_forecasts_coord.side_effect = IrmKmiApiError
 
@@ -181,4 +196,6 @@ async def test_grace_period_starts_at_the_last_usable_data(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(WEATHER_ENTITY_ID).state == STATE_UNAVAILABLE
+    state = hass.states.get(WEATHER_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

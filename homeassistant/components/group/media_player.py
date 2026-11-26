@@ -19,13 +19,13 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -267,7 +267,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @override
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
-        data = {ATTR_ENTITY_ID: self._features[KEY_CLEAR_PLAYLIST]}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._features[KEY_CLEAR_PLAYLIST]}
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             MediaPlayerService.CLEAR_PLAYLIST,
@@ -278,7 +278,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._features[KEY_TRACKS]}
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             MediaPlayerService.MEDIA_NEXT_TRACK,
@@ -289,7 +289,9 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
+        data: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]
+        }
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             MediaPlayerService.MEDIA_PAUSE,
@@ -300,7 +302,9 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @override
     async def async_media_play(self) -> None:
         """Send play command."""
-        data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
+        data: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]
+        }
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             MediaPlayerService.MEDIA_PLAY,
@@ -311,7 +315,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._features[KEY_TRACKS]}
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             MediaPlayerService.MEDIA_PREVIOUS_TRACK,
@@ -322,8 +326,8 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @override
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
-        data = {
-            ATTR_ENTITY_ID: self._features[KEY_SEEK],
+        data: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self._features[KEY_SEEK],
             MediaPlayerServiceArgument.SEEK_POSITION: position,
         }
         await self.hass.services.async_call(
@@ -336,7 +340,9 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
+        data: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]
+        }
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             MediaPlayerService.MEDIA_STOP,
@@ -347,8 +353,8 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        data = {
-            ATTR_ENTITY_ID: self._features[KEY_VOLUME],
+        data: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self._features[KEY_VOLUME],
             MediaPlayerServiceArgument.IS_VOLUME_MUTED: mute,
         }
         await self.hass.services.async_call(
@@ -363,8 +369,8 @@ class MediaPlayerGroup(MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
-        data = {
-            ATTR_ENTITY_ID: self._features[KEY_PLAY_MEDIA],
+        data: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self._features[KEY_PLAY_MEDIA],
             MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_id,
             MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
         }
@@ -380,8 +386,8 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
-        data = {
-            ATTR_ENTITY_ID: self._features[KEY_SHUFFLE],
+        data: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self._features[KEY_SHUFFLE],
             MediaPlayerServiceArgument.SHUFFLE: shuffle,
         }
         await self.hass.services.async_call(
@@ -394,7 +400,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @override
     async def async_turn_on(self) -> None:
         """Forward the turn_on command to all media in the media group."""
-        data = {ATTR_ENTITY_ID: self._features[KEY_ON_OFF]}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._features[KEY_ON_OFF]}
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             MediaPlayerService.TURN_ON,
@@ -405,8 +411,8 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level(s)."""
-        data = {
-            ATTR_ENTITY_ID: self._features[KEY_VOLUME],
+        data: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self._features[KEY_VOLUME],
             MediaPlayerServiceArgument.VOLUME_LEVEL: volume,
         }
         await self.hass.services.async_call(
@@ -419,7 +425,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @override
     async def async_turn_off(self) -> None:
         """Forward the turn_off command to all media in the media group."""
-        data = {ATTR_ENTITY_ID: self._features[KEY_ON_OFF]}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._features[KEY_ON_OFF]}
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             MediaPlayerService.TURN_OFF,

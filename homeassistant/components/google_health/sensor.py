@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    UnitOfArea,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfMass,
@@ -95,6 +96,7 @@ class GoogleHealthSensorEntityDescription[
 
     value_fn: Callable[[Any], _ValueT]
     suggested_unit_fn: Callable[[UnitSystem], str | None] | None = None
+    last_reset_fn: Callable[[Any], datetime | None] | None = None
 
 
 ACTIVITY_SENSORS: list[
@@ -148,6 +150,79 @@ ACTIVITY_SENSORS: list[
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data.floors.count_sum if data and data.floors else 0,
     ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float](
+        key="elevation",
+        translation_key="elevation",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: (data.altitude_gain_millimeters or 0) / 1000.0,
+        last_reset_fn=lambda data: data.rollup_start,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="light_activity",
+        translation_key="light_activity",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.light_activity_minutes or 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="moderate_activity",
+        translation_key="moderate_activity",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.moderate_activity_minutes or 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="vigorous_activity",
+        translation_key="vigorous_activity",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.vigorous_activity_minutes or 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="active_zone_minutes",
+        translation_key="active_zone_minutes",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.total_active_zone_minutes or 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float](
+        key="sedentary_time",
+        translation_key="sedentary_time",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.sedentary_duration.total_seconds() if data.sedentary_duration else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="fat_burn_active_zone_minutes",
+        translation_key="fat_burn_active_zone_minutes",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.fat_burn_active_zone_minutes or 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="cardio_active_zone_minutes",
+        translation_key="cardio_active_zone_minutes",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.cardio_active_zone_minutes or 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="peak_active_zone_minutes",
+        translation_key="peak_active_zone_minutes",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.peak_active_zone_minutes or 0,
+    ),
 ]
 
 BODY_SENSORS: list[
@@ -184,6 +259,73 @@ BODY_SENSORS: list[
         value_fn=lambda data: (
             data.body_fat.percentage if data and data.body_fat else None
         ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="heart_rate_variability",
+        translation_key="heart_rate_variability",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: (
+            data.heart_rate_variability.average_heart_rate_variability_milliseconds
+            if data and data.heart_rate_variability
+            else None
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="oxygen_saturation",
+        translation_key="oxygen_saturation",
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: (
+            data.oxygen_saturation.average_percentage
+            if data and data.oxygen_saturation
+            else None
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="respiratory_rate",
+        translation_key="respiratory_rate",
+        native_unit_of_measurement="br/min",
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: (
+            data.respiratory_rate.breaths_per_minute
+            if data and data.respiratory_rate
+            else None
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="height",
+        translation_key="height",
+        # Meters auto-convert to feet in US customary
+        native_unit_of_measurement=UnitOfLength.METERS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.height.height_millimeters / 1000.0 if data and data.height else None
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="body_mass_index",
+        translation_key="body_mass_index",
+        native_unit_of_measurement=f"{UnitOfMass.KILOGRAMS}/{UnitOfArea.SQUARE_METERS}",
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.bmi.bmi if data and data.bmi else None,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="vo2_max",
+        translation_key="vo2_max",
+        native_unit_of_measurement="ml/min/kg",
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.vo2_max.vo2_max if data and data.vo2_max else None,
     ),
 ]
 
@@ -555,6 +697,15 @@ class GoogleHealthSensor[_CoordinatorT: GoogleHealthDataUpdateCoordinator[Any]](
             return suggested_unit_fn(self.hass.config.units)
 
         return super().suggested_unit_of_measurement
+
+    @property
+    @override
+    def last_reset(self) -> datetime | None:
+        """Return the time when the sensor was last reset, if any."""
+        if (last_reset_fn := self.entity_description.last_reset_fn) is not None:
+            return last_reset_fn(self.coordinator.data)
+
+        return super().last_reset
 
 
 class GoogleHealthDeviceSensor(

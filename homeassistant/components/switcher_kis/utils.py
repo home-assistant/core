@@ -5,7 +5,11 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING
 
-from aioswitcher.api.remotes import SwitcherBreezeRemoteManager
+from aioswitcher.api.remotes import (
+    SwitcherBreezeRemote,
+    SwitcherBreezeRemoteManager,
+    SwitcherBreezeRemoteNotSupportedError,
+)
 from aioswitcher.bridge import SwitcherBridge
 from aioswitcher.device import SwitcherBase
 
@@ -54,6 +58,19 @@ async def async_discover_devices() -> dict[str, SwitcherBase]:
 def get_breeze_remote_manager(hass: HomeAssistant) -> SwitcherBreezeRemoteManager:
     """Get Switcher Breeze remote manager."""
     return SwitcherBreezeRemoteManager()
+
+
+async def async_get_breeze_remote(
+    hass: HomeAssistant, device_name: str, remote_id: str
+) -> SwitcherBreezeRemote | None:
+    """Get the Breeze remote of a device, or None if it is not supported."""
+    try:
+        return await hass.async_add_executor_job(
+            get_breeze_remote_manager(hass).get_remote, remote_id
+        )
+    except SwitcherBreezeRemoteNotSupportedError as err:
+        _LOGGER.warning("Cannot control %s: %s", device_name, err)
+        return None
 
 
 @callback

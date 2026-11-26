@@ -14,7 +14,11 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template
-from homeassistant.components.template.const import CONF_PICTURE, DOMAIN
+from homeassistant.components.template.const import (
+    CONF_PICTURE,
+    DOMAIN,
+    WEATHER_DEPRECATED_OPTIONS,
+)
 from homeassistant.components.template.weather import DEFAULT_NAME
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
@@ -32,6 +36,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -44,6 +49,7 @@ from .conftest import (
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
+    get_issues_with_prefix,
     make_test_trigger,
     setup_entity,
     setup_mock_template_entity_restore_state,
@@ -1118,3 +1124,28 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_WEATHER.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param(TEST_LEGACY_REQUIRED, id="deprecated"),
+        pytest.param(TEST_MODERN_REQUIRED, id="modern"),
+    ],
+)
+@pytest.mark.usefixtures("setup_weather")
+async def test_deprecated_template_options_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a repair issue is created only for deprecated *_template options."""
+    assert (
+        get_issues_with_prefix(
+            issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
+        )
+        == snapshot
+    )

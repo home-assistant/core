@@ -33,9 +33,9 @@ class RpcFanDescription(RpcEntityDescription, FanEntityDescription):
     """Description for a Shelly RPC fan entity."""
 
 
-RPC_FANS: Final = {
-    "fan": RpcFanDescription(key="fan", translation_key="fan"),
-}
+RPC_FANS: Final = (
+    RpcFanDescription(key="fan", components=("fan",), translation_key="fan"),
+)
 
 
 async def async_setup_entry(

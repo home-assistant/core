@@ -25,6 +25,11 @@
         "inputType": "SMOKE",
         "name": "Kitchen Smoke"
       },
+      "6": {
+        "enable": "on",
+        "type": "no",
+        "status": "normal"
+      },
       "8": {
         "enable": "on",
         "type": "nc",
@@ -51,6 +56,44 @@
         "type": "nc",
         "status": "normal",
         "inputType": "ENTRY"
+      },
+      "32": {
+        "enable": "on",
+        "type": "no",
+        "status": "normal",
+        "inputType": "EMERGENCY_BUTTON"
+      }
+    },
+    "connector": {
+      "emergency": {
+        "+": "disconnected",
+        "-": "disconnected"
+      },
+      "tb": {
+        "4": {
+          "+": "disconnected",
+          "-": "disconnected"
+        },
+        "6": {
+          "+": "connected",
+          "-": "connected"
+        },
+        "8": {
+          "+": "disconnected",
+          "-": "disconnected"
+        },
+        "16": {
+          "+": "disconnected",
+          "-": "disconnected"
+        },
+        "24": {
+          "+": "disconnected",
+          "-": "disconnected"
+        },
+        "25": {
+          "+": "disconnected",
+          "-": "disconnected"
+        }
       }
     }
   },

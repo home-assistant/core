@@ -2,14 +2,19 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml.",
+      "entitlement_required": "[%key:component::smartthings::config::error::entitlement_required%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_scopes": "Authentication failed. Please make sure you have granted all required permissions.",
+      "quota_exceeded": "SmartThings API quota exceeded. SmartThings requires an active API plan with remaining API usage quotas to access the SmartThings APIs. Visit the SmartThings Developer Center to manage your plans: {manage_plans_url}",
       "reauth_account_mismatch": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account and pick the right location.",
       "reauth_location_mismatch": "Authenticated location does not match the location to be reauthenticated. Please log in with the correct account and pick the right location."
     },
     "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "entitlement_required": "SmartThings API Plan required. Please subscribe to a plan before setting up this integration and ensure your Personal Access token has 'application' scopes enabled.",
+      "invalid_pat": "Invalid Personal Access Token. Please make sure you have entered it correctly and that it has not expired.",
+      "quota_exceeded": "[%key:component::smartthings::config::abort::quota_exceeded%]"
     },
     "initiate_flow": {
       "user": "[%key:common::config_flow::initiate_flow::account%]"
@@ -18,17 +23,26 @@
       "oauth_discovery": {
         "description": "Home Assistant has found a SmartThings device on your network. Press **Submit** to continue setting up SmartThings."
       },
-      "pick_implementation": {
+      "pat": {
         "data": {
-          "implementation": "[%key:common::config_flow::data::implementation%]"
+          "pat_token": "Personal Access Token"
         },
         "data_description": {
-          "implementation": "[%key:common::config_flow::description::implementation%]"
+          "pat_token": "A Personal Access Token used to create your own SmartThings app."
         },
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+        "description": "Enter a Personal Access Token to set up your own SmartThings app. Generate one on the [SmartThings tokens page]({token_url}), making sure the 'application' scopes are selected. This requires an active [SmartThings API subscription]({manage_plans_url}).",
+        "title": "Connect SmartThings"
       },
       "reauth_confirm": {
         "description": "The SmartThings integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reauth_method": {
+        "description": "Reconnect with the SmartThings app Home Assistant created for you, or enter a new Personal Access Token to create a replacement app, for example after the app was deleted.",
+        "menu_options": {
+          "auth": "Reconnect with the existing app",
+          "new_app": "Create a new app"
+        },
         "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
@@ -934,19 +948,19 @@
           "ai_rinse": "AI rinse",
           "ai_spin": "AI spin",
           "ai_wash": "AI wash",
-          "air_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::air_wash%]",
+          "air_wash": "Air wash",
           "cooling": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::cooling%]",
           "delay_wash": "Delay wash",
           "drying": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::drying%]",
-          "finish": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::finish%]",
+          "finish": "Finish",
           "freeze_protection": "Freeze protection",
           "none": "None",
-          "pre_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::pre_wash%]",
-          "rinse": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::rinse%]",
-          "spin": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::spin%]",
-          "wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wash%]",
+          "pre_wash": "Pre-wash",
+          "rinse": "Rinse",
+          "spin": "Spin",
+          "wash": "Wash",
           "weight_sensing": "Weight sensing",
-          "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wrinkle_prevent%]"
+          "wrinkle_prevent": "Wrinkle prevention"
         }
       },
       "washer_machine_state": {
@@ -972,19 +986,19 @@
           "ai_rinse": "[%key:component::smartthings::entity::sensor::washer_job_state::state::ai_rinse%]",
           "ai_spin": "[%key:component::smartthings::entity::sensor::washer_job_state::state::ai_spin%]",
           "ai_wash": "[%key:component::smartthings::entity::sensor::washer_job_state::state::ai_wash%]",
-          "air_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::air_wash%]",
+          "air_wash": "[%key:component::smartthings::entity::sensor::washer_job_state::state::air_wash%]",
           "cooling": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::cooling%]",
           "delay_wash": "[%key:component::smartthings::entity::sensor::washer_job_state::state::delay_wash%]",
           "drying": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::drying%]",
-          "finish": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::finish%]",
+          "finish": "[%key:component::smartthings::entity::sensor::washer_job_state::state::finish%]",
           "freeze_protection": "[%key:component::smartthings::entity::sensor::washer_job_state::state::freeze_protection%]",
           "none": "[%key:component::smartthings::entity::sensor::washer_job_state::state::none%]",
-          "pre_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::pre_wash%]",
-          "rinse": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::rinse%]",
-          "spin": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::spin%]",
-          "wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wash%]",
+          "pre_wash": "[%key:component::smartthings::entity::sensor::washer_job_state::state::pre_wash%]",
+          "rinse": "[%key:component::smartthings::entity::sensor::washer_job_state::state::rinse%]",
+          "spin": "[%key:component::smartthings::entity::sensor::washer_job_state::state::spin%]",
+          "wash": "[%key:component::smartthings::entity::sensor::washer_job_state::state::wash%]",
           "weight_sensing": "[%key:component::smartthings::entity::sensor::washer_job_state::state::weight_sensing%]",
-          "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wrinkle_prevent%]"
+          "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::washer_job_state::state::wrinkle_prevent%]"
         }
       },
       "washer_sub_machine_state": {
@@ -1148,11 +1162,20 @@
     "dishwasher_machine_state": {
       "message": "Can only be changed when the dishwasher machine state is {machine_state}"
     },
+    "entitlement_required": {
+      "message": "SmartThings subscription required. Reconnect your SmartThings account to restore access."
+    },
     "missing_token": {
       "message": "The configuration entry is missing a token, please reauthenticate"
     },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
     "option_not_supported": {
       "message": "Option is not supported by the selected cycle"
+    },
+    "quota_exceeded": {
+      "message": "SmartThings API quota exceeded. SmartThings requires an active API plan with remaining API usage quotas to access the SmartThings APIs. Visit the SmartThings Developer Center to manage your plans: {manage_plans_url}"
     },
     "remote_control_status": {
       "message": "Can only be changed when remote control is enabled"

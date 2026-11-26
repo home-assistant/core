@@ -185,6 +185,16 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
+        "id": "cover.office_blind",
+        "name": {"name": "Office Blind"},
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
+        "type": "action.devices.types.BLINDS",
+        "willReportState": False,
+    },
+    {
         "id": "cover.kitchen_window",
         "name": {"name": "Kitchen Window"},
         "traits": [

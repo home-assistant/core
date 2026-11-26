@@ -16,8 +16,9 @@ from homeassistant.components.vacuum import (
     SERVICE_START,
     SERVICE_STOP,
     VacuumActivity,
+    VacuumService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -170,8 +171,8 @@ async def test_vacuum_command_exception(
     with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_START,
-            {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
+            VacuumService.START,
+            {TargetKey.ENTITY_ID: VACUUM_ENTITY_ID},
             blocking=True,
         )
 

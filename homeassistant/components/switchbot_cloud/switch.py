@@ -63,7 +63,9 @@ class SwitchBotCloudSwitch(SwitchBotCloudEntity, SwitchEntity):
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
-        power_state = self.coordinator.data.get("power")
+        power_state = self.coordinator.data.get("power") or self.coordinator.data.get(
+            "powerState"
+        )
         self._attr_is_on = (
             power_state.lower() == PowerState.ON.value if power_state else None
         )

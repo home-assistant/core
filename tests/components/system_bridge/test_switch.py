@@ -2,10 +2,16 @@
 
 from collections.abc import Generator
 from dataclasses import replace
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.const import EventType
 from systembridgeconnector.models.audio_control import AudioControl
@@ -86,6 +92,53 @@ async def test_display_power_added_later(
 
     assert (state := hass.states.get("switch.hostname_display_def456_power"))
     assert state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_display_power_removed_on_reconnect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a display's power switch stays until it's still gone after reconnecting."""
+    mock_websocket_client.listen.side_effect = None
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    # Unplugged before the first pushed display list
+    await coordinator.async_handle_module(Module.DISPLAYS, [])
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+
+    # System Bridge reconnects, here after a lost connection
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await coordinator.async_handle_module(Module.DISPLAYS, [])
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID) is None
+    assert entity_registry.async_get(ENTITY_ID) is None
+
+    # Plugged in again, it waits for the system data, which names it
+    system = coordinator.data.system
+    await coordinator.async_handle_module(Module.SYSTEM, None)
+    await coordinator.async_handle_module(Module.DISPLAYS, FIXTURE_DISPLAYS)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(ENTITY_ID) is None
+
+    # It comes back once the system data is back
+    await coordinator.async_handle_module(Module.SYSTEM, system)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID)
 
 
 @pytest.mark.parametrize(

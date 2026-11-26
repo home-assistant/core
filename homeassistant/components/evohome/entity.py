@@ -148,7 +148,7 @@ class EvoChild(EvoEntity):
         try:
             this_sp = self._evo_device.this_switchpoint
             next_sp = self._evo_device.next_switchpoint
-        except evo.NotFetchedError, evo.InvalidScheduleError:
+        except evo.NotFetchedError, evo.InvalidGetScheduleError:
             return self._setpoints  # the coordinator has yet to fetch a valid schedule
 
         if this_sp is None or next_sp is None:  # there is no schedule

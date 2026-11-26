@@ -1,0 +1,173 @@
+# serializer version: 1
+# name: test_entities[device]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'microsoft',
+        '01KAB5VHQ8J6Q4WZ3CEY7B9K2D',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Microsoft',
+    'model': 'Azure AI Speech',
+    'model_id': None,
+    'name': 'Microsoft',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_entities[tts.microsoft_text_to_speech-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('microsoft', '01KAB5VHQ8J6Q4WZ3CEY7B9K2D')]>,
+    'disabled_by': None,
+    'domain': 'tts',
+    'entity_category': None,
+    'entity_id': 'tts.microsoft_text_to_speech',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Text-to-speech',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Text-to-speech',
+    'platform': 'microsoft',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'text_to_speech',
+    'unique_id': '01KAB5VHQ8J6Q4WZ3CEY7B9K2D',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[tts.microsoft_text_to_speech-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Microsoft Text-to-speech',
+    }),
+    'context': <ANY>,
+    'entity_id': 'tts.microsoft_text_to_speech',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_yaml_import
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2027.6.0',
+    'config_entry_id': None,
+    'config_subentry_id': None,
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'microsoft',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': 'microsoft',
+    'issue_id': 'deprecated_yaml',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'deprecated_yaml',
+    'translation_placeholders': dict({
+      'domain': 'microsoft',
+      'integration_title': 'Microsoft Text-to-Speech',
+    }),
+  })
+# ---
+# name: test_yaml_import_failed[cannot_connect]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2027.6.0',
+    'config_entry_id': None,
+    'config_subentry_id': None,
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'microsoft',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': 'microsoft',
+    'issue_id': 'deprecated_yaml_import_issue_cannot_connect',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'deprecated_yaml_import_issue_cannot_connect',
+    'translation_placeholders': dict({
+      'domain': 'microsoft',
+      'integration_title': 'Microsoft Text-to-Speech',
+    }),
+  })
+# ---
+# name: test_yaml_import_failed[invalid_api_key]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2027.6.0',
+    'config_entry_id': None,
+    'config_subentry_id': None,
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'microsoft',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': 'microsoft',
+    'issue_id': 'deprecated_yaml_import_issue_invalid_api_key',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'deprecated_yaml_import_issue_invalid_api_key',
+    'translation_placeholders': dict({
+      'domain': 'microsoft',
+      'integration_title': 'Microsoft Text-to-Speech',
+    }),
+  })
+# ---
+# name: test_yaml_import_failed[unknown]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2027.6.0',
+    'config_entry_id': None,
+    'config_subentry_id': None,
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'microsoft',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': 'microsoft',
+    'issue_id': 'deprecated_yaml_import_issue_unknown',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'deprecated_yaml_import_issue_unknown',
+    'translation_placeholders': dict({
+      'domain': 'microsoft',
+      'integration_title': 'Microsoft Text-to-Speech',
+    }),
+  })
+# ---

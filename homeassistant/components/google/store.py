@@ -16,7 +16,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY_FORMAT = "{domain}.{entry_id}"
-STORAGE_VERSION = 1
+STORAGE_VERSION = 2
 # Buffer writes every few minutes (plus guaranteed to be written at shutdown)
 STORAGE_SAVE_DELAY_SECONDS = 120
 
@@ -31,12 +31,28 @@ class GoogleRuntimeData:
     store: LocalCalendarStore
 
 
+class _GoogleCalendarStore(Store[dict[str, Any]]):
+    """Store for Google Calendar data with migration support."""
+
+    @override
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Migrate from older storage versions."""
+        # Drop the cache on migration so the client library performs a full
+        # re-sync of all content into the new storage layout.
+        return {}
+
+
 class LocalCalendarStore(CalendarStore):
     """Storage for local persistence of calendar and event data."""
 
     def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
         """Initialize LocalCalendarStore."""
-        self._store = Store[dict[str, Any]](
+        self._store = _GoogleCalendarStore(
             hass,
             STORAGE_VERSION,
             STORAGE_KEY_FORMAT.format(domain=DOMAIN, entry_id=entry_id),

@@ -37,16 +37,17 @@ class RpcTextDescription(RpcEntityDescription, TextEntityDescription):
     """Class to describe a RPC text entity."""
 
 
-RPC_TEXT_ENTITIES: Final = {
-    "text_generic": RpcTextDescription(
-        key="text",
+RPC_TEXT_ENTITIES: Final = (
+    RpcTextDescription(
+        key="text_generic",
+        components=("text",),
         sub_key="value",
         removal_condition=lambda config, _status, key: (
             not is_view_for_platform(config, key, TEXT_DOMAIN)
         ),
         role=ROLE_GENERIC,
     ),
-}
+)
 
 
 async def async_setup_entry(
