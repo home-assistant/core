@@ -56,7 +56,7 @@ from homeassistant.loader import (
 )
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
-from .automation import DATA_AUTOMATION_VIEW
+from .automation import DATA_AUTOMATION_VIEW, async_is_loaded
 from .const import DOMAIN, SUPPORTED_LABEL_THEME_COLORS
 from .core import UPDATE_CONFIG_SCHEMA, async_update_config
 
@@ -2139,9 +2139,14 @@ _AUTOMATION_ID_DESCRIPTION = (
 )
 
 
-def _resolve_automation_id(hass: HomeAssistant, automation_id: str) -> str:
+async def _async_resolve_automation_id(hass: HomeAssistant, automation_id: str) -> str:
     """Resolve an automation id or automation entity_id to the stored config id."""
-    if not automation_id.startswith("automation."):
+    view = hass.data[DATA_AUTOMATION_VIEW]
+    # A stored id may look like an entity_id, so it takes precedence
+    if (
+        not automation_id.startswith("automation.")
+        or await view.async_get_value(hass, automation_id) is not None
+    ):
         return automation_id
     if (
         entry := er.async_get(hass).async_get(automation_id)
@@ -2179,7 +2184,7 @@ class GetAutomationConfigTool(Tool):
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> ToolResult:
         """Return the automation configuration."""
-        automation_id = _resolve_automation_id(
+        automation_id = await _async_resolve_automation_id(
             hass, self.parameters(tool_input.tool_args)["automation_id"]
         )
         view = hass.data[DATA_AUTOMATION_VIEW]
@@ -2198,9 +2203,11 @@ class SetAutomationConfigTool(Tool):
         "given. The configuration is validated first and nothing is stored when it "
         "is invalid. It replaces the whole automation, so start from "
         "config__get_automation_config when changing an existing one. The "
-        "automation is reloaded after it is stored. Returns the automation_id "
-        "and previous_config, the stored configuration from before the change "
-        "(null for a new automation)."
+        "automation is reloaded after it is stored. Returns the automation_id, "
+        "previous_config, the stored configuration from before the change (null "
+        "for a new automation), and loaded, which is false when the stored "
+        "configuration is not running, for example because the automation is "
+        "disabled or the reload failed."
     )
     annotations = ToolAnnotations(
         read_only=False, destructive=True, idempotent=False, open_world=False
@@ -2234,7 +2241,16 @@ class SetAutomationConfigTool(Tool):
         args = self.parameters(tool_input.tool_args)
         view = hass.data[DATA_AUTOMATION_VIEW]
         if "automation_id" in args:
-            automation_id = _resolve_automation_id(hass, args["automation_id"])
+            automation_id = await _async_resolve_automation_id(
+                hass, args["automation_id"]
+            )
+            if await view.async_get_value(hass, automation_id) is None and er.async_get(
+                hass
+            ).async_get_entity_id("automation", "automation", automation_id):
+                raise HomeAssistantError(
+                    f"Automation '{automation_id}' is not stored in automations.yaml "
+                    "and cannot be changed."
+                )
         else:
             automation_id = uuid.uuid4().hex
         config = dict(args["config"])
@@ -2249,12 +2265,16 @@ class SetAutomationConfigTool(Tool):
             raise HomeAssistantError(
                 f"Invalid automation configuration: {err}"
             ) from err
-        previous = await view.async_write_value(hass, automation_id, config)
+        previous = await view.async_write_value(
+            hass, automation_id, config, wait_for_hook=True
+        )
+        stored = await view.async_get_value(hass, automation_id)
         return ToolResult(
             data={
                 "result": {
                     "automation_id": automation_id,
                     "previous_config": previous,
+                    "loaded": async_is_loaded(hass, automation_id, stored),
                 }
             }
         )
@@ -2287,7 +2307,7 @@ class DeleteAutomationTool(Tool):
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> ToolResult:
         """Delete the automation."""
-        automation_id = _resolve_automation_id(
+        automation_id = await _async_resolve_automation_id(
             hass, self.parameters(tool_input.tool_args)["automation_id"]
         )
         view = hass.data[DATA_AUTOMATION_VIEW]

@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import copy
 from http import HTTPStatus
+import logging
 import os
 from typing import Any, cast, override
 
@@ -20,6 +21,8 @@ from homeassistant.util.yaml import dump, load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 
 from .const import ACTION_CREATE_UPDATE, ACTION_DELETE
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]])](
@@ -158,7 +161,12 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
             self.data_schema(data)  # type: ignore[misc]
 
     async def async_write_value(
-        self, hass: HomeAssistant, config_key: str, data: dict[str, Any]
+        self,
+        hass: HomeAssistant,
+        config_key: str,
+        data: dict[str, Any],
+        *,
+        wait_for_hook: bool = False,
     ) -> dict[str, Any] | None:
         """Write validated config for a key and run the post write hook.
 
@@ -175,9 +183,15 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
             await hass.async_add_executor_job(_write, path, current)
 
         if self.post_write_hook is not None:
-            hass.async_create_task(
-                self.post_write_hook(ACTION_CREATE_UPDATE, config_key)
-            )
+            hook = self.post_write_hook(ACTION_CREATE_UPDATE, config_key)
+            if not wait_for_hook:
+                hass.async_create_task(hook)
+            else:
+                try:
+                    await hook
+                except HomeAssistantError:
+                    # The config is stored, the caller still needs the previous one
+                    _LOGGER.exception("Error applying the stored config")
 
         return previous
 

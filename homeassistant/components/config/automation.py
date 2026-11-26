@@ -5,6 +5,7 @@ import uuid
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.automation.config import async_validate_config_item  # pylint: disable=home-assistant-component-root-import
+from homeassistant.components.automation.const import DATA_COMPONENT  # pylint: disable=home-assistant-component-root-import
 from homeassistant.config import AUTOMATION_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
@@ -27,7 +28,10 @@ def async_setup(hass: HomeAssistant) -> bool:
         """post_write_hook for Config View that reloads automations."""
         if action != ACTION_DELETE:
             await hass.services.async_call(
-                AUTOMATION_DOMAIN, SERVICE_RELOAD, {CONF_ID: config_key}
+                AUTOMATION_DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: config_key},
+                blocking=True,
             )
             return
 
@@ -53,6 +57,20 @@ def async_setup(hass: HomeAssistant) -> bool:
     hass.data[DATA_AUTOMATION_VIEW] = view
     hass.http.register_view(view)
     return True
+
+
+@callback
+def async_is_loaded(
+    hass: HomeAssistant, config_key: str, config: dict[str, Any] | None
+) -> bool:
+    """Return if the automation is running with the given config."""
+    entity_id = er.async_get(hass).async_get_entity_id(
+        AUTOMATION_DOMAIN, AUTOMATION_DOMAIN, config_key
+    )
+    if entity_id is None:
+        return False
+    entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
+    return entity is not None and entity.raw_config == config
 
 
 class EditAutomationConfigView(EditIdBasedConfigView):

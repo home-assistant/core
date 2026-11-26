@@ -5007,7 +5007,13 @@ async def test_automation_tools(
         )
     await hass.async_block_till_done()
     assert result == llm.ToolResult(
-        data={"result": {"automation_id": "morning", "previous_config": None}}
+        data={
+            "result": {
+                "automation_id": "morning",
+                "previous_config": None,
+                "loaded": True,
+            }
+        }
     )
     assert hass_config_store["automations.yaml"] == [
         {"id": "morning", **AUTOMATION_CONFIG}
@@ -5040,6 +5046,7 @@ async def test_automation_tools(
             "result": {
                 "automation_id": "morning",
                 "previous_config": {"id": "morning", **AUTOMATION_CONFIG},
+                "loaded": True,
             }
         }
     )
@@ -5100,6 +5107,69 @@ async def test_automation_tools_disabled_entity(
     )
 
     assert result == llm.ToolResult(data={"result": {"id": "sun", **AUTOMATION_CONFIG}})
+
+
+async def test_automation_tools_outside_automations_yaml(
+    entity_registry: er.EntityRegistry,
+    automation_api: llm.APIInstance,
+    hass_config_store: dict[str, Any],
+) -> None:
+    """Test an automation defined elsewhere is not duplicated."""
+    hass_config_store["automations.yaml"] = []
+    entity_registry.async_get_or_create("automation", "automation", "package")
+
+    with pytest.raises(HomeAssistantError, match="is not stored in automations.yaml"):
+        await automation_api.async_call_tool(
+            llm.ToolInput(
+                "config__set_automation_config",
+                {"automation_id": "package", "config": AUTOMATION_CONFIG},
+            )
+        )
+
+    assert hass_config_store["automations.yaml"] == []
+
+
+@pytest.mark.parametrize(
+    "reload_patch",
+    [
+        pytest.param({"return_value": {}}, id="automations_not_included"),
+        pytest.param({"side_effect": HomeAssistantError("boom")}, id="reload_error"),
+    ],
+)
+async def test_automation_tools_not_loaded(
+    automation_api: llm.APIInstance,
+    hass_config_store: dict[str, Any],
+    reload_patch: dict[str, Any],
+) -> None:
+    """Test storing an automation which does not get loaded."""
+    hass_config_store["automations.yaml"] = []
+
+    with patch("homeassistant.config.async_hass_config_yaml", **reload_patch):
+        result = await automation_api.async_call_tool(
+            llm.ToolInput(
+                "config__set_automation_config", {"config": AUTOMATION_CONFIG}
+            )
+        )
+
+    assert result.data["result"]["loaded"] is False
+    assert len(hass_config_store["automations.yaml"]) == 1
+
+
+async def test_automation_tools_id_like_entity_id(
+    automation_api: llm.APIInstance,
+    hass_config_store: dict[str, Any],
+) -> None:
+    """Test a stored id which looks like an entity_id takes precedence."""
+    stored = {"id": "automation.stored", **AUTOMATION_CONFIG}
+    hass_config_store["automations.yaml"] = [stored]
+
+    result = await automation_api.async_call_tool(
+        llm.ToolInput(
+            "config__get_automation_config", {"automation_id": "automation.stored"}
+        )
+    )
+
+    assert result == llm.ToolResult(data={"result": stored})
 
 
 @pytest.mark.parametrize(
