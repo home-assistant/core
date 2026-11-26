@@ -11,7 +11,7 @@ from TISApi.api import TISApi
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEVICES_DICT, DOMAIN
@@ -39,7 +39,7 @@ def _raise_no_devices_found(port: int) -> NoReturn:
     raise ConfigEntryNotReady(f"No TIS devices found while scanning on port {port}")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> None:
     """Set up TIS Control from a config entry."""
     # Get the TISApi instance from the user's entry.
     tis_api: TISApi = TISApi(
@@ -98,11 +98,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
         try:
             await tis_api.scan_devices()
         except (ConnectionError, OSError) as e:
-            _LOGGER.error(
-                "Connection error occurred while scanning for devices on port %d: %s",
-                entry.data[CONF_PORT],
-                e,
-            )
             raise ConfigEntryNotReady from e
 
         if not tis_api.devices:
@@ -123,25 +118,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
             tis_api.disconnect()
         raise
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TISConfigEntry) -> None:
     """Unload a config entry."""
     # Unload the platforms associated with this entry, which will remove the entities.
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    # Only disconnect the API if the platforms successfully unloaded
-    if unload_ok:
-        # However, we also explicitly cancel and await it to ensure it has stopped
-        # before disconnecting the API.
-        if (task := entry.runtime_data.listener_task) is not None:
-            task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await task
-            entry.runtime_data.listener_task = None
+    if not unload_ok:
+        raise ConfigEntryError("Failed to unload TIS Control platforms")
 
-        with contextlib.suppress(Exception):
-            entry.runtime_data.tis_api.disconnect()
+    # Ensure the listener has stopped before disconnecting the API.
+    if (task := entry.runtime_data.listener_task) is not None:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+        entry.runtime_data.listener_task = None
 
-    return unload_ok
+    with contextlib.suppress(Exception):
+        entry.runtime_data.tis_api.disconnect()
