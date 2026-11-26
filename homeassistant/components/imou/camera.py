@@ -32,7 +32,7 @@ PARALLEL_UPDATES = 0
 CAMERA_STREAM_RESOLUTION_SD = "SD"
 
 # Defaults for pyimouapi ImouHaDeviceManager APIs (async_get_device_stream / async_get_device_image).
-# Cloud HTTPS HLS fails ffmpeg peer checks; request the HTTP playlist (same as Imou Life).
+# Cloud HTTPS HLS fails ffmpeg peer checks; request the HTTP playlist instead.
 PYIMOUAPI_LIVE_PROTOCOL = "http"
 PYIMOUAPI_SNAPSHOT_WAIT_SECONDS = 3
 
