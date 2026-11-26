@@ -8,7 +8,12 @@ from unittest.mock import call, patch
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
 from freezegun import freeze_time
-from habluetooth import BluetoothScanningMode, HaScanner
+from habluetooth import (
+    BluetoothScanningMode,
+    DiscoveredDeviceAdvertisementData,
+    HaScanner,
+    discovered_device_advertisement_data_to_dict,
+)
 
 # pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
@@ -51,6 +56,7 @@ from homeassistant.components.bluetooth import (
     async_get_fallback_availability_interval,
     async_get_learned_advertising_interval,
     async_register_advertisement_callback,
+    async_register_event_driven,
     async_scanner_count,
     async_set_fallback_availability_interval,
     async_track_unavailable,
@@ -2100,6 +2106,234 @@ async def test_async_register_advertisement_callback(hass: HomeAssistant) -> Non
     cancel()
     inject_advertisement_with_source(hass, device, adv, "hci0")
     assert len(seen) == 2
+
+
+EVENT_DRIVEN_ADDRESS = "44:44:33:11:23:46"
+OPEN = b"\x01"
+CLOSED = b"\x02"
+
+
+def _event_advertisement(payload: bytes, rssi: int) -> AdvertisementData:
+    """Return an advertisement of the event-driven device."""
+    return generate_advertisement_data(
+        local_name="event", service_data={"fcd2": payload}, rssi=rssi
+    )
+
+
+def _event_driven_history() -> tuple[str, bytes]:
+    """Return the source and payload the manager holds for the device."""
+    service_info = bluetooth.async_last_service_info(
+        _get_manager().hass, EVENT_DRIVEN_ADDRESS, False
+    )
+    assert service_info is not None
+    return service_info.source, service_info.service_data["fcd2"]
+
+
+@pytest.mark.usefixtures(
+    "enable_bluetooth", "register_hci0_scanner", "register_hci1_scanner"
+)
+async def test_async_register_event_driven(hass: HomeAssistant) -> None:
+    """A new payload of an event-driven device is taken from a weaker scanner."""
+    device = generate_ble_device(EVENT_DRIVEN_ADDRESS, "event")
+    start = MONOTONIC_TIME()
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(OPEN, -50), start, HCI0_SOURCE_ADDRESS
+    )
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(OPEN, -90), start + 0.1, HCI1_SOURCE_ADDRESS
+    )
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(CLOSED, -90), start + 5, HCI1_SOURCE_ADDRESS
+    )
+    assert _event_driven_history() == (HCI0_SOURCE_ADDRESS, OPEN)
+
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(CLOSED, -90), start + 20, HCI1_SOURCE_ADDRESS
+    )
+    assert _event_driven_history() == (HCI1_SOURCE_ADDRESS, CLOSED)
+
+    cancel()
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(OPEN, -50), start + 25, HCI0_SOURCE_ADDRESS
+    )
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(CLOSED, -90), start + 45, HCI1_SOURCE_ADDRESS
+    )
+    assert _event_driven_history() == (HCI0_SOURCE_ADDRESS, OPEN)
+
+
+@pytest.mark.usefixtures(
+    "enable_bluetooth", "register_hci0_scanner", "register_hci1_scanner"
+)
+async def test_event_driven_history_saved_at_stop(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """The accepted advertisement of a registered address is saved at stop."""
+    device = generate_ble_device(EVENT_DRIVEN_ADDRESS, "event")
+    start = MONOTONIC_TIME()
+    async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(OPEN, -50), start, HCI0_SOURCE_ADDRESS
+    )
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(CLOSED, -90), start + 5, HCI1_SOURCE_ADDRESS
+    )
+    inject_advertisement_with_time_and_source(
+        hass,
+        generate_ble_device("44:44:33:11:23:99", "other"),
+        _event_advertisement(OPEN, -50),
+        start,
+        HCI0_SOURCE_ADDRESS,
+    )
+
+    await hass.async_stop()
+
+    data = hass_storage[storage.EVENT_DRIVEN_STORAGE_KEY]["data"]
+    assert data["sources"] == {
+        EVENT_DRIVEN_ADDRESS: {"source": HCI1_SOURCE_ADDRESS, "connectable": True}
+    }
+    assert list(data["advertisements"]["discovered_device_advertisement_datas"]) == [
+        EVENT_DRIVEN_ADDRESS
+    ]
+
+
+def _stored_advertisement(payload: bytes, rssi: int, heard: float) -> dict[str, Any]:
+    """Return a stored advertisement of the event-driven device."""
+    return discovered_device_advertisement_data_to_dict(
+        DiscoveredDeviceAdvertisementData(
+            connectable=False,
+            expire_seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+            discovered_device_advertisement_datas={
+                EVENT_DRIVEN_ADDRESS: (
+                    generate_ble_device(EVENT_DRIVEN_ADDRESS, "event"),
+                    _event_advertisement(payload, rssi),
+                )
+            },
+            discovered_device_timestamps={EVENT_DRIVEN_ADDRESS: heard},
+        )
+    )
+
+
+@pytest.fixture
+async def restarted_bluetooth(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Start Bluetooth from stored scanner, local and accepted advertisements."""
+    now = MONOTONIC_TIME()
+    scanners, local, accepted = request.param
+    hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = {
+        "version": storage.REMOTE_SCANNER_STORAGE_VERSION,
+        "minor_version": 1,
+        "key": storage.REMOTE_SCANNER_STORAGE_KEY,
+        "data": {
+            scanner: _stored_advertisement(payload, rssi, now - age)
+            for scanner, (payload, rssi, age) in scanners.items()
+        },
+    }
+    accepted_source, accepted_payload, accepted_age = accepted
+    hass_storage[storage.EVENT_DRIVEN_STORAGE_KEY] = {
+        "version": storage.EVENT_DRIVEN_STORAGE_VERSION,
+        "minor_version": 1,
+        "key": storage.EVENT_DRIVEN_STORAGE_KEY,
+        "data": {
+            "sources": {
+                EVENT_DRIVEN_ADDRESS: {"source": accepted_source, "connectable": False}
+            },
+            "advertisements": _stored_advertisement(
+                accepted_payload, -90, now - accepted_age
+            ),
+        },
+    }
+    local_history = {
+        address: AdvertisementHistory(
+            generate_ble_device(address, "event"),
+            _event_advertisement(payload, rssi),
+            "hci0",
+        )
+        for address, (payload, rssi) in local.items()
+    }
+    with patch("bluetooth_adapters.systems.linux.LinuxAdapters.history", local_history):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
+@pytest.mark.parametrize(
+    ("restarted_bluetooth", "expected"),
+    [
+        pytest.param(
+            (
+                {"strong-proxy": (OPEN, -50, 60), "weak-proxy": (CLOSED, -90, 10)},
+                {},
+                ("weak-proxy", CLOSED, 10),
+            ),
+            ("weak-proxy", CLOSED),
+            id="older_strong_remote",
+        ),
+        pytest.param(
+            (
+                {"weak-proxy": (CLOSED, -90, 10)},
+                {EVENT_DRIVEN_ADDRESS: (OPEN, -50)},
+                ("weak-proxy", CLOSED, 10),
+            ),
+            ("weak-proxy", CLOSED),
+            id="older_strong_local",
+        ),
+        pytest.param(
+            (
+                {"strong-proxy": (CLOSED, -50, 20), "weak-proxy": (OPEN, -90, 10)},
+                {},
+                ("strong-proxy", CLOSED, 20),
+            ),
+            ("strong-proxy", CLOSED),
+            id="later_stale_copy",
+        ),
+    ],
+    indirect=["restarted_bluetooth"],
+)
+@pytest.mark.usefixtures("restarted_bluetooth")
+async def test_register_event_driven_restores_accepted(
+    hass: HomeAssistant, expected: tuple[str, bytes]
+) -> None:
+    """Registering after a restart starts from the advertisement accepted before it."""
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+
+    assert _event_driven_history() == expected
+    cancel()
+
+
+@pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
+@pytest.mark.parametrize(
+    "restarted_bluetooth",
+    [
+        (
+            {"strong-proxy": (OPEN, -50, 60), "weak-proxy": (CLOSED, -90, 10)},
+            {},
+            ("weak-proxy", CLOSED, 10),
+        )
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("restarted_bluetooth")
+async def test_register_event_driven_keeps_live_advertisement(
+    hass: HomeAssistant,
+) -> None:
+    """An advertisement heard after startup is kept over the stored one."""
+    inject_advertisement_with_time_and_source(
+        hass,
+        generate_ble_device(EVENT_DRIVEN_ADDRESS, "event"),
+        _event_advertisement(OPEN, -50),
+        MONOTONIC_TIME(),
+        "strong-proxy",
+    )
+
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+
+    assert _event_driven_history() == ("strong-proxy", OPEN)
+    cancel()
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
