@@ -35,7 +35,6 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SE
 
 _LOGGER = logging.getLogger(__name__)
 
-# Service data and time last processed per address, kept across reloads
 LAST_PROCESSED: HassKey[dict[str, tuple[dict[str, bytes], float]]] = HassKey(
     f"{DOMAIN}_last_processed"
 )
@@ -125,7 +124,7 @@ def process_service_info(
             data=entry.data | {CONF_SLEEPY_DEVICE: data.sleepy_device},
         )
         coordinator.async_set_event_driven(data.sleepy_device)
-    last_processed = hass.data.setdefault(LAST_PROCESSED, {})
+    last_processed = coordinator.last_processed
     # A packet replayed at start isn't a new event if it was restored from
     # before the start or already processed, unlike one heard since
     already_processed = coordinator.replaying and (
@@ -236,6 +235,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> No
         discovered_event_classes=event_classes,
         connectable=False,
         entry=entry,
+        last_processed=hass.data.setdefault(LAST_PROCESSED, {}),
     )
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

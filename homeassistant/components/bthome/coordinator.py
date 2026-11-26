@@ -36,11 +36,14 @@ class BTHomePassiveBluetoothProcessorCoordinator(
         device_data: BTHomeBluetoothDeviceData,
         discovered_event_classes: set[str],
         entry: BTHomeConfigEntry,
+        last_processed: dict[str, tuple[dict[str, bytes], float]],
         connectable: bool = False,
     ) -> None:
         """Initialize the BTHome Bluetooth Passive Update Processor Coordinator."""
         super().__init__(hass, logger, address, mode, update_method, connectable)
         self.discovered_event_classes = discovered_event_classes
+        # Service data and time last processed per address, kept across reloads
+        self.last_processed = last_processed
         self.device_data = device_data
         self.entry = entry
         # Track whether we've already logged the encryption downgrade this session.
@@ -58,9 +61,10 @@ class BTHomePassiveBluetoothProcessorCoordinator(
     def async_start(self) -> CALLBACK_TYPE:
         """Start the coordinator, flagging the history it replays."""
         self.replaying = True
-        cancel = super().async_start()
-        self.replaying = False
-        return cancel
+        try:
+            return super().async_start()
+        finally:
+            self.replaying = False
 
     @callback
     def async_set_event_driven(self, event_driven: bool) -> None:
