@@ -239,7 +239,7 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
                 err,
             )
             self.client_v1 = None
-            return self.data
+            return {}
 
         except (ec1.EvohomeError, TimeoutError) as err:
             self.logger.warning(

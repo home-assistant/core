@@ -196,10 +196,21 @@ async def test_high_precision_temps_multiple_locations(
 
 @pytest.mark.parametrize("install", ["default"])
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "message"),
     [
-        pytest.param(ec1.ApiCallFailedError("API call failed"), id="api_error"),
-        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(
+            ec1.ApiCallFailedError("API call failed"),
+            "They will be ignored this refresh cycle",
+            id="api_error",
+        ),
+        pytest.param(
+            TimeoutError(), "They will be ignored this refresh cycle", id="timeout"
+        ),
+        pytest.param(
+            ec1.BadUserCredentialsError("Authentication failed"),
+            "The feature will be disabled until next restart",
+            id="bad_credentials",
+        ),
     ],
 )
 @pytest.mark.usefixtures("evohome")
@@ -209,6 +220,7 @@ async def test_high_precision_temps_failed_poll(
     caplog: pytest.LogCaptureFixture,
     zone_id: str,
     exception: Exception,
+    message: str,
 ) -> None:
     """Test a failed v1 poll drops the high-precision temps, rather than keep them."""
 
@@ -225,7 +237,7 @@ async def test_high_precision_temps_failed_poll(
     with patch("evohomeasync.EvohomeClient.get_status", side_effect=exception):
         await _poll(hass, freezer)
 
-    assert "They will be ignored this refresh cycle" in caplog.text
+    assert message in caplog.text
 
     # the zone falls back to its v2 temperature (it has none in this fixture)
     state = hass.states.get(zone_id)
