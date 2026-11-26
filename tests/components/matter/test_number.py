@@ -14,6 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .common import (
     set_node_attribute,
@@ -646,6 +647,95 @@ async def test_thermostat_unoccupied_setpoint_limits_removed(
     state = hass.states.get(entity_id)
     assert state
     assert (state.attributes["min"], state.attributes["max"]) == spec_defaults
+
+
+@pytest.mark.parametrize(
+    ("attributes", "entity_id", "expected_min", "expected_max"),
+    [
+        pytest.param(
+            {"1/513/21": None, "1/513/22": None, "1/513/3": None, "1/513/4": None},
+            UNOCCUPIED_HEATING_SETPOINT_ENTITY_ID,
+            44.6,
+            86.0,
+            id="heating",
+        ),
+        pytest.param(
+            {"1/513/23": None, "1/513/24": None, "1/513/5": None, "1/513/6": None},
+            UNOCCUPIED_COOLING_SETPOINT_ENTITY_ID,
+            60.8,
+            89.6,
+            id="cooling",
+        ),
+    ],
+)
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+@pytest.mark.usefixtures("matter_node")
+async def test_thermostat_unoccupied_setpoint_fahrenheit_limits(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    entity_id: str,
+    expected_min: float,
+    expected_max: float,
+) -> None:
+    """Test the spec default limits convert exactly to °F."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    # Rewrite the state in the new unit system
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["unit_of_measurement"] == "°F"
+    assert state.attributes["min"] == expected_min
+    assert state.attributes["max"] == expected_max
+
+
+# The number platform rounds the °F state to the decimals of the °C value, so
+# some whole-°F setpoints read back as x.01 / x.99
+@pytest.mark.parametrize(
+    ("value", "raw_value", "expected_state"),
+    [
+        pytest.param(72, 2222, "72.0", id="72F"),
+        pytest.param(71, 2167, "71.01", id="71F"),
+        pytest.param(74, 2333, "73.99", id="74F"),
+        pytest.param(68.19, 2011, "68.2", id="68.19F"),
+    ],
+)
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+async def test_thermostat_unoccupied_setpoint_fahrenheit(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    value: float,
+    raw_value: int,
+    expected_state: str,
+) -> None:
+    """Test how unoccupied setpoints are written and shown in °F."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    matter_client.write_attribute.return_value = [
+        {
+            "Path": {"EndpointId": 1, "ClusterId": 513, "AttributeId": 20},
+            "Status": 0,
+        }
+    ]
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": UNOCCUPIED_HEATING_SETPOINT_ENTITY_ID, "value": value},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
+        ),
+        value=raw_value,
+    )
+
+    set_node_attribute(matter_node, 1, 513, 20, raw_value)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(UNOCCUPIED_HEATING_SETPOINT_ENTITY_ID)
+    assert state
+    assert state.state == expected_state
 
 
 # The fixture's FeatureMap is 423: Heating (1), Cooling (2) and Occupancy (4)

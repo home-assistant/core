@@ -499,8 +499,8 @@ DISCOVERY_SCHEMAS = [
             abs_min_attribute=clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit,
             abs_max_attribute=clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit,
             # Spec defaults for AbsMinHeatSetpointLimit and AbsMaxHeatSetpointLimit
-            native_min_value=7,
-            native_max_value=30,
+            native_min_value=7.0,
+            native_max_value=30.0,
             native_step=0.01,
             mode=NumberMode.BOX,
         ),
@@ -534,8 +534,8 @@ DISCOVERY_SCHEMAS = [
             abs_min_attribute=clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit,
             abs_max_attribute=clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit,
             # Spec defaults for AbsMinCoolSetpointLimit and AbsMaxCoolSetpointLimit
-            native_min_value=16,
-            native_max_value=32,
+            native_min_value=16.0,
+            native_max_value=32.0,
             native_step=0.01,
             mode=NumberMode.BOX,
         ),
