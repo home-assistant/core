@@ -6,6 +6,7 @@ from logging import Logger
 from bthome_ble import BTHomeBluetoothDeviceData, SensorUpdate
 
 from homeassistant.components.bluetooth import (
+    BluetoothCallbackReplay,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
@@ -39,7 +40,21 @@ class BTHomePassiveBluetoothProcessorCoordinator(
         connectable: bool = False,
     ) -> None:
         """Initialize the BTHome Bluetooth Passive Update Processor Coordinator."""
-        super().__init__(hass, logger, address, mode, update_method, connectable)
+        super().__init__(
+            hass,
+            logger,
+            address,
+            mode,
+            update_method,
+            connectable,
+            # The last packet in the Bluetooth history can be older than one
+            # taken from a non-owner scanner; entities restore the latest state.
+            replay=(
+                BluetoothCallbackReplay.DISABLED
+                if entry.data.get(CONF_SLEEPY_DEVICE)
+                else BluetoothCallbackReplay.OLDEST_FIRST
+            ),
+        )
         self.discovered_event_classes = discovered_event_classes
         self.device_data = device_data
         self.entry = entry

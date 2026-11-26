@@ -16,7 +16,12 @@ from pytest_homeassistant.components.bluetooth import (
 from homeassistant.components.bluetooth import async_register_scanner
 from homeassistant.components.bthome.const import BTHOME_BLE_EVENT, DOMAIN
 from homeassistant.components.event import EventEntityStateAttribute
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from . import make_bthome_v2_adv
@@ -264,3 +269,39 @@ async def test_copies_of_one_packet_fire_one_event(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert [event.data["event_type"] for event in events] == ["press", "double_press"]
+
+
+async def test_reload_keeps_state_from_non_owner_proxy(hass: HomeAssistant) -> None:
+    """Test a reload does not replay an older packet of a sleepy device."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=BUTTON_ADDRESS)
+    entry.add_to_hass(hass)
+    entry.async_on_unload(
+        async_register_scanner(hass, FakeScanner(STRONG_PROXY, STRONG_PROXY))
+    )
+    entry.async_on_unload(
+        async_register_scanner(hass, FakeScanner(WEAK_PROXY, WEAK_PROXY))
+    )
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    events = async_capture_events(hass, BTHOME_BLE_EVENT)
+    now = time.monotonic()
+
+    _inject_button_payload(
+        hass, b"\x44\x00\x01\x3a\x01\x2d\x01", STRONG_PROXY, -60, now
+    )
+    _inject_button_payload(
+        hass, b"\x44\x00\x01\x3a\x01\x2d\x01", WEAK_PROXY, -90, now + 0.1
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.test_device_18b2_window").state == STATE_ON
+    # Only the weak proxy hears the window close, so the strong proxy's packet
+    # stays the last one in the Bluetooth history
+    _inject_button_payload(hass, b"\x44\x00\x02\x2d\x00", WEAK_PROXY, -90, now + 5)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.test_device_18b2_window").state == STATE_OFF
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test_device_18b2_window").state == STATE_OFF
+    assert [event.data["event_type"] for event in events] == ["press"]
