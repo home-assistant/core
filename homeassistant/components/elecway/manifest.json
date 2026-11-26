@@ -1,6 +1,7 @@
 {
   "domain": "elecway",
   "name": "Elecway",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@Elecway001"],
   "config_flow": true,
   "dependencies": ["zeroconf"],

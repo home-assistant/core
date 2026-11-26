@@ -106,7 +106,6 @@ class ElecwayConfigFlow(ConfigFlow, domain=DOMAIN):
             finally:
                 await client.disconnect()
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={"serial_number": self.unique_id or ""},

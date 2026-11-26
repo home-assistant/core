@@ -7,11 +7,10 @@ from unittest.mock import AsyncMock, patch
 
 from aioelecway import StorageData, Telemetry
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 SERIAL = "ES25082799999"
 MODEL = "S3-20-EW02-08"
@@ -90,7 +89,7 @@ def mock_client(updates: asyncio.Queue[StorageData | None]) -> Generator[AsyncMo
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Isolate configuration flow tests from entity setup."""
     with patch(
-        "homeassistant.components.elecway.async_setup_entry", return_value=True
+        "homeassistant.components.elecway.async_setup_entry", return_value=None
     ) as mock:
         yield mock
 

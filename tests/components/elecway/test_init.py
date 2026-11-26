@@ -4,11 +4,10 @@ from unittest.mock import AsyncMock, patch
 
 from aioelecway import ElecwayError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_client")
 
