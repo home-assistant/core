@@ -5,6 +5,17 @@
         "default": "mdi:heart-plus"
       }
     },
+    "sensor": {
+      "sleep_timer_end": {
+        "default": "mdi:sleep"
+      },
+      "sleep_timer_mode": {
+        "default": "mdi:sleep",
+        "state": {
+          "off": "mdi:sleep-off"
+        }
+      }
+    },
     "switch": {
       "queue_autoplay": {
         "default": "mdi:infinity"
