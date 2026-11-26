@@ -8,7 +8,12 @@ import pyads
 import pytest
 
 from homeassistant.components.ads.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.setup import async_setup_component
+
+from . import ADS_CONFIG
 
 SERVICE_WRITE_DATA_BY_NAME = "write_data_by_name"
 ADS_VAR = "GVL.setpoint"
@@ -105,3 +110,25 @@ async def test_write_data_by_name_error(
     )
 
     assert f"Error writing {ADS_VAR}" in caplog.text
+
+
+async def test_write_data_by_name_not_loaded(
+    hass: HomeAssistant, mock_pyads_connection: MagicMock
+) -> None:
+    """Test the action explains it cannot run while the device is not set up."""
+    mock_pyads_connection.return_value.open.side_effect = pyads.ADSError(err_code=1861)
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: ADS_CONFIG})
+    await hass.async_block_till_done()
+    (entry,) = hass.config_entries.async_entries(DOMAIN)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_WRITE_DATA_BY_NAME,
+            {"adsvar": ADS_VAR, "adstype": "int", "value": 42},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "not_loaded"
+    mock_pyads_connection.return_value.write_by_name.assert_not_called()
