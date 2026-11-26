@@ -8,13 +8,11 @@ import probatio
 
 from homeassistant.components import siren
 from homeassistant.components.siren import (
-    ATTR_DURATION,
-    ATTR_TONE,
-    ATTR_VOLUME_LEVEL,
     TURN_ON_SCHEMA,
     SirenEntity,
     SirenEntityCapabilityAttribute,
     SirenEntityFeature,
+    SirenServiceArgument,
     SirenTurnOnServiceParameters,
     process_turn_on_params,
 )
@@ -91,9 +89,9 @@ DISCOVERY_SCHEMA = probatio.All(
 
 MQTT_SIREN_ATTRIBUTES_BLOCKED = frozenset(
     {
-        ATTR_DURATION,
-        ATTR_TONE,
-        ATTR_VOLUME_LEVEL,
+        SirenServiceArgument.DURATION,
+        SirenServiceArgument.TONE,
+        SirenServiceArgument.VOLUME_LEVEL,
         SirenEntityCapabilityAttribute.AVAILABLE_TONES,
     }
 )
@@ -101,9 +99,9 @@ MQTT_SIREN_ATTRIBUTES_BLOCKED = frozenset(
 SUPPORTED_BASE = SirenEntityFeature.TURN_OFF | SirenEntityFeature.TURN_ON
 
 SUPPORTED_ATTRIBUTES = {
-    ATTR_DURATION: SirenEntityFeature.DURATION,
-    ATTR_TONE: SirenEntityFeature.TONES,
-    ATTR_VOLUME_LEVEL: SirenEntityFeature.VOLUME_SET,
+    SirenServiceArgument.DURATION: SirenEntityFeature.DURATION,
+    SirenServiceArgument.TONE: SirenEntityFeature.TONES,
+    SirenServiceArgument.VOLUME_LEVEL: SirenEntityFeature.VOLUME_SET,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -163,16 +161,16 @@ class MqttSiren(MqttEntity, SirenEntity):
         _supported_features = SUPPORTED_BASE
         if config[CONF_SUPPORT_DURATION]:
             _supported_features |= SirenEntityFeature.DURATION
-            self._extra_attributes[ATTR_DURATION] = None
+            self._extra_attributes[SirenServiceArgument.DURATION] = None
 
         if config.get(CONF_AVAILABLE_TONES):
             _supported_features |= SirenEntityFeature.TONES
             self._attr_available_tones = config[CONF_AVAILABLE_TONES]
-            self._extra_attributes[ATTR_TONE] = None
+            self._extra_attributes[SirenServiceArgument.TONE] = None
 
         if config[CONF_SUPPORT_VOLUME_SET]:
             _supported_features |= SirenEntityFeature.VOLUME_SET
-            self._extra_attributes[ATTR_VOLUME_LEVEL] = None
+            self._extra_attributes[SirenServiceArgument.VOLUME_LEVEL] = None
 
         self._attr_supported_features = _supported_features
         self._optimistic = config[CONF_OPTIMISTIC] or CONF_STATE_TOPIC not in config

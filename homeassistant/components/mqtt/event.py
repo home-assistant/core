@@ -40,6 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
+ATTR_EVENT_TYPE = "event_type"
 CONF_EVENT_TYPES = "event_types"
 
 MQTT_EVENT_ATTRIBUTES_BLOCKED = frozenset(
@@ -143,7 +144,7 @@ class MqttEvent(MqttEntity, EventEntity):
             return
         try:
             event_attributes = json_loads_object(payload)
-            event_type = str(event_attributes.pop(event.ATTR_EVENT_TYPE))
+            event_type = str(event_attributes.pop(ATTR_EVENT_TYPE))
             _LOGGER.debug(
                 (
                     "JSON event data detected after processing payload '%s' on"

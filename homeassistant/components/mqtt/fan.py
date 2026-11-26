@@ -9,14 +9,11 @@ import probatio
 
 from homeassistant.components import fan
 from homeassistant.components.fan import (
-    ATTR_DIRECTION,
-    ATTR_OSCILLATING,
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
     FanEntity,
     FanEntityCapabilityAttribute,
     FanEntityFeature,
     FanEntityStateAttribute,
+    FanServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -311,10 +308,14 @@ class MqttFan(MqttEntity, FanEntity):
 
         command_templates: dict[str, Template | None] = {
             CONF_STATE: config.get(CONF_COMMAND_TEMPLATE),
-            ATTR_DIRECTION: config.get(CONF_DIRECTION_COMMAND_TEMPLATE),
-            ATTR_PERCENTAGE: config.get(CONF_PERCENTAGE_COMMAND_TEMPLATE),
-            ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_COMMAND_TEMPLATE),
-            ATTR_OSCILLATING: config.get(CONF_OSCILLATION_COMMAND_TEMPLATE),
+            FanServiceArgument.DIRECTION: config.get(CONF_DIRECTION_COMMAND_TEMPLATE),
+            FanServiceArgument.PERCENTAGE: config.get(CONF_PERCENTAGE_COMMAND_TEMPLATE),
+            FanServiceArgument.PRESET_MODE: config.get(
+                CONF_PRESET_MODE_COMMAND_TEMPLATE
+            ),
+            FanServiceArgument.OSCILLATING: config.get(
+                CONF_OSCILLATION_COMMAND_TEMPLATE
+            ),
         }
         self._command_templates = {
             key: MqttCommandTemplate(tpl, entity=self).async_render
@@ -323,10 +324,18 @@ class MqttFan(MqttEntity, FanEntity):
 
         value_templates: dict[str, Template | None] = {
             CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
-            ATTR_DIRECTION: config.get(CONF_DIRECTION_VALUE_TEMPLATE),
-            ATTR_PERCENTAGE: config.get(CONF_PERCENTAGE_VALUE_TEMPLATE),
-            ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_VALUE_TEMPLATE),
-            ATTR_OSCILLATING: config.get(CONF_OSCILLATION_VALUE_TEMPLATE),
+            FanEntityStateAttribute.DIRECTION: config.get(
+                CONF_DIRECTION_VALUE_TEMPLATE
+            ),
+            FanEntityStateAttribute.PERCENTAGE: config.get(
+                CONF_PERCENTAGE_VALUE_TEMPLATE
+            ),
+            FanEntityStateAttribute.PRESET_MODE: config.get(
+                CONF_PRESET_MODE_VALUE_TEMPLATE
+            ),
+            FanEntityStateAttribute.OSCILLATING: config.get(
+                CONF_OSCILLATION_VALUE_TEMPLATE
+            ),
         }
         self._value_templates = {
             key: MqttValueTemplate(
@@ -352,9 +361,9 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _percentage_received(self, msg: ReceiveMessage) -> None:
         """Handle new received MQTT message for the percentage."""
-        rendered_percentage_payload = self._value_templates[ATTR_PERCENTAGE](
-            msg.payload
-        )
+        rendered_percentage_payload = self._value_templates[
+            FanEntityStateAttribute.PERCENTAGE
+        ](msg.payload)
         if not rendered_percentage_payload:
             _LOGGER.debug("Ignoring empty speed from '%s'", msg.topic)
             return
@@ -392,7 +401,9 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _preset_mode_received(self, msg: ReceiveMessage) -> None:
         """Handle new received MQTT message for preset mode."""
-        preset_mode = str(self._value_templates[ATTR_PRESET_MODE](msg.payload))
+        preset_mode = str(
+            self._value_templates[FanEntityStateAttribute.PRESET_MODE](msg.payload)
+        )
         if preset_mode == self._payload["PRESET_MODE_RESET"]:
             self._attr_preset_mode = None
             return
@@ -413,7 +424,9 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _oscillation_received(self, msg: ReceiveMessage) -> None:
         """Handle new received MQTT message for the oscillation."""
-        payload = self._value_templates[ATTR_OSCILLATING](msg.payload)
+        payload = self._value_templates[FanEntityStateAttribute.OSCILLATING](
+            msg.payload
+        )
         if not payload:
             _LOGGER.debug("Ignoring empty oscillation from '%s'", msg.topic)
             return
@@ -425,7 +438,9 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _direction_received(self, msg: ReceiveMessage) -> None:
         """Handle new received MQTT message for the direction."""
-        direction = self._value_templates[ATTR_DIRECTION](msg.payload)
+        direction = self._value_templates[FanEntityStateAttribute.DIRECTION](
+            msg.payload
+        )
         if not direction:
             _LOGGER.debug("Ignoring empty direction from '%s'", msg.topic)
             return
@@ -514,7 +529,9 @@ class MqttFan(MqttEntity, FanEntity):
         percentage_payload = math.ceil(
             percentage_to_ranged_value(self._speed_range, percentage)
         )
-        mqtt_payload = self._command_templates[ATTR_PERCENTAGE](percentage_payload)
+        mqtt_payload = self._command_templates[FanServiceArgument.PERCENTAGE](
+            percentage_payload
+        )
         await self.async_publish_with_config(
             self._config[CONF_PERCENTAGE_COMMAND_TOPIC], mqtt_payload
         )
@@ -528,7 +545,9 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        mqtt_payload = self._command_templates[ATTR_PRESET_MODE](preset_mode)
+        mqtt_payload = self._command_templates[FanServiceArgument.PRESET_MODE](
+            preset_mode
+        )
         await self.async_publish_with_config(
             self._config[CONF_PRESET_MODE_COMMAND_TOPIC], mqtt_payload
         )
@@ -543,11 +562,11 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         if oscillating:
-            mqtt_payload = self._command_templates[ATTR_OSCILLATING](
+            mqtt_payload = self._command_templates[FanServiceArgument.OSCILLATING](
                 self._payload["OSCILLATE_ON_PAYLOAD"]
             )
         else:
-            mqtt_payload = self._command_templates[ATTR_OSCILLATING](
+            mqtt_payload = self._command_templates[FanServiceArgument.OSCILLATING](
                 self._payload["OSCILLATE_OFF_PAYLOAD"]
             )
         await self.async_publish_with_config(
@@ -563,7 +582,7 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        mqtt_payload = self._command_templates[ATTR_DIRECTION](direction)
+        mqtt_payload = self._command_templates[FanServiceArgument.DIRECTION](direction)
         await self.async_publish_with_config(
             self._config[CONF_DIRECTION_COMMAND_TOPIC], mqtt_payload
         )
