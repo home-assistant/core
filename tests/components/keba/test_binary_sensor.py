@@ -31,6 +31,18 @@ async def test_binary_sensors(
         assert state == snapshot(name=f"{state.entity_id}-state")
 
 
+@pytest.mark.parametrize("keba_fixture", ["p30_plugged.json", "p30_charging.json"])
+async def test_binary_sensor_states(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test the binary sensor states with a car plugged in, and with a car charging."""
+    states = sorted(
+        hass.states.async_all(BINARY_SENSOR_DOMAIN), key=lambda state: state.entity_id
+    )
+    assert len(states) == 4
+    assert states == snapshot
+
+
 @pytest.mark.parametrize(
     ("plugged", "wallbox", "locked", "ev", "expected"),
     [

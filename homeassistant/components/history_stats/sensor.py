@@ -54,7 +54,7 @@ from .const import (
 )
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
-from .helpers import pretty_ratio
+from .helpers import pretty_ratio, resolve_period_config
 
 UNITS: dict[str, str] = {
     CONF_TYPE_TIME: UnitOfTime.HOURS,
@@ -169,7 +169,7 @@ async def async_setup_entry(
     sensor_type: str = entry.options[CONF_TYPE]
     coordinator = entry.runtime_data
     entity_id: str = entry.options[CONF_ENTITY_ID]
-    state_class: SensorStateClass | None = entry.options.get(CONF_STATE_CLASS)
+    state_class = resolve_period_config(entry.options, sensor_type).state_class
     async_add_entities(
         [
             HistoryStatsSensor(

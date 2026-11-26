@@ -1,7 +1,7 @@
 """Code to support homekit_controller tests."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 import os
@@ -21,6 +21,7 @@ from pytest_homeassistant.common import (
 )
 
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.homekit_controller.connection import IDENTIFIER_SERVICE_ID
 from homeassistant.components.homekit_controller.const import (
     CONTROLLER,
     DEBOUNCE_COOLDOWN,
@@ -84,6 +85,15 @@ class DeviceTriggerInfo:
 
 
 @dataclass
+class ChildDeviceTestInfo:
+    """Describes how we expected a child device to be created by homekit_controller."""
+
+    unique_id: str
+    name: str
+    entities: list[EntityTestInfo]
+
+
+@dataclass
 class DeviceTestInfo:
     """Describes how we exepced a device to be created by homekit_controlller."""
 
@@ -102,6 +112,8 @@ class DeviceTestInfo:
 
     # A homekit device can have events but no entity (like a doorbell or remote)
     stateless_triggers: list[DeviceTriggerInfo] | None = None
+
+    child_devices: list[ChildDeviceTestInfo] = field(default_factory=list)
 
 
 class Helper:
@@ -320,6 +332,26 @@ async def assert_devices_and_entities_created(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
+    def _assert_entities(expected: list[EntityTestInfo], device_id: str) -> None:
+        for entity_info in expected:
+            entity = entity_registry.async_get(entity_info.entity_id)
+            logger.debug("Comparing entity %r to %r", entity, entity_info)
+
+            assert entity
+            assert entity.device_id == device_id
+            assert entity.unique_id == entity_info.unique_id
+            assert entity.supported_features == entity_info.supported_features
+            assert entity.entity_category == entity_info.entity_category
+            assert entity.unit_of_measurement == entity_info.unit_of_measurement
+            assert entity.capabilities == entity_info.capabilities
+
+            state = hass.states.get(entity_info.entity_id)
+            logger.debug("Comparing state %r to %r", state, entity_info)
+
+            assert state is not None
+            assert state.state == entity_info.state
+            assert state.attributes["friendly_name"] == entity_info.friendly_name
+
     async def _do_assertions(expected: DeviceTestInfo) -> dr.DeviceEntry:
         # Note: homekit_controller currently uses a 3-tuple for device identifiers
         # The current standard is a 2-tuple (hkc was not migrated when this change was
@@ -363,24 +395,16 @@ async def assert_devices_and_entities_created(
         # registry entry.
         assert (not expected.unique_id) ^ accessory_id_set
 
-        for entity_info in expected.entities:
-            entity = entity_registry.async_get(entity_info.entity_id)
-            logger.debug("Comparing entity %r to %r", entity, entity_info)
+        _assert_entities(expected.entities, device.id)
 
-            assert entity
-            assert entity.device_id == device.id
-            assert entity.unique_id == entity_info.unique_id
-            assert entity.supported_features == entity_info.supported_features
-            assert entity.entity_category == entity_info.entity_category
-            assert entity.unit_of_measurement == entity_info.unit_of_measurement
-            assert entity.capabilities == entity_info.capabilities
-
-            state = hass.states.get(entity_info.entity_id)
-            logger.debug("Comparing state %r to %r", state, entity_info)
-
-            assert state is not None
-            assert state.state == entity_info.state
-            assert state.attributes["friendly_name"] == entity_info.friendly_name
+        for expected_child in expected.child_devices:
+            child_device = device_registry.async_get_child_device_by_identifier(
+                (IDENTIFIER_SERVICE_ID, expected_child.unique_id), config_entry_id
+            )
+            assert child_device
+            assert child_device.name == expected_child.name
+            assert child_device.parent_device_id == device.id
+            _assert_entities(expected_child.entities, child_device.id)
 
         all_triggers = await async_get_device_automations(
             hass, DeviceAutomationType.TRIGGER, device.id
