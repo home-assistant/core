@@ -23,6 +23,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     }
 )
 
+
 class ConfigFlow(HAConfigFlow, domain=DOMAIN):
     """Handle a config flow for WWS."""
 
@@ -46,7 +47,7 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
                     await client.async_login()
             except EdAuthError:
                 errors["base"] = "invalid_auth"
-            except (EdError, TimeoutError):
+            except EdError, TimeoutError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
