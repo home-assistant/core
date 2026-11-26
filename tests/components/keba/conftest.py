@@ -52,6 +52,8 @@ def mock_keba(
     client.start = AsyncMock()
     client.stop = AsyncMock()
     client.set_text = AsyncMock()
+    client.set_energy = AsyncMock()
+    client.set_current = AsyncMock()
     with (
         patch.multiple(
             KebaKeContact,
@@ -62,6 +64,8 @@ def mock_keba(
             start=client.start,
             stop=client.stop,
             set_text=client.set_text,
+            set_energy=client.set_energy,
+            set_current=client.set_current,
         ),
         # With autospec the mock gets the handler, and reports the data to it.
         patch.object(
