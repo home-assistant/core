@@ -9,10 +9,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from roombapy import RoombaConnectionError, RoombaError
 
-from homeassistant.components.homeassistant import (
-    DOMAIN as HA_DOMAIN,
-    SERVICE_UPDATE_ENTITY,
-)
+from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
+from homeassistant.components.homeassistant.const import HomeAssistantService
 from homeassistant.components.roomba.connection import (
     COMMAND_HOLD_SECONDS,
     MISSION_CHECK_SECONDS,
@@ -21,17 +19,13 @@ from homeassistant.components.roomba.connection import (
     TELEMETRY_QUIET_SECONDS,
 )
 from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
-from homeassistant.components.vacuum import (
-    DOMAIN as VACUUM_DOMAIN,
-    SERVICE_LOCATE,
-    SERVICE_START,
-)
+from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -94,7 +88,7 @@ def _call(hass: HomeAssistant, domain: str, service: str) -> asyncio.Task[None]:
     """Start a blocking service call on the vacuum entity."""
     return hass.async_create_task(
         hass.services.async_call(
-            domain, service, {ATTR_ENTITY_ID: VACUUM_ENTITY_ID}, blocking=True
+            domain, service, {TargetKey.ENTITY_ID: VACUUM_ENTITY_ID}, blocking=True
         )
     )
 
@@ -188,7 +182,10 @@ async def test_periodic_command_connects_and_holds(
     assert not periodic_roomba.connected
 
     await hass.services.async_call(
-        VACUUM_DOMAIN, SERVICE_LOCATE, {ATTR_ENTITY_ID: VACUUM_ENTITY_ID}, blocking=True
+        VACUUM_DOMAIN,
+        VacuumService.LOCATE,
+        {TargetKey.ENTITY_ID: VACUUM_ENTITY_ID},
+        blocking=True,
     )
     assert periodic_roomba.connect.await_count == 2
     periodic_roomba.send_command.assert_awaited_once_with("find", None)
@@ -282,7 +279,9 @@ async def test_polling_disabled_refreshes_on_request(
     await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL * 3)
     periodic_roomba.connect.assert_awaited_once()
 
-    await _call_while_ticking(hass, freezer, HA_DOMAIN, SERVICE_UPDATE_ENTITY)
+    await _call_while_ticking(
+        hass, freezer, HA_DOMAIN, HomeAssistantService.UPDATE_ENTITY
+    )
 
     # update_entity returns once the state is in and the robot is released.
     assert periodic_roomba.connect.await_count == 2
@@ -302,7 +301,7 @@ async def test_refresh_joins_poll_in_progress(
     await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
     assert periodic_roomba.connected
 
-    task = _call(hass, HA_DOMAIN, SERVICE_UPDATE_ENTITY)
+    task = _call(hass, HA_DOMAIN, HomeAssistantService.UPDATE_ENTITY)
     for _ in range(5):
         await asyncio.sleep(0)
     assert not task.done()
@@ -371,7 +370,10 @@ async def test_reconnect_after_dropped_session(
     periodic_roomba.connected = False
     reconnecting = True
     await hass.services.async_call(
-        VACUUM_DOMAIN, SERVICE_LOCATE, {ATTR_ENTITY_ID: VACUUM_ENTITY_ID}, blocking=True
+        VACUUM_DOMAIN,
+        VacuumService.LOCATE,
+        {TargetKey.ENTITY_ID: VACUUM_ENTITY_ID},
+        blocking=True,
     )
     periodic_roomba.send_command.assert_awaited_once_with("find", None)
 
@@ -405,7 +407,10 @@ async def test_no_session_after_stop(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        VACUUM_DOMAIN, SERVICE_LOCATE, {ATTR_ENTITY_ID: VACUUM_ENTITY_ID}, blocking=True
+        VACUUM_DOMAIN,
+        VacuumService.LOCATE,
+        {TargetKey.ENTITY_ID: VACUUM_ENTITY_ID},
+        blocking=True,
     )
 
     periodic_roomba.connect.assert_awaited_once()
@@ -550,8 +555,8 @@ async def test_command_fails_cleanly_when_unreachable(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_LOCATE,
-            {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
+            VacuumService.LOCATE,
+            {TargetKey.ENTITY_ID: VACUUM_ENTITY_ID},
             blocking=True,
         )
 
@@ -597,7 +602,10 @@ async def test_command_logs_recovery(
 
     periodic_roomba.connect.side_effect = connect
     await hass.services.async_call(
-        VACUUM_DOMAIN, SERVICE_LOCATE, {ATTR_ENTITY_ID: VACUUM_ENTITY_ID}, blocking=True
+        VACUUM_DOMAIN,
+        VacuumService.LOCATE,
+        {TargetKey.ENTITY_ID: VACUUM_ENTITY_ID},
+        blocking=True,
     )
 
     assert "is reachable again" in caplog.text
@@ -675,13 +683,15 @@ async def test_failed_command_does_not_pin_the_session(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_LOCATE,
-            {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
+            VacuumService.LOCATE,
+            {TargetKey.ENTITY_ID: VACUUM_ENTITY_ID},
             blocking=True,
         )
 
     periodic_roomba.connect.side_effect = connect
-    await _call_while_ticking(hass, freezer, HA_DOMAIN, SERVICE_UPDATE_ENTITY)
+    await _call_while_ticking(
+        hass, freezer, HA_DOMAIN, HomeAssistantService.UPDATE_ENTITY
+    )
 
     assert not periodic_roomba.connected
 
@@ -704,7 +714,7 @@ async def test_start_uses_fresh_state(
         _publish(periodic_roomba, {"cleanMissionStatus": status})
 
     periodic_roomba.connect.side_effect = _connect_paused
-    await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, SERVICE_START)
+    await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, VacuumService.START)
 
     periodic_roomba.send_command.assert_awaited_once_with("resume", None)
 
@@ -726,7 +736,7 @@ async def test_stop_during_reconnect_releases_waiters(
         periodic_roomba.connected = False
 
     periodic_roomba.disconnect.side_effect = _slow_disconnect
-    refresh = _call(hass, HA_DOMAIN, SERVICE_UPDATE_ENTITY)
+    refresh = _call(hass, HA_DOMAIN, HomeAssistantService.UPDATE_ENTITY)
     for _ in range(5):
         await asyncio.sleep(0)
     # The unload starts while the refresh tears down the previous session.
@@ -773,7 +783,7 @@ async def test_old_settle_timer_does_not_mark_reconnect_fresh(
         )
 
     periodic_roomba.connect.side_effect = _slow_connect
-    task = _call(hass, VACUUM_DOMAIN, SERVICE_START)
+    task = _call(hass, VACUUM_DOMAIN, VacuumService.START)
     # The reconnect outlasts the old session's 30 s deadline.
     for _ in range(15):
         await asyncio.sleep(0)
@@ -799,7 +809,7 @@ async def test_start_requires_mission_state(
     await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
 
     with pytest.raises(HomeAssistantError) as exc_info:
-        await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, SERVICE_START)
+        await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, VacuumService.START)
 
     assert exc_info.value.translation_key == "no_mission_state"
     periodic_roomba.send_command.assert_not_awaited()
@@ -821,7 +831,7 @@ async def test_start_requires_phase_and_cycle(
 
     periodic_roomba.connect.side_effect = _partial_connect
     with pytest.raises(HomeAssistantError):
-        await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, SERVICE_START)
+        await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, VacuumService.START)
 
     periodic_roomba.send_command.assert_not_awaited()
 
@@ -842,7 +852,7 @@ async def test_start_after_background_recovery_requires_mission_state(
     on_state("disconnected", "Wi-Fi drop")
     on_state("connected", None)
     with pytest.raises(HomeAssistantError):
-        await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, SERVICE_START)
+        await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, VacuumService.START)
 
     periodic_roomba.send_command.assert_not_awaited()
 
@@ -860,7 +870,9 @@ async def test_refresh_reconnects_when_settling_session_dropped(
     await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
     periodic_roomba.connected = False
 
-    await _call_while_ticking(hass, freezer, HA_DOMAIN, SERVICE_UPDATE_ENTITY)
+    await _call_while_ticking(
+        hass, freezer, HA_DOMAIN, HomeAssistantService.UPDATE_ENTITY
+    )
 
     assert periodic_roomba.connect.await_count == 3
 
@@ -883,7 +895,7 @@ async def test_mission_fields_in_separate_messages(
         _publish(periodic_roomba, {"cleanMissionStatus": {"cycle": "clean"}})
 
     periodic_roomba.connect.side_effect = _split_connect
-    await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, SERVICE_START)
+    await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, VacuumService.START)
 
     periodic_roomba.send_command.assert_awaited_once_with("resume", None)
 
@@ -903,7 +915,7 @@ async def test_start_waits_for_state_after_background_recovery(
     on_state("connected", None)
     _set_phase(periodic_roomba, "pause")
 
-    task = _call(hass, VACUUM_DOMAIN, SERVICE_START)
+    task = _call(hass, VACUUM_DOMAIN, VacuumService.START)
     for _ in range(5):
         await asyncio.sleep(0)
     assert not task.done()
@@ -943,7 +955,7 @@ async def test_partial_setup_state_is_not_mission_state(
     await _setup(hass, mock_config_entry, continuous=False)
 
     with pytest.raises(HomeAssistantError) as exc_info:
-        await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, SERVICE_START)
+        await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, VacuumService.START)
 
     assert exc_info.value.translation_key == "no_mission_state"
     periodic_roomba.send_command.assert_not_awaited()
