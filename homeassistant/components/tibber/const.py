@@ -27,5 +27,6 @@ DATA_API_DEFAULT_SCOPES = [
     "data-api-thermostats-read",
     "data-api-vehicles-read",
     "data-api-inverters-read",
+    "data-api-meters-read",
     DATA_API_PRICES_SCOPE,
 ]
