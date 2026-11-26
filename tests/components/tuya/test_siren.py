@@ -9,12 +9,8 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.siren import (
-    DOMAIN as SIREN_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenService
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -99,11 +95,11 @@ async def test_selective_state_update(
     ("service", "expected_commands"),
     [
         (
-            SERVICE_TURN_ON,
+            SirenService.TURN_ON,
             [{"code": "siren_switch", "value": True}],
         ),
         (
-            SERVICE_TURN_OFF,
+            SirenService.TURN_OFF,
             [{"code": "siren_switch", "value": False}],
         ),
     ],
@@ -126,7 +122,7 @@ async def test_action(
         SIREN_DOMAIN,
         service,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )

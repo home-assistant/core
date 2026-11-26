@@ -164,3 +164,19 @@ DEVICE_WITH_HALF_A_LOCATION = {
     "lowPowerMode": False,
     "location": {"latitude": 60.2, "longitude": None},
 }
+
+# A second device to stand next to the account's own in the tests that
+# exercise what happens to everything Apple reports but stops naming.
+DEVICE_2 = {
+    "id": "device6",
+    "name": "iPad",
+    "deviceStatus": "200",
+    "batteryStatus": "Charging",
+    "batteryLevel": 0.5,
+    "rawDeviceModel": "iPad13,1",
+    "deviceClass": "iPad",
+    "deviceDisplayName": "iPad",
+    "prsId": None,
+    "lowPowerMode": False,
+    "location": None,
+}

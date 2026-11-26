@@ -1,5 +1,7 @@
 """Tests for the Keenetic NDMS2 component."""
 
+from ndms2_client.client import RouterInfo
+
 from homeassistant.components.keenetic_ndms2 import const
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.helpers.service_info.ssdp import (
@@ -10,6 +12,18 @@ from homeassistant.helpers.service_info.ssdp import (
 
 MOCK_NAME = "Keenetic Ultra 2030"
 MOCK_IP = "0.0.0.0"
+CLIENT_MAC = "aa:bb:cc:dd:ee:ff"
+
+MOCK_ROUTER_INFO = RouterInfo(
+    name=MOCK_NAME,
+    fw_version="3.0.4",
+    fw_channel="stable",
+    model="mock",
+    hw_version="0000",
+    manufacturer="pytest",
+    vendor="foxel",
+    region="RU",
+)
 SSDP_LOCATION = f"http://{MOCK_IP}/"
 
 MOCK_DATA = {

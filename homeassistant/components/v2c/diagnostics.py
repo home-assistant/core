@@ -1,6 +1,6 @@
 """Diagnostics support for V2C."""
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST
@@ -16,9 +16,6 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
-
-    if TYPE_CHECKING:
-        assert coordinator.evse
 
     coordinator_data = coordinator.evse.data
     evse_raw_data = cast(dict[str, Any], coordinator.evse.raw_data)

@@ -1,5 +1,6 @@
 """Config flow for the Foreca integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -8,6 +9,7 @@ from pyforeca import (
     ForecaApiClient,
     ForecaAuthError,
     ForecaError,
+    ForecaProductUnavailableError,
     Location,
     format_location,
 )
@@ -34,6 +36,8 @@ from .coordinator import ForecaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+SIGNUP_URL = "https://business.foreca.com/weather-api/free-weather-api"
+
 
 async def _async_check_location(
     hass: HomeAssistant, api_key: str, latitude: float, longitude: float
@@ -44,7 +48,7 @@ async def _async_check_location(
     try:
         info = await client.location_info(location)
         await client.current(location)
-    except ForecaAuthError:
+    except ForecaAuthError, ForecaProductUnavailableError:
         return {"base": "invalid_auth"}, None
     except ForecaError:
         return {"base": "cannot_connect"}, None
@@ -93,6 +97,54 @@ class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
+            errors=errors,
+            description_placeholders={"signup_url": SIGNUP_URL},
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a rejected API key."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for a new API key, and check it against the home location."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        if user_input is not None:
+            if any(
+                entry.data[CONF_API_KEY] == user_input[CONF_API_KEY]
+                for entry in self._async_current_entries(include_ignore=False)
+                if entry.entry_id != reauth_entry.entry_id
+            ):
+                return self.async_abort(reason="already_configured")
+            errors, _ = await _async_check_location(
+                self.hass,
+                user_input[CONF_API_KEY],
+                self.hass.config.latitude,
+                self.hass.config.longitude,
+            )
+            if not errors:
+                # The update listener reloads a loaded entry when the key changes
+                reload = (
+                    not reauth_entry.update_listeners
+                    or reauth_entry.data[CONF_API_KEY] == user_input[CONF_API_KEY]
+                )
+                result = self.async_update_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
+                )
+                if reload:
+                    self.hass.config_entries.async_schedule_reload(
+                        reauth_entry.entry_id
+                    )
+                return result
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
             data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )

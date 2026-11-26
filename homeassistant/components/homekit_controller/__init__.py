@@ -124,6 +124,8 @@ async def async_remove_config_entry_device(
     """Remove homekit_controller config entry from a device."""
     hkid = config_entry.data["AccessoryPairingID"]
     connection: HKDevice = hass.data[KNOWN_DEVICES][hkid]
+    if device_entry.id in connection.child_devices.values():
+        return False
     return not any(
         connection.accessory_identifier(accessory) in device_entry.identifiers
         for accessory in connection.entity_map.accessories

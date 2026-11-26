@@ -104,9 +104,11 @@ from .tasks import (
 )
 from .util import (
     async_create_backup_failure_issue,
+    async_update_corrupt_database_issue,
     build_mysqldb_conv,
     dburl_to_path,
     end_incomplete_runs,
+    find_corrupt_database_files,
     get_engine_db_url,
     is_file_sqlite_url,
     is_second_sunday,
@@ -886,8 +888,8 @@ class Recorder(threading.Thread):
         # has changed. This reduces the disk io.
         queue_ = self._queue
         startup_task_or_events: list[RecorderTask | Event] = []
-        while not queue_.empty() and (task_or_event := queue_.get_nowait()):
-            startup_task_or_events.append(task_or_event)
+        while not queue_.empty():
+            startup_task_or_events.append(queue_.get_nowait())
         self._pre_process_startup_events(startup_task_or_events)
         for task in startup_task_or_events:
             self._guarded_process_one_task_or_event_or_recover(task)
@@ -1508,6 +1510,14 @@ class Recorder(threading.Thread):
 
         if using_file_sqlite:
             validate_or_move_away_sqlite_database(self.db_url)
+            try:
+                corrupt_files = find_corrupt_database_files(dburl_to_path(self.db_url))
+            except OSError:
+                _LOGGER.exception("Could not look for corrupt database files")
+            else:
+                self.hass.add_job(
+                    async_update_corrupt_database_issue, self.hass, corrupt_files
+                )
 
         assert not self.engine
         self.engine = create_engine(engine_url, **kwargs, future=True)

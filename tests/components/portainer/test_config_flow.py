@@ -364,7 +364,7 @@ async def test_environment_subentry_flow(
         data=MOCK_TEST_CONFIG,
         unique_id=TEST_INSTANCE_ID,
         version=5,
-        minor_version=2,
+        minor_version=3,
         subentries_data=[
             ConfigSubentryData(
                 data={},
@@ -382,6 +382,9 @@ async def test_environment_subentry_flow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["data_schema"].schema[CONF_ENDPOINT_ID].config["options"] == [
+        {"value": "42", "label": "my-edge-offline"}
+    ]
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -417,7 +420,7 @@ async def test_environment_subentry_flow_exceptions(
         data=MOCK_TEST_CONFIG,
         unique_id=TEST_INSTANCE_ID,
         version=5,
-        minor_version=2,
+        minor_version=3,
         subentries_data=[
             ConfigSubentryData(
                 data={},
@@ -489,7 +492,7 @@ async def test_environment_subentry_flow_race_condition(
         data=MOCK_TEST_CONFIG,
         unique_id=TEST_INSTANCE_ID,
         version=5,
-        minor_version=2,
+        minor_version=3,
         subentries_data=[
             ConfigSubentryData(
                 data={},

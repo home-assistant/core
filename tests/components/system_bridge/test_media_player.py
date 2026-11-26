@@ -1,12 +1,16 @@
 """Tests for the System Bridge media player platform."""
 
+import base64
 from collections.abc import Generator
 from dataclasses import replace
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, patch
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
@@ -42,6 +46,8 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
     RepeatMode,
 )
@@ -51,6 +57,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -292,8 +299,8 @@ async def test_media_player_source(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Spotify"},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: "Spotify"},
         blocking=True,
     )
 
@@ -305,8 +312,8 @@ async def test_media_player_source(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        MediaPlayerService.MEDIA_PLAY,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_websocket_client.media_control.assert_awaited_once_with(
@@ -315,8 +322,11 @@ async def test_media_player_source(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Automatic"},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.SOURCE: "Automatic",
+        },
         blocking=True,
     )
 
@@ -356,8 +366,8 @@ async def test_media_player_source_cleared(
     await hass.async_block_till_done()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Spotify"},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: "Spotify"},
         blocking=True,
     )
 
@@ -386,8 +396,11 @@ async def test_media_player_source_named_automatic(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Automatic (auto)"},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.SOURCE: "Automatic (auto)",
+        },
         blocking=True,
     )
 
@@ -443,8 +456,8 @@ async def test_select_unknown_source(
     with pytest.raises(ServiceValidationError, match=message):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: source},
+            MediaPlayerService.SELECT_SOURCE,
+            {TargetKey.ENTITY_ID: entity_id, MediaPlayerServiceArgument.SOURCE: source},
             blocking=True,
         )
 
@@ -473,8 +486,11 @@ async def test_default_output_follows_default(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: DEFAULT_OUTPUT_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: False},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: DEFAULT_OUTPUT_ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: False,
+        },
         blocking=True,
     )
     mock_websocket_client.audio_control.assert_awaited_once_with(
@@ -595,6 +611,15 @@ async def test_control_error(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(
+            ConnectionClosedException("Connection is closed"), id="connection_closed"
+        ),
+        pytest.param(ConnectionResetError, id="connection_reset"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_control_connection_closed(
     hass: HomeAssistant,
@@ -603,11 +628,10 @@ async def test_control_connection_closed(
     service: str,
     service_data: dict[str, Any],
     client_method: str,
+    side_effect: Exception | type[Exception],
 ) -> None:
-    """Test a closed connection raises."""
-    getattr(
-        mock_websocket_client, client_method
-    ).side_effect = ConnectionClosedException("Connection is closed")
+    """Test a lost connection raises."""
+    getattr(mock_websocket_client, client_method).side_effect = side_effect
 
     with pytest.raises(
         HomeAssistantError,
@@ -619,3 +643,214 @@ async def test_control_connection_closed(
             {ATTR_ENTITY_ID: entity_id, **service_data},
             blocking=True,
         )
+
+
+async def test_media_player_image_data_url(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test media player entity picture with a data URL thumbnail and updates."""
+    b64_png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    png_bytes = base64.b64decode(b64_png)
+    data_url_png = f"data:image/png;base64,{b64_png}"
+
+    coordinator = init_integration.runtime_data
+    await coordinator.async_handle_module(
+        Module.MEDIA,
+        Media(
+            title="Test Song",
+            thumbnail=data_url_png,
+        ),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    entity_picture = state.attributes.get("entity_picture")
+    assert entity_picture is not None
+    assert entity_picture.startswith(f"/api/media_player_proxy/{ENTITY_ID}?")
+
+    client = await hass_client_no_auth()
+    resp = await client.get(entity_picture)
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Content-Type"] == "image/png"
+    assert await resp.read() == png_bytes
+
+    # Update with a different thumbnail (JPEG) and verify cache token and image change
+    b64_jpeg = (
+        "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP///////////////////////////////////"
+        "///////////////////////////////////////////////////wgALCAABAAEBAREA"
+        "/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="
+    )
+    jpeg_bytes = base64.b64decode(b64_jpeg)
+    data_url_jpeg = f"data:image/jpeg;base64,{b64_jpeg}"
+
+    await coordinator.async_handle_module(
+        Module.MEDIA,
+        Media(
+            title="Another Song",
+            thumbnail=data_url_jpeg,
+        ),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    entity_picture_updated = state.attributes.get("entity_picture")
+    assert entity_picture_updated is not None
+    assert entity_picture_updated != entity_picture
+
+    cache_1 = parse_qs(urlsplit(entity_picture).query)["cache"][0]
+    cache_2 = parse_qs(urlsplit(entity_picture_updated).query)["cache"][0]
+    assert cache_1 != cache_2
+
+    resp = await client.get(entity_picture_updated)
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Content-Type"] == "image/jpeg"
+    assert await resp.read() == jpeg_bytes
+
+    # Update with thumbnail cleared and verify entity_picture is removed
+    await coordinator.async_handle_module(
+        Module.MEDIA,
+        Media(
+            title="Track Without Artwork",
+            thumbnail=None,
+        ),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("entity_picture") is None
+
+
+async def test_media_player_image_http_url(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test media player entity picture with an HTTP URL thumbnail."""
+    coordinator = init_integration.runtime_data
+    await coordinator.async_handle_module(
+        Module.MEDIA,
+        Media(
+            title="Test Song",
+            thumbnail="https://example.com/cover.jpg",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    entity_picture = state.attributes.get("entity_picture")
+    assert entity_picture is not None
+    assert entity_picture.startswith(f"/api/media_player_proxy/{ENTITY_ID}?")
+
+    client = await hass_client_no_auth()
+    with patch(
+        "homeassistant.components.media_player.MediaPlayerEntity.async_get_media_image",
+        return_value=(b"image_bytes", "image/jpeg"),
+    ) as mock_get_image:
+        resp = await client.get(entity_picture)
+        assert resp.status == HTTPStatus.OK
+        assert resp.headers["Content-Type"] == "image/jpeg"
+        assert await resp.read() == b"image_bytes"
+        mock_get_image.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "thumbnail",
+    [
+        pytest.param("data:text/plain;base64,aGVsbG8=", id="unsupported_mime"),
+        pytest.param("data:image/png;base64,invalid!@#$", id="invalid_base64"),
+        pytest.param("data:image/png,not_base64", id="missing_base64"),
+        pytest.param("invalid_string", id="invalid_string"),
+        pytest.param(None, id="none"),
+    ],
+)
+async def test_media_player_image_invalid_or_none(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    thumbnail: str | None,
+) -> None:
+    """Test media player entity picture is absent for invalid thumbnails."""
+    coordinator = init_integration.runtime_data
+    await coordinator.async_handle_module(
+        Module.MEDIA,
+        Media(
+            title="Test Song",
+            thumbnail=thumbnail,
+        ),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert "entity_picture" not in state.attributes
+
+    client = await hass_client()
+    resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_media_player_image_follows_source(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test media player artwork follows the selected player source."""
+    b64_png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    png_bytes = base64.b64decode(b64_png)
+    data_url_png = f"data:image/png;base64,{b64_png}"
+
+    coordinator = mock_config_entry.runtime_data
+    vlc = replace(FIXTURE_MEDIA.players[0], thumbnail=None)
+    spotify = replace(
+        vlc,
+        id="spotify",
+        name="Spotify",
+        title="Spotify Song",
+        thumbnail=data_url_png,
+    )
+    await coordinator.async_handle_module(
+        Module.MEDIA,
+        replace(FIXTURE_MEDIA, thumbnail=None, players=[vlc, spotify]),
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes.get("entity_picture") is None
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: "Spotify"},
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(ENTITY_ID))
+    entity_picture = state.attributes.get("entity_picture")
+    assert entity_picture is not None
+    assert entity_picture.startswith(f"/api/media_player_proxy/{ENTITY_ID}?")
+
+    client = await hass_client_no_auth()
+    resp = await client.get(entity_picture)
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Content-Type"] == "image/png"
+    assert await resp.read() == png_bytes
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.SOURCE: "Automatic",
+        },
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes.get("entity_picture") is None

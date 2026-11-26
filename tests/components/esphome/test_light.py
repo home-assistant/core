@@ -13,30 +13,22 @@ from aioesphomeapi import (
 import pytest
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
     ATTR_EFFECT_LIST,
-    ATTR_FLASH,
-    ATTR_HS_COLOR,
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MIN_COLOR_TEMP_KELVIN,
-    ATTR_RGB_COLOR,
-    ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
-    ATTR_TRANSITION,
-    ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     FLASH_LONG,
     FLASH_SHORT,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_ON,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockGenericDeviceEntryType
@@ -75,8 +67,8 @@ async def test_light_on_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -116,8 +108,8 @@ async def test_light_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -134,8 +126,11 @@ async def test_light_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.BRIGHTNESS: 127,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -153,8 +148,11 @@ async def test_light_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_TRANSITION: 2},
+        LightService.TURN_OFF,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.TRANSITION: 2,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -164,8 +162,11 @@ async def test_light_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_FLASH: FLASH_LONG},
+        LightService.TURN_OFF,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.FLASH: FLASH_LONG,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -175,8 +176,11 @@ async def test_light_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_TRANSITION: 2},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.TRANSITION: 2,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -194,8 +198,11 @@ async def test_light_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_FLASH: FLASH_SHORT},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.FLASH: FLASH_SHORT,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -250,8 +257,8 @@ async def test_light_legacy_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -306,8 +313,8 @@ async def test_light_brightness_on_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -324,8 +331,11 @@ async def test_light_brightness_on_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.BRIGHTNESS: 127,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -377,8 +387,8 @@ async def test_light_legacy_white_converted_to_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -441,8 +451,8 @@ async def test_light_legacy_white_with_rgb(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_WHITE: 60},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light", LightServiceArgument.WHITE: 60},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -500,8 +510,8 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -518,8 +528,11 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.BRIGHTNESS: 127,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -570,8 +583,8 @@ async def test_light_on_and_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -620,8 +633,8 @@ async def test_rgb_color_temp_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -638,8 +651,11 @@ async def test_rgb_color_temp_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.BRIGHTNESS: 127,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -657,8 +673,11 @@ async def test_rgb_color_temp_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 2500},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.COLOR_TEMP_KELVIN: 2500,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -708,8 +727,8 @@ async def test_light_rgb(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -728,8 +747,11 @@ async def test_light_rgb(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.BRIGHTNESS: 127,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -749,11 +771,11 @@ async def test_light_rgb(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_my_light",
-            ATTR_BRIGHTNESS: 127,
-            ATTR_HS_COLOR: (100, 100),
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.BRIGHTNESS: 127,
+            LightServiceArgument.HS_COLOR: (100, 100),
         },
         blocking=True,
     )
@@ -776,8 +798,11 @@ async def test_light_rgb(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.RGB_COLOR: (255, 255, 255),
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -847,8 +872,8 @@ async def test_light_rgbw(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -868,8 +893,11 @@ async def test_light_rgbw(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.BRIGHTNESS: 127,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -890,11 +918,11 @@ async def test_light_rgbw(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_my_light",
-            ATTR_BRIGHTNESS: 127,
-            ATTR_HS_COLOR: (100, 100),
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.BRIGHTNESS: 127,
+            LightServiceArgument.HS_COLOR: (100, 100),
         },
         blocking=True,
     )
@@ -919,8 +947,11 @@ async def test_light_rgbw(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.RGB_COLOR: (255, 255, 255),
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -943,8 +974,11 @@ async def test_light_rgbw(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.RGBW_COLOR: (255, 255, 255, 255),
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1028,8 +1062,8 @@ async def test_light_rgbww_with_cold_warm_white_support(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1046,8 +1080,11 @@ async def test_light_rgbww_with_cold_warm_white_support(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.BRIGHTNESS: 127,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1065,11 +1102,11 @@ async def test_light_rgbww_with_cold_warm_white_support(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_my_light",
-            ATTR_BRIGHTNESS: 127,
-            ATTR_HS_COLOR: (100, 100),
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.BRIGHTNESS: 127,
+            LightServiceArgument.HS_COLOR: (100, 100),
         },
         blocking=True,
     )
@@ -1090,8 +1127,11 @@ async def test_light_rgbww_with_cold_warm_white_support(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.RGB_COLOR: (255, 255, 255),
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1110,8 +1150,11 @@ async def test_light_rgbww_with_cold_warm_white_support(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.RGBW_COLOR: (255, 255, 255, 255),
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1131,10 +1174,10 @@ async def test_light_rgbww_with_cold_warm_white_support(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_my_light",
-            ATTR_RGBWW_COLOR: (255, 255, 255, 255, 255),
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.RGBWW_COLOR: (255, 255, 255, 255, 255),
         },
         blocking=True,
     )
@@ -1156,8 +1199,11 @@ async def test_light_rgbww_with_cold_warm_white_support(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 2500},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.COLOR_TEMP_KELVIN: 2500,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1230,8 +1276,8 @@ async def test_light_rgbww_without_cold_warm_white_support(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1252,8 +1298,11 @@ async def test_light_rgbww_without_cold_warm_white_support(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.BRIGHTNESS: 127,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1275,11 +1324,11 @@ async def test_light_rgbww_without_cold_warm_white_support(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_my_light",
-            ATTR_BRIGHTNESS: 127,
-            ATTR_HS_COLOR: (100, 100),
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.BRIGHTNESS: 127,
+            LightServiceArgument.HS_COLOR: (100, 100),
         },
         blocking=True,
     )
@@ -1306,62 +1355,68 @@ async def test_light_rgbww_without_cold_warm_white_support(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
-        blocking=True,
-    )
-    mock_client.light_command.assert_has_calls(
-        [
-            call(
-                key=1,
-                state=True,
-                color_brightness=pytest.approx(0.4235294117647059),
-                color_temperature=276.5,
-                white=1,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
-                rgb=(0, pytest.approx(0.5462962962962963), 1.0),
-                device_id=0,
-            )
-        ]
-    )
-    mock_client.light_command.reset_mock()
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGBW_COLOR: (255, 255, 255, 255)},
-        blocking=True,
-    )
-    mock_client.light_command.assert_has_calls(
-        [
-            call(
-                key=1,
-                state=True,
-                color_brightness=pytest.approx(0.4235294117647059),
-                white=1,
-                color_temperature=276.5,
-                color_mode=LightColorCapability.RGB
-                | LightColorCapability.WHITE
-                | LightColorCapability.COLOR_TEMPERATURE
-                | LightColorCapability.ON_OFF
-                | LightColorCapability.BRIGHTNESS,
-                rgb=(0, pytest.approx(0.5462962962962963), 1.0),
-                device_id=0,
-            )
-        ]
-    )
-    mock_client.light_command.reset_mock()
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_my_light",
-            ATTR_RGBWW_COLOR: (255, 255, 255, 255, 255),
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.RGB_COLOR: (255, 255, 255),
+        },
+        blocking=True,
+    )
+    mock_client.light_command.assert_has_calls(
+        [
+            call(
+                key=1,
+                state=True,
+                color_brightness=pytest.approx(0.4235294117647059),
+                color_temperature=276.5,
+                white=1,
+                color_mode=LightColorCapability.RGB
+                | LightColorCapability.WHITE
+                | LightColorCapability.COLOR_TEMPERATURE
+                | LightColorCapability.ON_OFF
+                | LightColorCapability.BRIGHTNESS,
+                rgb=(0, pytest.approx(0.5462962962962963), 1.0),
+                device_id=0,
+            )
+        ]
+    )
+    mock_client.light_command.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.RGBW_COLOR: (255, 255, 255, 255),
+        },
+        blocking=True,
+    )
+    mock_client.light_command.assert_has_calls(
+        [
+            call(
+                key=1,
+                state=True,
+                color_brightness=pytest.approx(0.4235294117647059),
+                white=1,
+                color_temperature=276.5,
+                color_mode=LightColorCapability.RGB
+                | LightColorCapability.WHITE
+                | LightColorCapability.COLOR_TEMPERATURE
+                | LightColorCapability.ON_OFF
+                | LightColorCapability.BRIGHTNESS,
+                rgb=(0, pytest.approx(0.5462962962962963), 1.0),
+                device_id=0,
+            )
+        ]
+    )
+    mock_client.light_command.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.RGBWW_COLOR: (255, 255, 255, 255, 255),
         },
         blocking=True,
     )
@@ -1387,8 +1442,11 @@ async def test_light_rgbww_without_cold_warm_white_support(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 2500},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.COLOR_TEMP_KELVIN: 2500,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1458,8 +1516,8 @@ async def test_light_color_temp(
     assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1478,8 +1536,8 @@ async def test_light_color_temp(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls([call(key=1, state=False, device_id=0)])
@@ -1532,8 +1590,8 @@ async def test_light_color_temp_no_mireds_set(
     assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 0
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1552,8 +1610,11 @@ async def test_light_color_temp_no_mireds_set(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 6000},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.COLOR_TEMP_KELVIN: 6000,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1573,8 +1634,8 @@ async def test_light_color_temp_no_mireds_set(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls([call(key=1, state=False, device_id=0)])
@@ -1637,8 +1698,8 @@ async def test_light_color_temp_legacy(
     assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1657,8 +1718,8 @@ async def test_light_color_temp_legacy(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls([call(key=1, state=False, device_id=0)])
@@ -1720,8 +1781,8 @@ async def test_light_rgb_legacy(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1737,8 +1798,8 @@ async def test_light_rgb_legacy(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls([call(key=1, state=False, device_id=0)])
@@ -1746,8 +1807,11 @@ async def test_light_rgb_legacy(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_RGB_COLOR: (255, 255, 255)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.RGB_COLOR: (255, 255, 255),
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1804,8 +1868,11 @@ async def test_light_effects(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_EFFECT: "effect1"},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.EFFECT: "effect1",
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1873,8 +1940,8 @@ async def test_only_cold_warm_white_support(
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 0
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1884,8 +1951,11 @@ async def test_only_cold_warm_white_support(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_BRIGHTNESS: 127},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.BRIGHTNESS: 127,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1903,8 +1973,11 @@ async def test_only_cold_warm_white_support(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 2500},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.COLOR_TEMP_KELVIN: 2500,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -1926,11 +1999,11 @@ async def test_only_cold_warm_white_support(
     # result in brightness being applied twice (b² effect)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_my_light",
-            ATTR_BRIGHTNESS: 127,
-            ATTR_COLOR_TEMP_KELVIN: 3600,
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.BRIGHTNESS: 127,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 3600,
         },
         blocking=True,
     )
@@ -2000,8 +2073,11 @@ async def test_cold_warm_white_no_mireds_set(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 3600},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.test_my_light",
+            LightServiceArgument.COLOR_TEMP_KELVIN: 3600,
+        },
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -2053,8 +2129,8 @@ async def test_light_no_color_modes(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     mock_client.light_command.assert_has_calls(
@@ -2094,8 +2170,8 @@ async def test_light_turn_on_before_state_received(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_my_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_my_light"},
         blocking=True,
     )
     # Without a current state there is no color mode to keep, so the

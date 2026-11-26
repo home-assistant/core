@@ -14,16 +14,15 @@ import probatio
 import pytest
 
 from homeassistant.const import (
-    ATTR_LABEL_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_CONDITION,
-    CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import (
@@ -217,7 +216,7 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
     return [
         (
             {
-                CONF_ENTITY_ID: [
+                TargetKey.ENTITY_ID: [
                     f"{domain}.standalone_{domain}",
                     f"{domain}.standalone2_{domain}",
                 ]
@@ -225,7 +224,7 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
             f"{domain}.standalone_{domain}",
             2,
         ),
-        ({ATTR_LABEL_ID: "test_label"}, f"{domain}.label_{domain}", 3),
+        ({TargetKey.LABEL_ID: "test_label"}, f"{domain}.label_{domain}", 3),
     ]
 
 
@@ -1717,7 +1716,7 @@ async def _validate_condition_options(
     """Assert that a condition accepts or rejects the given options."""
     config: dict[str, Any] = {CONF_CONDITION: condition}
     if supports_target:
-        config[CONF_TARGET] = {ATTR_LABEL_ID: "test_label"}
+        config[CONF_TARGET] = {TargetKey.LABEL_ID: "test_label"}
     if options is not None:
         config[CONF_OPTIONS] = options
     if valid:
@@ -1831,7 +1830,7 @@ async def _validate_trigger_options(
     """Assert that a trigger accepts or rejects the given options during validation."""
     trigger_config: dict[str, Any] = {CONF_PLATFORM: trigger}
     if supports_target:
-        trigger_config[CONF_TARGET] = {ATTR_LABEL_ID: "test_label"}
+        trigger_config[CONF_TARGET] = {TargetKey.LABEL_ID: "test_label"}
     if options is not None:
         trigger_config[CONF_OPTIONS] = options
     if valid:
@@ -2746,7 +2745,7 @@ async def assert_trigger_ignores_limit_entities_with_wrong_unit(
     await hass.async_block_till_done()
 
     await arm_trigger(
-        hass, trigger, trigger_options, {CONF_ENTITY_ID: [entity_id]}, calls
+        hass, trigger, trigger_options, {TargetKey.ENTITY_ID: [entity_id]}, calls
     )
 
     # Cycle entity state - should NOT fire (all limit entities have wrong unit)
@@ -2822,7 +2821,7 @@ async def assert_numerical_condition_unit_conversion(
         cond = await create_target_condition(
             hass,
             condition=condition,
-            target={CONF_ENTITY_ID: [entity_id]},
+            target={TargetKey.ENTITY_ID: [entity_id]},
             behavior="any",
             condition_options=condition_options,
         )
@@ -2837,7 +2836,7 @@ async def assert_numerical_condition_unit_conversion(
     cond = await create_target_condition(
         hass,
         condition=condition,
-        target={CONF_ENTITY_ID: [entity_id]},
+        target={TargetKey.ENTITY_ID: [entity_id]},
         behavior="any",
         condition_options=limit_entity_condition_options,
     )

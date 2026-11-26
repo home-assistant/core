@@ -16,21 +16,20 @@ from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
 from homeassistant.components.totalconnect.const import DOMAIN
-from homeassistant.components.totalconnect.services import (
-    SERVICE_ALARM_ARM_AWAY_INSTANT,
-    SERVICE_ALARM_ARM_HOME_INSTANT,
-)
+from homeassistant.components.totalconnect.services import TotalConnectService
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_DISARM,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -155,8 +154,8 @@ async def test_disarming(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: entity_id, ATTR_CODE: CODE},
+        AlarmControlPanelService.DISARM,
+        {TargetKey.ENTITY_ID: entity_id, AlarmControlPanelServiceArgument.CODE: CODE},
         blocking=True,
     )
     assert mock_partition.disarm.call_args[1] == {"usercode": ""}
@@ -184,8 +183,11 @@ async def test_disarming_invalid_usercode(
     with pytest.raises(ServiceValidationError, match="Incorrect code entered"):
         await hass.services.async_call(
             ALARM_CONTROL_PANEL_DOMAIN,
-            SERVICE_ALARM_DISARM,
-            {ATTR_ENTITY_ID: entity_id, ATTR_CODE: "invalid_code"},
+            AlarmControlPanelService.DISARM,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                AlarmControlPanelServiceArgument.CODE: "invalid_code",
+            },
             blocking=True,
         )
     assert mock_partition.disarm.call_count == 0
@@ -195,8 +197,8 @@ async def test_disarming_invalid_usercode(
 @pytest.mark.parametrize(
     ("service", "arm_type"),
     [
-        (SERVICE_ALARM_ARM_HOME_INSTANT, ArmType.STAY_INSTANT),
-        (SERVICE_ALARM_ARM_AWAY_INSTANT, ArmType.AWAY_INSTANT),
+        (TotalConnectService.ARM_HOME_INSTANT, ArmType.STAY_INSTANT),
+        (TotalConnectService.ARM_AWAY_INSTANT, ArmType.AWAY_INSTANT),
     ],
 )
 async def test_instant_arming(
@@ -285,8 +287,8 @@ async def test_arming_exceptions(
 @pytest.mark.parametrize(
     ("service", "prefix"),
     [
-        (SERVICE_ALARM_ARM_HOME_INSTANT, "arm_home_instant"),
-        (SERVICE_ALARM_ARM_AWAY_INSTANT, "arm_away_instant"),
+        (TotalConnectService.ARM_HOME_INSTANT, "arm_home_instant"),
+        (TotalConnectService.ARM_AWAY_INSTANT, "arm_away_instant"),
     ],
 )
 async def test_instant_arming_exceptions(

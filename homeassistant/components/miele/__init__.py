@@ -57,7 +57,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> Non
     _coordinator = MieleDataUpdateCoordinator(hass, entry, _api)
     await _coordinator.async_config_entry_first_refresh()
     _aux_coordinator = MieleAuxDataUpdateCoordinator(hass, entry, _api)
-    await _aux_coordinator.async_config_entry_first_refresh()
+    # Filling levels are optional. Their endpoint fails independently of the
+    # appliance data, so a failure must not block setup of the whole entry.
+    await _aux_coordinator.async_refresh()
 
     entry.runtime_data = MieleRuntimeData(_api, _coordinator, _aux_coordinator)
 

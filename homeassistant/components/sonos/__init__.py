@@ -192,6 +192,7 @@ class SonosDiscoveryManager:
         self.data = data
         self.hosts = set(hosts)
         self.hosts_in_error: dict[str, bool] = {}
+        self.unresolved_hosts: set[str] = set()
         self.discovery_lock = asyncio.Lock()
         self.creation_lock = asyncio.Lock()
         self._known_invisible: set[SoCo] = set()
@@ -254,6 +255,13 @@ class SonosDiscoveryManager:
     def is_device_invisible(self, ip_address: str) -> bool:
         """Check if device at provided IP is known to be invisible."""
         return any(x for x in self._known_invisible if x.ip_address == ip_address)
+
+    def is_available_speaker_ip(self, ip_address: str) -> bool:
+        """Check if provided IP belongs to a known, available speaker."""
+        return any(
+            speaker.available and speaker.soco.ip_address == ip_address
+            for speaker in self.data.discovered.values()
+        )
 
     async def _process_http_connection_error(
         self, err: HTTPError, ip_address: str
@@ -513,13 +521,29 @@ class SonosDiscoveryManager:
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)
 
+    async def _async_resolve_host(self, host: str) -> str | None:
+        """Return the IP address of a manual host, None when it can not be resolved."""
+        try:
+            ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
+        except OSError as err:
+            if host in self.unresolved_hosts:
+                _LOGGER.debug("Could not resolve Sonos host %s: %s", host, err)
+            else:
+                _LOGGER.warning("Could not resolve Sonos host %s: %s", host, err)
+                self.unresolved_hosts.add(host)
+            return None
+
+        self.unresolved_hosts.discard(host)
+        return ip_addr
+
     async def async_poll_manual_hosts(self, now: dt.datetime | None = None) -> None:
         """Add and maintain Sonos devices from a manual configuration."""
 
         # Loop through each configured host and verify that
         # Soco attributes are available for it.
         for host in self.hosts.copy():
-            ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
+            if (ip_addr := await self._async_resolve_host(host)) is None:
+                continue
             soco = SoCo(ip_addr)
             try:
                 visible_zones = await self.hass.async_add_executor_job(
@@ -565,7 +589,8 @@ class SonosDiscoveryManager:
         # error. Send a discovery message if a speaker does
         # not already exist, or ping if it is unavailable.
         for host in self.hosts.copy():
-            ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
+            if (ip_addr := await self._async_resolve_host(host)) is None:
+                continue
             soco = SoCo(ip_addr)
             # Skip hosts that are in error to avoid blocking
             # call on soco.uuid in event loop
@@ -662,6 +687,14 @@ class SonosDiscoveryManager:
                 await self.async_subscribe_to_zone_updates(discovered_ip)
             elif uid not in self.data.discovered:
                 if self.is_device_invisible(discovered_ip):
+                    return
+                if self.is_available_speaker_ip(discovered_ip):
+                    # Subscribing would replace that speaker's ZoneGroupTopology subscription
+                    _LOGGER.debug(
+                        "Ignoring %s for %s, IP belongs to a known speaker",
+                        uid,
+                        discovered_ip,
+                    )
                     return
                 await self.async_subscribe_to_zone_updates(discovered_ip)
             elif boot_seqnum and boot_seqnum > self.data.boot_counts[uid]:

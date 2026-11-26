@@ -14,7 +14,6 @@ from pychromecast.const import CAST_TYPE_CHROMECAST, CAST_TYPE_GROUP
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
-    assert_setup_component,
     async_load_fixture,
     mock_platform,
 )
@@ -902,7 +901,13 @@ async def test_entity_availability(hass: HomeAssistant) -> None:
     assert state.state == "unavailable"
 
 
-@pytest.mark.parametrize(("port", "entry_type"), [(8009, None), (12345, None)])
+@pytest.mark.parametrize(
+    ("port", "entry_type", "connections"),
+    [
+        (8009, None, {(dr.CONNECTION_UPNP, f"uuid:{FakeUUID}")}),
+        (12345, None, set()),
+    ],
+)
 async def test_device_registry(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -910,6 +915,7 @@ async def test_device_registry(
     entity_registry: er.EntityRegistry,
     port,
     entry_type,
+    connections,
 ) -> None:
     """Test device registry integration."""
     assert await async_setup_component(hass, "config", {})
@@ -937,6 +943,7 @@ async def test_device_registry(
     device_entry = device_registry.async_get(entity_entry.device_id)
     assert entity_entry.device_id == device_entry.id
     assert device_entry.entry_type == entry_type
+    assert device_entry.connections == connections
 
     # Check that the chromecast object is torn down when the device is removed
     chromecast.disconnect.assert_not_called()
@@ -2100,12 +2107,7 @@ async def test_failed_cast_other_url(
 ) -> None:
     """Test warning when casting from internal_url fails."""
     await async_setup_component(hass, "homeassistant", {})
-    with assert_setup_component(1, tts.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            tts.DOMAIN,
-            {tts.DOMAIN: {"platform": "demo"}},
-        )
+    assert await async_setup_component(hass, tts.DOMAIN, {})
 
     info = get_fake_chromecast_info()
     chromecast, _ = await async_setup_media_player_cast(hass, info)
@@ -2129,10 +2131,7 @@ async def test_failed_cast_internal_url(
         hass,
         {"internal_url": "http://example.local:8123"},
     )
-    with assert_setup_component(1, tts.DOMAIN):
-        assert await async_setup_component(
-            hass, tts.DOMAIN, {tts.DOMAIN: {"platform": "demo"}}
-        )
+    assert await async_setup_component(hass, tts.DOMAIN, {})
 
     info = get_fake_chromecast_info()
     chromecast, _ = await async_setup_media_player_cast(hass, info)
@@ -2159,12 +2158,7 @@ async def test_failed_cast_external_url(
         hass,
         {"external_url": "http://example.com:8123"},
     )
-    with assert_setup_component(1, tts.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            tts.DOMAIN,
-            {tts.DOMAIN: {"platform": "demo"}},
-        )
+    assert await async_setup_component(hass, tts.DOMAIN, {})
 
     info = get_fake_chromecast_info()
     chromecast, _ = await async_setup_media_player_cast(hass, info)

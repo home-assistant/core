@@ -129,6 +129,21 @@ async def test_device_remove_devices(
     client = await hass_ws_client(hass)
     response = await client.remove_device(device_entry.id)
     assert not response["success"]
+    assert response["error"]["message"] == (
+        "This device is still connected to Jellyfin. It cannot be removed while "
+        "the client is active. Disable or hide it instead"
+    )
+
+    server_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SERVER-UUID"), mock_config_entry.entry_id
+    )
+    assert server_device_entry
+    response = await client.remove_device(server_device_entry.id)
+    assert not response["success"]
+    assert response["error"]["message"] == (
+        "The Jellyfin server device cannot be removed. Remove the Jellyfin "
+        "integration instead"
+    )
 
     old_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,

@@ -52,6 +52,7 @@ from .const import (
     DOMAIN,
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
+    MODEL_AIRPURIFIER_3H,
     MODEL_FAN_1C,
     MODEL_FAN_P5,
     MODEL_FAN_P9,
@@ -136,6 +137,7 @@ LAZY_DISCOVER_FOR_MODEL = {
     "zhimi.fan.za5": True,
     "zhimi.airpurifier.za1": True,
     "dmaker.fan.1c": True,
+    MODEL_AIRPURIFIER_3H: True,
 }
 
 

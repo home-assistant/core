@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, MutableMapping
+from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 import hashlib
@@ -14,8 +15,8 @@ from pathlib import Path
 import re
 import secrets
 import struct
-from time import monotonic
-from typing import Any, Final, Protocol
+from time import monotonic, time, time_ns
+from typing import TYPE_CHECKING, Any, Final, Protocol
 
 from aiohttp import web
 import mutagen
@@ -47,6 +48,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.os_error import os_read_error, os_write_error
 from homeassistant.helpers.typing import ConfigType, Undefined
 from homeassistant.util import language as language_util, ulid as ulid_util
 
@@ -258,7 +260,7 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
     default_entity_id: str | None = None
 
     for entity in hass.data[DATA_COMPONENT].entities:
-        if entity.platform and entity.platform.platform_name == "cloud":
+        if entity.platform.platform_name == "cloud":
             return entity.entity_id
 
         if default_entity_id is None:
@@ -613,27 +615,29 @@ async def _async_convert_audio(
 
     if is_input_gen:
         # Input is a generator, so we must manually feed in chunks
-        assert isinstance(audio_input, AsyncGenerator)
-        assert process.stdin
+        stdin = process.stdin
+        if TYPE_CHECKING:
+            assert isinstance(audio_input, AsyncGenerator)
+            assert stdin is not None
 
         async def write_input() -> None:
-            assert process.stdin
             try:
                 async for chunk in audio_input:
-                    process.stdin.write(chunk)
-                    await process.stdin.drain()
+                    stdin.write(chunk)
+                    await stdin.drain()
             finally:
-                if process.stdin:
-                    process.stdin.close()
+                stdin.close()
 
         writer_task = hass.async_create_background_task(
             write_input(), "tts_ffmpeg_conversion"
         )
 
-    assert process.stdout
+    stdout = process.stdout
+    if TYPE_CHECKING:
+        assert stdout is not None
     try:
         while True:
-            chunk = await process.stdout.read(FFMPEG_CHUNK_SIZE)
+            chunk = await stdout.read(FFMPEG_CHUNK_SIZE)
             if not chunk:
                 break
             yield chunk
@@ -645,8 +649,10 @@ async def _async_convert_audio(
         # Wait for process termination and check for errors.
         retcode = await process.wait()
         if retcode != 0:
-            assert process.stderr
-            stderr_data = await process.stderr.read()
+            stderr = process.stderr
+            if TYPE_CHECKING:
+                assert stderr is not None
+            stderr_data = await stderr.read()
             # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(stderr_data.decode())
             raise HomeAssistantError(
@@ -1042,6 +1048,7 @@ class SpeechManager:
         self.cache_dir = cache_dir
         self.memory_cache_maxage = memory_cache_maxage
         self.file_cache: dict[str, str] = {}
+        self._files_pending_removal: set[str] = set()
         self.mem_cache: dict[str, TTSCache] = {}
         self.token_to_stream: dict[str, ResultStream] = {}
         self.converted_override_cache: dict[
@@ -1057,19 +1064,23 @@ class SpeechManager:
         try:
             self.cache_dir = _init_tts_cache_dir(self.hass, self.cache_dir)
         except OSError as err:
-            raise HomeAssistantError(f"Can't init cache dir {err}") from err
+            raise os_write_error(err, self.hass.config.path(self.cache_dir)) from err
 
         try:
             return _get_cache_files(self.cache_dir)
         except OSError as err:
-            raise HomeAssistantError(f"Can't read cache dir {err}") from err
+            raise os_read_error(err, self.cache_dir) from err
 
     async def async_init_cache(self) -> None:
         """Init config folder and load file cache."""
         self.file_cache.update(await self.hass.async_add_executor_job(self._init_cache))
 
-    async def async_clear_cache(self) -> None:
-        """Read file cache and delete files."""
+    async def async_clear_cache(self, days: int | None = None) -> None:
+        """Delete cached files, or only those not used for the given days."""
+        if days is not None:
+            await self._async_clear_unused_cache(days)
+            return
+
         self.mem_cache.clear()
 
         def remove_files(files: list[str]) -> None:
@@ -1085,6 +1096,66 @@ class SpeechManager:
         )
         self.file_cache.clear()
         await task
+
+    async def _async_clear_unused_cache(self, days: int) -> None:
+        """Delete cached files that were not used for the given days."""
+        cutoff = time() - days * 86400
+
+        def find_unused_files(files: dict[str, str]) -> list[str]:
+            """Return the keys of files that were not used since the cutoff."""
+            unused = []
+            for cache_key, filename in files.items():
+                try:
+                    if (
+                        os.stat(os.path.join(self.cache_dir, filename)).st_atime
+                        >= cutoff
+                    ):
+                        continue
+                except FileNotFoundError:
+                    pass
+                except OSError as err:
+                    _LOGGER.warning("Can't check cache file '%s': %s", filename, err)
+                    continue
+                unused.append(cache_key)
+            return unused
+
+        def remove_files(files: dict[str, str]) -> dict[str, str]:
+            """Remove files from filesystem and return the ones that failed."""
+            failed = {}
+            for cache_key, filename in files.items():
+                try:
+                    os.remove(os.path.join(self.cache_dir, filename))
+                except FileNotFoundError:
+                    pass
+                except OSError as err:
+                    _LOGGER.warning("Can't remove cache file '%s': %s", filename, err)
+                    failed[cache_key] = filename
+            return failed
+
+        # Messages in the memory cache are in use
+        unused = await self.hass.async_add_executor_job(
+            find_unused_files,
+            {
+                cache_key: filename
+                for cache_key, filename in self.file_cache.items()
+                if cache_key not in self.mem_cache
+            },
+        )
+        # Unindex before removing, so a request started meanwhile regenerates
+        # the audio instead of reading a removed file
+        files = {
+            cache_key: filename
+            for cache_key in unused
+            if cache_key not in self.mem_cache
+            and (filename := self.file_cache.pop(cache_key, None))
+        }
+        self._files_pending_removal.update(files.values())
+        try:
+            failed = await self.hass.async_add_executor_job(remove_files, files)
+        finally:
+            self._files_pending_removal.difference_update(files.values())
+        for cache_key, filename in failed.items():
+            self.file_cache.setdefault(cache_key, filename)
 
     @callback
     def async_get_cache_file_path(self, cache_key: str) -> Path | None:
@@ -1329,6 +1400,10 @@ class SpeechManager:
         # Is speech already in memory
         if cache := self.mem_cache.get(cache_key):
             _LOGGER.debug("Found audio in cache for %s", message[0:32])
+            if filename := self.file_cache.get(cache_key):
+                self.hass.async_add_executor_job(
+                    _mark_file_used, os.path.join(self.cache_dir, filename)
+                )
             return cache
 
         store_to_disk = use_file_cache
@@ -1447,6 +1522,10 @@ class SpeechManager:
             raise HomeAssistantError(
                 f"TTS filename '{filename}' from {engine_instance.name} is invalid!"
             )
+
+        # Writing now could race the removal of the old file with this name
+        if filename in self._files_pending_removal:
+            return
 
         if cache.extension == "mp3":
             name = (
@@ -1628,13 +1707,15 @@ class SpeechManager:
         def load_speech() -> bytes:
             """Load a speech from filesystem."""
             with open(voice_file, "rb") as speech:
-                return speech.read()
+                data = speech.read()
+                _mark_file_used(speech.fileno())
+                return data
 
         try:
             data = await self.hass.async_add_executor_job(load_speech)
         except OSError as err:
-            del self.file_cache[cache_key]
-            raise HomeAssistantError(f"Can't read {voice_file}") from err
+            self.file_cache.pop(cache_key, None)
+            raise os_read_error(err, voice_file) from err
 
         yield data
 
@@ -1678,6 +1759,12 @@ class SpeechManager:
             _LOGGER.error("ID3 tag error: %s", err)
 
         return data_bytes.getvalue()
+
+
+def _mark_file_used(file: int | str) -> None:
+    """Set the access time of a cache file, independent of the mount's atime setting."""
+    with suppress(OSError):
+        os.utime(file, ns=(time_ns(), os.stat(file).st_mtime_ns))
 
 
 def _init_tts_cache_dir(hass: HomeAssistant, cache_dir: str) -> str:
@@ -1836,8 +1923,7 @@ def websocket_list_engines(
                 language, entity.supported_languages, country
             )
         providers.append(provider_info)
-        if entity.platform:
-            entity_domains.add(entity.platform.platform_name)
+        entity_domains.add(entity.platform.platform_name)
     for engine_id, provider in hass.data[DATA_TTS_MANAGER].providers.items():
         if provider.has_entity:
             continue
