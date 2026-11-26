@@ -200,7 +200,7 @@ aioamazondevices==18.0.0
 aioambient==2024.08.0
 
 # homeassistant.components.any_list
-aioanylist==1.0.2
+aioanylist==1.0.3
 
 # homeassistant.components.apcupsd
 aioapcaccess==1.0.0
@@ -228,6 +228,9 @@ aioazuredevops==2.2.2
 
 # homeassistant.components.baf
 aiobafi6==0.9.0
+
+# homeassistant.components.bambu_lab
+aiobambulab==0.0.1
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.aws
@@ -874,7 +877,7 @@ debugpy==1.8.22
 decora-wifi==1.4
 
 # homeassistant.components.ecovacs
-deebot-client==18.7.0
+deebot-client==18.8.0
 
 # homeassistant.components.ihc
 # homeassistant.components.ohmconnect
@@ -1360,7 +1363,7 @@ holidays==0.109
 home-assistant-frontend==20261125.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.10.27
+home-assistant-intents==2026.11.25
 
 # homeassistant.components.homekit
 homekit-audio-proxy==1.2.1
@@ -1526,7 +1529,7 @@ kiwiki-client==0.1.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.11.8.11926
+knx-frontend==2026.11.25.154408
 
 # homeassistant.components.knx
 knx-telegram-store[sqlite,postgres]==0.16.0
@@ -1633,7 +1636,7 @@ lxml==6.1.3
 lyngdorf==2.3.0
 
 # homeassistant.components.marantz_rs232
-marantz-rs232==2.1.1
+marantz-rs232==2.2.0
 
 # homeassistant.components.matrix
 matrix-nio==0.26.0
@@ -1665,6 +1668,9 @@ medcom-ble==0.1.1
 
 # homeassistant.components.melnor
 melnor-bluetooth==0.0.25
+
+# homeassistant.components.meraki
+meraki==4.7.0
 
 # homeassistant.components.message_bird
 messagebird==1.2.1
@@ -1916,7 +1922,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.3
 
 # homeassistant.components.opower
-opower==0.23.1
+opower==0.24.0
 
 # homeassistant.components.oralb
 oralb-ble==1.1.3
@@ -2731,7 +2737,7 @@ pysmlight==0.6.2
 pysnmp==7.1.27
 
 # homeassistant.components.snooz
-pysnooz==0.10.1
+pysnooz==0.11.1
 
 # homeassistant.components.soma
 pysoma==0.0.12
@@ -2930,7 +2936,7 @@ pytile==2024.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline
-pytouchline_extended==1.3.1
+pytouchline_extended==1.4.0
 
 # homeassistant.components.touchline_sl
 pytouchlinesl==0.6.0
@@ -3183,7 +3189,7 @@ simplehound==0.3
 simplepush[legacy]==3.8.0
 
 # homeassistant.components.simplisafe
-simplisafe-python==2026.06.0
+simplisafe-python==2026.09.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.4
@@ -3232,6 +3238,9 @@ solyx-energy-api-client==0.2.0
 
 # homeassistant.components.sonos
 sonos-websocket==0.2.0
+
+# homeassistant.components.sony_tv_rs232
+sony-tv-rs232==0.3.4
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
@@ -3303,7 +3312,7 @@ systembridgeconnector==5.29.0
 tailscale==1.0.0
 
 # homeassistant.components.tank_utility
-tank-utility==1.5.1
+tank-utility==1.5.3
 
 # homeassistant.components.tapsaff
 tapsaff==0.2.1

@@ -14,9 +14,10 @@ from reolink_aio.api import Host
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.event import async_call_later
+
+from .util import ReolinkConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ class ReolinkHlsPlayback:
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: ReolinkConfigEntry,
         api: Host,
         channel: int,
         stream: str,

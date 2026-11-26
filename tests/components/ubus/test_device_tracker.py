@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    STATE_HOME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -69,6 +70,25 @@ async def test_only_authorized_clients_are_tracked(
     assert {mac: device.connections for mac, device in devices.items()} == {
         mac: {(dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))} for mac in expected_names
     }
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_client_present_when_authorized_on_one_interface(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a client appears to be "home" when authorized on at least one interface."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_HOME
 
 
 @pytest.mark.parametrize(
@@ -188,6 +208,42 @@ async def test_missing_leases_keep_existing_device_name(
     assert phone.name == "my-phone"
     assert laptop is not None
     assert laptop.name == MAC_LAPTOP
+
+
+async def test_missing_uci_config_falls_back_to_mac_names(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test clients are named by MAC while the dnsmasq uci config is missing."""
+    mock_ubus.return_value.get_uci_config.return_value = None
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    phone = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), mock_config_entry.entry_id
+    )
+    assert phone is not None
+    assert phone.name == MAC_PHONE
+    laptop = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_LAPTOP), mock_config_entry.entry_id
+    )
+    assert laptop is not None
+    assert laptop.name == MAC_LAPTOP
+
+    # The hostnames are picked up on a later read once the config is available.
+    mock_ubus.return_value.get_uci_config.return_value = {
+        "values": {"cfg01": {"leasefile": "/var/dhcp/dnsmasq.leases"}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert device_registry.async_get(phone.id).name == "my-phone"
+    assert device_registry.async_get(laptop.id).name == "my-laptop"
 
 
 @pytest.mark.parametrize(
@@ -346,9 +402,13 @@ async def test_lease_reread_throttled_for_clients_without_hostname(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert file_read.call_count == 2
 
-    mock_ubus.return_value.get_hostapd_clients.return_value["clients"][MAC_GUEST][
-        "authorized"
-    ] = True
+    mock_ubus.return_value.get_hostapd_clients.side_effect = lambda interface: {
+        "clients": {
+            MAC_PHONE: {"authorized": True},
+            MAC_LAPTOP: {"authorized": True},
+            MAC_GUEST: {"authorized": True},
+        }
+    }
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -372,9 +432,13 @@ async def test_empty_lease_reread_keeps_known_hostnames(
     # A new client without a hostname triggers a reread, which is empty.
     file_read = mock_ubus.return_value.file_read
     file_read.return_value = {"data": ""}
-    mock_ubus.return_value.get_hostapd_clients.return_value["clients"][MAC_GUEST][
-        "authorized"
-    ] = True
+    mock_ubus.return_value.get_hostapd_clients.side_effect = lambda interface: {
+        "clients": {
+            MAC_PHONE: {"authorized": True},
+            MAC_LAPTOP: {"authorized": True},
+            MAC_GUEST: {"authorized": True},
+        }
+    }
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)

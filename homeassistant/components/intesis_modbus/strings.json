@@ -114,6 +114,32 @@
           }
         }
       }
+    },
+    "sensor": {
+      "error": {
+        "name": "Error",
+        "state": {
+          "communication_error": "Communication error with the unit",
+          "initialising": "Initializing",
+          "none": "No error",
+          "unit_error": "Unit error"
+        }
+      },
+      "error_code": {
+        "name": "Error code"
+      },
+      "operation_hours": {
+        "name": "Operation time"
+      },
+      "outdoor_intake_temperature": {
+        "name": "Outdoor intake temperature"
+      },
+      "return_path_temperature": {
+        "name": "Return path temperature"
+      },
+      "undervoltage_hours": {
+        "name": "Undervoltage time"
+      }
     }
   },
   "exceptions": {

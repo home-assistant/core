@@ -1,7 +1,8 @@
 """Recorder constants."""
 
 from enum import StrEnum
-from typing import TYPE_CHECKING
+import logging
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.const import (
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,  # noqa: F401
@@ -15,6 +16,8 @@ if TYPE_CHECKING:
 
 
 DOMAIN = "recorder"
+
+LOGGER: Final = logging.getLogger(__package__)
 
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
 
