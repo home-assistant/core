@@ -38,7 +38,6 @@ class E3dcDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Poll the power station."""
 
     config_entry: E3dcConfigEntry
-    # Set once setup has registered the power station's device
     station_device_id: str
 
     def __init__(
@@ -74,7 +73,22 @@ class E3dcDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     @override
     async def _async_setup(self) -> None:
+        # The first poll also reads the identity and probes which blocks the station serves
         await self._async_poll(HARDWARE_COMPONENTS)
+        if self.device.serial_number != self.config_entry.unique_id:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="serial_mismatch",
+                translation_placeholders={
+                    "expected": str(self.config_entry.unique_id),
+                    "found": str(self.device.serial_number),
+                },
+            )
+        # Register the power station before its parts, which link to it
+        station = dr.async_get(self.hass).async_get_or_create_from_info(
+            config_entry_id=self.config_entry.entry_id, device_info=self.device_info
+        )
+        self.station_device_id = station.id
 
     @override
     async def _async_update_data(self) -> None:

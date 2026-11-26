@@ -6,10 +6,9 @@ from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
-from homeassistant.helpers import device_registry as dr
 
 from .config_flow import create_modbus_params
-from .const import DOMAIN, UNIT_ID
+from .const import UNIT_ID
 from .coordinator import E3dcConfigEntry, E3dcDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -29,23 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: E3dcConfigEntry) -> None
     entry.async_on_unload(device.close)
 
     coordinator = E3dcDataUpdateCoordinator(hass, entry, device)
-    # The first poll also reads the identity and probes which blocks the station serves
     await coordinator.async_config_entry_first_refresh()
-    if device.serial_number != entry.unique_id:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="serial_mismatch",
-            translation_placeholders={
-                "expected": str(entry.unique_id),
-                "found": str(device.serial_number),
-            },
-        )
-
-    # Register the power station before its parts, which link to it
-    station = dr.async_get(hass).async_get_or_create_from_info(
-        config_entry_id=entry.entry_id, device_info=coordinator.device_info
-    )
-    coordinator.station_device_id = station.id
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

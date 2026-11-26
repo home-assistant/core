@@ -513,19 +513,19 @@ class _PartKind:
     """A kind of part that gets a device for each slot the power station reports."""
 
     kind: PartKind
-    present_fn: Callable[[E3dcPowerStation], Iterable[int]]
+    exists_fn: Callable[[E3dcPowerStation], Iterable[int]]
     sensors: tuple[E3dcPartSensorDescription, ...]
 
 
 PARTS = (
     _PartKind(
         kind=PartKind.POWER_METER,
-        present_fn=_installed_meters,
+        exists_fn=_installed_meters,
         sensors=POWER_METER_SENSORS,
     ),
     _PartKind(
         kind=PartKind.INVERTER,
-        present_fn=_connected_inverters,
+        exists_fn=_connected_inverters,
         sensors=INVERTER_SENSORS,
     ),
 )
@@ -558,7 +558,7 @@ async def async_setup_entry(
                 added_sensors.add(description.key)
                 entities.append(E3dcSensor(coordinator, description))
         for part_kind in PARTS:
-            for slot in part_kind.present_fn(device):
+            for slot in part_kind.exists_fn(device):
                 if (part_kind.kind, slot) in added_parts:
                     continue
                 added_parts.add((part_kind.kind, slot))
@@ -614,12 +614,12 @@ class E3dcPartSensor(E3dcEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, entity_description, part)
         self._slot = part.slot
-        self._present_fn = part_kind.present_fn
+        self._exists_fn = part_kind.exists_fn
 
     @property
     @override
     def available(self) -> bool:
-        return super().available and self._slot in self._present_fn(
+        return super().available and self._slot in self._exists_fn(
             self.coordinator.device
         )
 
