@@ -30,7 +30,7 @@
           "signing_key": "[%key:component::wiz::config::step::user::data::signing_key%]"
         },
         "data_description": {
-          "signing_key": "[%key:component::wiz::config::step::user::data_description::signing_key%]"
+          "signing_key": "Leave blank to keep the current key."
         }
       },
       "user": {
