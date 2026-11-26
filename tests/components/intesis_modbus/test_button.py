@@ -104,6 +104,20 @@ async def test_press_failure_raises_home_assistant_error(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_reset_gateway_accepts_an_unanswered_write(
+    hass: HomeAssistant, mock_connection: MockModbusConnection
+) -> None:
+    """The gateway restarts without answering the reset, which is not a failure."""
+    mock_connection.for_unit(1).fail_write(99, ModbusTimeoutError())
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: RESET_GATEWAY},
+        blocking=True,
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_buttons_stay_when_a_register_block_fails(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
