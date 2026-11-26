@@ -21,6 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
@@ -108,7 +109,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await c.async_first_refresh()
 
         if not c.last_update_success:
-            _LOGGER.error(f"Failed to fetch initial data: {c.last_exception}")  # noqa: G004
+            # translations aren't available until setup completes, so log the cause
+            err = c.last_exception
+            if isinstance(err, HomeAssistantError) and err.translation_key:
+                err = err.__cause__ or err
+            _LOGGER.error("Failed to fetch initial data: %s", err)
             return False
 
     assert location_coord.tcs is not None  # mypy
