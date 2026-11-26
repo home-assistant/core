@@ -49,6 +49,8 @@ from homeassistant.components.weather import (
 from homeassistant.const import Platform
 
 ATTRIBUTION = "Powered by AEMET OpenData"
+API_KEY_EXPIRATION_WARNING_DAYS = 7
+API_KEY_URL = "https://opendata.aemet.es/centrodedescargas/altaUsuario"
 CONF_RADAR_UPDATES = "radar_updates"
 CONF_STATION_UPDATES = "station_updates"
 PLATFORMS = [Platform.IMAGE, Platform.SENSOR, Platform.WEATHER]

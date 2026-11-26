@@ -58,17 +58,7 @@
       "message": "Only zones support the `{service}` action"
     }
   },
-  "issues": {
-    "deprecated_refresh_system_service": {
-      "description": "The `refresh_system` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Instead, use the `homeassistant.update_entity` action, targeting the controller's climate entity.",
-      "title": "Evohome 'Refresh system' action is deprecated"
-    }
-  },
   "services": {
-    "refresh_system": {
-      "description": "Pulls the latest data from the vendor's servers now, rather than waiting for the next scheduled update (deprecated).",
-      "name": "Refresh system"
-    },
     "set_dhw_override": {
       "description": "Overrides a DHW's state, either indefinitely or for a specified duration, after which it will revert to following its schedule.",
       "fields": {

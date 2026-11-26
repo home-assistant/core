@@ -20,9 +20,12 @@ from homeassistant.components.homekit.const import (
     TYPE_FAUCET,
     TYPE_HEATER_COOLER,
     TYPE_OUTLET,
+    TYPE_SET_TOP_BOX,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
+    TYPE_STREAMING_STICK,
     TYPE_SWITCH,
+    TYPE_TELEVISION,
     TYPE_THERMOSTAT,
     TYPE_VALVE,
 )
@@ -266,6 +269,51 @@ def test_type_covers(type_name, entity_id, state, attrs) -> None:
             "on",
             {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.PROJECTOR},
             {},
+        ),
+        (
+            "TelevisionMediaPlayer",
+            "media_player.tv",
+            "on",
+            {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV},
+            {CONF_TYPE: TYPE_TELEVISION},
+        ),
+        (
+            "SetTopBoxMediaPlayer",
+            "media_player.set_top_box",
+            "on",
+            {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV},
+            {CONF_TYPE: TYPE_SET_TOP_BOX},
+        ),
+        (
+            "SetTopBoxMediaPlayer",
+            "media_player.projector",
+            "on",
+            {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.PROJECTOR},
+            {CONF_TYPE: TYPE_SET_TOP_BOX},
+        ),
+        (
+            "StreamingStickMediaPlayer",
+            "media_player.streaming_stick",
+            "on",
+            {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV},
+            {CONF_TYPE: TYPE_STREAMING_STICK},
+        ),
+        (
+            "ReceiverMediaPlayer",
+            "media_player.receiver",
+            "on",
+            {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.RECEIVER},
+            {CONF_TYPE: TYPE_SET_TOP_BOX},
+        ),
+        (
+            "MediaPlayer",
+            "media_player.test",
+            "on",
+            {
+                ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.TURN_ON
+                | MediaPlayerEntityFeature.TURN_OFF
+            },
+            {CONF_FEATURE_LIST: {FEATURE_ON_OFF: None}, CONF_TYPE: TYPE_SET_TOP_BOX},
         ),
     ],
 )

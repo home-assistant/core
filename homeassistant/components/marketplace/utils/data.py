@@ -456,7 +456,8 @@ class MarketplaceData:
             or {}
         )
         repository.repository_manifest = RepositoryManifest.from_dict(
-            manifest if isinstance(manifest, dict) else {}
+            manifest if isinstance(manifest, dict) else {},
+            repository.data.full_name,
         )
 
         # Stored before file names were, a template names its file in hacs.json
