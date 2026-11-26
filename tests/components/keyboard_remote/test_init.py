@@ -1319,7 +1319,7 @@ async def test_device_found_during_teardown_stays_connected(
     await _wait_in_executor(hass, listing)
     old = fake_input.add("/dev/input/event9", REMOTE_NAME)
     await fake_input.touch("/dev/input/event9", wait_for_executor=False)
-    await fake_input.wait_until(lambda: old.grab.called)
+    await fake_input.wait_until(lambda: old.async_read_loop.called)
     ungrabbing, release_ungrab = old.ungrab.hold()
     remote = fake_input.add(REMOTE_PATH, REMOTE_NAME)
 

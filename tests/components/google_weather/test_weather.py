@@ -47,6 +47,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -198,7 +199,7 @@ async def test_forecast_service(
         WEATHER_DOMAIN,
         WeatherService.GET_FORECASTS,
         {
-            ATTR_ENTITY_ID: "weather.home",
+            TargetKey.ENTITY_ID: "weather.home",
             "type": forecast_type,
         },
         blocking=True,
@@ -336,7 +337,7 @@ async def test_forecast_filters_past_periods(
         WEATHER_DOMAIN,
         WeatherService.GET_FORECASTS,
         {
-            ATTR_ENTITY_ID: "weather.home",
+            TargetKey.ENTITY_ID: "weather.home",
             "type": forecast_type,
         },
         blocking=True,
@@ -405,7 +406,7 @@ async def test_minute_forecast_service(
     response = await hass.services.async_call(
         DOMAIN,
         GoogleWeatherService.GET_MINUTE_FORECAST,
-        {ATTR_ENTITY_ID: "weather.home"},
+        {TargetKey.ENTITY_ID: "weather.home"},
         blocking=True,
         return_response=True,
     )
@@ -427,7 +428,7 @@ async def test_minute_forecast_service_unit_conversion(
     response = await hass.services.async_call(
         DOMAIN,
         GoogleWeatherService.GET_MINUTE_FORECAST,
-        {ATTR_ENTITY_ID: "weather.home"},
+        {TargetKey.ENTITY_ID: "weather.home"},
         blocking=True,
         return_response=True,
     )
@@ -453,7 +454,7 @@ async def test_minute_forecast_service_keeps_small_amounts(
     response = await hass.services.async_call(
         DOMAIN,
         GoogleWeatherService.GET_MINUTE_FORECAST,
-        {ATTR_ENTITY_ID: "weather.home"},
+        {TargetKey.ENTITY_ID: "weather.home"},
         blocking=True,
         return_response=True,
     )
@@ -478,7 +479,7 @@ async def test_minute_forecast_service_error(
         await hass.services.async_call(
             DOMAIN,
             GoogleWeatherService.GET_MINUTE_FORECAST,
-            {ATTR_ENTITY_ID: "weather.home"},
+            {TargetKey.ENTITY_ID: "weather.home"},
             blocking=True,
             return_response=True,
         )
@@ -614,7 +615,7 @@ async def test_minute_forecast_service_unspecified_quantity(
     response = await hass.services.async_call(
         DOMAIN,
         GoogleWeatherService.GET_MINUTE_FORECAST,
-        {ATTR_ENTITY_ID: "weather.home"},
+        {TargetKey.ENTITY_ID: "weather.home"},
         blocking=True,
         return_response=True,
     )

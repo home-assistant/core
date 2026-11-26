@@ -81,7 +81,6 @@ class KNXModule:
         self.ui_time_server_controller = TimeServerController()
         self.entry = entry
 
-        self.project = KNXProject(hass=hass, entry=entry)
         self.config_store = KNXConfigStore(hass=hass, config_entry=entry)
 
         default_state_updater = (
@@ -91,8 +90,8 @@ class KNXModule:
                 tracker_type=StateTrackerType.INIT, update_interval_min=60
             )
         )
+        # loading the project data sets the address format
         self.xknx = XKNX(
-            address_format=self.project.get_address_format(),
             connection_config=self.connection_config(),
             rate_limit=self.entry.options[CONF_KNX_RATE_LIMIT],
             state_updater=default_state_updater,
@@ -100,6 +99,7 @@ class KNXModule:
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
         )
+        self.project = KNXProject(hass=hass, entry=entry, xknx=self.xknx)
         self.telegrams = Telegrams(
             hass=hass,
             config_entry_id=entry.entry_id,
@@ -133,7 +133,7 @@ class KNXModule:
 
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""
-        await self.project.load_project(self.xknx)
+        await self.project.load_project()
         await self.config_store.load_data()
         self.telegrams.async_start()
         await self.xknx.start()

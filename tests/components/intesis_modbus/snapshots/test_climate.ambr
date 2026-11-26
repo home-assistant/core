@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_climate_snapshot[climate.inmbsmhi001r000-entry]
+# name: test_climate_snapshot[climate.inmbsmhi001r000_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,11 +36,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('intesis_modbus', '01JTESTINTESISSINGLE000000')]>,
+    'device_id': <DeviceEntry identifiers=[('intesis_modbus', '01JTESTINTESISSINGLE000000_unit')]>,
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.inmbsmhi001r000',
+    'entity_id': 'climate.inmbsmhi001r000_air_conditioner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -63,7 +63,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_snapshot[climate.inmbsmhi001r000-state]
+# name: test_climate_snapshot[climate.inmbsmhi001r000_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.3,
@@ -75,7 +75,7 @@
         'high',
         'powerful',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INMBSMHI001R000',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INMBSMHI001R000 air conditioner',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -100,7 +100,7 @@
       <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.inmbsmhi001r000',
+    'entity_id': 'climate.inmbsmhi001r000_air_conditioner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

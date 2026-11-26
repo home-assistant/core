@@ -1865,6 +1865,7 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown',
         'ok',
         'no_dustbin_or_filter',
         'auto_empty_dock_fan_error',
@@ -1914,6 +1915,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Dock error',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown',
         'ok',
         'no_dustbin_or_filter',
         'auto_empty_dock_fan_error',
@@ -2692,6 +2694,7 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown',
         'none',
         'lidar_blocked',
         'bumper_stuck',
@@ -2782,6 +2785,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Vacuum error',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown',
         'none',
         'lidar_blocked',
         'bumper_stuck',
@@ -3126,6 +3130,7 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown',
         'ok',
         'no_dustbin_or_filter',
         'auto_empty_dock_fan_error',
@@ -3175,6 +3180,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Dock error',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown',
         'ok',
         'no_dustbin_or_filter',
         'auto_empty_dock_fan_error',
@@ -3953,6 +3959,7 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown',
         'none',
         'lidar_blocked',
         'bumper_stuck',
@@ -4043,6 +4050,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Vacuum error',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unknown',
         'none',
         'lidar_blocked',
         'bumper_stuck',

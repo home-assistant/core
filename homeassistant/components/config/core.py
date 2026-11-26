@@ -11,6 +11,7 @@ from homeassistant.components.sensor import async_update_suggested_units
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import check_config, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import location as location_util, unit_system
 
 
@@ -46,27 +47,37 @@ class CheckConfigView(HomeAssistantView):
         )
 
 
+UPDATE_CONFIG_SCHEMA: VolDictType = {
+    probatio.Optional("country"): cv.country,
+    probatio.Optional("currency"): cv.currency,
+    probatio.Optional("elevation"): probatio.Coerce(int),
+    probatio.Optional("external_url"): probatio.Any(cv.url_no_path, None),
+    probatio.Optional("internal_url"): probatio.Any(cv.url_no_path, None),
+    probatio.Optional("language"): cv.language,
+    probatio.Optional("latitude"): cv.latitude,
+    probatio.Optional("location_name"): str,
+    probatio.Optional("longitude"): cv.longitude,
+    probatio.Optional("radius"): cv.positive_int,
+    probatio.Optional("time_zone"): str,
+    probatio.Optional("update_units"): bool,
+    probatio.Optional("unit_system"): unit_system.validate_unit_system,
+}
+
+
+async def async_update_config(hass: HomeAssistant, data: dict[str, Any]) -> None:
+    """Update the core config with data validated by UPDATE_CONFIG_SCHEMA.
+
+    Raises ValueError if a value is not valid.
+    """
+    data = dict(data)
+    update_units = data.pop("update_units", False)
+    await hass.config.async_update(**data)
+    if update_units:
+        async_update_suggested_units(hass)
+
+
 @websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        "type": "config/core/update",
-        probatio.Optional("country"): cv.country,
-        probatio.Optional("currency"): cv.currency,
-        probatio.Optional("elevation"): probatio.Coerce(int),
-        probatio.Optional("external_url"): probatio.Any(cv.url_no_path, None),
-        probatio.Optional("internal_url"): probatio.Any(cv.url_no_path, None),
-        probatio.Optional("language"): cv.language,
-        probatio.Optional("latitude"): cv.latitude,
-        probatio.Optional("location_name"): str,
-        probatio.Optional("longitude"): cv.longitude,
-        probatio.Optional("radius"): cv.positive_int,
-        # Validated by async_set_time_zone in the executor to avoid
-        # blocking I/O loading zoneinfo data on the event loop.
-        probatio.Optional("time_zone"): str,
-        probatio.Optional("update_units"): bool,
-        probatio.Optional("unit_system"): unit_system.validate_unit_system,
-    }
-)
+@websocket_api.websocket_command({"type": "config/core/update", **UPDATE_CONFIG_SCHEMA})
 @websocket_api.async_response
 async def websocket_update_config(
     hass: HomeAssistant,
@@ -78,12 +89,8 @@ async def websocket_update_config(
     data.pop("id")
     data.pop("type")
 
-    update_units = data.pop("update_units", False)
-
     try:
-        await hass.config.async_update(**data)
-        if update_units:
-            async_update_suggested_units(hass)
+        await async_update_config(hass, data)
         connection.send_result(msg["id"])
     except ValueError as err:
         connection.send_error(msg["id"], "invalid_info", str(err))

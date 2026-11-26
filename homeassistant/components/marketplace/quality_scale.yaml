@@ -5,10 +5,7 @@ rules:
     comment: |
       This integration does not provide additional actions.
   appropriate-polling: done
-  brands:
-    status: todo
-    comment: |
-      The Marketplace icon is in home-assistant/brands#11237.
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done

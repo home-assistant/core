@@ -203,14 +203,18 @@ class PassiveBluetoothDataUpdate[_T]:
         entity_description_class: type[EntityDescription],
     ) -> None:
         """Set the restored data from storage."""
-        self.devices.update(
-            {
-                key or None: DeviceInfo(
-                    **{k: v for k, v in device_info.items() if k in _DEVICE_INFO_FIELDS}
-                )
-                for key, device_info in restore_data["devices"].items()
+        devices: dict[str | None, DeviceInfo] = {}
+        for key, device_info in restore_data["devices"].items():
+            restored = {
+                k: v for k, v in device_info.items() if k in _DEVICE_INFO_FIELDS
             }
-        )
+            # SensorPro and ThermoBeacon stored the model as an int. Remove the
+            # conversion once their parsers are fixed upstream and stored data has
+            # been replaced.
+            if isinstance(model := restored.get("model"), int):
+                restored["model"] = str(model)
+            devices[key or None] = DeviceInfo(**restored)
+        self.devices.update(devices)
         self.entity_descriptions.update(
             {
                 PassiveBluetoothEntityKey.from_string(

@@ -51,13 +51,17 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "MBF_PAR_MODEL": 0x0003,
     "MBF_PAR_SERNUM": int(MOCK_SERIAL),
     "MBF_PAR_FILTRATION_CONF": 1,
+    # Built-in functions share the low physical relays (1..3) so that physical
+    # relays 4..7, i.e. AUX1..AUX4, stay free. The AUX relay gating hides an AUX
+    # entity whose relay a function has claimed, so the default fixture keeps all
+    # four AUX relays unassigned.
     "MBF_PAR_FILT_GPIO": 1,
     "MBF_PAR_LIGHTING_GPIO": 2,
     "MBF_PAR_HEATING_GPIO": 3,
-    "MBF_PAR_PH_ACID_RELAY_GPIO": 4,
-    "MBF_PAR_PH_BASE_RELAY_GPIO": 5,
-    "MBF_PAR_RX_RELAY_GPIO": 6,
-    "MBF_PAR_CL_RELAY_GPIO": 7,
+    "MBF_PAR_PH_ACID_RELAY_GPIO": 1,
+    "MBF_PAR_PH_BASE_RELAY_GPIO": 2,
+    "MBF_PAR_RX_RELAY_GPIO": 3,
+    "MBF_PAR_CL_RELAY_GPIO": 1,
     "MBF_PAR_CD_RELAY_GPIO": 0,
     "MBF_PAR_UV_RELAY_GPIO": 1,
     "MBF_PAR_FILTVALVE_GPIO": 1,

@@ -7,17 +7,9 @@ import pytest
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     CodeFormat,
-)
-from homeassistant.const import (
-    ATTR_CODE,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_ARM_VACATION,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -36,7 +28,7 @@ async def help_test_async_alarm_control_panel_service(
     """Help to lock a test lock."""
     data: dict[str, Any] = {"entity_id": entity_id}
     if code is not Undefined:
-        data[ATTR_CODE] = code
+        data[AlarmControlPanelServiceArgument.CODE] = code
 
     await hass.services.async_call(
         alarm_control_panel.DOMAIN, service, data, blocking=True
@@ -112,19 +104,21 @@ async def test_alarm_control_panel_arm_with_code(
 
     with pytest.raises(ServiceValidationError):
         await help_test_async_alarm_control_panel_service(
-            hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_ARM_AWAY
+            hass,
+            mock_alarm_control_panel_entity.entity_id,
+            AlarmControlPanelService.ARM_AWAY,
         )
     with pytest.raises(ServiceValidationError):
         await help_test_async_alarm_control_panel_service(
             hass,
             mock_alarm_control_panel_entity.entity_id,
-            SERVICE_ALARM_ARM_AWAY,
+            AlarmControlPanelService.ARM_AWAY,
             code="",
         )
     await help_test_async_alarm_control_panel_service(
         hass,
         mock_alarm_control_panel_entity.entity_id,
-        SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         code="1234",
     )
     assert mock_alarm_control_panel_entity.calls_arm_away.call_count == 1
@@ -140,31 +134,43 @@ async def test_alarm_control_panel_with_no_code(
 ) -> None:
     """Test alarm control panel entity without code."""
     await help_test_async_alarm_control_panel_service(
-        hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_ARM_AWAY
+        hass,
+        mock_alarm_control_panel_entity.entity_id,
+        AlarmControlPanelService.ARM_AWAY,
     )
     mock_alarm_control_panel_entity.calls_arm_away.assert_called_with(None)
     await help_test_async_alarm_control_panel_service(
-        hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_ARM_CUSTOM_BYPASS
+        hass,
+        mock_alarm_control_panel_entity.entity_id,
+        AlarmControlPanelService.ARM_CUSTOM_BYPASS,
     )
     mock_alarm_control_panel_entity.calls_arm_custom.assert_called_with(None)
     await help_test_async_alarm_control_panel_service(
-        hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_ARM_HOME
+        hass,
+        mock_alarm_control_panel_entity.entity_id,
+        AlarmControlPanelService.ARM_HOME,
     )
     mock_alarm_control_panel_entity.calls_arm_home.assert_called_with(None)
     await help_test_async_alarm_control_panel_service(
-        hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_ARM_NIGHT
+        hass,
+        mock_alarm_control_panel_entity.entity_id,
+        AlarmControlPanelService.ARM_NIGHT,
     )
     mock_alarm_control_panel_entity.calls_arm_night.assert_called_with(None)
     await help_test_async_alarm_control_panel_service(
-        hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_ARM_VACATION
+        hass,
+        mock_alarm_control_panel_entity.entity_id,
+        AlarmControlPanelService.ARM_VACATION,
     )
     mock_alarm_control_panel_entity.calls_arm_vacation.assert_called_with(None)
     await help_test_async_alarm_control_panel_service(
-        hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_DISARM
+        hass, mock_alarm_control_panel_entity.entity_id, AlarmControlPanelService.DISARM
     )
     mock_alarm_control_panel_entity.calls_disarm.assert_called_with(None)
     await help_test_async_alarm_control_panel_service(
-        hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_TRIGGER
+        hass,
+        mock_alarm_control_panel_entity.entity_id,
+        AlarmControlPanelService.TRIGGER,
     )
     mock_alarm_control_panel_entity.calls_trigger.assert_called_with(None)
 
@@ -187,27 +193,37 @@ async def test_alarm_control_panel_with_default_code(
     await hass.async_block_till_done()
 
     await help_test_async_alarm_control_panel_service(
-        hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_ARM_AWAY
+        hass,
+        mock_alarm_control_panel_entity.entity_id,
+        AlarmControlPanelService.ARM_AWAY,
     )
     mock_alarm_control_panel_entity.calls_arm_away.assert_called_with("1234")
     await help_test_async_alarm_control_panel_service(
-        hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_ARM_CUSTOM_BYPASS
+        hass,
+        mock_alarm_control_panel_entity.entity_id,
+        AlarmControlPanelService.ARM_CUSTOM_BYPASS,
     )
     mock_alarm_control_panel_entity.calls_arm_custom.assert_called_with("1234")
     await help_test_async_alarm_control_panel_service(
-        hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_ARM_HOME
+        hass,
+        mock_alarm_control_panel_entity.entity_id,
+        AlarmControlPanelService.ARM_HOME,
     )
     mock_alarm_control_panel_entity.calls_arm_home.assert_called_with("1234")
     await help_test_async_alarm_control_panel_service(
-        hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_ARM_NIGHT
+        hass,
+        mock_alarm_control_panel_entity.entity_id,
+        AlarmControlPanelService.ARM_NIGHT,
     )
     mock_alarm_control_panel_entity.calls_arm_night.assert_called_with("1234")
     await help_test_async_alarm_control_panel_service(
-        hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_ARM_VACATION
+        hass,
+        mock_alarm_control_panel_entity.entity_id,
+        AlarmControlPanelService.ARM_VACATION,
     )
     mock_alarm_control_panel_entity.calls_arm_vacation.assert_called_with("1234")
     await help_test_async_alarm_control_panel_service(
-        hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_DISARM
+        hass, mock_alarm_control_panel_entity.entity_id, AlarmControlPanelService.DISARM
     )
     mock_alarm_control_panel_entity.calls_disarm.assert_called_with("1234")
 

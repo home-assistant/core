@@ -1,5 +1,6 @@
 """Test template validators."""
 
+import math
 from typing import Any
 
 import pytest
@@ -563,6 +564,12 @@ async def test_boolean_as_false(
             {"junk"},
             [],
             ["stuff"],
+            "nan",
+            "inf",
+            "-inf",
+            math.nan,
+            math.inf,
+            -math.inf,
         ),
     ],
 )
@@ -606,6 +613,7 @@ async def test_number_as_float(
         (0.0, 0),
         (-324.4564, -324),
         (1, 1),
+        pytest.param(10**400, 10**400, id="huge_int"),
         *expect_none(
             None,
             "al;dfj",
@@ -619,6 +627,12 @@ async def test_number_as_float(
             {"junk"},
             [],
             ["stuff"],
+            "nan",
+            "inf",
+            "-inf",
+            math.nan,
+            math.inf,
+            -math.inf,
         ),
     ],
 )
@@ -1186,3 +1200,55 @@ def test_entity_config_identifier(
     """Test the entity config identifier for every fallback."""
     config = {"name": Template(name, hass), **entity_config}
     assert cv.entity_config_identifier(Platform.SENSOR, config) == expected
+
+
+@pytest.mark.parametrize(
+    ("name", "entity_config", "section_unique_id", "expected"),
+    [
+        pytest.param(
+            "Kitchen",
+            {"default_entity_id": "sensor.kitchen", "unique_id": "kitchen"},
+            None,
+            "unique_id: kitchen",
+            id="unique_id_wins",
+        ),
+        pytest.param(
+            "Kitchen",
+            {"unique_id": "kitchen"},
+            "first_floor",
+            "unique_id: first_floor-kitchen",
+            id="section_unique_id",
+        ),
+        pytest.param(
+            "Kitchen",
+            {"default_entity_id": "sensor.kitchen"},
+            "first_floor",
+            "default_entity_id: sensor.kitchen",
+            id="section_unique_id_without_unique_id",
+        ),
+        pytest.param(
+            "Kitchen",
+            {"default_entity_id": "sensor.kitchen"},
+            None,
+            "default_entity_id: sensor.kitchen",
+            id="default_entity_id_wins",
+        ),
+        pytest.param("Kitchen", {}, None, "name: Kitchen", id="name"),
+        pytest.param(
+            "Template Sensor", {}, None, "name: Template Sensor", id="default_name"
+        ),
+    ],
+)
+def test_entity_config_repair_identifier(
+    hass: HomeAssistant,
+    name: str,
+    entity_config: dict[str, str],
+    section_unique_id: str | None,
+    expected: str,
+) -> None:
+    """Test the repair identifier prefers the unique_id and default_entity_id."""
+    config = {"name": Template(name, hass), **entity_config}
+    assert (
+        cv.entity_config_repair_identifier(Platform.SENSOR, config, section_unique_id)
+        == expected
+    )

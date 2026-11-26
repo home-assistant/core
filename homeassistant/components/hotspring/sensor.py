@@ -15,7 +15,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    UnitOfApparentPower,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfPower,
     UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
@@ -37,6 +40,13 @@ class HotSpringSensorEntityDescription(SensorEntityDescription):
     exists_fn: Callable[[Spa], bool] = lambda _: True
     value_fn: Callable[[Spa], StateType]
     unit_fn: Callable[[Spa], str | None] | None = None
+
+
+def _has_jet3_power(spa: Spa) -> bool:
+    """Return True if power monitoring is supported and Jet 3 is enabled."""
+    return spa.power.supported and (
+        (jet3 := spa.jets.get(3)) is not None and jet3.is_enabled
+    )
 
 
 SENSORS: tuple[HotSpringSensorEntityDescription, ...] = (
@@ -134,6 +144,105 @@ SENSORS: tuple[HotSpringSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=lambda spa: spa.versions.fwss,
         exists_fn=lambda spa: bool(spa.versions.fwss),
+    ),
+    HotSpringSensorEntityDescription(
+        key="total_power",
+        translation_key="total_power",
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        value_fn=lambda spa: spa.power.total_power,
+        exists_fn=lambda spa: spa.power.supported,
+    ),
+    HotSpringSensorEntityDescription(
+        key="heater_power",
+        translation_key="heater_power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda spa: spa.power.heater_power,
+        exists_fn=lambda spa: spa.power.supported,
+    ),
+    HotSpringSensorEntityDescription(
+        key="small_loads_power",
+        translation_key="small_loads_power",
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda spa: spa.power.small_loads_power,
+        exists_fn=lambda spa: spa.power.supported,
+    ),
+    HotSpringSensorEntityDescription(
+        key="jet1_jet2_blower_power",
+        translation_key="jet1_jet2_blower_power",
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda spa: spa.power.jet1_jet2_blower_power,
+        exists_fn=lambda spa: spa.power.supported,
+    ),
+    HotSpringSensorEntityDescription(
+        key="jet3_power",
+        translation_key="jet3_power",
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda spa: spa.power.jet3_power,
+        exists_fn=_has_jet3_power,
+    ),
+    HotSpringSensorEntityDescription(
+        key="heater_current",
+        translation_key="heater_current",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda spa: spa.power.heater_current,
+        exists_fn=lambda spa: spa.power.supported,
+    ),
+    HotSpringSensorEntityDescription(
+        key="small_loads_current",
+        translation_key="small_loads_current",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda spa: spa.power.small_loads_current,
+        exists_fn=lambda spa: spa.power.supported,
+    ),
+    HotSpringSensorEntityDescription(
+        key="jet1_jet2_blower_current",
+        translation_key="jet1_jet2_blower_current",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda spa: spa.power.jet1_jet2_blower_current,
+        exists_fn=lambda spa: spa.power.supported,
+    ),
+    HotSpringSensorEntityDescription(
+        key="jet3_current",
+        translation_key="jet3_current",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda spa: spa.power.jet3_current,
+        exists_fn=_has_jet3_power,
     ),
 )
 

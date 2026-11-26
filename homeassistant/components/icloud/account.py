@@ -24,8 +24,10 @@ from pyicloud.services.findmyiphone import AppleDevice
 from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_USERNAME, EntityStateAttribute
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
@@ -513,11 +515,14 @@ class IcloudAccount:
         # Gets devices infos
         devices = list(api_devices)
         new_device = False
+        reported_device_ids: set[str] = set()
         first_status: dict[str, Any] | None = None
         for device in devices:
             status = device.status(DEVICE_STATUS_SET)
             device_id = status[DEVICE_ID]
             device_name = status[DEVICE_NAME]
+            if device_id is not None:
+                reported_device_ids.add(device_id)
 
             if device_id is None or device_name is None:
                 # status() reports every requested field, using None for the
@@ -568,14 +573,28 @@ class IcloudAccount:
             self._devices[device_id].update(status)
             new_device = True
 
-        if (
+        # A pending read is not the whole list, so wait for the retry below
+        # before treating anything missing from it as gone from the account.
+        retry_pending = (
             # status() reports every requested field, using None for the ones
             # iCloud left out; indexing the payload directly would raise here
             # instead, and during setup that is before any timer is armed.
             first_status is not None
             and DEVICE_STATUS_CODES.get(first_status[DEVICE_STATUS]) == "pending"
             and not self._retried_fetch
-        ):
+        )
+
+        if not retry_pending:
+            # This runs in the executor, while the registries only change
+            # on the event loop; waiting leaves the devices deleted before
+            # the update signal below reaches the entities.
+            run_callback_threadsafe(
+                self.hass.loop,
+                self._async_delete_stale_devices,
+                reported_device_ids,
+            ).result()
+
+        if retry_pending:
             _LOGGER.debug("Pending devices, trying again in 15s")
             self._fetch_interval = 0.25
             self._retried_fetch = True
@@ -591,6 +610,41 @@ class IcloudAccount:
             dispatcher_send(self.hass, self.signal_device_new)
 
         self._schedule_next_fetch()
+
+    @callback
+    def _async_delete_stale_devices(self, reported_device_ids: set[str]) -> None:
+        """Delete the devices Apple stopped reporting, with their entities.
+
+        This runs on the event loop, as scheduled by update_devices().
+        """
+        device_registry = dr.async_get(self.hass)
+        for device_id in set(self._devices) - reported_device_ids:
+            self._devices.pop(device_id)
+
+        # The registry holds the devices of the previous run too, so it is
+        # what catches a device that went stale while Home Assistant was off.
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, self._config_entry.entry_id
+        ):
+            # The account's own service device (calendars, to-dos) is never
+            # in Apple's report.
+            if device_entry.entry_type is DeviceEntryType.SERVICE:
+                continue
+            icloud_ids = {
+                identifier[1]
+                for identifier in device_entry.identifiers
+                if identifier[0] == DOMAIN
+            }
+            if not icloud_ids or icloud_ids & reported_device_ids:
+                continue
+
+            _LOGGER.info(
+                "Removing iCloud device %s, no longer reported by Apple",
+                device_entry.name_by_user or device_entry.name,
+            )
+            # The entity registry removes the device's entities when the
+            # device goes.
+            device_registry.async_remove_device(device_entry.id)
 
     def _ask_to_authenticate(self, err: Exception) -> None:
         """Ask the user to log in again after iCloud rejected the session.

@@ -12,7 +12,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.components.opentherm_gw import DOMAIN
 from homeassistant.components.opentherm_gw.const import OpenThermDeviceIdentifier
-from homeassistant.const import CONF_ID, STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.const import CONF_ID, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -53,7 +53,7 @@ async def test_control_setpoint_number_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: number_entity_id,
+            TargetKey.ENTITY_ID: number_entity_id,
             NumberServiceArgument.VALUE: 10.5,
         },
         blocking=True,
@@ -65,7 +65,7 @@ async def test_control_setpoint_number_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: number_entity_id,
+            TargetKey.ENTITY_ID: number_entity_id,
             NumberServiceArgument.VALUE: 0,
         },
         blocking=True,

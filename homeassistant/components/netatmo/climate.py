@@ -385,14 +385,12 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self._away_temperature = self.home.get_away_temp()
         self._hg_temperature = self.home.get_hg_temp()
         self._attr_native_current_temperature = self.device.therm_measured_temperature
-        self._attr_native_target_temperature = self.device.therm_setpoint_temperature
+        # Homes in cooling mode report cooling_setpoint_* instead of therm_setpoint_*
+        self._attr_native_target_temperature = self.device.setpoint_temperature
 
-        therm_setpoint_mode = getattr(self.device, "therm_setpoint_mode", None)
-
-        if therm_setpoint_mode is None:
-            therm_setpoint_mode = STATE_NETATMO_SCHEDULE
-
-        self._attr_preset_mode = NETATMO_MAP_PRESET[therm_setpoint_mode]
+        self._attr_preset_mode = NETATMO_MAP_PRESET.get(
+            self.device.setpoint_mode, PRESET_SCHEDULE
+        )
         self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
         self._away = self._attr_hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 

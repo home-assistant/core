@@ -25,6 +25,7 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
     UpdateEntityStateAttribute,
+    UpdateReleaseNotesMessage,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import CoreState, HomeAssistant, callback
@@ -44,9 +45,9 @@ UPDATE_DELAY_STRING = "delay"
 UPDATE_DELAY_INTERVAL = 15  # In seconds
 ATTR_LATEST_VERSION_FIRMWARE = "latest_version_firmware"
 
-OTA_MESSAGE_SLEEPING_DEVICE = (
-    "This is a battery powered sleeping device. You may need to wake it up"
-    " manually for the update to begin."
+RELEASE_NOTES_MESSAGE_SLEEPING_DEVICE = UpdateReleaseNotesMessage(
+    translation_domain=DOMAIN,
+    translation_key="sleeping_device",
 )
 
 
@@ -353,21 +354,28 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
                 self.hass, timedelta(days=1), self._async_update
             )
 
+    @property
+    @override
+    def release_notes_messages(self) -> tuple[UpdateReleaseNotesMessage, ...]:
+        """Messages shown before the release notes."""
+        if not self.node.can_sleep:
+            return ()
+        if wakeup := (self.node.device_config.metadata.wakeup or "").strip():
+            return (
+                UpdateReleaseNotesMessage(
+                    translation_domain=DOMAIN,
+                    translation_key="sleeping_device_wakeup",
+                    translation_placeholders={"wakeup_instructions": wakeup},
+                ),
+            )
+        return (RELEASE_NOTES_MESSAGE_SLEEPING_DEVICE,)
+
     @override
     async def async_release_notes(self) -> str | None:
         """Get release notes."""
         if self._latest_version_firmware is None:
             return None
-        changelog = self._latest_version_firmware.changelog
-        if not self.node.can_sleep:
-            return changelog
-
-        message = OTA_MESSAGE_SLEEPING_DEVICE
-        if wakeup := (self.node.device_config.metadata.wakeup or "").strip():
-            message += f" To wake up this device:\n\n{wakeup}"
-        # Surround the content with blank lines so markdown inside the alert is rendered
-        header = f"<ha-alert alert-type='info'>\n\n{message}\n\n</ha-alert>"
-        return f"{header}\n\n{changelog}"
+        return self._latest_version_firmware.changelog
 
     @override
     async def async_install(

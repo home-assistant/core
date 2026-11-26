@@ -10,7 +10,7 @@ from homeassistant.components.number import (
     NumberServiceArgument,
 )
 from homeassistant.components.wiz.const import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -55,7 +55,7 @@ async def test_speed_operation(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 30},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 30},
         blocking=True,
     )
     bulb.set_speed.assert_called_with(30)
@@ -77,7 +77,7 @@ async def test_speed_operation_fails(hass: HomeAssistant) -> None:
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 30,
             },
             blocking=True,
@@ -102,7 +102,7 @@ async def test_ratio_operation(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 30},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 30},
         blocking=True,
     )
     bulb.set_ratio.assert_called_with(30)
@@ -115,10 +115,10 @@ async def test_ratio_operation_without_dual_head_feature(
 ) -> None:
     """Test changing a ratio reported by a light with an unadvertised dual head feature."""
     bulb = _mocked_wizlight(None, None, FAKE_TURNABLE_BULB)
-    bulb.state = None
+    bulb.state = []
 
-    async def _update_state() -> PilotParser:
-        bulb.state = PilotParser({"mac": FAKE_MAC, "ratio": 50})
+    async def _update_state() -> list[PilotParser | None]:
+        bulb.state = [PilotParser({"mac": FAKE_MAC, "ratio": 50})]
         return bulb.state
 
     bulb.updateState.side_effect = _update_state
@@ -135,7 +135,7 @@ async def test_ratio_operation_without_dual_head_feature(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 30},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 30},
         blocking=True,
     )
     bulb.set_ratio.assert_called_with(30)

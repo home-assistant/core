@@ -35,7 +35,7 @@ from .const import (
     ZONE_NAME_UNCONFIGURED,
 )
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
-from .entity import DaikinEntity
+from .entity import DaikinEntity, daikin_exception_handler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -216,6 +216,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         if self.device.support_swing_mode:
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
+    @daikin_exception_handler
     async def _set(self, settings: dict[str, Any]) -> None:
         """Set device settings using API."""
         values: dict[str, Any] = {}
@@ -337,6 +338,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         return PRESET_NONE
 
     @override
+    @daikin_exception_handler
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         if preset_mode == PRESET_AWAY:
@@ -373,12 +375,14 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         return ret
 
     @override
+    @daikin_exception_handler
     async def async_turn_on(self) -> None:
         """Turn device on."""
         await self.device.set({})
         await self.coordinator.async_refresh()
 
     @override
+    @daikin_exception_handler
     async def async_turn_off(self) -> None:
         """Turn device off."""
         await self.device.set(
@@ -484,6 +488,7 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
         return {"zone_id": self._zone_id}
 
     @override
+    @daikin_exception_handler
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the zone temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -531,12 +536,14 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     @override
+    @daikin_exception_handler
     async def async_turn_on(self) -> None:
         """Turn the zone on."""
         await self.device.set_zone(self._zone_id, "zone_onoff", "1")
         await self.coordinator.async_refresh()
 
     @override
+    @daikin_exception_handler
     async def async_turn_off(self) -> None:
         """Turn the zone off."""
         await self.device.set_zone(self._zone_id, "zone_onoff", "0")

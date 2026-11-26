@@ -1,9 +1,13 @@
 """Test the Ecoforest config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from pyecoforest.exceptions import EcoforestAuthenticationRequired
+from pyecoforest.exceptions import (
+    EcoforestAuthenticationRequired,
+    EcoforestConnectionError,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.ecoforest.const import DOMAIN
@@ -78,8 +82,12 @@ async def test_form_device_already_configured(
             "invalid_auth",
         ),
         (
-            Exception("Something wrong"),
+            EcoforestConnectionError("Timeout"),
             "cannot_connect",
+        ),
+        (
+            Exception("Something wrong"),
+            "unknown",
         ),
     ],
 )
@@ -114,3 +122,100 @@ async def test_flow_fails(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_reauth(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    config_entry: MockConfigEntry,
+    mock_device: Mock,
+) -> None:
+    """Test a successful reauthentication."""
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert get_schema_suggested_value(result["data_schema"].schema, CONF_USERNAME) == (
+        "test-username"
+    )
+
+    with patch("pyecoforest.api.EcoforestApi.get", return_value=mock_device):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data == {
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "new-username",
+        CONF_PASSWORD: "new-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        pytest.param(
+            EcoforestAuthenticationRequired("401"), "invalid_auth", id="invalid_auth"
+        ),
+        pytest.param(
+            EcoforestConnectionError("Timeout"), "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(Exception("Something wrong"), "unknown", id="exception"),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    config_entry: MockConfigEntry,
+    mock_device: Mock,
+    error: Exception,
+    message: str,
+) -> None:
+    """Test reauthentication errors and a successful retry."""
+    result = await config_entry.start_reauth_flow(hass)
+
+    with patch("pyecoforest.api.EcoforestApi.get", side_effect=error):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new-username", CONF_PASSWORD: "wrong-password"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": message}
+    assert get_schema_suggested_value(result["data_schema"].schema, CONF_USERNAME) == (
+        "new-username"
+    )
+
+    with patch("pyecoforest.api.EcoforestApi.get", return_value=mock_device):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_PASSWORD] == "new-password"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth_wrong_device(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_device: Mock
+) -> None:
+    """Test reauthentication aborts for a different device."""
+    result = await config_entry.start_reauth_flow(hass)
+    mock_device.serial_number = "5678"
+
+    with patch("pyecoforest.api.EcoforestApi.get", return_value=mock_device):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    assert config_entry.data[CONF_PASSWORD] == "test-password"

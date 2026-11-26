@@ -37,6 +37,22 @@ def dict_duration_to_str_duration(
     return f"{d['hours']:02d}:{d['minutes']:02d}:{d['seconds']:02d}"
 
 
+def title_from_stations(stations: list[str], stops_at: list[str]) -> str:
+    """Build a title for a stationboard config entry."""
+    return ", ".join(stations) + (
+        f" stops at {', '.join(stops_at)}" if stops_at else ""
+    )
+
+
+def unique_id_from_stations(stations: list[str], stops_at: list[str]) -> str:
+    """Build a unique id for a stationboard config entry."""
+    # The order of the stations does not change the stationboard, and their
+    # names contain commas
+    return f"stationboard {'; '.join(sorted(stations))}" + (
+        f" stops at {'; '.join(sorted(stops_at))}" if stops_at else ""
+    )
+
+
 def unique_id_from_config(config: Mapping[str, Any]) -> str:
     """Build a unique id from a config entry."""
     return (

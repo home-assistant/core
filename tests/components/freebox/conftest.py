@@ -22,6 +22,8 @@ from .const import (
     DATA_LAN_GET_INTERFACES,
     DATA_STORAGE_GET_DISKS,
     DATA_STORAGE_GET_RAIDS,
+    DATA_SWITCH_GET_PORT_STATS,
+    DATA_SWITCH_GET_STATUS,
     DATA_SYSTEM_GET_CONFIG,
     DATA_WIFI_GET_GLOBAL_CONFIG,
 )
@@ -83,6 +85,10 @@ def mock_router(mock_device_registry_devices):
         instance.storage.get_raids = AsyncMock(return_value=DATA_STORAGE_GET_RAIDS)
         instance.connection.get_status = AsyncMock(
             return_value=DATA_CONNECTION_GET_STATUS
+        )
+        instance.switch.get_status = AsyncMock(return_value=DATA_SWITCH_GET_STATUS)
+        instance.switch.get_port_stats = AsyncMock(
+            return_value=DATA_SWITCH_GET_PORT_STATS
         )
         # switch
         instance.wifi.get_global_config = AsyncMock(

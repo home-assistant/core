@@ -5,7 +5,8 @@ from unittest.mock import MagicMock, Mock
 from aiohttp import ClientResponseError
 from probatio import MultipleInvalid
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_array_fixture
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.myuplink.const import DOMAIN
 from homeassistant.components.myuplink.services import (
@@ -22,7 +23,7 @@ from . import setup_integration
 TEST_DEVICE = "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff"
 
 
-async def test_services(
+async def test_set_services(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
     mock_myuplink_client: MagicMock,
@@ -49,7 +50,44 @@ async def test_services(
     )
 
 
-async def test_get_service_api_errors(
+async def test_get_services(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_myuplink_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests that the get custom services are correct."""
+
+    await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE), mock_config_entry.entry_id
+    )
+    mock_myuplink_client.async_get_device_points_json.return_value = (
+        await async_load_json_array_fixture(
+            hass, "device_points_get_action.json", DOMAIN
+        )
+    )
+
+    assert snapshot == await hass.services.async_call(
+        DOMAIN,
+        MyUplinkService.GET_DATAPOINTS,
+        {
+            ATTR_DEVICE_ID: device.id,
+            MyUplinkServiceArgument.DATAPOINTS: [
+                {MyUplinkServiceArgument.DATAPOINT_ID: "40004"},
+                {MyUplinkServiceArgument.DATAPOINT_ID: "40008"},
+            ],
+        },
+        blocking=True,
+        return_response=True,
+    )
+    mock_myuplink_client.async_get_device_points_json.assert_called_once_with(
+        TEST_DEVICE, points=["40004", "40008"]
+    )
+
+
+async def test_set_service_api_errors(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
     mock_myuplink_client: MagicMock,
@@ -79,7 +117,40 @@ async def test_get_service_api_errors(
     mock_myuplink_client.async_set_device_points.assert_called_once()
 
 
-async def test_service_validation_errors(
+async def test_get_service_api_errors(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_myuplink_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test service api errors."""
+    await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE), mock_config_entry.entry_id
+    )
+
+    # Test http error
+    mock_myuplink_client.async_get_device_points_json.side_effect = ClientResponseError(
+        Mock(), Mock()
+    )
+    with pytest.raises(HomeAssistantError, match="Failed to get value for datapoint"):
+        await hass.services.async_call(
+            DOMAIN,
+            MyUplinkService.GET_DATAPOINTS,
+            {
+                ATTR_DEVICE_ID: device.id,
+                MyUplinkServiceArgument.DATAPOINTS: [
+                    {MyUplinkServiceArgument.DATAPOINT_ID: "40004"},
+                    {MyUplinkServiceArgument.DATAPOINT_ID: "40008"},
+                ],
+            },
+            blocking=True,
+            return_response=True,
+        )
+    mock_myuplink_client.async_get_device_points_json.assert_called_once()
+
+
+async def test_set_service_validation_errors(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
     mock_myuplink_client: MagicMock,
@@ -115,3 +186,51 @@ async def test_service_validation_errors(
             blocking=True,
         )
     mock_myuplink_client.async_set_device_points.assert_not_called()
+
+
+async def test_get_service_validation_errors(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_myuplink_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Tests that the custom services handle bad data."""
+
+    await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE), mock_config_entry.entry_id
+    )
+
+    # Test missing parameters
+    with pytest.raises(MultipleInvalid, match="required key not provided"):
+        await hass.services.async_call(
+            DOMAIN,
+            MyUplinkService.GET_DATAPOINTS,
+            {
+                ATTR_DEVICE_ID: device.id,
+                # MyUplinkServiceArgument.DATAPOINTS: [
+                #     {MyUplinkServiceArgument.DATAPOINT_ID: "40004"},
+                #     {MyUplinkServiceArgument.DATAPOINT_ID: "40008"},
+                # ],
+            },
+            blocking=True,
+            return_response=True,
+        )
+    mock_myuplink_client.async_get_device_points_json.assert_not_called()
+
+    # Test invalid device
+    with pytest.raises(ServiceValidationError, match="Device with ID invalid_device"):
+        await hass.services.async_call(
+            DOMAIN,
+            MyUplinkService.GET_DATAPOINTS,
+            {
+                ATTR_DEVICE_ID: "invalid_device",
+                MyUplinkServiceArgument.DATAPOINTS: [
+                    {MyUplinkServiceArgument.DATAPOINT_ID: "40004"},
+                    {MyUplinkServiceArgument.DATAPOINT_ID: "40008"},
+                ],
+            },
+            blocking=True,
+            return_response=True,
+        )
+    mock_myuplink_client.async_get_device_points_json.assert_not_called()

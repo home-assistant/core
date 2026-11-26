@@ -2,11 +2,13 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from boschshcpy import (
+    SHCHeatingCircuit,
     SHCMicromoduleDimmer,
     SHCMicromoduleRelay,
+    SHCOutdoorSiren,
     SHCRoomThermostat2,
     SHCShutterContact2,
     SHCSmartPlug,
@@ -107,7 +109,74 @@ def _display_on_time_set_value_fn(device: _DisplayConfigDevice, value: float) ->
 
 IMPULSE_LENGTH = "impulse_length"
 
+
+def _setpoint_range_fn(
+    range_attr: str, index: int, default: float
+) -> Callable[[SHCHeatingCircuit], float]:
+    """Return a min/max function for a heating circuit setpoint range."""
+
+    def _range_fn(device: SHCHeatingCircuit) -> float:
+        temperature_range = getattr(device, range_attr)
+        return temperature_range[index] if temperature_range is not None else default
+
+    return _range_fn
+
+
+def _siren_value_fn(field: str) -> Callable[[SHCOutdoorSiren], float | None]:
+    """Return a value_fn reading one field of the siren configuration."""
+
+    def _value(device: SHCOutdoorSiren) -> float | None:
+        return float(getattr(device.siren, field))
+
+    return _value
+
+
+def _siren_set_value_fn(field: str) -> Callable[[SHCOutdoorSiren, float], None]:
+    """Return a set_value_fn writing one field of the siren configuration."""
+
+    def _set(device: SHCOutdoorSiren, value: float) -> None:
+        kwargs: dict[str, Any] = {field: round(value)}
+        device.siren.set_configuration(**kwargs)
+
+    return _set
+
+
+SIREN_DURATION_KEYS = ("alarm_duration", "flash_duration")
+SIREN_DELAY_KEYS = ("alarm_delay", "flash_delay")
+
 NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
+    **{
+        key: SHCNumberEntityDescription[SHCOutdoorSiren](
+            key=key,
+            translation_key=f"siren_{key}",
+            entity_category=EntityCategory.CONFIG,
+            device_class=NumberDeviceClass.DURATION,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
+            native_min_value=1.0,
+            native_max_value=15.0,
+            native_step=1.0,
+            mode=NumberMode.BOX,
+            value_fn=_siren_value_fn(key),
+            set_value_fn=_siren_set_value_fn(key),
+        )
+        for key in SIREN_DURATION_KEYS
+    },
+    **{
+        key: SHCNumberEntityDescription[SHCOutdoorSiren](
+            key=key,
+            translation_key=f"siren_{key}",
+            entity_category=EntityCategory.CONFIG,
+            device_class=NumberDeviceClass.DURATION,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            native_min_value=0.0,
+            native_max_value=180.0,
+            native_step=1.0,
+            mode=NumberMode.BOX,
+            value_fn=_siren_value_fn(key),
+            set_value_fn=_siren_set_value_fn(key),
+        )
+        for key in SIREN_DELAY_KEYS
+    },
     IMPULSE_LENGTH: SHCNumberEntityDescription[SHCMicromoduleRelay](
         key=IMPULSE_LENGTH,
         translation_key=IMPULSE_LENGTH,
@@ -148,6 +217,34 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
             float(speed) if (speed := device.dimming_speed) is not None else None
         ),
         set_value_fn=lambda device, value: device.set_dimming_speed(round(value)),
+    ),
+    "eco_temperature": SHCNumberEntityDescription[SHCHeatingCircuit](
+        key="eco_temperature",
+        translation_key="eco_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_step=0.5,
+        mode=NumberMode.BOX,
+        value_fn=lambda device: device.setpoint_temperature_eco,
+        set_value_fn=lambda device, value: device.set_setpoint_temperature_eco(value),
+        min_value_fn=_setpoint_range_fn("eco_temperature_range", 0, 5.0),
+        max_value_fn=_setpoint_range_fn("eco_temperature_range", 1, 30.0),
+    ),
+    "comfort_temperature": SHCNumberEntityDescription[SHCHeatingCircuit](
+        key="comfort_temperature",
+        translation_key="comfort_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_step=0.5,
+        mode=NumberMode.BOX,
+        value_fn=lambda device: device.setpoint_temperature_comfort,
+        set_value_fn=lambda device, value: device.set_setpoint_temperature_comfort(
+            value
+        ),
+        min_value_fn=_setpoint_range_fn("comfort_temperature_range", 0, 5.0),
+        max_value_fn=_setpoint_range_fn("comfort_temperature_range", 1, 30.0),
     ),
     "power_threshold": SHCNumberEntityDescription[SHCSmartPlug | SHCSmartPlugCompact](
         key="power_threshold",
@@ -435,6 +532,31 @@ async def async_setup_entry(
             for device in session.device_helper.micromodule_dimmers
             if device.supports_dimmer_configuration
         )
+
+    entities.extend(
+        SHCNumber(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=NUMBER_TYPES[key],
+        )
+        for key in ("eco_temperature", "comfort_temperature")
+        for device in session.device_helper.heating_circuits
+    )
+
+    entities.extend(
+        SHCNumber(
+            hass=hass,
+            device=siren,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=NUMBER_TYPES[key],
+        )
+        for siren in session.device_helper.outdoor_sirens
+        if siren.siren is not None
+        for key in (*SIREN_DURATION_KEYS, *SIREN_DELAY_KEYS)
+    )
 
     async_add_entities(entities)
 

@@ -1,0 +1,20 @@
+blueprint:
+  name: Test light with missing actions
+  description: Creates a light with options without their action
+  domain: template
+  input:
+    sensor:
+      name: Sensor Entity
+      description: The sensor entity
+      selector:
+        entity:
+          domain: sensor
+variables:
+  sensor: !input sensor
+light:
+  state: "{{ is_state(sensor, 'on') }}"
+  turn_on: []
+  turn_off: []
+  level: "{{ 100 }}"
+  hs: "{{ (40, 50) }}"
+  set_hs: []

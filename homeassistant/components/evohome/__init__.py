@@ -21,6 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
@@ -73,10 +74,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Remove any (persistent) repair issues for deprecations that have been completed
     for issue_id in (
-        "deprecated_clear_zone_override_service",
-        "deprecated_preset_reset",
-        "deprecated_reset_system_service",
-        "deprecated_set_system_mode_service",
+        "deprecated_clear_zone_override_service",  # Remove in 2027.5.0
+        "deprecated_preset_reset",  # Remove in 2027.5.0
+        "deprecated_refresh_system_service",  # Remove in 2027.7.0
+        "deprecated_reset_system_service",  # Remove in 2027.5.0
+        "deprecated_set_system_mode_service",  # Remove in 2027.5.0
     ):
         ir.async_delete_issue(hass, DOMAIN, issue_id)
 
@@ -108,7 +110,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await c.async_first_refresh()
 
         if not c.last_update_success:
-            _LOGGER.error(f"Failed to fetch initial data: {c.last_exception}")  # noqa: G004
+            # translations aren't available until setup completes, so log the cause
+            err = c.last_exception
+            if isinstance(err, HomeAssistantError) and err.translation_key:
+                err = err.__cause__ or err
+            _LOGGER.error("Failed to fetch initial data: %s", err)
             return False
 
     assert location_coord.tcs is not None  # mypy

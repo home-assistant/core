@@ -67,6 +67,12 @@
         'usr_pid_coolsetp': None,
         'usr_pid_heatsetp': None,
         'usralrms': False,
+        'workinghours_cool_hrsret': 310,
+        'workinghours_dhw_hrsret': 1250,
+        'workinghours_heat_hrsret': 8400,
+        'workinghours_heater1_hrs': 12,
+        'workinghours_heater2_hrs': 0,
+        'workinghours_heater3_hrs': 0,
       }),
       'switches': dict({
         'antilegionella_frcstart_ant': False,

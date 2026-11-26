@@ -382,6 +382,9 @@ async def test_environment_subentry_flow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["data_schema"].schema[CONF_ENDPOINT_ID].config["options"] == [
+        {"value": "42", "label": "my-edge-offline"}
+    ]
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
