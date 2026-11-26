@@ -14,7 +14,11 @@ from zha.mixins import LogMixin
 
 from homeassistant.const import EntityCategory
 from homeassistant.core import State, callback
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_ZIGBEE,
+    ChildDeviceInfo,
+    DeviceInfo,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.group import IntegrationSpecificGroup
@@ -26,7 +30,9 @@ from .helpers import (
     SIGNAL_REMOVE_ENTITIES,
     SIGNAL_REMOVE_ENTITY,
     EntityData,
+    async_get_child_device_name,
     convert_zha_error_to_ha_error,
+    get_child_device_identifier,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,7 +134,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
 
     @property
     @override
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo:
         """Return a device description for device registry."""
         # Group entities have their own device linked via the coordinator
         if self.entity_data.is_group_entity:
@@ -138,6 +144,13 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
 
         zha_device_info = self.entity_data.device_proxy.device_info
         ieee = zha_device_info["ieee"]
+
+        if (child_device := self.entity_data.entity.child_device) is not None:
+            return ChildDeviceInfo(
+                identifiers={get_child_device_identifier(ieee, child_device.id)},
+                parent_device_id=self.entity_data.device_proxy.device_id,
+                **async_get_child_device_name(self.hass, child_device),
+            )
 
         return DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},

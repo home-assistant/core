@@ -112,15 +112,22 @@ def validate_dates(holiday_list: list[str]) -> list[str]:
     return calc_holidays
 
 
-def get_country_options(country: str, options: Mapping[str, Any]) -> dict[str, Any]:
-    """Return the configured options that the country supports."""
-    # A repair can change the country, and the library raises on unsupported options
-    supported_options = country_holidays(country).get_supported_options()
-    return {
-        option: options[option]
-        for option in COUNTRY_OPTIONS
-        if option in options and option in supported_options
-    }
+def _get_language(entity: HolidayBase, language: str | None) -> str | None:
+    """Return the supported language that is closest to the requested language."""
+    if not (default_language := entity.default_language):
+        return language
+    if not language:
+        return default_language
+    supported_languages = entity.supported_languages
+    if language in supported_languages:
+        return language
+    if language.startswith("en"):
+        if default_language.startswith("en"):
+            return default_language
+        for supported_language in supported_languages:
+            if supported_language.startswith("en"):
+                return supported_language
+    return default_language
 
 
 def get_holidays_object(
@@ -135,80 +142,25 @@ def get_holidays_object(
     if not country:
         return HolidayBase()
 
-    set_categories = None
-    if categories:
-        category_list = [PUBLIC]
-        category_list.extend(categories)
-        set_categories = tuple(category_list)
+    # Without years, no holidays are calculated, but the metadata is available
+    entity = country_holidays(country)
+    if (holidays_language := _get_language(entity, language)) != language:
+        LOGGER.debug("Changing language from %s to %s", language, holidays_language)
 
-    country_options = get_country_options(country, options)
-
-    obj_holidays: HolidayBase = country_holidays(
+    # A repair can change the country, and the library raises on unsupported options
+    supported_options = entity.get_supported_options()
+    return country_holidays(
         country,
         subdiv=province,
         years=[year, year + 1],
-        language=language,
-        categories=set_categories,
-        **country_options,
+        language=holidays_language,
+        categories=(PUBLIC, *categories) if categories else None,
+        **{
+            option: options[option]
+            for option in COUNTRY_OPTIONS
+            if option in options and option in supported_options
+        },
     )
-
-    supported_languages = obj_holidays.supported_languages
-    default_language = obj_holidays.default_language
-
-    if default_language and not language:
-        # If no language is set, use the default language
-        LOGGER.debug("Changing language from None to %s", default_language)
-        return country_holidays(  # Return default if no language
-            country,
-            subdiv=province,
-            years=year,
-            language=default_language,
-            categories=set_categories,
-            **country_options,
-        )
-
-    if (
-        default_language
-        and language
-        and language not in supported_languages
-        and language.startswith("en")
-    ):
-        # If language does not match supported languages, use the first English variant
-        if default_language.startswith("en"):
-            LOGGER.debug("Changing language from %s to %s", language, default_language)
-            return country_holidays(  # Return default English if default language
-                country,
-                subdiv=province,
-                years=year,
-                language=default_language,
-                categories=set_categories,
-                **country_options,
-            )
-        for lang in supported_languages:
-            if lang.startswith("en"):
-                LOGGER.debug("Changing language from %s to %s", language, lang)
-                return country_holidays(
-                    country,
-                    subdiv=province,
-                    years=year,
-                    language=lang,
-                    categories=set_categories,
-                    **country_options,
-                )
-
-    if default_language and language and language not in supported_languages:
-        # If language does not match supported languages, use the default language
-        LOGGER.debug("Changing language from %s to %s", language, default_language)
-        return country_holidays(  # Return default English if default language
-            country,
-            subdiv=province,
-            years=year,
-            language=default_language,
-            categories=set_categories,
-            **country_options,
-        )
-
-    return obj_holidays
 
 
 def add_remove_custom_holidays(

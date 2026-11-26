@@ -154,6 +154,11 @@ class AdsHub:
             with self._lock:
                 del self._notification_items[hnotify]
 
+    def delete_device_notifications(self, hnotifies: list[int]) -> None:
+        """Delete several device notifications."""
+        for hnotify in hnotifies:
+            self.delete_device_notification(hnotify)
+
     def _device_notification_callback(self, notification, name):
         """Handle device notifications."""
         contents = notification.contents

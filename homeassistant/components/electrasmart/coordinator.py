@@ -45,6 +45,7 @@ class ElectraSmartCoordinator(DataUpdateCoordinator[None]):
         self.api = api
         self._skip_until: dict[str, float] = {}
         self._consecutive_failures: dict[str, int] = {}
+        self._confirmed_macs: set[str] = set()
 
     @override
     async def _async_update_data(self) -> None:
@@ -56,6 +57,10 @@ class ElectraSmartCoordinator(DataUpdateCoordinator[None]):
         arriving for UNAVAILABLE_THRESH_SEC.
         """
         now = time.monotonic()
+        # Only the ACs this refresh fetched carry a state the cloud confirmed,
+        # so the ACs whose polls are paused and the ones that fail to answer
+        # are collected afresh on every refresh.
+        self._confirmed_macs = set()
         await asyncio.gather(
             *(
                 self._async_fetch_telemetry(device)
@@ -83,6 +88,19 @@ class ElectraSmartCoordinator(DataUpdateCoordinator[None]):
             return
 
         self._consecutive_failures.pop(device.mac, None)
+        self._confirmed_macs.add(device.mac)
+
+    def last_refresh_confirmed(self, mac: str) -> bool:
+        """Return whether the refresh that just ran confirmed this AC's state.
+
+        An AC is confirmed when the refresh fetched its telemetry and the
+        cloud answered. One whose polls are paused, because the API still
+        serves the state from before a command, and one whose fetch failed
+        both keep the state they already had, which is the state a command
+        left behind when the cloud did not accept it. The entities use this to
+        decide whether they may publish the state the device object carries.
+        """
+        return mac in self._confirmed_macs
 
     def async_command_sent(self, mac: str) -> None:
         """Keep the state a command just set, as the API lags behind it."""

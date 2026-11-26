@@ -11,6 +11,7 @@ from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
     PyiCloud2FARequiredException,
     PyiCloudAcceptTermsException,
+    PyiCloudAccountLockedException,
     PyiCloudAPIResponseException,
     PyiCloudAuthRequiredException,
     PyiCloudConnectionException,
@@ -157,6 +158,12 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             self.api, challenged = await self.hass.async_add_executor_job(
                 self._login_without_stored_session, storage_path
+            )
+        except PyiCloudAccountLockedException as retry_error:
+            _LOGGER.error("Apple Account is locked: %s", retry_error)
+            self.api = None
+            return self._show_setup_form(
+                user_input, {CONF_PASSWORD: "account_locked"}, step_id
             )
         except PyiCloudFailedLoginException as retry_error:
             _LOGGER.error("Error logging into iCloud service: %s", retry_error)
@@ -338,6 +345,11 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             except PyiCloudAcceptTermsException as error:
                 return await self._async_terms_required(error)
+            except PyiCloudAccountLockedException as error:
+                _LOGGER.error("Apple Account is locked: %s", error)
+                self.api = None
+                errors = {CONF_PASSWORD: "account_locked"}
+                return self._show_setup_form(user_input, errors, step_id)
             except PyiCloudFailedLoginException as error:
                 _LOGGER.error("Error logging into iCloud service: %s", error)
                 self.api = None

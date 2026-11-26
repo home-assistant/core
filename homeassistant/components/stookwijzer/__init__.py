@@ -18,7 +18,7 @@ from .const import DOMAIN, LOGGER
 from .coordinator import StookwijzerConfigEntry, StookwijzerCoordinator
 from .services import async_setup_services
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.IMAGE, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
