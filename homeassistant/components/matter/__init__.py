@@ -119,6 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> No
                     hass,
                     DOMAIN,
                     "server_version_version_too_old",
+                    config_entry_id=entry.entry_id,
                     is_fixable=False,
                     severity=IssueSeverity.ERROR,
                     translation_key="server_version_version_too_old",
@@ -128,6 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> No
                 hass,
                 DOMAIN,
                 "server_version_version_too_new",
+                config_entry_id=entry.entry_id,
                 is_fixable=False,
                 severity=IssueSeverity.ERROR,
                 translation_key="server_version_version_too_new",
@@ -445,9 +447,9 @@ async def async_remove_config_entry_device(
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
-    if not isinstance(device_entry, dr.DeviceEntry):
-        # This integration does not create child devices.
-        return False
+    if isinstance(device_entry, dr.ChildDeviceEntry):
+        # Only an orphaned child device, whose endpoint is gone, can be removed.
+        return get_node_from_device_entry(hass, device_entry) is None
     node = get_node_from_device_entry(hass, device_entry)
 
     if node is None:

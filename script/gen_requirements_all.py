@@ -74,8 +74,8 @@ grpcio-reflection==1.83.1
 # runtime requirement install cannot pull in a botocore version that is
 # incompatible with aiobotocore.
 # see https://github.com/home-assistant/core/issues/167399
-boto3==1.42.97
-botocore==1.42.97
+boto3==1.43.117
+botocore==1.43.117
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -94,7 +94,7 @@ uuid==1000000000.0.0
 # httpx2 requires httpcore2 and anyio, while httpcore2 requires h11. The
 # version constraints on anyio and h11 are quite loose. Pin them so we can
 # directly link HA versions to these library versions.
-anyio==4.15.1
+anyio==4.16.0
 h11==0.16.0
 
 # Many libraries still depend on httpx/httpcore. Those imports are aliased to
@@ -115,7 +115,7 @@ multidict>=6.0.2
 Brotli>=1.2.1
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.14.1
+pydantic==2.14.3
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0
@@ -232,12 +232,6 @@ auth0-python<5.0
 backoff==2.2.1
 python-backoff<2.4.0
 
-# bitstring 5.0.0 removed ConstBitStream, which pysml (used by edl21) still imports
-# https://github.com/home-assistant/core/issues/185883
-# https://codeberg.org/obi/pysml/issues/33
-# Remove once pysml supports bitstring>=5
-bitstring<5
-
 # graphql-core 3.3 removed graphql_input_types, which apischema 0.19.0
 # (used by aioaseko) still imports
 # https://github.com/home-assistant/core/issues/184918
@@ -325,8 +319,11 @@ def gather_recursive_requirements(
     )
     integration.load_manifest()
     reqs = {x for x in integration.requirements if x not in CONSTRAINT_BASE}
-    for dep_domain in integration.dependencies:
-        reqs.update(gather_recursive_requirements(dep_domain, seen))
+    for dep_domain in integration.dependencies + integration.manifest.get(
+        "after_dependencies", []
+    ):
+        if dep_domain not in seen:
+            reqs.update(gather_recursive_requirements(dep_domain, seen))
     return reqs
 
 

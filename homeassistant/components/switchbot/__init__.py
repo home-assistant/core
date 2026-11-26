@@ -7,7 +7,6 @@ import switchbot
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothReachabilityIntent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_MAC,
@@ -129,6 +128,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.K11_PLUS_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K20_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.HUB3.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
+    SupportedModels.HUB4.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
     SupportedModels.LOCK_LITE.value: [
         Platform.BINARY_SENSOR,
         Platform.LOCK,
@@ -179,6 +179,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.RGBICWW_STRIP_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.PERMANENT_OUTDOOR_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.PLUG_MINI_EU.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.PLUG_MINI_IT.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.RELAY_SWITCH_2PM.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.GARAGE_DOOR_OPENER.value: [Platform.COVER, Platform.SENSOR],
     SupportedModels.CLIMATE_PANEL.value: [
@@ -226,7 +227,10 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
     ],
     SupportedModels.WEATHER_STATION.value: [Platform.SENSOR],
-    SupportedModels.UNIVERSAL_REMOTE.value: [Platform.SENSOR],
+    SupportedModels.UNIVERSAL_REMOTE.value: [
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
     SupportedModels.CANDLE_WARMER_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.RGBIC_NEON_ROPE_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.RGBIC_NEON_WIRE_ROPE_LIGHT.value: [
@@ -263,7 +267,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.K11_PLUS_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K20_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.LOCK_LITE.value: switchbot.SwitchbotLock,
-    SupportedModels.LOCK_ULTRA.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_ULTRA.value: switchbot.SwitchbotLockUltra,
     SupportedModels.AIR_PURIFIER_JP.value: switchbot.SwitchbotAirPurifier,
     SupportedModels.AIR_PURIFIER_US.value: switchbot.SwitchbotAirPurifier,
     SupportedModels.AIR_PURIFIER_TABLE_JP.value: switchbot.SwitchbotAirPurifier,
@@ -280,6 +284,7 @@ CLASS_BY_DEVICE = {
         switchbot.SwitchbotPermanentOutdoorLight
     ),
     SupportedModels.PLUG_MINI_EU.value: switchbot.SwitchbotRelaySwitch,
+    SupportedModels.PLUG_MINI_IT.value: switchbot.SwitchbotRelaySwitch,
     SupportedModels.RELAY_SWITCH_2PM.value: switchbot.SwitchbotRelaySwitch2PM,
     SupportedModels.GARAGE_DOOR_OPENER.value: switchbot.SwitchbotGarageDoorOpener,
     SupportedModels.SMART_THERMOSTAT_RADIATOR.value: (
@@ -293,7 +298,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.LOCK_VISION_PRO.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_VISION.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_PRO_WIFI.value: switchbot.SwitchbotLock,
-    SupportedModels.LOCK_ULTRA_MAX.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_ULTRA_MAX.value: switchbot.SwitchbotLockUltra,
     SupportedModels.CANDLE_WARMER_LAMP.value: switchbot.SwitchbotCandleWarmerLamp,
     SupportedModels.RGBIC_NEON_ROPE_LIGHT.value: switchbot.SwitchbotRgbicNeonLight,
     SupportedModels.RGBIC_NEON_WIRE_ROPE_LIGHT.value: switchbot.SwitchbotRgbicNeonLight,
@@ -547,12 +552,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
         _LOGGER.debug("Migration to version 2.1 successful")
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: SwitchbotConfigEntry
+) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> None:
     """Unload a config entry."""
     sensor_type = entry.data[CONF_SENSOR_TYPE]
     await hass.config_entries.async_unload_platforms_or_raise(

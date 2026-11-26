@@ -24,8 +24,10 @@ from pyicloud.services.findmyiphone import AppleDevice
 from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_USERNAME, EntityStateAttribute
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
@@ -513,11 +515,14 @@ class IcloudAccount:
         # Gets devices infos
         devices = list(api_devices)
         new_device = False
+        reported_device_ids: set[str] = set()
         first_status: dict[str, Any] | None = None
         for device in devices:
             status = device.status(DEVICE_STATUS_SET)
             device_id = status[DEVICE_ID]
             device_name = status[DEVICE_NAME]
+            if device_id is not None:
+                reported_device_ids.add(device_id)
 
             if device_id is None or device_name is None:
                 # status() reports every requested field, using None for the
@@ -568,14 +573,28 @@ class IcloudAccount:
             self._devices[device_id].update(status)
             new_device = True
 
-        if (
+        # A pending read is not the whole list, so wait for the retry below
+        # before treating anything missing from it as gone from the account.
+        retry_pending = (
             # status() reports every requested field, using None for the ones
             # iCloud left out; indexing the payload directly would raise here
             # instead, and during setup that is before any timer is armed.
             first_status is not None
             and DEVICE_STATUS_CODES.get(first_status[DEVICE_STATUS]) == "pending"
             and not self._retried_fetch
-        ):
+        )
+
+        if not retry_pending:
+            # This runs in the executor, while the registries only change
+            # on the event loop; waiting leaves the devices deleted before
+            # the update signal below reaches the entities.
+            run_callback_threadsafe(
+                self.hass.loop,
+                self._async_delete_stale_devices,
+                reported_device_ids,
+            ).result()
+
+        if retry_pending:
             _LOGGER.debug("Pending devices, trying again in 15s")
             self._fetch_interval = 0.25
             self._retried_fetch = True
@@ -591,6 +610,41 @@ class IcloudAccount:
             dispatcher_send(self.hass, self.signal_device_new)
 
         self._schedule_next_fetch()
+
+    @callback
+    def _async_delete_stale_devices(self, reported_device_ids: set[str]) -> None:
+        """Delete the devices Apple stopped reporting, with their entities.
+
+        This runs on the event loop, as scheduled by update_devices().
+        """
+        device_registry = dr.async_get(self.hass)
+        for device_id in set(self._devices) - reported_device_ids:
+            self._devices.pop(device_id)
+
+        # The registry holds the devices of the previous run too, so it is
+        # what catches a device that went stale while Home Assistant was off.
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, self._config_entry.entry_id
+        ):
+            # The account's own service device (calendars, to-dos) is never
+            # in Apple's report.
+            if device_entry.entry_type is DeviceEntryType.SERVICE:
+                continue
+            icloud_ids = {
+                identifier[1]
+                for identifier in device_entry.identifiers
+                if identifier[0] == DOMAIN
+            }
+            if not icloud_ids or icloud_ids & reported_device_ids:
+                continue
+
+            _LOGGER.info(
+                "Removing iCloud device %s, no longer reported by Apple",
+                device_entry.name_by_user or device_entry.name,
+            )
+            # The entity registry removes the device's entities when the
+            # device goes.
+            device_registry.async_remove_device(device_entry.id)
 
     def _ask_to_authenticate(self, err: Exception) -> None:
         """Ask the user to log in again after iCloud rejected the session.
@@ -838,6 +892,11 @@ class IcloudAccount:
         return self._fetch_interval
 
     @property
+    def max_interval(self) -> int:
+        """Return the longest interval between two fetches, in minutes."""
+        return self._max_interval
+
+    @property
     def devices(self) -> dict[str, IcloudDevice]:
         """Return the account devices."""
         return self._devices
@@ -922,12 +981,58 @@ class IcloudDevice:
         # Deliberately not nested under the battery block above: a device
         # iCloud reports no battery for still has a location worth reading.
         location = self._status.get(DEVICE_LOCATION)
-        if location and _is_usable_location(location):
+        if location and _is_usable_location(location) and not self._is_stale(location):
             announce = announce or self._location is None
             self._location = location
         else:
+            # Without a location the tracker reports "unknown" rather than the
+            # place the device has since left.
             self._location = None
         return announce
+
+    def _is_stale(self, location: dict[str, Any]) -> bool:
+        """Return whether a location fix is too old to be trusted.
+
+        Both signals are needed, because neither is sufficient alone:
+
+        `isOld` says iCloud served a cached fix rather than a fresh one, but
+        not why. A device that was briefly unreachable looks exactly like one
+        that has genuinely moved away, so acting on the flag by itself would
+        drop locations that are still perfectly good.
+
+        The age of the fix alone is no better: a device sitting still keeps
+        reporting the same old timestamp while iCloud still considers that fix
+        current, and discarding those would throw away the only location such
+        a device ever reports.
+
+        Requiring both means a fix is only discarded once iCloud has marked it
+        cached *and* it is older than the longest gap between two fetches - by
+        which point a fresher one should already have superseded it. The half
+        interval of headroom keeps a fix that merely lands late from being
+        treated as stale.
+
+        The configured maximum is used rather than the current fetch interval,
+        which is recomputed after this runs and drops as low as fifteen
+        seconds while devices are still pending - a threshold that short would
+        discard every cached fix there is.
+        """
+        if not location.get(DEVICE_LOCATION_IS_OLD):
+            return False
+
+        timestamp = location.get(DEVICE_LOCATION_TIMESTAMP)
+        if isinstance(timestamp, bool) or not isinstance(timestamp, int | float):
+            # Without a time there is nothing to judge the fix by, and one that
+            # is not a number cannot be read as one.
+            return False
+
+        try:
+            # iCloud reports the fix time in milliseconds.
+            fixed_at = datetime.fromtimestamp(timestamp / 1000, tz=UTC)
+        except OverflowError, OSError, ValueError:
+            # NaN, infinity and values outside the range of a date.
+            return False
+        age = utcnow() - fixed_at
+        return age.total_seconds() > self._account.max_interval * 60 * 1.5
 
     def play_sound(self) -> None:
         """Play sound on the device."""

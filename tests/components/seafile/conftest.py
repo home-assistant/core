@@ -95,6 +95,10 @@ def mock_seafile_client() -> Generator[AsyncMock]:
         client.get_library.return_value = LibraryDetail.from_json(
             load_fixture("library.json", DOMAIN)
         )
+        client.get_library_history_limit.return_value = -1
+        client.set_library_history_limit.side_effect = lambda _library_id, keep_days: (
+            keep_days
+        )
         client.get_directory.return_value = backup_listing(
             f"{BACKUP_BASE_NAME}.tar", f"{BACKUP_BASE_NAME}_meta.json"
         )

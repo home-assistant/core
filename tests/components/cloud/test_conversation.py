@@ -1,4 +1,4 @@
-"""Tests for the Home Assistant Cloud conversation entity."""
+"""Tests for the Home Assistant Link conversation entity."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -22,7 +22,7 @@ def cloud_conversation_entity(hass: HomeAssistant) -> CloudConversationEntity:
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     entity = CloudConversationEntity(cloud, entry)
-    entity.entity_id = "conversation.home_assistant_cloud"
+    entity.entity_id = "conversation.home_assistant_link"
     entity.hass = hass
     return entity
 

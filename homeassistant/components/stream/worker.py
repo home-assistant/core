@@ -6,6 +6,7 @@ import contextlib
 from dataclasses import fields
 import datetime as dt
 from io import SEEK_END, BytesIO
+from itertools import takewhile
 import logging
 import math
 from threading import Event
@@ -640,6 +641,8 @@ def stream_worker(
         # the stimeout option was renamed to timeout as of ffmpeg 5.0
         pyav_options["timeout"] = pyav_options["stimeout"]
         del pyav_options["stimeout"]
+    if quit_event.is_set():
+        return
     container = try_open_stream(source, pyav_options)
     try:
         video_stream = container.streams.video[0]
@@ -672,7 +675,14 @@ def stream_worker(
         int(1 / video_stream.time_base),
         int(1 / audio_stream.time_base) if audio_stream else 1,
     )
-    unvalidated_packets = PeekIterator(container.demux((video_stream, audio_stream)))
+    # The checks below can discard packets indefinitely,
+    # so check for a stop on every packet read
+    unvalidated_packets = PeekIterator(
+        takewhile(
+            lambda _: not quit_event.is_set(),
+            container.demux((video_stream, audio_stream)),
+        )
+    )
     container_packets = PeekIterator(
         filter(dts_validator.is_valid, unvalidated_packets)
     )
@@ -713,6 +723,8 @@ def stream_worker(
         raise
     except StopIteration as ex:
         container.close()
+        if quit_event.is_set():
+            return
         raise StreamEndedError("Stream ended; no additional packets") from ex
     except av.FFmpegError as ex:
         container.close()
@@ -746,6 +758,8 @@ def stream_worker(
             except StreamWorkerError:
                 raise
             except StopIteration as ex:
+                if quit_event.is_set():
+                    break
                 raise StreamEndedError("Stream ended; no additional packets") from ex
             except av.FFmpegError as ex:
                 raise StreamWorkerError(

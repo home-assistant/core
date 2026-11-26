@@ -8,7 +8,7 @@ from pytest_homeassistant.common import assert_setup_component, async_capture_ev
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components import http, image_processing as ip
-from homeassistant.const import ATTR_ENTITY_PICTURE
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -34,7 +34,7 @@ def aiohttp_unused_port_factory(
 def get_url(hass: HomeAssistant) -> str:
     """Return camera url."""
     state = hass.states.get("camera.demo_camera")
-    return f"{hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
+    return f"{hass.config.internal_url}{state.attributes.get(EntityStateAttribute.ENTITY_PICTURE)}"
 
 
 async def setup_image_processing(

@@ -14,9 +14,6 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-if TYPE_CHECKING:
-    from . import SqueezeboxConfigEntry
-
 from .const import (
     DOMAIN,
     PLAYER_UPDATE_INTERVAL,
@@ -24,6 +21,9 @@ from .const import (
     SIGNAL_PLAYER_REDISCOVERED,
     STATUS_API_TIMEOUT,
 )
+
+if TYPE_CHECKING:
+    from . import SqueezeboxConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

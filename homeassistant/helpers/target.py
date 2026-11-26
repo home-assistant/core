@@ -11,14 +11,10 @@ from typing import Any, TypeGuard, override
 import probatio
 
 from homeassistant.const import (
-    ATTR_AREA_ID,
-    ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
     CONF_EXCLUDE,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
+    TargetKey,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -38,7 +34,6 @@ from . import (
     group,
     label_registry as lr,
 )
-from .deprecation import deprecated_class
 from .event import async_track_state_change_event
 from .typing import ConfigType
 
@@ -81,11 +76,11 @@ class TargetSelection:
 
     def __init__(self, config: ConfigType) -> None:
         """Extract ids from the config."""
-        entity_ids: str | list[str] | None = config.get(ATTR_ENTITY_ID)
-        device_ids: str | list[str] | None = config.get(ATTR_DEVICE_ID)
-        area_ids: str | list[str] | None = config.get(ATTR_AREA_ID)
-        floor_ids: str | list[str] | None = config.get(ATTR_FLOOR_ID)
-        label_ids: str | list[str] | None = config.get(ATTR_LABEL_ID)
+        entity_ids: str | list[str] | None = config.get(TargetKey.ENTITY_ID)
+        device_ids: str | list[str] | None = config.get(TargetKey.DEVICE_ID)
+        area_ids: str | list[str] | None = config.get(TargetKey.AREA_ID)
+        floor_ids: str | list[str] | None = config.get(TargetKey.FLOOR_ID)
+        label_ids: str | list[str] | None = config.get(TargetKey.LABEL_ID)
 
         self.entity_ids = (
             set(probatio.EnsureList()(entity_ids)) if _has_match(entity_ids) else set()
@@ -125,16 +120,6 @@ class TargetSelection:
             or self.floor_ids
             or self.label_ids
         )
-
-
-@deprecated_class("TargetSelection", breaks_in_ha_version="2026.12.0")
-class TargetSelectorData(TargetSelection):
-    """Class to represent target selector data."""
-
-    @property
-    def has_any_selector(self) -> bool:
-        """Determine if any selectors are present."""
-        return super().has_any_target
 
 
 @dataclasses.dataclass(slots=True)
@@ -411,11 +396,11 @@ def _async_extract_referenced_entity_ids(
 
 
 _TARGET_ITEM_TYPES: tuple[tuple[str, str], ...] = (
-    ("entity", ATTR_ENTITY_ID),
-    ("device", ATTR_DEVICE_ID),
-    ("area", ATTR_AREA_ID),
-    ("floor", ATTR_FLOOR_ID),
-    ("label", ATTR_LABEL_ID),
+    ("entity", TargetKey.ENTITY_ID),
+    ("device", TargetKey.DEVICE_ID),
+    ("area", TargetKey.AREA_ID),
+    ("floor", TargetKey.FLOOR_ID),
+    ("label", TargetKey.LABEL_ID),
 )
 
 

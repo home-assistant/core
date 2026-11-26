@@ -7,6 +7,7 @@ from struct import error as StructError, pack, unpack_from
 from typing import TYPE_CHECKING, Any
 
 import orjson
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.helpers.template.helpers import raise_no_default
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 _ORJSON_PASSTHROUGH_OPTIONS = (
     orjson.OPT_PASSTHROUGH_DATACLASS | orjson.OPT_PASSTHROUGH_DATETIME

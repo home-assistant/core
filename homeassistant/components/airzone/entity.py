@@ -23,7 +23,6 @@ from aioairzone.const import (
 )
 from aioairzone.exceptions import AirzoneError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -112,7 +111,7 @@ class AirzoneHotWaterEntity(AirzoneEntity):
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -157,7 +156,7 @@ class AirzoneWebServerEntity(AirzoneEntity):
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -186,7 +185,7 @@ class AirzoneZoneEntity(AirzoneEntity):
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
         system_zone_id: str,
         zone_data: dict[str, Any],
     ) -> None:

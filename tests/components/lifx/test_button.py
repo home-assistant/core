@@ -27,7 +27,6 @@ def patch_lifx_identify_delay() -> Any:
 async def loaded_device(hass: HomeAssistant) -> Light:
     """Set up a typed LIFX entry and return its device."""
     device = create_mock_light()
-    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
     return device
 

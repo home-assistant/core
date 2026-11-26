@@ -5,8 +5,11 @@ from typing import Any, override
 
 from aioesphomeapi import EntityInfo, LockCommand, LockEntityState, LockInfo, LockState
 
-from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.const import ATTR_CODE
+from homeassistant.components.lock import (
+    LockEntity,
+    LockEntityFeature,
+    LockServiceArgument,
+)
 from homeassistant.core import callback
 
 from .entity import (
@@ -79,7 +82,7 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
     @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        code = kwargs.get(ATTR_CODE)
+        code = kwargs.get(LockServiceArgument.CODE)
         self._client.lock_command(
             self._key, LockCommand.UNLOCK, code, device_id=self._static_info.device_id
         )

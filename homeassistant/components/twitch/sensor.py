@@ -6,9 +6,9 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import TwitchConfigEntry, TwitchCoordinator, TwitchUpdate
+from .coordinator import TwitchConfigEntry, TwitchCoordinator
+from .entity import TwitchEntity
 
 ATTR_GAME = "game"
 ATTR_TITLE = "title"
@@ -41,30 +41,20 @@ async def async_setup_entry(
     )
 
 
-class TwitchSensor(CoordinatorEntity[TwitchCoordinator], SensorEntity):
+class TwitchSensor(TwitchEntity, SensorEntity):
     """Representation of a Twitch channel."""
 
     _attr_translation_key = "channel"
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = [STATE_OFFLINE, STATE_STREAMING]
+    # The channel status is the main feature of the device, so the entity
+    # takes the device's name.
+    _attr_name = None
 
     def __init__(self, coordinator: TwitchCoordinator, channel_id: str) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.channel_id = channel_id
+        super().__init__(coordinator, channel_id)
         self._attr_unique_id = channel_id
-        self._attr_name = self.channel.name
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and self.channel_id in self.coordinator.data
-
-    @property
-    def channel(self) -> TwitchUpdate:
-        """Return the channel data."""
-        return self.coordinator.data[self.channel_id]
 
     @property
     @override

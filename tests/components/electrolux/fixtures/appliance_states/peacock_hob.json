@@ -1,0 +1,65 @@
+{
+  "applianceId": "999008120_00:99907833-443E073D986E",
+  "connectionState": "connected",
+  "status": "enabled",
+  "properties": {
+    "reported": {
+      "oTA3TargetVersion": "S000412012A\u0000",
+      "applianceInfo": {
+        "capabilityHash": "6e7da5a7b8b39c99b9b08dd5b2e0f834885fc473832414e05ef3d31da0a5440d",
+        "applianceType": "HB"
+      },
+      "oTA3CurrentVersion": "S0004120121\u0000",
+      "remoteControl": "NOT_SAFETY_RELEVANT_ENABLED",
+      "oTA3State": "IDLE",
+      "cpv": "00",
+      "applianceState": "OFF",
+      "hobHood": {
+        "hoodDryingCycle": "OFF",
+        "hobToHoodState": "MANUAL",
+        "hoodFilterCharcIndication": false,
+        "hobToHoodFanSpeed": "OFF",
+        "windowNotification": "OPENING_REQUIRED",
+        "hobToHoodMode": "H3",
+        "hoodFilterGreaseIndication": false
+      },
+      "alerts": [],
+      "oTA3LastResult": "NONE",
+      "networkInterface": {
+        "swVersion": "v4.8.06rc2_argo",
+        "otaState": "IDLE",
+        "autoLocalTimeOffset": 7200,
+        "niuSwUpdateCurrentDescription": "A24559615A-S00031110B",
+        "timeZoneDatabaseName": "Europe/Stockholm",
+        "swAncAndRevision": "S00031110B",
+        "linkQualityIndicator": "VERY_GOOD",
+        "oTA3TargetVersion": "S000412012A\u0000",
+        "oTA3LastResult": "NONE",
+        "oTA3CurrentVersion": "S0004120121\u0000",
+        "oTA3State": "IDLE"
+      },
+      "childLock": false,
+      "hobZone2": {
+        "residualHeatState": "NO",
+        "heatingQualitativeLevel": 0,
+        "hobPotDetected": "NO_POT_IDLE"
+      },
+      "hobZone1": {
+        "residualHeatState": "NO",
+        "heatingQualitativeLevel": 0,
+        "hobPotDetected": "NO_POT_IDLE"
+      },
+      "hobZone4": {
+        "residualHeatState": "NO",
+        "heatingQualitativeLevel": 0,
+        "hobPotDetected": "NO_POT_IDLE"
+      },
+      "hobZone3": {
+        "residualHeatState": "NO",
+        "heatingQualitativeLevel": 0,
+        "hobPotDetected": "NO_POT_IDLE"
+      },
+      "connectivityState": "connected"
+    }
+  }
+}

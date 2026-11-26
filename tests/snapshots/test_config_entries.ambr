@@ -28,6 +28,7 @@
     'active': True,
     'breaks_in_ha_version': '2025.11.0',
     'config_entry_id': None,
+    'config_subentry_id': None,
     'created': <ANY>,
     'data': dict({
       'issue_type': 'config_entry_unique_id_collision',
@@ -55,6 +56,7 @@
     'active': True,
     'breaks_in_ha_version': '2025.11.0',
     'config_entry_id': None,
+    'config_subentry_id': None,
     'created': <ANY>,
     'data': dict({
       'issue_type': 'config_entry_unique_id_collision',
@@ -84,6 +86,7 @@
     'active': True,
     'breaks_in_ha_version': '2025.11.0',
     'config_entry_id': None,
+    'config_subentry_id': None,
     'created': <ANY>,
     'data': dict({
       'issue_type': 'config_entry_unique_id_collision',

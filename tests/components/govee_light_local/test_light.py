@@ -1,11 +1,12 @@
 """Test Govee light local."""
 
+import asyncio
 from errno import EACCES, EADDRINUSE, EADDRNOTAVAIL, EAFNOSUPPORT, ENETDOWN
 from ipaddress import IPv4Network
 import logging
 import os
 from typing import Any
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from govee_local_api import GoveeDevice, GoveeLightCapabilities
@@ -17,11 +18,11 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components.govee_light_local.const import (
     DEVICE_TIMEOUT,
     DOMAIN,
+    REBIND_INTERVAL,
     SCAN_INTERVAL,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
@@ -31,20 +32,16 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
     DEFAULT_CAPABILITIES,
-    DISABLED_NETWORK_ADAPTERS,
     EXPECTED_LISTENING_ADDRESSES,
     SCENE_CAPABILITIES,
     setup_light,
@@ -241,7 +238,7 @@ async def test_light_on_off(hass: HomeAssistant, mock_govee_api: AsyncMock) -> N
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {"entity_id": light.entity_id},
         blocking=True,
     )
@@ -255,7 +252,7 @@ async def test_light_on_off(hass: HomeAssistant, mock_govee_api: AsyncMock) -> N
     # Turn off
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {"entity_id": light.entity_id},
         blocking=True,
     )
@@ -307,8 +304,12 @@ async def test_turn_on_call_order(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS_PCT: 50, attribute: value},
+        LightService.TURN_ON,
+        {
+            "entity_id": light.entity_id,
+            LightServiceArgument.BRIGHTNESS_PCT: 50,
+            attribute: value,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -334,8 +335,8 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: AsyncMock) 
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS_PCT: 50},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.BRIGHTNESS_PCT: 50},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -348,8 +349,8 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: AsyncMock) 
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.BRIGHTNESS: 255},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -362,8 +363,8 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: AsyncMock) 
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.BRIGHTNESS: 255},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -387,8 +388,8 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: AsyncMock) -> No
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_RGB_COLOR: [100, 255, 50]},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.RGB_COLOR: [100, 255, 50]},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -405,8 +406,8 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: AsyncMock) -> No
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_COLOR_TEMP_KELVIN: 4400},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.COLOR_TEMP_KELVIN: 4400},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -432,8 +433,8 @@ async def test_scene_on(hass: HomeAssistant, mock_govee_api: AsyncMock) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "sunrise"},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.EFFECT: "sunrise"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -461,15 +462,15 @@ async def test_scene_restore_rgb(
     # Set initial color
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_RGB_COLOR: initial_color},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.RGB_COLOR: initial_color},
         blocking=True,
     )
     await hass.async_block_till_done()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.BRIGHTNESS: 255},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -484,8 +485,8 @@ async def test_scene_restore_rgb(
     # Activate scene
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "sunrise"},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.EFFECT: "sunrise"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -499,8 +500,8 @@ async def test_scene_restore_rgb(
     # Deactivate scene
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "none"},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.EFFECT: "none"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -529,8 +530,11 @@ async def test_scene_restore_temperature(
     # Set initial color
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_COLOR_TEMP_KELVIN: initial_color},
+        LightService.TURN_ON,
+        {
+            "entity_id": light.entity_id,
+            LightServiceArgument.COLOR_TEMP_KELVIN: initial_color,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -544,8 +548,8 @@ async def test_scene_restore_temperature(
     # Activate scene
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "sunrise"},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.EFFECT: "sunrise"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -559,8 +563,8 @@ async def test_scene_restore_temperature(
     # Deactivate scene
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "none"},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.EFFECT: "none"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -622,15 +626,15 @@ async def test_scene_none(hass: HomeAssistant, mock_govee_api: AsyncMock) -> Non
     # Set initial color
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_RGB_COLOR: initial_color},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.RGB_COLOR: initial_color},
         blocking=True,
     )
     await hass.async_block_till_done()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.BRIGHTNESS: 255},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -645,8 +649,8 @@ async def test_scene_none(hass: HomeAssistant, mock_govee_api: AsyncMock) -> Non
     # Activate scene
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "none"},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.EFFECT: "none"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -824,20 +828,179 @@ async def test_setup_with_partial_bind(
     assert "Not listening on 10.0.0.7: Cannot assign requested address" in caplog.text
 
 
-async def test_light_setup_retry_without_listening_addresses(
-    hass: HomeAssistant, mock_govee_api: AsyncMock
+@pytest.mark.usefixtures("mock_network_adapters")
+async def test_partial_bind_is_retried(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test setup is retried when no enabled adapter has an IPv4 address."""
+    """Test addresses that failed to bind are retried once per REBIND_INTERVAL.
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+    Walks a single timeline: the first retry still fails and the interval
+    holds across the next poll, the second retry brings the adapter back,
+    and nothing is retried once every address is bound.
+    """
 
-    with patch(
-        "homeassistant.components.network.async_get_adapters",
-        return_value=DISABLED_NETWORK_ADAPTERS,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.govee_light_local")
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert entry.reason == "No enabled network adapter has an IPv4 address to listen on"
-    mock_govee_api.start.assert_not_awaited()
+    mock_govee_api.listening_addresses = ["192.168.1.2"]
+    mock_govee_api.networks = [IPv4Network("192.168.1.0/24")]
+    mock_govee_api.bind_failures = [
+        ("10.0.0.7", OSError(EADDRNOTAVAIL, "Cannot assign requested address"))
+    ]
+
+    async def rebind_failed() -> list[str]:
+        if mock_govee_api.rebind_failed.await_count == 1:
+            return []
+        mock_govee_api.listening_addresses = ["10.0.0.7", "192.168.1.2"]
+        mock_govee_api.networks = [
+            IPv4Network("10.0.0.0/8"),
+            IPv4Network("192.168.1.0/24"),
+        ]
+        mock_govee_api.bind_failures = []
+        return ["10.0.0.7"]
+
+    mock_govee_api.rebind_failed.side_effect = rebind_failed
+
+    await setup_light(hass, mock_govee_api)
+    caplog.clear()
+
+    # Nothing is retried before REBIND_INTERVAL has elapsed.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    mock_govee_api.rebind_failed.assert_not_awaited()
+
+    # First retry: the address still does not bind.
+    freezer.tick(REBIND_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert mock_govee_api.rebind_failed.await_count == 1
+    assert "Listening on port 4002" not in caplog.text
+
+    # The next poll does not retry outside the interval.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert mock_govee_api.rebind_failed.await_count == 1
+
+    # Second retry: the adapter is back and the live set is logged.
+    freezer.tick(REBIND_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert mock_govee_api.rebind_failed.await_count == 2
+    assert (
+        "Listening on port 4002: 10.0.0.7 (10.0.0.0/8), 192.168.1.2 (192.168.1.0/24)"
+        in caplog.text
+    )
+
+    # Everything is bound, so later polls leave the controller alone.
+    freezer.tick(REBIND_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert mock_govee_api.rebind_failed.await_count == 2
+
+
+async def test_full_bind_is_never_retried(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a controller that bound every address never calls rebind_failed."""
+
+    await setup_light(hass, mock_govee_api)
+
+    freezer.tick(REBIND_INTERVAL + SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    mock_govee_api.rebind_failed.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_network_adapters")
+async def test_unload_waits_for_in_flight_rebind(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test unloading lets a running rebind finish before the controller is cleaned up."""
+
+    mock_govee_api.bind_failures = [
+        ("10.0.0.7", OSError(EADDRNOTAVAIL, "Cannot assign requested address"))
+    ]
+    events: list[str] = []
+    rebind_started = asyncio.Event()
+    rebind_unblocked = asyncio.Event()
+
+    async def rebind_failed() -> list[str]:
+        rebind_started.set()
+        await rebind_unblocked.wait()
+        events.append("rebind_done")
+        return []
+
+    mock_govee_api.rebind_failed.side_effect = rebind_failed
+    mock_govee_api.cleanup.side_effect = lambda **_: (
+        events.append("cleanup") or mock_govee_api.cleanup.return_value
+    )
+
+    _entry, _ = await setup_light(hass, mock_govee_api)
+
+    freezer.tick(REBIND_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await rebind_started.wait()
+
+    unload_task = hass.async_create_task(
+        hass.config_entries.async_unload(_entry.entry_id)
+    )
+    await asyncio.sleep(0)
+    # Unload is waiting on the rebind, so the controller is still untouched.
+    assert events == []
+
+    rebind_unblocked.set()
+    assert await unload_task
+    await hass.async_block_till_done()
+
+    assert events == ["rebind_done", "cleanup"]
+
+
+@pytest.mark.parametrize(
+    "bind_failures",
+    [
+        pytest.param(
+            [("10.0.0.7", OSError(EADDRNOTAVAIL, "Cannot assign requested address"))],
+            id="after_partial_bind",
+        ),
+        pytest.param([], id="after_full_bind"),
+    ],
+)
+async def test_reload_when_all_endpoints_lost(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    bind_failures: list[tuple[str, OSError]],
+) -> None:
+    """Test the entry is reloaded once the controller has no live endpoint left."""
+
+    mock_govee_api.bind_failures = bind_failures
+    entry, _ = await setup_light(hass, mock_govee_api)
+    assert mock_govee_api.start.await_count == 1
+
+    async def start(**kwargs: Any) -> None:
+        # The reloaded controller binds again.
+        mock_govee_api.protocols = [MagicMock()]
+
+    mock_govee_api.start.side_effect = start
+    mock_govee_api.protocols = []
+
+    # Past REBIND_INTERVAL so a partial bind would otherwise retry.
+    freezer.tick(REBIND_INTERVAL + SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    assert "Lost every network listener, reloading" in caplog.text
+    mock_govee_api.rebind_failed.assert_not_awaited()
+    assert mock_govee_api.start.await_count == 2
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.last_update_success

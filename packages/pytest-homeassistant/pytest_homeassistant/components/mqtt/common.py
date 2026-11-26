@@ -11,6 +11,7 @@ from unittest.mock import ANY, MagicMock, patch
 from freezegun import freeze_time
 import probatio
 import pytest
+from typing_extensions import sentinel
 import yaml
 
 from homeassistant import config as module_hass_config
@@ -1005,7 +1006,7 @@ MOCK_SUBENTRY_DATA_SET_MIX = {
     | MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL
     | MOCK_SUBENTRY_SIREN_COMPONENT,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 DISCOVERY_COUNT = sum(len(discovery_topic) for discovery_topic in MQTT.values())
 DEVICE_DISCOVERY_COUNT = 2
@@ -2816,17 +2817,9 @@ async def help_test_publishing_with_custom_encoding(
         " cmd/test3 with no encoding set, need 'bytes'" in caplog.text
     )
 
-    # 4) test with invalid encoding set should fail
-    await hass.services.async_call(
-        domain,
-        service,
-        service_data["test4"],
-        blocking=True,
-    )
-    assert (
-        f"Can't encode payload for publishing {payload} on"
-        " cmd/test4 with encoding invalid" in caplog.text
-    )
+    # 4) test with invalid encoding set should fail at discovery
+    assert hass.states.get(f"{domain}.test4") is None
+    assert "Error 'Unknown payload encoding 'invalid' at 'encoding''" in caplog.text
 
     # 5) test with command template and raw encoding if specified
     if not template:

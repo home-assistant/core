@@ -14,16 +14,15 @@ import probatio
 import pytest
 
 from homeassistant.const import (
-    ATTR_LABEL_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_CONDITION,
-    CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import (
@@ -47,7 +46,7 @@ from homeassistant.helpers.trigger import (
     async_initialize_triggers,
     async_validate_trigger_config,
 )
-from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType, UndefinedType
+from homeassistant.helpers.typing import TemplateVarsType, Undefined
 from homeassistant.util.yaml import load_yaml_dict
 from pytest_homeassistant.common import MockConfigEntry, mock_device_registry
 
@@ -217,7 +216,7 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
     return [
         (
             {
-                CONF_ENTITY_ID: [
+                TargetKey.ENTITY_ID: [
                     f"{domain}.standalone_{domain}",
                     f"{domain}.standalone2_{domain}",
                 ]
@@ -225,7 +224,7 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
             f"{domain}.standalone_{domain}",
             2,
         ),
-        ({ATTR_LABEL_ID: "test_label"}, f"{domain}.label_{domain}", 3),
+        ({TargetKey.LABEL_ID: "test_label"}, f"{domain}.label_{domain}", 3),
     ]
 
 
@@ -881,7 +880,7 @@ def parametrize_trigger_states(
         state: str | tuple[str | None, dict] | None,
         count: int,
         *,
-        others_state: str | tuple[str | None, dict] | UndefinedType | None = UNDEFINED,
+        others_state: str | tuple[str | None, dict] | Undefined | None = Undefined,
     ) -> TriggerStateDescription:
         """Return TriggerStateDescription dict."""
         included = _included_state_desc(state)
@@ -890,7 +889,7 @@ def parametrize_trigger_states(
             "excluded_state": _excluded_state_desc(state),
             "others_state": (
                 included
-                if isinstance(others_state, UndefinedType)
+                if others_state is Undefined
                 else _included_state_desc(others_state)
             ),
             "count": count,
@@ -1108,10 +1107,10 @@ def parametrize_trigger_states(
 
 
 def _add_threshold_unit(
-    options: dict[str, Any], threshold_unit: str | UndefinedType | None
+    options: dict[str, Any], threshold_unit: str | Undefined | None
 ) -> dict[str, Any]:
     """Add unit to trigger thresholds if threshold_unit is provided."""
-    if threshold_unit is UNDEFINED:
+    if threshold_unit is Undefined:
         return options
     options = copy.deepcopy(options)
     threshold_options = options["threshold"]
@@ -1127,7 +1126,7 @@ def parametrize_numerical_attribute_changed_trigger_states(
     state: str,
     attribute: str,
     *,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     trigger_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
     unit_attributes: dict | None = None,
@@ -1155,7 +1154,7 @@ def parametrize_numerical_attribute_changed_trigger_states(
             generates target/other/excluded states by varying this attribute.
         threshold_unit: When set, the threshold values in `trigger_options`
             get this unit attached (`unit_of_measurement`). Defaults to
-            UNDEFINED, meaning no unit is added.
+            Undefined, meaning no unit is added.
         trigger_options: Extra keys merged into the generated `options` dict
             for each threshold-type variant.
         required_filter_attributes: Attributes that must be present on the
@@ -1273,7 +1272,7 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     state: str,
     attribute: str,
     *,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     trigger_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
     unit_attributes: dict | None = None,
@@ -1303,7 +1302,7 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
             generates target/other/excluded states by varying this attribute.
         threshold_unit: When set, the threshold values in `trigger_options`
             get this unit attached (`unit_of_measurement`). Defaults to
-            UNDEFINED, meaning no unit is added.
+            Undefined, meaning no unit is added.
         trigger_options: Extra keys merged into the generated `options` dict
             for each threshold-type variant.
         required_filter_attributes: Attributes that must be present on the
@@ -1444,7 +1443,7 @@ def parametrize_numerical_state_value_changed_trigger_states(
     trigger: str,
     *,
     device_class: str,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     trigger_options: dict[str, Any] | None = None,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
@@ -1525,7 +1524,7 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
     trigger: str,
     *,
     device_class: str,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     trigger_options: dict[str, Any] | None = None,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
@@ -1717,7 +1716,7 @@ async def _validate_condition_options(
     """Assert that a condition accepts or rejects the given options."""
     config: dict[str, Any] = {CONF_CONDITION: condition}
     if supports_target:
-        config[CONF_TARGET] = {ATTR_LABEL_ID: "test_label"}
+        config[CONF_TARGET] = {TargetKey.LABEL_ID: "test_label"}
     if options is not None:
         config[CONF_OPTIONS] = options
     if valid:
@@ -1831,7 +1830,7 @@ async def _validate_trigger_options(
     """Assert that a trigger accepts or rejects the given options during validation."""
     trigger_config: dict[str, Any] = {CONF_PLATFORM: trigger}
     if supports_target:
-        trigger_config[CONF_TARGET] = {ATTR_LABEL_ID: "test_label"}
+        trigger_config[CONF_TARGET] = {TargetKey.LABEL_ID: "test_label"}
     if options is not None:
         trigger_config[CONF_OPTIONS] = options
     if valid:
@@ -2172,7 +2171,7 @@ def parametrize_numerical_condition_above_below_any(
     *,
     device_class: str,
     condition_options: dict[str, Any] | None = None,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize threshold cases for state-value numerical conditions.
@@ -2205,7 +2204,7 @@ def parametrize_numerical_condition_above_below_any(
             helper).
         threshold_unit: When set, the threshold values in
             `condition_options` get this unit attached
-            (`unit_of_measurement`). Defaults to UNDEFINED, meaning no unit
+            (`unit_of_measurement`). Defaults to Undefined, meaning no unit
             is added.
         unit_attributes: Attributes (typically
             `{ATTR_UNIT_OF_MEASUREMENT: ...}`) merged into every generated
@@ -2295,7 +2294,7 @@ def parametrize_numerical_condition_above_below_all(
     *,
     device_class: str,
     condition_options: dict[str, Any] | None = None,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize threshold cases for state-value numerical conditions.
@@ -2323,7 +2322,7 @@ def parametrize_numerical_condition_above_below_all(
             helper).
         threshold_unit: When set, the threshold values in
             `condition_options` get this unit attached
-            (`unit_of_measurement`). Defaults to UNDEFINED, meaning no unit
+            (`unit_of_measurement`). Defaults to Undefined, meaning no unit
             is added.
         unit_attributes: Attributes (typically
             `{ATTR_UNIT_OF_MEASUREMENT: ...}`) merged into every generated
@@ -2415,7 +2414,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
     *,
     condition_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     unit_attributes: dict | None = None,
     attribute_required: bool = False,
     attribute_value_scale: float = 1.0,
@@ -2453,7 +2452,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
             same state value but *without* these attributes.
         threshold_unit: When set, the threshold values in
             `condition_options` get this unit attached
-            (`unit_of_measurement`). Defaults to UNDEFINED, meaning no
+            (`unit_of_measurement`). Defaults to Undefined, meaning no
             unit is added.
         unit_attributes: Attributes (typically
             `{ATTR_UNIT_OF_MEASUREMENT: ...}`) merged into every generated
@@ -2563,7 +2562,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
     *,
     condition_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     unit_attributes: dict | None = None,
     attribute_required: bool = False,
     attribute_value_scale: float = 1.0,
@@ -2600,7 +2599,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
             same state value but *without* these attributes.
         threshold_unit: When set, the threshold values in
             `condition_options` get this unit attached
-            (`unit_of_measurement`). Defaults to UNDEFINED, meaning no
+            (`unit_of_measurement`). Defaults to Undefined, meaning no
             unit is added.
         unit_attributes: Attributes (typically
             `{ATTR_UNIT_OF_MEASUREMENT: ...}`) merged into every generated
@@ -2746,7 +2745,7 @@ async def assert_trigger_ignores_limit_entities_with_wrong_unit(
     await hass.async_block_till_done()
 
     await arm_trigger(
-        hass, trigger, trigger_options, {CONF_ENTITY_ID: [entity_id]}, calls
+        hass, trigger, trigger_options, {TargetKey.ENTITY_ID: [entity_id]}, calls
     )
 
     # Cycle entity state - should NOT fire (all limit entities have wrong unit)
@@ -2822,7 +2821,7 @@ async def assert_numerical_condition_unit_conversion(
         cond = await create_target_condition(
             hass,
             condition=condition,
-            target={CONF_ENTITY_ID: [entity_id]},
+            target={TargetKey.ENTITY_ID: [entity_id]},
             behavior="any",
             condition_options=condition_options,
         )
@@ -2837,7 +2836,7 @@ async def assert_numerical_condition_unit_conversion(
     cond = await create_target_condition(
         hass,
         condition=condition,
-        target={CONF_ENTITY_ID: [entity_id]},
+        target={TargetKey.ENTITY_ID: [entity_id]},
         behavior="any",
         condition_options=limit_entity_condition_options,
     )

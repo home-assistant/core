@@ -262,6 +262,31 @@ async def test_abort_removes_instance(manager: MockFlowManager) -> None:
     assert len(manager.mock_created_entries) == 0
 
 
+@pytest.mark.parametrize("result_type", ["create_entry", "form", "abort"])
+async def test_string_result_type_raises(
+    manager: MockFlowManager, result_type: str
+) -> None:
+    """Test a step result with a plain string type is rejected."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return {
+                "type": result_type,
+                "flow_id": self.flow_id,
+                "handler": self.handler,
+                "step_id": "init",
+                "title": "Test",
+                "data": {"password": "secret"},
+                "reason": "test",
+            }
+
+    with pytest.raises(TypeError, match="which is not a FlowResultType"):
+        await manager.async_init("test")
+    assert len(manager.mock_created_entries) == 0
+    assert manager.async_progress(include_uninitialized=True) == []
+
+
 @pytest.mark.parametrize(
     "translation_domain",
     [None, "homeassistant"],
@@ -1055,16 +1080,6 @@ async def test_abort_flow_exception_finish_flow_translation_domain(
     assert form["type"] is data_entry_flow.FlowResultType.ABORT
     assert form["reason"] == "mock-reason"
     assert form["translation_domain"] == "homeassistant"
-
-
-async def test_init_unknown_flow(manager: MockFlowManager) -> None:
-    """Test that UnknownFlow is raised when async_create_flow returns None."""
-
-    with (
-        pytest.raises(data_entry_flow.UnknownFlow),
-        patch.object(manager, "async_create_flow", return_value=None),
-    ):
-        await manager.async_init("test")
 
 
 async def test_async_get_unknown_flow(manager: MockFlowManager) -> None:

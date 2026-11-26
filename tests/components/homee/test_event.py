@@ -7,7 +7,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -70,7 +70,7 @@ async def test_event_triggers(
 
         # Check if the event was fired
         state = hass.states.get(entity_id)
-        assert state.attributes[ATTR_EVENT_TYPE] == event_type
+        assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == event_type
 
 
 @pytest.mark.parametrize(

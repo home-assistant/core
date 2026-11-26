@@ -5,7 +5,6 @@ from typing import Any, override
 
 from flux_led.aiodevice import AIOWifiLedBulb
 
-from homeassistant import config_entries
 from homeassistant.const import CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -15,12 +14,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_MINOR_VERSION, DOMAIN, SIGNAL_STATE_UPDATED
-from .coordinator import FluxLedUpdateCoordinator
+from .coordinator import FluxLedConfigEntry, FluxLedUpdateCoordinator
 
 
-def _async_device_info(
-    device: AIOWifiLedBulb, entry: config_entries.ConfigEntry
-) -> DeviceInfo:
+def _async_device_info(device: AIOWifiLedBulb, entry: FluxLedConfigEntry) -> DeviceInfo:
     version_num = device.version_num
     if minor_version := entry.data.get(CONF_MINOR_VERSION):
         sw_version = version_num + int(hex(minor_version)[2:]) / 100
@@ -50,7 +47,7 @@ class FluxBaseEntity(Entity):
     def __init__(
         self,
         device: AIOWifiLedBulb,
-        entry: config_entries.ConfigEntry,
+        entry: FluxLedConfigEntry,
     ) -> None:
         """Initialize the light."""
         self._device: AIOWifiLedBulb = device
