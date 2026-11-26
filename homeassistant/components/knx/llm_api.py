@@ -19,13 +19,14 @@ import probatio
 from probatio.dataclass_schema import constructed_mapping
 from xknx import mcp as xknx_mcp
 from xknx.exceptions import XKNXException
+from xknx.telegram.address import parse_device_group_address
 from xknxproject import mcp as xknxproject_mcp
 from xknxproject.models import KNXProject as KNXProjectModel
 
 from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, llm
+from homeassistant.helpers import device_registry as dr, entity_registry as er, llm
 from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN, SUPPORTED_PLATFORMS_UI
@@ -59,6 +60,15 @@ API_PROMPT = (
     "Entities created this way are listed by list_entities; update_entity "
     "replaces the configuration get_entity_config returns."
 )
+
+
+_USAGE_USED = "used"
+_USAGE_UNUSED = "unused"
+_USAGE_ALL = "all"
+_GA_OPTION_KEYS = frozenset({"write", "state", "passive"})
+# A central address is linked to far more objects than say anything about the
+# entity; its links are cut off and left out of the channel overview.
+_MAX_ADDRESS_LINKS = 20
 
 
 type _ToolFunc = Callable[[KNXModule, Any], Awaitable[Any]]
@@ -609,6 +619,169 @@ async def _delete_device(knx: KNXModule, args: Mapping[str, Any]) -> Any:
     return {"success": True}
 
 
+def _normalized_address(address: str) -> str:
+    """A group address as the integration spells it, whatever style was given."""
+    return str(parse_device_group_address(address))
+
+
+async def _list_group_address_usage(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+    """Group addresses with the entities using them, UI and YAML."""
+    entity_registry = er.async_get(knx.hass)
+    used = {
+        address: sorted(
+            (
+                {
+                    CONF_ENTITY_ID: entity_registry.async_get_entity_id(
+                        user["platform"], DOMAIN, user["unique_id"]
+                    ),
+                    CONF_PLATFORM: user["platform"],
+                    "ui": user["ui"],
+                    "disabled": user["disabled"],
+                }
+                for user in users
+            ),
+            key=lambda entity: entity[CONF_ENTITY_ID] or "",
+        )
+        for address, users in knx.get_group_address_entities().items()
+    }
+    usage: str = args["usage"]
+    addresses: set[str]
+    if args["group_addresses"] is not None:
+        addresses = {_normalized_address(ga) for ga in args["group_addresses"]}
+    elif usage == _USAGE_USED:
+        addresses = set(used)
+    else:
+        if not knx.project.loaded:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="llm_no_project_loaded",
+            )
+        addresses = {*knx.project.group_addresses, *used}
+    result = [
+        {
+            "address": address,
+            "name": info.name
+            if (info := knx.project.group_addresses.get(address))
+            else None,
+            "entities": used.get(address, []),
+        }
+        for address in sorted(addresses, key=_address_order)
+        if usage == _USAGE_ALL or (address in used) == (usage == _USAGE_USED)
+    ]
+    return _paginate(result, args, "group_addresses")
+
+
+def _group_address_options(
+    config: Mapping[str, Any], path: str = ""
+) -> dict[str, list[str]]:
+    """The options of a UI entity configuration each group address is set in."""
+    options: dict[str, list[str]] = {}
+    for key, value in config.items():
+        if not isinstance(value, dict):
+            continue
+        if not _GA_OPTION_KEYS.intersection(value):
+            for address, nested in _group_address_options(
+                value, f"{path}{key}."
+            ).items():
+                options.setdefault(address, []).extend(nested)
+            continue
+        configured = [
+            *((role, value.get(role)) for role in ("write", "state")),
+            *(("passive", passive) for passive in value.get("passive") or ()),
+        ]
+        for role, configured_address in configured:
+            if configured_address:
+                options.setdefault(_normalized_address(configured_address), []).append(
+                    f"{path}{key}.{role}"
+                )
+    return options
+
+
+async def _describe_entity_group_addresses(
+    knx: KNXModule, args: Mapping[str, Any]
+) -> Any:
+    """The group addresses of an entity with the devices and channels behind them."""
+    entity_id: str = args[CONF_ENTITY_ID]
+    entry = er.async_get(knx.hass).async_get(entity_id)
+    if entry is None or entry.config_entry_id != knx.entry.entry_id:
+        raise ValueError(f"KNX entity not found: {entity_id}")
+    project = await _require_project(knx)
+
+    addresses: list[str] = []
+    ui = False
+    for address, users in knx.get_group_address_entities().items():
+        for user in users:
+            if (user["platform"], user["unique_id"]) == (entry.domain, entry.unique_id):
+                addresses.append(address)
+                ui = user["ui"]
+    options = (
+        _group_address_options(
+            knx.config_store.get_entity_config(entity_id)[CONF_DATA]["knx"]
+        )
+        if ui
+        else {}
+    )
+
+    project_addresses = {
+        ga["address"]: ga for ga in project["group_addresses"].values()
+    }
+    channels: dict[tuple[str, str | None], dict[str, Any]] = {}
+    group_addresses: list[dict[str, Any]] = []
+    for address in sorted(addresses, key=_address_order):
+        project_address = project_addresses.get(address)
+        links = [
+            project["communication_objects"][co_id]
+            for co_id in (
+                project_address["communication_object_ids"] if project_address else ()
+            )
+        ]
+        linked = []
+        for communication_object in links[:_MAX_ADDRESS_LINKS]:
+            device_address = communication_object["device_address"]
+            device = project["devices"][device_address]
+            channel_id = communication_object["channel"]
+            channel = {
+                "device_address": device_address,
+                "device_name": device["name"],
+                "channel": channel_id,
+                "channel_name": (
+                    device["channels"][channel_id]["name"] if channel_id else None
+                ),
+            }
+            linked.append(
+                {
+                    **channel,
+                    "communication_object": communication_object["name"],
+                    "number": communication_object["number"],
+                }
+            )
+            if len(links) <= _MAX_ADDRESS_LINKS:
+                channels.setdefault(
+                    (device_address, channel_id), {**channel, "group_addresses": []}
+                )["group_addresses"].append(address)
+        group_addresses.append(
+            {
+                "address": address,
+                "options": options.get(address, []),
+                "in_project": project_address is not None,
+                "name": project_address["name"] if project_address else None,
+                "dpt": project_address["dpt"] if project_address else None,
+                "link_count": len(links),
+                "linked": linked,
+            }
+        )
+    return {
+        CONF_ENTITY_ID: entity_id,
+        CONF_PLATFORM: entry.domain,
+        "ui": ui,
+        "disabled": entry.disabled,
+        "group_addresses": group_addresses,
+        "channels": sorted(
+            channels.values(), key=lambda channel: -len(channel["group_addresses"])
+        ),
+    }
+
+
 _PLATFORM_VALIDATOR = probatio.In(sorted(SUPPORTED_PLATFORMS_UI))
 _ENTITY_MARKERS: dict[Any, Any] = {
     probatio.Optional(
@@ -978,6 +1151,58 @@ def _tool_specs() -> list[_ToolSpec]:
                 }
             ),
             _get_entity_config,
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "list_group_address_usage",
+            "List group address usage",
+            "Group addresses with the Home Assistant entities using them, "
+            "entities configured in YAML included. Tells whether an address "
+            "is covered by an entity already, and - with a project loaded - "
+            "which addresses of the project no entity uses yet.",
+            probatio.Schema(
+                {
+                    probatio.Optional(
+                        "group_addresses",
+                        description=(
+                            'Only these group addresses, e.g. ["1/2/3"]. By '
+                            "default the addresses in use, and for `unused` or "
+                            "`all` those of the project too."
+                        ),
+                        default=None,
+                    ): probatio.Any(None, [str]),
+                    probatio.Optional(
+                        "usage",
+                        description=(
+                            "`used` for addresses at least one entity uses, "
+                            "`unused` for those no entity uses, `all` for both."
+                        ),
+                        default=_USAGE_USED,
+                    ): probatio.In([_USAGE_USED, _USAGE_UNUSED, _USAGE_ALL]),
+                    **_PAGINATION_MARKERS,
+                }
+            ),
+            _list_group_address_usage,
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "describe_entity_group_addresses",
+            "Describe the group addresses of an entity",
+            "Resolve the group addresses of a KNX entity to the devices and "
+            "channels they are linked to in the project. `channels` groups the "
+            "addresses by channel: an entity whose addresses all sit on one "
+            "channel but one may be misconfigured, while entities such as "
+            "climate legitimately span devices. Addresses linked to more than "
+            f"{_MAX_ADDRESS_LINKS} objects are left out of `channels`.",
+            probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_ENTITY_ID,
+                        description='Entity id, e.g. "light.kitchen".',
+                    ): str
+                }
+            ),
+            _describe_entity_group_addresses,
             _READ_ONLY,
         ),
         _ToolSpec(
