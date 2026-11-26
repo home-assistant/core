@@ -67,11 +67,7 @@ def _event_driven_history_to_dict(
 def _event_driven_history_from_dict(
     data: EventDrivenHistoryDict,
 ) -> dict[str, BluetoothServiceInfoBleak]:
-    """Deserialize the accepted advertisements.
-
-    They don't expire: a cached local adapter advertisement is loaded with the
-    startup time however old it is, so an old accepted one still wins over it.
-    """
+    """Deserialize the accepted advertisements, which don't expire."""
     if not (
         loaded := discovered_device_advertisement_data_from_dict(data["advertisements"])
     ):
@@ -114,7 +110,7 @@ class BluetoothStorage:
             self._event_driven_history = _event_driven_history_from_dict(
                 event_driven_data
             )
-            # Only a clean stop saves it again; after a crash it would be outdated
+            # Outdated after a crash, a clean stop saves it again
             await self._event_driven_store.async_remove()
 
     def scanners(self) -> list[str]:

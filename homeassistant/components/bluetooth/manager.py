@@ -67,8 +67,7 @@ from .util import async_load_history_from_system
 
 _LOGGER = logging.getLogger(__name__)
 
-# After Home Assistant started, integrations get this long to register their
-# event-driven addresses again before the startup registrations are released
+# Time after start before unclaimed startup registrations are released
 EVENT_DRIVEN_CLAIM_SECONDS = 600
 
 
@@ -114,11 +113,9 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         self._callback_index = BluetoothCallbackMatcherIndex()
         self._cancel_logging_listener: CALLBACK_TYPE | None = None
         self._event_driven_addresses: dict[str, set[object]] = {}
-        # address -> last advertisement before it left the history, for addresses
-        # registered as event-driven
+        # Last advertisement of an event-driven address before it expired
         self._event_driven_disappeared: dict[str, BluetoothServiceInfoBleak] = {}
         self._event_driven_restore: dict[str, _PendingRestore] = {}
-        # address -> release the event-driven registration made at startup
         self._event_driven_early: dict[str, CALLBACK_TYPE] = {}
         self._history_loaded_time = 0.0
         self._cancel_event_driven_release: list[CALLBACK_TYPE] = []
@@ -160,12 +157,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
 
     @override
     def async_register_event_driven(self, address: str) -> Callable[[], None]:
-        """Register an event-driven address, starting from its accepted advertisement.
-
-        The history loaded at startup holds the strongest stored advertisement,
-        which can be older than the one accepted before the restart. The accepted
-        one is restored unless the address was heard since startup.
-        """
+        """Register an event-driven address, restoring its accepted advertisement."""
         token = object()
         self._event_driven_addresses.setdefault(address, set()).add(token)
         unregister = super().async_register_event_driven(address)
@@ -212,8 +204,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         """Stop restoring a history once a new advertisement replaced it."""
         if (pending := self._event_driven_restore.get(address)) is None:
             return
-        # The address is event-driven from startup, so the first advertisement
-        # heard after it is new data the manager records
+        # Event-driven from startup, so the manager recorded it
         pending.all_pending = False
         if service_info.connectable:
             pending.connectable_pending = False
@@ -308,8 +299,6 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         )
         self._history_loaded_time = monotonic_time_coarse()
         for address, accepted in self.storage.async_get_event_driven_history().items():
-            # Until the address is registered again, so an advertisement heard
-            # from any scanner is recorded, as before the restart
             self._event_driven_early[address] = super().async_register_event_driven(
                 address
             )
@@ -436,7 +425,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
                 address
             ) or self._event_driven_disappeared.get(address):
                 history[address] = service_info
-        # Until heard again, the history holds the older startup entry
+        # Untouched, the history still holds the older startup entry
         history.update(
             (address, pending.accepted)
             for address, pending in self._event_driven_restore.items()
