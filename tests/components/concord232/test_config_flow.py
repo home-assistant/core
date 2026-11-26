@@ -10,8 +10,7 @@ import requests
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
+    AlarmControlPanelService,
 )
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.concord232 import async_import_yaml
@@ -25,13 +24,13 @@ from homeassistant.components.concord232.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_CODE,
     CONF_HOST,
     CONF_MODE,
     CONF_NAME,
     CONF_PLATFORM,
     CONF_PORT,
+    TargetKey,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
@@ -258,8 +257,8 @@ async def test_options_change_takes_effect_without_manual_reload(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_HOME,
-        {ATTR_ENTITY_ID: "alarm_control_panel.localhost"},
+        AlarmControlPanelService.ARM_HOME,
+        {TargetKey.ENTITY_ID: "alarm_control_panel.localhost"},
         blocking=True,
     )
     mock_concord232_client.arm.assert_called_once_with("stay", "silent")
@@ -278,8 +277,8 @@ async def test_empty_code_option_means_no_code(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_AWAY,
-        {ATTR_ENTITY_ID: "alarm_control_panel.localhost"},
+        AlarmControlPanelService.ARM_AWAY,
+        {TargetKey.ENTITY_ID: "alarm_control_panel.localhost"},
         blocking=True,
     )
     mock_concord232_client.arm.assert_called_once_with("away")
