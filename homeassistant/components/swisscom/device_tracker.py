@@ -2,59 +2,18 @@
 
 from typing import TYPE_CHECKING, override
 
-import probatio
-
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    AsyncSeeCallback,
     ScannerEntity,
 )
-from homeassistant.const import CONF_HOST
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_HOST, DOMAIN
+from .const import DOMAIN
 from .coordinator import SwisscomConfigEntry, SwisscomDataUpdateCoordinator
-
-PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
-)
-
-
-async def async_setup_scanner(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_see: AsyncSeeCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> bool:
-    """Inform users that the YAML configuration is no longer supported."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml_import_issue_credentials_required",
-        breaks_in_ha_version="2027.1.0",
-        is_fixable=False,
-        is_persistent=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml_import_issue_credentials_required",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Swisscom Internet-Box",
-            "host": config[CONF_HOST],
-        },
-    )
-    return False
 
 
 async def async_setup_entry(
