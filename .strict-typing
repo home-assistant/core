@@ -371,6 +371,7 @@ homeassistant.components.kulersky.*
 homeassistant.components.labs.*
 homeassistant.components.lacrosse.*
 homeassistant.components.lacrosse_view.*
+homeassistant.components.laifen.*
 homeassistant.components.lamarzocco.*
 homeassistant.components.lametric.*
 homeassistant.components.laundrify.*

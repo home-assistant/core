@@ -754,6 +754,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "8d96a001-0002-64c2-0001-9acc4838521c",
     },
     {
+        "connectable": True,
+        "domain": "laifen",
+        "local_name": "LFTB01-P-*",
+    },
+    {
         "domain": "lamarzocco",
         "local_name": "MICRA_*",
     },

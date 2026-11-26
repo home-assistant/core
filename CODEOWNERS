@@ -1077,6 +1077,8 @@ AGENTS.md @home-assistant/core
 /tests/components/labs/ @home-assistant/core
 /homeassistant/components/lacrosse_view/ @IceBotYT
 /tests/components/lacrosse_view/ @IceBotYT
+/homeassistant/components/laifen/ @bzumik1
+/tests/components/laifen/ @bzumik1
 /homeassistant/components/lamarzocco/ @zweckj
 /tests/components/lamarzocco/ @zweckj
 /homeassistant/components/lametric/ @robbiet480 @frenck @bachya

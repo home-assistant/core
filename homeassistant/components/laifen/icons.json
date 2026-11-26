@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "last_brushing_duration": {
+        "default": "mdi:timer-outline"
+      }
+    }
+  }
+}

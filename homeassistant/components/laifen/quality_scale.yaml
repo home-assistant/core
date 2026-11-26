@@ -1,0 +1,104 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not register actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities do not subscribe to events; the coordinator does.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: |
+      The toothbrush is asleep most of the time, so setup does not wait for it
+      and connects as soon as it wakes up and advertises.
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not provide actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration has no options.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: done
+    comment: |
+      The toothbrush is a sleepy device that is asleep almost all the time, so
+      the battery and the duration of the last brushing keep their last value,
+      as the sensors of other sleepy Bluetooth devices do.
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: The toothbrush does not require authentication.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: The toothbrush is discovered over Bluetooth, which has no network address to update.
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry is a single toothbrush.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: Every entity is relevant for the toothbrush.
+  entity-translations: done
+  exception-translations:
+    status: exempt
+    comment: The integration does not raise exceptions.
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      The only setting is the Bluetooth address, and a different address is a
+      different toothbrush.
+  repair-issues:
+    status: exempt
+    comment: The integration has no issues that the user could repair.
+  stale-devices:
+    status: exempt
+    comment: Each config entry is a single toothbrush.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: The toothbrush is reached over Bluetooth, not over HTTP.
+  strict-typing: done
