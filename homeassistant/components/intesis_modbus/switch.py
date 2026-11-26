@@ -9,6 +9,7 @@ from intesis_gw_modbus import IntesisSingleUnitGateway
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import IntesisConfigEntry, IntesisCoordinator, IntesisUnitCoordinator
@@ -58,6 +59,13 @@ UNIT_SWITCHES: Final[tuple[IntesisSwitchEntityDescription, ...]] = (
         value_fn=lambda device: device.remote_control_disabled,
         set_fn=lambda device, on: device.async_set_remote_control_disabled(on),
     ),
+)
+
+# What the gateway is told about the room of the air conditioner. It belongs
+# to that device, but the gateway holds it: it has to stay writable while the
+# gateway cannot reach the air conditioner, or a window closed meanwhile would
+# still count as open afterwards.
+UNIT_INPUT_SWITCHES: Final[tuple[IntesisSwitchEntityDescription, ...]] = (
     IntesisSwitchEntityDescription(
         key="window_contact",
         translation_key="window_contact",
@@ -83,6 +91,12 @@ async def async_setup_entry(
                 for description in GATEWAY_SWITCHES
             ),
             *(IntesisSwitch(data.unit, description) for description in UNIT_SWITCHES),
+            *(
+                IntesisSwitch(
+                    data.gateway, description, device_info=data.unit.device_info
+                )
+                for description in UNIT_INPUT_SWITCHES
+            ),
         ]
     )
 
@@ -96,10 +110,18 @@ class IntesisSwitch(IntesisEntity, SwitchEntity):
         self,
         coordinator: IntesisCoordinator | IntesisUnitCoordinator,
         description: IntesisSwitchEntityDescription,
+        *,
+        device_info: DeviceInfo | None = None,
     ) -> None:
-        """Bind to the device the description reads, through its coordinator."""
+        """Bind to the device the description reads, through its coordinator.
+
+        device_info places the switch on another device than the one its
+        coordinator follows.
+        """
         super().__init__(coordinator, description.key, description.report_name)
         self.entity_description = description
+        if device_info is not None:
+            self._attr_device_info = device_info
 
     @property
     @override

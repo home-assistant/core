@@ -132,12 +132,11 @@ async def test_unreachable_air_conditioner_only_takes_its_own_switches(
     freezer: FrozenDateTimeFactory,
     mock_connection: MockModbusConnection,
 ) -> None:
-    """The gateway's switches stay when it cannot reach the air conditioner."""
+    """What the gateway holds itself stays when it cannot reach the air conditioner."""
     mock_connection.for_unit(1).holding[11] = 65535
     await _poll(hass, freezer)
     assert hass.states.get(LOCK).state == STATE_UNAVAILABLE
-    assert hass.states.get(WINDOW).state == STATE_UNAVAILABLE
-    for entity_id in (DISABLED, MASTER):
+    for entity_id in (DISABLED, MASTER, WINDOW):
         assert hass.states.get(entity_id).state == STATE_OFF
 
 
