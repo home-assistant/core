@@ -204,8 +204,14 @@ class LightGroup(GroupEntity, LightEntity):
 
     @callback
     def _clamp_color_temp_kelvin(self, entity_id: str, kelvin: int) -> int:
-        """Limit a color temperature to the range reported by a member."""
+        """Limit a color temperature to the range reported by a member.
+
+        The range of a nested light group is the combined range of its own members
+        and that group limits the value for each of them, so it is passed on as is.
+        """
         if (state := self.hass.states.get(entity_id)) is None:
+            return kelvin
+        if GroupEntityStateAttribute.ENTITY_ID in state.attributes:
             return kelvin
         if (
             min_kelvin := state.attributes.get(
