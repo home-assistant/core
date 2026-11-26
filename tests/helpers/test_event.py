@@ -2411,6 +2411,87 @@ async def test_track_template_rate_limit_replay_of_hidden_entity(
     info.async_remove()
 
 
+async def test_track_template_rate_limit_replay_of_hidden_entity_in_super_template(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a deferred super template render still runs after its entity was hidden."""
+    hidden: set[str] = set()
+    template_availability = Template(
+        "{{ states | selectattr('state', 'eq', 'on') | list | count > 0 }}",
+        hass,
+        entity_filter_factory=lambda: lambda entity_id: entity_id not in hidden,
+    )
+    template_refresh = Template("{{ states('sensor.one') }}", hass)
+    hass.states.async_set("sensor.one", "on")
+    hass.states.async_set("sensor.two", "off")
+
+    info = async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None, 1),
+            TrackTemplate(template_refresh, None),
+        ],
+        lambda event, updates: None,
+        has_super_template=True,
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+
+    freezer.tick(0.1)
+    hass.states.async_set("sensor.two", "on")
+    await hass.async_block_till_done()
+    assert info.listeners["all"] is False
+    hidden.add("sensor.two")
+
+    freezer.tick(2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert info.listeners["all"] is True
+
+    info.async_remove()
+
+
+async def test_track_template_rate_limit_replay_does_not_render_super_template(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a deferred render of another template leaves the super template alone."""
+    template_availability = Template(
+        "{{ states('sensor.one') != 'unavailable' }}", hass
+    )
+    template_refresh = Template("{{ states | count }}", hass)
+    hass.states.async_set("sensor.one", "on")
+
+    info = async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_refresh, None, 1),
+        ],
+        lambda event, updates: None,
+        has_super_template=True,
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+
+    freezer.tick(0.1)
+    hass.states.async_set("sensor.two", "on")
+    await hass.async_block_till_done()
+
+    with patch.object(
+        Template,
+        "async_render_to_info",
+        autospec=True,
+        side_effect=Template.async_render_to_info,
+    ) as render:
+        freezer.tick(2)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert [call.args[0] for call in render.call_args_list] == [template_refresh]
+
+    info.async_remove()
+
+
 async def test_track_template_rate_limit_super(hass: HomeAssistant) -> None:
     """Test template rate limit with super template."""
     template_availability = Template(

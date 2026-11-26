@@ -1104,7 +1104,12 @@ class TrackTemplateResultInfo:
 
         # Update the super template first
         if super_template is not None:
-            update = self._render_template_if_ready(super_template, now, event)
+            update = self._render_template_if_ready(
+                super_template,
+                now,
+                event,
+                bool(replayed) and super_template in track_templates,
+            )
             info_changed |= self._apply_update(updates, update, super_template.template)
 
             if isinstance(update, TrackTemplateResult):
