@@ -54,7 +54,7 @@ DISCOVERY_SCHEMA = probatio.Schema(
 
 CONNECTION_PLACEHOLDERS = {
     "example_url": "http://192.168.1.123:1234",
-    "min_version": MIN_REQUIRED_MEALIE_VERSION,
+    "min_version": str(MIN_REQUIRED_MEALIE_VERSION),
 }
 
 
@@ -246,7 +246,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=DISCOVERY_SCHEMA,
             description_placeholders={
                 "addon": self._hassio_discovery["addon"],
-                "min_version": MIN_REQUIRED_MEALIE_VERSION,
+                "min_version": str(MIN_REQUIRED_MEALIE_VERSION),
             },
             errors=errors or {},
         )
