@@ -124,7 +124,8 @@ class VeluxCover(VeluxEntity, CoverEntity):
         """Return capability attributes without the deprecated speeds."""
         # Remove in 2027.6.0 when the deprecated speeds are removed
         return {
-            CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: list(_SPEED_TO_VELOCITY)
+            **(super().capability_attributes or {}),
+            CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: list(_SPEED_TO_VELOCITY),
         }
 
     def _velocity_from_speed(self, speed: str | None) -> Velocity | None:
@@ -316,6 +317,8 @@ class VeluxBlind(VeluxCover):
             | CoverEntityFeature.SET_TILT_POSITION
             | CoverEntityFeature.STOP_TILT
         )
+        self._attr_open_tilt_position = 100 - node.open_orientation_target
+        self._attr_closed_tilt_positions = [0, 100]
 
     @property
     @override

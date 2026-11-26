@@ -10,7 +10,7 @@ from zigpy.zcl.clusters.security import IasWd
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import DOMAIN, ZHAService
@@ -153,6 +153,15 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions."""
+    # Actions belong to the ZHA device, not to its child devices
+    if (
+        dr.async_get(hass).async_get(
+            device_id, include_main_devices=False, include_composite_devices=False
+        )
+        is not None
+    ):
+        return []
+
     try:
         zha_device = async_get_zha_device_proxy(hass, device_id).device
     except KeyError, AttributeError:

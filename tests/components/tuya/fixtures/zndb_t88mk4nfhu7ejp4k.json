@@ -454,42 +454,42 @@
     }
   },
   "status": {
-    "forward_energy_total": 513106,
+    "forward_energy_total": 509977,
     "reverse_energy_total": 0,
     "phase_a": {
-      "electricCurrent": 78.462,
-      "power": 14.838,
-      "voltage": 226.1
+      "electricCurrent": 37.508,
+      "power": 7.917,
+      "voltage": 230.1
     },
     "phase_b": {
-      "electricCurrent": 33.727,
-      "power": 6.02,
-      "voltage": 220.0
+      "electricCurrent": 48.462,
+      "power": 10.152,
+      "voltage": 231.1
     },
     "phase_c": {
-      "electricCurrent": 27.899,
-      "power": 5.66,
-      "voltage": 237.3
+      "electricCurrent": 46.644,
+      "power": 9.896,
+      "voltage": 229.4
     },
-    "power_total": 26554,
+    "power_total": 27965,
     "fault": 0,
     "clear": false,
-    "phase_1": "Ag8H0gA3eAAKjQADeAALG18A",
-    "phase_2": "Ag8IQQAbvAAFZAACTAAF3FwA",
-    "phase_3": "Ag8JZwAKKAACXwAAmAACcmEA",
-    "phase_4": "Ag8JEgA44gAJhwACXAANMkgE",
-    "phase_5": "Ag8JHQAYtwADxAAAnQAFy0EE",
-    "phase_6": "Ag8JGwAnDwAHZgACjgAJLFEE",
-    "phase_7": "Ag8I+QApaAAJIQACqgAJg2AA",
-    "phase_8": "Ag8IPQAc6AAFqwACPgAGGV0A",
-    "phase_9": "Ag8JXgAKjAACewAAgQACh2IA",
-    "phase_10": "Ag8JDgA3FAAJcwAIlgAMxEoE",
-    "phase_11": "Ag8JGgAX1AADuAAEHwAFjUME",
-    "phase_12": "Ag8JGAAn2AAHswAFLAAJR1ME",
-    "phase_13": "Ag8JAAAsJAAJ3QACeQAKLGEA",
-    "phase_14": "Ag8IQwAakAAFHQACVAAFnlsA",
-    "phase_15": "Ag8JYQAJYAACKQAAoQACQGAA",
-    "phase_16": "Ag8JEQA1hAAJcQAIEwAMbEwE"
+    "phase_1": "Ag8I9QAtoQAIygAFrAAKdlQA",
+    "phase_2": "Ag8I9gA1CAALzQAC8wAMKmEA",
+    "phase_3": "Ag8I9gAdzwAGbgACVQAG114A",
+    "phase_4": "Ag8I9gAQAwADagABWgADrF0A",
+    "phase_5": "Ag8I/wAtEgAJIgAE7gAKYVgA",
+    "phase_6": "Ag8JBwA8jAANAwAFJQAN/l0A",
+    "phase_7": "Ag8JBwAbygAGOwABjgAGbGEA",
+    "phase_8": "Ag8I/QAkHAAH+gACUwAIT2AA",
+    "phase_9": "Ag8I/gAR7QAD9gABJwAEIGAA",
+    "phase_10": "Ag8I/QASTQAD9QABcQAENl4A",
+    "phase_11": "Ag8I/QAPOwADHgABmgADgVkA",
+    "phase_12": "Ag8JCAAL9gACvQAAYwACxGMA",
+    "phase_13": "Ag8JBgAsqgAIQQAGMAAKUVAA",
+    "phase_14": "Ag8I/QAN4QACyAABkwADMlcA",
+    "phase_15": "Ag8JBgAsWAAJbAAEBAAKPlwA",
+    "phase_16": "Ag8I9wAluQAIOQACtQAIqF8A"
   },
   "set_up": true,
   "support_local": true

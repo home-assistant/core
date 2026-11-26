@@ -146,7 +146,7 @@ async def test_indexed_raw_phase_child_devices(
     assert entity_id is not None
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "14.2"
+    assert state.state == "11.681"
     assert state.attributes["unit_of_measurement"] == "A"
 
 
@@ -481,9 +481,9 @@ async def test_temp_unit_convert_sensor_invalid(
     state = hass.states.get("sensor.inverter_pool_heat_pump_temperature")
     assert state is not None
     assert state.attributes.get("device_class") is None
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.attributes.get("unit_of_measurement") is None
     assert (
-        "Device class temperature ignored for incompatible unit  in "
+        "Device class temperature ignored for incompatible unit None in "
         "sensor entity tuya.zuqudhznfzttizpgbrnztemp_current"
     ) in caplog.text
 

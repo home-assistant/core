@@ -182,12 +182,30 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     ),
     "Plug": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SWITCH,)),
     "Plug Mini (US)": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.SWITCH, Platform.SENSOR)
+        True, entity_config=(Platform.SWITCH, Platform.SENSOR)
     ),
     "Plug Mini (JP)": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.SWITCH, Platform.SENSOR)
+        True, entity_config=(Platform.SWITCH, Platform.SENSOR)
     ),
     "Plug Mini (EU)": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR)
+    ),
+    "Smart Radiator Thermostat": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.CLIMATE, Platform.SENSOR)
+    ),
+    "Relay Switch 1": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.SWITCH,)
+    ),
+    "Relay Switch 1PM": SwitchbotCloudDeviceConfig(
         False, entity_config=(Platform.SWITCH, Platform.SENSOR)
+    ),
+    "Relay Switch 2PM": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.SWITCH, Platform.SENSOR)
+    ),
+    "Humidifier": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.HUMIDIFIER, Platform.SENSOR)
+    ),
+    "Humidifier2": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.HUMIDIFIER,)
     ),
 }

@@ -501,6 +501,10 @@ ZEROCONF = {
             "domain": "modern_forms",
             "name": "wac*",
         },
+        {
+            "domain": "modern_forms",
+            "name": "mf_fan*",
+        },
     ],
     "_ecobee._tcp.local.": [
         {
@@ -617,6 +621,10 @@ ZEROCONF = {
         {
             "domain": "bsblan",
             "name": "bsb-lan*",
+        },
+        {
+            "domain": "busybar",
+            "name": "busybar-*",
         },
         {
             "domain": "duco",

@@ -97,7 +97,7 @@
     'supported_features': 0,
     'translation_key': 'last_amount',
     'unique_id': 'tuya.vlnxlt70qdljzrz8psfeed_report',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_camera_pet_feeder[sp_8zrzjldq07tlxnlv][sensor.8zrzjldq07tlxnlv_last_amount-state]
@@ -105,7 +105,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '8zrzjldq07tlxnlv Last amount',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.8zrzjldq07tlxnlv_last_amount',
@@ -4967,7 +4966,7 @@
     'supported_features': 0,
     'translation_key': 'uv_index',
     'unique_id': 'tuya.6tbtkuv3tal1aesfjxquv_index',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_uv_index-state]
@@ -4975,7 +4974,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BR 7-in-1 WLAN Wetterstation Anthrazit UV index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_uv_index',
@@ -6487,7 +6485,7 @@
     'supported_features': 0,
     'translation_key': 'last_amount',
     'unique_id': 'tuya.igkrtodqg14xvfxlqswwcfeed_report',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.cat_feeder_last_amount-state]
@@ -6495,7 +6493,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cat Feeder Last amount',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cat_feeder_last_amount',
@@ -14351,7 +14348,7 @@
     'supported_features': 0,
     'translation_key': 'last_amount',
     'unique_id': 'tuya.iomszlsve0yyzkfwqswwcfeed_report',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.cleverio_pf100_last_amount-state]
@@ -14359,7 +14356,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cleverio PF100 Last amount',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cleverio_pf100_last_amount',
@@ -15274,7 +15270,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': 'tuya.o4hpbl5uarjfbzhepswireless_electricity',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.dolni_vchod_zapad_battery-state]
@@ -15282,7 +15278,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dolní vchod - západ Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dolni_vchod_zapad_battery',
@@ -20472,7 +20467,7 @@
     'supported_features': 0,
     'translation_key': 'pm25',
     'unique_id': 'tuya.zfHZQ7tZUBxAWjACjkpm25',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.hl400_pm2_5-state]
@@ -20480,7 +20475,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL400 PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl400_pm2_5',
@@ -21042,7 +21036,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': 'tuya.ZgXzZULP6dDp4Atvgcdswva_battery',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.humy_bain_battery-state]
@@ -21050,7 +21044,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humy bain Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.humy_bain_battery',
@@ -22491,7 +22484,7 @@
     'supported_features': 0,
     'translation_key': 'pm25',
     'unique_id': 'tuya.owozxdzgbibizu4sjkpm25',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.ion1000pro_pm2_5-state]
@@ -22499,7 +22492,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ION1000PRO PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ion1000pro_pm2_5',
@@ -23666,7 +23658,7 @@
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': 'tuya.btpss2f6kwfi294rqsjhumidity_current',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.klarta_humea_humidity-state]
@@ -23674,7 +23666,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KLARTA HUMEA Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.klarta_humea_humidity',
@@ -26608,7 +26599,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': 'tuya.i6xywcsymer1kmb6pswireless_electricity',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.mirilla_puerta_battery-state]
@@ -26616,7 +26607,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mirilla puerta Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mirilla_puerta_battery',
@@ -27185,7 +27175,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3.268',
+    'state': '1.078',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_10_current-entry]
@@ -27246,7 +27236,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '14.1',
+    'state': '4.685',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_10_power-entry]
@@ -27307,7 +27297,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.419',
+    'state': '1.013',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_10_power_factor-entry]
@@ -27361,7 +27351,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.74',
+    'state': '0.94',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_10_reactive_power-entry]
@@ -27422,7 +27412,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-2.198',
+    'state': '0.369',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_10_voltage-entry]
@@ -27480,7 +27470,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '231.8',
+    'state': '230.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_11_apparent_power-entry]
@@ -27541,7 +27531,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.421',
+    'state': '0.897',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_11_current-entry]
@@ -27602,7 +27592,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6.1',
+    'state': '3.899',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_11_power-entry]
@@ -27663,7 +27653,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.952',
+    'state': '0.798',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_11_power_factor-entry]
@@ -27717,7 +27707,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.67',
+    'state': '0.89',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_11_reactive_power-entry]
@@ -27778,7 +27768,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-1.055',
+    'state': '0.41',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_11_voltage-entry]
@@ -27836,7 +27826,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '233.0',
+    'state': '230.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_12_apparent_power-entry]
@@ -27897,7 +27887,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.375',
+    'state': '0.708',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_12_current-entry]
@@ -27958,7 +27948,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10.2',
+    'state': '3.062',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_12_power-entry]
@@ -28019,7 +28009,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.971',
+    'state': '0.701',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_12_power_factor-entry]
@@ -28073,7 +28063,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.83',
+    'state': '0.99',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_12_reactive_power-entry]
@@ -28134,7 +28124,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-1.324',
+    'state': '0.099',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_12_voltage-entry]
@@ -28192,7 +28182,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '232.8',
+    'state': '231.2',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_13_apparent_power-entry]
@@ -28253,7 +28243,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.604',
+    'state': '2.641',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_13_current-entry]
@@ -28314,7 +28304,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '11.3',
+    'state': '11.434',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_13_power-entry]
@@ -28375,7 +28365,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.525',
+    'state': '2.113',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_13_power_factor-entry]
@@ -28429,7 +28419,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.97',
+    'state': '0.8',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_13_reactive_power-entry]
@@ -28490,7 +28480,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.633',
+    'state': '1.584',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_13_voltage-entry]
@@ -28548,7 +28538,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '230.4',
+    'state': '231.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_14_apparent_power-entry]
@@ -28609,7 +28599,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.438',
+    'state': '0.818',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_14_current-entry]
@@ -28670,7 +28660,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6.8',
+    'state': '3.553',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_14_power-entry]
@@ -28731,7 +28721,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.309',
+    'state': '0.712',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_14_power_factor-entry]
@@ -28785,7 +28775,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.91',
+    'state': '0.87',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_14_reactive_power-entry]
@@ -28846,7 +28836,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.596',
+    'state': '0.403',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_14_voltage-entry]
@@ -28904,7 +28894,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '211.5',
+    'state': '230.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_15_apparent_power-entry]
@@ -28965,7 +28955,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.576',
+    'state': '2.622',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_15_current-entry]
@@ -29026,7 +29016,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.4',
+    'state': '11.352',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_15_power-entry]
@@ -29087,7 +29077,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.553',
+    'state': '2.412',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_15_power_factor-entry]
@@ -29141,7 +29131,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.96',
+    'state': '0.92',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_15_reactive_power-entry]
@@ -29202,7 +29192,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.161',
+    'state': '1.028',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_15_voltage-entry]
@@ -29260,7 +29250,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '240.1',
+    'state': '231.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_16_apparent_power-entry]
@@ -29321,7 +29311,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3.18',
+    'state': '2.216',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_16_current-entry]
@@ -29382,7 +29372,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '13.7',
+    'state': '9.657',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_16_power-entry]
@@ -29443,7 +29433,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.417',
+    'state': '2.105',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_16_power_factor-entry]
@@ -29497,7 +29487,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.76',
+    'state': '0.95',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_16_reactive_power-entry]
@@ -29558,7 +29548,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-2.067',
+    'state': '0.693',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_16_voltage-entry]
@@ -29616,7 +29606,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '232.1',
+    'state': '229.5',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_1_apparent_power-entry]
@@ -29677,7 +29667,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.843',
+    'state': '2.678',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_1_current-entry]
@@ -29738,7 +29728,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '14.2',
+    'state': '11.681',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_1_power-entry]
@@ -29799,7 +29789,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.701',
+    'state': '2.25',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_1_power_factor-entry]
@@ -29853,7 +29843,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.95',
+    'state': '0.84',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_1_reactive_power-entry]
@@ -29914,7 +29904,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.888',
+    'state': '1.452',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_1_voltage-entry]
@@ -29972,7 +29962,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '200.2',
+    'state': '229.3',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_2_apparent_power-entry]
@@ -30033,7 +30023,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.5',
+    'state': '3.114',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_2_current-entry]
@@ -30094,7 +30084,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '7.1',
+    'state': '13.576',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_2_power-entry]
@@ -30155,7 +30145,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.38',
+    'state': '3.021',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_2_power_factor-entry]
@@ -30209,7 +30199,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.92',
+    'state': '0.97',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_2_reactive_power-entry]
@@ -30270,7 +30260,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.588',
+    'state': '0.755',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_2_voltage-entry]
@@ -30328,7 +30318,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '211.3',
+    'state': '229.4',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_3_apparent_power-entry]
@@ -30389,7 +30379,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.626',
+    'state': '1.751',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_3_current-entry]
@@ -30450,7 +30440,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.6',
+    'state': '7.631',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_3_power-entry]
@@ -30511,7 +30501,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.607',
+    'state': '1.646',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_3_power_factor-entry]
@@ -30565,7 +30555,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.97',
+    'state': '0.94',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_3_reactive_power-entry]
@@ -30626,7 +30616,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.152',
+    'state': '0.597',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_3_voltage-entry]
@@ -30684,7 +30674,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '240.7',
+    'state': '229.4',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_4_apparent_power-entry]
@@ -30745,7 +30735,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3.378',
+    'state': '0.94',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_4_current-entry]
@@ -30806,7 +30796,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '14.562',
+    'state': '4.099',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_4_power-entry]
@@ -30867,7 +30857,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.439',
+    'state': '0.874',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_4_power_factor-entry]
@@ -30921,7 +30911,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.72',
+    'state': '0.93',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_4_reactive_power-entry]
@@ -30982,7 +30972,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-0.604',
+    'state': '0.346',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_4_voltage-entry]
@@ -31040,7 +31030,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '232.2',
+    'state': '229.4',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_5_apparent_power-entry]
@@ -31101,7 +31091,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.483',
+    'state': '2.657',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_5_current-entry]
@@ -31162,7 +31152,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6.327',
+    'state': '11.538',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_5_power-entry]
@@ -31223,7 +31213,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.964',
+    'state': '2.338',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_5_power_factor-entry]
@@ -31277,7 +31267,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.65',
+    'state': '0.88',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_5_reactive_power-entry]
@@ -31338,7 +31328,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-0.157',
+    'state': '1.262',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_5_voltage-entry]
@@ -31396,7 +31386,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '233.3',
+    'state': '230.3',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_6_apparent_power-entry]
@@ -31457,7 +31447,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.348',
+    'state': '3.582',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_6_current-entry]
@@ -31518,7 +31508,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '9.999',
+    'state': '15.5',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_6_power-entry]
@@ -31579,7 +31569,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.894',
+    'state': '3.331',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_6_power_factor-entry]
@@ -31633,7 +31623,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.81',
+    'state': '0.93',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_6_reactive_power-entry]
@@ -31694,7 +31684,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-0.654',
+    'state': '1.317',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_6_voltage-entry]
@@ -31752,7 +31742,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '233.1',
+    'state': '231.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_7_apparent_power-entry]
@@ -31813,7 +31803,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.435',
+    'state': '1.644',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_7_current-entry]
@@ -31874,7 +31864,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10.6',
+    'state': '7.114',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_7_power-entry]
@@ -31935,7 +31925,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.337',
+    'state': '1.595',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_7_power_factor-entry]
@@ -31989,7 +31979,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.96',
+    'state': '0.97',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_7_reactive_power-entry]
@@ -32050,7 +32040,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.682',
+    'state': '0.398',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_7_voltage-entry]
@@ -32108,7 +32098,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '229.7',
+    'state': '231.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_8_apparent_power-entry]
@@ -32169,7 +32159,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.561',
+    'state': '2.127',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_8_current-entry]
@@ -32230,7 +32220,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '7.4',
+    'state': '9.244',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_8_power-entry]
@@ -32291,7 +32281,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.451',
+    'state': '2.042',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_8_power_factor-entry]
@@ -32345,7 +32335,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.93',
+    'state': '0.96',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_8_reactive_power-entry]
@@ -32406,7 +32396,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.574',
+    'state': '0.595',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_8_voltage-entry]
@@ -32464,7 +32454,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '210.9',
+    'state': '230.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_9_apparent_power-entry]
@@ -32525,7 +32515,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.647',
+    'state': '1.056',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_9_current-entry]
@@ -32586,7 +32576,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.7',
+    'state': '4.589',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_9_power-entry]
@@ -32647,7 +32637,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.635',
+    'state': '1.014',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_9_power_factor-entry]
@@ -32701,7 +32691,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.98',
+    'state': '0.96',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_9_reactive_power-entry]
@@ -32762,7 +32752,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.129',
+    'state': '0.295',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_channel_9_voltage-entry]
@@ -32820,7 +32810,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '239.8',
+    'state': '230.2',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_phase_a_current-entry]
@@ -32881,7 +32871,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '78.462',
+    'state': '37.508',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_phase_a_power-entry]
@@ -32942,7 +32932,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '14.838',
+    'state': '7.917',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_phase_a_voltage-entry]
@@ -33000,7 +32990,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '226.1',
+    'state': '230.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_phase_b_current-entry]
@@ -33061,7 +33051,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '33.727',
+    'state': '48.462',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_phase_b_power-entry]
@@ -33122,7 +33112,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6.02',
+    'state': '10.152',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_phase_b_voltage-entry]
@@ -33180,7 +33170,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '220.0',
+    'state': '231.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_phase_c_current-entry]
@@ -33241,7 +33231,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '27.899',
+    'state': '46.644',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_phase_c_power-entry]
@@ -33302,7 +33292,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.66',
+    'state': '9.896',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_phase_c_voltage-entry]
@@ -33360,7 +33350,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '237.3',
+    'state': '229.4',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_total_energy-entry]
@@ -33418,7 +33408,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5131.06',
+    'state': '5099.77',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_total_power-entry]
@@ -33476,7 +33466,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '26.554',
+    'state': '27.965',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.multi_circuit_energy_meter_total_production-entry]
@@ -42733,7 +42723,7 @@
     'supported_features': 0,
     'translation_key': 'air_pressure',
     'unique_id': 'tuya.ai9swgb6tyinbwbxjxqatmospheric_pressture',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_air_pressure-state]
@@ -42741,7 +42731,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SWS 16600 WiFi SH Air pressure',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sws_16600_wifi_sh_air_pressure',
@@ -43697,7 +43686,7 @@
     'supported_features': 0,
     'translation_key': 'uv_index',
     'unique_id': 'tuya.ai9swgb6tyinbwbxjxquv_index',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_uv_index-state]
@@ -43705,7 +43694,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SWS 16600 WiFi SH UV index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sws_16600_wifi_sh_uv_index',

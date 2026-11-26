@@ -104,13 +104,19 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         """Fetch data from API endpoint."""
         try:
             async with asyncio.timeout(10):
-                return await self._api.async_get_lock_details()
+                data = await self._api.async_get_lock_details()
         except aiohttp.ClientResponseError as err:
             if is_auth_error(err):
                 raise ConfigEntryAuthFailed(
                     "The LOQED bridge rejected the credentials"
                 ) from err
             raise
+        if "bolt_state" in data:
+            await self.lock.updateState(data["bolt_state"])
+        # Lock.online reads raw_data. Replace it, like Lock.update() does, so a
+        # lock_online flag set by an earlier webhook does not outlive this status.
+        self.lock.raw_data = dict(data)
+        return data
 
     async def _handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request

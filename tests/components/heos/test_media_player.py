@@ -43,31 +43,15 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
-    ATTR_MEDIA_REPEAT,
-    ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_CLEAR_PLAYLIST,
-    SERVICE_JOIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOURCE,
-    SERVICE_UNJOIN,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
     RepeatMode,
 )
 from homeassistant.components.media_source import DOMAIN as MS_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_REPEAT_SET,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
     STATE_IDLE,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
@@ -352,8 +336,8 @@ async def test_clear_playlist(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_CLEAR_PLAYLIST,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.CLEAR_PLAYLIST,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     assert controller.player_clear_queue.call_count == 1
@@ -371,8 +355,8 @@ async def test_clear_playlist_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_CLEAR_PLAYLIST,
-            {ATTR_ENTITY_ID: "media_player.test_player"},
+            MediaPlayerService.CLEAR_PLAYLIST,
+            {TargetKey.ENTITY_ID: "media_player.test_player"},
             blocking=True,
         )
     assert controller.player_clear_queue.call_count == 1
@@ -386,8 +370,8 @@ async def test_pause(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PAUSE,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.MEDIA_PAUSE,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     assert controller.player_set_play_state.call_count == 1
@@ -405,8 +389,8 @@ async def test_pause_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PAUSE,
-            {ATTR_ENTITY_ID: "media_player.test_player"},
+            MediaPlayerService.MEDIA_PAUSE,
+            {TargetKey.ENTITY_ID: "media_player.test_player"},
             blocking=True,
         )
     assert controller.player_set_play_state.call_count == 1
@@ -420,8 +404,8 @@ async def test_play(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.MEDIA_PLAY,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     assert controller.player_set_play_state.call_count == 1
@@ -439,8 +423,8 @@ async def test_play_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PLAY,
-            {ATTR_ENTITY_ID: "media_player.test_player"},
+            MediaPlayerService.MEDIA_PLAY,
+            {TargetKey.ENTITY_ID: "media_player.test_player"},
             blocking=True,
         )
     assert controller.player_set_play_state.call_count == 1
@@ -454,8 +438,8 @@ async def test_previous_track(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PREVIOUS_TRACK,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     assert controller.player_play_previous.call_count == 1
@@ -474,8 +458,8 @@ async def test_previous_track_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PREVIOUS_TRACK,
-            {ATTR_ENTITY_ID: "media_player.test_player"},
+            MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+            {TargetKey.ENTITY_ID: "media_player.test_player"},
             blocking=True,
         )
     assert controller.player_play_previous.call_count == 1
@@ -489,8 +473,8 @@ async def test_next_track(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_NEXT_TRACK,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.MEDIA_NEXT_TRACK,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     assert controller.player_play_next.call_count == 1
@@ -509,8 +493,8 @@ async def test_next_track_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_NEXT_TRACK,
-            {ATTR_ENTITY_ID: "media_player.test_player"},
+            MediaPlayerService.MEDIA_NEXT_TRACK,
+            {TargetKey.ENTITY_ID: "media_player.test_player"},
             blocking=True,
         )
     assert controller.player_play_next.call_count == 1
@@ -524,8 +508,8 @@ async def test_stop(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_STOP,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.MEDIA_STOP,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     assert controller.player_set_play_state.call_count == 1
@@ -544,8 +528,8 @@ async def test_stop_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_STOP,
-            {ATTR_ENTITY_ID: "media_player.test_player"},
+            MediaPlayerService.MEDIA_STOP,
+            {TargetKey.ENTITY_ID: "media_player.test_player"},
             blocking=True,
         )
     assert controller.player_set_play_state.call_count == 1
@@ -559,8 +543,11 @@ async def test_volume_mute(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
     assert controller.player_set_mute.call_count == 1
@@ -579,8 +566,11 @@ async def test_volume_mute_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_VOLUME_MUTE,
-            {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_MUTED: True},
+            MediaPlayerService.VOLUME_MUTE,
+            {
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+            },
             blocking=True,
         )
     assert controller.player_set_mute.call_count == 1
@@ -595,8 +585,11 @@ async def test_shuffle_set(
     player = controller.players[1]
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SHUFFLE_SET,
-        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_SHUFFLE: True},
+        MediaPlayerService.SHUFFLE_SET,
+        {
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.SHUFFLE: True,
+        },
         blocking=True,
     )
     controller.player_set_play_mode.assert_called_once_with(1, player.repeat, True)
@@ -616,8 +609,11 @@ async def test_shuffle_set_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SHUFFLE_SET,
-            {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_SHUFFLE: True},
+            MediaPlayerService.SHUFFLE_SET,
+            {
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.SHUFFLE: True,
+            },
             blocking=True,
         )
     controller.player_set_play_mode.assert_called_once_with(1, player.repeat, True)
@@ -632,8 +628,11 @@ async def test_repeat_set(
     player = controller.players[1]
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_REPEAT_SET,
-        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_REPEAT: RepeatMode.ONE},
+        MediaPlayerService.REPEAT_SET,
+        {
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.REPEAT: RepeatMode.ONE,
+        },
         blocking=True,
     )
     controller.player_set_play_mode.assert_called_once_with(
@@ -655,10 +654,10 @@ async def test_repeat_set_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_REPEAT_SET,
+            MediaPlayerService.REPEAT_SET,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_REPEAT: RepeatMode.ALL,
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.REPEAT: RepeatMode.ALL,
             },
             blocking=True,
         )
@@ -675,8 +674,11 @@ async def test_volume_set(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 1},
+        MediaPlayerService.VOLUME_SET,
+        {
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.VOLUME_LEVEL: 1,
+        },
         blocking=True,
     )
     controller.player_set_volume.assert_called_once_with(1, 100)
@@ -695,8 +697,11 @@ async def test_volume_set_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_VOLUME_SET,
-            {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 1},
+            MediaPlayerService.VOLUME_SET,
+            {
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.VOLUME_LEVEL: 1,
+            },
             blocking=True,
         )
     controller.player_set_volume.assert_called_once_with(1, 100)
@@ -839,8 +844,11 @@ async def test_select_favorite(
     favorite = favorites[1]
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_INPUT_SOURCE: favorite.name},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.SOURCE: favorite.name,
+        },
         blocking=True,
     )
     controller.play_preset_station.assert_called_once_with(1, 1)
@@ -870,8 +878,11 @@ async def test_select_radio_favorite(
     favorite = favorites[2]
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_INPUT_SOURCE: favorite.name},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.SOURCE: favorite.name,
+        },
         blocking=True,
     )
     controller.play_preset_station.assert_called_once_with(1, 2)
@@ -906,10 +917,10 @@ async def test_select_radio_favorite_command_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOURCE,
+            MediaPlayerService.SELECT_SOURCE,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_INPUT_SOURCE: favorite.name,
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.SOURCE: favorite.name,
             },
             blocking=True,
         )
@@ -938,10 +949,10 @@ async def test_select_input_source(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
+        MediaPlayerService.SELECT_SOURCE,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_INPUT_SOURCE: source_name,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.SOURCE: source_name,
         },
         blocking=True,
     )
@@ -978,8 +989,11 @@ async def test_select_input_unknown_raises(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: "media_player.test_player", ATTR_INPUT_SOURCE: "Unknown"},
+            MediaPlayerService.SELECT_SOURCE,
+            {
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.SOURCE: "Unknown",
+            },
             blocking=True,
         )
 
@@ -1001,10 +1015,10 @@ async def test_select_input_command_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOURCE,
+            MediaPlayerService.SELECT_SOURCE,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_INPUT_SOURCE: input_source.name,
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.SOURCE: input_source.name,
             },
             blocking=True,
         )
@@ -1038,11 +1052,11 @@ async def test_play_media(
     url = "http://news/podcast.mp3"
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_MEDIA_CONTENT_ID: url,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: url,
         },
         blocking=True,
     )
@@ -1067,11 +1081,11 @@ async def test_play_media_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_TYPE: media_type,
-                ATTR_MEDIA_CONTENT_ID: url,
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: url,
             },
             blocking=True,
         )
@@ -1093,11 +1107,11 @@ async def test_play_media_quick_select(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: "quick_select",
-            ATTR_MEDIA_CONTENT_ID: content_id,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "quick_select",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: content_id,
         },
         blocking=True,
     )
@@ -1116,11 +1130,11 @@ async def test_play_media_quick_select_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_TYPE: "quick_select",
-                ATTR_MEDIA_CONTENT_ID: "Invalid",
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "quick_select",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "Invalid",
             },
             blocking=True,
         )
@@ -1156,7 +1170,7 @@ async def test_play_media_playlist(
         service_data[ATTR_MEDIA_ENQUEUE] = enqueue
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         service_data,
         blocking=True,
     )
@@ -1175,11 +1189,11 @@ async def test_play_media_playlist_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
-                ATTR_MEDIA_CONTENT_ID: "Invalid",
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "Invalid",
             },
             blocking=True,
         )
@@ -1201,11 +1215,11 @@ async def test_play_media_favorite(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: "favorite",
-            ATTR_MEDIA_CONTENT_ID: content_id,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "favorite",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: content_id,
         },
         blocking=True,
     )
@@ -1224,11 +1238,11 @@ async def test_play_media_favorite_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_TYPE: "favorite",
-                ATTR_MEDIA_CONTENT_ID: "Invalid",
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "favorite",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "Invalid",
             },
             blocking=True,
         )
@@ -1247,11 +1261,11 @@ async def test_play_media_invalid_type(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_TYPE: "Other",
-                ATTR_MEDIA_CONTENT_ID: "",
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "Other",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "",
             },
             blocking=True,
         )
@@ -1270,11 +1284,11 @@ async def test_play_media_media_uri(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_ID: media_content_id,
-            ATTR_MEDIA_CONTENT_TYPE: "",
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_content_id,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "",
         },
         blocking=True,
     )
@@ -1297,11 +1311,11 @@ async def test_play_media_media_uri_invalid(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_ID: media_id,
-                ATTR_MEDIA_CONTENT_TYPE: "",
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "",
             },
             blocking=True,
         )
@@ -1320,11 +1334,11 @@ async def test_play_media_music_source_url(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/test.mp3",
-            ATTR_MEDIA_CONTENT_TYPE: "",
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "media-source://media_source/local/test.mp3",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "",
         },
         blocking=True,
     )
@@ -1342,11 +1356,11 @@ async def test_play_media_queue(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: "queue",
-            ATTR_MEDIA_CONTENT_ID: "2",
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "queue",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "2",
         },
         blocking=True,
     )
@@ -1365,11 +1379,11 @@ async def test_play_media_queue_invalid(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_TYPE: "queue",
-                ATTR_MEDIA_CONTENT_ID: "Invalid",
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "queue",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "Invalid",
             },
             blocking=True,
         )
@@ -1583,10 +1597,10 @@ async def test_media_player_join_group(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_GROUP_MEMBERS: members,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.GROUP_MEMBERS: members,
         },
         blocking=True,
     )
@@ -1607,10 +1621,10 @@ async def test_media_player_join_group_keeps_existing_members(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_GROUP_MEMBERS: ["media_player.test_player_3"],
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.GROUP_MEMBERS: ["media_player.test_player_3"],
         },
         blocking=True,
     )
@@ -1630,10 +1644,12 @@ async def test_media_player_join_group_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.GROUP_MEMBERS: [
+                    "media_player.test_player_2"
+                ],
             },
             blocking=True,
         )
@@ -1691,9 +1707,9 @@ async def test_media_player_unjoin_group(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_UNJOIN,
+        MediaPlayerService.UNJOIN,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -1713,9 +1729,9 @@ async def test_media_player_unjoin_group_error(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_UNJOIN,
+            MediaPlayerService.UNJOIN,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
+                TargetKey.ENTITY_ID: "media_player.test_player",
             },
             blocking=True,
         )
@@ -1738,10 +1754,12 @@ async def test_media_player_group_fails_when_entity_removed(
     with pytest.raises(ServiceValidationError, match="was not found"):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.GROUP_MEMBERS: [
+                    "media_player.test_player_2"
+                ],
             },
             blocking=True,
         )
@@ -1769,10 +1787,10 @@ async def test_media_player_group_fails_wrong_integration(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_GROUP_MEMBERS: [entry.entity_id],
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.GROUP_MEMBERS: [entry.entity_id],
             },
             blocking=True,
         )
