@@ -1594,6 +1594,29 @@ async def test_describe_entity_group_addresses(
     ] == [("CH-1", ["1/1/0"]), ("CH-2", ["1/2/1"])]
 
 
+def test_group_address_options_of_nested_configuration() -> None:
+    """Options nested in a group, as the colors of a light, keep their path."""
+    assert llm_api._group_address_options(
+        {
+            "ga_switch": {"write": "3/0/1", "state": None, "passive": []},
+            "sync_state": True,
+            "color": {
+                "ga_hue": {"write": "3/2/1", "state": "3/2/0", "passive": []},
+                "ga_saturation": {
+                    "write": "3/3/1",
+                    "state": None,
+                    "passive": ["3/2/0"],
+                },
+            },
+        }
+    ) == {
+        "3/0/1": ["ga_switch.write"],
+        "3/2/1": ["color.ga_hue.write"],
+        "3/2/0": ["color.ga_hue.state", "color.ga_saturation.passive"],
+        "3/3/1": ["color.ga_saturation.write"],
+    }
+
+
 async def test_describe_entity_group_addresses_of_yaml_entity(
     hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser
 ) -> None:
