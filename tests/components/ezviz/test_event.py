@@ -35,14 +35,16 @@ SERIAL = "C123456789"
 
 
 def _camera(
-    last_alarm_time: str | None, status: int = 1
+    last_alarm_time: str | None,
+    status: int = 1,
+    alarm_type_code: str | None = "10079",
 ) -> dict[str, dict[str, object]]:
     """Return coordinator data with the given last alarm."""
     return {
         SERIAL: _mock_camera_data(
             status=status,
             last_alarm_time=last_alarm_time,
-            last_alarm_type_code="10079",
+            last_alarm_type_code=alarm_type_code,
             last_alarm_type_name="Smart Detection Alarm",
         )
     }
@@ -54,9 +56,12 @@ async def _refresh(
     mock_ezviz_client: AsyncMock,
     last_alarm_time: str | None,
     status: int = 1,
+    alarm_type_code: str | None = "10079",
 ) -> None:
     """Let the coordinator fetch new camera data."""
-    mock_ezviz_client.load_cameras.return_value = _camera(last_alarm_time, status)
+    mock_ezviz_client.load_cameras.return_value = _camera(
+        last_alarm_time, status, alarm_type_code
+    )
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -116,6 +121,34 @@ async def test_event_on_new_alarm(
     await _refresh(hass, freezer, mock_ezviz_client, None)
     await _refresh(hass, freezer, mock_ezviz_client, "2026-11-17 12:00:20")
     assert hass.states.get(ENTITY_ID).state == "2026-11-17T12:01:00.000+00:00"
+
+
+@pytest.mark.parametrize("alarm_type_code", ["2701", "10242"])
+async def test_intercom_alarm_not_fired(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+    alarm_type_code: str,
+) -> None:
+    """Test a doorbell ring or an unlock is handled without firing motion."""
+    freezer.move_to("2026-11-17 12:00:00+00:00")
+    mock_ezviz_client.load_cameras.return_value = _camera("2026-11-17 10:00:00")
+
+    await setup_integration(hass, mock_config_entry)
+
+    await _refresh(
+        hass, freezer, mock_ezviz_client, "2026-11-17 12:00:20", 1, alarm_type_code
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+    # The handled ring does not fire later, when its type is no longer reported
+    await _refresh(hass, freezer, mock_ezviz_client, "2026-11-17 12:00:20", 1, None)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+    # A motion alarm after it still fires
+    await _refresh(hass, freezer, mock_ezviz_client, "2026-11-17 12:01:40")
+    assert hass.states.get(ENTITY_ID).state == "2026-11-17T12:01:30.000+00:00"
 
 
 async def test_event_after_outage(

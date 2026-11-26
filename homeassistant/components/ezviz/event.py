@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from typing import override
 
+from pyezvizapi.devices.intercom_events import intercom_event_type
+
 from homeassistant.components.event import (
     EventDeviceClass,
     EventEntity,
@@ -99,6 +101,10 @@ class EzvizMotionEvent(EzvizEntity, EventEntity):
         last_alarm_time = self.data.get("last_alarm_time")
         if last_alarm_time and last_alarm_time != self._last_alarm_time:
             self._last_alarm_time = last_alarm_time
+            # Doorbell rings and unlocks are reported as alarms too: they are
+            # handled, so they do not fire later, but they are not motion.
+            if intercom_event_type(self.data.get("last_alarm_type_code")):
+                return
             self._trigger_event(
                 EVENT_MOTION,
                 {
