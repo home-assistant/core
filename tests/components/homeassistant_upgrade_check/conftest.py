@@ -26,9 +26,11 @@ RUNNING = "2026.7.0"
 TARGET = "2026.11.0"
 
 
-@pytest.fixture(autouse=True)
-def mock_release_notes(aioclient_mock: AiohttpClientMocker) -> Generator[None]:
-    """Serve the fixture release posts as the home-assistant.io repository."""
+def serve_release_posts(aioclient_mock: AiohttpClientMocker) -> None:
+    """Serve the fixture release posts as the home-assistant.io repository.
+
+    A response registered before this one for the same URL takes precedence.
+    """
     posts = sorted(POSTS.iterdir())
     aioclient_mock.get(
         POSTS_URL,
@@ -41,6 +43,12 @@ def mock_release_notes(aioclient_mock: AiohttpClientMocker) -> Generator[None]:
     )
     for post in posts:
         aioclient_mock.get(POST_URL.format(name=post.name), text=post.read_text())
+
+
+@pytest.fixture(autouse=True)
+def mock_release_notes(aioclient_mock: AiohttpClientMocker) -> Generator[None]:
+    """Serve the fixture release posts and count only what a test installs."""
+    serve_release_posts(aioclient_mock)
     # Only what a test sets up counts as installed.
     with patch(
         "homeassistant.components.homeassistant_upgrade_check.websocket_api.MOCK_DOMAINS",

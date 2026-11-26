@@ -10,7 +10,10 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homeassistant_upgrade_check.const import DOMAIN
-from homeassistant.components.homeassistant_upgrade_check.feed import POSTS_URL
+from homeassistant.components.homeassistant_upgrade_check.feed import (
+    POST_URL,
+    POSTS_URL,
+)
 from homeassistant.components.homeassistant_upgrade_check.release_notes import (
     INDEX_FORMAT,
 )
@@ -24,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_CORE_UPDATE, RUNNING, TARGET
+from .conftest import MOCK_CORE_UPDATE, RUNNING, TARGET, serve_release_posts
 
 DIGEST = f"{DOMAIN}/digest"
 
@@ -158,6 +161,15 @@ async def test_digest_nothing_installed(
 
 
 @pytest.mark.parametrize(
+    "url",
+    [
+        pytest.param(POSTS_URL, id="listing"),
+        pytest.param(
+            POST_URL.format(name="2026-11-04-release-202611.markdown"), id="post"
+        ),
+    ],
+)
+@pytest.mark.parametrize(
     "response",
     [
         pytest.param({"status": 403}, id="rate_limited"),
@@ -171,11 +183,13 @@ async def test_digest_release_notes_unavailable(
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
     aioclient_mock: AiohttpClientMocker,
+    url: str,
     response: dict[str, Any],
 ) -> None:
-    """Test the error when the release posts cannot be read."""
+    """Test the error when the listing or a release post cannot be read."""
     aioclient_mock.clear_requests()
-    aioclient_mock.get(POSTS_URL, **response)
+    aioclient_mock.get(url, **response)
+    serve_release_posts(aioclient_mock)
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": DIGEST})
