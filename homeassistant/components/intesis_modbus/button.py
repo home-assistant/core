@@ -23,9 +23,8 @@ PARALLEL_UPDATES = 1
 
 @dataclass(frozen=True, kw_only=True)
 class IntesisButtonEntityDescription(ButtonEntityDescription):
-    """A command, and the gateway sub-system it depends on."""
+    """A command the gateway takes."""
 
-    report_name: str
     press_fn: Callable[[IntesisSingleUnitGateway], Awaitable[None]]
 
 
@@ -33,7 +32,6 @@ GATEWAY_BUTTONS: Final[tuple[IntesisButtonEntityDescription, ...]] = (
     IntesisButtonEntityDescription(
         key="reset_gateway",
         translation_key="reset_gateway",
-        report_name="control",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -45,7 +43,6 @@ UNIT_BUTTONS: Final[tuple[IntesisButtonEntityDescription, ...]] = (
     IntesisButtonEntityDescription(
         key="clear_external_temperature",
         translation_key="clear_external_temperature",
-        report_name="limits",
         entity_category=EntityCategory.CONFIG,
         # Without an external reference the unit regulates on its own sensor
         press_fn=lambda device: device.async_set_external_temperature(None),
@@ -53,7 +50,6 @@ UNIT_BUTTONS: Final[tuple[IntesisButtonEntityDescription, ...]] = (
     IntesisButtonEntityDescription(
         key="reset_error",
         translation_key="reset_error",
-        report_name="control",
         entity_category=EntityCategory.DIAGNOSTIC,
         press_fn=lambda device: device.async_reset_error(),
     ),
@@ -89,7 +85,8 @@ class IntesisButton(IntesisEntity, ButtonEntity):
         description: IntesisButtonEntityDescription,
     ) -> None:
         """Bind to the command the description sends."""
-        super().__init__(coordinator, description.key, description.report_name)
+        # A command reads no value, so no register block has to answer for it
+        super().__init__(coordinator, description.key, None)
         self.entity_description = description
 
     @override

@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import ModbusTimeoutError
+from modbus_connection import IllegalDataAddressError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection, WriteEvent
 import pytest
 from pytest_homeassistant.common import (
@@ -13,10 +13,10 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.intesis_modbus.const import DOMAIN
 from homeassistant.components.intesis_modbus.coordinator import SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -65,7 +65,10 @@ async def test_button_writes_its_register(
     writes: list[WriteEvent] = []
     mock_connection.for_unit(1).on_write(writes.append)
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     assert [(w.address, w.values[0]) for w in writes] == [(address, value)]
 
@@ -78,10 +81,47 @@ async def test_press_failure_raises_home_assistant_error(
     mock_connection.for_unit(1).fail_write(45, ModbusTimeoutError())
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: RESET}, blocking=True
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: RESET},
+            blocking=True,
         )
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "write_failed"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_reset_gateway_the_gateway_refuses_raises(
+    hass: HomeAssistant, mock_connection: MockModbusConnection
+) -> None:
+    """A reset the gateway refuses surfaces as an error."""
+    mock_connection.for_unit(1).fail_write(99, IllegalDataAddressError())
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: RESET_GATEWAY},
+            blocking=True,
+        )
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "write_failed"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_buttons_stay_when_a_register_block_fails(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """A command reads nothing, so a block that stops answering does not hide it."""
+    unit = mock_connection.for_unit(1)
+    unit.fail_read(21, IllegalDataAddressError())
+    unit.fail_read(60, IllegalDataAddressError())
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    for entity_id in (CLEAR, RESET, RESET_GATEWAY):
+        assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("init_integration")
