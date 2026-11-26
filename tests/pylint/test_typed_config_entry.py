@@ -171,6 +171,18 @@ def handle(*entries: ConfigEntry, **by_id: ConfigEntry) -> None:
             [4, 4],
             id="varargs",
         ),
+        pytest.param(
+            """
+from collections.abc import Callable
+
+from homeassistant.config_entries import ConfigEntry
+
+def register(callback: Callable[[ConfigEntry], None]) -> None:
+    pass
+""",
+            [6],
+            id="callable_argument",
+        ),
     ],
 )
 def test_plain_config_entry(

@@ -37,7 +37,8 @@ def _plain_config_entries(annotation: nodes.NodeNG) -> Iterator[nodes.NodeNG]:
         case nodes.BinOp(op="|", left=left, right=right):
             yield from _plain_config_entries(left)
             yield from _plain_config_entries(right)
-        case nodes.Tuple(elts=elts):
+        # Callable[[ConfigEntry], None] keeps its arguments in a list
+        case nodes.Tuple(elts=elts) | nodes.List(elts=elts):
             for elt in elts:
                 yield from _plain_config_entries(elt)
 
