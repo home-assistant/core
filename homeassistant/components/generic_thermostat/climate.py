@@ -15,19 +15,17 @@ from typing import Any, override
 import probatio
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     PRESET_NONE,
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
     RestoreClimate,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_START,
@@ -39,6 +37,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -473,11 +472,11 @@ class GenericThermostat(RestoreClimate):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+        if (temperature := kwargs.get(ClimateServiceArgument.TEMPERATURE)) is None:
             return
         self._attr_preset_mode = self._presets_inv.get(temperature, PRESET_NONE)
         self._target_temp = temperature
-        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+        if (hvac_mode := kwargs.get(ClimateServiceArgument.HVAC_MODE)) is not None:
             await self.async_set_hvac_mode(hvac_mode)
             return
         await self._async_control_heating(force=True)
@@ -687,7 +686,7 @@ class GenericThermostat(RestoreClimate):
 
     async def _async_heater_turn_on(self, keepalive: bool = False) -> None:
         """Turn heater toggleable device on."""
-        data = {ATTR_ENTITY_ID: self.heater_entity_id}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self.heater_entity_id}
         # Create a child context for the switch service call so we can
         # identify the resulting state change event as originating from us.
         # Don't set it as our own context — the climate entity's state changes
@@ -716,7 +715,7 @@ class GenericThermostat(RestoreClimate):
 
     async def _async_heater_turn_off(self, keepalive: bool = False) -> None:
         """Turn heater toggleable device off."""
-        data = {ATTR_ENTITY_ID: self.heater_entity_id}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self.heater_entity_id}
         # Create a child context for the switch service call so we can
         # identify the resulting state change event as originating from us.
         # Don't set it as our own context — the climate entity's state changes
