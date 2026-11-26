@@ -1,5 +1,13 @@
 {
   "entity": {
+    "button": {
+      "clear_external_temperature": {
+        "default": "mdi:thermometer-off"
+      },
+      "reset_error": {
+        "default": "mdi:restart-alert"
+      }
+    },
     "sensor": {
       "error": {
         "default": "mdi:alert-circle",

@@ -55,6 +55,17 @@
     }
   },
   "entity": {
+    "button": {
+      "clear_external_temperature": {
+        "name": "Clear external temperature reference"
+      },
+      "reset_error": {
+        "name": "Reset error"
+      },
+      "reset_gateway": {
+        "name": "Reset gateway"
+      }
+    },
     "climate": {
       "air_conditioner": {
         "state_attributes": {
