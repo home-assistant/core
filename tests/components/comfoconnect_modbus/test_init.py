@@ -1,5 +1,6 @@
 """Tests for the Zehnder ComfoConnect PRO integration setup."""
 
+from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -13,20 +14,23 @@ from modbus_connection import (
     ModbusSerialParams,
     ModbusTcpParams,
 )
-from modbus_connection.mock import MockModbusUnit
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.comfoconnect_modbus.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.comfoconnect_modbus.const import (
+    CONF_UNIT_ID,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import INPUT, MOCK_SERIAL_ENTRY_DATA, seed
+from . import INPUT, MOCK_SERIAL_ENTRY_DATA, seed, seed_gateway
 
 _SCAN = timedelta(seconds=SCAN_INTERVAL)
 AIRFLOW = "sensor.comfoair_airflow"
@@ -153,12 +157,14 @@ async def test_dead_link_makes_everything_unavailable(
     freezer: FrozenDateTimeFactory,
     init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that entities go unavailable while the link is down."""
-    mock_unit.fail_requests(ModbusConnectionError())
+    mock_unit.fail_requests(ModbusConnectionError("socket closed"))
     await _tick(hass, freezer)
 
     assert hass.states.get(AIRFLOW).state == STATE_UNAVAILABLE
+    assert "Lost the Modbus link to the ComfoConnect PRO" in caplog.text
 
     mock_unit.fail_requests(None)
     await _tick(hass, freezer)
@@ -171,6 +177,7 @@ async def test_every_component_failing_marks_the_poll_failed(
     freezer: FrozenDateTimeFactory,
     init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that the poll fails when every read fails."""
     error = IllegalDataAddressError()
@@ -180,8 +187,8 @@ async def test_every_component_failing_marks_the_poll_failed(
     mock_unit.fail_read(address(0x0001), error, register_type="holding")
     await _tick(hass, freezer)
 
-    assert not init_integration.runtime_data.last_update_success
     assert hass.states.get(AIRFLOW).state == STATE_UNAVAILABLE
+    assert "The ComfoConnect PRO refused every read" in caplog.text
 
 
 async def test_lost_ventilation_unit_makes_everything_unavailable(
@@ -235,6 +242,7 @@ async def test_gateway_refusing_every_read_reports_no_path(
     init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
     error: type[Exception],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that the poll reports no path when the gateway refuses every read."""
     # The first registers of the status, sensor and settings blocks
@@ -243,24 +251,42 @@ async def test_gateway_refusing_every_read_reports_no_path(
     mock_unit.fail_read(address(0x0001), error(), register_type="holding")
     await _tick(hass, freezer)
 
-    coordinator = init_integration.runtime_data
-    assert not coordinator.last_update_success
-    assert isinstance(coordinator.last_exception, UpdateFailed)
-    assert coordinator.last_exception.translation_key == "no_path_to_unit"
     assert hass.states.get(AIRFLOW).state == STATE_UNAVAILABLE
+    assert "The ComfoConnect PRO has no path to the ventilation unit" in caplog.text
 
 
-async def test_dead_link_keeps_the_modbus_error(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    init_integration: MockConfigEntry,
-    mock_unit: MockModbusUnit,
+@pytest.fixture
+def bus() -> MockModbusConnection:
+    """One RS-485 bus with gateways on unit IDs 1 and 2."""
+    connection = MockModbusConnection()
+    seed_gateway(connection.for_unit(1))
+    seed_gateway(connection.for_unit(2))
+    return connection
+
+
+@pytest.fixture
+def connection_class(bus: MockModbusConnection) -> Generator[MagicMock]:
+    """Patch `ModbusConnection` in core's modbus helper to return ``bus``."""
+    with patch(
+        "homeassistant.components.modbus.connection.ModbusConnection",
+        return_value=bus,
+    ) as connection_class:
+        yield connection_class
+
+
+async def test_two_gateways_share_one_serial_connection(
+    hass: HomeAssistant, connection_class: MagicMock
 ) -> None:
-    """Test that a poll failure keeps the Modbus error as its cause."""
-    mock_unit.fail_requests(ModbusConnectionError("socket closed"))
-    await _tick(hass, freezer)
+    """Test that two gateways on one serial port share a connection."""
+    first = MockConfigEntry(domain=DOMAIN, data=MOCK_SERIAL_ENTRY_DATA)
+    second = MockConfigEntry(
+        domain=DOMAIN, data={**MOCK_SERIAL_ENTRY_DATA, CONF_UNIT_ID: 2}
+    )
+    for entry in (first, second):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    exception = init_integration.runtime_data.last_exception
-    assert isinstance(exception, UpdateFailed)
-    assert exception.translation_key == "modbus_error"
-    assert isinstance(exception.__cause__, ModbusConnectionError)
+    assert first.state is ConfigEntryState.LOADED
+    assert second.state is ConfigEntryState.LOADED
+    connection_class.assert_called_once()
