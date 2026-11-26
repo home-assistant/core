@@ -293,7 +293,7 @@ class VeSyncHumidifierRGBNightLightHA(VeSyncBaseEntity[VeSyncHumidifier], LightE
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="nightlight_command_failed"
             )
-        self.async_write_ha_state()
+        self.coordinator.async_mark_command(self.device)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -302,7 +302,7 @@ class VeSyncHumidifierRGBNightLightHA(VeSyncBaseEntity[VeSyncHumidifier], LightE
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="nightlight_command_failed"
             )
-        self.async_write_ha_state()
+        self.coordinator.async_mark_command(self.device)
 
     @property
     @override
