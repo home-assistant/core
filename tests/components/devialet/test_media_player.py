@@ -1,10 +1,12 @@
 """Test the Devialet init."""
 
-from unittest.mock import PropertyMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 from devialet import DevialetApi
 from devialet.const import UrlSuffix
+import pytest
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 from yarl import URL
 
 from homeassistant.components.devialet.media_player import SUPPORT_DEVIALET
@@ -28,7 +30,11 @@ from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
+    MediaType,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -50,9 +56,14 @@ from homeassistant.const import (
     TargetKey,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from . import HOST, NAME, setup_integration
+
+ENTITY_ID = f"{MP_DOMAIN}.{NAME.lower()}"
+STREAM_URL = "http://stream.example.com/radio.mp3"
 
 SERVICE_TO_URL = {
     SERVICE_MEDIA_SEEK: [UrlSuffix.SEEK],
@@ -130,8 +141,8 @@ async def test_media_player_playing(
     assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "1 (Remastered)"
     assert state.attributes[ATTR_MEDIA_TITLE] == "Hey Jude - Remastered 2015"
     assert state.attributes[ATTR_ENTITY_PICTURE] is not None
-    assert state.attributes[ATTR_MEDIA_DURATION] == 425653
-    assert state.attributes[ATTR_MEDIA_POSITION] == 123102
+    assert state.attributes[ATTR_MEDIA_DURATION] == 425.653
+    assert state.attributes[ATTR_MEDIA_POSITION] == 123.102
     assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] is not None
     assert state.attributes[ATTR_SUPPORTED_FEATURES] is not None
     assert state.attributes[ATTR_INPUT_SOURCE] is not None
@@ -305,3 +316,139 @@ async def test_media_player_services(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_upnp_discovery_started(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_upnp_discovery: AsyncMock,
+) -> None:
+    """Test the UPnP renderer of the system leader is discovered."""
+    await setup_integration(hass, aioclient_mock)
+
+    mock_upnp_discovery.assert_called_once()
+
+
+async def test_media_features_without_upnp(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test media playback is not offered before UPnP is discovered."""
+    await setup_integration(hass, aioclient_mock)
+
+    features = hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES]
+    assert not features & MediaPlayerEntityFeature.PLAY_MEDIA
+    assert not features & MediaPlayerEntityFeature.BROWSE_MEDIA
+
+
+@pytest.mark.usefixtures("mock_upnp_available")
+async def test_play_media_url(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_play_url_source: AsyncMock,
+) -> None:
+    """Test playing a URL."""
+    await setup_integration(hass, aioclient_mock)
+
+    features = hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES]
+    assert features & MediaPlayerEntityFeature.PLAY_MEDIA
+    assert features & MediaPlayerEntityFeature.BROWSE_MEDIA
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        MediaPlayerService.PLAY_MEDIA,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: STREAM_URL,
+        },
+        blocking=True,
+    )
+
+    mock_play_url_source.assert_awaited_once_with(
+        STREAM_URL, MediaType.MUSIC, "Home Assistant", True
+    )
+
+
+@pytest.mark.usefixtures("mock_upnp_available")
+async def test_play_media_source(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_play_url_source: AsyncMock,
+) -> None:
+    """Test playing a media source item resolves it to a URL."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://homeassistant.local:8123"}
+    )
+    await async_setup_component(hass, "media_source", {})
+    await setup_integration(hass, aioclient_mock)
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        MediaPlayerService.PLAY_MEDIA,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
+                "media-source://media_source/local/test.mp3"
+            ),
+        },
+        blocking=True,
+    )
+
+    url, mime_type, _, _ = mock_play_url_source.await_args.args
+    assert url.startswith("http://homeassistant.local:8123/media/local/test.mp3?")
+    assert mime_type == "audio/mpeg"
+
+
+@pytest.mark.usefixtures("mock_upnp_available")
+async def test_play_media_failed(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_play_url_source: AsyncMock,
+) -> None:
+    """Test an error is raised when the device cannot play the media."""
+    mock_play_url_source.return_value = False
+    await setup_integration(hass, aioclient_mock)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            MediaPlayerService.PLAY_MEDIA,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: STREAM_URL,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "play_media_failed"
+
+
+@pytest.mark.usefixtures("mock_upnp_available")
+async def test_browse_media(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test browsing media only returns audio."""
+    await async_setup_component(hass, "media_source", {})
+    await setup_integration(hass, aioclient_mock)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": "directory",
+            "media_content_id": "media-source://media_source/local/.",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    content_types = {
+        child["media_content_type"] for child in response["result"]["children"]
+    }
+    assert "audio/mpeg" in content_types
+    assert not any(ct.startswith("video/") for ct in content_types)
