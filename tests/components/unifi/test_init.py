@@ -253,6 +253,31 @@ async def test_remove_config_entry_device_rejects_child_device(
     assert device_registry.async_get(child_device.id)
 
 
+async def test_remove_config_entry_device_rejects_child_device_when_unloaded(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Test removing a child device is rejected while the entry is unloaded."""
+    config_entry = await config_entry_factory()
+    assert await async_setup_component(hass, "config", {})
+    child_device = _add_firewall_policy_device(
+        device_registry, config_entry, DELETED_POLICY_ID
+    )
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+    assert not response["success"]
+    assert (
+        response["error"]["message"]
+        == "Failed to remove device entry, rejected by integration"
+    )
+    assert device_registry.async_get(child_device.id)
+
+
 ADOPTED_MAC = "00:00:00:00:01:01"
 PENDING_MAC = "00:00:00:00:01:02"
 
