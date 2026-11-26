@@ -25,10 +25,18 @@ from homeassistant.components.intesis_modbus.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_TYPE,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from . import (
     MOCK_ENTRY_DATA,
@@ -959,6 +967,50 @@ async def test_reconfigure_of_an_entry_from_before_the_connection_type(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data == {**MOCK_ENTRY_DATA, CONF_DEVICE: "/dev/ttyUSB1"}
+
+
+async def test_tcp_duplicate_aborts_however_an_ipv6_address_is_written(
+    hass: HomeAssistant,
+) -> None:
+    """The same IPv6 bridge written out in full is still the same bridge."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_TCP_ENTRY_DATA, CONF_HOST: "2001:db8::1"},
+        options=MOCK_ENTRY_OPTIONS,
+        minor_version=2,
+    ).add_to_hass(hass)
+    result = await _submit_link(
+        hass, "tcp", {**MOCK_TCP_INPUT, CONF_HOST: "2001:DB8:0:0:0:0:0:1"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_reconfigure_of_a_loaded_entry_to_a_tcp_bridge_keeps_its_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    mock_get_unit: MagicMock,
+) -> None:
+    """A running entry reloads on the bridge with the entities it had."""
+    entry_id = init_integration.entry_id
+    before = er.async_entries_for_config_entry(entity_registry, entry_id)
+    assert before
+    result = await _start_reconfigure(hass, init_integration, "reconfigure_tcp")
+    with _patch_temporary_unit(_seeded(), expected=TCP_PARAMS):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_TCP_INPUT
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert init_integration.state is ConfigEntryState.LOADED
+    assert init_integration.data == MOCK_TCP_ENTRY_DATA
+    assert mock_get_unit.call_args.args[2] == TCP_PARAMS
+    assert er.async_entries_for_config_entry(entity_registry, entry_id) == before
+    for entity in before:
+        if entity.disabled_by is None:
+            assert hass.states.get(entity.entity_id).state != STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
+from ipaddress import ip_address
 from typing import TYPE_CHECKING, Any, override
 
 from intesis_gw_modbus import GatewayModel, GatewayProbe, async_probe_gateway
@@ -93,7 +94,12 @@ def _link_data(connection_type: str, user_input: dict[str, Any]) -> dict[str, An
     if CONF_HOST in data:
         # The zone of an IPv6 link-local address names an interface: its case counts
         host, zone, interface = data[CONF_HOST].strip().partition("%")
-        data[CONF_HOST] = f"{host.lower()}{zone}{interface}"
+        try:
+            # One address can be written in several ways, which must compare equal
+            host = ip_address(host).compressed
+        except ValueError:
+            host = host.lower()
+        data[CONF_HOST] = f"{host}{zone}{interface}"
     return data
 
 
