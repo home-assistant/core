@@ -42,6 +42,16 @@ BINARY_SENSOR_MAP: dict[
     type[Robot] | tuple[type[Robot], ...],
     tuple[RobotBinarySensorEntityDescription, ...],
 ] = {
+    Robot: (
+        RobotBinarySensorEntityDescription[Robot](
+            key="online",
+            translation_key="online",
+            device_class=BinarySensorDeviceClass.CONNECTIVITY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            is_on_fn=lambda robot: robot.is_online,
+        ),
+    ),
     LitterRobot: (
         RobotBinarySensorEntityDescription[LitterRobot](
             key="sleeping",
@@ -98,14 +108,6 @@ BINARY_SENSOR_MAP: dict[
             translation_key="laser_dirty",
             device_class=BinarySensorDeviceClass.PROBLEM,
             is_on_fn=lambda robot: robot.is_laser_dirty,
-        ),
-        RobotBinarySensorEntityDescription[LitterRobot5](
-            key="online",
-            translation_key="online",
-            device_class=BinarySensorDeviceClass.CONNECTIVITY,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            entity_registry_enabled_default=False,
-            is_on_fn=lambda robot: robot.is_online,
         ),
     ),
     (FeederRobot, LitterRobot3, LitterRobot4): (

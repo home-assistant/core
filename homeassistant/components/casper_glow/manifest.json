@@ -4,7 +4,8 @@
   "bluetooth": [
     {
       "connectable": true,
-      "local_name": "Jar*"
+      "local_name": "Jar*",
+      "manufacturer_id": 65535
     }
   ],
   "categories": ["lighting.bulbs_lamps", "health_wellbeing"],

@@ -145,6 +145,30 @@ async def validate_input(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
         session.detach()
 
 
+def _format_entry_title(data: Mapping[str, Any]) -> str:
+    """Format the config entry title from connection details."""
+    host = data[CONF_HOST]
+    port = int(data[CONF_PORT])
+    default_port = 443 if data.get(CONF_SSL, True) else 80
+    host_str = f"{host}:{port}" if port != default_port else host
+    return f"INDI Allsky ({host_str})"
+
+
+def _build_entry_data(user_input: Mapping[str, Any]) -> dict[str, Any]:
+    """Build config entry data dict, omitting empty optional credentials."""
+    entry_data: dict[str, Any] = {
+        CONF_HOST: user_input[CONF_HOST],
+        CONF_PORT: user_input[CONF_PORT],
+        CONF_SSL: user_input.get(CONF_SSL, True),
+        CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, True),
+    }
+    if user_input.get(CONF_USERNAME):
+        entry_data[CONF_USERNAME] = user_input[CONF_USERNAME]
+    if user_input.get(CONF_PASSWORD):
+        entry_data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+    return entry_data
+
+
 class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for INDI Allsky."""
 
@@ -152,6 +176,21 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_data: dict[str, Any] | None = None
     _requires_auth: bool = False
+
+    async def _async_validate_errors(self, data: Mapping[str, Any]) -> dict[str, str]:
+        """Validate connection details and return any form error mapping."""
+        try:
+            await validate_input(self.hass, data)
+        except MissingCredentials:
+            return {"base": "missing_credentials"}
+        except CannotConnect:
+            return {"base": "cannot_connect"}
+        except InvalidAuth:
+            return {"base": "invalid_auth"}
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return {"base": "unknown"}
+        return {}
 
     @override
     async def async_step_user(
@@ -170,39 +209,11 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
 
-            try:
-                await validate_input(self.hass, user_input)
-            except MissingCredentials:
-                errors["base"] = "missing_credentials"
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                port = user_input[CONF_PORT]
-                default_port = 443 if user_input.get(CONF_SSL, True) else 80
-                host_str = (
-                    f"{user_input[CONF_HOST]}:{port}"
-                    if port != default_port
-                    else user_input[CONF_HOST]
-                )
-                entry_data = {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_PORT: user_input[CONF_PORT],
-                    CONF_SSL: user_input.get(CONF_SSL, True),
-                    CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, True),
-                }
-                if user_input.get(CONF_USERNAME):
-                    entry_data[CONF_USERNAME] = user_input[CONF_USERNAME]
-                if user_input.get(CONF_PASSWORD):
-                    entry_data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
-
+            errors = await self._async_validate_errors(user_input)
+            if not errors:
                 return self.async_create_entry(
-                    title=f"INDI Allsky ({host_str})",
-                    data=entry_data,
+                    title=_format_entry_title(user_input),
+                    data=_build_entry_data(user_input),
                 )
 
         return self.async_show_form(
@@ -309,15 +320,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: self._discovered_data[CONF_PORT],
             }
         )
-        port = self._discovered_data[CONF_PORT]
-        default_port = 443 if self._discovered_data[CONF_SSL] else 80
-        host_str = (
-            f"{self._discovered_data[CONF_HOST]}:{port}"
-            if port != default_port
-            else self._discovered_data[CONF_HOST]
-        )
         return self.async_create_entry(
-            title=f"INDI Allsky ({host_str})",
+            title=_format_entry_title(self._discovered_data),
             data=self._discovered_data,
         )
 
@@ -363,18 +367,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
             }
 
-            try:
-                await validate_input(self.hass, data)
-            except MissingCredentials:
-                errors["base"] = "missing_credentials"
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            errors = await self._async_validate_errors(data)
+            if not errors:
                 self._discovered_data = data
                 return self._create_discovered_entry()
 
@@ -400,18 +394,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             validate_data = {**reauth_entry.data, **user_input}
-            try:
-                await validate_input(self.hass, validate_data)
-            except MissingCredentials:
-                errors["base"] = "missing_credentials"
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            errors = await self._async_validate_errors(validate_data)
+            if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates=user_input,
@@ -446,34 +430,12 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
 
-            try:
-                await validate_input(self.hass, user_input)
-            except MissingCredentials:
-                errors["base"] = "missing_credentials"
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                port = user_input[CONF_PORT]
-                default_port = 443 if user_input.get(CONF_SSL, True) else 80
-                host_str = (
-                    f"{user_input[CONF_HOST]}:{port}"
-                    if port != default_port
-                    else user_input[CONF_HOST]
-                )
-                entry_data = {
-                    k: v
-                    for k, v in user_input.items()
-                    if k not in (CONF_USERNAME, CONF_PASSWORD) or v
-                }
+            errors = await self._async_validate_errors(user_input)
+            if not errors:
                 return self.async_update_reload_and_abort(
                     entry,
-                    title=f"INDI Allsky ({host_str})",
-                    data=entry_data,
+                    title=_format_entry_title(user_input),
+                    data=_build_entry_data(user_input),
                     options={
                         **entry.options,
                         CONF_MANUAL_ENDPOINT: (

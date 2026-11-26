@@ -391,3 +391,74 @@ async def test_options_flow_log_set_unavailable(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("connection_type", "data", "existing_data"),
+    [
+        (
+            "nibegw",
+            MOCK_FLOW_NIBEGW_USERDATA,
+            {**MOCK_FLOW_NIBEGW_USERDATA, "connection_type": "nibegw"},
+        ),
+        (
+            "modbus",
+            MOCK_FLOW_MODBUS_USERDATA,
+            {**MOCK_FLOW_MODBUS_USERDATA, "connection_type": "modbus"},
+        ),
+    ],
+)
+async def test_already_configured(
+    hass: HomeAssistant,
+    connection_type: str,
+    data: dict[str, Any],
+    existing_data: dict[str, Any],
+) -> None:
+    """Test that the same heat pump can't be set up twice."""
+    MockConfigEntry(domain=DOMAIN, data=existing_data).add_to_hass(hass)
+
+    result = await _get_connection_form(hass, connection_type)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("connection_type", "data", "existing_data", "coil"),
+    [
+        (
+            "nibegw",
+            MOCK_FLOW_NIBEGW_USERDATA,
+            {**MOCK_FLOW_NIBEGW_USERDATA, "connection_type": "nibegw"},
+            48852,
+        ),
+        (
+            "modbus",
+            MOCK_FLOW_MODBUS_USERDATA,
+            {**MOCK_FLOW_MODBUS_USERDATA, "connection_type": "modbus"},
+            40022,
+        ),
+    ],
+)
+async def test_already_configured_while_connecting(
+    hass: HomeAssistant,
+    mock_connection: Mock,
+    coils: dict[int, Any],
+    connection_type: str,
+    data: dict[str, Any],
+    existing_data: dict[str, Any],
+    coil: int,
+) -> None:
+    """Test that a pump added by another flow during validation isn't added twice."""
+    coils[coil] = 1
+    result = await _get_connection_form(hass, connection_type)
+
+    async def _added_by_another_flow() -> None:
+        MockConfigEntry(domain=DOMAIN, data=existing_data).add_to_hass(hass)
+
+    mock_connection.verify_connectivity = AsyncMock(side_effect=_added_by_another_flow)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

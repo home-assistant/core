@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable, Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aioamazondevices.structures import AmazonSchedule
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -29,6 +30,7 @@ from .const import (
     TEST_DEVICE_PLUG_SN,
     TEST_DEVICE_THERMOSTAT_SENSORS,
     TEST_DEVICE_THERMOSTAT_SN,
+    TEST_NOTIFICATIONS,
     TEST_PASSWORD,
     TEST_USER_ID,
     TEST_USERNAME,
@@ -85,6 +87,21 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.on_volume_state_event = MagicMock()
         client.on_media_state_event = MagicMock()
         client.on_todo_event = MagicMock()
+        client.on_notification_event = MagicMock()
+        notification_event_handler: list[
+            Callable[[dict[str, dict[str, AmazonSchedule]]], Awaitable[None]]
+        ] = []
+        client.on_notification_event.append.side_effect = (
+            notification_event_handler.append
+        )
+
+        async def _sync_notifications() -> None:
+            assert notification_event_handler, (
+                "on_notification_event handler was not registered"
+            )
+            await notification_event_handler[0](deepcopy(TEST_NOTIFICATIONS))
+
+        client.sync_notifications = AsyncMock(side_effect=_sync_notifications)
         client.on_dnd_event = MagicMock()
         client.on_sensor_event = MagicMock()
         dnd_event_handler: list[Callable[[dict[str, bool]], Awaitable[None]]] = []

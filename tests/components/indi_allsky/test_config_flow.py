@@ -1,5 +1,6 @@
 """Test the INDI Allsky Config flow."""
 
+from ipaddress import ip_address
 import ssl
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -568,8 +569,8 @@ async def test_reconfigure_hostname_port_preserved_on_zeroconf_rediscovery(
     assert entry.data[CONF_PORT] == 8443
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=443,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -628,8 +629,8 @@ async def test_reconfigure_credentials_only_allows_zeroconf_dhcp_update(
     assert result["reason"] == "reconfigure_successful"
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.60",
-        ip_addresses=["192.168.1.60"],
+        ip_address=ip_address("192.168.1.60"),
+        ip_addresses=[ip_address("192.168.1.60")],
         port=443,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -692,8 +693,8 @@ def test_get_ssl_context() -> None:
     [
         (
             ZeroconfServiceInfo(
-                ip_address="192.168.1.50",
-                ip_addresses=["192.168.1.50"],
+                ip_address=ip_address("192.168.1.50"),
+                ip_addresses=[ip_address("192.168.1.50")],
                 port=443,
                 hostname="indi-allsky.local.",
                 type="_indi-allsky._tcp.local.",
@@ -711,8 +712,8 @@ def test_get_ssl_context() -> None:
         ),
         (
             ZeroconfServiceInfo(
-                ip_address="192.168.1.50",
-                ip_addresses=["192.168.1.50"],
+                ip_address=ip_address("192.168.1.50"),
+                ip_addresses=[ip_address("192.168.1.50")],
                 port=8443,
                 hostname="indi-allsky.local.",
                 type="_indi-allsky._tcp.local.",
@@ -730,8 +731,8 @@ def test_get_ssl_context() -> None:
         ),
         (
             ZeroconfServiceInfo(
-                ip_address="192.168.1.50",
-                ip_addresses=["192.168.1.50"],
+                ip_address=ip_address("192.168.1.50"),
+                ip_addresses=[ip_address("192.168.1.50")],
                 port=80,
                 hostname="indi-allsky.local.",
                 type="_indi-allsky._tcp.local.",
@@ -745,8 +746,8 @@ def test_get_ssl_context() -> None:
         ),
         (
             ZeroconfServiceInfo(
-                ip_address="192.168.1.50",
-                ip_addresses=["192.168.1.50"],
+                ip_address=ip_address("192.168.1.50"),
+                ip_addresses=[ip_address("192.168.1.50")],
                 port=None,
                 hostname="indi-allsky.local.",
                 type="_indi-allsky._tcp.local.",
@@ -807,8 +808,8 @@ async def test_zeroconf_cannot_connect(
     )
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=443,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -838,8 +839,8 @@ async def test_zeroconf_unverified_ssl_fallback(
     ]
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=443,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -878,8 +879,8 @@ async def test_zeroconf_requires_auth_success(
     )
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=443,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -930,8 +931,8 @@ async def test_zeroconf_credentials_errors(
     )
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=80,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -1020,8 +1021,8 @@ async def test_zeroconf_cannot_connect_non_ssl(
     )
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=80,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -1051,8 +1052,8 @@ async def test_zeroconf_unverified_ssl_fallback_requires_auth(
     ]
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=443,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -1112,8 +1113,8 @@ async def test_zeroconf_adopts_existing_unlinked_manual_entry(
     entry.add_to_hass(hass)
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=443,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -1150,8 +1151,8 @@ async def test_zeroconf_adopts_existing_unlinked_manual_entry_by_hostname(
     entry.add_to_hass(hass)
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=443,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -1189,8 +1190,8 @@ async def test_zeroconf_already_configured_with_mac_updates_info(
     entry.add_to_hass(hass)
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=8443,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -1228,8 +1229,8 @@ async def test_zeroconf_preserves_configured_hostname(
     entry.add_to_hass(hass)
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=8443,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -1266,8 +1267,8 @@ async def test_zeroconf_already_configured_without_mac(
     entry.add_to_hass(hass)
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=443,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -1302,8 +1303,8 @@ async def test_zeroconf_already_configured_without_mac_by_hostname(
     entry.add_to_hass(hass)
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=443,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -1327,8 +1328,8 @@ async def test_zeroconf_confirmation_collision_aborts(
 ) -> None:
     """Test discovery confirmation aborts if endpoint was configured while discovery was pending."""
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=443,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",
@@ -1384,8 +1385,8 @@ async def test_zeroconf_rejects_protocol_downgrade(
     entry.add_to_hass(hass)
 
     discovery_info = ZeroconfServiceInfo(
-        ip_address="192.168.1.50",
-        ip_addresses=["192.168.1.50"],
+        ip_address=ip_address("192.168.1.50"),
+        ip_addresses=[ip_address("192.168.1.50")],
         port=80,
         hostname="indi-allsky.local.",
         type="_indi-allsky._tcp.local.",

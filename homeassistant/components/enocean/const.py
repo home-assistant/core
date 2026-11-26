@@ -8,6 +8,8 @@ DOMAIN = "enocean"
 
 MANUFACTURER = "EnOcean"
 
+CONF_PROTOCOL = "protocol"
+
 ERROR_INVALID_DEVICE_ID = "invalid_device_id"
 ERROR_INVALID_DONGLE_PATH = "invalid_dongle_path"
 

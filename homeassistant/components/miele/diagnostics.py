@@ -32,7 +32,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    aux_data = config_entry.runtime_data.aux_coordinator.data
+    aux_data = config_entry.runtime_data.aux_coordinator.data_or_none
     filling_levels = aux_data.filling_levels if aux_data else {}
     miele_data: dict[str, Any] = {
         "devices": redact_identifiers(
@@ -96,7 +96,7 @@ async def async_get_device_diagnostics(
                     device_id
                 ].raw
             }
-            if aux_coordinator.data
+            if aux_coordinator.data_or_none
             else {}
         ),
         "actions": {

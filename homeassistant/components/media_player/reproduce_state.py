@@ -12,6 +12,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
     EntityStateAttribute,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant, State
 
@@ -53,7 +54,7 @@ async def _async_reproduce_states(
         service: str, attributes: Iterable[MediaPlayerEntityStateAttribute]
     ) -> None:
         """Call service with the given state attributes."""
-        data = {"entity_id": state.entity_id}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: state.entity_id}
         for attribute in attributes:
             if attribute in state.attributes:
                 data[_STATE_ATTRIBUTE_TO_SERVICE_ARG[attribute]] = state.attributes[

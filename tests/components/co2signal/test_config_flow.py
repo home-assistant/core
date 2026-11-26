@@ -7,6 +7,7 @@ from aioelectricitymaps import (
     ElectricityMapsError,
     ElectricityMapsInvalidTokenError,
     ElectricityMapsNoDataError,
+    ZoneRequest,
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -198,10 +199,13 @@ async def test_form_error_handling(
 
 async def test_reauth(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
     electricity_maps: AsyncMock,
 ) -> None:
     """Test reauth flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "api_key", CONF_COUNTRY_CODE: "fr"},
+    )
     config_entry.add_to_hass(hass)
 
     init_result = await config_entry.start_reauth_flow(hass)
@@ -224,6 +228,10 @@ async def test_reauth(
     assert configure_result["type"] is FlowResultType.ABORT
     assert configure_result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
+    electricity_maps.carbon_intensity_for_home_assistant.assert_called_once_with(
+        ZoneRequest(zone="fr")
+    )
+    assert config_entry.data == {CONF_API_KEY: "api_key2", CONF_COUNTRY_CODE: "fr"}
 
 
 @pytest.mark.usefixtures("electricity_maps")

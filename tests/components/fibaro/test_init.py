@@ -117,6 +117,7 @@ async def test_child_device_info(
     mock_light.parent_fibaro_id = 5
     mock_light.endpoint_id = 1
     mock_light.has_endpoint_id = True
+    mock_zigbee_light.name = "Test light 2"
     mock_zigbee_light.parent_fibaro_id = 5
     mock_zigbee_light.endpoint_id = 2
     mock_zigbee_light.has_endpoint_id = True
@@ -163,10 +164,10 @@ async def test_child_device_info(
         "light.test_climate_test_light_room_1_test_light"
     )
     second_light_entity = entity_registry.async_get(
-        "light.test_climate_test_light_room_1_test_light_2"
+        "light.test_climate_test_light_2_room_1_test_light_2"
     )
     additional_sensor_entity = entity_registry.async_get(
-        "sensor.test_climate_test_light_room_1_test_sensor_power"
+        "sensor.test_climate_test_light_2_room_1_test_sensor_power"
     )
     sensor_entity = entity_registry.async_get("sensor.test_climate_room_1_test_sensor")
 

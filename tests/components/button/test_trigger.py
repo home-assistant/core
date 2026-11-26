@@ -28,15 +28,12 @@ from homeassistant.components.event import (
     EventEntityStateAttribute,
 )
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    ATTR_LABEL_ID,
-    CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant, callback
@@ -83,7 +80,7 @@ def _button_event_state(
 ) -> StateDescription:
     """Build an event entity state."""
     attributes: dict[str, Any] = {
-        ATTR_DEVICE_CLASS: device_class,
+        EntityStateAttribute.DEVICE_CLASS: device_class,
         EventEntityCapabilityAttribute.EVENT_TYPES: event_types,
         EventEntityStateAttribute.EVENT_TYPE: event_type,
     }
@@ -1139,7 +1136,7 @@ async def test_button_hold_triggers_ignore_buttons(
     set_or_remove_state(
         hass, entity_id, _button_event_state(STATE_UNKNOWN, _HOLD_BUTTON_EVENT_TYPES)
     )
-    await arm_trigger(hass, trigger, None, {CONF_ENTITY_ID: entity_id}, calls)
+    await arm_trigger(hass, trigger, None, {TargetKey.ENTITY_ID: entity_id}, calls)
 
     # Attributes of a hold event, so only the domain filter can keep it out.
     set_or_remove_state(
@@ -1188,7 +1185,7 @@ def _make_set_state_step(state: str | None) -> _TimelineStep:
             {
                 "state": state,
                 "attributes": {
-                    ATTR_DEVICE_CLASS: "button",
+                    EntityStateAttribute.DEVICE_CLASS: "button",
                     EventEntityCapabilityAttribute.EVENT_TYPES: _PHYSICAL_BUTTON_EVENT_TYPES,
                 },
             },
@@ -1206,7 +1203,7 @@ def _make_attribute_update_step() -> _TimelineStep:
         hass.states.async_set(
             _EVENT_ENTITY_ID,
             state.state,
-            {**state.attributes, ATTR_FRIENDLY_NAME: f"Button {index}"},
+            {**state.attributes, EntityStateAttribute.FRIENDLY_NAME: f"Button {index}"},
         )
 
     return step
@@ -1429,7 +1426,7 @@ async def test_button_held_trigger_repeat(
         _button_event_state(STATE_UNKNOWN, _PHYSICAL_BUTTON_EVENT_TYPES),
     )
     unsub = await _arm_held_trigger(
-        hass, {CONF_ENTITY_ID: _EVENT_ENTITY_ID}, options, calls
+        hass, {TargetKey.ENTITY_ID: _EVENT_ENTITY_ID}, options, calls
     )
 
     for index, (step, expected_repeat_counts) in enumerate(steps):
@@ -1457,7 +1454,7 @@ async def test_button_held_trigger_repeats_per_entity(
             _button_event_state(STATE_UNKNOWN, _HOLD_BUTTON_EVENT_TYPES),
         )
     unsub = await _arm_held_trigger(
-        hass, {CONF_ENTITY_ID: [entity_1, entity_2]}, _INTERVAL_500MS, calls
+        hass, {TargetKey.ENTITY_ID: [entity_1, entity_2]}, _INTERVAL_500MS, calls
     )
 
     set_or_remove_state(
@@ -1525,7 +1522,7 @@ async def test_button_held_trigger_trigger_data(
         _button_event_state(STATE_UNKNOWN, _HOLD_BUTTON_EVENT_TYPES),
     )
     unsub = await _arm_held_trigger(
-        hass, {CONF_ENTITY_ID: _EVENT_ENTITY_ID}, _INTERVAL_500MS, trigger_data
+        hass, {TargetKey.ENTITY_ID: _EVENT_ENTITY_ID}, _INTERVAL_500MS, trigger_data
     )
 
     set_or_remove_state(
@@ -1591,7 +1588,7 @@ async def test_button_held_trigger_entity_removed_from_target(
         _button_event_state(STATE_UNKNOWN, _HOLD_BUTTON_EVENT_TYPES),
     )
     unsub = await _arm_held_trigger(
-        hass, {ATTR_LABEL_ID: label.label_id}, _INTERVAL_500MS, calls
+        hass, {TargetKey.LABEL_ID: label.label_id}, _INTERVAL_500MS, calls
     )
 
     set_or_remove_state(
@@ -1628,7 +1625,7 @@ async def test_button_held_trigger_unsubscribe_stops_repeating(
         _button_event_state(STATE_UNKNOWN, _HOLD_BUTTON_EVENT_TYPES),
     )
     unsub = await _arm_held_trigger(
-        hass, {CONF_ENTITY_ID: _EVENT_ENTITY_ID}, _INTERVAL_500MS, calls
+        hass, {TargetKey.ENTITY_ID: _EVENT_ENTITY_ID}, _INTERVAL_500MS, calls
     )
 
     set_or_remove_state(
@@ -1676,7 +1673,11 @@ async def _hold_until_run_ends_it(
     )
     unsubs.append(
         await _arm_held_trigger(
-            hass, {CONF_ENTITY_ID: _EVENT_ENTITY_ID}, _INTERVAL_500MS, calls, on_run
+            hass,
+            {TargetKey.ENTITY_ID: _EVENT_ENTITY_ID},
+            _INTERVAL_500MS,
+            calls,
+            on_run,
         )
     )
 

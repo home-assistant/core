@@ -12,13 +12,20 @@ from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     MediaPlayerService,
 )
-from homeassistant.components.sonos.const import LONG_SERVICE_TIMEOUT
+from homeassistant.components.sonos.const import DOMAIN, LONG_SERVICE_TIMEOUT
 from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
-from .conftest import MockSoCo, create_zgs_sonos_event, group_speakers, ungroup_speakers
+from .conftest import (
+    MockSoCo,
+    SoCoMockFactory,
+    create_zgs_sonos_event,
+    group_speakers,
+    ungroup_speakers,
+)
 
 
 async def test_media_player_join(
@@ -110,6 +117,45 @@ async def test_media_player_join_entity_no_speaker(
             blocking=True,
         )
     assert bad_media_player.entity_id in str(excinfo.value)
+
+
+async def test_media_player_join_different_household(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+) -> None:
+    """Test joining speakers from different households is rejected."""
+    soco_living_room = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco_bedroom = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    soco_bedroom.household_id = "household_b"
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "media_player": {
+                    "interface_addr": "127.0.0.1",
+                    "hosts": ["10.10.10.1", "10.10.10.2"],
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Cannot join media_player.bedroom to media_player.living_room",
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            MediaPlayerService.JOIN,
+            {
+                "entity_id": "media_player.living_room",
+                "group_members": ["media_player.bedroom"],
+            },
+            blocking=True,
+        )
+    soco_bedroom.join.assert_not_called()
+    soco_living_room.join.assert_not_called()
 
 
 @asynccontextmanager

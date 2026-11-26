@@ -3,7 +3,7 @@
 from functools import partial
 from typing import Any, override
 
-from holidays import PUBLIC, HolidayBase, country_holidays, list_supported_countries
+from holidays import PUBLIC, country_holidays, list_supported_countries
 import probatio
 
 from homeassistant.config_entries import (
@@ -16,6 +16,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     CountrySelector,
     CountrySelectorConfig,
     LanguageSelector,
@@ -40,6 +41,7 @@ from .const import (
     CONF_PROVINCE,
     CONF_REMOVE_HOLIDAYS,
     CONF_WORKDAYS,
+    COUNTRY_OPTIONS,
     DEFAULT_EXCLUDES,
     DEFAULT_NAME,
     DEFAULT_OFFSET,
@@ -49,6 +51,7 @@ from .const import (
     SECTION_COUNTRY_SETTINGS,
     SECTION_CUSTOM_HOLIDAYS,
 )
+from .util import get_holidays_object
 
 
 def add_province_and_language_to_schema(
@@ -115,11 +118,19 @@ def add_province_and_language_to_schema(
             ),
         }
 
+    supported_options = _country.get_supported_options()
+    country_options_schema = {
+        probatio.Optional(option, default=supported_options[option]): BooleanSelector()
+        for option in COUNTRY_OPTIONS
+        if option in supported_options
+    }
+
     if not (
         country_settings_schema := {
             **language_schema,
             **province_schema,
             **category_schema,
+            **country_options_schema,
         }
     ):
         return schema
@@ -155,19 +166,15 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
         ):
             raise AddDatesError("Incorrect date")
 
-    year: int = dt_util.now().year
-    if country := user_input.get(CONF_COUNTRY):
-        country_settings: dict[str, Any] = user_input.get(SECTION_COUNTRY_SETTINGS, {})
-        obj_holidays = country_holidays(
-            country=country,
-            subdiv=country_settings.get(CONF_PROVINCE),
-            years=year,
-            language=country_settings.get(CONF_LANGUAGE),
-            categories=[PUBLIC, *country_settings.get(CONF_CATEGORY, [])],
-        )
-
-    else:
-        obj_holidays = HolidayBase(years=year)
+    country_settings: dict[str, Any] = user_input.get(SECTION_COUNTRY_SETTINGS, {})
+    obj_holidays = get_holidays_object(
+        user_input.get(CONF_COUNTRY),
+        country_settings.get(CONF_PROVINCE),
+        dt_util.now().year,
+        country_settings.get(CONF_LANGUAGE),
+        country_settings.get(CONF_CATEGORY),
+        country_settings,
+    )
 
     for remove_date in custom_holidays[CONF_REMOVE_HOLIDAYS]:
         if (
@@ -230,7 +237,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Workday integration."""
 
     VERSION = 2
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     data: dict[str, Any] = {}
 

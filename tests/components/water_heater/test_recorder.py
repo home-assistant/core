@@ -8,12 +8,8 @@ from pytest_homeassistant.components.recorder.common import async_wait_recording
 from homeassistant.components import water_heater
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.water_heater import (
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
-    ATTR_OPERATION_LIST,
-)
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.components.water_heater import WaterHeaterCapabilityAttribute
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -40,7 +36,7 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
         for state in entity_states
         if split_entity_id(state.entity_id)[0] == water_heater.DOMAIN
     ):
-        assert ATTR_OPERATION_LIST not in state.attributes
-        assert ATTR_MIN_TEMP not in state.attributes
-        assert ATTR_MAX_TEMP not in state.attributes
-        assert ATTR_FRIENDLY_NAME in state.attributes
+        assert WaterHeaterCapabilityAttribute.OPERATION_LIST not in state.attributes
+        assert WaterHeaterCapabilityAttribute.MIN_TEMP not in state.attributes
+        assert WaterHeaterCapabilityAttribute.MAX_TEMP not in state.attributes
+        assert EntityStateAttribute.FRIENDLY_NAME in state.attributes

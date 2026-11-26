@@ -4469,7 +4469,9 @@ async def _arm_off_to_on_trigger(
 
     trigger_config = {
         CONF_PLATFORM: "test.off_to_on",
-        CONF_TARGET: target if target is not None else {CONF_ENTITY_ID: entity_ids},
+        CONF_TARGET: target
+        if target is not None
+        else {TargetKey.ENTITY_ID: entity_ids},
         CONF_OPTIONS: options,
     }
 
@@ -6397,6 +6399,33 @@ def mock_test_modern_trigger(hass: HomeAssistant) -> None:
             id="modern-target-empty",
         ),
         pytest.param(
+            {
+                "platform": "test.modern",
+                "options": {"entity_id": ["sensor.x", "sensor.y"]},
+            },
+            ["sensor.x", "sensor.y"],
+            id="modern-options-list",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "options": {"entity_id": "sensor.x"}},
+            ["sensor.x"],
+            id="modern-options-single",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "options": {}},
+            [],
+            id="modern-options-empty",
+        ),
+        pytest.param(
+            {
+                "platform": "test.modern",
+                "options": {"entity_id": ["sensor.x", "sensor.y"]},
+                "target": {"entity_id": "sensor.z"},
+            },
+            ["sensor.x", "sensor.y", "sensor.z"],
+            id="modern-options-and-target",
+        ),
+        pytest.param(
             {"platform": "test.modern"},
             [],
             id="no-match",
@@ -6551,6 +6580,33 @@ def _substitute(obj: Any, placeholder: str, value: str) -> Any:
             },
             ["abc123", "def456"],
             id="modern-target-list",
+        ),
+        pytest.param(
+            {
+                "platform": "test.modern",
+                "options": {"device_id": ["abc123", "def456"]},
+            },
+            ["abc123", "def456"],
+            id="modern-options-list",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "options": {"device_id": "abc123"}},
+            ["abc123"],
+            id="modern-options-single",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "options": {}},
+            [],
+            id="modern-options-empty",
+        ),
+        pytest.param(
+            {
+                "platform": "test.modern",
+                "options": {"device_id": ["abc123", "def456"]},
+                "target": {"device_id": "ghi789"},
+            },
+            ["abc123", "def456", "ghi789"],
+            id="modern-options-and-target",
         ),
         pytest.param(
             {"platform": "test.modern"},

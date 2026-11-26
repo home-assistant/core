@@ -37,6 +37,22 @@ from homeassistant.util.dt import utcnow
 
 
 @pytest.fixture
+def areas_and_labels(area_registry: ar.AreaRegistry) -> None:
+    """Create the areas that the tests assign to entries."""
+    for name in (
+        "12345a",
+        "12345b",
+        "attic",
+        "bedroom",
+        "garage",
+        "garden",
+        "kitchen",
+        "mock_area_id",
+    ):
+        area_registry.async_create(name)
+
+
+@pytest.fixture
 async def client(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> MockHAClientWebSocket:
@@ -712,6 +728,7 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
     }
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_update_entity(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
@@ -754,7 +771,7 @@ async def test_update_entity(
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "aliases": ["alias_1", "alias_2"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "categories": {"scope1": "id", "scope2": "id"},
             "device_class": "custom_device_class",
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
@@ -769,7 +786,7 @@ async def test_update_entity(
     assert msg["result"] == {
         "entity_entry": {
             "aliases": ["alias_1", "alias_2"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id"},
             "created_at": created.timestamp(),
@@ -853,7 +870,7 @@ async def test_update_entity(
     assert msg["result"] == {
         "entity_entry": {
             "aliases": ["alias_1", "alias_2"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id"},
             "config_entry_id": None,
@@ -900,7 +917,7 @@ async def test_update_entity(
     assert msg["result"] == {
         "entity_entry": {
             "aliases": ["alias_1", "alias_2"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id"},
             "config_entry_id": None,
@@ -946,7 +963,7 @@ async def test_update_entity(
     assert msg["result"] == {
         "entity_entry": {
             "aliases": ["alias_1", "alias_2"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id", "scope3": "id"},
             "config_entry_id": None,
@@ -992,7 +1009,7 @@ async def test_update_entity(
     assert msg["result"] == {
         "entity_entry": {
             "aliases": ["alias_1", "alias_2"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id", "scope3": "other_id"},
             "config_entry_id": None,
@@ -1038,7 +1055,7 @@ async def test_update_entity(
     assert msg["result"] == {
         "entity_entry": {
             "aliases": ["alias_1", "alias_2"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope3": "other_id"},
             "config_entry_id": None,
@@ -1081,7 +1098,7 @@ async def test_update_entity(
     assert msg["result"] == {
         "entity_entry": {
             "aliases": [None, "alias_1", "alias_2", "alias_3"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope3": "other_id"},
             "config_entry_id": None,
@@ -1110,6 +1127,7 @@ async def test_update_entity(
     }
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_update_entity_own_area_without_own_name(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
@@ -2008,3 +2026,25 @@ async def test_update_settings_requires_admin(
 
     assert msg["success"]
     assert msg["result"] == {"entity_id_parts": None}
+
+
+async def test_update_entity_unknown_area(
+    client: MockHAClientWebSocket,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test updating an entity to an unknown area returns an error."""
+    entry = entity_registry.async_get_or_create("light", "hue", "5678")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": entry.entity_id,
+            "area_id": "unknown",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_info"
+    assert msg["error"]["message"] == "Area 'unknown' not found."
+    assert entity_registry.async_get(entry.entity_id) == entry

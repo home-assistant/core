@@ -32,14 +32,16 @@ class WatergateBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
     WatergateBinarySensorEntityDescription(
-        value_fn=lambda data: data.state.water_flow_indicator if data.state else None,
+        # Despite its type, the state is None after an empty response
+        value_fn=lambda data: data.state.water_flow_indicator if data.state else None,  # type: ignore[truthy-bool]
         translation_key="water_flowing",
         key="water_flowing",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
     WatergateBinarySensorEntityDescription(
         value_fn=lambda data: (
-            data.networking.mqtt_connected if data.networking else None
+            # Despite its type, the networking is None after an empty response
+            data.networking.mqtt_connected if data.networking else None  # type: ignore[truthy-bool]
         ),
         translation_key="mqtt_connected",
         key="mqtt_connected",
@@ -49,7 +51,8 @@ DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
     ),
     WatergateBinarySensorEntityDescription(
         value_fn=lambda data: (
-            data.networking.wifi_connected if data.networking else None
+            # Despite its type, the networking is None after an empty response
+            data.networking.wifi_connected if data.networking else None  # type: ignore[truthy-bool]
         ),
         translation_key="wifi_connected",
         key="wifi_connected",
@@ -59,7 +62,8 @@ DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
     ),
     WatergateBinarySensorEntityDescription(
         value_fn=lambda data: (
-            "external" in data.state.power_supply if data.state else None
+            # Despite its type, the state is None after an empty response
+            "external" in data.state.power_supply if data.state else None  # type: ignore[truthy-bool]
         ),
         translation_key="external_power",
         key="external_power",

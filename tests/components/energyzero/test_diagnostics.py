@@ -26,6 +26,7 @@ async def test_entry_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the EnergyZero entry diagnostics."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
     await setup_integration(hass, mock_config_entry)
 
     result = await get_diagnostics_for_config_entry(

@@ -15,9 +15,9 @@ from pytest_unordered import unordered
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
     DOMAIN,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
     SensorStateClass,
     device_trigger,
 )
@@ -203,7 +203,7 @@ async def test_get_triggers_no_unit_or_stateclass(
         DOMAIN,
         "test",
         "5678",
-        capabilities={ATTR_STATE_CLASS: state_class},
+        capabilities={SensorEntityCapabilityAttribute.STATE_CLASS: state_class},
         device_id=device_entry.id,
         unit_of_measurement=unit,
     )

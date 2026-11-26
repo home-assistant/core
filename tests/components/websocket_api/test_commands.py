@@ -51,12 +51,15 @@ from homeassistant.components.websocket_api.commands import (
 )
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    CONF_EXTERNAL_URL,
-    SIGNAL_BOOTSTRAP_INTEGRATIONS,
-    EntityCategory,
+from homeassistant.const import CONF_EXTERNAL_URL, EntityCategory
+from homeassistant.core import (
+    Context,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    SupportsResponse,
+    callback,
 )
-from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -66,7 +69,6 @@ from homeassistant.helpers import (
     system_state,
     trace,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
@@ -878,6 +880,71 @@ async def test_call_service_error(
     assert msg["error"]["code"] == "unknown_error"
     assert msg["error"]["message"] == "value_error"
     assert "Traceback" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("call_data", "log_message"),
+    [
+        pytest.param(
+            {},
+            "Error during service call to domain_test.ha_error: device did not respond",
+            id="no_target",
+        ),
+        pytest.param(
+            {"service_data": {"brightness": 10}},
+            "Error during service call to domain_test.ha_error: device did not respond",
+            id="no_target_in_service_data",
+        ),
+        pytest.param(
+            {"target": {"entity_id": "light.kitchen"}},
+            "Error during service call to domain_test.ha_error with target "
+            "{'entity_id': ['light.kitchen']}: device did not respond",
+            id="target",
+        ),
+        pytest.param(
+            {"service_data": {"entity_id": "light.kitchen", "brightness": 10}},
+            "Error during service call to domain_test.ha_error with target "
+            "{'entity_id': 'light.kitchen'}: device did not respond",
+            id="target_in_service_data",
+        ),
+        pytest.param(
+            {
+                "target": {"area_id": "kitchen"},
+                "service_data": {"device_id": "abc123"},
+            },
+            "Error during service call to domain_test.ha_error with target "
+            "{'device_id': 'abc123', 'area_id': ['kitchen']}: device did not respond",
+            id="target_and_service_data",
+        ),
+    ],
+)
+async def test_call_service_error_logs_target(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    websocket_client: MockHAClientWebSocket,
+    call_data: dict[str, Any],
+    log_message: str,
+) -> None:
+    """Test the error log of a failed service call names the target."""
+
+    @callback
+    def ha_error_call(_: ServiceCall) -> None:
+        raise HomeAssistantError("device did not respond")
+
+    hass.services.async_register("domain_test", "ha_error", ha_error_call)
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "call_service",
+            "domain": "domain_test",
+            "service": "ha_error",
+            **call_data,
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["success"] is False
+    assert log_message in caplog.text
 
 
 async def test_subscribe_unsubscribe_events(
@@ -3859,30 +3926,6 @@ async def test_execute_script_config_error(
     assert msg["error"] == expected_error
 
 
-async def test_subscribe_unsubscribe_bootstrap_integrations(
-    hass: HomeAssistant,
-    websocket_client: MockHAClientWebSocket,
-    hass_admin_user: MockUser,
-) -> None:
-    """Test subscribe/unsubscribe bootstrap_integrations."""
-    await websocket_client.send_json_auto_id(
-        {"type": "subscribe_bootstrap_integrations"}
-    )
-
-    msg = await websocket_client.receive_json()
-    subscription = msg["id"]
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
-
-    message = {"august": 12.5, "isy994": 12.8}
-
-    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, message)
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == subscription
-    assert msg["type"] == "event"
-    assert msg["event"] == message
-
-
 async def test_subscribe_bootstrap_progress(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
@@ -4016,7 +4059,7 @@ async def test_integration_setup_info(
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
 ) -> None:
-    """Test subscribe/unsubscribe bootstrap_integrations."""
+    """Test integration setup info."""
     with patch(
         "homeassistant.components.websocket_api.commands.async_get_setup_timings",
         return_value={

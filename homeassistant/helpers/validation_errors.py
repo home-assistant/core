@@ -16,10 +16,14 @@ from typing import Any, TypedDict, override
 import probatio
 from probatio import VirtualPathComponent
 from probatio.error import render_path
+from probatio.humanize import MAX_VALIDATION_ERROR_ITEM_LENGTH
 
 from homeassistant.exceptions import HomeAssistantError
 
+MAX_HUMANIZED_ERRORS = 10
+
 _SECRET_MESSAGE = "invalid value"
+_SECRET_VALUE = "<redacted>"
 
 
 @dataclass(slots=True, frozen=True, repr=False)
@@ -268,3 +272,50 @@ def validation_errors_as_dicts(
     to, so don't validate inside an except block.
     """
     return [validation_error_as_dict(info) for info in iter_validation_errors(err)]
+
+
+def _humanize_validation_error(data: Any, info: ValidationErrorInfo) -> str:
+    """Return a validation error with its path and the value it is about in data."""
+    err = info.exception
+    if isinstance(err, probatio.Invalid) and err.secret:
+        return f"{info}. Got {_SECRET_VALUE}"
+    if not info.path and not isinstance(err, probatio.Invalid):
+        # The error is not about a part of data
+        return str(info)
+    path = info.path
+    if path and isinstance(path[-1], VirtualPathComponent):
+        # A group is not a key of the config, the error is about its parent
+        path = path[:-1]
+    value = data
+    for segment in path:
+        try:
+            value = value[segment]
+        except KeyError, IndexError, TypeError:
+            value = None
+            break
+    offending = repr(value)
+    if len(offending) > MAX_VALIDATION_ERROR_ITEM_LENGTH:
+        offending = offending[: MAX_VALIDATION_ERROR_ITEM_LENGTH - 3] + "..."
+    return f"{info}. Got {offending}"
+
+
+def humanize_validation_errors(
+    data: Any, err: probatio.Invalid | HomeAssistantError
+) -> str:
+    """Return the errors in err as text, for a log or a repair issue.
+
+    There is one line for each error, in the order the errors are in err. A
+    line has the message, the path, and the value at that path in data. At
+    most MAX_HUMANIZED_ERRORS errors are included, followed by the number of
+    errors which were left out.
+
+    Must be called in the event loop when err may hold a translated
+    HomeAssistantError.
+    """
+    errors = list(iter_validation_errors(err))
+    lines = [
+        _humanize_validation_error(data, info) for info in errors[:MAX_HUMANIZED_ERRORS]
+    ]
+    if (left_out := len(errors) - MAX_HUMANIZED_ERRORS) > 0:
+        lines.append(f"… and {left_out} more error{'s' if left_out > 1 else ''}")
+    return "\n".join(lines)

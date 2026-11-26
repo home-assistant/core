@@ -46,26 +46,6 @@ TEST_DEVICE_1 = AmazonDevice(
     entity_id="11111111-2222-3333-4444-555555555555",
     endpoint_id="G1234567890123456789012345678A",
     notifications_supported=True,
-    notifications={
-        NOTIFICATION_ALARM: AmazonSchedule(
-            type=NOTIFICATION_ALARM,
-            status="ON",
-            label="Morning Alarm",
-            next_occurrence=datetime(2023, 10, 1, 7, 0, 0, tzinfo=UTC),
-        ),
-        NOTIFICATION_REMINDER: AmazonSchedule(
-            type=NOTIFICATION_REMINDER,
-            status="ON",
-            label="Take out the trash",
-            next_occurrence=None,
-        ),
-        NOTIFICATION_TIMER: AmazonSchedule(
-            type=NOTIFICATION_TIMER,
-            status="OFF",
-            label="",
-            next_occurrence=None,
-        ),
-    },
     media_player_supported=True,
     communication_settings={
         "announcements": "ON",
@@ -124,6 +104,29 @@ TEST_DEVICE_1 = AmazonDevice(
     },
 )
 
+TEST_NOTIFICATIONS: dict[str, dict[str, AmazonSchedule]] = {
+    TEST_DEVICE_1_SN: {
+        NOTIFICATION_ALARM: AmazonSchedule(
+            type=NOTIFICATION_ALARM,
+            status="ON",
+            label="Morning Alarm",
+            next_occurrence=datetime(2023, 10, 1, 7, 0, 0, tzinfo=UTC),
+        ),
+        NOTIFICATION_REMINDER: AmazonSchedule(
+            type=NOTIFICATION_REMINDER,
+            status="ON",
+            label="Take out the trash",
+            next_occurrence=None,
+        ),
+        NOTIFICATION_TIMER: AmazonSchedule(
+            type=NOTIFICATION_TIMER,
+            status="OFF",
+            label="",
+            next_occurrence=None,
+        ),
+    },
+}
+
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"
 TEST_DEVICE_2 = AmazonDevice(
     account_name="Echo Test 2",
@@ -144,7 +147,6 @@ TEST_DEVICE_2 = AmazonDevice(
     entity_id="11111111-2222-3333-4444-555555555555",
     endpoint_id="G1234567890123456789012345678A",
     notifications_supported=False,
-    notifications={},
     media_player_supported=False,
     communication_settings={},
     voice_control_supported=True,
@@ -189,7 +191,6 @@ TEST_DEVICE_AQM = AmazonDevice(
     entity_id="66666666-7777-8888-9999-000000000000",
     endpoint_id="G1234567890123456789012345678C",
     notifications_supported=False,
-    notifications={},
     media_player_supported=False,
     communication_settings={},
     voice_control_supported=False,
@@ -309,7 +310,6 @@ TEST_DEVICE_GLOW = AmazonDevice(
     entity_id="12121212-3434-5656-7878-909090909090",
     endpoint_id="G1234567890123456789012345678D",
     notifications_supported=False,
-    notifications={},
     media_player_supported=False,
     communication_settings={},
     voice_control_supported=False,
@@ -412,7 +412,6 @@ TEST_DEVICE_THERMOSTAT = AmazonDevice(
     entity_id="13131313-2424-3535-4646-575757575757",
     endpoint_id="G1234567890123456789012345678E",
     notifications_supported=False,
-    notifications={},
     media_player_supported=False,
     communication_settings={},
     voice_control_supported=False,
@@ -533,6 +532,32 @@ TEST_DEVICE_THERMOSTAT = AmazonDevice(
                 },
             )
         },
+        "range": {
+            "2": AmazonDeviceFeature(
+                properties=["rangeValue"],
+                supported_operations=["setRangeValue"],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=1,
+                maximum_value=5,
+                precision=1,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"rangeValue": "amz_them_active_brightness"},
+            ),
+            "3": AmazonDeviceFeature(
+                properties=["rangeValue"],
+                supported_operations=["setRangeValue"],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=1,
+                maximum_value=5,
+                precision=1,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"rangeValue": "amz_therm_inactive_brightness"},
+            ),
+        },
     },
     unsupported_features={},
 )
@@ -557,7 +582,6 @@ TEST_DEVICE_PLUG = AmazonDevice(
     entity_id="13131313-2424-3535-4646-575757575757",
     endpoint_id="G1234567890123456789012345678E",
     notifications_supported=False,
-    notifications={},
     media_player_supported=False,
     communication_settings={},
     voice_control_supported=False,
@@ -890,6 +914,28 @@ TEST_DEVICE_THERMOSTAT_SENSORS: dict[str, AmazonDeviceSensor] = {
         feature_name="hvac",
         property_name="fanStage",
         instance="",
+    ),
+    "amz_them_active_brightness": AmazonDeviceSensor(
+        name="amz_them_active_brightness",
+        value=4,
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale=None,
+        feature_name="range",
+        property_name="rangeValue",
+        instance="2",
+    ),
+    "amz_therm_inactive_brightness": AmazonDeviceSensor(
+        name="amz_therm_inactive_brightness",
+        value=1,
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale=None,
+        feature_name="range",
+        property_name="rangeValue",
+        instance="3",
     ),
 }
 
