@@ -16,6 +16,7 @@ from velbusaio.channels import (
 )
 from velbusaio.module import Module
 from velbusaio.properties import (
+    BusErrorTx,
     LightValue,
     PSUCurrent,
     PSULoad,
@@ -43,6 +44,7 @@ def mock_controller(
     mock_watercounter: AsyncMock,
     mock_sensornumber: AsyncMock,
     mock_lightsensor: AsyncMock,
+    mock_bus_error: AsyncMock,
     mock_psu_power: AsyncMock,
     mock_psu_voltage: AsyncMock,
     mock_psu_current: AsyncMock,
@@ -74,6 +76,7 @@ def mock_controller(
             mock_temperature,
             mock_sensornumber,
             mock_lightsensor,
+            mock_bus_error,
             mock_psu_power,
             mock_psu_voltage,
             mock_psu_current,
@@ -206,7 +209,7 @@ def mock_select() -> AsyncMock:
     channel.get_full_name.return_value = "Kitchen"
     channel.get_module_sw_version.return_value = "1.1.1"
     channel.get_module_serial.return_value = "qwerty1234567"
-    channel.is_sub_device.return_value = True
+    channel.is_sub_device.return_value = False
     channel.get_options.return_value = ["none", "summer", "winter", "holiday"]
     channel.get_selected_program.return_value = "winter"
     return channel
@@ -416,9 +419,29 @@ def mock_lightsensor() -> AsyncMock:
     channel.is_sub_device.return_value = False
     channel.is_counter_channel.return_value = False
     channel.is_temperature.return_value = False
-    channel.get_unit.return_value = "illuminance"
+    channel.get_unit.return_value = "lx"
     channel.get_state.return_value = 250
-    channel.get_sensor_types.return_value = ["measurement"]
+    channel.get_sensor_types.return_value = ["illuminance"]
+    return channel
+
+
+@pytest.fixture
+def mock_bus_error() -> AsyncMock:
+    """Mock a Velbus bus error counter property."""
+    channel = AsyncMock(spec=BusErrorTx)
+    channel.get_categories.return_value = ["sensor"]
+    channel.get_name.return_value = "Bus error transmit"
+    channel.get_property_key.return_value = "BusErrorTx"
+    channel.get_module_address.return_value = 2
+    channel.get_channel_number.return_value = 0
+    channel.get_module_type_name.return_value = "VMB7IN"
+    channel.get_module_type.return_value = 8
+    channel.get_full_name.return_value = "Input"
+    channel.get_module_sw_version.return_value = "1.0.0"
+    channel.get_module_serial.return_value = "a1b2c3d4e5f6"
+    channel.is_sub_device.return_value = False
+    channel.get_state.return_value = 12.0
+    channel.get_sensor_types.return_value = ["bus_error"]
     return channel
 
 

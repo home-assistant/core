@@ -13,6 +13,9 @@
       "pause_container": {
         "default": "mdi:pause-circle"
       },
+      "pull_image": {
+        "default": "mdi:download"
+      },
       "recreate_container": {
         "default": "mdi:creation"
       },
@@ -40,6 +43,9 @@
       },
       "container_disk_usage_total_size": {
         "default": "mdi:harddisk"
+      },
+      "container_exit_code": {
+        "default": "mdi:exit-run"
       },
       "container_health_state": {
         "default": "mdi:heart-pulse"
@@ -115,6 +121,9 @@
       },
       "stack_containers_count": {
         "default": "mdi:server"
+      },
+      "stack_last_deployed": {
+        "default": "mdi:rocket-launch"
       },
       "stack_type": {
         "default": "mdi:server"

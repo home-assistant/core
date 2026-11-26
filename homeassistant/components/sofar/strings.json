@@ -1079,11 +1079,17 @@
     }
   },
   "exceptions": {
+    "battery_tower_unreachable": {
+      "message": "The battery tower cannot be reached."
+    },
     "charge_cutoff_unsupported": {
       "message": "{title} does not support setting the charge cut-off."
     },
     "invalid_action_value": {
       "message": "The provided value is not valid for this action."
+    },
+    "inverter_unreachable": {
+      "message": "The inverter cannot be reached."
     },
     "max_power_not_a_multiple_of_100": {
       "message": "Maximum power must be a multiple of 100 W."

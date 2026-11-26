@@ -25,7 +25,7 @@
       },
       "connection": {
         "data": {
-          "api_key": "API key",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "endpoint": "Application Server",
           "identity_server": "Identity Server"
         },
@@ -39,7 +39,7 @@
       },
       "reauth_confirm": {
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "An API key with permission to read devices and application traffic for every selected application. Sending device commands also requires permission to write downlink traffic."

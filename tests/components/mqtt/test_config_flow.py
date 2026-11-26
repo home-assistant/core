@@ -1,16 +1,27 @@
 """Test config flow."""
 
-from collections.abc import Generator, Iterator
+from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from copy import deepcopy
+from datetime import timedelta
 from pathlib import Path
-from ssl import SSLError
+from ssl import PROTOCOL_TLS_CLIENT, SSLError
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import Discovery
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.serialization import (
+    BestAvailableEncryption,
+    Encoding,
+    NoEncryption,
+    PrivateFormat,
+)
+from cryptography.x509.oid import NameOID
 import probatio
 import pytest
 from pytest_homeassistant.common import (
@@ -70,9 +81,19 @@ from homeassistant.components.mqtt.config_flow import (
     SET_CLIENT_CERT,
     TRANSLATION_DESCRIPTION_PLACEHOLDERS,
 )
-from homeassistant.components.mqtt.const import CONF_DISCOVERY_QOS, DOMAIN
+from homeassistant.components.mqtt.const import (
+    CONF_CERTIFICATE_FILE,
+    CONF_CLIENT_CERT_FILE,
+    CONF_CLIENT_KEY_FILE,
+    CONF_DISCOVERY_QOS,
+    DOMAIN,
+)
 from homeassistant.components.mqtt.util import learn_more_url
-from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigSubentry,
+    ConfigSubentryData,
+)
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_PASSWORD,
@@ -89,6 +110,7 @@ from homeassistant.helpers import (
     selector,
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.util import dt as dt_util
 
 ADD_ON_DISCOVERY_INFO = {
     "addon": "Mosquitto Mqtt Broker",
@@ -370,6 +392,21 @@ def mock_process_uploaded_file(
             mqtt.CONF_CLIENT_KEY: file_id_key,
         }
         yield mock_upload
+
+
+@pytest.fixture
+def mock_certificate_files(tmp_path: Path) -> dict[str, str]:
+    """Write the certificate files to load from a file path."""
+    file_paths: dict[str, str] = {}
+    for key, file_name, data in (
+        (CONF_CERTIFICATE_FILE, "ca.pem", MOCK_CA_CERT),
+        (CONF_CLIENT_CERT_FILE, "client.pem", MOCK_CLIENT_CERT),
+        (CONF_CLIENT_KEY_FILE, "client_key.pem", MOCK_CLIENT_KEY),
+    ):
+        file_path = tmp_path / file_name
+        file_path.write_bytes(data)
+        file_paths[key] = str(file_path)
+    return file_paths
 
 
 @pytest.fixture(name="supervisor")
@@ -1673,7 +1710,16 @@ async def test_step_reauth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
+    # Simulate the certificate files cannot be loaded
+    mock_try_connection.side_effect = FileNotFoundError(2, "No such file")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_load_certificates"}
+
     # Simulate re-auth fails
+    mock_try_connection.side_effect = None
     mock_try_connection.return_value = False
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input
@@ -2512,6 +2558,645 @@ async def test_reconfigure_flow_form(
         mqtt.CONF_CLIENT_KEY: MOCK_CLIENT_KEY.decode(encoding="utf-8"),
     }
     await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.mark.usefixtures("mock_ssl_context")
+async def test_reconfigure_with_certificate_files(
+    hass: HomeAssistant,
+    mock_try_connection_success: MqttMockPahoClient,
+    mock_certificate_files: dict[str, str],
+) -> None:
+    """Test replacing uploaded certificates with certificate file paths."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+        data={
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 8883,
+            CONF_PROTOCOL: "5",
+            mqtt.CONF_CERTIFICATE: MOCK_GENERIC_CERT.decode(encoding="utf-8"),
+            mqtt.CONF_CLIENT_CERT: MOCK_GENERIC_CERT.decode(encoding="utf-8"),
+            mqtt.CONF_CLIENT_KEY: MOCK_CLIENT_KEY.decode(encoding="utf-8"),
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "broker"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 8883,
+            CONF_PROTOCOL: "5",
+            OTHER_SETTINGS: {
+                SET_CA_CERT: "custom",
+                SET_CLIENT_CERT: True,
+                mqtt.CONF_TRANSPORT: "tcp",
+            }
+            | mock_certificate_files,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # The uploaded certificates are replaced by the file paths
+    assert config_entry.data == {
+        mqtt.CONF_BROKER: "test-broker",
+        CONF_PORT: 8883,
+        CONF_PROTOCOL: "5",
+        mqtt.CONF_TRANSPORT: "tcp",
+        CONF_CERTIFICATE_FILE: mock_certificate_files[CONF_CERTIFICATE_FILE],
+        CONF_CLIENT_CERT_FILE: mock_certificate_files[CONF_CLIENT_CERT_FILE],
+        CONF_CLIENT_KEY_FILE: mock_certificate_files[CONF_CLIENT_KEY_FILE],
+    }
+    assert mock_try_connection_success.tls_set.mock_calls[0] == call(
+        mock_certificate_files[CONF_CERTIFICATE_FILE],
+        certfile=mock_certificate_files[CONF_CLIENT_CERT_FILE],
+        keyfile=mock_certificate_files[CONF_CLIENT_KEY_FILE],
+        tls_version=PROTOCOL_TLS_CLIENT,
+    )
+
+    # Test the suggested values when the file paths are set
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    other_settings_schema = result["data_schema"].schema[OTHER_SETTINGS].schema.schema
+    for key, value in (
+        {SET_CA_CERT: "custom", SET_CLIENT_CERT: True} | mock_certificate_files
+    ).items():
+        assert get_schema_suggested_value(other_settings_schema, key) == value
+
+
+@pytest.mark.usefixtures("mock_ssl_context")
+@pytest.mark.parametrize(
+    ("update_listeners", "reloads"),
+    [
+        # The update listener reloads the entry
+        pytest.param([AsyncMock()], 0, id="update_listener"),
+        # The client failed to set up before the update listener was registered
+        pytest.param([], 1, id="no_update_listener"),
+    ],
+)
+async def test_reconfigure_reloads_entry_that_failed_to_set_up(
+    hass: HomeAssistant,
+    mock_try_connection: MagicMock,
+    mock_certificate_files: dict[str, str],
+    update_listeners: list[AsyncMock],
+    reloads: int,
+) -> None:
+    """Test reconfiguring an entry without an update listener reloads it."""
+    mock_try_connection.return_value = True
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+        data={mqtt.CONF_BROKER: "test-broker", CONF_PORT: 8883, CONF_PROTOCOL: "5"},
+        state=ConfigEntryState.SETUP_RETRY,
+    )
+    config_entry.add_to_hass(hass)
+    config_entry.update_listeners.extend(update_listeners)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                mqtt.CONF_BROKER: "test-broker",
+                CONF_PORT: 8883,
+                CONF_PROTOCOL: "5",
+                OTHER_SETTINGS: {
+                    SET_CA_CERT: "custom",
+                    SET_CLIENT_CERT: True,
+                    mqtt.CONF_TRANSPORT: "tcp",
+                }
+                | mock_certificate_files,
+            },
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reload.call_count == reloads
+
+
+@pytest.mark.usefixtures("mock_ssl_context")
+@pytest.mark.parametrize(
+    ("set_ca_cert", "expected_ca_settings"),
+    [
+        pytest.param("off", {}, id="ca_validation_off"),
+        pytest.param("auto", {mqtt.CONF_CERTIFICATE: "auto"}, id="ca_validation_auto"),
+    ],
+)
+async def test_reconfigure_ignores_file_paths_of_disabled_settings(
+    hass: HomeAssistant,
+    mock_try_connection: MagicMock,
+    mock_certificate_files: dict[str, str],
+    set_ca_cert: str,
+    expected_ca_settings: dict[str, str],
+) -> None:
+    """Test pre-filled file paths are not used when their setting is disabled."""
+    mock_try_connection.return_value = True
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+        data={
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 8883,
+            CONF_PROTOCOL: "5",
+        }
+        | mock_certificate_files,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 8883,
+            CONF_PROTOCOL: "5",
+            OTHER_SETTINGS: {
+                SET_CA_CERT: set_ca_cert,
+                SET_CLIENT_CERT: False,
+                mqtt.CONF_TRANSPORT: "tcp",
+            }
+            | mock_certificate_files,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert (
+        config_entry.data
+        == {
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 8883,
+            CONF_PROTOCOL: "5",
+            mqtt.CONF_TRANSPORT: "tcp",
+        }
+        | expected_ca_settings
+    )
+
+
+@pytest.mark.usefixtures("mock_ssl_context")
+@pytest.mark.parametrize(
+    ("uploads", "file_paths", "missing_file_paths", "error"),
+    [
+        pytest.param(
+            (mqtt.CONF_CERTIFICATE,),
+            (CONF_CERTIFICATE_FILE,),
+            (),
+            "upload_and_file_path",
+            id="ca_cert_upload_and_file_path",
+        ),
+        pytest.param(
+            (mqtt.CONF_CLIENT_CERT, mqtt.CONF_CLIENT_KEY),
+            (CONF_CLIENT_CERT_FILE,),
+            (),
+            "upload_and_file_path",
+            id="client_cert_upload_and_file_path",
+        ),
+        pytest.param(
+            (mqtt.CONF_CLIENT_CERT, mqtt.CONF_CLIENT_KEY),
+            (CONF_CLIENT_KEY_FILE,),
+            (),
+            "upload_and_file_path",
+            id="client_key_upload_and_file_path",
+        ),
+        pytest.param(
+            (),
+            (CONF_CLIENT_CERT_FILE,),
+            (),
+            "invalid_inclusion",
+            id="client_cert_file_path_without_key",
+        ),
+        pytest.param(
+            (mqtt.CONF_CLIENT_KEY,),
+            (CONF_CLIENT_CERT_FILE,),
+            (),
+            "invalid_inclusion",
+            id="client_cert_file_path_with_uploaded_key",
+        ),
+        pytest.param(
+            (mqtt.CONF_CLIENT_CERT,),
+            (CONF_CLIENT_KEY_FILE,),
+            (),
+            "invalid_inclusion",
+            id="uploaded_client_cert_with_key_file_path",
+        ),
+        pytest.param(
+            (),
+            (CONF_CERTIFICATE_FILE, CONF_CLIENT_KEY_FILE),
+            (CONF_CLIENT_CERT_FILE,),
+            "cannot_read_client_cert_file",
+            id="missing_client_cert_file",
+        ),
+        pytest.param(
+            (),
+            (CONF_CERTIFICATE_FILE, CONF_CLIENT_CERT_FILE),
+            (CONF_CLIENT_KEY_FILE,),
+            "cannot_read_client_key_file",
+            id="missing_client_key_file",
+        ),
+        pytest.param(
+            (),
+            (CONF_CLIENT_CERT_FILE, CONF_CLIENT_KEY_FILE),
+            (CONF_CERTIFICATE_FILE,),
+            "cannot_read_certificate_file",
+            id="missing_ca_cert_file",
+        ),
+        pytest.param(
+            (),
+            (CONF_CLIENT_CERT_FILE, CONF_CLIENT_KEY_FILE),
+            (),
+            "ca_certificate_missing",
+            id="custom_ca_cert_without_certificate",
+        ),
+        pytest.param(
+            (),
+            (CONF_CERTIFICATE_FILE,),
+            (),
+            "client_certificate_missing",
+            id="client_cert_without_certificate",
+        ),
+    ],
+)
+async def test_certificate_file_path_validation(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_try_connection: MagicMock,
+    mock_process_uploaded_file: MagicMock,
+    mock_certificate_files: dict[str, str],
+    uploads: tuple[str, ...],
+    file_paths: tuple[str, ...],
+    missing_file_paths: tuple[str, ...],
+    error: str,
+) -> None:
+    """Test validation of certificate file paths in the config flow."""
+    mock_try_connection.return_value = True
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    other_settings: dict[str, Any] = {
+        SET_CA_CERT: "custom",
+        SET_CLIENT_CERT: True,
+        mqtt.CONF_TRANSPORT: "tcp",
+    }
+    other_settings |= {key: mock_process_uploaded_file.file_id[key] for key in uploads}
+    other_settings |= {key: mock_certificate_files[key] for key in file_paths}
+    other_settings |= {
+        key: str(tmp_path / "does_not_exist.pem") for key in missing_file_paths
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 8883,
+            CONF_PROTOCOL: "5",
+            OTHER_SETTINGS: other_settings,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    # Correct the settings by only using file paths
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 8883,
+            CONF_PROTOCOL: "5",
+            OTHER_SETTINGS: {
+                SET_CA_CERT: "custom",
+                SET_CLIENT_CERT: True,
+                mqtt.CONF_TRANSPORT: "tcp",
+            }
+            | mock_certificate_files,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        mqtt.CONF_BROKER: "test-broker",
+        CONF_PORT: 8883,
+        CONF_PROTOCOL: "5",
+        mqtt.CONF_TRANSPORT: "tcp",
+        CONF_CERTIFICATE_FILE: mock_certificate_files[CONF_CERTIFICATE_FILE],
+        CONF_CLIENT_CERT_FILE: mock_certificate_files[CONF_CLIENT_CERT_FILE],
+        CONF_CLIENT_KEY_FILE: mock_certificate_files[CONF_CLIENT_KEY_FILE],
+    }
+
+
+@pytest.mark.usefixtures("mock_ssl_context")
+@pytest.mark.parametrize(
+    ("settings", "error"),
+    [
+        pytest.param(
+            {CONF_CLIENT_CERT_FILE: "ssl/client.pem"},
+            "file_path_not_absolute",
+            id="relative_client_cert_file_path",
+        ),
+        pytest.param(
+            {CONF_CERTIFICATE_FILE: "ssl/ca.pem"},
+            "file_path_not_absolute",
+            id="relative_ca_cert_file_path",
+        ),
+        pytest.param(
+            {CONF_CLIENT_KEY_PASSWORD: "secret"},
+            "client_key_password_with_file",
+            id="client_key_password_with_file_path",
+        ),
+    ],
+)
+async def test_certificate_file_path_settings_invalid(
+    hass: HomeAssistant,
+    mock_try_connection: MagicMock,
+    mock_certificate_files: dict[str, str],
+    settings: dict[str, str],
+    error: str,
+) -> None:
+    """Test certificate file path settings that are not supported."""
+    mock_try_connection.return_value = True
+    user_input = {
+        mqtt.CONF_BROKER: "test-broker",
+        CONF_PORT: 8883,
+        CONF_PROTOCOL: "5",
+        OTHER_SETTINGS: {
+            SET_CA_CERT: "custom",
+            SET_CLIENT_CERT: True,
+            mqtt.CONF_TRANSPORT: "tcp",
+        }
+        | mock_certificate_files,
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input | {OTHER_SETTINGS: user_input[OTHER_SETTINGS] | settings},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+    mock_try_connection.assert_not_called()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_ssl_context")
+@pytest.mark.parametrize(
+    ("unreadable_file", "error"),
+    [
+        pytest.param(
+            CONF_CLIENT_CERT_FILE,
+            "cannot_read_client_cert_file",
+            id="unreadable_client_cert_file",
+        ),
+        pytest.param(
+            CONF_CLIENT_KEY_FILE,
+            "cannot_read_client_key_file",
+            id="unreadable_client_key_file",
+        ),
+        pytest.param(
+            CONF_CERTIFICATE_FILE,
+            "cannot_read_certificate_file",
+            id="unreadable_ca_cert_file",
+        ),
+    ],
+)
+async def test_certificate_file_cannot_be_read(
+    hass: HomeAssistant,
+    mock_try_connection: MagicMock,
+    mock_certificate_files: dict[str, str],
+    unreadable_file: str,
+    error: str,
+) -> None:
+    """Test an existing certificate file that cannot be read."""
+    mock_try_connection.return_value = True
+    user_input = {
+        mqtt.CONF_BROKER: "test-broker",
+        CONF_PORT: 8883,
+        CONF_PROTOCOL: "5",
+        OTHER_SETTINGS: {
+            SET_CA_CERT: "custom",
+            SET_CLIENT_CERT: True,
+            mqtt.CONF_TRANSPORT: "tcp",
+        }
+        | mock_certificate_files,
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    def _open(file: str, *args: Any, **kwargs: Any) -> Any:
+        """Refuse to open the unreadable file."""
+        if file == mock_certificate_files[unreadable_file]:
+            raise PermissionError(13, "Permission denied")
+        return open(file, *args, **kwargs)
+
+    def _access(path: str, mode: int) -> bool:
+        """Refuse access to the unreadable file."""
+        return path != mock_certificate_files[unreadable_file]
+
+    with (
+        patch(
+            "homeassistant.components.mqtt.config_flow.open",
+            side_effect=_open,
+            create=True,
+        ),
+        patch(
+            "homeassistant.components.mqtt.config_flow.os.access",
+            side_effect=_access,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_ssl_context")
+async def test_certificate_files_cannot_be_loaded(
+    hass: HomeAssistant,
+    mock_try_connection: MagicMock,
+    mock_certificate_files: dict[str, str],
+) -> None:
+    """Test an error is shown when the certificates cannot be loaded to connect."""
+    user_input = {
+        mqtt.CONF_BROKER: "test-broker",
+        CONF_PORT: 8883,
+        CONF_PROTOCOL: "5",
+        OTHER_SETTINGS: {
+            SET_CA_CERT: "custom",
+            SET_CLIENT_CERT: True,
+            mqtt.CONF_TRANSPORT: "tcp",
+        }
+        | mock_certificate_files,
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    # The files were replaced after they were checked
+    mock_try_connection.side_effect = FileNotFoundError(2, "No such file")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_load_certificates"}
+
+    mock_try_connection.side_effect = None
+    mock_try_connection.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+def _generate_certificate_and_key() -> tuple[bytes, bytes, ec.EllipticCurvePrivateKey]:
+    """Generate a self signed PEM encoded certificate and private key."""
+    key = ec.generate_private_key(ec.SECP256R1())
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "mqtt-client")])
+    now = dt_util.utcnow()
+    certificate = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(days=1))
+        .not_valid_after(now + timedelta(days=90))
+        .sign(key, hashes.SHA256())
+    )
+    return (
+        certificate.public_bytes(Encoding.PEM),
+        key.private_bytes(
+            Encoding.PEM, PrivateFormat.TraditionalOpenSSL, NoEncryption()
+        ),
+        key,
+    )
+
+
+def _invalid_client_cert(files: dict[str, Path]) -> None:
+    """Install an invalid client certificate file."""
+    files[CONF_CLIENT_CERT_FILE].write_text("invalid")
+
+
+def _invalid_client_key(files: dict[str, Path]) -> None:
+    """Install an invalid private key file."""
+    files[CONF_CLIENT_KEY_FILE].write_text("invalid")
+
+
+def _encrypted_client_key(files: dict[str, Path]) -> None:
+    """Install an encrypted private key file."""
+    _, _, key = _generate_certificate_and_key()
+    files[CONF_CLIENT_KEY_FILE].write_bytes(
+        key.private_bytes(
+            Encoding.PEM,
+            PrivateFormat.TraditionalOpenSSL,
+            BestAvailableEncryption(b"secret"),
+        )
+    )
+
+
+def _mismatching_client_key(files: dict[str, Path]) -> None:
+    """Install a private key that does not match the client certificate."""
+    _, key, _ = _generate_certificate_and_key()
+    files[CONF_CLIENT_KEY_FILE].write_bytes(key)
+
+
+def _invalid_ca_cert(files: dict[str, Path]) -> None:
+    """Install an invalid CA certificate file."""
+    files[CONF_CERTIFICATE_FILE].write_text(
+        "-----BEGIN CERTIFICATE-----\ninvalid\n-----END CERTIFICATE-----\n"
+    )
+
+
+@pytest.mark.parametrize(
+    ("install_invalid_file", "error"),
+    [
+        pytest.param(_invalid_client_cert, "bad_client_cert", id="invalid_client_cert"),
+        pytest.param(_invalid_client_key, "client_key_error", id="invalid_client_key"),
+        pytest.param(
+            _encrypted_client_key, "client_key_error", id="encrypted_client_key"
+        ),
+        pytest.param(
+            _mismatching_client_key, "bad_client_cert_key", id="mismatching_client_key"
+        ),
+        pytest.param(_invalid_ca_cert, "bad_certificate", id="invalid_ca_cert"),
+    ],
+)
+async def test_certificate_file_content_validation(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_try_connection: MagicMock,
+    install_invalid_file: Callable[[dict[str, Path]], None],
+    error: str,
+) -> None:
+    """Test the content of certificate files is validated in the config flow."""
+    mock_try_connection.return_value = True
+    certificate, key, _ = _generate_certificate_and_key()
+    files = {
+        CONF_CERTIFICATE_FILE: tmp_path / "ca.pem",
+        CONF_CLIENT_CERT_FILE: tmp_path / "client.pem",
+        CONF_CLIENT_KEY_FILE: tmp_path / "client_key.pem",
+    }
+    # Use the self signed client certificate as CA certificate
+    files[CONF_CERTIFICATE_FILE].write_bytes(certificate)
+    files[CONF_CLIENT_CERT_FILE].write_bytes(certificate)
+    files[CONF_CLIENT_KEY_FILE].write_bytes(key)
+    install_invalid_file(files)
+    file_paths = {conf: str(file_path) for conf, file_path in files.items()}
+    user_input = {
+        mqtt.CONF_BROKER: "test-broker",
+        CONF_PORT: 8883,
+        CONF_PROTOCOL: "5",
+        OTHER_SETTINGS: {
+            SET_CA_CERT: "custom",
+            SET_CLIENT_CERT: True,
+            mqtt.CONF_TRANSPORT: "tcp",
+        }
+        | file_paths,
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    # Install valid files again
+    files[CONF_CERTIFICATE_FILE].write_bytes(certificate)
+    files[CONF_CLIENT_CERT_FILE].write_bytes(certificate)
+    files[CONF_CLIENT_KEY_FILE].write_bytes(key)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        result["data"]
+        == {
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 8883,
+            CONF_PROTOCOL: "5",
+            mqtt.CONF_TRANSPORT: "tcp",
+        }
+        | file_paths
+    )
 
 
 @pytest.mark.usefixtures(

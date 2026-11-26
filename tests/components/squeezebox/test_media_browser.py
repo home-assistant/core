@@ -8,19 +8,18 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_PLAY_MEDIA,
     BrowseError,
     MediaClass,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
 from homeassistant.components.squeezebox.browse_media import (
     LIBRARY,
     MEDIA_TYPE_TO_SQUEEZEBOX,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import FAKE_VALID_ITEM_ID
@@ -160,11 +159,11 @@ async def test_async_browse_playlist(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: child["media_content_type"],
-            ATTR_MEDIA_CONTENT_ID: child["media_content_id"],
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: child["media_content_type"],
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: child["media_content_id"],
         },
         blocking=True,
     )
@@ -452,11 +451,11 @@ async def test_generate_playlist_for_app(
         try:
             await hass.services.async_call(
                 MEDIA_PLAYER_DOMAIN,
-                SERVICE_PLAY_MEDIA,
+                MediaPlayerService.PLAY_MEDIA,
                 {
-                    ATTR_ENTITY_ID: "media_player.test_player",
-                    ATTR_MEDIA_CONTENT_TYPE: "app-fakecommand",
-                    ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+                    TargetKey.ENTITY_ID: "media_player.test_player",
+                    MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "app-fakecommand",
+                    MediaPlayerServiceArgument.MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
                 },
                 blocking=True,
             )
@@ -518,11 +517,11 @@ async def test_play_browse_item(
     """Test play browse item."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_ID: "1234",
-            ATTR_MEDIA_CONTENT_TYPE: "album",
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "1234",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "album",
         },
     )
 
@@ -534,11 +533,11 @@ async def test_play_browse_item_nonexistent(
     with pytest.raises(BrowseError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_ID: "0",
-                ATTR_MEDIA_CONTENT_TYPE: "album",
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "0",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "album",
             },
             blocking=True,
         )
@@ -552,11 +551,11 @@ async def test_play_browse_item_bad_category(
     with pytest.raises(BrowseError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_ID: "1234",
-                ATTR_MEDIA_CONTENT_TYPE: "bad_category",
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "1234",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "bad_category",
             },
             blocking=True,
         )

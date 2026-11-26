@@ -2,9 +2,9 @@
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, NamedTuple, override
 
-from sofar_modbus.modern.battery_pack import BatteryPack
+from sofar_modbus import BatteryPack
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -15,8 +15,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, SERVED_COMPONENTS
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 
-# A part of the inverter, as (device translation key, number).
-type SofarPart = tuple[str, int]
+
+class SofarPart(NamedTuple):
+    """A part of the inverter that has its own device."""
+
+    kind: str  # the device's translation key
+    number: int
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -30,6 +34,11 @@ class SofarEntityDescription(EntityDescription):
 def entity_unique_id(serial: str, key: str) -> str:
     """Name an entity by the inverter's serial and its key."""
     return f"{serial}_{key}"
+
+
+def part_identifier(serial: str, part: SofarPart) -> str:
+    """Name the device of one inverter part by its kind and number."""
+    return f"{serial}_{part.kind}_{part.number}"
 
 
 def battery_pack_identifier(serial: str, pack: BatteryPack) -> str:
@@ -76,26 +85,19 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(runtime_data.coordinator_for(entity_description.component))
         self.entity_description = entity_description
-        serial = self.coordinator.device.serial_number
-        self._attr_unique_id = self._unique_id(serial)
-        self._attr_device_info = self._device_info(runtime_data, serial)
-
-    def _unique_id(self, serial: str) -> str:
-        """Name the entity by the inverter's serial and its key."""
-        return entity_unique_id(serial, self.entity_description.key)
-
-    def _device_info(
-        self, runtime_data: SofarRuntimeData, serial: str
-    ) -> dr.DeviceInfo:
-        """Place the entity on the inverter, or on the part it measures."""
-        if (part := self.entity_description.part) is None:
-            return self.coordinator.device_info
-        kind, number = part
-        return dr.DeviceInfo(
-            identifiers={(DOMAIN, f"{serial}_{kind}_{number}")},
+        self._attr_unique_id = entity_unique_id(
+            self.coordinator.device.serial_number, entity_description.key
+        )
+        if (part := entity_description.part) is None:
+            self._attr_device_info = self.coordinator.device_info
+            return
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={
+                (DOMAIN, part_identifier(self.coordinator.device.serial_number, part))
+            },
             via_device_id=runtime_data.inverter_device_id,
-            translation_key=kind,
-            translation_placeholders={"number": str(number)},
+            translation_key=part.kind,
+            translation_placeholders={"number": str(part.number)},
         )
 
     @property

@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import MusicAssistantConfigEntry
+from . import MusicAssistantConfigEntry, PlatformHandlers
 from .entity import MusicAssistantEntity
 from .helpers import catch_musicassistant_error
 
@@ -30,7 +30,9 @@ async def async_setup_entry(
         async_add_entities([MusicAssistantPlayerSleepTimerTime(mass, player_id)])
 
     # register callback to add players when they are discovered
-    entry.runtime_data.platform_handlers.setdefault(Platform.TIME, add_player)
+    entry.runtime_data.platform_handlers.setdefault(
+        Platform.TIME, PlatformHandlers(add_player=add_player)
+    )
 
 
 class MusicAssistantPlayerSleepTimerTime(MusicAssistantEntity, TimeEntity):

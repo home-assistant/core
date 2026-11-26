@@ -99,6 +99,29 @@ async def test_service_without_yaml_raises(
     assert "Modbus is not loaded" in str(err.value)
 
 
+@pytest.mark.usefixtures("mock_pymodbus")
+@pytest.mark.parametrize(("service", "data"), HUB_SERVICES)
+async def test_service_unknown_hub_raises(
+    hass: HomeAssistant, service: str, data: dict
+) -> None:
+    """Test the hub actions raise when the named hub is not configured."""
+    assert await async_setup_component(hass, DOMAIN, HUB_CONFIG)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {**data, ModbusServiceArgument.HUB: "unknown"},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "unknown_hub"
+    assert err.value.translation_placeholders == {"hub": "unknown"}
+    assert "Modbus hub unknown is not configured" in str(err.value)
+
+
 @pytest.mark.parametrize(("service", "data"), HUB_SERVICES)
 async def test_service_without_hubs_raises(
     hass: HomeAssistant, service: str, data: dict
@@ -232,7 +255,6 @@ async def test_reload_yaml(
     ] == expected_entities
 
 
-TEST_HUB_A = "hub_a"
 TEST_HUB_B = "hub_b"
 
 
@@ -247,13 +269,27 @@ def _two_hub_config() -> dict:
                 CONF_PORT: port,
                 CONF_SENSORS: [{CONF_NAME: f"sensor_{name}", CONF_ADDRESS: 1}],
             }
-            for name, port in ((TEST_HUB_A, 5501), (TEST_HUB_B, 5502))
+            for name, port in ((DEFAULT_HUB, 5501), (TEST_HUB_B, 5502))
         ]
     }
 
 
 @pytest.mark.usefixtures("mock_pymodbus")
-async def test_stop_only_disables_the_selected_hub(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("data", "stopped_hub", "running_hub"),
+    [
+        pytest.param(
+            {ModbusServiceArgument.HUB: TEST_HUB_B},
+            TEST_HUB_B,
+            DEFAULT_HUB,
+            id="named_hub",
+        ),
+        pytest.param({}, DEFAULT_HUB, TEST_HUB_B, id="default_hub"),
+    ],
+)
+async def test_stop_only_disables_the_selected_hub(
+    hass: HomeAssistant, data: dict[str, str], stopped_hub: str, running_hub: str
+) -> None:
     """Test stopping one hub leaves the other hub's entities alone."""
     assert await async_setup_component(hass, DOMAIN, _two_hub_config())
     await hass.async_block_till_done()
@@ -265,18 +301,13 @@ async def test_stop_only_disables_the_selected_hub(hass: HomeAssistant) -> None:
         for platform in async_get_platforms(hass, DOMAIN)
         for entity in platform.entities.values()
     }
-    entity_a = entities[f"sensor.sensor_{TEST_HUB_A}"]
-    entity_b = entities[f"sensor.sensor_{TEST_HUB_B}"]
-    assert entity_a.available
-    assert entity_b.available
+    stopped_entity = entities[f"sensor.sensor_{stopped_hub}"]
+    running_entity = entities[f"sensor.sensor_{running_hub}"]
+    assert stopped_entity.available
+    assert running_entity.available
 
-    await hass.services.async_call(
-        DOMAIN,
-        ModbusService.STOP,
-        {ModbusServiceArgument.HUB: TEST_HUB_A},
-        blocking=True,
-    )
+    await hass.services.async_call(DOMAIN, ModbusService.STOP, data, blocking=True)
     await hass.async_block_till_done()
 
-    assert not entity_a.available
-    assert entity_b.available
+    assert not stopped_entity.available
+    assert running_entity.available

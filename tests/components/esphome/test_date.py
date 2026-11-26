@@ -5,11 +5,11 @@ from unittest.mock import call
 from aioesphomeapi import APIClient, DateInfo, DateState
 
 from homeassistant.components.date import (
-    ATTR_DATE,
     DOMAIN as DATE_DOMAIN,
-    SERVICE_SET_VALUE,
+    DateService,
+    DateServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockGenericDeviceEntryType
@@ -42,8 +42,11 @@ async def test_generic_date_entity(
 
     await hass.services.async_call(
         DATE_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "date.test_my_date", ATTR_DATE: "1999-01-01"},
+        DateService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: "date.test_my_date",
+            DateServiceArgument.DATE: "1999-01-01",
+        },
         blocking=True,
     )
     mock_client.date_command.assert_has_calls([call(1, 1999, 1, 1, device_id=0)])

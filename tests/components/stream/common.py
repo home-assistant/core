@@ -49,13 +49,16 @@ async def worker_lifetime(
     the test instead of hanging it.
     """
     worker = stream._thread
+    control = stream._worker_control
     assert worker is not None, "start the stream before entering"
+    assert control is not None, "start the stream before entering"
     yield worker
     if request_quit:
-        stream._thread_quit.set()
+        control.interrupt.set()
     await hass.async_add_executor_job(worker.join)
     if stream._thread is worker:
         stream._thread = None
+        stream._worker_control = None
     await hass.async_block_till_done()
 
 

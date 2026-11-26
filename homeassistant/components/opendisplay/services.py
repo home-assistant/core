@@ -13,10 +13,11 @@ from opendisplay import (
     AuthenticationRequiredError,
     DitherMode,
     FitMode,
-    OpenDisplayDevice,
     OpenDisplayError,
     RefreshMode,
     Rotation,
+    Sec2KeyRequiredError,
+    connect,
 )
 from PIL import Image as PILImage, ImageOps
 import probatio
@@ -39,10 +40,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.selector import MediaSelector, MediaSelectorConfig
 
+from .const import CONF_ENCRYPTION_KEY, DOMAIN
+
 if TYPE_CHECKING:
     from . import OpenDisplayConfigEntry
-
-from .const import CONF_ENCRYPTION_KEY, DOMAIN
 
 
 class OpenDisplayService(StrEnum):
@@ -85,7 +86,7 @@ SCHEMA_UPLOAD_IMAGE = probatio.Schema(
         ): probatio.All(probatio.Coerce(int), probatio.Coerce(Rotation)),
         probatio.Optional(
             OpenDisplayServiceArgument.DITHER_MODE, default="burkes"
-        ): _str_to_int_enum(DitherMode),
+        ): probatio.Coerce(DitherMode),
         probatio.Optional(
             OpenDisplayServiceArgument.REFRESH_MODE, default="full"
         ): _str_to_int_enum(RefreshMode),
@@ -174,8 +175,8 @@ async def _async_upload_image(call: ServiceCall) -> None:
     tone_compression_pct: float | None = call.data.get(
         OpenDisplayServiceArgument.TONE_COMPRESSION
     )
-    tone_compression: float | str = (
-        tone_compression_pct / 100.0 if tone_compression_pct is not None else "auto"
+    tone_compression = (
+        tone_compression_pct / 100.0 if tone_compression_pct is not None else 0.0
     )
 
     ble_device = async_ble_device_from_address(call.hass, address, connectable=True)
@@ -216,13 +217,17 @@ async def _async_upload_image(call: ServiceCall) -> None:
                 translation_domain=DOMAIN, translation_key="authentication_error"
             ) from err
 
-        async with OpenDisplayDevice(
-            mac_address=address,
+        async with connect(
+            address=address,
             ble_device=ble_device,
-            config=entry.runtime_data.device_config,
             encryption_key=encryption_key,
         ) as device:
-            await device.upload_image(
+            if device.legacy.capabilities is None:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="display_not_supported",
+                )
+            await device.legacy.upload_image(
                 pil_image,
                 refresh_mode=refresh_mode,
                 dither_mode=dither_mode,
@@ -232,7 +237,11 @@ async def _async_upload_image(call: ServiceCall) -> None:
             )
     except asyncio.CancelledError:
         return
-    except (AuthenticationFailedError, AuthenticationRequiredError) as err:
+    except (
+        AuthenticationFailedError,
+        AuthenticationRequiredError,
+        Sec2KeyRequiredError,
+    ) as err:
         entry.async_start_reauth(call.hass)
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="authentication_error"

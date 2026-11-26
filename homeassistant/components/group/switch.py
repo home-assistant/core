@@ -13,13 +13,13 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -132,7 +132,7 @@ class SwitchGroup(GroupEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Forward the turn_on command to all switches in the group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._entity_ids}
         _LOGGER.debug("Forwarded turn_on command: %s", data)
 
         await self.hass.services.async_call(
@@ -146,7 +146,7 @@ class SwitchGroup(GroupEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Forward the turn_off command to all switches in the group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._entity_ids}
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,

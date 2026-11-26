@@ -6,12 +6,8 @@ from haphilipsjs import PhilipsTV
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.remote import (
-    DOMAIN as REMOTE_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteService
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 
 REMOTE_ENTITY_ID = "remote.philips_tv_remote"
@@ -114,8 +110,8 @@ async def test_turn_off(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: REMOTE_ENTITY_ID},
+        RemoteService.TURN_OFF,
+        {TargetKey.ENTITY_ID: REMOTE_ENTITY_ID},
         blocking=True,
     )
 
@@ -134,8 +130,8 @@ async def test_turn_on_with_powerstate(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: REMOTE_ENTITY_ID},
+        RemoteService.TURN_ON,
+        {TargetKey.ENTITY_ID: REMOTE_ENTITY_ID},
         blocking=True,
     )
 

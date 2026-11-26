@@ -67,6 +67,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
     UnitOfTemperature,
     __version__,
 )
@@ -129,9 +130,12 @@ from .const import (
     TYPE_FAUCET,
     TYPE_HEATER_COOLER,
     TYPE_OUTLET,
+    TYPE_SET_TOP_BOX,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
+    TYPE_STREAMING_STICK,
     TYPE_SWITCH,
+    TYPE_TELEVISION,
     TYPE_THERMOSTAT,
     TYPE_VALVE,
 )
@@ -162,6 +166,11 @@ FAN_TYPES = {
 CLIMATE_TYPES = {
     TYPE_HEATER_COOLER: "HeaterCooler",
     TYPE_THERMOSTAT: "Thermostat",
+}
+MEDIA_PLAYER_TYPES = {
+    TYPE_SET_TOP_BOX: "SetTopBoxMediaPlayer",
+    TYPE_STREAMING_STICK: "StreamingStickMediaPlayer",
+    TYPE_TELEVISION: "TelevisionMediaPlayer",
 }
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
@@ -350,7 +359,7 @@ def get_accessory(  # noqa: C901
             MediaPlayerDeviceClass.TV,
             MediaPlayerDeviceClass.PROJECTOR,
         ):
-            a_type = "TelevisionMediaPlayer"
+            a_type = MEDIA_PLAYER_TYPES[config.get(CONF_TYPE, TYPE_TELEVISION)]
         elif validate_media_player_features(state, feature_list):
             a_type = "MediaPlayer"
 
@@ -807,7 +816,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         requested action.
         """
         event_data = {
-            ATTR_ENTITY_ID: service_data.get(ATTR_ENTITY_ID, self.entity_id),
+            ATTR_ENTITY_ID: service_data.get(TargetKey.ENTITY_ID, self.entity_id),
             ATTR_DISPLAY_NAME: self.display_name,
             ATTR_SERVICE: service,
             ATTR_VALUE: value,
@@ -862,6 +871,10 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             SIGNAL_RELOAD_ENTITIES.format(self.driver.entry_id),
             (self.entity_id,),
         )
+
+    def diagnostics(self) -> dict[str, Any]:
+        """Return accessory specific diagnostics."""
+        return {}
 
     @ha_callback
     def async_stop(self) -> None:

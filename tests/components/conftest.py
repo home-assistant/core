@@ -50,6 +50,7 @@ from aiohasupervisor.models import (
 from aiohasupervisor.mounts import MountsClient
 from aiohasupervisor.network import NetworkClient
 from aiohasupervisor.os import OSClient
+from aiohasupervisor.plugins import PluginsClient
 from aiohasupervisor.resolution import ResolutionClient
 from aiohasupervisor.store import StoreClient
 from aiohasupervisor.supervisor import SupervisorManagementClient
@@ -791,6 +792,7 @@ def supervisor_client() -> Generator[AsyncMock]:
     )
     supervisor_client.network = AsyncMock(spec=NetworkClient)
     supervisor_client.os = AsyncMock(spec=OSClient)
+    supervisor_client.plugins = AsyncMock(spec=PluginsClient)
     supervisor_client.resolution = AsyncMock(spec=ResolutionClient)
     supervisor_client.supervisor = AsyncMock(spec=SupervisorManagementClient)
     supervisor_client.store = AsyncMock(spec=StoreClient)
@@ -838,6 +840,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.update_helper.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.llm.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(
@@ -1309,7 +1315,9 @@ async def _check_exception_translation(
 
 _DYNAMIC_SERVICE_DOMAINS = {
     "esphome",
+    "joaoapps_join",
     "notify",
+    "python_script",
     "rest_command",
     "script",
     "shell_command",
@@ -1389,6 +1397,7 @@ async def check_translations(
     _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
     _original_service_registry_async_call = ServiceRegistry.async_call
     _original_service_registry_async_register = ServiceRegistry.async_register
+    _original_service_registry_register = ServiceRegistry.register
 
     # Prepare override functions
     async def _flow_manager_async_handle_step(
@@ -1499,6 +1508,37 @@ async def check_translations(
             description_placeholders=description_placeholders,
         )
 
+    def _service_registry_register(
+        self: ServiceRegistry,
+        domain: str,
+        service: str,
+        service_func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
+        ],
+        schema: probatio.Schema | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+    ) -> None:
+        if (
+            (current_frame := inspect.currentframe()) is not None
+            and (caller := current_frame.f_back) is not None
+            and not caller.f_code.co_filename.startswith(str(Path(__file__).parents[0]))
+        ):
+            translation_coros.add(
+                _check_service_registration_translation(
+                    self._hass,
+                    domain,
+                    service,
+                    None,
+                    translation_errors,
+                    ignored_domains,
+                )
+            )
+
+        _original_service_registry_register(
+            self, domain, service, service_func, schema, supports_response
+        )
+
     # Use override functions
     with (
         patch(
@@ -1516,6 +1556,10 @@ async def check_translations(
         patch(
             "homeassistant.core.ServiceRegistry.async_register",
             _service_registry_async_register,
+        ),
+        patch(
+            "homeassistant.core.ServiceRegistry.register",
+            _service_registry_register,
         ),
     ):
         yield

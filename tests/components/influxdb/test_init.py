@@ -6,9 +6,12 @@ import datetime as dt
 from http import HTTPStatus
 import logging
 import math
+import threading
+import time
 from typing import Any
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
+from influxdb_client.client.write_api import SYNCHRONOUS
 import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -1675,6 +1678,30 @@ async def test_event_listener_scheduled_write(
 
 
 @pytest.mark.parametrize(
+    ("hass_config", "mock_client"),
+    [({"influxdb": {}}, influxdb.API_VERSION_2)],
+    indirect=["mock_client"],
+)
+async def test_v2_write_api_is_synchronous(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test the V2 write API is synchronous so write errors reach the retry logic."""
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=BASE_V2_CONFIG)
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("entity.entity_id", 1)
+    await hass.async_block_till_done()
+    await async_wait_for_queue_to_process(hass)
+
+    mock_client.return_value.write_api.assert_called_once_with(
+        write_options=SYNCHRONOUS
+    )
+
+
+@pytest.mark.parametrize(
     ("hass_config", "mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
@@ -2098,3 +2125,24 @@ async def test_precision(
     assert write_api.call_count == 1
     assert write_api.call_args == get_mock_call(body, precision)
     write_api.reset_mock()
+
+
+async def test_waiters_released_after_unexpected_write_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test waiters in a batch are released when the write raises an unexpected error."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    influx = MagicMock()
+    influx.write.side_effect = RuntimeError("unexpected")
+    influx_thread = influxdb.InfluxThread(
+        hass, entry, influx, lambda event: {"measurement": "test"}, 0
+    )
+    done = threading.Event()
+    influx_thread.queue.put((time.monotonic(), MagicMock()))
+    influx_thread.queue.put(done)
+    influx_thread.queue.put(None)
+
+    with pytest.raises(RuntimeError):
+        influx_thread.run()
+
+    assert done.is_set()
