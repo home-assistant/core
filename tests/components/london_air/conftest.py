@@ -119,13 +119,13 @@ def mock_london_air_client() -> Generator[AsyncMock]:
     """Mock the London Air client."""
     with (
         patch(
-            "homeassistant.components.london_air.sensor.LondonAirClient"
-        ) as mock_sensor_client_cls,
+            "homeassistant.components.london_air.coordinator.LondonAirClient"
+        ) as mock_coordinator_client_cls,
         patch(
             "homeassistant.components.london_air.config_flow.LondonAirClient"
         ) as mock_flow_client_cls,
     ):
-        mock_client = mock_sensor_client_cls.return_value
+        mock_client = mock_coordinator_client_cls.return_value
         mock_client.async_update = AsyncMock()
         mock_client.async_test_connection = AsyncMock()
         mock_flow_client_cls.return_value = mock_client
