@@ -55,7 +55,7 @@ async def _arm(hass: HomeAssistant, options: dict[str, Any] | None = None) -> No
 
 def _next_check() -> datetime:
     """Return the time of the next phase check."""
-    return dt_util.utcnow() + timedelta(minutes=10)
+    return dt_util.utcnow() + timedelta(hours=1)
 
 
 async def test_phase_changed_fires_on_any_change(

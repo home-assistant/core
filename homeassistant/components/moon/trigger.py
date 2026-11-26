@@ -22,7 +22,7 @@ from .helpers import MOON_PHASES, async_get_moon_data, moon_phase
 PHASE_ANY = "any"
 
 # Phase boundaries fall at half-days, so checking intraday catches each change promptly.
-_CHECK_INTERVAL = timedelta(minutes=10)
+_CHECK_INTERVAL = timedelta(hours=1)
 
 _PHASE_CHANGED_TRIGGER_SCHEMA = probatio.Schema(
     {
