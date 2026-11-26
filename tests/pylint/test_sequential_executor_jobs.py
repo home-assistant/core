@@ -588,6 +588,16 @@ async def async_setup(hass, config):
         pytest.param(
             """
 async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+    else:
+        await hass.async_add_executor_job(call_b)
+""",
+            id="executor_job_in_else",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
     while await hass.async_add_executor_job(has_more):
         result = do_something()
 """,
@@ -782,6 +792,56 @@ async def async_setup(hass, config):
         await loop.run_in_executor(default, call_a)
 """,
             id="executor_named_default_rebound_by_target",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+    else:
+        await fetch()
+""",
+            id="await_in_else",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+    else:
+        return
+""",
+            id="return_in_else",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+    else:
+        hass.async_create_task(fetch())
+""",
+            id="loop_only_call_in_else",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+    else:
+        await loop.run_in_executor(pool, call_b)
+""",
+            id="other_executor_in_else",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        pass
+    else:
+        await hass.async_add_executor_job(call_b)
+""",
+            id="executor_job_only_in_else",
         ),
         pytest.param(
             """

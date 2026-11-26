@@ -202,17 +202,12 @@ def _is_transparent(node: nodes.NodeNG) -> bool:
     )
 
 
-def _loop_executor_key(loop: nodes.For | nodes.While) -> str | None:
-    """Return the executor key if every await in *loop* is a job on that executor.
+def _executor_jobs(parts: list[nodes.NodeNG]) -> list[tuple[str, nodes.Call]] | None:
+    """Return the executor jobs awaited in *parts*.
 
-    Such a loop can move into a single executor job. Loops that suspend in any
-    other way, return or call loop-only APIs must stay in the event loop.
+    Return None if *parts* suspend in any other way or return.
     """
-    parts: list[nodes.NodeNG] = list(loop.body)
-    if isinstance(loop, nodes.While):
-        parts.append(loop.test)
-    keys: set[str] = set()
-    jobs: list[nodes.Call] = []
+    jobs: list[tuple[str, nodes.Call]] = []
     for part in parts:
         for child in _eager_nodes(part):
             if isinstance(
@@ -233,11 +228,34 @@ def _loop_executor_key(loop: nodes.For | nodes.While) -> str | None:
                 or (key := _executor_key(call)) is None
             ):
                 return None
-            keys.add(key)
-            jobs.append(call)
-    if len(keys) != 1 or any(_calls_loop_only_api(part, jobs) for part in parts):
+            jobs.append((key, call))
+    return jobs
+
+
+def _loop_executor_key(loop: nodes.For | nodes.While) -> str | None:
+    """Return the executor key if every await in *loop* is a job on that executor.
+
+    Such a loop, with its ``else`` block, can move into a single executor job.
+    Loops that suspend in any other way, return or call loop-only APIs must
+    stay in the event loop.
+    """
+    parts: list[nodes.NodeNG] = list(loop.body)
+    if isinstance(loop, nodes.While):
+        parts.append(loop.test)
+    body_jobs = _executor_jobs(parts)
+    else_jobs = _executor_jobs(loop.orelse)
+    if body_jobs is None or else_jobs is None:
+        return None
+    # Only the jobs in the loop body repeat on each iteration
+    keys = {key for key, _ in body_jobs}
+    if len(keys) != 1:
         return None
     key = keys.pop()
+    if any(else_key != key for else_key, _ in else_jobs):
+        return None
+    calls = [call for _, call in body_jobs + else_jobs]
+    if any(_calls_loop_only_api(part, calls) for part in parts + loop.orelse):
+        return None
     # Each iteration can use a different executor when the loop rebinds it
     if _rebinds_executor(loop, key):
         return None
