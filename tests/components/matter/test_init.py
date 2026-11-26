@@ -24,7 +24,12 @@ from homeassistant.components.matter import (
 )
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+    Platform,
+    __version__ as HA_VERSION,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -817,8 +822,12 @@ async def test_ipv6_disabled_repair(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    issue = issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
-    assert (issue is not None) is issue_expected
+    issues = [
+        (issue.issue_id, issue.config_entry_id)
+        for issue in issue_registry.issues.values()
+        if issue.domain == DOMAIN
+    ]
+    assert issues == [("ipv6_disabled", entry.entry_id)] * issue_expected
 
 
 async def test_ipv6_repair_not_raised_without_supervisor(
@@ -909,6 +918,57 @@ async def test_ipv6_repair_resolves_on_reload(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+
+
+async def test_ipv6_repair_ignored_issue_linked_and_kept_ignored(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an ignored unlinked IPv6 repair stays ignored once linked."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "ipv6_disabled",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="ipv6_disabled",
+    )
+    ir.async_ignore_issue(hass, DOMAIN, "ipv6_disabled", True)
+    supervisor_client = MagicMock()
+    supervisor_client.network.info = AsyncMock(
+        return_value=MagicMock(
+            interfaces=[
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.DISABLED
+                )
+            ]
+        )
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.matter.is_hassio", return_value=True),
+        patch(
+            "homeassistant.components.matter.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+    assert issue
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.dismissed_version == HA_VERSION
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
     assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
 
 

@@ -489,6 +489,102 @@
     }),
   })
 # ---
+# name: test_diagnostics_no_peak_in_either_month
+  dict({
+    'entry': dict({
+      'data': dict({
+        'access_token': '**REDACTED**',
+        'email': '**REDACTED**',
+        'mfa_method': 'sms',
+        'refresh_token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'engie_be',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'epex': None,
+    'households': dict({
+      '**REDACTED_27d6fbbe5c7d230a': dict({
+        'ean_count': 2,
+        'energy_types': dict({
+          '**REDACTED_473550ae0ee79134': 'ELECTRICITY',
+          '**REDACTED_a289ff0d5e276f6d': 'GAS',
+        }),
+        'is_dynamic': False,
+        'last_update_success': True,
+        'peaks': dict({
+          'is_fallback': False,
+          'last_update_success': True,
+          'monthly': dict({
+            'daily_peaks': list([
+            ]),
+            'month': 10,
+            'peak_of_the_month': None,
+            'previous_peak_of_the_month': None,
+            'skipped_entries': 0,
+            'year': 2026,
+          }),
+          'peak_month': None,
+          'previous_month': dict({
+            'daily_peaks': list([
+            ]),
+            'month': 9,
+            'peak_of_the_month': None,
+            'previous_peak_of_the_month': None,
+            'skipped_entries': 0,
+            'year': 2026,
+          }),
+          'update_interval': '1:00:00',
+        }),
+        'slots': dict({
+          '**REDACTED_473550ae0ee79134': dict({
+            'injection': dict({
+              'S_TOU1_INJECTION_PEAK': dict({
+                'price_value': 0.05,
+                'price_value_excl_vat': 0.04717,
+              }),
+            }),
+            'offtake': dict({
+              'S_TOU1_OFFTAKE_PEAK': dict({
+                'price_value': 0.18,
+                'price_value_excl_vat': 0.169811,
+              }),
+              'S_TOU1_OFFTAKE_WEEKEND': dict({
+                'price_value': 0.15,
+                'price_value_excl_vat': 0.141509,
+              }),
+            }),
+          }),
+          '**REDACTED_a289ff0d5e276f6d': dict({
+            'offtake': dict({
+              'TOTAL_HOURS': dict({
+                'price_value': 0.123456,
+                'price_value_excl_vat': 0.116468,
+              }),
+            }),
+          }),
+        }),
+        'update_interval': '1:00:00',
+      }),
+    }),
+    'relations': dict({
+      'agreement_count': 1,
+      'last_update_success': True,
+    }),
+  })
+# ---
 # name: test_diagnostics_setup_retry
   dict({
     'entry': dict({

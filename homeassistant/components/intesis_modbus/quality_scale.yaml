@@ -68,15 +68,11 @@ rules:
     comment: An entry is one gateway, which controls exactly one indoor unit.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: No entity is noisy or of little use to most users.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: The entities use the icons of their mode or device class.
-  reconfiguration-flow: todo
+  icon-translations: done
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices:
     status: exempt

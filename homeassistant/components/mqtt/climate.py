@@ -281,7 +281,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
                 HVACMode.DRY,
                 HVACMode.FAN_ONLY,
             ],
-        ): probatio.EnsureList(),
+        ): probatio.All(probatio.EnsureList(), [probatio.Coerce(HVACMode)]),
         probatio.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
         probatio.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
         probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
