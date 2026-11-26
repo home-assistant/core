@@ -12,6 +12,7 @@ from habluetooth import (
     BluetoothScanningMode,
     DiscoveredDeviceAdvertisementData,
     HaScanner,
+    discovered_device_advertisement_data_from_dict,
     discovered_device_advertisement_data_to_dict,
 )
 
@@ -52,6 +53,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
+    async_advertisement_restored,
     async_ble_device_from_address,
     async_get_fallback_availability_interval,
     async_get_learned_advertising_interval,
@@ -2261,6 +2263,52 @@ async def test_event_driven_history_saved_after_disappearing_and_reload(
     }
 
 
+def _saved_event_driven(hass_storage: dict[str, Any]) -> tuple[str, bytes]:
+    """Return the source and payload saved for the device at stop."""
+    data = hass_storage[storage.EVENT_DRIVEN_STORAGE_KEY]["data"]
+    advertisements = discovered_device_advertisement_data_from_dict(
+        data["advertisements"]
+    )
+    assert advertisements is not None
+    _, advertisement = advertisements.discovered_device_advertisement_datas[
+        EVENT_DRIVEN_ADDRESS
+    ]
+    return (
+        data["sources"][EVENT_DRIVEN_ADDRESS]["source"],
+        advertisement.service_data["fcd2"],
+    )
+
+
+@pytest.mark.usefixtures(
+    "enable_bluetooth", "register_hci0_scanner", "register_hci1_scanner"
+)
+async def test_event_driven_history_keeps_newer_after_unregistered_expiry(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """A newer advertisement that expired while unregistered replaces the kept one."""
+    device = generate_ble_device(EVENT_DRIVEN_ADDRESS, "event")
+    start = MONOTONIC_TIME()
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(OPEN, -90), start, HCI1_SOURCE_ADDRESS
+    )
+    await _expire_history(hass)
+    cancel()
+    inject_advertisement_with_time_and_source(
+        hass,
+        device,
+        _event_advertisement(CLOSED, -90),
+        MONOTONIC_TIME(),
+        HCI1_SOURCE_ADDRESS,
+    )
+    await _expire_history(hass)
+    async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+
+    await hass.async_stop()
+
+    assert _saved_event_driven(hass_storage) == (HCI1_SOURCE_ADDRESS, CLOSED)
+
+
 def _stored_advertisement(
     payload: bytes, rssi: int, heard: float, connectable: bool
 ) -> dict[str, Any]:
@@ -2580,6 +2628,54 @@ async def test_pending_accepted_advertisement_saved_again(
     assert data["sources"] == {
         EVENT_DRIVEN_ADDRESS: {"source": "weak-proxy", "connectable": False}
     }
+
+
+@pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
+@pytest.mark.parametrize("restarted_bluetooth", [OLDER_STRONG_REMOTE], indirect=True)
+@pytest.mark.usefixtures("restarted_bluetooth")
+async def test_startup_registered_address_saved_after_heard(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """An address only registered from startup keeps what it was heard with."""
+    inject_advertisement_with_time_and_source(
+        hass,
+        generate_ble_device(EVENT_DRIVEN_ADDRESS, "event"),
+        _event_advertisement(b"\x03", -90),
+        MONOTONIC_TIME(),
+        "weak-proxy",
+    )
+    await _expire_history(hass)
+
+    await hass.async_stop()
+
+    assert _saved_event_driven(hass_storage) == ("weak-proxy", b"\x03")
+
+
+@pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
+@pytest.mark.parametrize("restarted_bluetooth", [OLDER_STRONG_REMOTE], indirect=True)
+@pytest.mark.usefixtures("restarted_bluetooth")
+async def test_async_advertisement_restored(hass: HomeAssistant) -> None:
+    """Restored advertisements are told apart from advertisements heard since."""
+    startup = bluetooth.async_last_service_info(hass, EVENT_DRIVEN_ADDRESS, False)
+    assert startup is not None
+    assert async_advertisement_restored(hass, startup)
+
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+    accepted = bluetooth.async_last_service_info(hass, EVENT_DRIVEN_ADDRESS, False)
+    assert accepted is not None
+    assert async_advertisement_restored(hass, accepted)
+
+    inject_advertisement_with_time_and_source(
+        hass,
+        generate_ble_device(EVENT_DRIVEN_ADDRESS, "event"),
+        _event_advertisement(b"\x03", -90),
+        MONOTONIC_TIME() + 1,
+        "weak-proxy",
+    )
+    live = bluetooth.async_last_service_info(hass, EVENT_DRIVEN_ADDRESS, False)
+    assert live is not None
+    assert not async_advertisement_restored(hass, live)
+    cancel()
 
 
 @pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
