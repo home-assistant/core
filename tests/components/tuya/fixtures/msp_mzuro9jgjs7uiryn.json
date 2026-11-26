@@ -44,34 +44,6 @@
       "type": "Boolean",
       "value": {}
     },
-    "sleep": {
-      "type": "Boolean",
-      "value": {}
-    },
-    "sleep_start_time": {
-      "type": "Integer",
-      "value": {
-        "unit": "",
-        "min": 0,
-        "max": 1440,
-        "scale": 0,
-        "step": 1
-      }
-    },
-    "sleep_end_time": {
-      "type": "Integer",
-      "value": {
-        "unit": "",
-        "min": 0,
-        "max": 1440,
-        "scale": 0,
-        "step": 1
-      }
-    },
-    "uv": {
-      "type": "Boolean",
-      "value": {}
-    },
     "status": {
       "type": "Enum",
       "value": {
@@ -157,34 +129,6 @@
       "type": "Boolean",
       "value": {}
     },
-    "sleep": {
-      "type": "Boolean",
-      "value": {}
-    },
-    "sleep_start_time": {
-      "type": "Integer",
-      "value": {
-        "unit": "",
-        "min": 0,
-        "max": 1440,
-        "scale": 0,
-        "step": 1
-      }
-    },
-    "sleep_end_time": {
-      "type": "Integer",
-      "value": {
-        "unit": "",
-        "min": 0,
-        "max": 1440,
-        "scale": 0,
-        "step": 1
-      }
-    },
-    "uv": {
-      "type": "Boolean",
-      "value": {}
-    },
     "status": {
       "type": "Enum",
       "value": {
@@ -204,10 +148,6 @@
     "notification": 0,
     "fault": 0,
     "factory_reset": false,
-    "sleep": false,
-    "sleep_start_time": 60,
-    "sleep_end_time": 420,
-    "uv": true,
     "status": "standly"
   },
   "set_up": true,

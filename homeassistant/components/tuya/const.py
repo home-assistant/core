@@ -904,8 +904,6 @@ class DPCode(StrEnum):
     SIREN_SWITCH = "siren_switch"
     SITUATION_SET = "situation_set"
     SLEEP = "sleep"  # Sleep function
-    SLEEP_END_TIME = "sleep_end_time"
-    SLEEP_START_TIME = "sleep_start_time"
     SLOW_FEED = "slow_feed"
     SMOKE_SENSOR_STATE = "smoke_sensor_state"
     SMOKE_SENSOR_STATUS = "smoke_sensor_status"

@@ -253,20 +253,6 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
             device_class=NumberDeviceClass.DURATION,
             entity_category=EntityCategory.CONFIG,
         ),
-        TuyaNumberEntityDescription(
-            key=DPCode.SLEEP_START_TIME,
-            translation_key="sleep_start_time",
-            device_class=NumberDeviceClass.DURATION,
-            native_unit_of_measurement=UnitOfTime.MINUTES,
-            entity_category=EntityCategory.CONFIG,
-        ),
-        TuyaNumberEntityDescription(
-            key=DPCode.SLEEP_END_TIME,
-            translation_key="sleep_end_time",
-            device_class=NumberDeviceClass.DURATION,
-            native_unit_of_measurement=UnitOfTime.MINUTES,
-            entity_category=EntityCategory.CONFIG,
-        ),
     ),
     DeviceCategory.MZJ: (
         TuyaNumberEntityDescription(

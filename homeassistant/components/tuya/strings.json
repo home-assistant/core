@@ -406,12 +406,6 @@
       "siren_duration": {
         "name": "Siren duration"
       },
-      "sleep_end_time": {
-        "name": "Sleep end time"
-      },
-      "sleep_start_time": {
-        "name": "Sleep start time"
-      },
       "speed": {
         "name": "[%key:component::sensor::entity_component::speed::name%]"
       },
