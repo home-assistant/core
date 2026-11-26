@@ -1,6 +1,7 @@
 """Test the Deluge integration setup."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -23,7 +24,8 @@ def _mock_call(method: str, *args: Any) -> Any:
         return {
             key.encode(): value for key, value in GET_TORRENT_STATUS_RESPONSE.items()
         }
-    return GET_TORRENT_STATES_RESPONSE
+    # The switch pops items from the response, so keep the shared constant intact
+    return deepcopy(GET_TORRENT_STATES_RESPONSE)
 
 
 @pytest.fixture
