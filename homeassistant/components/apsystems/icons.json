@@ -44,6 +44,14 @@
         "default": "mdi:flash-triangle-outline"
       }
     },
+    "button": {
+      "manual_control_apply": {
+        "default": "mdi:play-circle-outline"
+      },
+      "manual_control_interrupt": {
+        "default": "mdi:stop-circle-outline"
+      }
+    },
     "number": {
       "depth_of_discharge": {
         "default": "mdi:battery-low"
@@ -118,14 +126,6 @@
     "text": {
       "tou_plan": {
         "default": "mdi:calendar-clock"
-      }
-    },
-    "button": {
-      "manual_control_apply": {
-        "default": "mdi:play-circle-outline"
-      },
-      "manual_control_interrupt": {
-        "default": "mdi:stop-circle-outline"
       }
     }
   }
