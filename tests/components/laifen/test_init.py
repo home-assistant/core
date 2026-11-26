@@ -1,5 +1,6 @@
 """Test the Laifen integration setup."""
 
+from dataclasses import replace
 from datetime import timedelta
 import logging
 from unittest.mock import MagicMock
@@ -31,7 +32,7 @@ from . import (
     setup_integration,
     wake_up,
 )
-from .conftest import FIRMWARE_VERSION
+from .conftest import FIRMWARE_VERSION, STATE
 
 
 def inject_old_advertisement(hass: HomeAssistant) -> None:
@@ -332,10 +333,11 @@ async def test_push_restores_availability_after_failed_update(
     await hass.async_block_till_done()
     assert hass.states.get(BATTERY_ENTITY_ID).state == STATE_UNAVAILABLE
 
+    mock_toothbrush.state = replace(STATE, battery_level=88)
     mock_toothbrush.notify()
     await hass.async_block_till_done()
 
-    assert hass.states.get(BATTERY_ENTITY_ID).state != STATE_UNAVAILABLE
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "88"
 
 
 async def test_update_while_connected(
