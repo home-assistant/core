@@ -1,6 +1,6 @@
 """Support for E3/DC sensors."""
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntEnum
 from operator import attrgetter
@@ -38,8 +38,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import PartKind
-from .coordinator import E3dcConfigEntry, E3dcDataUpdateCoordinator
-from .entity import E3dcEntity, E3dcPart
+from .coordinator import E3dcConfigEntry
+from .entity import E3dcEntity, E3dcPartEntity, async_add_part_entities
 
 PARALLEL_UPDATES = 0
 
@@ -487,48 +487,10 @@ INVERTER_SENSORS: tuple[E3dcPartSensorDescription, ...] = (
 )
 
 
-def _installed_meters(device: E3dcPowerStation) -> list[int]:
-    """The power meter slots with a meter configured, other than the grid connection point.
-
-    The power station's own sensors cover the meter at the grid connection point.
-    """
-    return [
-        number
-        for number, meter in device.power_meter_readings.items()
-        if meter.is_installed and meter.meter_type is not PowerMeterType.ROOT
-    ]
-
-
-def _connected_inverters(device: E3dcPowerStation) -> list[int]:
-    """The power station's own inverter, and each additional one on the grid."""
-    return [
-        number
-        for number, inverter in (device.inverters or {}).items()
-        if number == 0 or inverter.is_connected
-    ]
-
-
-@dataclass(frozen=True, kw_only=True)
-class _PartKind:
-    """A kind of part that gets a device for each slot the power station reports."""
-
-    kind: PartKind
-    exists_fn: Callable[[E3dcPowerStation], Iterable[int]]
-    sensors: tuple[E3dcPartSensorDescription, ...]
-
-
-PARTS = (
-    _PartKind(
-        kind=PartKind.POWER_METER,
-        exists_fn=_installed_meters,
-        sensors=POWER_METER_SENSORS,
-    ),
-    _PartKind(
-        kind=PartKind.INVERTER,
-        exists_fn=_connected_inverters,
-        sensors=INVERTER_SENSORS,
-    ),
-)
+PART_SENSORS: dict[PartKind, tuple[E3dcPartSensorDescription, ...]] = {
+    PartKind.POWER_METER: POWER_METER_SENSORS,
+    PartKind.INVERTER: INVERTER_SENSORS,
+}
 
 
 async def async_setup_entry(
@@ -542,12 +504,10 @@ async def async_setup_entry(
     served = {*device.readings_components, *device.settings_components}
     # The keys of the station sensors that are already added
     added_sensors: set[str] = set()
-    # The parts whose sensors are already added, by kind and slot
-    added_parts: set[tuple[PartKind, int]] = set()
 
     @callback
     def _async_add_new() -> None:
-        """Add sensors for hardware the first time the power station reports it."""
+        """Add station sensors for hardware the first time the power station reports it."""
         entities: list[SensorEntity] = []
         for description in SENSORS:
             if (
@@ -557,21 +517,12 @@ async def async_setup_entry(
             ):
                 added_sensors.add(description.key)
                 entities.append(E3dcSensor(coordinator, description))
-        for part_kind in PARTS:
-            for slot in part_kind.exists_fn(device):
-                if (part_kind.kind, slot) in added_parts:
-                    continue
-                added_parts.add((part_kind.kind, slot))
-                part = E3dcPart(kind=part_kind.kind, slot=slot)
-                entities.extend(
-                    E3dcPartSensor(coordinator, description, part, part_kind)
-                    for description in part_kind.sensors
-                )
         if entities:
             async_add_entities(entities)
 
     _async_add_new()
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new))
+    async_add_part_entities(entry, async_add_entities, PART_SENSORS, E3dcPartSensor)
 
 
 def _state(value: StateType | IntEnum) -> StateType:
@@ -599,33 +550,14 @@ class E3dcSensor(E3dcEntity, SensorEntity):
         return _state(self.entity_description.value_fn(self.coordinator.device))
 
 
-class E3dcPartSensor(E3dcEntity, SensorEntity):
+class E3dcPartSensor(E3dcPartEntity, SensorEntity):
     """Defines a sensor of a power meter or an inverter."""
 
     entity_description: E3dcPartSensorDescription
-
-    def __init__(
-        self,
-        coordinator: E3dcDataUpdateCoordinator,
-        entity_description: E3dcPartSensorDescription,
-        part: E3dcPart,
-        part_kind: _PartKind,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, entity_description, part)
-        self._slot = part.slot
-        self._exists_fn = part_kind.exists_fn
-
-    @property
-    @override
-    def available(self) -> bool:
-        return super().available and self._slot in self._exists_fn(
-            self.coordinator.device
-        )
 
     @property
     @override
     def native_value(self) -> StateType:
         return _state(
-            self.entity_description.value_fn(self.coordinator.device, self._slot)
+            self.entity_description.value_fn(self.coordinator.device, self._part.slot)
         )

@@ -1,10 +1,12 @@
 """Data update coordinator for E3/DC devices."""
 
+from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, override
 
-from e3dc_ess_modbus import E3dcPowerStation, NotAnE3dcError
+from e3dc_ess_modbus import E3dcPowerStation, NotAnE3dcError, PowerMeterType
 from modbus_connection import ModbusError
 from propcache.api import cached_property
 
@@ -14,7 +16,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_NAME, DOMAIN, SCAN_INTERVAL
+from .const import DEFAULT_NAME, DOMAIN, SCAN_INTERVAL, PartKind
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +32,51 @@ POLLED_COMPONENTS = (
 )
 # The components that tell which optional hardware is installed, read once
 HARDWARE_COMPONENTS = ("wallboxes",)
+
+
+@dataclass(frozen=True, kw_only=True, order=True)
+class E3dcPart:
+    """A power meter or inverter of the power station, with its own device."""
+
+    kind: PartKind
+    slot: int  # E3/DC counts the slots from 0
+
+    @property
+    def number(self) -> int:
+        """The part's number, counted from 1."""
+        return self.slot + 1
+
+    @property
+    def built_in(self) -> bool:
+        """Whether this is the power station's own inverter."""
+        return self.kind is PartKind.INVERTER and self.slot == 0
+
+
+def _installed_meters(device: E3dcPowerStation) -> list[int]:
+    """The power meter slots with a meter configured, other than the grid connection point.
+
+    The power station's own sensors cover the meter at the grid connection point.
+    """
+    return [
+        number
+        for number, meter in device.power_meter_readings.items()
+        if meter.is_installed and meter.meter_type is not PowerMeterType.ROOT
+    ]
+
+
+def _connected_inverters(device: E3dcPowerStation) -> list[int]:
+    """The power station's own inverter, and each additional one on the grid."""
+    return [
+        number
+        for number, inverter in (device.inverters or {}).items()
+        if number == 0 or inverter.is_connected
+    ]
+
+
+PART_SLOTS: dict[PartKind, Callable[[E3dcPowerStation], Iterable[int]]] = {
+    PartKind.POWER_METER: _installed_meters,
+    PartKind.INVERTER: _connected_inverters,
+}
 
 type E3dcConfigEntry = ConfigEntry[E3dcDataUpdateCoordinator]
 
@@ -55,6 +102,8 @@ class E3dcDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         self.device = device
+        # The parts the power station reported in the last successful poll
+        self.parts: set[E3dcPart] = set()
 
     @cached_property
     def device_info(self) -> dr.DeviceInfo:
@@ -93,6 +142,11 @@ class E3dcDataUpdateCoordinator(DataUpdateCoordinator[None]):
     @override
     async def _async_update_data(self) -> None:
         await self._async_poll(POLLED_COMPONENTS)
+        self.parts = {
+            E3dcPart(kind=kind, slot=slot)
+            for kind, slots_fn in PART_SLOTS.items()
+            for slot in slots_fn(self.device)
+        }
 
     async def _async_poll(self, components: tuple[str, ...]) -> None:
         """Read the components from the power station, or raise."""

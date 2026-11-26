@@ -1,32 +1,16 @@
 """Base entity for E3/DC devices."""
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from collections.abc import Callable, Iterable, Mapping
+from typing import TYPE_CHECKING, override
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, PartKind
-from .coordinator import E3dcDataUpdateCoordinator
-
-
-@dataclass(frozen=True, kw_only=True)
-class E3dcPart:
-    """A power meter or inverter of the power station, with its own device."""
-
-    kind: PartKind
-    slot: int  # E3/DC counts the slots from 0
-
-    @property
-    def number(self) -> int:
-        """The part's number, counted from 1."""
-        return self.slot + 1
-
-    @property
-    def built_in(self) -> bool:
-        """Whether this is the power station's own inverter."""
-        return self.kind is PartKind.INVERTER and self.slot == 0
+from .coordinator import E3dcConfigEntry, E3dcDataUpdateCoordinator, E3dcPart
 
 
 class E3dcEntity(CoordinatorEntity[E3dcDataUpdateCoordinator]):
@@ -53,6 +37,56 @@ class E3dcEntity(CoordinatorEntity[E3dcDataUpdateCoordinator]):
             prefix = f"{serial}_{part.kind}_{part.number}"
             self._attr_device_info = _part_device_info(coordinator, part, prefix)
         self._attr_unique_id = f"{prefix}_{entity_description.key}"
+
+
+class E3dcPartEntity(E3dcEntity):
+    """Defines an entity of a power meter or an inverter."""
+
+    def __init__(
+        self,
+        coordinator: E3dcDataUpdateCoordinator,
+        entity_description: EntityDescription,
+        part: E3dcPart,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, entity_description, part)
+        self._part = part
+
+    @property
+    @override
+    def available(self) -> bool:
+        return super().available and self._part in self.coordinator.parts
+
+
+@callback
+def async_add_part_entities[_DescriptionT: EntityDescription](
+    entry: E3dcConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    descriptions: Mapping[PartKind, Iterable[_DescriptionT]],
+    entity_factory: Callable[
+        [E3dcDataUpdateCoordinator, _DescriptionT, E3dcPart], Entity
+    ],
+) -> None:
+    """Add a platform's entities for each part the first time the power station reports it."""
+    coordinator = entry.runtime_data
+    added: set[E3dcPart] = set()
+
+    @callback
+    def _async_add_new() -> None:
+        new = sorted(
+            part for part in coordinator.parts - added if part.kind in descriptions
+        )
+        added.update(new)
+        entities = [
+            entity_factory(coordinator, description, part)
+            for part in new
+            for description in descriptions[part.kind]
+        ]
+        if entities:
+            async_add_entities(entities)
+
+    _async_add_new()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new))
 
 
 def _part_device_info(
