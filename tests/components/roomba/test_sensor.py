@@ -9,7 +9,14 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.roomba.const import CONF_BLID, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_HOST,
+    CONF_PASSWORD,
+    STATE_UNKNOWN,
+    Platform,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -224,6 +231,65 @@ async def test_lifetime_stats_from_run_report(
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.test_roomba_total_cleaning_time").state == "120"
+    assert (
+        hass.states.get("sensor.test_roomba_total_cleaning_time").state
+        == "120.583333333333"
+    )
     assert hass.states.get("sensor.test_roomba_total_cleaned_area").state == "2322.5"
     assert hass.states.get("sensor.test_roomba_scrubs").state == "1"
+
+
+async def test_total_cleaning_time_keeps_hours_for_existing_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roomba: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity registered before the minutes change is still shown in hours."""
+    mock_roomba.master_state["state"]["reported"]["bbrun"] = {"hr": 214, "min": 52}
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"total_cleaning_time_{mock_config_entry.data[CONF_BLID]}",
+        suggested_object_id="test_roomba_total_cleaning_time",
+        config_entry=mock_config_entry,
+        unit_of_measurement=UnitOfTime.HOURS,
+    )
+
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_roomba_total_cleaning_time")
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTime.HOURS
+    assert state.state == "214.866666666667"
+
+
+@pytest.mark.parametrize(
+    ("bbrun", "expected"),
+    [
+        pytest.param(
+            {"hr": 214, "min": 52}, "214.866666666667", id="hours_and_minutes"
+        ),
+        pytest.param({"hr": 214}, "214.0", id="hours_only"),
+        pytest.param({"min": 52}, "0.866666666666667", id="minutes_only"),
+        pytest.param({}, STATE_UNKNOWN, id="missing"),
+    ],
+)
+async def test_total_cleaning_time(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roomba: AsyncMock,
+    bbrun: dict[str, int],
+    expected: str,
+) -> None:
+    """Test total cleaning time combines the reported hours and minutes."""
+    mock_roomba.master_state["state"]["reported"]["bbrun"] = bbrun
+
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_roomba_total_cleaning_time").state == expected
