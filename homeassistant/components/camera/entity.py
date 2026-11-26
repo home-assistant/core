@@ -282,7 +282,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         implementation handles offers itself and only gets a WebRTC provider
         if it overrides this method, for example to fetch still images through
         the provider from a source that the stream component can't play. Its
-        WebRTC sessions, candidates included, never go to the provider.
+        WebRTC sessions, candidates included, never go to the provider, and
+        the provider isn't asked to preload a stream for it. Like
+        stream_source, it is only used when the camera supports
+        CameraEntityFeature.STREAM.
         """
         return await self.stream_source()
 
@@ -472,7 +475,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self.entity_id,
             )
 
-        if new_provider:
+        # A native WebRTC camera only uses the provider for its provider stream
+        # source, so the provider doesn't set up streams for it, like preload
+        if new_provider and not self._supports_native_async_webrtc:
             await async_call_webrtc_provider(
                 new_provider.async_register_camera(self),
                 "registering WebRTC provider for",
