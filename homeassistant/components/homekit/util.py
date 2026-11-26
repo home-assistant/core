@@ -36,7 +36,7 @@ from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteEntit
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_CODE,
     CONF_NAME,
@@ -120,9 +120,12 @@ from .const import (
     TYPE_FAUCET,
     TYPE_HEATER_COOLER,
     TYPE_OUTLET,
+    TYPE_SET_TOP_BOX,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
+    TYPE_STREAMING_STICK,
     TYPE_SWITCH,
+    TYPE_TELEVISION,
     TYPE_THERMOSTAT,
     TYPE_VALVE,
     VIDEO_CODEC_COPY,
@@ -170,6 +173,22 @@ BASIC_INFO_SCHEMA = probatio.Schema(
 
 FEATURE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {probatio.Optional(CONF_FEATURE_LIST, default=None): probatio.EnsureList()}
+)
+
+# No default so an unset type keeps the automatic routing on the device class.
+MEDIA_PLAYER_ENTITY_SCHEMA = FEATURE_SCHEMA.extend(
+    {
+        probatio.Optional(CONF_TYPE): probatio.All(
+            cv.string,
+            probatio.In(
+                (
+                    TYPE_SET_TOP_BOX,
+                    TYPE_STREAMING_STICK,
+                    TYPE_TELEVISION,
+                )
+            ),
+        ),
+    }
 )
 
 CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
@@ -388,7 +407,7 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
             config = CODE_SCHEMA(config)
 
         elif domain == MEDIA_PLAYER_DOMAIN:
-            config = FEATURE_SCHEMA(config)
+            config = MEDIA_PLAYER_ENTITY_SCHEMA(config)
             feature_list = {}
             for feature in config[CONF_FEATURE_LIST]:
                 params = MEDIA_PLAYER_SCHEMA(feature)
@@ -602,6 +621,32 @@ def density_to_air_quality_voc(density: float) -> int:
     if density <= 3000:  # WHO IAQ 4 (HomeKit: Inferior)
         return 4
     return 5  # WHOA IAQ 5 (HomeKit: Poor)
+
+
+def ppb_to_air_quality_ozone(ppb: float) -> int:
+    """Map ozone ppb to HomeKit AirQuality level using US EPA 8-hour breakpoints."""
+    if ppb <= 54:  # US AQI 0-50 (HomeKit: Excellent)
+        return 1
+    if ppb <= 70:  # US AQI 51-100 (HomeKit: Good)
+        return 2
+    if ppb <= 85:  # US AQI 101-150 (HomeKit: Fair)
+        return 3
+    if ppb <= 105:  # US AQI 151-200 (HomeKit: Inferior)
+        return 4
+    return 5  # US AQI 201+ (HomeKit: Poor)
+
+
+def ppb_to_air_quality_sulphur_dioxide(ppb: float) -> int:
+    """Map sulphur dioxide ppb to HomeKit AirQuality level using US EPA 1-hour breakpoints."""
+    if ppb <= 35:  # US AQI 0-50 (HomeKit: Excellent)
+        return 1
+    if ppb <= 75:  # US AQI 51-100 (HomeKit: Good)
+        return 2
+    if ppb <= 185:  # US AQI 101-150 (HomeKit: Fair)
+        return 3
+    if ppb <= 304:  # US AQI 151-200 (HomeKit: Inferior)
+        return 4
+    return 5  # US AQI 201+ (HomeKit: Poor)
 
 
 def get_persist_filename_for_entry_id(entry_id: str) -> str:
@@ -821,14 +866,14 @@ def async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
 
 
 def _async_get_imported_entries_indices(
-    current_entries: list[ConfigEntry],
-) -> tuple[dict[str, ConfigEntry], dict[int, ConfigEntry]]:
+    current_entries: list[HomeKitConfigEntry],
+) -> tuple[dict[str, HomeKitConfigEntry], dict[int, HomeKitConfigEntry]]:
     """Return a dicts of the entries by name and port."""
 
     # For backwards compat, its possible the first bridge is using the default
     # name.
-    entries_by_name: dict[str, ConfigEntry] = {}
-    entries_by_port: dict[int, ConfigEntry] = {}
+    entries_by_name: dict[str, HomeKitConfigEntry] = {}
+    entries_by_port: dict[int, HomeKitConfigEntry] = {}
     for entry in current_entries:
         if entry.source != SOURCE_IMPORT:
             continue
@@ -840,8 +885,8 @@ def _async_get_imported_entries_indices(
 @callback
 def _async_update_config_entry_from_yaml(
     hass: HomeAssistant,
-    entries_by_name: dict[str, ConfigEntry],
-    entries_by_port: dict[int, ConfigEntry],
+    entries_by_name: dict[str, HomeKitConfigEntry],
+    entries_by_port: dict[int, HomeKitConfigEntry],
     conf: ConfigType,
 ) -> bool:
     """Update a config entry with the latest yaml.

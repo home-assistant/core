@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@Rendili", "@KJonline"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/hive",
   "homekit": {
     "models": ["HHKBridge*"]
@@ -15,5 +16,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["apyhiveapi"],
-  "requirements": ["pyhive-integration==1.0.9"]
+  "requirements": ["pyhive-integration==1.0.10"]
 }

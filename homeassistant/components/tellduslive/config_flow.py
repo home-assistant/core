@@ -1,13 +1,14 @@
 """Config flow for Tellduslive."""
 
 import asyncio
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
 import probatio
 from tellduslive import Session, supports_local_api
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 
 from .const import (
@@ -83,6 +84,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         KEY_TOKEN: self._session.access_token,
                         KEY_TOKEN_SECRET: self._session.access_token_secret,
                     }
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates={KEY_SESSION: session}
+                    )
                 return self.async_create_entry(
                     title=host,
                     data={
@@ -96,12 +101,12 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             async with asyncio.timeout(10):
                 auth_url = await self.hass.async_add_executor_job(self._get_auth_url)
-            if not auth_url:
-                return self.async_abort(reason="unknown_authorize_url_generation")
         except TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
         except Exception:
             _LOGGER.exception("Unexpected error generating auth url")
+            return self.async_abort(reason="unknown_authorize_url_generation")
+        if not auth_url:
             return self.async_abort(reason="unknown_authorize_url_generation")
 
         _LOGGER.debug("Got authorization URL %s", auth_url)
@@ -113,6 +118,21 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 "auth_url": auth_url,
             },
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        self._host = entry_data[KEY_SESSION].get(CONF_HOST)
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_auth()
 
     @override
     async def async_step_discovery(

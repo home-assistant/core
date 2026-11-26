@@ -16,7 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, HomeeConfigEntry
+from . import HomeeConfigEntry
+from .const import DOMAIN
 from .entity import HomeeEntity
 from .helpers import get_name_for_enum, setup_homee_platform
 

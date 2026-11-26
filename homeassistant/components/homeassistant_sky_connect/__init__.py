@@ -6,6 +6,9 @@ import logging
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_get_serial_port_via_device_id,
+)
 from homeassistant.components.homeassistant_hardware.repair_helpers import (
     async_create_multi_pan_migration_issue,
     async_delete_multi_pan_migration_issue,
@@ -55,6 +58,7 @@ class HomeAssistantSkyConnectData:
     """Runtime data definition."""
 
     coordinator: FirmwareUpdateCoordinator
+    via_device_id: str | None
 
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -121,7 +125,10 @@ async def async_setup_entry(
         session,
         NABU_CASA_FIRMWARE_RELEASES_URL,
     )
-    entry.runtime_data = HomeAssistantSkyConnectData(coordinator)
+    entry.runtime_data = HomeAssistantSkyConnectData(
+        coordinator=coordinator,
+        via_device_id=async_get_serial_port_via_device_id(hass, device_path),
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, ["switch", "update"])
 
@@ -190,7 +197,9 @@ async def async_migrate_entry(
 
                 if not (usb_info := serial_ports_info.get(device)):
                     raise HomeAssistantError(
-                        f"USB device {device} is missing, cannot migrate"
+                        translation_domain=DOMAIN,
+                        translation_key="device_missing_migration",
+                        translation_placeholders={"device": device},
                     )
 
                 assert isinstance(usb_info, USBDevice)

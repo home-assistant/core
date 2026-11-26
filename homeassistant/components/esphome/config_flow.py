@@ -29,7 +29,6 @@ from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -102,8 +101,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _reauth_entry: ConfigEntry
-    _reconfig_entry: ConfigEntry
+    _reauth_entry: ESPHomeConfigEntry
+    _reconfig_entry: ESPHomeConfigEntry
 
     def __init__(self) -> None:
         """Initialize flow."""
@@ -118,7 +117,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # The ESPHome name as per its config
         self._device_name: str | None = None
         self._device_mac: str | None = None
-        self._entry_with_name_conflict: ConfigEntry | None = None
+        self._entry_with_name_conflict: ESPHomeConfigEntry | None = None
 
     async def _async_step_user_base(
         self, user_input: dict[str, Any] | None = None, error: str | None = None
@@ -368,9 +367,13 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # Late import to avoid circular dependency
         # NOTE: Do not change to hass.config.components check - improv_ble is
         # config_flow only and may not be in the components registry
-        if improv_ble := await async_import_module(
-            self.hass, "homeassistant.components.improv_ble"
-        ):
+        try:
+            improv_ble = await async_import_module(
+                self.hass, "homeassistant.components.improv_ble"
+            )
+        except ImportError:
+            _LOGGER.debug("Improv BLE is not available")
+        else:
             ble_mac = wifi_mac_to_bluetooth_mac(mac_address)
             improv_ble.async_register_next_flow(self.hass, ble_mac, self.flow_id)
             _LOGGER.debug(
@@ -661,7 +664,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_abort_wrong_device(
-        self, entry: ConfigEntry, expected_mac: str, actual_mac: str
+        self, entry: ESPHomeConfigEntry, expected_mac: str, actual_mac: str
     ) -> ConfigFlowResult:
         """Abort flow because a different device was found at the IP address."""
         assert self._host is not None
@@ -784,7 +787,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_get_human_readable_name(self) -> str:
         """Return a human readable name for the entry."""
-        entry: ConfigEntry | None = None
+        entry: ESPHomeConfigEntry | None = None
         if self.source == SOURCE_REAUTH:
             entry = self._reauth_entry
         elif self.source == SOURCE_RECONFIGURE:
@@ -990,9 +993,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         Repair-in-place only, never create: presence in the store means
         "HA generated this key" and gates the device-side key wipe on
         entry removal, so dashboard/user keys must not be enrolled.
+
+        Only called once the device info has been fetched, which sets the MAC.
         """
-        if (mac_address := self._async_get_storage_mac()) is None:
-            return
+        mac_address = self._device_mac
+        assert mac_address is not None
         storage = await async_get_encryption_key_storage(self.hass)
         if (stored := await storage.async_get_key(mac_address)) and stored != key:
             await storage.async_store_key(mac_address, key)

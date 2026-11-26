@@ -48,19 +48,23 @@ from mcp.server.streamable_http import (
     MCP_PROTOCOL_VERSION_HEADER,
 )
 from mcp.shared.jsonrpc_dispatcher import JSONRPCDispatcher
-from mcp.shared.message import SessionMessage
+from mcp.shared.message import ServerMessageMetadata, SessionMessage
 import pydantic
 
 from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.const import CONF_LLM_HASS_API, CONTENT_TYPE_JSON
+from homeassistant.const import (
+    CONF_LLM_HASS_API,
+    CONTENT_TYPE_JSON,
+    HTTP_HEADER_HA_DEVICE_ID,
+)
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import llm
 
 from .const import CONF_ALL_LLM_APIS, CONF_READ_ONLY, CONF_REQUIRE_ADMIN, DOMAIN
 from .server import create_server
 from .session import Session
-from .types import MCPServerConfigEntry
+from .types import MCPRequestContext, MCPServerConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,12 +174,13 @@ async def create_streams() -> AsyncGenerator[Streams]:
 
 
 async def create_mcp_server(
-    hass: HomeAssistant,
+    request: web.Request,
     context: Context,
     llm_api_id: str | list[str],
     read_only: bool,
 ) -> tuple[Server, InitializationOptions]:
     """Initialize the MCP server to ensure it's ready to handle requests."""
+    hass = request.app[KEY_HASS]
     llm_context = llm.LLMContext(
         platform=DOMAIN,
         context=context,
@@ -183,7 +188,9 @@ async def create_mcp_server(
         assistant=conversation.DOMAIN,
         device_id=None,
     )
-    server = await create_server(hass, llm_api_id, llm_context, read_only)
+    server = await create_server(
+        hass, llm_api_id, llm_context, read_only, str(request.url.origin())
+    )
     options = await hass.async_add_executor_job(
         server.create_initialization_options  # Reads package for version info
     )
@@ -212,7 +219,7 @@ class ModelContextProtocolSSEView(HomeAssistantView):
         session_manager = entry.runtime_data
 
         server, options = await create_mcp_server(
-            hass,
+            request,
             self.context(request),
             _entry_llm_api_ids(hass, entry),
             entry.data[CONF_READ_ONLY],
@@ -279,7 +286,16 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
             raise HTTPBadRequest(text="Could not parse message") from err
 
         _LOGGER.debug("Received client message: %s", message)
-        await session.read_stream_writer.send(SessionMessage(message))
+        await session.read_stream_writer.send(
+            SessionMessage(
+                message,
+                ServerMessageMetadata(
+                    request_context=MCPRequestContext(
+                        device_id=request.headers.get(HTTP_HEADER_HA_DEVICE_ID)
+                    )
+                ),
+            )
+        )
         return web.Response(status=200)
 
 
@@ -290,8 +306,6 @@ async def _async_handle_streamable_message(
     read_only: bool,
 ) -> web.StreamResponse:
     """Process a single JSON-RPC message for the given LLM API."""
-    hass = request.app[KEY_HASS]
-
     # The request must include a JSON-RPC message
     if CONTENT_TYPE_JSON not in request.headers.get("accept", ""):
         raise HTTPBadRequest(text=f"Client must accept {CONTENT_TYPE_JSON}")
@@ -329,7 +343,7 @@ async def _async_handle_streamable_message(
     # request. We open a buffered stream pair to communicate with it. The
     # request is sent to the MCP server and we wait for a single response
     # then shut down the server.
-    server, options = await create_mcp_server(hass, context, llm_api_id, read_only)
+    server, options = await create_mcp_server(request, context, llm_api_id, read_only)
 
     protocol_version = (
         request.headers.get(MCP_PROTOCOL_VERSION_HEADER) or DEFAULT_NEGOTIATED_VERSION
@@ -359,7 +373,16 @@ async def _async_handle_streamable_message(
         async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
             tg.start_soon(run_server)
 
-            await streams.read_stream_writer.send(SessionMessage(message))
+            await streams.read_stream_writer.send(
+                SessionMessage(
+                    message,
+                    ServerMessageMetadata(
+                        request_context=MCPRequestContext(
+                            device_id=request.headers.get(HTTP_HEADER_HA_DEVICE_ID)
+                        )
+                    ),
+                )
+            )
             session_message = await anext(streams.write_stream_reader)
             tg.cancel_scope.cancel()
 

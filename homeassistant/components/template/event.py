@@ -14,7 +14,7 @@ from homeassistant.components.event import (
     EventEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS
+from homeassistant.const import CONF_DEVICE_CLASS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -25,6 +25,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import validators as tcv
+from .const import DEFAULT_NAMES
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -41,7 +42,7 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Template Event"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.EVENT]
 
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_TYPES = "event_types"
@@ -140,6 +141,7 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
 
         self._event_type = None
         self._attr_event_types = []
+        self._event_types_known = False
 
         self.setup_template(
             CONF_EVENT_TYPES,
@@ -157,6 +159,8 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
     @callback
     def _update_event_types(self, event_types: Any) -> None:
         """Update the event types from the template."""
+        self._event_types_known = True
+
         if event_types in (None, "None", ""):
             self._attr_event_types = []
             return

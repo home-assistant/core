@@ -24,6 +24,7 @@ SERIAL_PORT_KEY_PATHS: tuple[tuple[str, ...], ...] = (
     ("host",),  # elkm1
     ("port",),
     ("serial_port",),  # edl21, teleinfo
+    ("serial_port", "port_name"),  # ramses_cc
     ("socket_path",),  # zwave_js
     ("usb_path",),  # zwave_js, crownstone
 )

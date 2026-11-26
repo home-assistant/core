@@ -4,14 +4,19 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import CONF_TYPE, EntityCategory, UnitOfTime
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import CONF_TYPE, EntityCategory, Platform, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .api import MinecraftServerData, MinecraftServerType
-from .const import KEY_LATENCY, KEY_MOTD
+from .const import DOMAIN, KEY_LATENCY, KEY_MOTD
 from .coordinator import MinecraftServerConfigEntry, MinecraftServerCoordinator
 from .entity import MinecraftServerEntity
 
@@ -96,6 +101,7 @@ SENSOR_DESCRIPTIONS = [
     MinecraftServerSensorEntityDescription(
         key=KEY_LATENCY,
         translation_key=KEY_LATENCY,
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         suggested_display_precision=0,
         value_fn=lambda data: data.latency,
@@ -169,16 +175,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Minecraft Server sensor platform."""
     coordinator = config_entry.runtime_data
+    server_type = config_entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION)
+    entity_registry = er.async_get(hass)
+    entities = []
 
-    # Add sensor entities.
-    async_add_entities(
-        [
-            MinecraftServerSensorEntity(coordinator, description, config_entry)
-            for description in SENSOR_DESCRIPTIONS
-            if config_entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION)
-            in description.supported_server_types
-        ]
-    )
+    for description in SENSOR_DESCRIPTIONS:
+        if server_type in description.supported_server_types:
+            entities.append(
+                MinecraftServerSensorEntity(coordinator, description, config_entry)
+            )
+        # Remove existing stale entity (e.g. after server type change)
+        elif entity_id := entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{config_entry.entry_id}-{description.key}"
+        ):
+            entity_registry.async_remove(entity_id)
+
+    async_add_entities(entities)
 
 
 class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):

@@ -41,7 +41,8 @@ from .const import (
 )
 from .exception import UnknownMediaType
 from .favorites import SonosFavorites
-from .speaker import SonosMedia, SonosSpeaker
+from .media import SonosMedia
+from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,12 +96,11 @@ def get_thumbnail_url_full(
             )
         return fix_image_url(getattr(item, "album_art_uri", ""))
 
-    return urllib.parse.unquote(
-        get_browse_image_url(
-            media_content_type,
-            media_content_id,
-            media_image_id,
-        )
+    # The content id must stay percent-encoded; aiohttp decodes the path once.
+    return get_browse_image_url(
+        media_content_type,
+        media_content_id,
+        media_image_id,
     )
 
 
@@ -215,7 +215,14 @@ async def async_browse_media(
         ),
     )
     if response is None:
-        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="media_not_found",
+            translation_placeholders={
+                "media_content_type": media_content_type,
+                "media_content_id": media_content_id,
+            },
+        )
     return response
 
 
@@ -385,7 +392,7 @@ async def root_payload(
     """Return root payload for Sonos."""
     children: list[BrowseMedia] = []
 
-    if speaker.favorites:
+    if speaker.favorites.count:
         children.append(
             BrowseMedia(
                 title="Favorites",

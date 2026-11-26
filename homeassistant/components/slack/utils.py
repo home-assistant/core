@@ -6,6 +6,8 @@ import aiofiles
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
 
+from homeassistant.helpers.os_error import os_read_error
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -35,7 +37,7 @@ async def upload_file_to_slack(
 
     Raises:
         SlackApiError: If the Slack API call fails.
-        OSError: If there is an error reading the file.
+        HomeAssistantError: If there is an error reading the file.
 
     """
     if file_content is None and file_path:
@@ -43,9 +45,8 @@ async def upload_file_to_slack(
         try:
             async with aiofiles.open(file_path, "rb") as file:
                 file_content = await file.read()
-        except OSError as os_err:
-            _LOGGER.error("Error reading file %s: %r", file_path, os_err)
-            return
+        except OSError as err:
+            raise os_read_error(err, file_path) from err
 
     for channel_id in channel_ids:
         try:

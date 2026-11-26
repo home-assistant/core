@@ -3,6 +3,7 @@
   "name": "Notify.Events",
   "categories": ["messaging_notifications.push_notifications"],
   "codeowners": ["@matrozov", "@papajojo"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/notify_events",
   "iot_class": "cloud_push",
   "loggers": ["notify_events"],

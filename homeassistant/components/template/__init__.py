@@ -12,6 +12,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ADDITIONAL_OPTIONS, CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
 from .helpers import async_get_blueprints, process_config
+from .repairs import async_update_deprecated_template_options_issues
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +34,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # separate task to avoid waiting for it to finish setting up
     # since a tracked task will be waited at the end of startup
     hass.async_create_task(blueprints.async_populate(), eager_start=True)
+
+    async_update_deprecated_template_options_issues(hass, config.get(DOMAIN))
 
     if DOMAIN in config:
         await process_config(hass, config)
@@ -60,7 +63,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if (
         device_id is not None
         and device_registry.async_get(
-            device_id, include_main_devices=False, include_child_devices=False
+            device_id,
+            include_main_devices=False,
+            include_child_devices=False,
+            include_composite_devices=True,
         )
         is not None
     ):

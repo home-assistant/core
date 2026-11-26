@@ -1,7 +1,6 @@
 """Test the KACO Modbus sensor platform."""
 
 from freezegun.api import FrozenDateTimeFactory
-from kaco_modbus import KacoInverter
 from kaco_modbus.const import INVERTER_MODEL_ID
 from kaco_modbus.testing import BLUEPLANET_86TL3, BLUEPLANET_86TL3_ASLEEP
 from modbus_connection import ModbusTimeoutError
@@ -16,14 +15,28 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.kaco_modbus.const import DOMAIN
 from homeassistant.components.kaco_modbus.coordinator import SCAN_INTERVAL
-from homeassistant.components.kaco_modbus.sensor import SENSOR_DESCRIPTIONS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import MOCK_SERIAL, model_registers
+
+MPPT_MODEL_ID = 160
+
+# The readings someone adds this integration to get, as opposed to the detail
+# ones that stay disabled until they are asked for.
+PRIMARY_SENSORS = {
+    "ac_current",
+    "ac_power",
+    "dc_power",
+    "lifetime_energy",
+    "mppt_1_dc_power",
+    "mppt_2_dc_power",
+    "operating_state",
+    "temperature",
+}
 
 
 def _entity_id(entity_registry: er.EntityRegistry, key: str) -> str:
@@ -46,32 +59,138 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
-def test_sensor_descriptions_read_real_fields() -> None:
-    """Guard SENSOR_DESCRIPTIONS against a component transcription slip.
-
-    Values are resolved by getattr, so a wrong component name would other-
-    wise show up as a permanently empty sensor rather than an error.
-    """
-    device = KacoInverter(MockModbusConnection().for_unit(1))
-    for description in SENSOR_DESCRIPTIONS:
-        assert hasattr(device, description.component), (
-            f"unknown component {description.component!r}"
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_mppt_child_devices(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test each MPPT gets a child device of the inverter, carrying its sensors."""
+    for number in (1, 2):
+        mppt = device_registry.async_get_child_device_by_identifier(
+            (DOMAIN, f"{MOCK_SERIAL}_mppt_{number}"), init_integration.entry_id
         )
+        assert mppt is not None
+        assert mppt == snapshot(name=f"mppt_{number}")
+        assert {
+            entry.unique_id
+            for entry in er.async_entries_for_device(entity_registry, mppt.id)
+        } == {
+            f"{MOCK_SERIAL}_mppt_{number}_{key}"
+            for key in ("dc_current", "dc_power", "dc_voltage")
+        }
 
 
-async def test_sensor_values(
+async def test_only_primary_readings_are_enabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test the shipped sensors carry the captured inverter's readings."""
-    assert hass.states.get(_entity_id(entity_registry, "ac_power")).state == "1000"
-    assert (
-        hass.states.get(_entity_id(entity_registry, "operating_state")).state == "mppt"
-    )
-    # Reported in Wh and shown in kWh, so the state is the converted value.
+    """Test the detail readings are left for a user to opt into."""
+    enabled = {
+        entry.unique_id.removeprefix(f"{MOCK_SERIAL}_")
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, init_integration.entry_id
+        )
+        if entry.disabled_by is None
+    }
+    assert enabled == PRIMARY_SENSORS
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("key", "expected"),
+    [
+        pytest.param("ac_power", "1000", id="ac_power"),
+        pytest.param("ac_current", "4.84", id="ac_current"),
+        pytest.param("operating_state", "mppt", id="operating_state"),
+        pytest.param("power_factor", "1.0", id="power_factor"),
+        pytest.param("frequency", "49.944", id="frequency"),
+        pytest.param("temperature", "46.9", id="temperature"),
+        pytest.param("voltage_l1", "226.5", id="voltage_l1"),
+        pytest.param("current_l1", "1.64", id="current_l1"),
+        pytest.param("mppt_1_dc_power", "360", id="mppt_1_dc_power"),
+        pytest.param("mppt_1_dc_voltage", "355.1", id="mppt_1_dc_voltage"),
+        pytest.param("mppt_1_dc_current", "1.02", id="mppt_1_dc_current"),
+        pytest.param("mppt_2_dc_power", "650", id="mppt_2_dc_power"),
+    ],
+)
+async def test_sensor_values(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    key: str,
+    expected: str,
+) -> None:
+    """Test the sensors carry the captured inverter's readings."""
+    assert hass.states.get(_entity_id(entity_registry, key)).state == expected
+
+
+async def test_lifetime_energy_is_converted_to_kilowatt_hours(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the total is reported in Wh and shown in kWh."""
     energy = hass.states.get(_entity_id(entity_registry, "lifetime_energy"))
     assert float(energy.state) == pytest.approx(12187.169)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("register_image", [BLUEPLANET_86TL3_ASLEEP])
+@pytest.mark.parametrize(
+    "key", ["frequency", "power_factor", "temperature", "voltage_l1"]
+)
+async def test_readings_it_stops_taking_are_withheld(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    key: str,
+) -> None:
+    """Test a reading the inverter parks at zero after dark reads unknown.
+
+    These come from the device, which gates them on the operating state,
+    rather than off the raw registers: asleep the block claims 0.0 Hz for a
+    live grid, 0.0 degC for a warm cabinet, 0.0 V for live mains, and a power
+    factor of 1.00 with no current flowing.
+    """
+    assert hass.states.get(_entity_id(entity_registry, key)).state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("register_image", [BLUEPLANET_86TL3_ASLEEP])
+@pytest.mark.parametrize(
+    "key", ["ac_power", "ac_current", "apparent_power", "dc_power", "current_l1"]
+)
+async def test_genuine_zeros_are_still_reported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    key: str,
+) -> None:
+    """Test producing nothing really is zero, and is not withheld."""
+    assert float(hass.states.get(_entity_id(entity_registry, key)).state) == 0
+
+
+@pytest.mark.parametrize("register_image", [BLUEPLANET_86TL3_ASLEEP])
+async def test_the_lifetime_total_survives_the_night(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a sleeping inverter keeps reporting what it has produced.
+
+    A KACO keeps answering after dark rather than going quiet, so nothing
+    goes unavailable and the Energy dashboard gains no nightly gap.
+    """
+    assert (
+        hass.states.get(_entity_id(entity_registry, "operating_state")).state
+        == "sleeping"
+    )
+    energy = hass.states.get(_entity_id(entity_registry, "lifetime_energy"))
+    assert float(energy.state) == pytest.approx(12187.710)
 
 
 async def test_sensors_go_unavailable_when_the_link_drops(
@@ -99,51 +218,50 @@ async def test_sensors_go_unavailable_when_the_link_drops(
     assert hass.states.get(power).state == "1000"
 
 
-async def test_an_unreadable_block_takes_its_sensors_unavailable(
+@pytest.mark.parametrize(
+    ("model_id", "failing", "answering"),
+    [
+        pytest.param(INVERTER_MODEL_ID, "ac_power", "mppt_1_dc_power", id="inverter"),
+        pytest.param(MPPT_MODEL_ID, "mppt_1_dc_power", "ac_power", id="mppt"),
+    ],
+)
+async def test_an_unreadable_block_takes_only_its_sensors_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
     mock_connection: MockModbusConnection,
     init_integration: MockConfigEntry,
+    model_id: int,
+    failing: str,
+    answering: str,
 ) -> None:
     """Test a partial poll, where one block fails and the others answer.
 
     A different path from a dead link: the poll still succeeds, so the entry
     stays loaded, and it is the per-component check that takes these entities
-    unavailable. That the *other* components are unaffected is not observable
-    until a second component has entities of its own.
+    unavailable.
     """
-    power = _entity_id(entity_registry, "ac_power")
-    assert hass.states.get(power).state == "1000"
-
+    failing_id = _entity_id(entity_registry, failing)
+    answering_id = _entity_id(entity_registry, answering)
+    failing_value = hass.states.get(failing_id).state
+    answering_value = hass.states.get(answering_id).state
     unit = mock_connection.for_unit(1)
-    for address in model_registers(BLUEPLANET_86TL3, INVERTER_MODEL_ID):
+    addresses = model_registers(BLUEPLANET_86TL3, model_id)
+
+    for address in addresses:
         unit.fail_read(address, ModbusTimeoutError("slow block"))
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(power).state == STATE_UNAVAILABLE
+    assert hass.states.get(failing_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(answering_id).state == answering_value
     assert init_integration.state is ConfigEntryState.LOADED
 
+    for address in addresses:
+        unit.fail_read(address, None)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-@pytest.mark.parametrize("register_image", [BLUEPLANET_86TL3_ASLEEP])
-async def test_after_dark_the_inverter_reports_a_true_zero(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test a sleeping inverter still reports what it genuinely measures.
-
-    A KACO keeps answering after dark rather than going quiet, so nothing
-    goes unavailable. Producing nothing really is 0 W, and the lifetime
-    total must keep reporting or the Energy dashboard gains a nightly gap.
-    """
-    assert hass.states.get(_entity_id(entity_registry, "ac_power")).state == "0"
-    assert (
-        hass.states.get(_entity_id(entity_registry, "operating_state")).state
-        == "sleeping"
-    )
-    energy = hass.states.get(_entity_id(entity_registry, "lifetime_energy"))
-    assert energy.state != STATE_UNAVAILABLE
-    assert float(energy.state) > 12000
+    assert hass.states.get(failing_id).state == failing_value

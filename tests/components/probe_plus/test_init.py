@@ -125,6 +125,9 @@ async def test_migrate_entry_no_unique_id(
 
     assert entry.version == 1
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.reason == (
+        "Could not migrate the config entry because it has no unique ID"
+    )
 
 
 async def test_migrate_entry_future_version(

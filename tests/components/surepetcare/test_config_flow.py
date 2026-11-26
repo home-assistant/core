@@ -29,7 +29,7 @@ def _patch_success() -> Generator[None]:
         ),
         patch(
             "homeassistant.components.surepetcare.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -46,7 +46,7 @@ async def test_form(hass: HomeAssistant, surepetcare: NonCallableMagicMock) -> N
 
     with patch(
         "homeassistant.components.surepetcare.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -178,7 +178,7 @@ async def test_flow_entry_already_exists(
 
     with patch(
         "homeassistant.components.surepetcare.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

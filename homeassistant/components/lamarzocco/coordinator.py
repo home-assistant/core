@@ -15,6 +15,7 @@ from pylamarzocco.const import MachineMode, WidgetType
 from pylamarzocco.exceptions import (
     AuthFail,
     BluetoothConnectionFailed,
+    PolicyAcceptanceRequired,
     RequestNotSuccessful,
 )
 from pylamarzocco.models import BluetoothMachineTelemetry, MachineStatus
@@ -104,6 +105,13 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
             ) from ex
+        except PolicyAcceptanceRequired as ex:
+            _LOGGER.debug("Privacy policy acceptance required", exc_info=True)
+            self.update_success = False
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="policy_acceptance_required",
+            ) from ex
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
             self.update_success = False
@@ -147,11 +155,14 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
+    dashboard_loaded = False
+
     @override
     async def _internal_async_setup(self) -> None:
         """Set up the coordinator."""
         await self.device.ensure_token_valid()
         await self.device.get_dashboard()
+        self.dashboard_loaded = True
 
     @override
     async def _internal_async_update_data(self) -> None:
@@ -266,6 +277,8 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         self._shot_timer_task: Task | None = None
         self._shot_timer_supported = True
         self._shot_timer_started = False
+        self._machine_could_brew = False
+        self._shot_timer_power_on = False
         self._shot_timer_retry_delays = iter(SHOT_TIMER_RETRY_DELAYS)
         self._shot_timer_retry_after = dt_util.utcnow()
         # cloud updates may switch the machine between standby and brewing mode
@@ -281,7 +294,9 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     @override
     async def _internal_async_setup(self) -> None:
         """Initial setup for Bluetooth coordinator."""
-        await self.device.get_model_info_from_bluetooth()
+        # the cloud dashboard already holds the model and is more reliable
+        if not self._config_coordinator.dashboard_loaded:
+            await self.device.get_model_info_from_bluetooth()
 
     @property
     def _machine_can_brew(self) -> bool:
@@ -295,15 +310,24 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     @callback
     def _async_update_shot_timer(self) -> None:
         """Run the shot timer only while the machine is able to brew."""
-        if not self._shot_timer_supported or (
-            self._shot_timer_task is not None and not self._shot_timer_task.done()
-        ):
+        if not self._shot_timer_supported:
             return
         can_brew = self._machine_can_brew
+        if can_brew != self._machine_could_brew:
+            # connect right away once turned on, kept until a running task is done
+            self._shot_timer_power_on = can_brew
+            self._machine_could_brew = can_brew
+        if self._shot_timer_task is not None and not self._shot_timer_task.done():
+            return
+        power_on, self._shot_timer_power_on = self._shot_timer_power_on, False
         if can_brew == self._shot_timer_started or (
-            can_brew and dt_util.utcnow() < self._shot_timer_retry_after
+            can_brew
+            and not power_on
+            and dt_util.utcnow() < self._shot_timer_retry_after
         ):
             return
+        if power_on:
+            self._shot_timer_retry_delays = iter(SHOT_TIMER_RETRY_DELAYS)
         # starting and stopping update the listeners, which call this again
         self._shot_timer_started = can_brew
         self._shot_timer_task = self.config_entry.async_create_background_task(
@@ -325,7 +349,7 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
             return
         if (err := task.exception()) is not None:
             _LOGGER.error("Error in the Bluetooth shot timer", exc_info=err)
-        if self._machine_can_brew != can_brew:
+        if self._shot_timer_power_on or self._machine_can_brew != can_brew:
             self._async_update_shot_timer()
 
     @callback

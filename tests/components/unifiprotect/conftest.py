@@ -17,6 +17,7 @@ from uiprotect.data import (
     NVR,
     Bootstrap,
     Camera,
+    ChannelQuality,
     Chime,
     CloudAccount,
     Light,
@@ -56,6 +57,8 @@ from homeassistant.util import dt as dt_util
 from . import _patch_discovery
 from .utils import (
     MockUFPFixture,
+    active_rtsps_qualities,
+    generate_random_ids,
     make_public_bootstrap,
     make_public_camera,
     public_rtsps_for,
@@ -80,6 +83,37 @@ DEFAULT_API_KEY = "test-api-key"
 def mock_discovery():
     """Prevent real network scanning in all unifiprotect tests."""
     with _patch_discovery(no_device=True):
+        yield
+
+
+@pytest.fixture
+def mock_private_only_entities_registered():
+    """Create the deprecated private-only entities as if they were registered.
+
+    New installs skip them; the platform tests cover existing installs.
+    """
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.entity.async_is_new_private_only_entity",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.switch.async_is_new_private_only_entity",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.sensor.async_is_new_private_only_entity",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.sensor.async_is_new_ring_or_motion_sensor",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.binary_sensor.async_is_new_ring_or_motion_sensor",
+            return_value=False,
+        ),
+    ):
         yield
 
 
@@ -153,8 +187,16 @@ def bootstrap_fixture(nvr: NVR):
     return Bootstrap.from_unifi_dict(**data)
 
 
+@pytest.fixture(name="rtsps_qualities")
+def mock_rtsps_qualities() -> dict[str, tuple[ChannelQuality, ...]]:
+    """Active RTSPS qualities the fake console reports, keyed by camera id."""
+    return {}
+
+
 @pytest.fixture(name="ufp_client")
-def mock_ufp_client(bootstrap: Bootstrap):
+def mock_ufp_client(
+    bootstrap: Bootstrap, rtsps_qualities: dict[str, tuple[ChannelQuality, ...]]
+):
     """Mock ProtectApiClient for testing."""
     client = Mock()
     client.bootstrap = bootstrap
@@ -172,10 +214,6 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.base_url = "https://127.0.0.1"
     client.connection_host = IPv4Address("127.0.0.1")
 
-    async def get_nvr(*args: Any, **kwargs: Any) -> NVR:
-        return client.bootstrap.nvr
-
-    client.get_nvr = get_nvr
     client.get_bootstrap = AsyncMock(return_value=bootstrap)
     client.update = AsyncMock(return_value=bootstrap)
     client.update_public = AsyncMock()
@@ -212,16 +250,36 @@ def mock_ufp_client(bootstrap: Bootstrap):
     ) -> RTSPSStreams | None:
         """Fetch a camera's RTSPS streams (used by the repair flow)."""
         camera = client.bootstrap.cameras.get(camera_id)
-        return public_rtsps_for(camera) if camera is not None else None
+        return (
+            public_rtsps_for(*active_rtsps_qualities(rtsps_qualities, camera_id))
+            if camera is not None
+            else None
+        )
 
     client.get_camera_rtsps_streams = AsyncMock(side_effect=get_camera_rtsps_streams)
     client.create_camera_rtsps_streams = AsyncMock(return_value=None)
     return client
 
 
+def _subscribe_public_resync(
+    ufp: MockUFPFixture,
+) -> Callable[[Callable[[bool], None]], Mock]:
+    """Capture the public resync callback on the fixture."""
+
+    def subscribe(resync_callback: Callable[[bool], None]) -> Mock:
+        ufp.public_resync_subscription = resync_callback
+        ufp.public_resync_unsub = Mock()
+        return ufp.public_resync_unsub
+
+    return subscribe
+
+
 @pytest.fixture(name="ufp")
 def mock_entry(
-    hass: HomeAssistant, ufp_config_entry: MockConfigEntry, ufp_client: ProtectApiClient
+    hass: HomeAssistant,
+    ufp_config_entry: MockConfigEntry,
+    ufp_client: ProtectApiClient,
+    rtsps_qualities: dict[str, tuple[ChannelQuality, ...]],
 ):
     """Mock ProtectApiClient for testing."""
 
@@ -234,7 +292,9 @@ def mock_entry(
 
         mock_api.return_value = ufp_client
 
-        ufp = MockUFPFixture(ufp_config_entry, ufp_client)
+        ufp = MockUFPFixture(
+            ufp_config_entry, ufp_client, rtsps_qualities=rtsps_qualities
+        )
 
         def subscribe(ws_callback: Callable[[WSSubscriptionMessage], None]) -> Any:
             ufp.ws_subscription = ws_callback
@@ -281,6 +341,7 @@ def mock_entry(
         ufp_client.subscribe_events = subscribe_events
         ufp_client.subscribe_devices_websocket_state = subscribe_devices_websocket_state
         ufp_client.subscribe_events_websocket_state = subscribe_events_websocket_state
+        ufp_client.subscribe_public_resync = _subscribe_public_resync(ufp)
 
         async def update_public() -> Any:
             # Mirror the library prime: build each camera's public model from the
@@ -291,7 +352,9 @@ def mock_entry(
             for camera in ufp_client.bootstrap.cameras.values():
                 public = make_public_camera(camera)
                 public.rtsps_streams = (
-                    public_rtsps_for(camera)
+                    public_rtsps_for(
+                        *active_rtsps_qualities(ufp.rtsps_qualities, camera.id)
+                    )
                     if camera.state is StateType.CONNECTED
                     else None
                 )
@@ -329,24 +392,29 @@ def camera_fixture(fixed_now: datetime):
 
 
 @pytest.fixture(name="camera_all")
-def camera_all_fixture(camera: Camera):
+def camera_all_fixture(
+    camera: Camera, rtsps_qualities: dict[str, tuple[ChannelQuality, ...]]
+):
     """Mock UniFi Protect Camera device."""
 
     all_camera = camera.model_copy()
+    # Own id so its qualities don't collide with other copies of ``camera``.
+    all_camera.id, _ = generate_random_ids()
     all_camera.channels = [all_camera.channels[0].model_copy()]
 
     medium_channel = all_camera.channels[0].model_copy()
-    medium_channel.name = "Medium"
     medium_channel.id = 1
-    medium_channel.rtsp_alias = "test_medium_alias"
     all_camera.channels.append(medium_channel)
 
     low_channel = all_camera.channels[0].model_copy()
-    low_channel.name = "Low"
     low_channel.id = 2
-    low_channel.rtsp_alias = "test_medium_alias"
     all_camera.channels.append(low_channel)
 
+    rtsps_qualities[all_camera.id] = (
+        ChannelQuality.HIGH,
+        ChannelQuality.MEDIUM,
+        ChannelQuality.LOW,
+    )
     return all_camera
 
 
@@ -367,19 +435,24 @@ def camera_all_features_fixture(fixed_now: datetime):
 
 
 @pytest.fixture(name="doorbell")
-def doorbell_fixture(camera: Camera, fixed_now: datetime):
+def doorbell_fixture(
+    camera: Camera,
+    fixed_now: datetime,
+    rtsps_qualities: dict[str, tuple[ChannelQuality, ...]],
+):
     """Mock UniFi Protect Camera device (with chime)."""
 
     doorbell = camera.model_copy()
+    # Own id so its qualities don't collide with other copies of ``camera``.
+    doorbell.id, _ = generate_random_ids()
     doorbell.channels = [c.model_copy() for c in doorbell.channels]
 
     package_channel = doorbell.channels[0].model_copy()
-    package_channel.name = "Package Camera"
     package_channel.id = 3
     package_channel.fps = 2
-    package_channel.rtsp_alias = "test_package_alias"
 
     doorbell.channels.append(package_channel)
+    rtsps_qualities[doorbell.id] = (ChannelQuality.HIGH, ChannelQuality.PACKAGE)
     doorbell.feature_flags.video_modes = [VideoMode.DEFAULT, VideoMode.HIGH_FPS]
     doorbell.feature_flags.smart_detect_types = [
         SmartDetectObjectType.PERSON,
@@ -397,7 +470,6 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
     doorbell.feature_flags.support_nfc = True
     doorbell.feature_flags.has_chime = True
     doorbell.feature_flags.has_smart_detect = True
-    doorbell.feature_flags.has_package_camera = True
     doorbell.feature_flags.has_led_status = True
     doorbell.last_ring = fixed_now - timedelta(hours=1)
     return doorbell
@@ -410,7 +482,6 @@ def ptz_camera_fixture(camera: Camera):
     ptz_cam.channels = [c.model_copy() for c in ptz_cam.channels]
     ptz_cam.name = "PTZ Camera"
     ptz_cam.feature_flags.is_ptz = True
-    ptz_cam.active_patrol_slot = None
 
     # Disable pydantic validation on this instance so we can mock methods
     object.__setattr__(ptz_cam, "get_ptz_presets", AsyncMock(return_value=[]))
@@ -467,16 +538,14 @@ def viewer():
 
 
 @pytest.fixture(name="sensor")
-def sensor_fixture(fixed_now: datetime):
+def sensor_fixture():
     """Mock UniFi Protect Sensor device."""
 
     # disable pydantic validation so mocking can happen
     Sensor.model_config["validate_assignment"] = False
 
     data = load_json_object_fixture("sample_sensor.json", DOMAIN)
-    sensor: Sensor = Sensor.from_unifi_dict(**data)
-    sensor.alarm_triggered_at = fixed_now - timedelta(hours=1)
-    yield sensor
+    yield Sensor.from_unifi_dict(**data)
 
     Sensor.model_config["validate_assignment"] = True
 
@@ -486,12 +555,8 @@ def sensor_all_fixture(sensor: Sensor):
     """Mock UniFi Protect Sensor device."""
 
     all_sensor = sensor.model_copy()
-    all_sensor.light_settings.is_enabled = True
-    all_sensor.humidity_settings.is_enabled = True
-    all_sensor.temperature_settings.is_enabled = True
     all_sensor.alarm_settings.is_enabled = True
     all_sensor.led_settings.is_enabled = True
-    all_sensor.motion_settings.is_enabled = True
 
     return all_sensor
 
@@ -649,6 +714,7 @@ def mock_ufp_public_only(
     ufp_public_only_client.subscribe_events_websocket_state = (
         subscribe_events_websocket_state
     )
+    ufp_public_only_client.subscribe_public_resync = _subscribe_public_resync(ufp)
     return ufp
 
 
@@ -685,7 +751,7 @@ def mock_setup_fixture() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock,
     ):
         yield mock

@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from flux_led.scanner import FluxLEDDiscovery
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -22,6 +23,7 @@ from homeassistant.components.flux_led.const import (
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -81,7 +83,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
         _patch_discovery(),
         _patch_wifibulb(),
         patch(f"{MODULE}.async_setup", return_value=True) as mock_setup,
-        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+        patch(f"{MODULE}.async_setup_entry", return_value=None) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -157,7 +159,7 @@ async def test_discovery_legacy(hass: HomeAssistant) -> None:
         _patch_discovery(),
         _patch_wifibulb(),
         patch(f"{MODULE}.async_setup", return_value=True) as mock_setup,
-        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+        patch(f"{MODULE}.async_setup_entry", return_value=None) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -244,7 +246,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
     with (
         _patch_discovery(),
         _patch_wifibulb(),
-        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+        patch(f"{MODULE}.async_setup_entry", return_value=None) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: MAC_ADDRESS}
@@ -322,7 +324,7 @@ async def test_manual_working_discovery(hass: HomeAssistant) -> None:
         _patch_discovery(),
         _patch_wifibulb(),
         patch(f"{MODULE}.async_setup", return_value=True),
-        patch(f"{MODULE}.async_setup_entry", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -389,7 +391,7 @@ async def test_user_flow_can_replace_ignored(hass: HomeAssistant) -> None:
         _patch_discovery(),
         _patch_wifibulb(),
         patch(f"{MODULE}.async_setup", return_value=True),
-        patch(f"{MODULE}.async_setup_entry", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -423,7 +425,7 @@ async def test_manual_no_discovery_data(hass: HomeAssistant) -> None:
         _patch_discovery(no_device=True),
         _patch_wifibulb(),
         patch(f"{MODULE}.async_setup", return_value=True),
-        patch(f"{MODULE}.async_setup_entry", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -513,7 +515,7 @@ async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
         _patch_wifibulb(),
         patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
         patch(
-            f"{MODULE}.async_setup_entry", return_value=True
+            f"{MODULE}.async_setup_entry", return_value=None
         ) as mock_async_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -553,7 +555,7 @@ async def test_discovered_by_dhcp_udp_responds(hass: HomeAssistant) -> None:
         _patch_wifibulb(),
         patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
         patch(
-            f"{MODULE}.async_setup_entry", return_value=True
+            f"{MODULE}.async_setup_entry", return_value=None
         ) as mock_async_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -593,7 +595,7 @@ async def test_discovered_by_dhcp_no_udp_response(hass: HomeAssistant) -> None:
         _patch_wifibulb(),
         patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
         patch(
-            f"{MODULE}.async_setup_entry", return_value=True
+            f"{MODULE}.async_setup_entry", return_value=None
         ) as mock_async_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -629,7 +631,7 @@ async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(
         _patch_wifibulb(),
         patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
         patch(
-            f"{MODULE}.async_setup_entry", return_value=True
+            f"{MODULE}.async_setup_entry", return_value=None
         ) as mock_async_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -824,3 +826,191 @@ async def test_discovered_can_be_ignored(hass: HomeAssistant, source, data) -> N
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    "unique_id",
+    [
+        pytest.param(MAC_ADDRESS, id="same_mac"),
+        pytest.param(MAC_ADDRESS_ONE_OFF, id="mac_one_off"),
+        pytest.param(None, id="no_unique_id"),
+    ],
+)
+async def test_reconfigure(hass: HomeAssistant, unique_id: str | None) -> None:
+    """Test reconfiguring the host."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.5"},
+        unique_id=unique_id,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        _patch_discovery(),
+        _patch_wifibulb(),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_HOST] == IP_ADDRESS
+
+
+async def test_reconfigure_reloads_loaded_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test reconfiguring a loaded entry reloads it without the deprecated helper."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.5"},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_wifibulb():
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+        assert config_entry.update_listeners
+
+        result = await config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.data[CONF_HOST] == IP_ADDRESS
+    assert "has an update listener" not in caplog.text
+
+
+async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
+    """Test reconfiguring recovers from a connection error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.5"},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        _patch_discovery(),
+        _patch_wifibulb(),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_HOST] == IP_ADDRESS
+
+
+@pytest.mark.parametrize(
+    "discovery",
+    [
+        pytest.param(FLUX_DISCOVERY, id="full_udp_response"),
+        pytest.param(FLUX_DISCOVERY_PARTIAL, id="partial_udp_response"),
+    ],
+)
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, discovery: FluxLEDDiscovery
+) -> None:
+    """Test reconfiguring aborts when a different device is found."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.5"},
+        unique_id=MAC_ADDRESS_DIFFERENT,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    with _patch_discovery(device=discovery), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert config_entry.data[CONF_HOST] == "192.168.1.5"
+
+
+async def test_reconfigure_host_already_configured(hass: HomeAssistant) -> None:
+    """Test reconfiguring aborts when another entry uses the host."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS},
+        unique_id=MAC_ADDRESS_DIFFERENT,
+    ).add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.5"},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == "192.168.1.5"
+
+
+async def test_reconfigure_mac_already_configured(hass: HomeAssistant) -> None:
+    """Test reconfiguring aborts when another entry already has the discovered MAC."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.6"},
+        unique_id=MAC_ADDRESS,
+    ).add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.5"},
+        unique_id=None,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == "192.168.1.5"
+    assert config_entry.unique_id is None

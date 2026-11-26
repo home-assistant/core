@@ -21,9 +21,8 @@ from homeassistant.components.climate import (
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.fritzbox.climate import (
@@ -34,7 +33,7 @@ from homeassistant.components.fritzbox.climate import (
 )
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_DEVICES, Platform
+from homeassistant.const import ATTR_TEMPERATURE, CONF_DEVICES, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -214,8 +213,8 @@ async def test_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
         True,
     )
     assert device.set_target_temperature.call_count == len(
@@ -302,8 +301,8 @@ async def test_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
         True,
     )
 
@@ -343,8 +342,11 @@ async def test_set_preset_mode_comfort(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_COMFORT},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_COMFORT,
+        },
         True,
     )
     assert device.set_hkr_state.call_count == len(expected_call_args)
@@ -376,8 +378,11 @@ async def test_set_preset_mode_eco(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_ECO},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_ECO,
+        },
         True,
     )
     assert device.set_hkr_state.call_count == len(expected_call_args)
@@ -398,8 +403,11 @@ async def test_set_preset_mode_boost(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_BOOST},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_BOOST,
+        },
         True,
     )
     assert device.set_hkr_state.call_count == 1
@@ -521,8 +529,8 @@ async def test_set_temperature_lock(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
             True,
         )
 
@@ -583,8 +591,8 @@ async def test_set_hvac_mode_lock(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            ClimateService.SET_HVAC_MODE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
             True,
         )
 
@@ -632,8 +640,8 @@ async def test_holidy_summer_mode(
     ):
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_HVAC_MODE,
-            {"entity_id": ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+            ClimateService.SET_HVAC_MODE,
+            {"entity_id": ENTITY_ID, ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT},
             blocking=True,
         )
     with pytest.raises(
@@ -644,8 +652,11 @@ async def test_holidy_summer_mode(
     ):
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_PRESET_MODE,
-            {"entity_id": ENTITY_ID, ATTR_PRESET_MODE: PRESET_HOLIDAY},
+            ClimateService.SET_PRESET_MODE,
+            {
+                "entity_id": ENTITY_ID,
+                ClimateServiceArgument.PRESET_MODE: PRESET_HOLIDAY,
+            },
             blocking=True,
         )
 
@@ -670,8 +681,8 @@ async def test_holidy_summer_mode(
     ):
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_HVAC_MODE,
-            {"entity_id": ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+            ClimateService.SET_HVAC_MODE,
+            {"entity_id": ENTITY_ID, ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT},
             blocking=True,
         )
     with pytest.raises(
@@ -682,8 +693,8 @@ async def test_holidy_summer_mode(
     ):
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_PRESET_MODE,
-            {"entity_id": ENTITY_ID, ATTR_PRESET_MODE: PRESET_SUMMER},
+            ClimateService.SET_PRESET_MODE,
+            {"entity_id": ENTITY_ID, ClimateServiceArgument.PRESET_MODE: PRESET_SUMMER},
             blocking=True,
         )
 

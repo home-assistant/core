@@ -20,11 +20,11 @@ from pytest_homeassistant.common import (
 
 from homeassistant.components.water_heater import (
     DOMAIN,
-    SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_TEMPERATURE,
     WaterHeaterCapabilityAttribute,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
     WaterHeaterStateAttribute,
 )
 from homeassistant.components.water_heater.services import (
@@ -32,10 +32,10 @@ from homeassistant.components.water_heater.services import (
     _async_service_temperature_set,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.const import STATE_UNAVAILABLE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
@@ -145,12 +145,11 @@ async def test_operation_mode_validation(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.WATER_HEATER]
         )
-        return True
 
     async def async_setup_entry_water_heater_platform(
         hass: HomeAssistant,
@@ -182,7 +181,7 @@ async def test_operation_mode_validation(
 
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
+            DOMAIN, WaterHeaterService.SET_OPERATION_MODE, data, blocking=True
         )
     assert (
         str(exc.value) == "Operation mode test is not valid for water_heater.test. "
@@ -198,7 +197,7 @@ async def test_operation_mode_validation(
     water_heater_entity._attr_operation_list = ["gas", "eco"]
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
+            DOMAIN, WaterHeaterService.SET_OPERATION_MODE, data, blocking=True
         )
     assert (
         str(exc.value) == "Operation mode test is not valid for water_heater.test. "
@@ -214,7 +213,7 @@ async def test_operation_mode_validation(
 
     data = {"entity_id": "water_heater.test", "operation_mode": "eco"}
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
+        DOMAIN, WaterHeaterService.SET_OPERATION_MODE, data, blocking=True
     )
     await hass.async_block_till_done()
     water_heater_entity.set_operation_mode.assert_has_calls([mock.call("eco")])
@@ -487,7 +486,10 @@ async def test_native_temperature_unit_conversion(
         == expected_temperature
     )
     # The published unit is the one the published temperatures are converted to
-    assert state.attributes[WaterHeaterStateAttribute.TEMPERATURE_UNIT] == expected_unit
+    assert (
+        state.attributes[WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT]
+        == expected_unit
+    )
 
 
 async def test_native_temperature_unit_property(hass: HomeAssistant) -> None:
@@ -668,8 +670,8 @@ async def test_set_temperature_service_converts_to_native_unit(
         ServiceCall(
             hass,
             DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_TEMPERATURE: service_temperature},
+            WaterHeaterService.SET_TEMPERATURE,
+            {WaterHeaterServiceArgument.TEMPERATURE: service_temperature},
         ),
     )
 
@@ -1421,3 +1423,35 @@ async def test_migrated_grandparent_property_wins_over_descendant_attributes(
 
     assert getattr(entity, f"native_{member}") is grandparent_value
     assert getattr(entity, member) is grandparent_value
+
+
+async def test_temperature_unit_when_unavailable(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    register_test_integration: MockConfigEntry,
+) -> None:
+    """Test the temperature unit is kept when the entity is unavailable."""
+    entity = MockWaterHeaterEntity()
+    entity._attr_name = "Test"
+    entity._attr_unique_id = "unique_water_heater_test"
+    entity._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    entity._attr_available = False
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("water_heater.test")
+    assert state.state == STATE_UNAVAILABLE
+    assert (
+        state.attributes[WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT]
+        == UnitOfTemperature.CELSIUS
+    )
+    # The entity registry restores the capabilities before the entity is added
+    entry = entity_registry.async_get("water_heater.test")
+    assert (
+        entry.capabilities[WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT]
+        == UnitOfTemperature.CELSIUS
+    )

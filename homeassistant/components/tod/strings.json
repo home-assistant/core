@@ -3,9 +3,19 @@
     "step": {
       "user": {
         "data": {
+          "after": "Turn on based on",
+          "after_offset": "On offset",
+          "after_sun": "On sun position",
           "after_time": "On time",
+          "before": "Turn off based on",
+          "before_offset": "Off offset",
+          "before_sun": "Off sun position",
           "before_time": "Off time",
           "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "after_offset": "Apply a positive or negative offset to the selected sun position.",
+          "before_offset": "[%key:component::tod::config::step::user::data_description::after_offset%]"
         },
         "description": "Create a binary sensor that turns on or off depending on the time.",
         "title": "Create Times of the Day Sensor"
@@ -16,9 +26,33 @@
     "step": {
       "init": {
         "data": {
+          "after": "[%key:component::tod::config::step::user::data::after%]",
+          "after_offset": "[%key:component::tod::config::step::user::data::after_offset%]",
+          "after_sun": "[%key:component::tod::config::step::user::data::after_sun%]",
           "after_time": "[%key:component::tod::config::step::user::data::after_time%]",
+          "before": "[%key:component::tod::config::step::user::data::before%]",
+          "before_offset": "[%key:component::tod::config::step::user::data::before_offset%]",
+          "before_sun": "[%key:component::tod::config::step::user::data::before_sun%]",
           "before_time": "[%key:component::tod::config::step::user::data::before_time%]"
+        },
+        "data_description": {
+          "after_offset": "[%key:component::tod::config::step::user::data_description::after_offset%]",
+          "before_offset": "[%key:component::tod::config::step::user::data_description::after_offset%]"
         }
+      }
+    }
+  },
+  "selector": {
+    "boundary": {
+      "options": {
+        "sun": "Sun position",
+        "time": "Time"
+      }
+    },
+    "sun_event": {
+      "options": {
+        "sunrise": "Sunrise",
+        "sunset": "Sunset"
       }
     }
   },

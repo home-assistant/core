@@ -41,3 +41,11 @@ refresh:
       default: false
       selector:
         boolean:
+
+pause_protection:
+  fields:
+    duration:
+      required: true
+      example: "00:30:00"
+      selector:
+        duration:

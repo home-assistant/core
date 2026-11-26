@@ -1,0 +1,128 @@
+# serializer version: 1
+# name: test_diagnostics_active_job
+  dict({
+    'coordinators': dict({
+      'info': dict({
+        'last_update_success': True,
+      }),
+      'job': dict({
+        'last_update_success': True,
+      }),
+      'legacy_status': dict({
+        'last_update_success': True,
+      }),
+      'status': dict({
+        'last_update_success': True,
+      }),
+      'version': dict({
+        'last_update_success': True,
+      }),
+    }),
+    'info': dict({
+      'farm_mode': False,
+      'min_extrusion_temp': 170,
+      'mmu': False,
+      'nozzle_diameter': 0.4,
+      'sd_ready': True,
+    }),
+    'job': dict({
+      'has_file': True,
+      'progress': 37.0,
+      'state': 'PRINTING',
+      'time_printing': 43987,
+      'time_remaining': 73020,
+    }),
+    'legacy_status': dict({
+      'material': 'PLA',
+    }),
+    'status': dict({
+      'job': dict({
+        'progress': 37.0,
+        'time_printing': 43987,
+        'time_remaining': 73020,
+      }),
+      'printer': dict({
+        'axis_z': 5.0,
+        'fan_hotend': 5000,
+        'fan_print': 2500,
+        'flow': 100,
+        'speed': 100,
+        'state': 'PRINTING',
+        'status_connect_ok': True,
+        'status_printer_ok': True,
+        'target_bed': 85.0,
+        'target_nozzle': 0.0,
+        'temp_bed': 53.9,
+        'temp_nozzle': 6.0,
+      }),
+      'storage': dict({
+        'read_only': False,
+      }),
+    }),
+    'version': dict({
+      'api': '2.0.0',
+      'firmware': '6.1.2+11023',
+      'server': '2.1.2',
+      'text': 'PrusaLink',
+    }),
+  })
+# ---
+# name: test_diagnostics_no_job
+  dict({
+    'coordinators': dict({
+      'info': dict({
+        'last_update_success': True,
+      }),
+      'job': dict({
+        'last_update_success': True,
+      }),
+      'legacy_status': dict({
+        'last_update_success': True,
+      }),
+      'status': dict({
+        'last_update_success': True,
+      }),
+      'version': dict({
+        'last_update_success': True,
+      }),
+    }),
+    'info': dict({
+      'farm_mode': False,
+      'min_extrusion_temp': 170,
+      'mmu': False,
+      'nozzle_diameter': 0.4,
+      'sd_ready': True,
+    }),
+    'job': None,
+    'legacy_status': dict({
+      'material': 'PLA',
+    }),
+    'status': dict({
+      'job': None,
+      'printer': dict({
+        'axis_x': 7.9,
+        'axis_y': 8.4,
+        'axis_z': 1.8,
+        'fan_hotend': 100,
+        'fan_print': 75,
+        'flow': 100,
+        'speed': 100,
+        'state': 'IDLE',
+        'status_connect_ok': True,
+        'target_bed': 60.5,
+        'target_nozzle': 210.1,
+        'temp_bed': 41.9,
+        'temp_nozzle': 47.8,
+      }),
+      'storage': dict({
+        'read_only': False,
+      }),
+    }),
+    'version': dict({
+      'api': '2.0.0',
+      'firmware': '6.1.2+11023',
+      'server': '2.1.2',
+      'text': 'PrusaLink',
+    }),
+  })
+# ---

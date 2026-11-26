@@ -10,7 +10,7 @@ from tellduslive import DIM, TURNON, UP, Session
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelldusLiveConfigEntry) 
         )
 
     if not session.is_authorized:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_error",
         )
@@ -76,15 +76,13 @@ async def async_new_client(
     dev_reg = dr.async_get(hass)
     for hub in await client.async_get_hubs():
         _LOGGER.debug("Connected hub %s", hub["name"])
-        dev_reg.async_get_or_create_device(
+        dev_reg.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={(DOMAIN, hub["id"])},
-                manufacturer="Telldus",
-                name=hub["name"],
-                model=hub["type"],
-                sw_version=hub["version"],
-            ),
+            identifiers={(DOMAIN, hub["id"])},
+            manufacturer="Telldus",
+            name=hub["name"],
+            model=hub["type"],
+            sw_version=hub["version"],
         )
     await client.update()
 

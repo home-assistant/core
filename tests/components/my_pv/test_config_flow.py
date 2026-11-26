@@ -62,13 +62,22 @@ async def test_step_user(
     assert result["result"].unique_id == ELWA2_SERIAL_NUMBER
 
 
-@pytest.mark.usefixtures("mock_my_pv_client")
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(None, id="connected"),
+        pytest.param(MyPVAuthenticationError(), id="password_needed"),
+    ],
+)
 async def test_step_user_already_configured(
     hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    side_effect: Exception | None,
 ) -> None:
     """Test for user configuration that is already configured."""
     mock_config_entry.add_to_hass(hass)
+    mock_my_pv_client.connect.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -302,15 +311,24 @@ async def test_step_dhcp(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_my_pv_client")
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(None, id="connected"),
+        pytest.param(MyPVAuthenticationError(), id="password_needed"),
+    ],
+)
 async def test_step_discovery_already_configured(
     hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     source: str,
     data: BaseServiceInfo,
+    side_effect: Exception | None,
 ) -> None:
     """Test for discovery that is already configured."""
     mock_config_entry.add_to_hass(hass)
+    mock_my_pv_client.connect.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -337,7 +355,6 @@ async def test_step_discovery_already_configured(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_my_pv_client")
 async def test_step_discovery_unsupported_device(
     hass: HomeAssistant,
     mock_my_pv_client: AsyncMock,
@@ -606,3 +623,179 @@ async def test_step_reauth_cannot_connect(
 
     updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert updated_entry.data[CONF_PASSWORD] == "new-password"
+
+
+@pytest.mark.usefixtures("mock_my_pv_client", "mock_setup_entry")
+async def test_step_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring the host."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "127.0.0.2"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "127.0.0.2",
+        CONF_PASSWORD: "test-password",
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "return_value", "error"),
+    [
+        (None, False, "cannot_connect"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_step_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception | None,
+    return_value: bool,
+    error: str,
+) -> None:
+    """Test reconfiguring the host recovers from errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_my_pv_client.connect.side_effect = side_effect
+    mock_my_pv_client.connect.return_value = return_value
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "127.0.0.2"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    mock_my_pv_client.connect.side_effect = None
+    mock_my_pv_client.connect.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "127.0.0.2"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(None, id="connected"),
+        pytest.param(MyPVAuthenticationError(), id="password_needed"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_step_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception | None,
+) -> None:
+    """Test reconfiguring to a host with a different device."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_my_pv_client.connect.side_effect = side_effect
+    mock_my_pv_client.serial_number = "1601500000000001"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "127.0.0.2"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_step_reconfigure_unsupported_device(
+    hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring to a host with an unsupported device."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_my_pv_client.connect.side_effect = MyPVDeviceNotSupportedError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "127.0.0.2"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_step_reconfigure_password_needed(
+    hass: HomeAssistant,
+    mock_my_pv_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring the host of a device that now needs a new password."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "127.0.0.2"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_auth"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "wrong-password"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_auth"
+    assert result["errors"] == {CONF_PASSWORD: "invalid_password"}
+
+    mock_my_pv_client.connect.side_effect = None
+    mock_my_pv_client.connect.return_value = False
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_auth"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_my_pv_client.connect.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "127.0.0.2",
+        CONF_PASSWORD: "new-password",
+    }

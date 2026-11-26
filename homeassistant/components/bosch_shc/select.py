@@ -6,20 +6,31 @@ from typing import TYPE_CHECKING, override
 
 from boschshcpy import (
     OutdoorSirenService,
+    SHCMicromoduleDimmer,
+    SHCMicromoduleRelay,
     SHCMotionDetector2,
     SHCOutdoorSiren,
     SHCRoomThermostat2,
     SHCShutterContact2Plus,
+    SHCSmartPlug,
+    SHCSmartPlugCompact,
     SHCSmokeDetector,
     SHCThermostatGen2,
 )
 from boschshcpy.device import SHCDevice
 from boschshcpy.services_impl import (
+    DimmerConfigurationService,
     DisplayDirection,
     DisplayedTemperatureConfiguration,
     PirSensorConfigurationService,
+    PollControlService,
+    PowerSwitchConfigurationService,
+    SmartSensitivityControlService,
     SmokeSensitivityService,
+    SwitchConfiguration,
+    TerminalConfiguration,
     VibrationSensorService,
+    WallThermostatConfiguration,
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -82,6 +93,31 @@ MOTION_SENSITIVITY_DESCRIPTION = SHCSelectEntityDescription[SHCMotionDetector2](
     options=["high", "middle", "low"],
     current_option_fn=lambda device, options: device.motion_sensitivity.name.lower(),
     select_option_fn=_motion_select_option,
+)
+
+
+def _orientation_light_current_option(
+    device: SHCMotionDetector2, options: Sequence[str] | None
+) -> str | None:
+    """Read the Motion Detector II's orientation-light response time."""
+    interval = device.long_poll_interval
+    if interval is PollControlService.PollControlState.UNKNOWN:
+        return None
+    return str(interval.name.lower())
+
+
+def _orientation_light_select_option(device: SHCMotionDetector2, option: str) -> None:
+    """Write the Motion Detector II's orientation-light response time."""
+    device.long_poll_interval = PollControlService.PollControlState[option.upper()]
+
+
+ORIENTATION_LIGHT_RESPONSE_DESCRIPTION = SHCSelectEntityDescription[SHCMotionDetector2](
+    key="orientation_light_response_time",
+    translation_key="orientation_light_response_time",
+    entity_category=EntityCategory.CONFIG,
+    options=["long", "short"],
+    current_option_fn=_orientation_light_current_option,
+    select_option_fn=_orientation_light_select_option,
 )
 
 
@@ -163,6 +199,228 @@ DISPLAYED_TEMPERATURE_DESCRIPTION = SHCSelectEntityDescription[
 )
 
 
+def _state_after_power_outage_select_option(
+    device: SHCSmartPlug | SHCSmartPlugCompact, option: str
+) -> None:
+    """Write the Smart Plug's state after a power outage."""
+    device.state_after_power_outage = (
+        PowerSwitchConfigurationService.StateAfterPowerOutage[option.upper()]
+    )
+
+
+STATE_AFTER_POWER_OUTAGE_DESCRIPTION = SHCSelectEntityDescription[
+    SHCSmartPlug | SHCSmartPlugCompact
+](
+    key="state_after_power_outage",
+    translation_key="state_after_power_outage",
+    entity_category=EntityCategory.CONFIG,
+    options=["off", "on", "last_state"],
+    current_option_fn=lambda device, options: (
+        state.name.lower() if (state := device.state_after_power_outage) else None
+    ),
+    select_option_fn=_state_after_power_outage_select_option,
+)
+
+
+def _valve_type_select_option(device: SHCThermostatGen2, option: str) -> None:
+    """Write the thermostat's valve type."""
+    device.valve_type = WallThermostatConfiguration.ValveType[option.upper()]
+
+
+VALVE_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCThermostatGen2](
+    key="valve_type",
+    translation_key="valve_type",
+    entity_category=EntityCategory.CONFIG,
+    options=["normally_close", "normally_open"],
+    current_option_fn=lambda device, options: (
+        valve.name.lower() if (valve := device.valve_type) else None
+    ),
+    select_option_fn=_valve_type_select_option,
+)
+
+
+def _heater_type_select_option(device: SHCThermostatGen2, option: str) -> None:
+    """Write the thermostat's heater type."""
+    device.heater_type = WallThermostatConfiguration.HeaterType[option.upper()]
+
+
+HEATER_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCThermostatGen2](
+    key="heater_type",
+    translation_key="heater_type",
+    entity_category=EntityCategory.CONFIG,
+    options=[
+        "floor_heating",
+        "floor_heating_low_energy",
+        "radiator",
+        "convector_passive",
+        "convector_active",
+        "volt_free_heating",
+    ],
+    current_option_fn=lambda device, options: (
+        heater.name.lower() if (heater := device.heater_type) else None
+    ),
+    select_option_fn=_heater_type_select_option,
+)
+
+
+def _switch_type_select_option(device: SHCMicromoduleRelay, option: str) -> None:
+    """Write the relay's switch type."""
+    device.switch_type = SwitchConfiguration.SwitchType[option.upper()]
+
+
+SWITCH_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
+    key="switch_type",
+    translation_key="switch_type",
+    entity_category=EntityCategory.CONFIG,
+    options=[
+        "none",
+        "pushbutton",
+        "switch",
+        "no_switch",
+    ],
+    current_option_fn=lambda device, options: (
+        value.name.lower() if (value := device.switch_type) else None
+    ),
+    select_option_fn=_switch_type_select_option,
+)
+
+
+def _terminal_type_select_option(device: SHCRoomThermostat2, option: str) -> None:
+    """Write the thermostat's terminal (external sensor) type."""
+    device.terminal_type = TerminalConfiguration.Type[option.upper()]
+
+
+TERMINAL_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCRoomThermostat2](
+    key="terminal_type",
+    translation_key="terminal_type",
+    entity_category=EntityCategory.CONFIG,
+    options=[
+        "not_connected",
+        "floor_sensor_connected",
+        "floor_sensor_used_for_regulation",
+        "floor_sensor_displayed",
+        "floor_sensor_displayed_and_used_for_regulation",
+        "volt_free_sensor_connected",
+        "volt_free_sensor_connected_and_used_for_operation",
+        "outdoor_sensor_connected",
+    ],
+    current_option_fn=lambda device, options: (
+        terminal.name.lower() if (terminal := device.terminal_type) else None
+    ),
+    select_option_fn=_terminal_type_select_option,
+)
+
+
+def _actuator_type_select_option(device: SHCMicromoduleRelay, option: str) -> None:
+    """Write the relay's actuator type."""
+    device.actuator_type = SwitchConfiguration.ActuatorType[option.upper()]
+
+
+ACTUATOR_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
+    key="actuator_type",
+    translation_key="actuator_type",
+    entity_category=EntityCategory.CONFIG,
+    options=[
+        "normally_closed",
+        "normally_open",
+        "unsupported",
+    ],
+    current_option_fn=lambda device, options: (
+        value.name.lower() if (value := device.actuator_type) else None
+    ),
+    select_option_fn=_actuator_type_select_option,
+)
+
+
+def _output_mode_select_option(device: SHCMicromoduleRelay, option: str) -> None:
+    """Write the relay's output mode."""
+    device.output_mode = SwitchConfiguration.OutputMode[option.upper()]
+
+
+OUTPUT_MODE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
+    key="output_mode",
+    translation_key="output_mode",
+    entity_category=EntityCategory.CONFIG,
+    options=[
+        "attached",
+        "detached",
+        "detached_short_press",
+        "detached_long_press",
+        "unsupported",
+    ],
+    current_option_fn=lambda device, options: (
+        value.name.lower() if (value := device.output_mode) else None
+    ),
+    select_option_fn=_output_mode_select_option,
+)
+
+
+def _smart_sensitivity_current_option(
+    device: SHCMotionDetector2,
+    context: SmartSensitivityControlService.SmartSensitivityContext,
+    options: Sequence[str] | None,
+) -> str | None:
+    """Read the manual sensitivity level of a smart sensitivity context."""
+    if (sensitivity := device.get_smart_sensitivity(context)) is None:
+        return None
+    level = str(sensitivity.get("manualLevel", "")).lower()
+    return level if options is not None and level in options else None
+
+
+SMART_SENSITIVITY_SECURITY_LEVEL_DESCRIPTION = SHCSelectEntityDescription[
+    SHCMotionDetector2
+](
+    key="smart_sensitivity_security_level",
+    translation_key="smart_sensitivity_security_level",
+    entity_category=EntityCategory.CONFIG,
+    options=["high", "middle", "low"],
+    current_option_fn=lambda device, options: _smart_sensitivity_current_option(
+        device, SmartSensitivityControlService.SmartSensitivityContext.SECURITY, options
+    ),
+    select_option_fn=lambda device, option: device.set_smart_sensitivity_manual_level(
+        SmartSensitivityControlService.SmartSensitivityContext.SECURITY,
+        SmartSensitivityControlService.MotionSensitivity[option.upper()],
+    ),
+)
+
+SMART_SENSITIVITY_COMFORT_LEVEL_DESCRIPTION = SHCSelectEntityDescription[
+    SHCMotionDetector2
+](
+    key="smart_sensitivity_comfort_level",
+    translation_key="smart_sensitivity_comfort_level",
+    entity_category=EntityCategory.CONFIG,
+    options=["high", "middle", "low"],
+    current_option_fn=lambda device, options: _smart_sensitivity_current_option(
+        device, SmartSensitivityControlService.SmartSensitivityContext.COMFORT, options
+    ),
+    select_option_fn=lambda device, option: device.set_smart_sensitivity_manual_level(
+        SmartSensitivityControlService.SmartSensitivityContext.COMFORT,
+        SmartSensitivityControlService.MotionSensitivity[option.upper()],
+    ),
+)
+
+
+def _dimmer_phase_control_select_option(
+    device: SHCMicromoduleDimmer, option: str
+) -> None:
+    """Write the dimmer's phase-control mode."""
+    device.edge_phase_control_mode = DimmerConfigurationService.EdgePhaseControlMode[
+        option.upper()
+    ]
+
+
+DIMMER_PHASE_CONTROL_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleDimmer](
+    key="dimmer_phase_control",
+    translation_key="dimmer_phase_control",
+    entity_category=EntityCategory.CONFIG,
+    options=["trailing", "leading"],
+    current_option_fn=lambda device, options: (
+        mode.name.lower() if (mode := device.edge_phase_control_mode) else None
+    ),
+    select_option_fn=_dimmer_phase_control_select_option,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -204,6 +462,17 @@ async def async_setup_entry(
             description=MOTION_SENSITIVITY_DESCRIPTION,
         )
         for detector in motion_detectors
+    )
+
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=detector,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=ORIENTATION_LIGHT_RESPONSE_DESCRIPTION,
+        )
+        for detector in session.device_helper.motion_detectors2
     )
 
     entities.extend(
@@ -259,6 +528,130 @@ async def async_setup_entry(
         )
         for thermostat in thermostats
         if thermostat.supports_displayed_temperature
+    )
+
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=plug,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=STATE_AFTER_POWER_OUTAGE_DESCRIPTION,
+        )
+        for plug in session.device_helper.smart_plugs
+        if plug.state_after_power_outage is not None
+    )
+
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=compact_plug,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=STATE_AFTER_POWER_OUTAGE_DESCRIPTION,
+        )
+        for compact_plug in session.device_helper.smart_plugs_compact
+        if compact_plug.state_after_power_outage is not None
+    )
+
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=thermostat,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=VALVE_TYPE_DESCRIPTION,
+        )
+        for thermostat in session.device_helper.thermostats
+        if isinstance(thermostat, SHCThermostatGen2)
+        and thermostat.supports_wall_thermostat_configuration
+        and thermostat.valve_type is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=thermostat,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=HEATER_TYPE_DESCRIPTION,
+        )
+        for thermostat in session.device_helper.thermostats
+        if isinstance(thermostat, SHCThermostatGen2)
+        and thermostat.supports_wall_thermostat_configuration
+        and thermostat.heater_type is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=relay,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPE_DESCRIPTION,
+        )
+        for relay in session.device_helper.micromodule_relays
+        if relay.supports_switch_configuration and relay.switch_type is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=room_thermostat,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=TERMINAL_TYPE_DESCRIPTION,
+        )
+        for room_thermostat in session.device_helper.roomthermostats
+        if isinstance(room_thermostat, SHCRoomThermostat2)
+        and room_thermostat.supports_terminal_configuration
+        and room_thermostat.terminal_type is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=relay,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=ACTUATOR_TYPE_DESCRIPTION,
+        )
+        for relay in session.device_helper.micromodule_relays
+        if relay.supports_switch_configuration and relay.actuator_type is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=relay,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=OUTPUT_MODE_DESCRIPTION,
+        )
+        for relay in session.device_helper.micromodule_relays
+        if relay.supports_switch_configuration and relay.output_mode is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=detector,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=description,
+        )
+        for detector in session.device_helper.motion_detectors2
+        if detector.supports_smart_sensitivity
+        for description in (
+            SMART_SENSITIVITY_SECURITY_LEVEL_DESCRIPTION,
+            SMART_SENSITIVITY_COMFORT_LEVEL_DESCRIPTION,
+        )
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=dimmer,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=DIMMER_PHASE_CONTROL_DESCRIPTION,
+        )
+        for dimmer in session.device_helper.micromodule_dimmers
+        if dimmer.supports_dimmer_configuration
+        and dimmer.edge_phase_control_mode is not None
     )
 
     async_add_entities(entities)

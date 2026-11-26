@@ -5,9 +5,13 @@ from typing import Any
 from velbusaio.channels import Channel as VelbusChannel
 from velbusaio.module import Module as VelbusModule
 
+from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
 from . import VelbusConfigEntry
+
+TO_REDACT = {CONF_ACCESS_TOKEN}
 
 
 async def async_get_config_entry_diagnostics(
@@ -15,7 +19,10 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     controller = entry.runtime_data.controller
-    data: dict[str, Any] = {"entry": entry.as_dict(), "modules": []}
+    data: dict[str, Any] = {
+        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
+        "modules": [],
+    }
     for module in controller.get_modules().values():
         data["modules"].append(await _build_module_diagnostics_info(module))
     return data
@@ -36,7 +43,7 @@ async def _build_module_diagnostics_info(module: VelbusModule) -> dict[str, Any]
 
 
 def _build_channels_diagnostics_info(
-    channels: dict[str, VelbusChannel],
+    channels: dict[int, VelbusChannel],
 ) -> dict[str, Any]:
     """Build diagnostics info for all channels."""
     data: dict[str, Any] = {}

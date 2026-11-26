@@ -6,7 +6,10 @@ from typing import Any, Concatenate
 
 from aiohttp.web_exceptions import HTTPException
 from apyhiveapi import Auth, Hive
-from apyhiveapi.helper.hive_exceptions import HiveReauthRequired
+from apyhiveapi.helper.hive_exceptions import (
+    HiveInvalidDeviceAuthentication,
+    HiveReauthRequired,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -49,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> None
         raise ConfigEntryNotReady(
             f"Could not connect to the internet: {error}"
         ) from error
-    except HiveReauthRequired as err:
+    except (HiveReauthRequired, HiveInvalidDeviceAuthentication) as err:
         raise ConfigEntryAuthFailed from err
 
     hub_data = devices["parent"][0]
@@ -58,16 +61,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> None
         connections.add((dr.CONNECTION_NETWORK_MAC, mac))
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, hub_data["device_id"])},
-            connections=connections,
-            name=hub_data["hiveName"],
-            model=hub_data["deviceData"]["model"],
-            sw_version=hub_data["deviceData"]["version"],
-            manufacturer=hub_data["deviceData"]["manufacturer"],
-        ),
+        identifiers={(DOMAIN, hub_data["device_id"])},
+        connections=connections,
+        name=hub_data["hiveName"],
+        model=hub_data["deviceData"]["model"],
+        sw_version=hub_data["deviceData"]["version"],
+        manufacturer=hub_data["deviceData"]["manufacturer"],
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -42,7 +42,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.husqvarna_automower_ble.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -90,6 +90,10 @@ def mock_automower_client(enable_bluetooth: None) -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.husqvarna_automower_ble.config_flow.bluetooth.async_ble_device_from_address",
             return_value=mock_device,
+        ),
+        patch(
+            "homeassistant.components.husqvarna_automower_ble.bluetooth.async_scanner_devices_by_address",
+            return_value=[Mock()],
         ),
     ):
         client = mock_client.return_value

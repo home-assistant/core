@@ -83,12 +83,11 @@ async def create_entity(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.WEATHER]
         )
-        return True
 
     async def async_setup_entry_weather_platform(
         hass: HomeAssistant,

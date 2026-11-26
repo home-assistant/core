@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_ENABLED,
     CONF_ENTITY_ID,
+    CONF_EXCLUDE,
     CONF_FOR,
     CONF_ID,
     CONF_MATCH,
@@ -31,6 +32,7 @@ from homeassistant.const import (
     CONF_ZONE,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_ANY,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import (
@@ -605,11 +607,13 @@ async def async_validate_condition_config(
     condition_key: str = config[CONF_CONDITION]
 
     if condition_key in ("and", "not", "or"):
-        conditions = []
-        for sub_cond in config["conditions"]:
-            sub_cond = await async_validate_condition_config(hass, sub_cond)
-            conditions.append(sub_cond)
-        config["conditions"] = conditions
+        try:
+            config["conditions"] = await async_validate_conditions_config(
+                hass, config["conditions"]
+            )
+        except probatio.Invalid as err:
+            err.prepend(["conditions"])
+            raise
         return config
 
     platform_domain, platform = await _async_get_condition_platform(hass, condition_key)
@@ -643,7 +647,14 @@ async def async_validate_conditions_config(
     """Validate config."""
     # No gather here because async_validate_condition_config is unlikely
     # to suspend and the overhead of creating many tasks is not worth it
-    return [await async_validate_condition_config(hass, cond) for cond in conditions]
+    validated: list[ConfigType | Template] = []
+    for index, cond in enumerate(conditions):
+        try:
+            validated.append(await async_validate_condition_config(hass, cond))
+        except probatio.Invalid as err:
+            err.prepend([index])
+            raise
+    return validated
 
 
 async def async_conditions_from_config(
@@ -698,6 +709,12 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
             if zone_entity_id := config.get(CONF_OPTIONS, {}).get(CONF_ZONE):
                 referenced.add(zone_entity_id)
 
+        if options := config.get(CONF_OPTIONS):
+            if entity_ids := options.get(CONF_ENTITY_ID):
+                referenced.update(
+                    [entity_ids] if isinstance(entity_ids, str) else entity_ids
+                )
+
         entity_ids = config.get(CONF_ENTITY_ID)
 
         if isinstance(entity_ids, str):
@@ -707,7 +724,7 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
             referenced.update(entity_ids)
 
         if target_entities := _get_targets_from_condition_config(
-            config, CONF_ENTITY_ID
+            config, TargetKey.ENTITY_ID
         ):
             referenced.update(target_entities)
 
@@ -736,7 +753,15 @@ def async_extract_devices(config: ConfigType | Template) -> set[str]:
                 referenced.add(device_id)
             continue
 
-        if target_devices := _get_targets_from_condition_config(config, CONF_DEVICE_ID):
+        if options := config.get(CONF_OPTIONS):
+            if device_ids := options.get(CONF_DEVICE_ID):
+                referenced.update(
+                    [device_ids] if isinstance(device_ids, str) else device_ids
+                )
+
+        if target_devices := _get_targets_from_condition_config(
+            config, TargetKey.DEVICE_ID
+        ):
             referenced.update(target_devices)
 
     return referenced
@@ -745,7 +770,7 @@ def async_extract_devices(config: ConfigType | Template) -> set[str]:
 @callback
 def async_extract_targets(
     config: ConfigType | Template,
-    target_type: Literal["area_id", "floor_id", "label_id"],
+    target_type: Literal[TargetKey.AREA_ID, TargetKey.FLOOR_ID, TargetKey.LABEL_ID],
 ) -> set[str]:
     """Extract targets from a condition."""
     referenced: set[str] = set()
@@ -770,12 +795,13 @@ def async_extract_targets(
 @callback
 def _get_targets_from_condition_config(
     config: ConfigType,
-    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+    target: TargetKey,
 ) -> list[str]:
-    """Extract targets from a condition target config."""
+    """Extract targets from a condition target config, including the exclude block."""
     if not (target_conf := config.get(CONF_TARGET)):
         return []
-    if not (targets := target_conf.get(target)):
-        return []
-
-    return [targets] if isinstance(targets, str) else targets
+    found: list[str] = []
+    for conf in (target_conf, target_conf.get(CONF_EXCLUDE, {})):
+        if targets := conf.get(target):
+            found.extend([targets] if isinstance(targets, str) else targets)
+    return found

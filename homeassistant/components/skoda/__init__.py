@@ -4,15 +4,33 @@ from skoda_public_api.api_layer.open_api_client import OpenAPIClient
 
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_VIN
+from .const import CONF_VIN, DOMAIN
 from .coordinator import SkodaConfigEntry, SkodaData, SkodaUpdateCoordinator
+from .services import async_setup_services
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.DEVICE_TRACKER,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Škoda integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> None:
     """Set up Škoda from a config entry."""
     vin: str = entry.data[CONF_VIN]
     api_key: str = entry.data[CONF_API_KEY]
@@ -37,9 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

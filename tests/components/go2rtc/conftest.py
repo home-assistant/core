@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 from awesomeversion import AwesomeVersion
+from go2rtc_client.exceptions import Go2RtcClientError
 from go2rtc_client.rest import (
     _PreloadClient,
     _SchemesClient,
@@ -72,6 +73,22 @@ def rest_client() -> Generator[AsyncMock]:
         client.preload = preload = Mock(spec_set=_PreloadClient)
         preload.list.return_value = {}
         yield client
+
+
+@pytest.fixture(
+    params=[
+        pytest.param("streams.list", id="list_streams"),
+        pytest.param("streams.add", id="add_stream"),
+        pytest.param("get_jpeg_snapshot", id="get_snapshot"),
+    ]
+)
+def snapshot_error(
+    request: pytest.FixtureRequest, rest_client: AsyncMock
+) -> Go2RtcClientError:
+    """Make a go2rtc request fail while getting a snapshot."""
+    error = Go2RtcClientError()
+    rest_client.configure_mock(**{f"{request.param}.side_effect": error})
+    return error
 
 
 @pytest.fixture
@@ -221,21 +238,19 @@ async def _setup_test_integration(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.CAMERA]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload test config entry."""
         await hass.config_entries.async_forward_entry_unload(
             config_entry, Platform.CAMERA
         )
-        return True
 
     mock_integration(
         hass,

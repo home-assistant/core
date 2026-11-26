@@ -12,7 +12,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SynoApi
+from .common import SynoApi
 from .const import DOMAIN
 from .coordinator import SynologyDSMConfigEntry, SynologyDSMSwitchUpdateCoordinator
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription

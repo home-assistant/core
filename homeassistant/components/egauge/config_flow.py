@@ -118,7 +118,7 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
-                CONF_HOST: reauth_entry.data[CONF_HOST],
-                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                "host": reauth_entry.data[CONF_HOST],
+                "username": reauth_entry.data[CONF_USERNAME],
             },
         )

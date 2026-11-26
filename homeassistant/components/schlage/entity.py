@@ -1,9 +1,12 @@
 """Base entity class for Schlage."""
 
-from typing import override
+from collections.abc import Callable
+from typing import Any, override
 
+from pyschlage.exceptions import Error as SchlageError
 from pyschlage.lock import Lock
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -28,6 +31,7 @@ class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
             name=self._lock.name,
             manufacturer=MANUFACTURER,
             model=self._lock.model_name,
+            serial_number=self._lock.serial_number,
             sw_version=self._lock.firmware_version,
         )
 
@@ -50,3 +54,12 @@ class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
             and self.device_id in self.coordinator.data
             and self._lock.connected
         )
+
+    async def _async_send_command(self, func: Callable[..., Any], *args: Any) -> None:
+        """Send a command to the lock, translating library errors."""
+        try:
+            await self.hass.async_add_executor_job(func, *args)
+        except SchlageError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="schlage_command_failed"
+            ) from ex

@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.folder_watcher.async_setup_entry", return_value=True
+        "homeassistant.components.folder_watcher.async_setup_entry", return_value=None
     ):
         yield
 

@@ -37,14 +37,13 @@ def connection_integration(
 ) -> Generator[None]:
     """Mock a connection integration."""
 
-    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         entry.async_on_unload(
             await async_register_connection(hass, entry, connection=mock_connection)
         )
-        return True
 
-    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-        return True
+    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Unload a config entry."""
 
     mock_integration(
         hass,
@@ -64,7 +63,7 @@ def connection_integration(
 def device_integration(hass: HomeAssistant) -> Generator[None]:
     """Mock a device integration with a sensor platform."""
 
-    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         manager = entry.runtime_data = DeviceManager(
             hass,
             entry,
@@ -74,10 +73,9 @@ def device_integration(hass: HomeAssistant) -> Generator[None]:
         entry.async_on_unload(manager.close)
         await manager.async_setup()
         await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
-        return True
 
-    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-        return await hass.config_entries.async_unload_platforms(
+    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        await hass.config_entries.async_unload_platforms_or_raise(
             entry, [Platform.SENSOR]
         )
 

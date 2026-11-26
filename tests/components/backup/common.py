@@ -1,11 +1,24 @@
 """Common helpers for the Backup integration tests."""
 
-from collections.abc import AsyncIterator, Buffer, Callable, Coroutine, Iterable
+from collections.abc import (
+    AsyncGenerator,
+    AsyncIterator,
+    Buffer,
+    Callable,
+    Coroutine,
+    Generator,
+    Iterable,
+)
+from contextlib import contextmanager
+from io import StringIO
 from pathlib import Path
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock, patch
 
-from pytest_homeassistant.common import mock_platform
+from aiohttp import ClientResponse
+from aiohttp.test_utils import TestClient
+from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed, mock_platform
 
 from homeassistant.components.backup import (
     DOMAIN,
@@ -15,10 +28,16 @@ from homeassistant.components.backup import (
     BackupAgentPlatformProtocol,
     BackupNotFound,
     Folder,
+    UploadBackupEvent,
+    async_get_manager,
 )
 from homeassistant.components.backup.backup import CoreLocalBackupAgent
-from homeassistant.components.backup.const import DATA_MANAGER
-from homeassistant.core import HomeAssistant
+from homeassistant.components.backup.const import BUF_SIZE, DATA_MANAGER
+from homeassistant.components.backup.manager import (
+    UPLOAD_PROGRESS_DEBOUNCE_SECONDS,
+    ManagerStateEvent,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 LOCAL_AGENT_ID = f"{DOMAIN}.local"
@@ -60,6 +79,35 @@ async def aiter_from_iter(iterable: Iterable) -> AsyncIterator:
     """Convert an iterable to an async iterator."""
     for i in iterable:
         yield i
+
+
+async def aiter_padded_chunks(data: bytes) -> AsyncGenerator[bytes]:
+    """Yield data in chunks, followed by padding.
+
+    The padding is larger than the buffer of tar readers, so the stream is not
+    exhausted by readers which stop at the end of the tar archive.
+    """
+    for i in range(0, len(data), 1024):
+        yield data[i : i + 1024]
+    for _ in range(3):
+        yield b"\0" * BUF_SIZE
+
+
+def mock_download_from_file(
+    mock_agent: Mock, path: Path
+) -> list[AsyncGenerator[bytes]]:
+    """Make an agent download a file, and return the opened download streams."""
+    data = path.read_bytes()
+    streams: list[AsyncGenerator[bytes]] = []
+
+    async def download_backup(backup_id: str, **kwargs: Any) -> AsyncIterator[bytes]:
+        """Mock download."""
+        stream = aiter_padded_chunks(data)
+        streams.append(stream)
+        return stream
+
+    mock_agent.async_download_backup.side_effect = download_backup
+    return streams
 
 
 def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mock:
@@ -156,7 +204,8 @@ async def setup_backup_integration(
             await setup_backup_platform(hass, domain=TEST_DOMAIN, platform=platform)
 
         assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+        # The config entry is set up from a background discovery flow.
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         if LOCAL_AGENT_ID not in backups or with_hassio:
             return remote_agents_dict
@@ -188,3 +237,62 @@ async def setup_backup_platform(
     mock_platform(hass, f"{domain}.backup", platform)
     assert await async_setup_component(hass, domain, {})
     await hass.async_block_till_done()
+
+
+async def upload_backup_via_http(
+    client: TestClient,
+    agent_id: str,
+    backup: AgentBackup,
+    chunks: Iterable[bytes] = (b"test",),
+) -> ClientResponse:
+    """Upload a backup to an agent through the backup upload view.
+
+    The manager reads the uploaded backup as `backup` and streams it to the
+    agent as `chunks`, one stream chunk per item.
+    """
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=backup,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[*chunks, b""])
+        return await client.post(
+            f"/api/backup/upload?agent_id={agent_id}",
+            data={"file": StringIO("test")},
+        )
+
+
+@contextmanager
+def collect_upload_events(
+    hass: HomeAssistant, agent_id: str
+) -> Generator[list[UploadBackupEvent]]:
+    """Collect the upload events of an agent while the context is active."""
+    events: list[UploadBackupEvent] = []
+
+    @callback
+    def _collect(event: ManagerStateEvent) -> None:
+        if isinstance(event, UploadBackupEvent) and event.agent_id == agent_id:
+            events.append(event)
+
+    unsub = async_get_manager(hass).async_subscribe_events(_collect)
+    try:
+        yield events
+    finally:
+        unsub()
+
+
+@callback
+def flush_upload_progress(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """End the cooldown of the manager's upload progress debouncer.
+
+    Call it between two progress reports of an agent, so both are emitted as
+    upload events.
+    """
+    freezer.tick(UPLOAD_PROGRESS_DEBOUNCE_SECONDS)
+    async_fire_time_changed(hass)

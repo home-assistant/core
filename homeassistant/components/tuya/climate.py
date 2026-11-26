@@ -115,15 +115,14 @@ async def async_setup_entry(
         entities: list[TuyaClimateEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if (description := CLIMATE_DESCRIPTIONS.get(device.category)) and (
-                definition := get_default_definition(
+            if description := CLIMATE_DESCRIPTIONS.get(device.category):
+                definition = get_default_definition(
                     device,
                     _HA_TO_TUYA_TEMPERATURE.get(
                         hass.config.units.temperature_unit,
                         TuyaUnitOfTemperature.CELSIUS,
                     ),
                 )
-            ):
                 entities.append(
                     TuyaClimateEntity(device, manager, description, definition)
                 )
@@ -260,6 +259,18 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             commands.extend(
                 self._hvac_mode_wrapper.get_update_commands(self.device, tuya_mode)
             )
+        elif (
+            hvac_mode == self.entity_description.switch_only_hvac_mode
+            and self._preset_wrapper
+            and self._preset_wrapper.options
+            and self._read_wrapper(self._preset_wrapper) is None
+        ):
+            # The mode DP holds an HVAC value such as "off": select a preset.
+            commands.extend(
+                self._preset_wrapper.get_update_commands(
+                    self.device, self._preset_wrapper.options[0]
+                )
+            )
         await self._async_send_commands(commands)
 
     @override
@@ -351,8 +362,13 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             return None
 
         # If we do have a mode wrapper, check if the mode maps to an HVAC mode.
-        tuya_mode = self._read_wrapper(self._hvac_mode_wrapper)
-        return _TUYA_TO_HA_HVACMODE_MAPPINGS.get(tuya_mode) if tuya_mode else None
+        if tuya_mode := self._read_wrapper(self._hvac_mode_wrapper):
+            return _TUYA_TO_HA_HVACMODE_MAPPINGS.get(tuya_mode)
+
+        # The mode DP holds a preset rather than an HVAC mode.
+        if self._read_wrapper(self._preset_wrapper) is not None:
+            return self.entity_description.switch_only_hvac_mode
+        return None
 
     @property
     @override

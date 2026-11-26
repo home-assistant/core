@@ -1,5 +1,7 @@
 """Provides device automations for Climate."""
 
+from typing import Any
+
 import probatio
 
 from homeassistant.components.device_automation import (
@@ -7,11 +9,11 @@ from homeassistant.components.device_automation import (
     async_validate_entity_schema,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -19,8 +21,16 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import const
-from .const import DOMAIN
+from .const import (
+    ATTR_HVAC_MODE,
+    ATTR_PRESET_MODE,
+    DOMAIN,
+    HVAC_MODES,
+    ClimateEntityCapabilityAttribute,
+    ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
+)
 
 ACTION_TYPES = {"set_hvac_mode", "set_preset_mode"}
 
@@ -28,7 +38,7 @@ SET_HVAC_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_TYPE): "set_hvac_mode",
         probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        probatio.Required(const.ATTR_HVAC_MODE): probatio.In(const.HVAC_MODES),
+        probatio.Required(ATTR_HVAC_MODE): probatio.In(HVAC_MODES),
     }
 )
 
@@ -36,7 +46,7 @@ SET_PRESET_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_TYPE): "set_preset_mode",
         probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        probatio.Required(const.ATTR_PRESET_MODE): str,
+        probatio.Required(ATTR_PRESET_MODE): str,
     }
 )
 
@@ -73,7 +83,7 @@ async def async_get_actions(
         }
 
         actions.append({**base_action, CONF_TYPE: "set_hvac_mode"})
-        if supported_features & const.ClimateEntityFeature.PRESET_MODE:
+        if supported_features & ClimateEntityFeature.PRESET_MODE:
             actions.append({**base_action, CONF_TYPE: "set_preset_mode"})
 
     return actions
@@ -86,14 +96,14 @@ async def async_call_action_from_config(
     context: Context | None,
 ) -> None:
     """Execute a device action."""
-    service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
+    service_data: dict[str, Any] = {TargetKey.ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "set_hvac_mode":
-        service = const.SERVICE_SET_HVAC_MODE
-        service_data[const.ATTR_HVAC_MODE] = config[const.ATTR_HVAC_MODE]
+        service = ClimateService.SET_HVAC_MODE
+        service_data[ClimateServiceArgument.HVAC_MODE] = config[ATTR_HVAC_MODE]
     elif config[CONF_TYPE] == "set_preset_mode":
-        service = const.SERVICE_SET_PRESET_MODE
-        service_data[const.ATTR_PRESET_MODE] = config[const.ATTR_PRESET_MODE]
+        service = ClimateService.SET_PRESET_MODE
+        service_data[ClimateServiceArgument.PRESET_MODE] = config[ATTR_PRESET_MODE]
 
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context
@@ -116,13 +126,13 @@ async def async_get_action_capabilities(
                 get_capability(
                     hass,
                     entry.entity_id,
-                    const.ClimateEntityCapabilityAttribute.HVAC_MODES,
+                    ClimateEntityCapabilityAttribute.HVAC_MODES,
                 )
                 or []
             )
         except HomeAssistantError:
             hvac_modes = []
-        fields[probatio.Required(const.ATTR_HVAC_MODE)] = probatio.In(hvac_modes)
+        fields[probatio.Required(ATTR_HVAC_MODE)] = probatio.In(hvac_modes)
     elif action_type == "set_preset_mode":
         try:
             entry = async_get_entity_registry_entry_or_raise(hass, entity_id_or_uuid)
@@ -130,12 +140,12 @@ async def async_get_action_capabilities(
                 get_capability(
                     hass,
                     entry.entity_id,
-                    const.ClimateEntityCapabilityAttribute.PRESET_MODES,
+                    ClimateEntityCapabilityAttribute.PRESET_MODES,
                 )
                 or []
             )
         except HomeAssistantError:
             preset_modes = []
-        fields[probatio.Required(const.ATTR_PRESET_MODE)] = probatio.In(preset_modes)
+        fields[probatio.Required(ATTR_PRESET_MODE)] = probatio.In(preset_modes)
 
     return {"extra_fields": probatio.Schema(fields)}

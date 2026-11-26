@@ -12,8 +12,8 @@ from homeassistant.components.cloudflare.const import (
     CONF_RECORDS,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
-    SERVICE_UPDATE_RECORDS,
 )
+from homeassistant.components.cloudflare.services import CloudflareService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -96,7 +96,7 @@ async def test_integration_services(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_RECORDS,
+        CloudflareService.UPDATE_RECORDS,
         {},
         blocking=True,
     )
@@ -122,7 +122,7 @@ async def test_integration_services_with_issue(
     with patch(LOCATION_PATCH_TARGET, return_value=None):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_RECORDS,
+            CloudflareService.UPDATE_RECORDS,
             {},
             blocking=True,
         )
@@ -145,7 +145,7 @@ async def test_integration_services_with_nonexisting_record(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_RECORDS,
+        CloudflareService.UPDATE_RECORDS,
         {},
         blocking=True,
     )
