@@ -4,8 +4,6 @@ from types import TracebackType
 from typing import Self
 from unittest.mock import AsyncMock, patch
 
-from httpx2 import Request, Response
-from mistralai.client import errors
 from mistralai.client.models import (
     CompletionChunk,
     CompletionEvent,
@@ -19,7 +17,6 @@ import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant import config_entries
 from homeassistant.components import conversation
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import Context, HomeAssistant
@@ -234,29 +231,3 @@ async def test_malformed_tool_arguments_abort(
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
     assert stream.closed
-
-
-@pytest.mark.usefixtures("mock_init_component")
-async def test_stream_auth_error_starts_reauth(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client,
-) -> None:
-    """A 401 from the chat API starts the reauthentication flow."""
-    request = Request("POST", "https://api.mistral.ai/v1/chat/completions")
-    mock_client.chat.stream_async.side_effect = errors.SDKError(
-        "unauthorized", Response(401, request=request)
-    )
-
-    result = await conversation.async_converse(
-        hass, "hi", None, Context(), agent_id=ENTITY_ID
-    )
-    await hass.async_block_till_done()
-
-    assert result.response.response_type is intent.IntentResponseType.ERROR
-    flows = hass.config_entries.flow.async_progress_by_handler(
-        mock_config_entry.domain, include_uninitialized=True
-    )
-    assert any(
-        flow["context"].get("source") == config_entries.SOURCE_REAUTH for flow in flows
-    )

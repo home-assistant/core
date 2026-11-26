@@ -12,15 +12,6 @@
       "user": "Add entry"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "Your Mistral API key."
-        },
-        "description": "Reauthentication required. Please enter your updated API key."
-      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"

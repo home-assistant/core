@@ -128,8 +128,8 @@ async def test_setup_error_retries(
     assert entry.state is expected_state
 
 
-async def test_setup_auth_error_starts_reauth(hass: HomeAssistant) -> None:
-    """A 401 during setup triggers the reauthentication flow."""
+async def test_setup_auth_error_without_reauth_flow(hass: HomeAssistant) -> None:
+    """A 401 during setup fails the entry without starting a flow."""
     entry = _entry()
     entry.add_to_hass(hass)
 
@@ -144,7 +144,8 @@ async def test_setup_auth_error_starts_reauth(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason
     flows = hass.config_entries.flow.async_progress_by_handler(
         DOMAIN, include_uninitialized=True
     )
-    assert any(flow["context"].get("source") == "reauth" for flow in flows)
+    assert not flows

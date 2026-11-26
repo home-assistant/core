@@ -1,6 +1,5 @@
 """Config flow for Mistral AI integration."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -9,7 +8,6 @@ from mistralai.client import errors as mistral_errors
 import probatio
 
 from homeassistant.config_entries import (
-    SOURCE_REAUTH,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -121,15 +119,6 @@ class MistralAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if self.source == SOURCE_REAUTH:
-                    entry = self._get_reauth_entry()
-                    if entry.update_listeners:
-                        return self.async_update_and_abort(
-                            entry, data_updates={CONF_API_KEY: user_input[CONF_API_KEY]}
-                        )
-                    return self.async_update_reload_and_abort(
-                        entry, data_updates={CONF_API_KEY: user_input[CONF_API_KEY]}
-                    )
                 return self.async_create_entry(
                     title="Mistral",
                     data={CONF_API_KEY: user_input[CONF_API_KEY]},
@@ -144,22 +133,10 @@ class MistralAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user" if self.source != SOURCE_REAUTH else "reauth_confirm",
+            step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauth."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the reauth confirmation step."""
-        return await self._async_step_api_key(user_input)
 
     @classmethod
     @callback

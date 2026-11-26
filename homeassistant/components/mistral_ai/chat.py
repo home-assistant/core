@@ -252,9 +252,6 @@ async def handle_chat_log(entity, chat_log: conversation.ChatLog) -> None:
                     )
                 )
         except errors.MistralError as err:
-            if err.status_code in (401, 403):
-                # Trigger the reauthentication flow for a revoked/expired key.
-                entity.entry.async_start_reauth(entity.hass)
             raise HomeAssistantError("Error talking to Mistral") from err
         except HomeAssistantError:
             raise
