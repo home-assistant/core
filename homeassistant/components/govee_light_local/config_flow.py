@@ -1,19 +1,25 @@
 """Config flow for Govee light local."""
 
+import asyncio
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
+
+from govee_local_api import GoveeDevice
+import probatio
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.util.network import is_ipv4_address
 
 from .const import CONF_FINGERPRINT, DOMAIN
 from .coordinator import (
     NoListeningAddressesError,
     async_acquire_coordinator,
     async_release_coordinator,
+    is_legacy_entry,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +45,20 @@ async def _async_discover_devices(hass: HomeAssistant) -> bool:
         await async_release_coordinator(hass, coordinator)
 
 
+async def _async_probe_device(
+    hass: HomeAssistant, ip_address: str
+) -> GoveeDevice | None:
+    """Return the lamp answering at the address, if any."""
+    try:
+        coordinator = await async_acquire_coordinator(hass)
+    except NoListeningAddressesError, OSError:
+        return None
+    try:
+        return await coordinator.async_probe(ip_address)
+    finally:
+        await async_release_coordinator(hass, coordinator)
+
+
 class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Govee light local."""
 
@@ -46,15 +66,102 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _ip_address: str
     _model: str
+    _scan_task: asyncio.Task[bool] | None = None
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Let the user search the network or enter the address of a lamp."""
+        return self.async_show_menu(step_id="user", menu_options=["scan", "manual"])
+
+    async def async_step_scan(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Scan for lamps; each one found is offered as a discovered device."""
-        if not await _async_discover_devices(self.hass):
+        if self._scan_task is None:
+            self._scan_task = self.hass.async_create_task(
+                _async_discover_devices(self.hass)
+            )
+        if not self._scan_task.done():
+            return self.async_show_progress(
+                step_id="scan", progress_action="scan", progress_task=self._scan_task
+            )
+        return self.async_show_progress_done(next_step_id="scan_done")
+
+    async def async_step_scan_done(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Tell the user whether the scan found any lamp."""
+        if TYPE_CHECKING:
+            assert self._scan_task is not None
+        if not self._scan_task.result():
             return self.async_abort(reason="no_devices_found")
         return self.async_abort(reason="discovery_started")
+
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Add the lamp at an address."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            ip_address = user_input[CONF_IP_ADDRESS]
+            if not is_ipv4_address(ip_address):
+                errors[CONF_IP_ADDRESS] = "invalid_host"
+            elif (device := await _async_probe_device(self.hass, ip_address)) is None:
+                errors[CONF_IP_ADDRESS] = "cannot_connect"
+            else:
+                # A discovery flow for the lamp does not hold back the user.
+                await self.async_set_unique_id(
+                    device.fingerprint, raise_on_progress=False
+                )
+                self._abort_if_unique_id_configured(
+                    updates={CONF_IP_ADDRESS: ip_address}
+                )
+                return self.async_create_entry(
+                    title=device.sku, data={CONF_IP_ADDRESS: ip_address}
+                )
+
+        return self.async_show_form(
+            step_id="manual",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_IP_ADDRESS): str}), user_input
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the address of a lamp."""
+        entry = self._get_reconfigure_entry()
+        if is_legacy_entry(entry):
+            # It has no lamp of its own until one of its lamps answers a scan.
+            return self.async_abort(reason="not_split")
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            ip_address = user_input[CONF_IP_ADDRESS]
+            if not is_ipv4_address(ip_address):
+                errors[CONF_IP_ADDRESS] = "invalid_host"
+            elif (device := await _async_probe_device(self.hass, ip_address)) is None:
+                errors[CONF_IP_ADDRESS] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(
+                    device.fingerprint, raise_on_progress=False
+                )
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    entry, data_updates={CONF_IP_ADDRESS: ip_address}
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_IP_ADDRESS): str}),
+                user_input or entry.data,
+            ),
+            errors=errors,
+        )
 
     @override
     async def async_step_integration_discovery(

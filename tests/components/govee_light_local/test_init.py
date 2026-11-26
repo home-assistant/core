@@ -22,14 +22,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import (
+from . import (
     DISABLED_NETWORK_ADAPTERS,
+    answer_probes,
     answer_scans,
     create_device,
     create_entry,
     create_legacy_entry,
     scan_reply,
     setup_light,
+    start_user_scan,
 )
 
 
@@ -206,6 +208,24 @@ async def test_setup_stores_new_ip_address(
     mock_govee_api.remove_device_from_discovery_queue.assert_called_once_with(
         "192.168.1.100"
     )
+
+
+async def test_setup_probes_the_stored_address(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test a lamp the multicast scan does not reach is found at its address."""
+
+    device = create_device(mock_govee_api)
+    entry = create_entry(hass, device)
+    answer_probes(mock_govee_api, device)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.h615a").state == STATE_OFF
+    # The library keeps scanning a lamp it found this way at its address.
+    assert device.is_manual
+    mock_govee_api.remove_device_from_discovery_queue.assert_not_called()
 
 
 async def test_retrying_entry_recovers_when_lamp_answers(
@@ -565,9 +585,7 @@ async def test_user_scan_leaves_lamps_to_the_pending_legacy_entry(
     assert legacy_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
     answer_scans(mock_govee_api, device)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await start_user_scan(hass)
     await hass.async_block_till_done()
 
     # Nothing is on offer, so the flow does not claim a discovery started.

@@ -41,6 +41,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# A scan ends once no lamp has answered for this long after the first reply.
+SCAN_SETTLE_TIME = 1
+
 
 class NoListeningAddressesError(HomeAssistantError):
     """No enabled network adapter has an IPv4 address to listen on."""
@@ -90,7 +93,7 @@ async def async_get_listening_addresses(hass: HomeAssistant) -> list[str]:
     )
 
 
-def _is_legacy_entry(entry: ConfigEntry) -> bool:
+def is_legacy_entry(entry: ConfigEntry) -> bool:
     """Return if the entry predates one entry per lamp."""
     return entry.unique_id is None or entry.unique_id == DOMAIN
 
@@ -102,7 +105,7 @@ def async_get_legacy_entry(hass: HomeAssistant) -> GoveeLocalConfigEntry | None:
         (
             entry
             for entry in hass.config_entries.async_entries(DOMAIN)
-            if _is_legacy_entry(entry) and not entry.disabled_by
+            if is_legacy_entry(entry) and not entry.disabled_by
         ),
         None,
     )
@@ -203,7 +206,8 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         self._controller.set_device_discovered_callback(self._async_device_discovered)
         self._rebind_lock = asyncio.Lock()
         self._unsub_rebind: CALLBACK_TYPE | None = None
-        self._waiters: dict[str, asyncio.Future[GoveeDevice]] = {}
+        self._waiters: dict[str, asyncio.Future[GoveeDevice | None]] = {}
+        self._scans: set[asyncio.Event] = set()
         self._entries: dict[str, GoveeLocalConfigEntry] = {}
         self.ref_count = 0
 
@@ -241,9 +245,20 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     @callback
     def _async_device_discovered(self, device: GoveeDevice, is_new: bool) -> bool:
         """Handle a scan reply; return whether the lamp is to be tracked."""
+        for heard in self._scans:
+            heard.set()
+
         fingerprint = device.fingerprint
-        if (waiter := self._waiters.get(fingerprint)) is not None and not waiter.done():
-            waiter.set_result(device)
+        awaited = False
+        probed = False
+        for key in (fingerprint, device.ip):
+            if (waiter := self._waiters.get(key)) is None:
+                continue
+            # Resolved by an earlier reply its owner has yet to pick up.
+            if not waiter.done():
+                waiter.set_result(device)
+            awaited = True
+            probed = probed or key == device.ip
 
         entry = self.hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, fingerprint
@@ -253,6 +268,9 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             # Left untracked, so it counts as new once that entry is removed.
             self._controller.remove_device(device)
             return False
+        if is_new and probed and entry is None:
+            # The probing flow sets it up, or it stays to be discovered.
+            return False
         if entry is not None and entry.state is ConfigEntryState.LOADED:
             if entry.data[CONF_IP_ADDRESS] != device.ip:
                 self.hass.config_entries.async_update_entry(
@@ -260,6 +278,8 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
                 )
         elif (
             is_new
+            # Whoever waits for the reply sets the lamp up.
+            and not awaited
             # For a retrying entry the flow aborts, stores the address and
             # retries the entry now.
             and (entry is None or entry.state is ConfigEntryState.SETUP_RETRY)
@@ -292,16 +312,15 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     def async_offer_devices(self, devices: list[GoveeDevice]) -> bool:
         """Offer the lamps a scan found; return if any is offered or set up.
 
-        A scan reply by itself only offers a lamp the first time it is heard.
+        A scan reply only offers a lamp the first time it is heard, so the
+        lamps this scan heard are offered again.
         """
         found = False
         for device in devices:
+            # A lamp with an entry got it while the scan was still running.
             if self.hass.config_entries.async_entry_for_domain_unique_id(
                 DOMAIN, device.fingerprint
-            ):
-                # It got its entry while the scan was still running.
-                found = True
-            elif self._async_create_flow(device):
+            ) or self._async_create_flow(device):
                 found = True
         return found
 
@@ -312,7 +331,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         Return False if the lamp is left to the entry that had set it up.
         """
         owner = self._async_get_registry_owner(device.fingerprint)
-        if owner is not None and _is_legacy_entry(owner):
+        if owner is not None and is_legacy_entry(owner):
             # It adds its lamps itself once it is split.
             return False
         discovery_flow.async_create_flow(
@@ -337,23 +356,46 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             device := self._controller.get_device_by_fingerprint(fingerprint)
         ) is not None:
             return device
+        return await self._async_wait_for_reply(fingerprint, ip)
 
-        waiter = self._waiters[fingerprint] = self.hass.loop.create_future()
-        if ip is not None:
+    async def async_probe(self, ip: str) -> GoveeDevice | None:
+        """Return the lamp that answers a scan sent to the address."""
+        return await self._async_wait_for_reply(ip, ip)
+
+    async def _async_wait_for_reply(
+        self, key: str, ip: str | None
+    ) -> GoveeDevice | None:
+        """Scan, also at the address, and wait for the reply of a lamp or an address."""
+        if (pending := self._waiters.get(key)) is not None:
+            # Its owner resolves it, with None once it gives up.
+            return await asyncio.shield(pending)
+        waiter = self._waiters[key] = self.hass.loop.create_future()
+        # The library already scans the address of a lamp it found through the queue.
+        if ip is not None and not self._is_manual_address(ip):
             self._controller.add_device_to_discovery_queue(ip)
         # Queueing alone waits for the next discovery interval.
         self._controller.send_discovery_message()
         try:
             async with asyncio.timeout(DISCOVERY_TIMEOUT):
-                return await waiter
+                # Shielded, so the timeout does not cancel it for those who joined.
+                return await asyncio.shield(waiter)
         except TimeoutError:
-            return None
+            # The reply can arrive in the same loop pass as the timeout.
+            return waiter.result() if waiter.done() else None
         finally:
-            del self._waiters[fingerprint]
-            # Dequeueing an address also makes the library forget a lamp
-            # tracked there, which could be another entry's.
-            if ip is not None and self._controller.get_device_by_ip(ip) is None:
+            del self._waiters[key]
+            if not waiter.done():
+                waiter.set_result(None)
+            # Dequeueing an address also makes the library forget a lamp it
+            # found there through the queue, which could be another entry's.
+            if ip is not None and not self._is_manual_address(ip):
                 self._controller.remove_device_from_discovery_queue(ip)
+
+    def _is_manual_address(self, ip: str) -> bool:
+        """Return if the lamp tracked at the address was found through the queue."""
+        return (
+            device := self._controller.get_device_by_ip(ip)
+        ) is not None and device.is_manual
 
     async def async_scan(self) -> list[GoveeDevice]:
         """Scan and return the answering lamps that had no config entry."""
@@ -363,8 +405,19 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             entry.unique_id for entry in self.hass.config_entries.async_entries(DOMAIN)
         }
         started = dt_util.utcnow()
+        heard = asyncio.Event()
+        self._scans.add(heard)
         self._controller.send_discovery_message()
-        await asyncio.sleep(DISCOVERY_TIMEOUT)
+        try:
+            async with asyncio.timeout(DISCOVERY_TIMEOUT):
+                await heard.wait()
+                while heard.is_set():
+                    heard.clear()
+                    await asyncio.sleep(SCAN_SETTLE_TIME)
+        except TimeoutError:
+            pass
+        finally:
+            self._scans.discard(heard)
         # A lamp stays tracked after it stops answering, so check it was heard.
         return [
             device

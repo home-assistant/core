@@ -40,7 +40,7 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .conftest import (
+from . import (
     EXPECTED_LISTENING_ADDRESSES,
     SCENE_CAPABILITIES,
     answer_scans,

@@ -3,12 +3,43 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "discovery_started": "Discovery has started. Your Govee lights will appear as discovered devices under Settings > Devices & services.",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "not_split": "This entry does not belong to a single light yet, so it has no IP address to change. Add the light by its IP address instead.",
+      "wrong_device": "The light at this IP address is a different light."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
     },
     "flow_title": "{model} ({ip})",
+    "progress": {
+      "scan": "Searching the network for Govee lights"
+    },
     "step": {
       "discovery_confirm": {
         "description": "Do you want to set up {model} ({ip})?"
+      },
+      "manual": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "[%key:component::govee_light_local::config::step::reconfigure::data_description::ip_address%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "The IP address of the light."
+        }
+      },
+      "user": {
+        "menu_options": {
+          "manual": "Enter the IP address",
+          "scan": "Search the network"
+        }
       }
     }
   },
