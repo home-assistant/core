@@ -527,6 +527,24 @@ async def test_sleep_sensors_created_when_receive_sleep_data(
     assert hass.states.get("sensor.henk_deep_sleep")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_apnea_hypopnea_index_no_reading(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test a negative apnea-hypopnea index (no reading) is reported as unknown."""
+    withings.get_sleep_summary_since.return_value = [
+        replace(sleep_summary, apnea_hypopnea_index=-1)
+        for sleep_summary in load_sleep_fixture()
+    ]
+    await setup_integration(hass, polling_config_entry, False)
+
+    state = hass.states.get("sensor.henk_apnea_hypopnea_index")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_workout_sensors_created_when_existed(
     hass: HomeAssistant,
     withings: AsyncMock,

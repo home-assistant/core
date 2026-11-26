@@ -101,6 +101,15 @@
       }
     },
     "event": {
+      "lower_button": {
+        "name": "Lower key"
+      },
+      "lower_left_button": {
+        "name": "Lower left key"
+      },
+      "lower_right_button": {
+        "name": "Lower right key"
+      },
       "smoke_detector_alarm": {
         "state_attributes": {
           "event_type": {
@@ -114,6 +123,15 @@
             }
           }
         }
+      },
+      "upper_button": {
+        "name": "Upper key"
+      },
+      "upper_left_button": {
+        "name": "Upper left key"
+      },
+      "upper_right_button": {
+        "name": "Upper right key"
       }
     },
     "light": {
@@ -160,6 +178,18 @@
       },
       "offset": {
         "name": "Temperature offset"
+      },
+      "siren_alarm_delay": {
+        "name": "Siren alarm delay"
+      },
+      "siren_alarm_duration": {
+        "name": "Siren alarm duration"
+      },
+      "siren_flash_delay": {
+        "name": "Flashing light alarm delay"
+      },
+      "siren_flash_duration": {
+        "name": "Flashing light alarm duration"
       }
     },
     "select": {
@@ -311,6 +341,14 @@
     "sensor": {
       "air_quality": {
         "name": "Air quality"
+      },
+      "battery_level": {
+        "name": "Battery level",
+        "state": {
+          "critically_low_battery": "Critically low",
+          "low_battery": "[%key:common::state::low%]",
+          "ok": "OK"
+        }
       },
       "communication_quality": {
         "name": "Communication quality"

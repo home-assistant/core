@@ -2,8 +2,6 @@
 
 from typing import override
 
-from aioindiallsky import IndiAllSkyAuthError, IndiAllSkyError
-
 from homeassistant.components.camera import Camera
 from homeassistant.components.image import infer_image_type
 from homeassistant.core import HomeAssistant
@@ -45,14 +43,8 @@ class IndiAllSkyCamera(IndiAllSkyEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of current camera image."""
-        try:
-            image: bytes = await self.coordinator.client.fetch_image("latestimage")
-        except IndiAllSkyAuthError:
-            self._entry.async_start_reauth(self.hass)
+        if (image := await self._async_fetch_image("latestimage")) is None:
             return None
-        except IndiAllSkyError:
-            return None
-        else:
-            if content_type := infer_image_type(image):
-                self.content_type = content_type
-            return image
+        if content_type := infer_image_type(image):
+            self.content_type = content_type
+        return image

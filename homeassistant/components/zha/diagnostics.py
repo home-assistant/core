@@ -7,7 +7,7 @@ from typing import Any
 from zha.application.const import ATTR_IEEE
 from zha.application.gateway import Gateway
 from zigpy.application import ControllerApplication
-from zigpy.config import CONF_NWK_EXTENDED_PAN_ID
+from zigpy.config import CONF_BLOCKED_DEVICES, CONF_NWK_EXTENDED_PAN_ID
 from zigpy.types import Channels
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -32,6 +32,7 @@ KEYS_TO_REDACT = {
     CONF_ALARM_MASTER_CODE,
     "network_key",
     CONF_NWK_EXTENDED_PAN_ID,
+    CONF_BLOCKED_DEVICES,
     "partner_ieee",
     "device_ieee",
 }

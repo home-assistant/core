@@ -195,12 +195,29 @@ _SCHEMA_STATE: dict[probatio.Marker, Any] = {
 }
 
 # (option, the option it requires, error when missing)
-_MEDIA_PLAYER_REQUIRED_OPTIONS = (
-    (CONF_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
-    (SERVICE_SELECT_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
-    (SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, "volume_up_and_down_required"),
-    (SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP, "volume_up_and_down_required"),
-)
+# Option, the option it requires and the error when it is missing
+_REQUIRED_OPTIONS: dict[str, tuple[tuple[str, str, str], ...]] = {
+    Platform.LIGHT: (
+        (CONF_HS, CONF_HS_ACTION, "hs_action_required"),
+        (CONF_LEVEL, CONF_LEVEL_ACTION, "level_action_required"),
+        (
+            CONF_TEMPERATURE_KELVIN,
+            CONF_TEMPERATURE_ACTION,
+            "temperature_action_required",
+        ),
+    ),
+    Platform.MEDIA_PLAYER: (
+        (CONF_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
+        (SERVICE_SELECT_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
+        (SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, "volume_up_and_down_required"),
+        (SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP, "volume_up_and_down_required"),
+    ),
+    Platform.VACUUM: (
+        (CONF_FAN_SPEED, CONF_FAN_SPEED_LIST, "fan_speeds_required"),
+        (SERVICE_SET_FAN_SPEED, CONF_FAN_SPEED_LIST, "fan_speeds_required"),
+        (CONF_FAN_SPEED_LIST, SERVICE_SET_FAN_SPEED, "set_fan_speed_required"),
+    ),
+}
 
 # Device class can only be chosen when the entity is created.
 _CONFIG_DEVICE_CLASS_DOMAINS = (
@@ -407,7 +424,10 @@ def generate_schema(
     if domain == Platform.NUMBER:
         schema |= {
             probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
-                selector.DeviceClassSelectorConfig(domain=Platform.NUMBER),
+                selector.DeviceClassSelectorConfig(
+                    domain=Platform.NUMBER,
+                    context={"filter_unit_of_measurement": CONF_UNIT_OF_MEASUREMENT},
+                ),
             ),
             probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Required(
@@ -443,7 +463,10 @@ def generate_schema(
     if domain == Platform.SENSOR:
         schema |= _SCHEMA_STATE | {
             probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
-                selector.DeviceClassSelectorConfig(domain=Platform.SENSOR),
+                selector.DeviceClassSelectorConfig(
+                    domain=Platform.SENSOR,
+                    context={"filter_unit_of_measurement": CONF_UNIT_OF_MEASUREMENT},
+                ),
             ),
             probatio.Optional(CONF_STATE_CLASS): selector.StateClassSelector(),
             probatio.Optional(
@@ -675,7 +698,7 @@ def validate_user_input(
     """Do post validation of user input.
 
     For sensors: Validate unit of measurement.
-    For media players: Validate options that require another option.
+    For media players and vacuums: Validate options that require another option.
     For all domaines: Set template type.
     """
 
@@ -699,10 +722,13 @@ def validate_user_input(
             # with temperature_kelvin or by removing the color temperature action
             handler.options.pop(CONF_TEMPERATURE, None)
             user_input.pop(CONF_TEMPERATURE, None)
-        if template_type == Platform.MEDIA_PLAYER:
-            for option, required_option, error in _MEDIA_PLAYER_REQUIRED_OPTIONS:
-                if option in user_input and required_option not in user_input:
-                    raise SchemaFlowError(error)
+        if template_type == Platform.VACUUM and not user_input.get(CONF_FAN_SPEED_LIST):
+            # The frontend sends an empty list when all fan speeds are removed
+            handler.options.pop(CONF_FAN_SPEED_LIST, None)
+            user_input.pop(CONF_FAN_SPEED_LIST, None)
+        for option, required_option, error in _REQUIRED_OPTIONS.get(template_type, ()):
+            if option in user_input and required_option not in user_input:
+                raise SchemaFlowError(error)
         if template_type == Platform.WATER_HEATER:
             tcv.requires_option(
                 CONF_WATER_HEATER_TARGET_TEMPERATURE,
@@ -1039,12 +1065,18 @@ def ws_start_preview(
             except probatio.Invalid as ex:
                 errors[CONF_STATE_CLASS] = str(ex.msg)
 
-        if domain == Platform.MEDIA_PLAYER:
-            for option, required_option, _ in _MEDIA_PLAYER_REQUIRED_OPTIONS:
-                try:
-                    tcv.requires_option(option, required_option)(user_input)
-                except probatio.Invalid as ex:
-                    errors[option] = str(ex.msg)
+        required_input = user_input
+        if domain == Platform.VACUUM and not user_input.get(CONF_FAN_SPEED_LIST):
+            required_input = {
+                key: value
+                for key, value in user_input.items()
+                if key != CONF_FAN_SPEED_LIST
+            }
+        for option, required_option, _ in _REQUIRED_OPTIONS.get(domain, ()):
+            try:
+                tcv.requires_option(option, required_option)(required_input)
+            except probatio.Invalid as ex:
+                errors[option] = str(ex.msg)
 
         return errors
 

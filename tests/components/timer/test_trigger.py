@@ -28,13 +28,7 @@ from homeassistant.components.timer.const import (
     STATUS_PAUSED,
 )
 from homeassistant.components.timer.trigger import TRIGGERS
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    CONF_OPTIONS,
-    CONF_PLATFORM,
-    CONF_TARGET,
-    TargetKey,
-)
+from homeassistant.const import CONF_OPTIONS, CONF_PLATFORM, CONF_TARGET, TargetKey
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, label_registry as lr
 from homeassistant.helpers.trigger import (
@@ -351,7 +345,7 @@ async def _arm_time_remaining_trigger(
         [
             {
                 CONF_PLATFORM: "timer.remaining_time_reached",
-                CONF_TARGET: target or {CONF_ENTITY_ID: entity_id},
+                CONF_TARGET: target or {TargetKey.ENTITY_ID: entity_id},
                 CONF_OPTIONS: {"remaining": remaining},
             }
         ],
