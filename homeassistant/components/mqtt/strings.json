@@ -1152,6 +1152,10 @@
       "description": "The client certificate that is loaded from `{client_cert_file}` to connect to MQTT broker {broker} expires on {expiry}. The installed CA certificate file `{ca_cert_file}` cannot be read, or does not contain a valid PEM encoded CA certificate. MQTT keeps using the certificates that were loaded, but might not start correctly after a restart. Install a valid CA certificate in `{ca_cert_file}`. The files are checked once a day. To check them right away after fixing them, reload the MQTT integration.",
       "title": "Invalid MQTT CA certificate file installed"
     },
+    "client_certificate_expired": {
+      "description": "The client certificate that is used to connect to MQTT broker {broker} expired on {expiry}. Home Assistant cannot connect to your MQTT broker again with this certificate. Replace the client certificate and private key files with renewed ones, or upload them by reconfiguring the MQTT integration. When files are replaced, reload the MQTT integration to use the renewed certificate.",
+      "title": "MQTT client certificate has expired"
+    },
     "client_certificate_expiring": {
       "description": "The client certificate that is used to connect to MQTT broker {broker} expires on {expiry}. Upload a renewed client certificate and private key by reconfiguring the MQTT integration, to make sure Home Assistant can keep connecting to your MQTT broker.",
       "title": "MQTT client certificate needs renewal"

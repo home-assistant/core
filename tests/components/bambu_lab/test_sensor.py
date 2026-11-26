@@ -2,7 +2,7 @@
 
 from dataclasses import replace
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from aiobambulab import PrintState
 from freezegun.api import FrozenDateTimeFactory
@@ -10,7 +10,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -29,7 +29,8 @@ async def test_sensors(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the sensors of a printer."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.bambu_lab._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 

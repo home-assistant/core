@@ -5,7 +5,11 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.components.sensor.helpers import async_parse_date_datetime  # pylint: disable=home-assistant-component-root-import
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -13,6 +17,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
@@ -396,3 +401,43 @@ async def test_value_template_entity_filter(
         )
         == "abc unknown"
     )
+
+
+@pytest.mark.parametrize(
+    "numeric_config",
+    [
+        pytest.param(
+            {CONF_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE}, id="device_class"
+        ),
+        pytest.param(
+            {CONF_STATE_CLASS: SensorStateClass.MEASUREMENT}, id="state_class"
+        ),
+        pytest.param({CONF_UNIT_OF_MEASUREMENT: "°C"}, id="unit_of_measurement"),
+    ],
+)
+async def test_manual_trigger_sensor_entity_non_numeric_value(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    numeric_config: dict[str, Any],
+) -> None:
+    """Test a non-numeric value for a numeric sensor becomes unknown and warns once."""
+    config = {CONF_NAME: template.Template("test_entity", hass), **numeric_config}
+    entity = ManualTriggerSensorEntity(hass, config)
+    entity.entity_id = "sensor.test"
+    warning = "returned the non-numeric value 'unavailable'"
+
+    entity._set_native_value_with_possible_timestamp("unavailable")
+    assert entity.native_value is None
+    assert entity.state is None
+    assert caplog.text.count(warning) == 1
+
+    entity._set_native_value_with_possible_timestamp("unavailable")
+    assert caplog.text.count(warning) == 1
+
+    entity._set_native_value_with_possible_timestamp("21.5")
+    assert entity.native_value == "21.5"
+    assert entity.state == "21.5"
+
+    entity._set_native_value_with_possible_timestamp("unavailable")
+    assert entity.native_value is None
+    assert caplog.text.count(warning) == 2

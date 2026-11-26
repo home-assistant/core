@@ -808,6 +808,7 @@ FLOWS = {
         "songpal",
         "sonos",
         "sony_infrared",
+        "sony_tv_rs232",
         "soundtouch",
         "specialized_turbo",
         "speedtestdotnet",
