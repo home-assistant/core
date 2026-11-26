@@ -106,7 +106,10 @@ async def test_sleep_timer_sensors_follow_active_source(
     group_player.sleep_timer_expires_at = 1767225600.0
     group_player.sleep_timer_mode = SleepTimerMode.DURATION
     await trigger_subscription_callback(
-        hass, music_assistant_client, EventType.PLAYER_UPDATED, "test_group_player_1"
+        hass,
+        music_assistant_client,
+        EventType.PLAYER_SLEEP_TIMER_UPDATED,
+        "test_group_player_1",
     )
     assert hass.states.get(END_ENTITY_ID).state == "2026-01-01T00:00:00+00:00"
     assert hass.states.get(MODE_ENTITY_ID).state == "duration"

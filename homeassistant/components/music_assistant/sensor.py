@@ -111,14 +111,14 @@ class MusicAssistantSensor(MusicAssistantEntity, SensorEntity):
         """Register callbacks, also for the player it plays along with."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.mass.subscribe(self._on_player_updated, EventType.PLAYER_UPDATED)
+            self.mass.subscribe(
+                self._on_sleep_timer_updated, EventType.PLAYER_SLEEP_TIMER_UPDATED
+            )
         )
 
-    async def _on_player_updated(self, event: MassEvent) -> None:
-        # updates of the player itself already reach the base entity
-        if event.object_id != self.player_id and (
-            event.object_id == self.player.active_source
-        ):
+    async def _on_sleep_timer_updated(self, event: MassEvent) -> None:
+        # the server updates the player before it signals its sleep timer
+        if event.object_id in (self.player_id, self.player.active_source):
             await self.async_on_update()
             self.async_write_ha_state()
 
