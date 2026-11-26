@@ -1040,8 +1040,9 @@ class _ScriptRun:
         )
         # The enabled option was already rendered with the run variables when
         # this step started, don't let the condition render it again.
-        cond = await self._async_get_condition(
-            {key: value for key, value in self._action.items() if key != CONF_ENABLED}
+        cond = await self._script._async_get_condition(  # noqa: SLF001
+            {key: value for key, value in self._action.items() if key != CONF_ENABLED},
+            cache_key=id(self._action),
         )
         try:
             trace_element = trace_stack_top(trace_stack_cv)
@@ -1817,7 +1818,7 @@ class Script:
         self._max_exceeded = max_exceeded
         if script_mode == SCRIPT_MODE_QUEUED:
             self._queue_lck = asyncio.Lock()
-        self._condition_cache: dict[frozenset[tuple[str, str]], ConditionChecker] = {}
+        self._condition_cache: dict[int, ConditionChecker] = {}
         self._repeat_script: dict[int, Script] = {}
         self._choose_data: dict[int, _ChooseData] = {}
         self._if_data: dict[int, _IfData] = {}
@@ -2338,11 +2339,14 @@ class Script:
             sub_script._async_unload()  # noqa: SLF001
         self._sequence_scripts.clear()
 
-    async def _async_get_condition(self, config: ConfigType) -> ConditionChecker:
-        config_cache_key = frozenset((k, str(v)) for k, v in config.items())
-        if not (cond := self._condition_cache.get(config_cache_key)):
+    async def _async_get_condition(
+        self, config: ConfigType, *, cache_key: int | None = None
+    ) -> ConditionChecker:
+        if cache_key is None:
+            cache_key = id(config)
+        if not (cond := self._condition_cache.get(cache_key)):
             cond = await condition.async_from_config(self._hass, config)
-            self._condition_cache[config_cache_key] = cond
+            self._condition_cache[cache_key] = cond
         return cond
 
     def _prep_repeat_script(self, step: int) -> Script:
