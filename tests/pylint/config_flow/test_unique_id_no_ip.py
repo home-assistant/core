@@ -101,6 +101,13 @@ def test_enforce_unique_id_no_ip(
         ),
         pytest.param(
             """
+        await self.async_set_unique_id_or_abort(entry.data[CONF_HOST])
+        """,
+            "homeassistant.components.test.config_flow",
+            id="async_set_unique_id_or_abort_conf_host",
+        ),
+        pytest.param(
+            """
         await self.async_set_unique_id(
             unique_id=data[CONF_IP_ADDRESS], raise_on_progress=False
         )
