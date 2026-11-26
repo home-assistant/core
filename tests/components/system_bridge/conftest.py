@@ -184,6 +184,12 @@ def mock_websocket_client(
             message="Notification sent",
             data={"id": 1},
         )
+        websocket_client.dismiss_notification.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.NOTIFICATION_DISMISSED,
+            message="Notification dismissed",
+            data={},
+        )
         websocket_client.get_commands.return_value = SettingsCommands(
             allowlist=[FIXTURE_COMMAND]
         )

@@ -38,6 +38,12 @@ _RF_315_RANGE = (314_950_000, 315_250_000)
 
 SUPPORTED_FREQUENCY_RANGES: list[tuple[int, int]] = [_RF_433_RANGE, _RF_315_RANGE]
 
+# Measured on an RM4 Pro: the outermost frequencies it was heard sending on.
+RM4_PRO_FREQUENCY_RANGES: list[tuple[int, int]] = [
+    (305_000_000, 335_000_000),
+    (431_000_000, 438_000_000),
+]
+
 
 def _type_byte_for_frequency(frequency: int) -> int:
     """Return the Broadlink RF type byte for a given carrier frequency."""
@@ -142,7 +148,9 @@ class BroadlinkRadioFrequency(BroadlinkEntity, RadioFrequencyTransmitterEntity):
     @property
     @override
     def supported_frequency_ranges(self) -> list[tuple[int, int]]:
-        """Return the Broadlink-supported narrow RF bands."""
+        """Return the RF bands this Broadlink model can send on."""
+        if self._device.api.type == "RM4PRO":
+            return RM4_PRO_FREQUENCY_RANGES
         return SUPPORTED_FREQUENCY_RANGES
 
     @override

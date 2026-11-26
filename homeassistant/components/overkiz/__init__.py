@@ -216,6 +216,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         coordinator=coordinator, platforms=platforms, scenarios=scenarios
     )
 
+    coordinator.setup_device_urls = set(coordinator.data)
+
     # Map Overkiz entities to Home Assistant platform
     for device in coordinator.data.values():
         if platform := OVERKIZ_DEVICE_TO_PLATFORM.get(

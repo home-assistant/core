@@ -23,9 +23,6 @@ SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
 # Schedules are weekly, so are re-fetched only to pick up any changes made elsewhere
 SCHEDULE_MAX_AGE: Final = timedelta(hours=1)
 
-# Support for the refresh_system service is being deprecated
-REFRESH_BREAKS_IN_HA_VERSION: Final = "2027.1.0"
-
 NEXT_SP_FROM: Final = "next_sp_from"
 THIS_SP_FROM: Final = "this_sp_from"
 
@@ -34,7 +31,6 @@ THIS_SP_FROM: Final = "this_sp_from"
 class EvoService(StrEnum):
     """The Evohome services."""
 
-    REFRESH_SYSTEM = "refresh_system"
     SET_SYSTEM_MODE = "set_system_mode"
     SET_ZONE_OVERRIDE = "set_zone_override"
     SET_DHW_OVERRIDE = "set_dhw_override"

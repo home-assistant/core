@@ -14,7 +14,11 @@ from pytest_homeassistant.plugins import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import event, template
-from homeassistant.components.template.const import CONF_ATTRIBUTES, CONF_PICTURE
+from homeassistant.components.template.const import (
+    CONF_ATTRIBUTES,
+    CONF_PICTURE,
+    EVENT_DEPRECATED_ATTRIBUTES,
+)
 from homeassistant.components.template.coordinator import TriggerUpdateCoordinator
 from homeassistant.components.template.event import (
     CONF_EVENT_TYPE,
@@ -33,7 +37,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.template import Template
 
 from .conftest import (
@@ -45,6 +53,7 @@ from .conftest import (
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
+    get_issues_with_prefix,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
@@ -867,3 +876,102 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_EVENT.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+def get_deprecated_attributes_issues(
+    issue_registry: ir.IssueRegistry,
+) -> list[ir.IssueEntry]:
+    """Return the deprecated attributes issues."""
+    return get_issues_with_prefix(
+        issue_registry, EVENT_DEPRECATED_ATTRIBUTES.translation_key
+    )
+
+
+@pytest.mark.parametrize(
+    ("count", "config", "options"),
+    [
+        pytest.param(
+            1,
+            {**TEST_EVENT_CONFIG, "attributes": {"device_class": "button"}},
+            "- `attributes: device_class` → `device_class`",
+            id="device_class",
+        ),
+        pytest.param(
+            1,
+            {
+                **TEST_EVENT_CONFIG,
+                "attributes": {"event_type": TEST_EVENT_TYPE_TEMPLATE},
+            },
+            "- `attributes: event_type` → `event_type`",
+            id="event_type",
+        ),
+        pytest.param(
+            1,
+            {
+                **TEST_EVENT_CONFIG,
+                "attributes": {"event_types": TEST_EVENT_TYPES_TEMPLATE},
+            },
+            "- `attributes: event_types` → `event_types`",
+            id="event_types",
+        ),
+        pytest.param(
+            1,
+            {
+                **TEST_EVENT_CONFIG,
+                "attributes": {
+                    "event_type": TEST_EVENT_TYPE_TEMPLATE,
+                    "event_types": TEST_EVENT_TYPES_TEMPLATE,
+                },
+            },
+            "- `attributes: event_type` → `event_type`\n- `attributes: event_types` → `event_types`",
+            id="event_type_and_event_types",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_base_event")
+async def test_deprecated_attributes_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, options: str
+) -> None:
+    """Test a repair issue is created for attributes that have a dedicated option."""
+    issues = get_deprecated_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.6.0"
+    assert issues[0].is_fixable is False
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].learn_more_url == (
+        "https://www.home-assistant.io/integrations/template/#event"
+    )
+    assert issues[0].translation_key == EVENT_DEPRECATED_ATTRIBUTES.translation_key
+    assert issues[0].translation_placeholders == {
+        "identifier": f"name: {TEST_EVENT.object_id}",
+        "options": options,
+    }
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        pytest.param(
+            1,
+            {**TEST_EVENT_CONFIG, "attributes": {"other": "{{ 1 }}"}},
+            id="dedicated_option",
+        ),
+        pytest.param(
+            1,
+            {**TEST_EVENT_CONFIG, "attributes": "{{ {'event_type': 'single'} }}"},
+            id="attributes_template",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_base_event")
+async def test_no_deprecated_attributes_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test no repair issue is created for dedicated options or allowed attributes."""
+    assert get_deprecated_attributes_issues(issue_registry) == []

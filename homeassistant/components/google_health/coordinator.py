@@ -17,10 +17,16 @@ from google_health_api.model import (
     ActiveMinutesRollupValue,
     ActiveZoneMinutesRollupValue,
     AltitudeRollupValue,
+    Bmi,
     BodyFat,
+    DailyHeartRateVariability,
+    DailyOxygenSaturation,
+    DailyRespiratoryRate,
     DailyRestingHeartRate,
+    DailyVO2Max,
     DistanceRollupValue,
     FloorsRollupValue,
+    Height,
     HydrationLogRollupValue,
     NutritionLogRollupValue,
     PairedDevice,
@@ -147,8 +153,14 @@ class GoogleHealthBodyData:
     """Class to hold body measurements."""
 
     weight: Weight | None = None
+    height: Height | None = None
+    bmi: Bmi | None = None
     resting_heart_rate: DailyRestingHeartRate | None = None
     body_fat: BodyFat | None = None
+    heart_rate_variability: DailyHeartRateVariability | None = None
+    oxygen_saturation: DailyOxygenSaturation | None = None
+    respiratory_rate: DailyRespiratoryRate | None = None
+    vo2_max: DailyVO2Max | None = None
 
 
 class GoogleHealthDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
@@ -299,30 +311,72 @@ class GoogleHealthBodyCoordinator(
 
     @override
     async def _async_fetch_data(self) -> GoogleHealthBodyData:
-        """Fetch latest body weight, resting heart rate, and body fat in parallel."""
+        """Fetch latest body measurements and vitals in parallel."""
         # The Google Health API returns data points sorted by interval start time
         # in descending order (newest first). Querying with page_size=1 and grabbing
         # the first element is sufficient to fetch the most recent measurement.
-        weight_result, hr_result, body_fat_result = await asyncio.gather(
-            self.api.weight.list(page_size=DEFAULT_PAGE_SIZE),
-            self.api.daily_resting_heart_rate.list(page_size=DEFAULT_PAGE_SIZE),
-            self.api.body_fat.list(page_size=DEFAULT_PAGE_SIZE),
+        # Nested gathers keep mypy tuple types inferred (overloads stop at 6).
+        (
+            (weight_result, height_result, hr_result, body_fat_result),
+            (hrv_result, spo2_result, respiratory_rate_result, vo2_max_result),
+        ) = await asyncio.gather(
+            asyncio.gather(
+                self.api.weight.list(page_size=DEFAULT_PAGE_SIZE),
+                self.api.height.list(page_size=DEFAULT_PAGE_SIZE),
+                self.api.daily_resting_heart_rate.list(page_size=DEFAULT_PAGE_SIZE),
+                self.api.body_fat.list(page_size=DEFAULT_PAGE_SIZE),
+            ),
+            asyncio.gather(
+                self.api.daily_heart_rate_variability.list(page_size=DEFAULT_PAGE_SIZE),
+                self.api.daily_oxygen_saturation.list(page_size=DEFAULT_PAGE_SIZE),
+                self.api.daily_respiratory_rate.list(page_size=DEFAULT_PAGE_SIZE),
+                self.api.daily_vo2_max.list(page_size=DEFAULT_PAGE_SIZE),
+            ),
+        )
+        bmi_result = await self.api.bmi.list(
+            page_size=DEFAULT_PAGE_SIZE,
+            weight_result=weight_result,
+            height_result=height_result,
         )
 
         weight = (
             weight_result.data_points[0].data if weight_result.data_points else None
         )
+        height = (
+            height_result.data_points[0].data if height_result.data_points else None
+        )
+        bmi = bmi_result.data_points[0].data if bmi_result.data_points else None
         resting_heart_rate = (
             hr_result.data_points[0].data if hr_result.data_points else None
         )
         body_fat = (
             body_fat_result.data_points[0].data if body_fat_result.data_points else None
         )
+        heart_rate_variability = (
+            hrv_result.data_points[0].data if hrv_result.data_points else None
+        )
+        oxygen_saturation = (
+            spo2_result.data_points[0].data if spo2_result.data_points else None
+        )
+        respiratory_rate = (
+            respiratory_rate_result.data_points[0].data
+            if respiratory_rate_result.data_points
+            else None
+        )
+        vo2_max = (
+            vo2_max_result.data_points[0].data if vo2_max_result.data_points else None
+        )
 
         return GoogleHealthBodyData(
             weight=weight,
+            height=height,
+            bmi=bmi,
             resting_heart_rate=resting_heart_rate,
             body_fat=body_fat,
+            heart_rate_variability=heart_rate_variability,
+            oxygen_saturation=oxygen_saturation,
+            respiratory_rate=respiratory_rate,
+            vo2_max=vo2_max,
         )
 
 

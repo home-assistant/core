@@ -1141,7 +1141,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
             return True
 
         # check for intent
-        if (await conversation_agent.async_recognize_intent(test_input)) is not None:
+        if await conversation_agent.async_recognize_intents(test_input):
             return True
 
         return False

@@ -5595,7 +5595,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home UV index',
-      'level': 'High',
+      'level': 'high',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'UV index',
     }),
@@ -6094,7 +6094,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'S',
+      'direction': 's',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind gust speed day 0',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -6151,7 +6151,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'NW',
+      'direction': 'nw',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind gust speed day 1',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -6208,7 +6208,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'SSW',
+      'direction': 'ssw',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind gust speed day 2',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -6265,7 +6265,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'W',
+      'direction': 'w',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind gust speed day 3',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -6322,7 +6322,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'W',
+      'direction': 'w',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind gust speed day 4',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -6379,7 +6379,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'WSW',
+      'direction': 'wsw',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind gust speed night 0',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -6436,7 +6436,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'S',
+      'direction': 's',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind gust speed night 1',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -6493,7 +6493,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'W',
+      'direction': 'w',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind gust speed night 2',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -6550,7 +6550,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'W',
+      'direction': 'w',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind gust speed night 3',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -6607,7 +6607,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'W',
+      'direction': 'w',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind gust speed night 4',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -6723,7 +6723,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'SSE',
+      'direction': 'sse',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind speed day 0',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -6780,7 +6780,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'WNW',
+      'direction': 'wnw',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind speed day 1',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -6837,7 +6837,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'SSW',
+      'direction': 'ssw',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind speed day 2',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -6894,7 +6894,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'WNW',
+      'direction': 'wnw',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind speed day 3',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -6951,7 +6951,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'W',
+      'direction': 'w',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind speed day 4',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -7008,7 +7008,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'WNW',
+      'direction': 'wnw',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind speed night 0',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -7065,7 +7065,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'SSE',
+      'direction': 'sse',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind speed night 1',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -7122,7 +7122,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'W',
+      'direction': 'w',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind speed night 2',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -7179,7 +7179,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'W',
+      'direction': 'w',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind speed night 3',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -7236,7 +7236,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
-      'direction': 'W',
+      'direction': 'w',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Wind speed night 4',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),

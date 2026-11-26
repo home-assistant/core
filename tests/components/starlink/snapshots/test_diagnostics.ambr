@@ -88,6 +88,7 @@
       'pop_ping_latency_ms': 30.285715103149414,
       'seconds_obstructed': None,
       'seconds_to_first_nonempty_slot': 0.0,
+      'signal_quality': 0.7,
       'snr': None,
       'software_version': '191e4dfa-d63a-46b1-a73b-9fa907733864.uterm.release',
       'state': 'CONNECTED',

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 from uuid import uuid4
 
 import probatio
@@ -19,6 +19,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    AbstractOAuth2BaseImplementation,
     AbstractOAuth2FlowHandler,
     AbstractOAuth2Implementation,
     ImplementationUnavailableError,
@@ -64,7 +65,7 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         super().__init__()
         self._app_id: str | None = None
         self._replace_app = False
-        self._implementations: dict[str, AbstractOAuth2Implementation] = {}
+        self._implementations: dict[str, AbstractOAuth2BaseImplementation] = {}
 
     @property
     @override
@@ -107,7 +108,8 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         implementations = {
             key: impl
             for key, impl in self._implementations.items()
-            if key != "cloud"
+            if isinstance(impl, AbstractOAuth2Implementation)
+            and key != "cloud"
             and getattr(impl, "client_id", None) != HOME_ASSISTANT_CLOUD_CLIENT_ID
             and not ledger.is_stale(key, redirect_uri)
         }
@@ -191,9 +193,12 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 self._app_id = existing_app.app_id
                 # Another flow may have just provisioned this app; regenerating its
                 # credentials would invalidate the secret that flow still uses.
-                if (
-                    implementation := implementations.get(app_auth_domain(self._app_id))
-                ) is not None:
+                if isinstance(
+                    implementation := implementations.get(
+                        app_auth_domain(self._app_id)
+                    ),
+                    AbstractOAuth2Implementation,
+                ):
                     self.flow_impl = implementation
                     return
                 regenerated = await client.regenerate_oauth(
@@ -226,7 +231,10 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
 
             implementations = await async_get_implementations(self.hass, DOMAIN)
-            self.flow_impl = implementations[auth_domain]
+            implementation = implementations[auth_domain]
+            if TYPE_CHECKING:
+                assert isinstance(implementation, AbstractOAuth2Implementation)
+            self.flow_impl = implementation
 
     def _is_app_in_use(self, app_id: str) -> bool:
         """Return if a config entry authenticates with the app."""
@@ -315,16 +323,18 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         # Cloud entries restart the flow, so they move to a PAT app.
         if entry.data.get("auth_implementation") not in (None, "cloud"):
             try:
-                self.flow_impl = await async_get_config_entry_implementation(
+                implementation = await async_get_config_entry_implementation(
                     self.hass, entry
                 )
             except ValueError, ImplementationUnavailableError:
                 return await self.async_step_user()
             if (
-                getattr(self.flow_impl, "client_id", None)
+                not isinstance(implementation, AbstractOAuth2Implementation)
+                or getattr(implementation, "client_id", None)
                 == HOME_ASSISTANT_CLOUD_CLIENT_ID
             ):
                 return await self.async_step_user()
+            self.flow_impl = implementation
             ledger = await async_get_app_ledger(self.hass)
             # The app's registered callback no longer matches after a URL change.
             if ledger.is_stale(

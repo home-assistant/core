@@ -22,7 +22,8 @@
     "is_snr_above_noise_floor": true,
     "gps_ready": true,
     "gps_enabled": true,
-    "gps_sats": 12
+    "gps_sats": 12,
+    "signal_quality": 0.7
   },
   {
     "wedges_fraction_obstructed[]": [

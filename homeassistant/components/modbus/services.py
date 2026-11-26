@@ -67,15 +67,21 @@ def _write_service_schema(
     )
 
 
-def _get_hubs(hass: HomeAssistant) -> dict[str, ModbusHub]:
-    """Return the configured Modbus hubs, raising if Modbus is not set up."""
+def _get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
+    """Return the named Modbus hub, raising if it is not set up."""
     if not (hubs := hass.data.get(DATA_MODBUS_HUBS)):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="not_loaded",
         )
+    if (hub := hubs.get(name)) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_hub",
+            translation_placeholders={"hub": name},
+        )
 
-    return hubs
+    return hub
 
 
 def _get_service_call_details(service: ServiceCall) -> tuple[ModbusHub, int, int]:
@@ -84,7 +90,7 @@ def _get_service_call_details(service: ServiceCall) -> tuple[ModbusHub, int, int
         ModbusServiceArgument.SLAVE, service.data.get(ModbusServiceArgument.UNIT, 1)
     )
     address = service.data[ModbusServiceArgument.ADDRESS]
-    hub = _get_hubs(service.hass)[service.data[ModbusServiceArgument.HUB]]
+    hub = _get_hub(service.hass, service.data[ModbusServiceArgument.HUB])
     return (hub, device_address, address)
 
 
@@ -118,7 +124,7 @@ async def _async_write_coil(service: ServiceCall) -> None:
 async def _async_stop_hub(service: ServiceCall) -> None:
     """Stop Modbus hub."""
     hass = service.hass
-    hub = _get_hubs(hass)[service.data[ModbusServiceArgument.HUB]]
+    hub = _get_hub(hass, service.data[ModbusServiceArgument.HUB])
     async_dispatcher_send(hass, SIGNAL_STOP_ENTITY.format(hub.name))
     await hub.async_close()
 

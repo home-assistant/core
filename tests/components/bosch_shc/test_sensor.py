@@ -4,19 +4,21 @@ from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import SHCRoomThermostat2, TerminalConfiguration
+from boschshcpy import BatteryLevelService, SHCRoomThermostat2, TerminalConfiguration
 from boschshcpy.services_impl import OutdoorSirenPowerSupplyService, ValveTappetService
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    battery_only_device,
+    light_control_device,
     motion_detector2_device,
     outdoor_siren_device,
     setup_integration,
@@ -369,3 +371,101 @@ async def test_motion_detector2_temperature_push_update(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.motion_detector_temperature").state == "19.0"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"micromodule_light_controls": [light_control_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_light_control_power_and_energy(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The Light Control reports power and energy."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.light_control_power").state == "12.5"
+    assert hass.states.get("sensor.light_control_energy").state == "3.0"
+
+
+@pytest.mark.parametrize(
+    ("device_buckets", "expected"),
+    [
+        pytest.param(
+            {"motion_detectors": [battery_only_device(batterylevel=level)]},
+            expected,
+            id=level.name.lower(),
+        )
+        for level, expected in (
+            (BatteryLevelService.State.OK, "ok"),
+            (BatteryLevelService.State.LOW_BATTERY, "low_battery"),
+            (BatteryLevelService.State.CRITICAL_LOW, "critically_low_battery"),
+            (
+                BatteryLevelService.State.CRITICALLY_LOW_BATTERY,
+                "critically_low_battery",
+            ),
+            (BatteryLevelService.State.NOT_AVAILABLE, STATE_UNKNOWN),
+        )
+    ],
+    indirect=["device_buckets"],
+)
+@pytest.mark.usefixtures("mock_session", "entity_registry_enabled_by_default")
+async def test_battery_level_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    expected: str,
+) -> None:
+    """Battery devices report their granular battery level."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.motion_battery_level")
+    assert state is not None
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "shutter_contacts": [
+                battery_only_device(
+                    device_id="hdm:HomeMaticIP:nobattery",
+                    name="No battery",
+                    supports_batterylevel=False,
+                )
+            ],
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session", "entity_registry_enabled_by_default")
+async def test_no_battery_level_without_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Devices without the BatteryLevel service get no sensor."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.no_battery_battery_level") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors": [battery_only_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_battery_level_disabled_by_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """The battery level is diagnostic detail, so it starts disabled."""
+    await setup_integration(hass, mock_config_entry)
+
+    entry = entity_registry.async_get("sensor.motion_battery_level")
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert entry.unique_id == "serial-hdm:HomeMaticIP:motion1_battery_level"

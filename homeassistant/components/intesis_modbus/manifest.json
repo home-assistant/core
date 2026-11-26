@@ -11,5 +11,5 @@
   "iot_class": "local_polling",
   "loggers": ["intesis_gw_modbus", "modbus_connection"],
   "quality_scale": "bronze",
-  "requirements": ["intesis-gw-modbus==0.3.0"]
+  "requirements": ["intesis-gw-modbus==0.3.2"]
 }

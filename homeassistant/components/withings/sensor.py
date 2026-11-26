@@ -343,6 +343,16 @@ class WithingsSleepSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[SleepSummary], StateType]
 
 
+UOM_EVENTS_PER_HOUR = "events/h"
+
+
+def _non_negative(value: int | None) -> int | None:
+    """Return None for the negative values Withings uses for "no reading"."""
+    if value is None or value < 0:
+        return None
+    return value
+
+
 SLEEP_SENSORS = [
     WithingsSleepSensorEntityDescription(
         key="sleep_breathing_disturbances_intensity",
@@ -488,6 +498,92 @@ SLEEP_SENSORS = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_apnea_hypopnea_index",
+        value_fn=lambda sleep_summary: _non_negative(
+            sleep_summary.apnea_hypopnea_index
+        ),
+        translation_key="apnea_hypopnea_index",
+        native_unit_of_measurement=UOM_EVENTS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_total_sleep_time_seconds",
+        value_fn=lambda sleep_summary: sleep_summary.total_sleep_time,
+        translation_key="total_sleep_time",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_total_time_in_bed_seconds",
+        value_fn=lambda sleep_summary: sleep_summary.total_time_in_bed,
+        translation_key="time_in_bed",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_awake_during_sleep_seconds",
+        value_fn=lambda sleep_summary: sleep_summary.time_awake_during_sleep,
+        translation_key="awake_after_sleep_onset",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_efficiency",
+        value_fn=lambda sleep_summary: (
+            round(sleep_summary.sleep_efficiency * 100)
+            if sleep_summary.sleep_efficiency is not None
+            else None
+        ),
+        translation_key="sleep_efficiency",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_rem_phase_count",
+        value_fn=lambda sleep_summary: sleep_summary.rem_sleep_phase_count,
+        translation_key="rem_sleep_phase_count",
+        native_unit_of_measurement=UOM_FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_out_of_bed_count",
+        value_fn=lambda sleep_summary: sleep_summary.out_of_bed_count,
+        translation_key="out_of_bed_count",
+        native_unit_of_measurement=UOM_FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_hrv_start_ms",
+        value_fn=lambda sleep_summary: (
+            sleep_summary.average_heart_rate_variability_start
+        ),
+        translation_key="heart_rate_variability_start",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_hrv_end_ms",
+        value_fn=lambda sleep_summary: sleep_summary.average_heart_rate_variability_end,
+        translation_key="heart_rate_variability_end",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),

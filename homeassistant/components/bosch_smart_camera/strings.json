@@ -27,9 +27,19 @@
         "name": "Camera light"
       }
     },
+    "sensor": {
+      "wifi_signal_strength": {
+        "name": "Wi-Fi signal strength"
+      }
+    },
     "switch": {
       "privacy_mode": {
         "name": "Privacy mode"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
       }
     }
   },
@@ -45,6 +55,9 @@
     },
     "privacy_mode_failed": {
       "message": "Unable to change the privacy mode at Bosch."
+    },
+    "restart_failed": {
+      "message": "Unable to restart the camera through Bosch."
     },
     "snapshot_failed": {
       "message": "Unable to fetch the camera image from Bosch."

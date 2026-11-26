@@ -208,6 +208,15 @@ def _mock_login_requests(requests_mock: requests_mock.Mocker) -> requests_mock.M
         requests_mock.request(ANY, url, text='<meta name="csrf_token" content="x"/>')
         requests_mock.request(
             ANY,
+            f"{url}api/user/challenge_login",
+            text=(
+                "<error><code>"
+                f"{ResponseCodeEnum.ERROR_SYSTEM_NO_SUPPORT}"
+                "</code><message/></error>"
+            ),
+        )
+        requests_mock.request(
+            ANY,
             f"{url}api/user/state-login",
             text=(
                 f"<response><State>{LoginStateEnum.LOGGED_OUT}</State>"
