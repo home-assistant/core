@@ -211,6 +211,13 @@ class RuntimeEntryData:
         default_factory=dict
     )
     device_update_subscriptions: set[CALLBACK_TYPE] = field(default_factory=set)
+    # Whether the assist satellite is subscribed to the device's voice
+    # assistant: the firmware drops voice assistant messages, timer events
+    # included, from a connection that is not
+    voice_assistant_subscribed: bool = False
+    voice_assistant_subscribed_callbacks: set[CALLBACK_TYPE] = field(
+        default_factory=set
+    )
     static_info_update_subscriptions: set[Callable[[list[EntityInfo]], None]] = field(
         default_factory=set
     )
@@ -446,6 +453,22 @@ class RuntimeEntryData:
         return partial(self.device_update_subscriptions.remove, callback_)
 
     @callback
+    def async_subscribe_voice_assistant_subscribed(
+        self, callback_: CALLBACK_TYPE
+    ) -> CALLBACK_TYPE:
+        """Subscribe to the satellite subscribing to the voice assistant."""
+        self.voice_assistant_subscribed_callbacks.add(callback_)
+        return partial(self.voice_assistant_subscribed_callbacks.remove, callback_)
+
+    @callback
+    def async_set_voice_assistant_subscribed(self, subscribed: bool) -> None:
+        """Record whether the satellite is subscribed to the voice assistant."""
+        self.voice_assistant_subscribed = subscribed
+        if subscribed:
+            for callback_ in self.voice_assistant_subscribed_callbacks.copy():
+                callback_()
+
+    @callback
     def async_subscribe_static_info_updated(
         self, callback_: Callable[[list[EntityInfo]], None]
     ) -> CALLBACK_TYPE:
@@ -661,6 +684,7 @@ class RuntimeEntryData:
         Safe to call multiple times.
         """
         self.available = False
+        self.voice_assistant_subscribed = False
         # The device's ports go with it, as a hub being unplugged takes its ports
         if self.serial_proxy_identities:
             self.serial_proxy_identities.clear()

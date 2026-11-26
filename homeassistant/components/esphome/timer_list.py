@@ -61,8 +61,10 @@ class EsphomeTimerList(InMemoryTimerListEntity):
     """Timers of an ESPHome voice satellite, which the device shows and rings.
 
     Timers are kept in Home Assistant, so they keep running while the device is
-    disconnected. When it connects again, it is sent every running timer and
-    told to drop the ones that ended in the meantime.
+    disconnected. Once it listens again, it is sent every running timer and
+    told to drop the ones that ended in the meantime. It listens once the
+    satellite has subscribed to its voice assistant: the firmware drops timer
+    events from a connection that has not.
     """
 
     _attr_has_entity_name = True
@@ -72,7 +74,6 @@ class EsphomeTimerList(InMemoryTimerListEntity):
         """Initialize the timer list."""
         super().__init__()
         self._entry_data = entry_data
-        self._was_available = entry_data.available
         # Running timers the device was told about, to cancel there when they
         # end while it is disconnected
         self._device_timers: dict[str, str | None] = {}
@@ -85,20 +86,16 @@ class EsphomeTimerList(InMemoryTimerListEntity):
     async def async_added_to_hass(self) -> None:
         """Send timer changes to the device."""
         await super().async_added_to_hass()
-        self._was_available = self._entry_data.available
         self.async_on_remove(self.async_subscribe_updates(self._async_send_event))
         self.async_on_remove(
-            self._entry_data.async_subscribe_device_updated(self._async_device_updated)
+            self._entry_data.async_subscribe_voice_assistant_subscribed(
+                self._async_sync_device
+            )
         )
 
     @callback
-    def _async_device_updated(self) -> None:
-        """Bring the device's timers up to date when it connects again."""
-        was_available = self._was_available
-        self._was_available = self._entry_data.available
-        if was_available or not self._entry_data.available:
-            return
-
+    def _async_sync_device(self) -> None:
+        """Send the device every running timer and cancel the ones that ended."""
         running = {
             timer.timer_id: timer
             for timer in self.timers
@@ -132,7 +129,8 @@ class EsphomeTimerList(InMemoryTimerListEntity):
     @callback
     def _async_send_event(self, event: TimerListEvent) -> None:
         """Send a timer change to the device."""
-        if not self._entry_data.available:
+        if not self._entry_data.voice_assistant_subscribed:
+            # Caught up with once it listens again
             return
 
         item = event.item

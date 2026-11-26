@@ -293,12 +293,14 @@ class EsphomeAssistSatellite(
             handle_announcement_finished=self.handle_announcement_finished,
             wake_word_audio=self._wake_word_audio_subscribed,
         )
+        self._entry_data.async_set_voice_assistant_subscribed(True)
 
     @callback
     def _async_unsubscribe_voice_assistant(self) -> None:
         if self._unsubscribe_voice_assistant is not None:
             self._unsubscribe_voice_assistant()
             self._unsubscribe_voice_assistant = None
+            self._entry_data.async_set_voice_assistant_subscribed(False)
 
     @callback
     def _async_wake_word_audio_wanted_changed(self) -> None:
@@ -344,13 +346,19 @@ class EsphomeAssistSatellite(
             self.async_on_remove(self._async_unsubscribe_voice_assistant)
         else:
             # UDP audio
-            self.async_on_remove(
-                self.cli.subscribe_voice_assistant(
-                    handle_start=self.handle_pipeline_start,
-                    handle_stop=self.handle_pipeline_stop,
-                    handle_announcement_finished=self.handle_announcement_finished,
-                )
+            unsubscribe = self.cli.subscribe_voice_assistant(
+                handle_start=self.handle_pipeline_start,
+                handle_stop=self.handle_pipeline_stop,
+                handle_announcement_finished=self.handle_announcement_finished,
             )
+            self._entry_data.async_set_voice_assistant_subscribed(True)
+
+            @callback
+            def _async_unsubscribe_udp() -> None:
+                unsubscribe()
+                self._entry_data.async_set_voice_assistant_subscribed(False)
+
+            self.async_on_remove(_async_unsubscribe_udp)
 
         assert self._attr_supported_features is not None
         if feature_flags & VoiceAssistantFeature.ANNOUNCE:

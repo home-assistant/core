@@ -372,6 +372,63 @@ async def test_cancel_retried_after_failed_send(
     )
 
 
+@pytest.mark.usefixtures("freezer")
+async def test_resent_after_the_satellite_subscribes(
+    hass: HomeAssistant, mock_client: APIClient, mock_device: MockESPHomeDevice
+) -> None:
+    """Test timers are resent only once the satellite is subscribed again.
+
+    The firmware drops timer events from a connection that is not subscribed to
+    its voice assistant, and the satellite subscribes after the device is
+    available again.
+    """
+    entity_id = _timer_list_entity_id(hass, mock_device)
+    assert entity_id is not None
+    result = await _call(hass, entity_id, "create_timer", duration={"seconds": 60})
+    await mock_device.mock_disconnect(expected_disconnect=False)
+    await hass.async_block_till_done()
+    mock_client.send_voice_assistant_timer_event.reset_mock()
+
+    order: list[str] = []
+    subscribe = mock_client.subscribe_voice_assistant
+
+    def _subscribe(**kwargs: Any) -> Any:
+        order.append("subscribe")
+        return subscribe(**kwargs)
+
+    mock_client.subscribe_voice_assistant = _subscribe
+    mock_client.send_voice_assistant_timer_event.side_effect = lambda *args: (
+        order.append("send")
+    )
+
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+
+    assert order == ["subscribe", "send"]
+    mock_client.send_voice_assistant_timer_event.assert_called_once_with(
+        UPDATED, result["timer_id"], None, 60, 60, True
+    )
+
+
+@pytest.mark.usefixtures("freezer")
+async def test_nothing_sent_while_not_subscribed(
+    hass: HomeAssistant, mock_client: APIClient, mock_device: MockESPHomeDevice
+) -> None:
+    """Test changes are kept for the next subscription while not subscribed."""
+    entity_id = _timer_list_entity_id(hass, mock_device)
+    assert entity_id is not None
+    entry_data = mock_device.entry.runtime_data
+    entry_data.async_set_voice_assistant_subscribed(False)
+
+    result = await _call(hass, entity_id, "create_timer", duration={"seconds": 60})
+    mock_client.send_voice_assistant_timer_event.assert_not_called()
+
+    entry_data.async_set_voice_assistant_subscribed(True)
+    mock_client.send_voice_assistant_timer_event.assert_called_once_with(
+        UPDATED, result["timer_id"], None, 60, 60, True
+    )
+
+
 async def test_nothing_resent_without_timers(
     hass: HomeAssistant, mock_client: APIClient, mock_device: MockESPHomeDevice
 ) -> None:
