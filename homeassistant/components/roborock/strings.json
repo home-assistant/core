@@ -149,10 +149,10 @@
         "name": "Cleaning mode",
         "state": {
           "custom": "Custom",
-          "mop": "Mop Only",
-          "smart_mode": "AI SmartPlan",
+          "mop": "Mop",
+          "smart_mode": "SmartPlan",
           "vac_and_mop": "Vac & Mop",
-          "vacuum": "Vacuum Only"
+          "vacuum": "Vacuum"
         }
       },
       "cleaning_route": {
