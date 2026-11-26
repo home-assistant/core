@@ -68,7 +68,10 @@ from homeassistant.components.bluetooth.const import (
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
-from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
+from homeassistant.components.bluetooth.manager import (
+    EVENT_DRIVEN_CLAIM_SECONDS,
+    HomeAssistantBluetoothManager,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.discovery_flow import DiscoveryKey
@@ -2676,6 +2679,27 @@ async def test_async_advertisement_restored(hass: HomeAssistant) -> None:
     assert live is not None
     assert not async_advertisement_restored(hass, live)
     cancel()
+
+
+@pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
+@pytest.mark.parametrize("restarted_bluetooth", [OLDER_STRONG_REMOTE], indirect=True)
+@pytest.mark.usefixtures("restarted_bluetooth")
+async def test_unclaimed_startup_registration_released(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """An address no integration registers again is released and not saved."""
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=EVENT_DRIVEN_CLAIM_SECONDS + 1)
+    )
+    await hass.async_block_till_done()
+
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+    assert _event_driven_history() == ("strong-proxy", OPEN)
+    cancel()
+
+    await hass.async_stop()
+
+    assert hass_storage[storage.EVENT_DRIVEN_STORAGE_KEY]["data"]["sources"] == {}
 
 
 @pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
