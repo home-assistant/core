@@ -281,6 +281,10 @@ async def test_set_position(
         pytest.param(True, 0.3, 30, CoverState.OPEN, id="unchanged_inverted"),
         pytest.param(False, 0.05, 100, CoverState.OPEN, id="rounded_open"),
         pytest.param(False, 0.95, 0, CoverState.CLOSED, id="rounded_closed"),
+        pytest.param(False, 0.1, 95, CoverState.OPENING, id="near_open"),
+        pytest.param(False, 0.9, 5, CoverState.CLOSING, id="near_closed"),
+        pytest.param(True, 0.9, 95, CoverState.OPENING, id="near_open_inverted"),
+        pytest.param(True, 0.1, 5, CoverState.CLOSING, id="near_closed_inverted"),
     ],
 )
 async def test_set_position_direction(
