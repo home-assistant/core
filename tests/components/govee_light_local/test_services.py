@@ -13,8 +13,8 @@ import pytest
 
 from homeassistant.components.govee_light_local.const import DOMAIN
 from homeassistant.components.light import (
-    ATTR_EFFECT,
     DOMAIN as LIGHT_DOMAIN,
+    LightEntityStateAttribute,
     LightService,
     LightServiceArgument,
 )
@@ -41,10 +41,13 @@ async def test_set_segment_color(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
-        {TargetKey.ENTITY_ID: "light.H615A", ATTR_EFFECT: "sunrise"},
+        {TargetKey.ENTITY_ID: "light.H615A", LightServiceArgument.EFFECT: "sunrise"},
         blocking=True,
     )
-    assert hass.states.get("light.H615A").attributes[ATTR_EFFECT] == "sunrise"
+    assert (
+        hass.states.get("light.H615A").attributes[LightEntityStateAttribute.EFFECT]
+        == "sunrise"
+    )
 
     await hass.services.async_call(
         DOMAIN,
@@ -61,7 +64,10 @@ async def test_set_segment_color(
         call(device, 2, (255, 0, 0)),
         call(device, 8, (255, 0, 0)),
     ]
-    assert hass.states.get("light.H615A").attributes[ATTR_EFFECT] is None
+    assert (
+        hass.states.get("light.H615A").attributes[LightEntityStateAttribute.EFFECT]
+        is None
+    )
 
 
 async def test_set_segment_color_without_segments(
