@@ -14,7 +14,6 @@ from .helpers.deprecation import (
 )
 from .util.event_type import EventType
 from .util.hass_dict import HassKey
-from .util.signal_type import SignalType
 
 if TYPE_CHECKING:
     from .core import EventStateChangedData, EventStateReportedData
@@ -1069,10 +1068,6 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 
 # User used by Supervisor
 HASSIO_USER_NAME = "Supervisor"
-
-SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
-    "bootstrap_integrations"
-)
 
 
 # hass.data keys for logging information.
