@@ -19,10 +19,10 @@ from habitron_client import (
     async_refresh_hub,
     async_refresh_system,
     get_host_ip,
-    get_own_ip,
     normalise_mac,
 )
 
+from homeassistant.components import network
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
@@ -190,7 +190,7 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
         if _is_ipv4(host):
             return host
         if host == CONF_DEFAULT_HOST:
-            return await self.hass.async_add_executor_job(get_own_ip)
+            return await network.async_get_source_ip(self.hass)
         return await get_host_ip(host)
 
     async def _async_resolve_uid(self) -> None:

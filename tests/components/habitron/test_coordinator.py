@@ -303,7 +303,10 @@ async def test_setup_does_not_retry_a_duplicate_hub(hass: HomeAssistant) -> None
         (
             "local",
             "192.168.1.10",
-            lambda resolved: patch(f"{_COORD}.get_own_ip", return_value=resolved),
+            lambda resolved: patch(
+                f"{_COORD}.network.async_get_source_ip",
+                new=AsyncMock(return_value=resolved),
+            ),
         ),
         (
             "smarthub.local",
@@ -323,11 +326,8 @@ async def test_host_resolution(
 ) -> None:
     """A literal address is used as-is; anything else is resolved.
 
-    ``get_own_ip`` blocks, so it goes to the executor; ``get_host_ip`` resolves
-    with async DNS and must be awaited directly -- handing it to the executor
-    would only build the coroutine and never run it. Which of the two is
-    stubbed travels in the parameter, so the literal case simply patches
-    nothing.
+    Which resolver is stubbed travels in the parameter, so the literal case
+    simply patches nothing.
     """
     entry = MagicMock()
     entry.data = {"host": configured}
