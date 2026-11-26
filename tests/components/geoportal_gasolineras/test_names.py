@@ -37,7 +37,7 @@ def _station(brand: str, municipality: str) -> Station:
     return Station(
         id="1",
         brand=brand,
-        address="CALLE MAYOR, 1",
+        address="PLAZA MAYOR, 1",
         locality="",
         municipality=municipality,
         municipality_id="1",
