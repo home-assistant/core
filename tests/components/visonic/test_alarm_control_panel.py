@@ -488,39 +488,39 @@ async def test_cloud_reconfigure_uses_normal_arming(
         assert await hass.config_entries.async_unload(entry.entry_id)
 
 
-@pytest.mark.asyncio
+@pytest.mark.usefixtures("mock_async_zeroconf")
+@pytest.mark.parametrize(
+    "mock_visonic_client", [pytest.param(False, id="standard-plus")], indirect=True
+)
 async def test_async_alarm_disarm_code_not_entered(
-    setup_integration: SetupIntegration,
-    wait_for_coordinator_timer: Callable[[], Awaitable[None]],
+    hass: HomeAssistant,
+    mock_visonic_client: MagicMock,
 ) -> None:
-    """Test disarm raises an error when a code is required but not supplied."""
-    identifier = "test_identifier"
-
-    options = {
-        CONF_INSTANT_ARM_HOME: False,
-        CONF_INSTANT_ARM_AWAY: False,
-    }
-    result, entry = await setup_integration(options=options)
-    assert result
-    coordinator: VisonicCoordinator = entry.runtime_data.coordinator
-    coordinator.data = VisonicCoordinatorData(connected=False, ispowermaster=True)
-
-    coordinator.process_command_result = MagicMock()
-    alarm = VisonicAlarm(entry, identifier=identifier)
-    assert alarm.available is False
-    assert alarm.alarm_state is None
-    assert alarm.supported_features == 0
-    alarm.coordinator.send_command = AsyncMock()
+    """A missing disarm code identifies the registered alarm without sending it."""
+    entry = create_mock_config_entry(options={CONF_ENABLE_REMOTE_DISARM: True})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    entity_id = "alarm_control_panel.visonic_alarm_p1"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == AlarmControlPanelState.DISARMED
+    assert state.attributes["code_format"] == CodeFormat.NUMBER
 
     with pytest.raises(ServiceValidationError) as exc_info:
-        await alarm.async_alarm_disarm(None)
+        await hass.services.async_call(
+            "alarm_control_panel",
+            "alarm_disarm",
+            {"entity_id": entity_id},
+            blocking=True,
+        )
 
     assert exc_info.value.translation_key == (
         TRANSLATE_EXCEPTION_DISARM_CODE_NOT_ENTERED
     )
-    alarm.coordinator.send_command.assert_not_awaited()
-
-    await wait_for_coordinator_timer()
+    assert exc_info.value.translation_placeholders == {"entity": entity_id}
+    mock_visonic_client.send_command.assert_not_awaited()
+    assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 @pytest.mark.parametrize(

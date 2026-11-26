@@ -80,9 +80,7 @@ class VisonicAlarm(AlarmBaseLogic, AlarmControlPanelEntity):  # pyright: ignore[
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=TRANSLATE_EXCEPTION_DISARM_CODE_NOT_ENTERED,
-                translation_placeholders={
-                    "entity": self.name if isinstance(self.name, str) else "Undefined"
-                },
+                translation_placeholders={"entity": self.entity_id},
             )
         # Send Disarm Command to the panel
         status = await self.coordinator.send_command(AlarmPanelCommand.DISARM, code)
