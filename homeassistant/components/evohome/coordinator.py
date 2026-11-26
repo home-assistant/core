@@ -116,6 +116,17 @@ def _log_api_call_failure(logger: logging.Logger, err: ec2.ApiCallFailedError) -
     )
 
 
+def _log_client_error(logger: logging.Logger, err: ec2.EvohomeError) -> None:
+    """Log (as debug) what the translated error of a client error leaves out."""
+    logger.debug(
+        "%s: %s (reason=%s, details=%s)",
+        type(err).__name__,
+        err,
+        err.reason,
+        err.details,
+    )
+
+
 type _Schedule = list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT]
 type _HighPrecisionTemps = dict[str, float | None]  # by DHW/zone id
 
@@ -199,8 +210,12 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
                 retry_after=err.retry_after,
             ) from err
 
-        except ec2.EvohomeError as err:
-            raise UpdateFailed(err) from err
+        except ec2.BadApiResponseError as err:
+            _log_client_error(self.logger, err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_response_invalid",
+            ) from err
 
     @override
     async def _async_update_data(self) -> _HighPrecisionTemps:
@@ -335,12 +350,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             ) from err
 
         except ec2.BadApiRequestError as err:  # e.g. InvalidSetModeError
-            self.logger.debug(
-                "The request was rejected by the client: %s (reason=%s, details=%s)",
-                err,
-                err.reason,
-                err.details,
-            )
+            _log_client_error(self.logger, err)
             raise _bad_request_error(err) from err
 
         if request_refresh:  # wait a moment for system to quiesce before updating state
@@ -369,8 +379,19 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
                 retry_after=err.retry_after,
             ) from err
 
-        except ec2.EvohomeError as err:
-            raise UpdateFailed(err) from err
+        except ec2.BadApiResponseError as err:
+            _log_client_error(self.logger, err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_response_invalid",
+            ) from err
+
+        except ec2.StaleConfigError as err:
+            _log_client_error(self.logger, err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="config_stale",
+            ) from err
 
         self.logger.debug("Status = %s", status)
 
