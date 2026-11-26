@@ -12,6 +12,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
+from .mock import MOCK_BRANCH
 from .release_notes import (
     INDEX_FORMAT,
     parse_release,
@@ -23,13 +24,15 @@ from .release_notes import (
 # The markdown source of the live site: the "current" branch of home-assistant.io.
 # Until home-assistant.io publishes releases/index.json and releases/<version>.json,
 # the index is built from this listing and each release parsed from its post.
+# Mock: use "current" to read the live site.
+BRANCH = MOCK_BRANCH
 POSTS_URL = (
     "https://api.github.com/repos/home-assistant/home-assistant.io"
-    "/git/trees/current:source/_posts"
+    f"/git/trees/{BRANCH}:source/_posts"
 )
 POST_URL = (
     "https://raw.githubusercontent.com/home-assistant/home-assistant.io"
-    "/current/source/_posts/{name}"
+    f"/{BRANCH}/source/_posts/{{name}}"
 )
 REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=30)
 STORAGE_VERSION = 1
