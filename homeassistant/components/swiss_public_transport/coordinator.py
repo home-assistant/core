@@ -31,7 +31,7 @@ from .helper import offset_opendata
 
 _LOGGER = logging.getLogger(__name__)
 
-# Spare connections which replace departed ones until the next update
+# Spare connections or departures which replace departed ones until the next update
 CONNECTIONS_SPARE = 2
 DEPARTED_GRACE = timedelta(seconds=30)
 # Departures to search for the ones which stop at the requested stations
@@ -76,19 +76,84 @@ def calculate_duration_in_seconds(duration_text: str) -> int | None:
     return duration.seconds if duration else None
 
 
-def _departed_at(connection: DataConnection) -> datetime | None:
-    """Return when a connection counts as departed."""
-    if (departure := connection["departure"]) is None:
+def _departed_at(entry: DataConnection | DataDeparture) -> datetime | None:
+    """Return when a connection or departure counts as departed."""
+    if (departure := entry["departure"]) is None:
         return None
-    return departure + timedelta(minutes=connection["delay"] or 0) + DEPARTED_GRACE
+    return departure + timedelta(minutes=entry["delay"] or 0) + DEPARTED_GRACE
+
+
+class SwissPublicTransportBaseDataUpdateCoordinator[
+    _DataT: DataConnection | DataDeparture
+](DataUpdateCoordinator[list[_DataT]]):
+    """A coordinator which can drop departed entries between updates."""
+
+    config_entry: SwissPublicTransportConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: SwissPublicTransportConfigEntry
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=DEFAULT_UPDATE_TIME),
+        )
+        self._unsub_departed: CALLBACK_TYPE | None = None
+
+    @override
+    async def async_shutdown(self) -> None:
+        self._async_cancel_departed()
+        await super().async_shutdown()
+
+    @callback
+    def _async_remaining(self, entries: list[_DataT]) -> list[_DataT]:
+        """Return the entries which have not departed yet."""
+        now = dt_util.utcnow()
+        return [
+            entry
+            for entry in entries
+            if (departed := _departed_at(entry)) is None or departed > now
+        ]
+
+    @callback
+    def _async_cancel_departed(self) -> None:
+        """Cancel the removal of the next departing entry."""
+        if self._unsub_departed:
+            self._unsub_departed()
+            self._unsub_departed = None
+
+    @callback
+    def _async_schedule_departed(self, entries: list[_DataT]) -> None:
+        """Schedule the removal of the next departing entry."""
+        self._async_cancel_departed()
+        departures = [
+            departed
+            for entry in entries
+            if (departed := _departed_at(entry)) is not None
+        ]
+        if not departures:
+            return
+        # A delayed entry can leave after the ones following it
+        self._unsub_departed = async_track_point_in_time(
+            self.hass, self._async_handle_departed, min(departures)
+        )
+
+    @callback
+    def _async_handle_departed(self, now: datetime) -> None:
+        """Remove the departed entries, the next ones move up."""
+        self._unsub_departed = None
+        self.data = self._async_remaining(self.data)
+        self.async_update_listeners()
+        self._async_schedule_departed(self.data)
 
 
 class SwissPublicTransportDataUpdateCoordinator(
-    DataUpdateCoordinator[list[DataConnection]]
+    SwissPublicTransportBaseDataUpdateCoordinator[DataConnection]
 ):
     """A SwissPublicTransport Data Update Coordinator."""
-
-    config_entry: SwissPublicTransportConfigEntry
 
     def __init__(
         self,
@@ -98,13 +163,7 @@ class SwissPublicTransportDataUpdateCoordinator(
         time_offset: dict[str, int] | None,
     ) -> None:
         """Initialize the SwissPublicTransport data coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_UPDATE_TIME),
-        )
+        super().__init__(hass, config_entry)
         self._opendata = opendata
         self._time_offset = time_offset
         # A fixed time or an arrival time returns connections which already left
@@ -113,7 +172,6 @@ class SwissPublicTransportDataUpdateCoordinator(
             and config_entry.data.get(CONF_TIME_STATION, DEFAULT_TIME_STATION)
             == "departure"
         )
-        self._unsub_departed: CALLBACK_TYPE | None = None
 
     def remaining_time(self, departure) -> timedelta | None:
         """Calculate the remaining time for the departure."""
@@ -132,54 +190,6 @@ class SwissPublicTransportDataUpdateCoordinator(
         )
         self._async_schedule_departed(connections)
         return connections
-
-    @override
-    async def async_shutdown(self) -> None:
-        self._async_cancel_departed()
-        await super().async_shutdown()
-
-    @callback
-    def _async_remaining(
-        self, connections: list[DataConnection]
-    ) -> list[DataConnection]:
-        """Return the connections which have not departed yet."""
-        now = dt_util.utcnow()
-        return [
-            connection
-            for connection in connections
-            if (departed := _departed_at(connection)) is None or departed > now
-        ]
-
-    @callback
-    def _async_cancel_departed(self) -> None:
-        """Cancel the removal of the next departing connection."""
-        if self._unsub_departed:
-            self._unsub_departed()
-            self._unsub_departed = None
-
-    @callback
-    def _async_schedule_departed(self, connections: list[DataConnection]) -> None:
-        """Schedule the removal of the next departing connection."""
-        self._async_cancel_departed()
-        departures = [
-            departed
-            for connection in connections
-            if (departed := _departed_at(connection)) is not None
-        ]
-        if not departures:
-            return
-        # A delayed connection can leave after the ones following it
-        self._unsub_departed = async_track_point_in_time(
-            self.hass, self._async_handle_departed, min(departures)
-        )
-
-    @callback
-    def _async_handle_departed(self, now: datetime) -> None:
-        """Remove the departed connections, the next ones move up."""
-        self._unsub_departed = None
-        self.data = self._async_remaining(self.data)
-        self.async_update_listeners()
-        self._async_schedule_departed(self.data)
 
     async def fetch_connections(self, limit: int) -> list[DataConnection]:
         """Fetch connections using the opendata api."""
@@ -239,11 +249,9 @@ class SwissPublicTransportDataUpdateCoordinator(
 
 
 class SwissPublicTransportStationboardDataUpdateCoordinator(
-    DataUpdateCoordinator[list[DataDeparture]]
+    SwissPublicTransportBaseDataUpdateCoordinator[DataDeparture]
 ):
     """A SwissPublicTransport stationboard Data Update Coordinator."""
-
-    config_entry: SwissPublicTransportConfigEntry
 
     def __init__(
         self,
@@ -252,13 +260,7 @@ class SwissPublicTransportStationboardDataUpdateCoordinator(
         opendata: OpendataTransportStationboard,
     ) -> None:
         """Initialize the SwissPublicTransport stationboard data coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_UPDATE_TIME),
-        )
+        super().__init__(hass, config_entry)
         self._opendata = opendata
         self._stops_at: set[str] = set(config_entry.data[CONF_STOPS_AT])
         # Updates and actions share the client, which collects the journeys
@@ -266,7 +268,11 @@ class SwissPublicTransportStationboardDataUpdateCoordinator(
 
     @override
     async def _async_update_data(self) -> list[DataDeparture]:
-        return await self.fetch_departures(limit=CONNECTIONS_COUNT)
+        departures = self._async_remaining(
+            await self.fetch_departures(limit=CONNECTIONS_COUNT + CONNECTIONS_SPARE)
+        )
+        self._async_schedule_departed(departures)
+        return departures
 
     async def fetch_departures(self, limit: int) -> list[DataDeparture]:
         """Fetch departures using the opendata api."""

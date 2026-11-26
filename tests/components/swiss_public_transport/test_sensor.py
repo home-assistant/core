@@ -26,6 +26,10 @@ from homeassistant.components.swiss_public_transport.const import (
     DEFAULT_UPDATE_TIME,
     DOMAIN,
 )
+from homeassistant.components.swiss_public_transport.helper import (
+    title_from_stations,
+    unique_id_from_stations,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -294,6 +298,7 @@ async def test_departed_connection_replaced_by_spare(
     )
 
 
+@pytest.mark.freeze_time("2024-01-06T17:00:00+00:00")
 @pytest.mark.usefixtures("mock_stationboard_client")
 async def test_all_stationboard_entities(
     hass: HomeAssistant,
@@ -311,6 +316,7 @@ async def test_all_stationboard_entities(
     )
 
 
+@pytest.mark.freeze_time("2024-01-06T17:00:00+00:00")
 async def test_stationboard_fetching_data(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -343,6 +349,7 @@ async def test_stationboard_fetching_data(
     assert hass.states.get("sensor.zurich_hb_departure").state == "unavailable"
 
 
+@pytest.mark.freeze_time("2024-01-06T17:00:00+00:00")
 async def test_stationboard_stops_at(
     hass: HomeAssistant, mock_stationboard_client: AsyncMock
 ) -> None:
@@ -372,6 +379,77 @@ async def test_stationboard_stops_at(
     )
     assert (
         hass.states.get("sensor.zurich_hb_stops_at_zug_bern_destination").state == "Zug"
+    )
+
+
+@pytest.mark.freeze_time("2024-01-06T17:02:45+00:00")
+@pytest.mark.parametrize(
+    ("stops_at", "entity_id", "limit", "departure", "departure_2"),
+    [
+        pytest.param(
+            [],
+            "sensor.zurich_hb_departure",
+            5,
+            "2024-01-06T17:04:00+00:00",
+            "2024-01-06T17:06:00+00:00",
+            id="spare departure moves up",
+        ),
+        pytest.param(
+            ["Zug", "Bern"],
+            "sensor.zurich_hb_stops_at_zug_bern_departure",
+            40,
+            "2024-01-06T17:07:00+00:00",
+            "unknown",
+            id="stops at without spare departure",
+        ),
+    ],
+)
+async def test_stationboard_departed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_stationboard_client: AsyncMock,
+    stops_at: list[str],
+    entity_id: str,
+    limit: int,
+    departure: str,
+    departure_2: str,
+) -> None:
+    """Test a departed departure is dropped without another request."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_STATIONS: ["Zürich HB"], CONF_STOPS_AT: stops_at},
+        title=title_from_stations(["Zürich HB"], stops_at),
+        unique_id=unique_id_from_stations(["Zürich HB"], stops_at),
+        version=3,
+    )
+    await setup_integration(hass, config_entry)
+
+    assert mock_stationboard_client.limit == limit
+    assert hass.states.get(entity_id).state == "2024-01-06T17:03:00+00:00"
+    call_count = mock_stationboard_client.async_get_data.call_count
+
+    # Pass the grace period after the first departure, before the next update
+    freezer.tick(46)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_stationboard_client.async_get_data.call_count == call_count
+    assert hass.states.get(entity_id).state == departure
+    assert hass.states.get(f"{entity_id}_2").state == departure_2
+
+
+@pytest.mark.freeze_time("2024-01-06T17:03:45+00:00")
+@pytest.mark.usefixtures("mock_stationboard_client")
+async def test_stationboard_departed_dropped_on_update(
+    hass: HomeAssistant, mock_stationboard_config_entry: MockConfigEntry
+) -> None:
+    """Test a departure which already left is dropped from an update."""
+    await setup_integration(hass, mock_stationboard_config_entry)
+
+    # The second departure is delayed and leaves at 17:06
+    assert (
+        hass.states.get("sensor.zurich_hb_departure").state
+        == "2024-01-06T17:04:00+00:00"
     )
 
 
