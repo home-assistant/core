@@ -13,7 +13,9 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .const import DATA_IMPORT_LOCK, DOMAIN
+from .const import DOMAIN
+
+DATA_IMPORT_LOCK = f"{DOMAIN}_import_lock"
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
 

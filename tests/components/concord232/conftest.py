@@ -7,7 +7,7 @@ from concord232 import client as concord232_client
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.concord232.const import DOMAIN
+from homeassistant.components.concord232.const import DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -43,7 +43,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="localhost",
-        data={CONF_HOST: "localhost", CONF_PORT: 5007},
+        data={CONF_HOST: "localhost", CONF_PORT: DEFAULT_PORT},
     )
 
 

@@ -16,6 +16,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.components.concord232.alarm_control_panel import SCAN_INTERVAL
+from homeassistant.components.concord232.const import MODE_SILENT
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -130,7 +131,7 @@ async def test_arm_home_silent_mode(
     """Test the silent option is passed through when arming home."""
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
-        mock_config_entry, options={CONF_MODE: "silent"}
+        mock_config_entry, options={CONF_MODE: MODE_SILENT}
     )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

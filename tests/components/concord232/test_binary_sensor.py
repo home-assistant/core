@@ -19,9 +19,9 @@ from homeassistant.core import HomeAssistant
 from .conftest import setup_integration
 
 
+@pytest.mark.usefixtures("mock_concord232_client")
 async def test_zone_sensors_created(
     hass: HomeAssistant,
-    mock_concord232_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test one binary sensor is created per zone."""
@@ -102,9 +102,9 @@ async def test_unsorted_zones_map_to_stable_entities(
     assert hass.states.get("binary_sensor.hall_motion").state == STATE_OFF
 
 
+@pytest.mark.usefixtures("mock_concord232_client")
 async def test_imported_zone_options_honored(
     hass: HomeAssistant,
-    mock_concord232_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test imported exclude_zones and zone_types apply to the sensors."""

@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import Concord232ConfigEntry, async_import_yaml
-from .const import DEFAULT_MODE, DEFAULT_PORT
+from .const import DEFAULT_MODE, DEFAULT_PORT, MODE_SILENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,7 +126,7 @@ class Concord232Alarm(AlarmControlPanelEntity):
         """Send arm home command."""
         if not self._validate_code(code, AlarmControlPanelState.ARMED_HOME):
             return
-        if self._mode == "silent":
+        if self._mode == MODE_SILENT:
             self._alarm.arm("stay", "silent")
         else:
             self._alarm.arm("stay")
