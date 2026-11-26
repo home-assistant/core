@@ -96,26 +96,6 @@ async def test_add_station(
     }
 
 
-async def test_same_name_gets_address(
-    hass: HomeAssistant, mock_client: AsyncMock, empty_entry: MockConfigEntry
-) -> None:
-    """Test a second station with the same name gets its address."""
-    stations = mock_client.get_stations_by_municipality.return_value
-    shell = stations.stations[1]
-    mock_client.get_stations_by_municipality.return_value = replace(
-        stations, stations=[*stations.stations, replace(shell, id="1")]
-    )
-    for station_id in ("6440", "1"):
-        result = await _start(hass, empty_entry)
-        result = await _configure(hass, result, {CONF_PROVINCE_ID: "41"})
-        result = await _configure(hass, result, {CONF_MUNICIPALITY_ID: "6139"})
-        result = await _configure(hass, result, {CONF_STATION_ID: station_id})
-    assert sorted(s.title for s in empty_entry.subentries.values()) == [
-        "Shell La Roda de Andalucía",
-        "Shell La Roda de Andalucía (Autovia Autovia A-92 Km. 123)",
-    ]
-
-
 async def test_added_stations_not_offered(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -203,7 +183,7 @@ async def test_added_meanwhile(
         ("REPSOL", "Roda de Andalucía (La)", "Repsol La Roda de Andalucía"),
         ("BP", "Palmas de Gran Canaria (Las)", "BP Las Palmas de Gran Canaria"),
         ("CEPSA", "Hospitalet de Llobregat (L')", "Cepsa L'Hospitalet de Llobregat"),
-        ("GAFISUR ANTEQUERA", "Antequera", "Gafisur Antequera"),
+        ("PETROPRIX", "Sevilla", "Petroprix Sevilla"),
     ],
 )
 async def test_station_title(

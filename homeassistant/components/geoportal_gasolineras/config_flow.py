@@ -167,11 +167,8 @@ class StationSubentryFlow(ConfigSubentryFlow):
             station = self._stations[user_input[CONF_STATION_ID]]
             if self._is_configured(station.id):
                 return self.async_abort(reason="already_configured")
-            taken = {
-                subentry.title for subentry in self._get_entry().subentries.values()
-            }
             return self.async_create_entry(
-                title=station_name(station, taken),
+                title=station_name(station),
                 data={
                     CONF_PROVINCE_ID: self._province_id,
                     CONF_MUNICIPALITY_ID: self._municipality_id,

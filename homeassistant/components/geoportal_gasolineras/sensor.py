@@ -4,7 +4,11 @@ from typing import override
 
 from aioprecioscarburantes import FuelType, Station
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CURRENCY_EURO, UnitOfMass, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
@@ -36,6 +40,21 @@ FUELS_PER_KG = {
     FuelType.COMPRESSED_NATURAL_GAS,
     FuelType.LIQUEFIED_NATURAL_GAS,
     FuelType.HYDROGEN,
+}
+
+FUEL_SENSORS: dict[FuelType, SensorEntityDescription] = {
+    fuel: SensorEntityDescription(
+        key=fuel.name.lower(),
+        translation_key=fuel.name.lower(),
+        native_unit_of_measurement=(
+            f"{CURRENCY_EURO}/{UnitOfMass.KILOGRAMS}"
+            if fuel in FUELS_PER_KG
+            else f"{CURRENCY_EURO}/{UnitOfVolume.LITERS}"
+        ),
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+    )
+    for fuel in FuelType
 }
 
 
@@ -72,8 +91,6 @@ class FuelPriceSensor(CoordinatorEntity[GeoportalGasolinerasCoordinator], Sensor
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_suggested_display_precision = 3
 
     def __init__(
         self,
@@ -84,12 +101,10 @@ class FuelPriceSensor(CoordinatorEntity[GeoportalGasolinerasCoordinator], Sensor
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._fuel = fuel
+        self.entity_description = FUEL_SENSORS[fuel]
         self._station_id: str = subentry.data[CONF_STATION_ID]
         station = coordinator.data[self._station_id]
-        self._attr_translation_key = fuel.name.lower()
-        self._attr_unique_id = f"{self._station_id}_{fuel.name.lower()}"
-        unit = UnitOfMass.KILOGRAMS if fuel in FUELS_PER_KG else UnitOfVolume.LITERS
-        self._attr_native_unit_of_measurement = f"{CURRENCY_EURO}/{unit}"
+        self._attr_unique_id = f"{self._station_id}_{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._station_id)},
             name=subentry.title,
