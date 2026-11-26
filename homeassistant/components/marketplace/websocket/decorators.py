@@ -135,7 +135,12 @@ def marketplace_command(
                 )
                 return
 
-            if requires_github and not marketplace.github_connected:
+            if (
+                requires_github
+                and not marketplace.github_connected
+                # The GitHub profile needs an account, the relays bring their own
+                and marketplace.configuration.profile.uses_github_account
+            ):
                 send_translated_error(
                     connection,
                     msg["id"],

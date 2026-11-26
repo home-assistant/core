@@ -113,7 +113,12 @@ async def marketplace_info(
             {
                 "categories": marketplace.common.categories,
                 "disabled_reason": marketplace.system.disabled_reason,
-                "github_connected": marketplace.github_connected,
+                "github_connected": (
+                    marketplace.github_connected
+                    # The relays bring their own credentials, the panel does
+                    # not need to ask for an account
+                    or not marketplace.configuration.profile.uses_github_account
+                ),
                 "has_pending_tasks": marketplace.queue.has_pending_tasks,
                 "lovelace_mode": marketplace.core.lovelace_mode,
                 "stage": marketplace.stage,
