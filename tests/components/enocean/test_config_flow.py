@@ -1,7 +1,6 @@
 """Tests for EnOcean config flow."""
 
-import asyncio
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import AsyncMock, patch
 
 from enocean_async import SerialProtocol
 import pytest
@@ -20,9 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-GATEWAY_CLASS = "homeassistant.components.enocean.config_flow.Gateway"
+DETECT_METHOD = "homeassistant.components.enocean.config_flow.detect_serial_protocol"
 GLOB_METHOD = "homeassistant.components.enocean.config_flow.glob.glob"
-PROBE_TIMEOUT = "homeassistant.components.enocean.config_flow.PROBE_TIMEOUT"
 SETUP_ENTRY_METHOD = "homeassistant.components.enocean.async_setup_entry"
 
 
@@ -47,7 +45,7 @@ async def test_user_flow_with_detected_dongle(hass: HomeAssistant) -> None:
 
     with (
         patch(GLOB_METHOD, side_effect=[[FAKE_DONGLE_PATH], [], []]),
-        patch(GATEWAY_CLASS, return_value=Mock(start=AsyncMock(), stop=AsyncMock())),
+        patch(DETECT_METHOD, return_value=SerialProtocol.ESP3),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -85,13 +83,12 @@ async def test_user_flow_lists_answering_dongles(
 ) -> None:
     """Test that the user flow only probes and lists the right ports."""
 
-    def create_gateway(port: str, protocol: SerialProtocol) -> Mock:
-        side_effect = None if port == "/fake/dongle" else ConnectionError("no answer")
-        return Mock(start=AsyncMock(side_effect=side_effect), stop=AsyncMock())
+    async def detect(port: str) -> SerialProtocol | None:
+        return SerialProtocol.ESP2 if port == "/fake/dongle" else None
 
     with (
         patch(GLOB_METHOD, side_effect=found_paths),
-        patch(GATEWAY_CLASS, side_effect=create_gateway) as gateway_class,
+        patch(DETECT_METHOD, side_effect=detect) as detect_mock,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -101,9 +98,7 @@ async def test_user_flow_lists_answering_dongles(
     assert result["step_id"] == "detect"
     devices = result["data_schema"].schema.get(CONF_DEVICE).config.get("options")
     assert devices == [*expected_devices, EnOceanFlowHandler.MANUAL_PATH_VALUE]
-    probed_paths = {
-        gateway_call.kwargs["port"] for gateway_call in gateway_class.call_args_list
-    }
+    probed_paths = {detect_call.args[0] for detect_call in detect_mock.call_args_list}
     assert probed_paths == expected_probed_paths
 
 
@@ -111,13 +106,7 @@ async def test_user_flow_with_no_answering_dongle(hass: HomeAssistant) -> None:
     """Test the user flow when no dongle answers on the detected ports."""
     with (
         patch(GLOB_METHOD, side_effect=[["/fake/silent/port"], [], []]),
-        patch(
-            GATEWAY_CLASS,
-            return_value=Mock(
-                start=AsyncMock(side_effect=ConnectionError("no answer")),
-                stop=AsyncMock(),
-            ),
-        ),
+        patch(DETECT_METHOD, return_value=None),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -138,40 +127,11 @@ async def test_user_flow_with_no_detected_dongle(hass: HomeAssistant) -> None:
     assert result["step_id"] == "manual"
 
 
-async def test_user_flow_hides_port_that_does_not_answer_in_time(
-    hass: HomeAssistant,
-) -> None:
-    """Test that a port is not listed when checking it for a dongle hangs."""
-
-    async def hang() -> None:
-        await asyncio.Event().wait()
-
-    gateway = Mock(start=AsyncMock(side_effect=hang), stop=AsyncMock())
-
-    with (
-        patch(GLOB_METHOD, side_effect=[["/fake/hanging/port"], [], []]),
-        patch(GATEWAY_CLASS, return_value=gateway),
-        patch(PROBE_TIMEOUT, 0),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "manual"
-
-    await hass.async_block_till_done(wait_background_tasks=True)
-    gateway.stop.assert_awaited_once()
-
-
 async def test_detection_flow_with_valid_path(hass: HomeAssistant) -> None:
     """Test the detection flow with a valid path selected."""
     USER_PROVIDED_PATH = "/user/provided/path"
 
-    with patch(
-        GATEWAY_CLASS,
-        return_value=Mock(start=AsyncMock(), stop=AsyncMock()),
-    ):
+    with patch(DETECT_METHOD, return_value=SerialProtocol.ESP3):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "detect"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
         )
@@ -199,13 +159,7 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
     """Test the detection flow with an invalid path selected."""
     USER_PROVIDED_PATH = "/invalid/path"
 
-    with patch(
-        GATEWAY_CLASS,
-        return_value=Mock(
-            start=AsyncMock(side_effect=ConnectionError("invalid path")),
-            stop=AsyncMock(),
-        ),
-    ):
+    with patch(DETECT_METHOD, return_value=None):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "detect"},
@@ -217,13 +171,14 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
     assert CONF_DEVICE in result["errors"]
 
     with (
-        patch(GATEWAY_CLASS, return_value=Mock(start=AsyncMock(), stop=AsyncMock())),
+        patch(DETECT_METHOD, return_value=SerialProtocol.ESP3),
         patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=None)),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: USER_PROVIDED_PATH}
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -231,10 +186,7 @@ async def test_manual_flow_with_valid_path(hass: HomeAssistant) -> None:
     """Test the manual flow with a valid path."""
     USER_PROVIDED_PATH = "/user/provided/path"
 
-    with patch(
-        GATEWAY_CLASS,
-        return_value=Mock(start=AsyncMock(), stop=AsyncMock()),
-    ):
+    with patch(DETECT_METHOD, return_value=SerialProtocol.ESP3):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
         )
@@ -245,32 +197,20 @@ async def test_manual_flow_with_valid_path(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("start_side_effects", "expected_protocol", "expected_attempts"),
+    ("protocol", "expected_protocol"),
     [
-        pytest.param([None], "esp3", [SerialProtocol.ESP3], id="esp3_dongle"),
-        pytest.param(
-            [ConnectionError("no answer"), None],
-            "esp2",
-            [SerialProtocol.ESP3, SerialProtocol.ESP2],
-            id="esp2_dongle",
-        ),
+        pytest.param(SerialProtocol.ESP3, "esp3", id="esp3_dongle"),
+        pytest.param(SerialProtocol.ESP2, "esp2", id="esp2_dongle"),
     ],
 )
-async def test_manual_flow_detects_protocol(
-    hass: HomeAssistant,
-    start_side_effects: list[Exception | None],
-    expected_protocol: str,
-    expected_attempts: list[SerialProtocol],
+async def test_manual_flow_stores_the_detected_protocol(
+    hass: HomeAssistant, protocol: SerialProtocol, expected_protocol: str
 ) -> None:
-    """Test that the flow detects and stores the serial protocol of the dongle."""
+    """Test that the flow stores the serial protocol of the dongle."""
     USER_PROVIDED_PATH = "/user/provided/path"
-    gateways = [
-        Mock(start=AsyncMock(side_effect=side_effect), stop=AsyncMock())
-        for side_effect in start_side_effects
-    ]
 
     with (
-        patch(GATEWAY_CLASS, side_effect=gateways) as gateway_class,
+        patch(DETECT_METHOD, return_value=protocol) as detect_mock,
         patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=None)),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -283,63 +223,14 @@ async def test_manual_flow_detects_protocol(
         CONF_DEVICE: USER_PROVIDED_PATH,
         CONF_PROTOCOL: expected_protocol,
     }
-    assert gateway_class.call_args_list == [
-        call(port=USER_PROVIDED_PATH, protocol=protocol)
-        for protocol in expected_attempts
-    ]
-    for gateway in gateways:
-        gateway.stop.assert_awaited_once()
-
-
-async def test_manual_flow_with_path_that_does_not_answer_in_time(
-    hass: HomeAssistant,
-) -> None:
-    """Test that the manual flow does not wait for a port that hangs."""
-    USER_PROVIDED_PATH = "/user/provided/path"
-
-    async def hang() -> None:
-        await asyncio.Event().wait()
-
-    with (
-        patch(
-            GATEWAY_CLASS,
-            return_value=Mock(start=AsyncMock(side_effect=hang), stop=AsyncMock()),
-        ),
-        patch(PROBE_TIMEOUT, 0),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "manual"
-    assert result["errors"] == {CONF_DEVICE: "invalid_dongle_path"}
-
-    with (
-        patch(GATEWAY_CLASS, return_value=Mock(start=AsyncMock(), stop=AsyncMock())),
-        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=None)),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_DEVICE: USER_PROVIDED_PATH}
-        )
-
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_PROTOCOL] == "esp3"
-    await hass.async_block_till_done(wait_background_tasks=True)
+    detect_mock.assert_awaited_once_with(USER_PROVIDED_PATH)
 
 
 async def test_manual_flow_with_invalid_path(hass: HomeAssistant) -> None:
     """Test the manual flow with an invalid path."""
     USER_PROVIDED_PATH = "/user/provided/path"
 
-    with patch(
-        GATEWAY_CLASS,
-        return_value=Mock(
-            start=AsyncMock(side_effect=ConnectionError("invalid path")),
-            stop=AsyncMock(),
-        ),
-    ):
+    with patch(DETECT_METHOD, return_value=None):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
         )
@@ -349,13 +240,14 @@ async def test_manual_flow_with_invalid_path(hass: HomeAssistant) -> None:
     assert CONF_DEVICE in result["errors"]
 
     with (
-        patch(GATEWAY_CLASS, return_value=Mock(start=AsyncMock(), stop=AsyncMock())),
+        patch(DETECT_METHOD, return_value=SerialProtocol.ESP3),
         patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=None)),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: USER_PROVIDED_PATH}
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -363,10 +255,7 @@ async def test_import_flow_with_valid_path(hass: HomeAssistant) -> None:
     """Test the import flow with a valid path."""
     DATA_TO_IMPORT = {CONF_DEVICE: "/valid/path/to/import"}
 
-    with patch(
-        GATEWAY_CLASS,
-        return_value=Mock(start=AsyncMock(), stop=AsyncMock()),
-    ):
+    with patch(DETECT_METHOD, return_value=SerialProtocol.ESP3):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -382,13 +271,7 @@ async def test_import_flow_with_invalid_path(hass: HomeAssistant) -> None:
     """Test the import flow with an invalid path."""
     DATA_TO_IMPORT = {CONF_DEVICE: "/invalid/path/to/import"}
 
-    with patch(
-        GATEWAY_CLASS,
-        return_value=Mock(
-            start=AsyncMock(side_effect=ConnectionError("invalid path")),
-            stop=AsyncMock(),
-        ),
-    ):
+    with patch(DETECT_METHOD, return_value=None):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -425,10 +308,7 @@ async def test_usb_discovery(
 
     # test device path
     with (
-        patch(
-            GATEWAY_CLASS,
-            return_value=Mock(start=AsyncMock(), stop=AsyncMock()),
-        ),
+        patch(DETECT_METHOD, return_value=SerialProtocol.ESP3),
         patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=None)),
         patch(
             "homeassistant.components.usb.get_serial_by_id",

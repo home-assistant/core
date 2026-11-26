@@ -4,7 +4,7 @@ import asyncio
 import glob
 from typing import Any, override
 
-from enocean_async import Gateway, SerialProtocol
+from enocean_async import SerialProtocol, detect_serial_protocol
 import probatio
 
 from homeassistant.components import usb
@@ -40,9 +40,6 @@ MANUAL_SCHEMA = probatio.Schema(
 ENOCEAN_DONGLE_GLOBS = ["/dev/tty*FTOA2PV*", "/dev/serial/by-id/*EnOcean*"]
 # Matches any USB serial adapter, so these ports are listed without probing them
 GENERIC_SERIAL_GLOBS = ["/dev/tty.usbserial-*"]
-# A dongle answers within a second. A port whose output never leaves the adapter
-# blocks its next open for the 30 seconds the kernel waits before closing it.
-PROBE_TIMEOUT = 2
 
 
 def _detect_usb_dongle(globs_to_test: list[str]) -> list[str]:
@@ -112,7 +109,8 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a yaml configuration."""
 
-        if (protocol := await self.detect_protocol(import_data)) is None:
+        protocol = await detect_serial_protocol(import_data[CONF_DEVICE])
+        if protocol is None:
             LOGGER.warning(
                 "Cannot import yaml configuration: %s is not a valid dongle path",
                 import_data[CONF_DEVICE],
@@ -140,11 +138,15 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         candidates = await self.hass.async_add_executor_job(
             _detect_usb_dongle, ENOCEAN_DONGLE_GLOBS
         )
-        answers = await asyncio.gather(
-            *(self._dongle_answers(path) for path in candidates)
+        # Only a port with a dongle is listed: a FAM-USB, for example, shows up as
+        # two serial ports, of which one is connected to the radio module.
+        protocols = await asyncio.gather(
+            *(detect_serial_protocol(path) for path in candidates)
         )
         devices = [
-            path for path, answered in zip(candidates, answers, strict=True) if answered
+            path
+            for path, protocol in zip(candidates, protocols, strict=True)
+            if protocol is not None
         ]
         devices.extend(
             await self.hass.async_add_executor_job(
@@ -176,7 +178,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Request manual USB dongle path."""
         errors = {}
         if user_input is not None:
-            protocol = await self._detect_protocol_in_time(user_input[CONF_DEVICE])
+            protocol = await detect_serial_protocol(user_input[CONF_DEVICE])
             if protocol is not None:
                 return self.create_enocean_entry(user_input, protocol)
             errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
@@ -186,42 +188,6 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(MANUAL_SCHEMA, user_input),
             errors=errors,
         )
-
-    async def _dongle_answers(self, dongle_path: str) -> bool:
-        """Return True if a dongle answers at the path in time to be listed."""
-        return await self._detect_protocol_in_time(dongle_path) is not None
-
-    async def _detect_protocol_in_time(self, dongle_path: str) -> SerialProtocol | None:
-        """Return the serial protocol of the dongle, None if none answers in time."""
-        probe = self.hass.async_create_background_task(
-            self.detect_protocol({CONF_DEVICE: dongle_path}),
-            f"enocean dongle probe {dongle_path}",
-        )
-        done, _ = await asyncio.wait([probe], timeout=PROBE_TIMEOUT)
-        if not done:
-            # A cancelled probe only ends once its port is released: do not await it
-            probe.cancel()
-            return None
-        return probe.result()
-
-    async def detect_protocol(
-        self, user_input: dict[str, Any]
-    ) -> SerialProtocol | None:
-        """Return the serial protocol of the dongle, None if no dongle answers."""
-        dongle_path = user_input[CONF_DEVICE]
-        for protocol in SerialProtocol.ESP3, SerialProtocol.ESP2:
-            gateway = Gateway(port=dongle_path, protocol=protocol)
-            try:
-                # Starting the gateway will raise an exception if it can't connect
-                await gateway.start()
-            except ConnectionError as exception:
-                LOGGER.debug("No %s dongle at %s: %s", protocol, dongle_path, exception)
-                continue
-            finally:
-                await gateway.stop()
-            return protocol
-
-        return None
 
     def create_enocean_entry(
         self, user_input: dict[str, Any], protocol: SerialProtocol
