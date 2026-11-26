@@ -1,5 +1,7 @@
 """Switch platform for TIS Control."""
 
+from datetime import datetime, timedelta
+import logging
 from typing import Any, TypedDict, override
 
 from TISApi.api import TISApi
@@ -7,17 +9,25 @@ from TISApi.components.switch.base_switch import TISAPISwitch
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 
 from . import TISConfigEntry
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 # Feedback types that prove the device answered (or was reported offline) and
 # therefore must be reflected in the entity availability.
 _AVAILABILITY_FEEDBACK_TYPES = ("control_response", "update_response", "offline_device")
+
+# How often an unavailable switch asks its device for a status update. The
+# answer (if the device is back) restores availability through the normal
+# feedback path, so recovery does not require reloading the config entry.
+RECOVERY_PROBE_INTERVAL = timedelta(seconds=30)
 
 
 class SwitchDescription(TypedDict):
@@ -141,6 +151,9 @@ class TISSwitch(SwitchEntity):
         self._entry_id = entry_id
         self.device_api = device_api
 
+        # Unsubscribe handle for the recovery probe; None while no probe runs.
+        self._unsub_recovery_probe: CALLBACK_TYPE | None = None
+
         dev_id_str = "_".join(str(i) for i in self.device_api.device_id)
         gateway = getattr(self.device_api, "gateway", "")
         identifier_str = f"{gateway}_{dev_id_str}" if gateway else dev_id_str
@@ -163,10 +176,56 @@ class TISSwitch(SwitchEntity):
         self._attr_is_on = self.device_api.is_on
 
     @callback
+    def _set_available(self, available: bool) -> None:
+        """Set the availability and start/stop the recovery probe accordingly.
+
+        Every availability change goes through here so the probe is always
+        running while (and only while) the entity is unavailable.
+        """
+        self._attr_available = available
+        self._update_recovery_probe()
+
+    @callback
+    def _update_recovery_probe(self) -> None:
+        """Run the recovery probe while the entity is unavailable."""
+        # `hass` is not set before the entity is added (e.g. during the initial
+        # `update_before_add` refresh); the probe is re-evaluated once added.
+        if self.hass is None:
+            return
+
+        if self._attr_available:
+            self._stop_recovery_probe()
+        elif self._unsub_recovery_probe is None:
+            self._unsub_recovery_probe = async_track_time_interval(
+                self.hass,
+                self._async_probe_device,
+                RECOVERY_PROBE_INTERVAL,
+                cancel_on_shutdown=True,
+            )
+
+    @callback
+    def _stop_recovery_probe(self) -> None:
+        """Stop the recovery probe if it is running."""
+        if self._unsub_recovery_probe is not None:
+            self._unsub_recovery_probe()
+            self._unsub_recovery_probe = None
+
+    async def _async_probe_device(self, _now: datetime) -> None:
+        """Ask an unavailable device for its status.
+
+        If the device is back, its update response is routed through
+        `_handle_event`, which restores the availability and stops the probe.
+        """
+        try:
+            await self.device_api.request_update()
+        except OSError as err:
+            _LOGGER.debug("Recovery probe for %s failed: %s", self.entity_id, err)
+
+    @callback
     def _handle_update(self) -> None:
         """Handle state updates from the TISAPISwitch object."""
         self._attr_is_on = self.device_api.is_on
-        self._attr_available = self.device_api.available
+        self._set_available(self.device_api.available)
         self.async_write_ha_state()
 
     @override
@@ -182,6 +241,11 @@ class TISSwitch(SwitchEntity):
                 self.hass, f"{DOMAIN}_{self._entry_id}_event", self._handle_event
             )
         )
+
+        # Make sure the probe never outlives the entity, and start it right away
+        # if the entity was already unavailable when it got added.
+        self.async_on_remove(self._stop_recovery_probe)
+        self._update_recovery_probe()
 
     @callback
     def _handle_event(self, event_data: dict[str, Any]) -> None:
@@ -204,14 +268,14 @@ class TISSwitch(SwitchEntity):
                 event_data.get("feedback_type") in _AVAILABILITY_FEEDBACK_TYPES
                 and self._attr_available != self.device_api.available
             ):
-                self._attr_available = self.device_api.available
+                self._set_available(self.device_api.available)
                 self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Update the entity state."""
         await self.device_api.request_update()
         self._attr_is_on = self.device_api.is_on
-        self._attr_available = self.device_api.available
+        self._set_available(self.device_api.available)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -226,10 +290,11 @@ class TISSwitch(SwitchEntity):
 
         if result:
             self._attr_is_on = True
-            self._attr_available = True
+            self._set_available(True)
         else:
-            # If no ack was received, the device is likely offline.
-            self._attr_available = False
+            # If no ack was received, the device is likely offline. The recovery
+            # probe started by `_set_available` keeps checking until it answers.
+            self._set_available(False)
 
         self.async_write_ha_state()
 
@@ -246,9 +311,10 @@ class TISSwitch(SwitchEntity):
 
         if result:
             self._attr_is_on = False
-            self._attr_available = True
+            self._set_available(True)
         else:
-            # If no ack was received, the device is likely offline.
-            self._attr_available = False
+            # If no ack was received, the device is likely offline. The recovery
+            # probe started by `_set_available` keeps checking until it answers.
+            self._set_available(False)
 
         self.async_write_ha_state()

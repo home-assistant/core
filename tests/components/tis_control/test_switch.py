@@ -3,11 +3,13 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.tis_control.const import DOMAIN
+from homeassistant.components.tis_control.switch import RECOVERY_PROBE_INTERVAL
 from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -494,7 +496,6 @@ async def test_availability_restored_on_unchanged_feedback(
     )
     await hass.async_block_till_done()
 
-    tis_switch.register_callback.call_args[0][0]  # callback was never needed
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
 
@@ -522,6 +523,86 @@ async def test_availability_not_restored_by_unrelated_feedback(
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_unavailable_switch_is_probed(
+    hass: HomeAssistant, tis_switch: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test an unavailable switch periodically requests its status."""
+    tis_switch.turn_switch_on.return_value = False
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {"entity_id": ENTITY_ID}, blocking=True
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # Ignore the refresh that happened during setup.
+    tis_switch.request_update.reset_mock()
+
+    # Nothing is sent before the interval elapsed.
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    tis_switch.request_update.assert_not_awaited()
+
+    # Every interval the device is probed again.
+    freezer.tick(RECOVERY_PROBE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert tis_switch.request_update.await_count == 1
+
+    freezer.tick(RECOVERY_PROBE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert tis_switch.request_update.await_count == 2
+
+
+async def test_probe_stops_after_recovery(
+    hass: HomeAssistant,
+    tis_switch: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the probe stops once the device answers and the entity is available."""
+    signal = f"{DOMAIN}_{mock_config_entry.entry_id}_event"
+
+    tis_switch.turn_switch_on.return_value = False
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {"entity_id": ENTITY_ID}, blocking=True
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # The device comes back and answers the status request.
+    async_dispatcher_send(
+        hass,
+        signal,
+        {
+            "device_id": [1, 2, 3],
+            "gateway": "mock_gateway",
+            "feedback_type": "update_response",
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+
+    # No further probes are sent.
+    tis_switch.request_update.reset_mock()
+    freezer.tick(RECOVERY_PROBE_INTERVAL * 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    tis_switch.request_update.assert_not_awaited()
+
+
+async def test_available_switch_is_not_probed(
+    hass: HomeAssistant, tis_switch: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test an available switch is never probed (push-based, no polling)."""
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+    tis_switch.request_update.reset_mock()
+
+    freezer.tick(RECOVERY_PROBE_INTERVAL * 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    tis_switch.request_update.assert_not_awaited()
 
 
 async def test_dispatcher_event_routing(
