@@ -601,14 +601,10 @@ async def test_reload_on_subentry_added(
 
 
 @pytest.mark.usefixtures("xbox_live_client")
-async def test_reload_on_subentry_rename(
+async def test_no_reload_on_subentry_rename(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test the entry is reloaded when a friend subentry is renamed.
-
-    ConfigSubentry instances are mutated in place, so this only works if the
-    integration snapshots its subentries by value.
-    """
+    """Test the entry is not reloaded when a friend subentry is renamed."""
 
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -626,4 +622,4 @@ async def test_reload_on_subentry_rename(
         )
         await hass.async_block_till_done()
 
-    mock_reload.assert_called_once_with(config_entry.entry_id)
+    mock_reload.assert_not_called()
