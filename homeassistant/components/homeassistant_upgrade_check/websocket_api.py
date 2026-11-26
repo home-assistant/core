@@ -58,6 +58,37 @@ def _installed_domains(hass: HomeAssistant) -> set[str]:
     return domains
 
 
+async def _resolve_removed(
+    hass: HomeAssistant, releases: list[dict[str, Any]], installed: set[str]
+) -> list[dict[str, Any]]:
+    """Return the releases with installed integrations matched by name.
+
+    A removed integration has no docs page, so its domain is guessed from its
+    name; the installed integration's manifest still has the real domain.
+    """
+    by_name = {
+        integration.name.casefold(): domain
+        for domain, integration in (
+            await async_get_integrations(hass, installed)
+        ).items()
+        if isinstance(integration, Integration)
+    }
+    return [
+        {
+            **release,
+            "items": [
+                {**entry, "domains": [*entry["domains"], domain]}
+                if entry["category"] in ("breaking", "removed")
+                and not set(entry["domains"]) & installed
+                and (domain := by_name.get(entry["title"].casefold()))
+                else entry
+                for entry in release["items"]
+            ],
+        }
+        for release in releases
+    ]
+
+
 async def _integration_types(
     hass: HomeAssistant, releases: list[dict[str, Any]]
 ) -> dict[str, str]:
@@ -176,6 +207,7 @@ async def websocket_digest(
         return
     # Mock: drop MOCK_DOMAINS to match only what is installed.
     installed = _installed_domains(hass) | MOCK_DOMAINS
+    releases = await _resolve_removed(hass, releases, installed)
     types = await _integration_types(hass, releases)
     # An entity type, like calendar, is loaded everywhere; it is yours once you
     # have such entities, and does not concern you otherwise.

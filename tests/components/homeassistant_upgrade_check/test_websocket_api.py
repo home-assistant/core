@@ -4,6 +4,7 @@ from typing import Any
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
@@ -264,3 +265,46 @@ async def test_digest_rebuilds_outdated_cache(
 
     assert [r["version"] for r in msg["result"]["releases"]] == ["2026.8", "2026.11"]
     assert hass_storage[DOMAIN]["data"]["key"].endswith(f"@{INDEX_FORMAT}")
+
+
+@pytest.mark.usefixtures("installed_integrations", "setup_integration")
+async def test_digest_target_release_not_published(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test that an upgrade to a release without a post yet is not cached."""
+    hass.states.async_set(
+        MOCK_CORE_UPDATE,
+        STATE_ON,
+        {ATTR_INSTALLED_VERSION: RUNNING, ATTR_LATEST_VERSION: "2027.1.0"},
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": DIGEST})
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "release_notes_unavailable"
+    assert DOMAIN not in hass_storage
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_digest_removed_integration_by_name(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that a removed integration is matched by its name, not a guessed domain."""
+    mock_integration(
+        hass, MockModule("legacy_thing", partial_manifest={"name": "Old Thing"})
+    )
+    MockConfigEntry(domain="legacy_thing").add_to_hass(hass)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": DIGEST})
+    msg = await client.receive_json()
+
+    removed = msg["result"]["categories"][3]
+    assert removed["key"] == "removed"
+    assert [(i["title"], i["domains"]) for i in removed["items"]] == [
+        ("Old Thing", ["legacy_thing"])
+    ]

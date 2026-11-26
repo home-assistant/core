@@ -81,12 +81,16 @@ class ReleaseFeed:
         try:
             listing = await (await fetch(POSTS_URL)).json()
             index = post_index((entry["path"] for entry in listing["tree"]), POST_URL)
-            return list(
-                await asyncio.gather(
-                    *map(fetch_release, releases_between(index, after, upto))
-                )
-            )
         except (aiohttp.ClientError, TimeoutError, KeyError) as err:
+            raise ReleaseNotesUnavailable from err
+        releases = releases_between(index, after, upto)
+        # The update can be offered before its post is live; a partial digest
+        # would otherwise be cached for this upgrade.
+        if not releases or parse_version(releases[-1]["version"]) != upto:
+            raise ReleaseNotesUnavailable
+        try:
+            return list(await asyncio.gather(*map(fetch_release, releases)))
+        except (aiohttp.ClientError, TimeoutError) as err:
             raise ReleaseNotesUnavailable from err
 
 
