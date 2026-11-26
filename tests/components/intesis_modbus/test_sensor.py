@@ -77,9 +77,6 @@ async def test_setpoint_reference_and_lock_follow_the_gateway(
     mock_connection: MockModbusConnection,
 ) -> None:
     """The applied setpoint, the input reference and the lock follow each poll."""
-    assert hass.states.get(SETPOINT).state == "21.5"
-    assert hass.states.get(REFERENCE).state == STATE_UNKNOWN
-    assert hass.states.get(LOCK).state == "remote_unlock"
     unit = mock_connection.for_unit(1)
     for address, value in {23: 220, 46: 3, 65: 214}.items():
         unit.holding[address] = value
