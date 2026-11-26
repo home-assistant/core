@@ -2,8 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
+    async_fire_time_changed,
     async_load_json_object_fixture,
     snapshot_platform,
 )
@@ -11,14 +13,12 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from switchbot_api import Device
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.image import async_get_image
-from homeassistant.components.switchbot_cloud.const import (
-    AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
-    DOMAIN,
-)
+from homeassistant.components.switchbot_cloud.const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.switchbot_cloud.services import SwitchBotCloudService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -79,8 +79,8 @@ async def test_art_frame_2_navigation(hass: HomeAssistant, command: str) -> None
     with patch.object(entry.runtime_data.api, "send_command") as mock_send:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: f"button.art_frame_2_{command}"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: f"button.art_frame_2_{command}"},
             blocking=True,
         )
     mock_send.assert_awaited_once_with("B0E9FEC395F0", command, "command", "default")
@@ -98,7 +98,7 @@ async def test_art_frame_2_upload(
     with patch.object(entry.runtime_data.api, "send_command") as mock_send:
         await hass.services.async_call(
             DOMAIN,
-            AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
+            SwitchBotCloudService.UPLOAD_ART_FRAME_IMAGE,
             {"device_id": device.id, "image_url": "https://example.com/new.jpg"},
             blocking=True,
         )
@@ -112,7 +112,10 @@ async def test_art_frame_2_upload(
 
 @pytest.mark.usefixtures("art_frame_2", "mock_setup_webhook", "mock_delete_webhook")
 async def test_art_frame_2_webhook_keeps_image(
-    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_get_status: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Update battery without clearing the image on a display-mode webhook."""
     entry = await configure_integration(hass)
@@ -144,3 +147,20 @@ async def test_art_frame_2_webhook_keeps_image(
         image = await async_get_image(hass, "image.art_frame_2_display")
     assert image.content == b"image bytes"
     mock_download.assert_awaited_once_with("https://example.com/art-frame-2.jpg", 5)
+
+    mock_get_status.return_value = {
+        **mock_get_status.return_value,
+        "imageUrl": "https://example.com/next.jpg",
+    }
+    mock_get_status.reset_mock()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_get_status.assert_awaited_once_with("B0E9FEC395F0")
+    with patch(
+        "homeassistant.components.switchbot_cloud.image.get_file_stream_from_cloud",
+        return_value=b"next image bytes",
+    ) as mock_download:
+        image = await async_get_image(hass, "image.art_frame_2_display")
+    assert image.content == b"next image bytes"
+    mock_download.assert_awaited_once_with("https://example.com/next.jpg", 5)

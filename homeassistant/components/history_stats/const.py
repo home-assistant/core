@@ -1,5 +1,7 @@
 """The history_stats component constants."""
 
+from enum import StrEnum
+
 from homeassistant.const import Platform
 
 DOMAIN = "history_stats"
@@ -10,6 +12,17 @@ CONF_END = "end"
 CONF_DURATION = "duration"
 CONF_MIN_STATE_DURATION = "min_state_duration"
 CONF_PERIOD_KEYS = [CONF_START, CONF_END, CONF_DURATION]
+CONF_PERIOD = "period"
+
+
+class Period(StrEnum):
+    """Period presets."""
+
+    TODAY = "today"
+    YESTERDAY = "yesterday"
+    ROLLING_WINDOW = "rolling_window"
+    CUSTOM = "custom"
+
 
 CONF_TYPE_TIME = "time"
 CONF_TYPE_RATIO = "ratio"

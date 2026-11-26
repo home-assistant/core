@@ -67,6 +67,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
     UnitOfTemperature,
     __version__,
 )
@@ -807,7 +808,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         requested action.
         """
         event_data = {
-            ATTR_ENTITY_ID: service_data.get(ATTR_ENTITY_ID, self.entity_id),
+            ATTR_ENTITY_ID: service_data.get(TargetKey.ENTITY_ID, self.entity_id),
             ATTR_DISPLAY_NAME: self.display_name,
             ATTR_SERVICE: service,
             ATTR_VALUE: value,
@@ -862,6 +863,10 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             SIGNAL_RELOAD_ENTITIES.format(self.driver.entry_id),
             (self.entity_id,),
         )
+
+    def diagnostics(self) -> dict[str, Any]:
+        """Return accessory specific diagnostics."""
+        return {}
 
     @ha_callback
     def async_stop(self) -> None:

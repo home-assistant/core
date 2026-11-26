@@ -24,8 +24,6 @@ VACUUM_FAN_SPEED_MAX = "max"
 
 CLIMATE_PRESET_SCHEDULE = "schedule"
 
-AI_ART_FRAME_UPLOAD_IMAGE_SERVICE = "upload_art_frame_image"
-
 AFTER_COMMAND_REFRESH = 5
 COVER_ENTITY_AFTER_COMMAND_REFRESH = 10
 SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH = 30
@@ -62,6 +60,7 @@ class SwitchbotCloudDeviceConfig:
 
     webhook: bool
     entity_config: tuple[Platform, ...]
+    poll_with_webhook: bool = False
 
 
 DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
@@ -75,6 +74,9 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
         True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
     "Hub 3": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
+    ),
+    "Hub 4": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
     "Home Climate Panel": SwitchbotCloudDeviceConfig(
@@ -149,7 +151,9 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
         True, entity_config=(Platform.SENSOR, Platform.BUTTON, Platform.IMAGE)
     ),
     "AI Art Frame 2": SwitchbotCloudDeviceConfig(
-        True, entity_config=(Platform.SENSOR, Platform.BUTTON, Platform.IMAGE)
+        True,
+        entity_config=(Platform.SENSOR, Platform.BUTTON, Platform.IMAGE),
+        poll_with_webhook=True,
     ),
     "Circulator Fan": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.FAN,)),
     "Standing Fan": SwitchbotCloudDeviceConfig(
@@ -181,5 +185,33 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     ),
     "Garage Door Opener": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.BINARY_SENSOR, Platform.COVER)
+    ),
+    "Plug": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SWITCH,)),
+    "Plug Mini (US)": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SWITCH, Platform.SENSOR)
+    ),
+    "Plug Mini (JP)": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SWITCH, Platform.SENSOR)
+    ),
+    "Plug Mini (EU)": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR)
+    ),
+    "Smart Radiator Thermostat": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.CLIMATE, Platform.SENSOR)
+    ),
+    "Relay Switch 1": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.SWITCH,)
+    ),
+    "Relay Switch 1PM": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.SWITCH, Platform.SENSOR)
+    ),
+    "Relay Switch 2PM": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.SWITCH, Platform.SENSOR)
+    ),
+    "Humidifier": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.HUMIDIFIER, Platform.SENSOR)
+    ),
+    "Humidifier2": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.HUMIDIFIER,)
     ),
 }

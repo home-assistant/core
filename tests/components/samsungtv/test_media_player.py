@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 from datetime import timedelta
-import logging
 from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, Mock, call, patch
 
 from async_upnp_client.exceptions import (
@@ -35,15 +34,12 @@ from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOURCE,
     MediaPlayerDeviceClass,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
 from homeassistant.components.samsungtv.const import (
@@ -58,7 +54,6 @@ from homeassistant.components.samsungtv.const import (
 from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
@@ -69,20 +64,10 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TIMEOUT,
     CONF_TOKEN,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PLAY_PAUSE,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
@@ -578,7 +563,7 @@ async def test_send_key(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for send key."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.VOLUME_UP, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     state = hass.states.get(ENTITY_ID)
     # key called
@@ -595,7 +580,10 @@ async def test_send_key_connection_failure(
     remote_legacy.control.side_effect = ConnectionFailure("Boom")
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+            MP_DOMAIN,
+            MediaPlayerService.VOLUME_UP,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            True,
         )
     assert err.value.translation_key == "send_command_failed"
     assert remote_legacy.control.call_count == 2
@@ -614,7 +602,7 @@ async def test_send_key_connection_closed_retry_succeed(
         DEFAULT_MOCK,
     ]
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.VOLUME_UP, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     state = hass.states.get(ENTITY_ID)
     # key because of retry two times
@@ -641,7 +629,10 @@ async def test_send_key_error_response(
     remote_legacy.control.side_effect = error
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+            MP_DOMAIN,
+            MediaPlayerService.VOLUME_UP,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            True,
         )
     assert err.value.translation_key == "error_sending_command"
     state = hass.states.get(ENTITY_ID)
@@ -667,7 +658,10 @@ async def test_send_key_failure_ws(
     remote_websocket.send_commands = Mock(side_effect=error)
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+            MP_DOMAIN,
+            MediaPlayerService.VOLUME_UP,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            True,
         )
     assert err.value.translation_key == "send_command_failed"
     assert remote_websocket.send_commands.call_count == call_count
@@ -694,7 +688,10 @@ async def test_send_key_failure_ws_encrypted(
     remote_encrypted_websocket.send_commands = Mock(side_effect=error)
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+            MP_DOMAIN,
+            MediaPlayerService.VOLUME_UP,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            True,
         )
     assert err.value.translation_key == "send_command_failed"
     assert remote_encrypted_websocket.send_commands.call_count == call_count
@@ -716,12 +713,12 @@ async def test_state(
     """Test for state property."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.VOLUME_UP, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     state = hass.states.get(ENTITY_ID)
     # Should be STATE_UNAVAILABLE after the timer expires
@@ -770,7 +767,7 @@ async def test_turn_off_websocket(
     remote_websocket.send_commands.reset_mock()
 
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     # key called
     assert remote_websocket.send_commands.call_count == 1
@@ -782,13 +779,13 @@ async def test_turn_off_websocket(
     # commands not sent : power off in progress
     remote_websocket.send_commands.reset_mock()
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.VOLUME_UP, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     assert "TV is powering off, not sending keys: ['KEY_VOLUP']" in caplog.text
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Deezer"},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: "Deezer"},
         True,
     )
     assert "TV is powering off, not sending launch_app command" in caplog.text
@@ -811,20 +808,25 @@ async def test_turn_off_websocket_frame(
     remote_websocket.send_commands.reset_mock()
 
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     # key called
     assert remote_websocket.send_commands.call_count == 1
-    commands = remote_websocket.send_commands.call_args_list[0].args[0]
-    assert len(commands) == 3
-    assert isinstance(commands[0], SendRemoteKey)
-    assert commands[0].params["Cmd"] == "Press"
-    assert commands[0].params["DataOfCmd"] == "KEY_POWER"
-    assert isinstance(commands[1], SamsungTVSleepCommand)
-    assert commands[1].delay == 3
-    assert isinstance(commands[2], SendRemoteKey)
-    assert commands[2].params["Cmd"] == "Release"
-    assert commands[2].params["DataOfCmd"] == "KEY_POWER"
+    call_args = remote_websocket.send_commands.call_args_list[0]
+    commands = call_args.args[0]
+    # Repeated presses must not be slowed down by the default key delay
+    assert call_args.kwargs["key_press_delay"] == 0
+    assert len(commands) == 81
+    presses = commands[0:-1:2]
+    sleeps = commands[1:-1:2]
+    assert all(isinstance(command, SendRemoteKey) for command in presses)
+    assert {command.params["Cmd"] for command in presses} == {"Press"}
+    assert {command.params["DataOfCmd"] for command in presses} == {"KEY_POWER"}
+    assert all(isinstance(command, SamsungTVSleepCommand) for command in sleeps)
+    assert {command.delay for command in sleeps} == {0.1}
+    assert isinstance(commands[-1], SendRemoteKey)
+    assert commands[-1].params["Cmd"] == "Release"
+    assert commands[-1].params["DataOfCmd"] == "KEY_POWER"
 
 
 async def test_turn_off_encrypted_websocket(
@@ -841,7 +843,7 @@ async def test_turn_off_encrypted_websocket(
 
     caplog.clear()
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     # key called
     assert remote_encrypted_websocket.send_commands.call_count == 1
@@ -856,7 +858,7 @@ async def test_turn_off_encrypted_websocket(
     # commands not sent : power off in progress
     remote_encrypted_websocket.send_commands.reset_mock()
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.VOLUME_UP, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     assert "TV is powering off, not sending keys: ['KEY_VOLUP']" in caplog.text
     remote_encrypted_websocket.send_commands.assert_not_called()
@@ -882,7 +884,7 @@ async def test_turn_off_encrypted_websocket_key_type(
 
     caplog.clear()
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     # key called
     assert remote_encrypted_websocket.send_commands.call_count == 1
@@ -897,7 +899,7 @@ async def test_turn_off_legacy(hass: HomeAssistant, remote_legacy: Mock) -> None
     """Test for turn_off."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     # key called
     assert remote_legacy.control.call_count == 1
@@ -909,11 +911,10 @@ async def test_turn_off_ws_os_error(
     hass: HomeAssistant, remote_websocket: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off with OSError."""
-    caplog.set_level(logging.DEBUG)
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
     remote_websocket.close = Mock(side_effect=OSError("BOOM"))
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     assert "Error closing connection" in caplog.text
 
@@ -925,11 +926,10 @@ async def test_turn_off_encryptedws_os_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for turn_off with OSError."""
-    caplog.set_level(logging.DEBUG)
     await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
     remote_encrypted_websocket.close = Mock(side_effect=OSError("BOOM"))
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     assert "Error closing connection" in caplog.text
 
@@ -938,7 +938,7 @@ async def test_volume_up(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for volume_up."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.VOLUME_UP, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     # key called
     assert remote_legacy.control.call_count == 1
@@ -949,7 +949,10 @@ async def test_volume_down(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for volume_down."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_DOWN, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN,
+        MediaPlayerService.VOLUME_DOWN,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        True,
     )
     # key called
     assert remote_legacy.control.call_count == 1
@@ -961,8 +964,11 @@ async def test_mute_volume(hass: HomeAssistant, remote_legacy: Mock) -> None:
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         True,
     )
     # key called
@@ -974,14 +980,17 @@ async def test_media_play(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for media_play."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_MEDIA_PLAY, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.MEDIA_PLAY, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     # key called
     assert remote_legacy.control.call_count == 1
     assert remote_legacy.control.call_args_list == [call("KEY_PLAY")]
 
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN,
+        MediaPlayerService.MEDIA_PLAY_PAUSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        True,
     )
     # key called
     assert remote_legacy.control.call_count == 2
@@ -992,14 +1001,20 @@ async def test_media_pause(hass: HomeAssistant, remote_legacy: Mock) -> None:
     """Test for media_pause."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_MEDIA_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN,
+        MediaPlayerService.MEDIA_PAUSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        True,
     )
     # key called
     assert remote_legacy.control.call_count == 1
     assert remote_legacy.control.call_args_list == [call("KEY_PAUSE")]
 
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN,
+        MediaPlayerService.MEDIA_PLAY_PAUSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        True,
     )
     # key called
     assert remote_legacy.control.call_count == 2
@@ -1010,7 +1025,10 @@ async def test_media_next_track(hass: HomeAssistant, remote_legacy: Mock) -> Non
     """Test for media_next_track."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_MEDIA_NEXT_TRACK, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN,
+        MediaPlayerService.MEDIA_NEXT_TRACK,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        True,
     )
     # key  called
     assert remote_legacy.control.call_count == 1
@@ -1021,7 +1039,10 @@ async def test_media_previous_track(hass: HomeAssistant, remote_legacy: Mock) ->
     """Test for media_previous_track."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN,
+        MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        True,
     )
     # key called
     assert remote_legacy.control.call_count == 1
@@ -1042,7 +1063,10 @@ async def test_turn_on_without_turnon_with_mac(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     with pytest.raises(ServiceNotSupported, match="does not support action"):
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
+            MP_DOMAIN,
+            MediaPlayerService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            True,
         )
 
 
@@ -1052,7 +1076,10 @@ async def test_turn_on_without_turnon(hass: HomeAssistant, remote_legacy: Mock) 
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     with pytest.raises(ServiceNotSupported, match="does not support action"):
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
+            MP_DOMAIN,
+            MediaPlayerService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            True,
         )
     # nothing called as not supported feature
     assert remote_legacy.control.call_count == 0
@@ -1064,11 +1091,11 @@ async def test_play_media(hass: HomeAssistant, remote_legacy: Mock) -> None:
     with patch("homeassistant.components.samsungtv.bridge.asyncio.sleep") as sleep:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
-                ATTR_MEDIA_CONTENT_ID: "576",
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "576",
             },
             True,
         )
@@ -1094,11 +1121,11 @@ async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
         remote.reset_mock()
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.URL,
-                ATTR_MEDIA_CONTENT_ID: url,
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.URL,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: url,
             },
             True,
         )
@@ -1126,11 +1153,11 @@ async def test_play_media_content_invalid_id(
         with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
                 MP_DOMAIN,
-                SERVICE_PLAY_MEDIA,
+                MediaPlayerService.PLAY_MEDIA,
                 {
-                    ATTR_ENTITY_ID: ENTITY_ID,
-                    ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
-                    ATTR_MEDIA_CONTENT_ID: content_id,
+                    TargetKey.ENTITY_ID: ENTITY_ID,
+                    MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+                    MediaPlayerServiceArgument.MEDIA_CONTENT_ID: content_id,
                 },
                 True,
             )
@@ -1145,8 +1172,8 @@ async def test_select_source(hass: HomeAssistant, remote_legacy: Mock) -> None:
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "HDMI"},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: "HDMI"},
         True,
     )
     # key called
@@ -1168,8 +1195,11 @@ async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
         with pytest.raises(HomeAssistantError) as exc_info:
             await hass.services.async_call(
                 MP_DOMAIN,
-                SERVICE_SELECT_SOURCE,
-                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: source},
+                MediaPlayerService.SELECT_SOURCE,
+                {
+                    TargetKey.ENTITY_ID: ENTITY_ID,
+                    MediaPlayerServiceArgument.SOURCE: source,
+                },
                 True,
             )
         # control not called
@@ -1190,11 +1220,11 @@ async def test_play_media_app(hass: HomeAssistant, remote_websocket: Mock) -> No
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.APP,
-            ATTR_MEDIA_CONTENT_ID: "3201608010191",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.APP,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "3201608010191",
         },
         True,
     )
@@ -1216,8 +1246,8 @@ async def test_select_source_app(hass: HomeAssistant, remote_websocket: Mock) ->
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Deezer"},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: "Deezer"},
         True,
     )
     assert remote_websocket.send_commands.call_count == 1
@@ -1243,7 +1273,7 @@ async def test_websocket_unsupported_remote_control(
     remote_websocket.send_commands.reset_mock()
 
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
     )
     remote_websocket.raise_mock_ws_event_callback(
         "ms.error",
@@ -1296,8 +1326,8 @@ async def test_volume_control_upnp(hass: HomeAssistant, dmr_device: Mock) -> Non
     # Upnp action succeeds
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        MediaPlayerService.VOLUME_SET,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5},
         True,
     )
     dmr_device.async_set_volume_level.assert_called_once_with(0.5)
@@ -1310,8 +1340,11 @@ async def test_volume_control_upnp(hass: HomeAssistant, dmr_device: Mock) -> Non
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_VOLUME_SET,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
+            MediaPlayerService.VOLUME_SET,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.VOLUME_LEVEL: 0.6,
+            },
             True,
         )
     assert err.value.translation_key == "error_set_volume"
@@ -1330,8 +1363,11 @@ async def test_upnp_not_available(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_VOLUME_SET,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
+            MediaPlayerService.VOLUME_SET,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.VOLUME_LEVEL: 0.6,
+            },
             True,
         )
     assert err.value.translation_key == "upnp_not_available"
@@ -1346,8 +1382,11 @@ async def test_upnp_missing_service(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_VOLUME_SET,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.6},
+            MediaPlayerService.VOLUME_SET,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.VOLUME_LEVEL: 0.6,
+            },
             True,
         )
     assert err.value.translation_key == "upnp_not_available"

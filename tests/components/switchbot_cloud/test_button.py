@@ -6,10 +6,11 @@ import pytest
 from switchbot_api import BotCommands, Device
 from switchbot_api.commands import ArtFrameCommands
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -54,7 +55,10 @@ async def test_pressmode_bot(
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
         mock_send_command.assert_called_once_with(
             "bot-id-1", BotCommands.PRESS.value, "command", "default"
@@ -99,6 +103,47 @@ async def test_switchmode_bot_no_button_entity(
 
 
 @pytest.mark.parametrize(
+    "device_mode",
+    ["customizeMode", "Any World", " "],
+)
+async def test_others_mode_bot_no_other_entity(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    mock_setup_webhook,
+    mock_get_webook_configuration,
+    device_mode,
+) -> None:
+    """Test others mode bot no other entity."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="bot-id-1",
+            deviceName="bot-1",
+            deviceType="Bot",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.return_value = {"deviceMode": device_mode}
+    mock_setup_webhook.return_value = {
+        "statusCode": 100,
+        "body": {},
+        "message": "success",
+    }
+    mock_get_webook_configuration.return_value = {
+        "statusCode": 100,
+        "body": {},
+        "message": "success",
+    }
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    assert not hass.states.async_entity_ids(BUTTON_DOMAIN)
+    assert not hass.states.async_entity_ids(SWITCH_DOMAIN)
+
+
+@pytest.mark.parametrize(
     "buttons",
     [
         ("AI Art Frame", ArtFrameCommands.PREVIOUS),
@@ -133,7 +178,10 @@ async def test_loaded_buttons(
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
         mock_send_command.assert_called()
 

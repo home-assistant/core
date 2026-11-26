@@ -94,12 +94,18 @@ async def coordinator_for_device(
     device: Device | Remote,
     coordinators_by_id: dict[str, SwitchBotCoordinator],
     manageable_by_webhook: bool = False,
+    poll_with_webhook: bool = False,
 ) -> SwitchBotCoordinator:
     """Instantiate coordinator and adds to list for gathering."""
     coordinator = coordinators_by_id.get(device.device_id)
     if coordinator is None:
         coordinator = SwitchBotCoordinator(
-            hass, entry, api, device, manageable_by_webhook
+            hass,
+            entry,
+            api,
+            device,
+            manageable_by_webhook,
+            poll_with_webhook=poll_with_webhook,
         )
         coordinators_by_id[device.device_id] = coordinator
 
@@ -141,39 +147,6 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.climates.append((device, coordinator))
-
-    if (
-        isinstance(device, Remote | Device)
-        and device.device_type == "Smart Radiator Thermostat"
-    ):
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.climates.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-
-    if (
-        isinstance(device, Device)
-        and (
-            device.device_type.startswith("Plug")
-            or device.device_type in ["Relay Switch 1PM", "Relay Switch 1"]
-        )
-    ) or isinstance(device, Remote):
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.switches.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type in [
-        "Relay Switch 1PM",
-        "Plug Mini (US)",
-        "Plug Mini (JP)",
-        "Plug Mini (EU)",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.sensors.append((device, coordinator))
     if isinstance(device, Device) and device.device_type in [
         "K10+",
         "K10+ Pro",
@@ -197,36 +170,20 @@ async def make_device_data(
         )
         devices_data.sensors.append((device, coordinator))
         if coordinator.data is not None:
-            if coordinator.data.get("deviceMode") == "pressMode":
-                devices_data.buttons.append((device, coordinator))
-            else:
-                devices_data.switches.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "Relay Switch 2PM":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.sensors.append((device, coordinator))
-        devices_data.switches.append((device, coordinator))
+            device_mode = coordinator.data.get("deviceMode")
+            match device_mode:
+                case "pressMode":
+                    devices_data.buttons.append((device, coordinator))
+                case "switchMode":
+                    devices_data.switches.append((device, coordinator))
+                case _:
+                    pass
 
     if isinstance(device, Device) and device.device_type.startswith("Air Purifier"):
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.fans.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type == "Humidifier2":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.humidifiers.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type == "Humidifier":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.humidifiers.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-
     await make_new_device_data(
         hass, entry, api, device, devices_data, coordinators_by_id
     )
@@ -252,6 +209,7 @@ async def make_new_device_data(
         device,
         coordinators_by_id,
         manageable_by_webhook=default_config.webhook,
+        poll_with_webhook=default_config.poll_with_webhook,
     )
 
     _platform_list_map: dict[Platform, list] = {

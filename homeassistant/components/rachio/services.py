@@ -5,7 +5,7 @@ import logging
 import probatio
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ID, CommonServiceArgument, Platform
+from homeassistant.const import ATTR_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -42,7 +42,7 @@ RESUME_SERVICE_SCHEMA = probatio.Schema(
 
 START_MULTIPLE_ZONES_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CommonServiceArgument.ENTITY_ID): cv.entity_ids,
+        probatio.Required(TargetKey.ENTITY_ID): cv.entity_ids,
         probatio.Required(RachioServiceArgument.DURATION): cv.ensure_list_csv,
     }
 )
@@ -112,7 +112,7 @@ def _start_multiple(call: ServiceCall) -> None:
             ATTR_DURATION: int(next(duration, default_time)) * 60,
             ATTR_SORT_ORDER: count,
         }
-        for count, entity_id in enumerate(call.data[CommonServiceArgument.ENTITY_ID])
+        for count, entity_id in enumerate(call.data[TargetKey.ENTITY_ID])
         if entity_id in entity_to_zone_id
     ]
 
@@ -120,7 +120,7 @@ def _start_multiple(call: ServiceCall) -> None:
         raise HomeAssistantError("No matching zones found in given entity_ids")
 
     person.start_multiple_zones(zones_list)
-    _LOGGER.debug("Starting zone(s) %s", call.data[CommonServiceArgument.ENTITY_ID])
+    _LOGGER.debug("Starting zone(s) %s", call.data[TargetKey.ENTITY_ID])
 
 
 @callback

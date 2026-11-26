@@ -11,6 +11,7 @@ from typing import Any, Literal, override
 import aiohttp
 from hass_nabucasa.client import CloudClient as Interface, RemoteActivationNotAllowed
 from hass_nabucasa.const import DISPATCH_REMOTE_BACKEND_UP
+from hass_nabucasa.remote import REPAIR_CLIENT_CERTIFICATE_ERROR
 from webrtc_models import RTCIceServer
 
 from homeassistant.components import google_assistant, persistent_notification, webhook
@@ -46,6 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 VALID_REPAIR_TRANSLATION_KEYS = {
     "connection_error",
     "no_subscription",
+    REPAIR_CLIENT_CERTIFICATE_ERROR,
     "reset_bad_custom_domain_configuration",
     "subscription_expired",
     "warn_bad_custom_domain_configuration",
@@ -117,6 +119,12 @@ class CloudClient(Interface):
     def remote_autostart(self) -> bool:
         """Return true if we want start a remote connection."""
         return self._prefs.remote_enabled
+
+    @property
+    @override
+    def remote_ssl_peer_certificate(self) -> str | None:
+        """Return CA file used to require client certificates on remote access."""
+        return self._hass.http.remote_ssl_peer_certificate
 
     @property
     @override
