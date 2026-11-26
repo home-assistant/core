@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any, Self, cast, override
 
+from homeassistant.components.homeassistant import HomeAssistantService
 from homeassistant.components.humidifier import (
     MODE_AWAY,
     MODE_NORMAL,
@@ -19,17 +20,15 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_START,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -634,14 +633,16 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
     async def _async_device_turn_on(self) -> None:
         """Turn humidifier toggleable device on."""
-        data = {ATTR_ENTITY_ID: self._switch_entity_id}
-        await self.hass.services.async_call(HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data)
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._switch_entity_id}
+        await self.hass.services.async_call(
+            HOMEASSISTANT_DOMAIN, HomeAssistantService.TURN_ON, data
+        )
 
     async def _async_device_turn_off(self) -> None:
         """Turn humidifier toggleable device off."""
-        data = {ATTR_ENTITY_ID: self._switch_entity_id}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._switch_entity_id}
         await self.hass.services.async_call(
-            HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data
+            HOMEASSISTANT_DOMAIN, HomeAssistantService.TURN_OFF, data
         )
 
     @override

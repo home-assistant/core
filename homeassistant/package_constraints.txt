@@ -48,7 +48,7 @@ ifaddr==0.2.0
 Jinja2==3.1.6
 lru-dict==1.4.1
 matter-ble-proxy==0.7.1
-matter-python-client==1.6.0
+matter-python-client==1.6.1
 mutagen==1.48.1
 openai==3.26.0
 orjson==3.13.0

@@ -3,9 +3,7 @@ rules:
   action-setup:
     status: exempt
     comment: only entity actions
-  appropriate-polling:
-    status: exempt
-    comment: Integration only sends messages, no polling required.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow: done
@@ -36,13 +34,9 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable:
-    status: exempt
-    comment: Notify entities are stateless send-only, availability is not applicable.
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: exempt
-    comment: Notify entities are stateless send-only.
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
@@ -56,9 +50,7 @@ rules:
   discovery-update-info:
     status: exempt
     comment: Cloud service, not discoverable on the network.
-  docs-data-update:
-    status: exempt
-    comment: Integration does not poll or update data.
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices:
@@ -73,15 +65,13 @@ rules:
   entity-category: done
   entity-device-class:
     status: exempt
-    comment: No applicable device class for notify entities.
+    comment: No applicable device class for the notify, image and credits entities.
   entity-disabled-by-default:
     status: exempt
-    comment: Notify entities should be enabled by default for immediate use.
+    comment: Notify entities and the credits sensor should be enabled by default.
   entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: Notify entities use default platform icon.
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt

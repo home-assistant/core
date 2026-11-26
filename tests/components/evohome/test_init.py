@@ -2,9 +2,10 @@
 
 from http import HTTPStatus
 import logging
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import aiohttp
+import evohomeasync2 as ec2
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -213,6 +214,99 @@ async def test_client_request_failure_v2(
     assert result is False
 
     assert caplog.record_tuples == CLIENT_REQUEST_TESTS[exception]
+
+
+async def _async_setup_evohome(
+    hass: HomeAssistant, config: dict[str, str | int], install: str
+) -> bool:
+    """Set up evohome from a mocked vendor's server, and return the result."""
+
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request(install),
+        ),
+        patch("_evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
+    ):
+        return await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+
+
+async def test_location_idx_out_of_range(
+    hass: HomeAssistant,
+    config: dict[str, str | int],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup fails if location_idx is not one of the account's locations."""
+
+    config["location_idx"] = 1  # the default install has only one location
+
+    with caplog.at_level(logging.ERROR):
+        assert await _async_setup_evohome(hass, config, "default") is False
+
+    assert caplog.record_tuples == [
+        (
+            "homeassistant.components.evohome",
+            logging.ERROR,
+            "Config error: 'location_idx' = 1, but the valid range is 0-0. "
+            "Unable to continue. Fix any configuration errors and restart HA",
+        ),
+        LOG_SETUP_FAILED,
+    ]
+
+
+async def test_location_without_tcs(
+    hass: HomeAssistant,
+    config: dict[str, str | int],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup fails if the configured location has no TCS."""
+
+    with (
+        patch.object(ec2.Location, "tcs", new_callable=PropertyMock, return_value=None),
+        caplog.at_level(logging.ERROR),
+    ):
+        assert await _async_setup_evohome(hass, config, "default") is False
+
+    assert caplog.record_tuples == [
+        (
+            "homeassistant.components.evohome",
+            logging.ERROR,
+            "Config error: location 2738909 has no TCS",
+        ),
+        LOG_SETUP_FAILED,
+    ]
+
+
+async def test_location_first_refresh_failure(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a translated error of a failed first refresh is logged by its cause."""
+
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request("default"),
+        ),
+        patch("_evohome.auth.AbstractAuth._make_request", mock_make_request("default")),
+        patch.object(
+            ec2.Location,
+            "get_status",
+            side_effect=ec2.ApiCallFailedError("API call failed"),
+        ),
+        caplog.at_level(logging.ERROR),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config}) is False
+
+    assert caplog.record_tuples == [
+        (
+            "homeassistant.components.evohome",
+            logging.ERROR,
+            "Failed to fetch initial data: API call failed",
+        ),
+        LOG_SETUP_FAILED,
+    ]
 
 
 @pytest.mark.parametrize("install", ["default"])

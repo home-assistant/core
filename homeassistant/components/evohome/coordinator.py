@@ -3,7 +3,7 @@
 from collections.abc import Awaitable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Final, override
+from typing import TYPE_CHECKING, Any, Final, override
 
 import evohomeasync as ec1
 import evohomeasync2 as ec2
@@ -183,6 +183,22 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
 
         try:
             await self.client.setup()  # only config for now
+
+        except ec2.ApiConnectionFailedError as err:
+            _log_api_call_failure(self.logger, err)
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="api_connection_failed",
+            ) from err
+
+        except ec2.ApiCallFailedError as err:
+            _log_api_call_failure(self.logger, err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key=_api_call_error_key(err),
+                retry_after=err.retry_after,
+            ) from err
+
         except ec2.EvohomeError as err:
             raise UpdateFailed(err) from err
 
@@ -233,19 +249,15 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
 class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
     """Coordinator for an evohome location (its status and schedules)."""
 
-    # These will not be None after _async_setup())
-    loc: ec2.Location
-    tcs: ec2.ControlSystem
-
     def __init__(
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
         account: EvoAccountCoordinator,
+        location: ec2.Location,
         *,
         name: str,
         update_interval: timedelta,
-        location_idx: int,
     ) -> None:
         """Class to manage fetching data."""
 
@@ -257,10 +269,14 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             update_interval=update_interval,
         )
 
+        if TYPE_CHECKING:
+            assert location.tcs is not None  # the caller skips locations without one
+
         self.account = account
         self.client = account.client
 
-        self.loc_idx = location_idx
+        self.loc = location
+        self.tcs = location.tcs
 
         self.data: EvoLocStatusT = None  # type: ignore[assignment]
 
@@ -269,26 +285,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
 
     @override
     async def _async_setup(self) -> None:
-        """Set up the coordinator.
-
-        Select the location from the account's configuration (fetched by the account
-        coordinator).
-        """
-
-        try:
-            self.loc = self.client.locations[self.loc_idx]
-        except IndexError as err:
-            raise UpdateFailed(
-                f"""
-                    Config error: 'location_idx' = {self.loc_idx},
-                    but the valid range is 0-{len(self.client.locations) - 1}.
-                    Unable to continue. Fix any configuration errors and restart HA
-                """
-            ) from err
-
-        if (tcs := self.loc.tcs) is None:
-            raise UpdateFailed(f"Config error: location {self.loc.id} has no TCS")
-        self.tcs = tcs
+        """Set up the coordinator (log the location's configuration)."""
 
         if self.logger.isEnabledFor(logging.DEBUG):
             loc_info = {
@@ -361,7 +358,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             _log_api_call_failure(self.logger, err)
             raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
-                translation_key=_api_call_error_key(err),
+                translation_key="api_connection_failed",
             ) from err
 
         except ec2.ApiCallFailedError as err:
