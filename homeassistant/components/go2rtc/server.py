@@ -244,32 +244,37 @@ class Server:
 
         self._startup_complete.clear()
 
-        self._process = await asyncio.create_subprocess_exec(
-            self._binary,
-            "-c",
-            config_file,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT,
-            close_fds=False,  # required for posix_spawn on CPython < 3.13
-        )
-
-        self._hass.async_create_background_task(
-            self._log_output(self._process), "Go2rtc log output"
-        )
-
         try:
-            async with asyncio.timeout(_SETUP_TIMEOUT):
-                await self._startup_complete.wait()
-        except TimeoutError as err:
-            msg = "Go2rtc server didn't start correctly"
-            _LOGGER.exception(msg)
-            self._log_server_output(logging.WARNING)
-            await self._stop()
-            raise Go2RTCServerStartError from err
+            self._process = await asyncio.create_subprocess_exec(
+                self._binary,
+                "-c",
+                config_file,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+                close_fds=False,  # required for posix_spawn on CPython < 3.13
+            )
 
-        # Check the server version
-        client = Go2RtcRestClient(self._session, HA_MANAGED_URL)
-        await client.validate_server_version()
+            self._hass.async_create_background_task(
+                self._log_output(self._process), "Go2rtc log output"
+            )
+
+            try:
+                async with asyncio.timeout(_SETUP_TIMEOUT):
+                    await self._startup_complete.wait()
+            except TimeoutError as err:
+                msg = "Go2rtc server didn't start correctly"
+                _LOGGER.exception(msg)
+                self._log_server_output(logging.WARNING)
+                raise Go2RTCServerStartError from err
+
+            # Check the server version
+            client = Go2RtcRestClient(self._session, HA_MANAGED_URL)
+            await client.validate_server_version()
+        except Exception:
+            # Don't leave the server running, or its config with the API
+            # credentials on disk
+            await self._stop()
+            raise
 
     async def _log_output(self, process: asyncio.subprocess.Process) -> None:
         """Log the output of the process."""
@@ -371,10 +376,10 @@ class Server:
 
     async def _stop(self) -> None:
         """Stop the server."""
-        if self._process:
+        # The process and the config file are only forgotten once they are
+        # gone, so a stop that is cancelled halfway is completed by the next
+        if process := self._process:
             _LOGGER.debug("Stopping go2rtc server")
-            process = self._process
-            self._process = None
             with suppress(ProcessLookupError):
                 process.terminate()
             try:
@@ -383,8 +388,10 @@ class Server:
                 _LOGGER.warning("Go2rtc server didn't terminate gracefully. Killing it")
                 with suppress(ProcessLookupError):
                     process.kill()
+                await process.wait()
             else:
                 _LOGGER.debug("Go2rtc server has been stopped")
+            self._process = None
         if config_file := self._config_file:
-            self._config_file = None
             await self._hass.async_add_executor_job(_remove_config_file, config_file)
+            self._config_file = None
