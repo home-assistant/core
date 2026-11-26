@@ -70,9 +70,6 @@ def _read_optional(
     """
     try:
         return getter(device)
-    except AttributeError:
-        # Only some device classes offer the getter at all.
-        _LOGGER.debug("Device class does not offer '%s'", data_point)
     except PyViCareNotSupportedFeatureError:
         _LOGGER.debug("Device does not offer a '%s' data point", data_point)
     except PyViCareRateLimitError as limit_exception:
@@ -103,7 +100,12 @@ def get_device_name(device: PyViCareDevice) -> str | None:
     level only zigbee devices, room sensors and floor heating offer the data
     point, so callers fall back to the model.
     """
-    name = _read_optional(lambda api: api.getName(), device, "device.name")
+    try:
+        name = _read_optional(lambda api: api.getName(), device, "device.name")
+    except AttributeError:
+        # Only some device classes offer the getter at all.
+        _LOGGER.debug("Device class does not offer 'device.name'")
+        return None
     return name.strip() or None if name is not None else None
 
 
