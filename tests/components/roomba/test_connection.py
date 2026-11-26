@@ -803,3 +803,63 @@ async def test_start_requires_mission_state(
 
     assert exc_info.value.translation_key == "not_connected"
     periodic_roomba.send_command.assert_not_awaited()
+
+
+async def test_start_requires_phase_and_cycle(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test a partial mission update does not count as the mission state."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+
+    async def _partial_connect() -> None:
+        periodic_roomba.connected = True
+        _publish(periodic_roomba, {"cleanMissionStatus": {"phase": "pause"}})
+
+    periodic_roomba.connect.side_effect = _partial_connect
+    with pytest.raises(HomeAssistantError):
+        await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, SERVICE_START)
+
+    periodic_roomba.send_command.assert_not_awaited()
+
+
+async def test_start_after_background_recovery_requires_mission_state(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test a session the client recovered on its own needs fresh mission state."""
+    _set_phase(periodic_roomba, "run")
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    assert periodic_roomba.connected
+
+    on_state = periodic_roomba.register_on_connection_state_callback.call_args.args[0]
+    on_state("disconnected", "Wi-Fi drop")
+    on_state("connected", None)
+    with pytest.raises(HomeAssistantError):
+        await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, SERVICE_START)
+
+    periodic_roomba.send_command.assert_not_awaited()
+
+
+async def test_refresh_reconnects_when_settling_session_dropped(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test update_entity does not join a session that dropped while settling."""
+    assert await async_setup_component(hass, HA_DOMAIN, {})
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+    periodic_roomba.connected = False
+
+    await _call_while_ticking(hass, freezer, HA_DOMAIN, SERVICE_UPDATE_ENTITY)
+
+    assert periodic_roomba.connect.await_count == 3

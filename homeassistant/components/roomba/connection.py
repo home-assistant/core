@@ -68,6 +68,7 @@ class RoombaConnection:
         self._unsub_settle: CALLBACK_TYPE | None = None
         self._unsub_release: CALLBACK_TYPE | None = None
         self._unsub_message: CALLBACK_TYPE | None = None
+        self._unsub_state: CALLBACK_TYPE | None = None
         self._session_start = 0.0
         self._last_message: float | None = None
         self._mission_received = False
@@ -92,6 +93,9 @@ class RoombaConnection:
         if self.continuous:
             return
         self._unsub_message = self.roomba.register_on_message_callback(self._on_message)
+        self._unsub_state = self.roomba.register_on_connection_state_callback(
+            self._on_connection_state
+        )
         if self.polling:
             self._unsub_interval = async_track_time_interval(
                 self.hass, self._async_poll, PERIODIC_UPDATE_INTERVAL
@@ -114,6 +118,9 @@ class RoombaConnection:
             if self._unsub_message:
                 self._unsub_message()
                 self._unsub_message = None
+            if self._unsub_state:
+                self._unsub_state()
+                self._unsub_state = None
             # Do not leave anyone waiting for state that will not come.
             self._fresh.set()
             await self._disconnect(self.hass, self.roomba)
@@ -124,8 +131,15 @@ class RoombaConnection:
         reported = (message.get("state") or {}).get("reported") or {}
         if len(reported) > 1 or (reported and "signal" not in reported):
             self._last_message = time.monotonic()
-        if "cleanMissionStatus" in reported:
+        mission = reported.get("cleanMissionStatus") or {}
+        if "phase" in mission and "cycle" in mission:
             self._mission_received = True
+
+    @callback
+    def _on_connection_state(self, state: str, _error: str | None) -> None:
+        """Forget the mission state when the session drops, even if it recovers."""
+        if state == "disconnected":
+            self._mission_received = False
 
     async def async_ensure_connected(self, *, wait: bool = False) -> None:
         """Open a session if needed before a command.
@@ -162,7 +176,7 @@ class RoombaConnection:
         async with self._lock:
             if self._closed:
                 return
-            if self._unsub_settle or self.roomba.connected:
+            if self.roomba.connected:
                 check_release = not self._unsub_settle
             else:
                 _LOGGER.debug("Refreshing state: connecting")
