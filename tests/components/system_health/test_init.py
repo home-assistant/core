@@ -1,16 +1,16 @@
 """Tests for the system health component init."""
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientError
-import pytest
 from pytest_homeassistant.common import get_system_health_info, mock_platform
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import system_health
-from homeassistant.components.system_health import DOMAIN, async_register_info
+from homeassistant.components.system_health import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -69,32 +69,42 @@ async def test_info_endpoint_return_info(
     assert data == {"info": {"hello": True}}
 
 
-async def test_info_endpoint_register_callback(
+def _mock_system_health_platform(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
+    domain: str,
+    info_callback: Callable[[HomeAssistant], Awaitable[dict[str, Any]]],
 ) -> None:
-    """Test that the info endpoint allows registering callbacks."""
+    """Mock a system_health platform registering an info callback."""
+    hass.config.components.add(domain)
+    mock_platform(
+        hass,
+        f"{domain}.system_health",
+        Mock(
+            async_register=lambda hass, register: register.async_register_info(
+                info_callback
+            )
+        ),
+    )
+
+
+async def test_info_endpoint_register_callback(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that the info endpoint returns registered callback info."""
 
     async def mock_info(hass: HomeAssistant) -> dict[str, Any]:
         return {"storage": "YAML"}
 
-    async_register_info(hass, "lovelace", mock_info)
-
-    assert "calls system_health.async_register_info, which is deprecated" in caplog.text
-    assert "This will stop working in Home Assistant 2027.1" in caplog.text
-    # The deprecation must not be attributed to system_health itself
-    assert "integration 'system_health'" not in caplog.text
-
+    _mock_system_health_platform(hass, "fake_integration", mock_info)
     assert await async_setup_component(hass, DOMAIN, {})
     data = await gather_system_health_info(hass, hass_ws_client)
 
     assert len(data) == 1
-    data = data["lovelace"]
+    data = data["fake_integration"]
     assert data == {"info": {"storage": "YAML"}}
 
     # Test our test helper works
-    assert await get_system_health_info(hass, "lovelace") == {"storage": "YAML"}
+    assert await get_system_health_info(hass, "fake_integration") == {"storage": "YAML"}
 
 
 async def test_info_endpoint_register_callback_timeout(
@@ -105,29 +115,29 @@ async def test_info_endpoint_register_callback_timeout(
     async def mock_info(hass: HomeAssistant) -> dict[str, Any]:
         raise TimeoutError
 
-    async_register_info(hass, "lovelace", mock_info)
+    _mock_system_health_platform(hass, "fake_integration", mock_info)
     assert await async_setup_component(hass, DOMAIN, {})
     data = await gather_system_health_info(hass, hass_ws_client)
 
     assert len(data) == 1
-    data = data["lovelace"]
+    data = data["fake_integration"]
     assert data == {"info": {"error": {"type": "failed", "error": "timeout"}}}
 
 
 async def test_info_endpoint_register_callback_exc(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test that the info endpoint requires auth."""
+    """Test that the info endpoint handles a failing callback."""
 
     async def mock_info(hass: HomeAssistant) -> dict[str, Any]:
         raise Exception("TEST ERROR")  # noqa: TRY002
 
-    async_register_info(hass, "lovelace", mock_info)
+    _mock_system_health_platform(hass, "fake_integration", mock_info)
     assert await async_setup_component(hass, DOMAIN, {})
     data = await gather_system_health_info(hass, hass_ws_client)
 
     assert len(data) == 1
-    data = data["lovelace"]
+    data = data["fake_integration"]
     assert data == {"info": {"error": {"type": "failed", "error": "unknown"}}}
 
 

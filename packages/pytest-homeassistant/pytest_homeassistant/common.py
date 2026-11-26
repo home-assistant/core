@@ -1566,15 +1566,9 @@ async def flush_store(store: storage.Store) -> None:
 
 async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, Any]:
     """Get system health info."""
-    from homeassistant.components.system_health import (  # noqa: PLC0415
-        DATA_SYSTEM_HEALTH_PLATFORMS,
-        DOMAIN as SYSTEM_HEALTH_DOMAIN,
-    )
+    from homeassistant.components.system_health import DATA_SYSTEM_HEALTH_PLATFORMS  # noqa: PLC0415
 
-    platform_registrations = await hass.data[
-        DATA_SYSTEM_HEALTH_PLATFORMS
-    ].async_get_platforms()
-    registrations = {**hass.data[SYSTEM_HEALTH_DOMAIN], **platform_registrations}
+    registrations = await hass.data[DATA_SYSTEM_HEALTH_PLATFORMS].async_get_platforms()
     return await registrations[domain].info_callback(hass)
 
 

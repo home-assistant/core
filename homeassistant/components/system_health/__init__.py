@@ -13,7 +13,6 @@ import probatio
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -26,8 +25,6 @@ INFO_CALLBACK_TIMEOUT = 5
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-# Lazily loaded system health platforms. hass.data[DOMAIN] holds registrations
-# from the deprecated async_register_info path.
 DATA_SYSTEM_HEALTH_PLATFORMS: HassKey[
     LazyIntegrationPlatforms[SystemHealthRegistration]
 ] = HassKey("system_health_platforms")
@@ -49,33 +46,9 @@ class SystemHealthProtocol(Protocol):
         """Register system health callbacks."""
 
 
-@callback
-def async_register_info(
-    hass: HomeAssistant,
-    domain: str,
-    info_callback: Callable[[HomeAssistant], Awaitable[dict]],
-) -> None:
-    """Register an info callback.
-
-    Deprecated.
-    """
-    report_usage(
-        "calls system_health.async_register_info, which is deprecated; "
-        "add a system_health platform instead",
-        breaks_in_ha_version="2027.1",
-        core_behavior=ReportBehavior.LOG,
-        exclude_integrations={DOMAIN},
-    )
-    registrations = hass.data.setdefault(DOMAIN, {})
-    registration = SystemHealthRegistration(hass, domain)
-    registration.async_register_info(info_callback)
-    registrations[domain] = registration
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the System Health component."""
     websocket_api.async_register_command(hass, handle_info)
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DATA_SYSTEM_HEALTH_PLATFORMS] = LazyIntegrationPlatforms(
         hass, DOMAIN, _process_system_health_platform
     )
@@ -121,10 +94,9 @@ async def _registered_domain_data(
     platform_registrations = await hass.data[
         DATA_SYSTEM_HEALTH_PLATFORMS
     ].async_get_platforms()
-    # hass.data[DOMAIN] holds registrations from the deprecated direct path.
     # Sort so the reported order is deterministic regardless of load order.
     registrations: dict[str, SystemHealthRegistration] = dict(
-        sorted({**hass.data[DOMAIN], **platform_registrations}.items())
+        sorted(platform_registrations.items())
     )
     for domain, domain_data in zip(
         registrations,
