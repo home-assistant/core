@@ -64,14 +64,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up the receiver's main and multi-room players."""
     receiver = config_entry.runtime_data
-    entities = [MarantzMediaPlayer(receiver, receiver.main, config_entry, "main")]
-    if receiver.multi_room_a.power is not None:
-        entities.append(
-            MarantzMediaPlayer(
-                receiver, receiver.multi_room_a, config_entry, "multi_room_a"
-            )
+    async_add_entities(
+        [MarantzMediaPlayer(receiver, receiver.main, config_entry, "main")]
+    )
+    multi_room_added = False
+
+    @callback
+    def _async_add_multi_room(state: V2007ReceiverState | None) -> None:
+        nonlocal multi_room_added
+        if state is None or multi_room_added or receiver.multi_room_a.power is None:
+            return
+        multi_room_added = True
+        async_add_entities(
+            [
+                MarantzMediaPlayer(
+                    receiver, receiver.multi_room_a, config_entry, "multi_room_a"
+                )
+            ]
         )
-    async_add_entities(entities)
+
+    config_entry.async_on_unload(receiver.subscribe(_async_add_multi_room))
+    _async_add_multi_room(receiver.state)
 
 
 def _translate_errors[**_P, _R](

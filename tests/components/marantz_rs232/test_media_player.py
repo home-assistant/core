@@ -342,6 +342,7 @@ async def test_startup_with_unknown_power(
     mock_receiver: MagicMock,
     mock_config_entry: MockConfigEntry,
     receiver_update: Callable[[V2007ReceiverState | None], None],
+    receiver_callbacks: list[Callable[[V2007ReceiverState | None], None]],
     power: bool,
     expected: str,
 ) -> None:
@@ -366,3 +367,24 @@ async def test_startup_with_unknown_power(
     receiver_update(state)
     await hass.async_block_till_done()
     assert hass.states.get(MAIN).state == expected
+    assert hass.states.get(MULTI) is None
+
+    mock_receiver.multi_room_a.power = power
+    state.multi_room_a.power = power
+    receiver_update(state)
+    receiver_update(state)
+    await hass.async_block_till_done()
+    assert hass.states.get(MULTI).state == expected
+    assert len(hass.states.async_all(MP_DOMAIN)) == 2
+
+    await hass.services.async_call(
+        MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: MULTI}, blocking=True
+    )
+    mock_receiver.multi_room_a.power_on.assert_awaited_once()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    receiver_update(state)
+    await hass.async_block_till_done()
+    assert hass.states.get(MULTI).state == STATE_UNAVAILABLE
+    assert not receiver_callbacks
