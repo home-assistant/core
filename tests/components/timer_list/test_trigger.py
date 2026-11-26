@@ -14,7 +14,6 @@ from homeassistant.components.timer_list.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_ENTITY_ID,
     CONF_PLATFORM,
     CONF_TARGET,
     SERVICE_TURN_OFF,
@@ -59,7 +58,7 @@ async def _setup_automation(
                 "triggers": [
                     {
                         CONF_PLATFORM: f"{DOMAIN}.{trigger_type}",
-                        CONF_TARGET: {CONF_ENTITY_ID: entity_id},
+                        CONF_TARGET: {TargetKey.ENTITY_ID: entity_id},
                     }
                 ],
                 "action": {

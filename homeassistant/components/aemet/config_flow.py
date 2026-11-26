@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-from aemet_opendata.exceptions import AemetError, AuthError
+from aemet_opendata.exceptions import AemetError, AuthError, TownNotFound
 from aemet_opendata.interface import AEMET, ConnectionOptions
 import probatio
 
@@ -168,6 +168,8 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
             await aemet.select_coordinates(latitude, longitude)
         except AuthError:
             return {"base": "invalid_api_key"}
+        except TownNotFound:
+            return {"base": "town_not_found"}
         except AemetError:
             return {"base": "cannot_connect"}
         return {}

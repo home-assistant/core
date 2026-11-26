@@ -38,7 +38,7 @@ async def init_integration(
         entry_id=entry_id,
         title=name,
         version=2,
-        minor_version=1,
+        minor_version=2,
     )
 
     config_entry.add_to_hass(hass)

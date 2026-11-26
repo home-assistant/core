@@ -151,5 +151,60 @@ async def test_migrate_to_version_2(
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.version == 2
-    assert config_entry.minor_version == 1
+    assert config_entry.minor_version == 2
     assert config_entry.options == expected_options
+
+
+@pytest.mark.parametrize(
+    ("options", "expected_country_settings"),
+    [
+        pytest.param(
+            {"country": "SE", "country_settings": {"language": "sv"}},
+            {"language": "sv", "include_sundays": False},
+            id="default_added",
+        ),
+        pytest.param(
+            {
+                "country": "SE",
+                "country_settings": {"language": "sv", "include_sundays": True},
+            },
+            {"language": "sv", "include_sundays": True},
+            id="stored_value_kept",
+        ),
+        pytest.param(
+            {"country": "DE", "country_settings": {"language": "de"}},
+            {"language": "de"},
+            id="country_without_options",
+        ),
+    ],
+)
+async def test_migrate_to_minor_version_2(
+    hass: HomeAssistant,
+    options: dict[str, Any],
+    expected_country_settings: dict[str, Any],
+) -> None:
+    """Test the migration stores the defaults of the country specific options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data={},
+        options={
+            "excludes": ["sat", "sun"],
+            "days_offset": DEFAULT_OFFSET,
+            "workdays": DEFAULT_WORKDAYS,
+            "custom_holidays": {"add_holidays": [], "remove_holidays": []},
+            **options,
+        },
+        entry_id="1",
+        title="Test sensor",
+        version=2,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.minor_version == 2
+    assert config_entry.options["country_settings"] == expected_country_settings

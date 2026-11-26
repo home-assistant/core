@@ -31,10 +31,7 @@ rules:
   has-entity-name: done
   runtime-data: done
   test-before-configure: done
-  test-before-setup:
-    status: exempt
-    comment: |
-      Device is expected to be offline most of the time, but needs to connect quickly once available.
+  test-before-setup: done
   unique-config-entry: done
   # Silver
   action-exceptions:
@@ -75,7 +72,9 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: Desired devices are selected in Libre Hardware Monitor.
-  entity-translations: todo
+  entity-translations:
+    status: exempt
+    comment: Sensors are named dynamically and can be renamed by users.
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done

@@ -6,12 +6,7 @@ from typing import Any, override
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -20,7 +15,6 @@ from .const import (
     DEFAULT_MINIMUM_MAGNITUDE,
     DEFAULT_MMI,
     DEFAULT_RADIUS,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 
@@ -67,9 +61,6 @@ class GeonetnzQuakesFlowHandler(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(identifier)
         self._abort_if_unique_id_configured()
-
-        scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()
 
         minimum_magnitude = user_input.get(
             CONF_MINIMUM_MAGNITUDE, DEFAULT_MINIMUM_MAGNITUDE

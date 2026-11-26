@@ -141,6 +141,40 @@ async def test_setup_with_working_holiday(
     assert state.state == "on"
 
 
+@pytest.mark.parametrize(
+    ("country", "include_sundays", "expected_state"),
+    [
+        pytest.param("SE", True, "off", id="sundays_included"),
+        pytest.param("SE", False, "on", id="sundays_not_included"),
+        pytest.param("DE", True, "on", id="option_not_supported_by_country"),
+    ],
+)
+async def test_setup_country_options(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    country: str,
+    include_sundays: bool,
+    expected_state: str,
+) -> None:
+    """Test country specific options are only used when the country supports them."""
+    freezer.move_to(datetime(2024, 11, 17, 12, tzinfo=UTC))  # Sunday
+    await init_integration(
+        hass,
+        {
+            "country": country,
+            "excludes": ["holiday"],
+            "days_offset": DEFAULT_OFFSET,
+            "workdays": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+            "custom_holidays": {"add_holidays": [], "remove_holidays": []},
+            "country_settings": {"include_sundays": include_sundays},
+        },
+    )
+
+    state = hass.states.get(f"binary_sensor.workday_sensor_{country.lower()}")
+    assert state is not None
+    assert state.state == expected_state
+
+
 async def test_setup_add_holiday(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -343,6 +377,41 @@ async def test_setup_date_range(
 
     state = hass.states.get("binary_sensor.workday_sensor_de_bw")
     assert state.state == "on"
+
+
+@pytest.mark.parametrize(
+    "check_date",
+    [
+        pytest.param(date(2026, 1, 1), id="this_year"),
+        pytest.param(date(2027, 1, 1), id="next_year"),
+    ],
+)
+async def test_remove_named_holiday_without_language(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    check_date: date,
+) -> None:
+    """Test a holiday removed by name stays removed next year without a language."""
+    freezer.move_to(datetime(2026, 6, 1, 12, tzinfo=UTC))
+    await init_integration(
+        hass,
+        {
+            "country": "DE",
+            "excludes": DEFAULT_EXCLUDES,
+            "days_offset": DEFAULT_OFFSET,
+            "workdays": DEFAULT_WORKDAYS,
+            "custom_holidays": {"add_holidays": [], "remove_holidays": ["Neujahr"]},
+        },
+    )
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        WorkdayService.CHECK_DATE,
+        {"entity_id": "binary_sensor.workday_sensor_de", "check_date": check_date},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"binary_sensor.workday_sensor_de": {"workday": True}}
 
 
 async def test_check_date_service(

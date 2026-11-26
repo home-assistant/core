@@ -168,6 +168,18 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # Docker resets the exit code to 0 when a container starts
+    PortainerContainerSensorEntityDescription(
+        key="container_exit_code",
+        translation_key="container_exit_code",
+        value_fn=lambda data: (
+            state.exit_code
+            if (state := data.container_inspect.state) and not state.running
+            else None
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     PortainerContainerSensorEntityDescription(
         key="memory_limit",
         translation_key="memory_limit",

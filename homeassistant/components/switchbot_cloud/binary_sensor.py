@@ -75,6 +75,23 @@ OPEN_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
 )
 
 
+OVERLOAD_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
+    key="overload",
+    name="Overload",
+    translation_key="overload",
+    device_class=BinarySensorDeviceClass.PROBLEM,
+    on_value="Warming",
+)
+
+OVERTEMPERATURE_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
+    key="overTemperature",
+    name="Overtemperature",
+    translation_key="over_temperature",
+    device_class=BinarySensorDeviceClass.PROBLEM,
+    on_value="Warming",
+)
+
+
 BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock": (
         CALIBRATION_DESCRIPTION,
@@ -136,6 +153,10 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         MOVE_DETECTED_DESCRIPTION,
     ),
     "Presence Sensor": (MOVE_DETECTED_DESCRIPTION,),
+    "Plug Mini (EU)": (
+        OVERLOAD_DESCRIPTION,
+        OVERTEMPERATURE_DESCRIPTION,
+    ),
 }
 
 

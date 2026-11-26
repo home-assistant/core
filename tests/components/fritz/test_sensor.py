@@ -25,6 +25,7 @@ from homeassistant.components.fritz.const import (
     SCAN_INTERVAL,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -36,6 +37,7 @@ from .const import (
     MOCK_HOST_ATTRIBUTES_DATA,
     MOCK_HOST_PHONE,
     MOCK_MESH_DATA,
+    MOCK_SERIAL_NUMBER,
     MOCK_USER_DATA,
     MOCK_WLAN_DEVICE_NODE,
 )
@@ -260,6 +262,80 @@ async def test_sensor_cpu_temp_unknown_on_request_error(
 
 
 @pytest.mark.parametrize(
+    ("key", "attribute", "booting_value", "booted_value", "expected_state"),
+    [
+        pytest.param(
+            "external_ipv6", "external_ipv6", "", "fec0::1", "fec0::1", id="ipv6"
+        ),
+        pytest.param(
+            "cpu_temperature",
+            "get_cpu_temperatures",
+            MagicMock(return_value=[0, 0]),
+            MagicMock(return_value=[42, 38]),
+            "42",
+            id="cpu_temperature_zero",
+        ),
+        pytest.param(
+            "cpu_temperature",
+            "get_cpu_temperatures",
+            MagicMock(return_value=[]),
+            MagicMock(return_value=[42, 38]),
+            "42",
+            id="cpu_temperature_empty",
+        ),
+        pytest.param(
+            "cpu_temperature",
+            "get_cpu_temperatures",
+            MagicMock(side_effect=FritzConnectionException("boom")),
+            MagicMock(return_value=[42, 38]),
+            "42",
+            id="cpu_temperature_error",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
+async def test_registered_sensor_kept_while_booting(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    key: str,
+    attribute: str,
+    booting_value: str | MagicMock,
+    booted_value: str | MagicMock,
+    expected_state: str,
+) -> None:
+    """Test a registered sensor is created while the device has no value yet."""
+    entity_id = f"sensor.mock_title_{key}"
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{MOCK_SERIAL_NUMBER}-{key}",
+        config_entry=entry,
+        suggested_object_id=f"mock_title_{key}",
+    )
+
+    with (
+        patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]),
+        patch.object(FritzStatus, attribute, booting_value),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_UNKNOWN
+
+    with patch.object(FritzStatus, attribute, booted_value):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
     "fc_data",
     [
         {
@@ -292,6 +368,45 @@ async def test_sensor_addon_infos_not_supported(
         "sensor.mock_title_gb_received",
     ):
         assert not entity_registry.async_is_registered(entity_id)
+    assert "Error adding entity" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "fc_data",
+    [
+        {
+            **MOCK_FB_SERVICES,
+            "WANCommonIFC1": {
+                **MOCK_FB_SERVICES["WANCommonIFC1"],
+                "GetAddonInfos": FritzConnectionException("Not available Action"),
+            },
+        }
+    ],
+)
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
+async def test_registered_sensor_not_kept_when_not_supported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a registered traffic sensor is not created when not supported."""
+    entity_id = "sensor.mock_title_upload_throughput"
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{MOCK_SERIAL_NUMBER}-kb_s_sent",
+        config_entry=entry,
+        suggested_object_id="mock_title_upload_throughput",
+    )
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(entity_id) is None
     assert "Error adding entity" not in caplog.text
 
 

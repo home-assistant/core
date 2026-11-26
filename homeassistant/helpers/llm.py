@@ -1,8 +1,10 @@
 """Module to coordinate llm tools."""
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable
+from collections import defaultdict
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field as dc_field
+import re
 from typing import Any, override
 
 import probatio
@@ -386,6 +388,31 @@ def rank_name_match(
     if rank is None and any(query in value.casefold() for value in other):
         rank = 3
     return rank
+
+
+SHORT_ID_MIN_LENGTH = 4
+
+
+def format_short_ids(pairs: Iterable[tuple[str, str]]) -> dict[str, str]:
+    """Return a mapping of full ID to short '<prefix>:<suffix>' ID.
+
+    Short IDs reduce token usage and LLM transcription errors across tool calls.
+    The trailing suffix starts at 4 characters and expands if another item with
+    the same prefix shares that suffix.
+    """
+    # A dict, so a full ID listed twice does not keep the suffix growing forever
+    groups: defaultdict[tuple[str, str], dict[str, None]] = defaultdict(dict)
+    for prefix, full_id in pairs:
+        groups[(prefix, full_id[-SHORT_ID_MIN_LENGTH:])][full_id] = None
+
+    result: dict[str, str] = {}
+    for (prefix, _), group in groups.items():
+        length = SHORT_ID_MIN_LENGTH
+        while len(group) > 1 and len({fid[-length:] for fid in group}) < len(group):
+            length += 1
+        for fid in group:
+            result[fid] = f"{prefix}:{fid[-length:]}"
+    return result
 
 
 class IntentTool(Tool):
@@ -890,3 +917,24 @@ class ActionTool(Tool):
         )
 
         return ToolResult(data={"result": result})
+
+
+_PLACEHOLDER_RE = re.compile(r"{([^{}]+)}")
+
+
+def substitute_translation_placeholders(
+    text: str | None, placeholders: Mapping[str, Any] | None
+) -> str | None:
+    """Replace {key} placeholders in a translated string using a single pass.
+
+    Leaves unknown placeholders intact and avoids re-expanding placeholder
+    syntax contained inside replacement values.
+    """
+    if not text or not placeholders:
+        return text
+    return _PLACEHOLDER_RE.sub(
+        lambda match: (
+            str(val) if (val := placeholders.get(match[1])) is not None else match[0]
+        ),
+        text,
+    )

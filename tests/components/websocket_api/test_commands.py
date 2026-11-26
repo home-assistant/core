@@ -56,7 +56,14 @@ from homeassistant.const import (
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
     EntityCategory,
 )
-from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
+from homeassistant.core import (
+    Context,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -878,6 +885,71 @@ async def test_call_service_error(
     assert msg["error"]["code"] == "unknown_error"
     assert msg["error"]["message"] == "value_error"
     assert "Traceback" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("call_data", "log_message"),
+    [
+        pytest.param(
+            {},
+            "Error during service call to domain_test.ha_error: device did not respond",
+            id="no_target",
+        ),
+        pytest.param(
+            {"service_data": {"brightness": 10}},
+            "Error during service call to domain_test.ha_error: device did not respond",
+            id="no_target_in_service_data",
+        ),
+        pytest.param(
+            {"target": {"entity_id": "light.kitchen"}},
+            "Error during service call to domain_test.ha_error with target "
+            "{'entity_id': ['light.kitchen']}: device did not respond",
+            id="target",
+        ),
+        pytest.param(
+            {"service_data": {"entity_id": "light.kitchen", "brightness": 10}},
+            "Error during service call to domain_test.ha_error with target "
+            "{'entity_id': 'light.kitchen'}: device did not respond",
+            id="target_in_service_data",
+        ),
+        pytest.param(
+            {
+                "target": {"area_id": "kitchen"},
+                "service_data": {"device_id": "abc123"},
+            },
+            "Error during service call to domain_test.ha_error with target "
+            "{'device_id': 'abc123', 'area_id': ['kitchen']}: device did not respond",
+            id="target_and_service_data",
+        ),
+    ],
+)
+async def test_call_service_error_logs_target(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    websocket_client: MockHAClientWebSocket,
+    call_data: dict[str, Any],
+    log_message: str,
+) -> None:
+    """Test the error log of a failed service call names the target."""
+
+    @callback
+    def ha_error_call(_: ServiceCall) -> None:
+        raise HomeAssistantError("device did not respond")
+
+    hass.services.async_register("domain_test", "ha_error", ha_error_call)
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "call_service",
+            "domain": "domain_test",
+            "service": "ha_error",
+            **call_data,
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["success"] is False
+    assert log_message in caplog.text
 
 
 async def test_subscribe_unsubscribe_events(

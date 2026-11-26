@@ -59,6 +59,7 @@ class ViCareEntity(Entity):
         self._device_serial = device.serial
         self._device_identifier = identifier
         self._model = model
+        self._device_name = device.name or model
         self._room_id = component.id if isinstance(component, PyViCareRoom) else None
 
     @contextmanager
@@ -117,7 +118,7 @@ class ViCareEntity(Entity):
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_identifier)},
-            name=self._model,
+            name=self._device_name,
             manufacturer="Viessmann",
             model=self._model,
             configuration_url=VIESSMANN_DEVELOPER_PORTAL,

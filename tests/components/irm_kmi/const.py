@@ -3,15 +3,19 @@
 from datetime import datetime
 
 from irm_kmi_api import (
+    AnimationFrameData,
     CurrentWeatherData,
     PollenLevel,
     PollenName,
+    RadarAnimationData,
     RadarForecast,
     WarningData,
     WarningType,
 )
 
 WEATHER_ENTITY_ID = "weather.brussels"
+RADAR_ENTITY_ID = "image.brussels_radar"
+RADAR_FRAME = b"\x89PNG\r\n\x1a\n" + bytes(1024)
 
 WARNING_ENTITY_ID = "binary_sensor.brussels_warning"
 
@@ -51,6 +55,24 @@ CURRENT_WEATHER = CurrentWeatherData(
     wind_bearing=180.0,
     uv_index=0.7,
     pressure=1015.0,
+)
+
+ANIMATION = RadarAnimationData(
+    hint="No rain forecasted shortly",
+    unit="mm/10min",
+    location="https://app.meteo.be/localisation.png?th=d",
+    most_recent_image_idx=0,
+    sequence=[
+        AnimationFrameData(
+            time=datetime.fromisoformat(f"2023-12-28T15:{minute}:00+01:00"),
+            image=f"https://app.meteo.be/frame.png?rs=1&i={minute}",
+            value=0.0,
+            position=0.0,
+            position_higher=0.0,
+            position_lower=0.0,
+        )
+        for minute in ("20", "30")
+    ],
 )
 
 POLLEN = {

@@ -7,7 +7,7 @@ import os
 from typing import TYPE_CHECKING, Any, override
 from urllib.parse import quote, urlparse
 
-from soco import SoCo, alarms
+from soco import SoCo
 from soco.core import (
     MUSIC_SRC_LIBRARY,
     MUSIC_SRC_LINE_IN,
@@ -808,11 +808,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         include_linked_zones: bool | None = None,
     ) -> None:
         """Set the alarm clock on the player."""
-        alarm: alarms.Alarm | None = None
-        for one_alarm in alarms.get_alarms(self.coordinator.soco):
-            if one_alarm.alarm_id == str(alarm_id):
-                alarm = one_alarm
-        if alarm is None:
+        household_alarms = self.speaker.alarms.alarms
+        household_alarms.update(self.coordinator.soco)
+        if (alarm := household_alarms.get(str(alarm_id))) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_alarm_id",
@@ -954,6 +952,15 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     translation_domain=DOMAIN,
                     translation_key="speaker_not_found",
                     translation_placeholders={"entity_id": entity_id},
+                )
+            if speaker.household_id != self.speaker.household_id:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="join_different_household",
+                    translation_placeholders={
+                        "entity_id": entity_id,
+                        "target_entity_id": self.entity_id,
+                    },
                 )
 
             speakers.append(speaker)

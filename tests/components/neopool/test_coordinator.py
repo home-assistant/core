@@ -434,3 +434,91 @@ async def test_aux_b_subtimer_polls_when_enabled(
     assert enabled_timers is not None
     assert "relay_aux1" in enabled_timers
     assert "relay_aux1b" in enabled_timers
+
+
+async def test_occupied_aux_relay_skipped_even_when_option_enabled(
+    hass: HomeAssistant,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """With use_aux1=True but AUX1 relay occupied from the start, both blocks are skipped.
+
+    When a device function (e.g. heating) is wired to the AUX1 relay before
+    setup, the switch and time entities are suppressed and no context is ever
+    registered, so both relay_aux1 and relay_aux1b stay out of the read.
+    """
+    occupied_data = dict(MOCK_POOL_DATA)
+    occupied_data["MBF_PAR_HEATING_GPIO"] = 4  # relay 4 == AUX1
+    mock_neopool_client.async_read_all.return_value = occupied_data
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Pool",
+        unique_id="neopool_gate_aux_occupied",
+        version=CURRENT_VERSION,
+        data={
+            "host": "192.0.2.24",
+            "port": 502,
+            "name": "Pool",
+            CONF_UNIT_ID: 1,
+            CONF_MODBUS_FRAMER: "tcp",
+        },
+        options={CONF_MODBUS_FRAMER: "tcp", CONF_USE_AUX1: True},
+    )
+    calls = _capture_timer_calls(mock_neopool_client)
+    await setup_integration(hass, entry)
+    await _poll_once_more(hass, entry.runtime_data, freezer)
+
+    enabled_timers = calls[-1][0]
+    assert enabled_timers is not None
+    assert "relay_aux1" not in enabled_timers
+    assert "relay_aux1b" not in enabled_timers
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_relay_becomes_occupied_excludes_both_aux_blocks(
+    hass: HomeAssistant,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Both AUX1 blocks are excluded once the relay becomes occupied mid-run.
+
+    Start with a free AUX1 relay so relay_aux1 and relay_aux1b both poll (all
+    entities enabled). Then simulate the device assigning the relay to a
+    function and verify that the next poll excludes both blocks via the new
+    aux_relay_available gate, not just the b subtimer's context check.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Pool",
+        unique_id="neopool_gate_aux_becomes_occupied",
+        version=CURRENT_VERSION,
+        data={
+            "host": "192.0.2.25",
+            "port": 502,
+            "name": "Pool",
+            CONF_UNIT_ID: 1,
+            CONF_MODBUS_FRAMER: "tcp",
+        },
+        options={CONF_MODBUS_FRAMER: "tcp", CONF_USE_AUX1: True},
+    )
+    calls = _capture_timer_calls(mock_neopool_client)
+    await setup_integration(hass, entry)
+    await _poll_once_more(hass, entry.runtime_data, freezer)
+
+    # Both blocks poll while relay is free.
+    assert calls[-1][0] is not None
+    assert "relay_aux1" in calls[-1][0]
+    assert "relay_aux1b" in calls[-1][0]
+
+    # Device assigns relay 4 (AUX1) to heating mid-run.
+    occupied_data = dict(MOCK_POOL_DATA)
+    occupied_data["MBF_PAR_HEATING_GPIO"] = 4  # relay 4 == AUX1
+    mock_neopool_client.async_read_all.return_value = occupied_data
+
+    await _poll_once_more(hass, entry.runtime_data, freezer)
+
+    enabled_timers = calls[-1][0]
+    assert enabled_timers is not None
+    assert "relay_aux1" not in enabled_timers
+    assert "relay_aux1b" not in enabled_timers

@@ -8,11 +8,14 @@ from typing import Any
 from pyforked_daapd import ForkedDaapdAPI
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import PlatformNotReady, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    DOMAIN,
     SIGNAL_ADD_ZONES,
     SIGNAL_UPDATE_DATABASE,
     SIGNAL_UPDATE_MASTER,
@@ -39,11 +42,76 @@ class ForkedDaapdUpdater:
         self.websocket_handler: asyncio.Task[None] | None = None
         self._all_output_ids: set[str] = set()
         self._entry_id = entry_id
+        self.outputs: list[dict[str, Any]] = []
 
     @property
     def api(self) -> ForkedDaapdAPI:
         """Return the API object."""
         return self._api
+
+    @property
+    def group_members(self) -> list[str]:
+        """Return the enabled server and selected output entities."""
+        entity_registry = er.async_get(self.hass)
+        entries = {
+            entry.unique_id: entry.entity_id
+            for entry in er.async_entries_for_config_entry(
+                entity_registry, self._entry_id
+            )
+            if entry.domain == Platform.MEDIA_PLAYER
+            and entry.platform == DOMAIN
+            and not entry.disabled
+        }
+        members = [
+            entity_id
+            for output in self.outputs
+            if output["selected"]
+            and (entity_id := entries.get(f"{self._entry_id}-{output['id']}"))
+            is not None
+        ]
+        if master_entity_id := entries.get(self._entry_id):
+            members.insert(0, master_entity_id)
+        return members
+
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Validate and enable outputs for the current playback."""
+        entity_registry = er.async_get(self.hass)
+        known_output_ids = {output["id"] for output in self.outputs}
+        output_ids: list[str] = []
+        for entity_id in group_members:
+            if not (entity_entry := entity_registry.async_get(entity_id)):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="entity_not_found",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            if (
+                entity_entry.platform != DOMAIN
+                or entity_entry.config_entry_id != self._entry_id
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_forked_daapd_output",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            if entity_entry.unique_id == self._entry_id:
+                continue
+            output_id = entity_entry.unique_id.removeprefix(f"{self._entry_id}-")
+            # Registry entries persist after an output disappears from the server.
+            if output_id not in known_output_ids:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="output_not_found",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            output_ids.append(output_id)
+
+        await asyncio.gather(
+            *(
+                self._api.change_output(output_id, selected=True)
+                for output_id in output_ids
+            )
+        )
 
     async def async_init(self) -> None:
         """Perform async portion of class initialization."""
@@ -74,44 +142,40 @@ class ForkedDaapdUpdater:
     async def _update(self, update_types_sequence: Sequence[str]) -> None:
         """Private update method."""
         update_types = set(update_types_sequence)
-        update_events = {}
+        updated = False
         _LOGGER.debug("Updating %s", update_types)
         if (
             "queue" in update_types
         ):  # update queue, queue before player for async_play_media
             if queue := await self._api.get_request("queue"):
-                update_events["queue"] = asyncio.Event()
+                updated = True
                 async_dispatcher_send(
                     self.hass,
                     SIGNAL_UPDATE_QUEUE.format(self._entry_id),
                     queue,
-                    update_events["queue"],
                 )
         # order of below don't matter
         if not {"outputs", "volume"}.isdisjoint(update_types):  # update outputs
             if outputs := await self._api.get_request("outputs"):
                 outputs = outputs["outputs"]
-                update_events["outputs"] = (
-                    asyncio.Event()
-                )  # only for master, zones should ignore
+                self.outputs = outputs
+                updated = True
                 async_dispatcher_send(
                     self.hass,
                     SIGNAL_UPDATE_OUTPUTS.format(self._entry_id),
                     outputs,
-                    update_events["outputs"],
                 )
                 self._add_zones(outputs)
         if not {"database"}.isdisjoint(update_types):
             pipes, playlists = await asyncio.gather(
                 self._api.get_pipes(), self._api.get_playlists()
             )
-            update_events["database"] = asyncio.Event()
+            updated = True
             async_dispatcher_send(
                 self.hass,
                 SIGNAL_UPDATE_DATABASE.format(self._entry_id),
                 pipes,
                 playlists,
-                update_events["database"],
             )
         if not {"update", "config"}.isdisjoint(update_types):  # not supported
             _LOGGER.debug("update/config notifications neither requested nor supported")
@@ -119,21 +183,13 @@ class ForkedDaapdUpdater:
             update_types
         ):  # update player
             if player := await self._api.get_request("player"):
-                update_events["player"] = asyncio.Event()
-                if update_events.get("queue"):
-                    await update_events[
-                        "queue"
-                    ].wait()  # make sure queue done before player for async_play_media
+                updated = True
                 async_dispatcher_send(
                     self.hass,
                     SIGNAL_UPDATE_PLAYER.format(self._entry_id),
                     player,
-                    update_events["player"],
                 )
-        if update_events:
-            await asyncio.wait(
-                [asyncio.create_task(event.wait()) for event in update_events.values()]
-            )  # make sure callbacks done before update
+        if updated:
             async_dispatcher_send(
                 self.hass, SIGNAL_UPDATE_MASTER.format(self._entry_id), True
             )

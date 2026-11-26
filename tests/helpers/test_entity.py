@@ -489,6 +489,42 @@ async def test_async_parallel_updates_with_one(hass: HomeAssistant) -> None:
         test_lock.release()
 
 
+async def test_update_cancelled_while_waiting_for_parallel_updates(
+    hass: HomeAssistant,
+) -> None:
+    """Test a cancelled update does not block later updates."""
+    updates = 0
+    semaphore = asyncio.Semaphore(1)
+
+    class AsyncEntity(entity.Entity):
+        """Test entity."""
+
+        def __init__(self) -> None:
+            """Initialize Async test entity."""
+            self.entity_id = "sensor.test"
+            self.hass = hass
+            self.parallel_updates = semaphore
+
+        async def async_update(self) -> None:
+            """Test update."""
+            nonlocal updates
+            updates += 1
+
+    ent = AsyncEntity()
+
+    await semaphore.acquire()
+    task = hass.async_create_task(ent.async_device_update())
+    await asyncio.sleep(0)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    semaphore.release()
+
+    await ent.async_device_update()
+
+    assert updates == 1
+
+
 async def test_async_parallel_updates_with_two(hass: HomeAssistant) -> None:
     """Test parallel updates with 2 (parallel)."""
     updates = []
@@ -640,6 +676,30 @@ async def test_async_remove_reports_the_original_error(hass: HomeAssistant) -> N
 
     with pytest.raises(ValueError, match="Boom"):
         await ent.async_remove()
+
+
+async def test_async_remove_removes_state_when_will_remove_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test a failing removal hook still removes the state."""
+
+    class MockEntityFailingRemoval(entity.Entity):
+        """Entity that cannot be removed cleanly."""
+
+        async def async_will_remove_from_hass(self) -> None:
+            """Fail while being removed."""
+            raise ValueError("Boom")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntityFailingRemoval()
+    ent.entity_id = "test.test"
+    await platform.async_add_entities([ent])
+    assert hass.states.get("test.test") is not None
+
+    with pytest.raises(ValueError, match="Boom"):
+        await ent.async_remove()
+
+    assert hass.states.get("test.test") is None
 
 
 async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> None:

@@ -852,7 +852,10 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return str(URL(url_path).with_query(url_query))
 
 
-_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=10)
+# Slow artwork CDNs (SoundCloud in particular) need the longer total, while an
+# unreachable host should still fail fast. sock_connect, unlike connect, does
+# not count time spent waiting for a free pooled connection.
+_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=30, sock_connect=10)
 
 
 def _image_response_appears_complete(

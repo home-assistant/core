@@ -3,11 +3,9 @@
 from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.valve import (
-    ATTR_CURRENT_POSITION,
     DOMAIN,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_SET_VALVE_POSITION,
+    ValveEntityStateAttribute,
+    ValveService,
     ValveState,
 )
 from homeassistant.core import HomeAssistant
@@ -21,7 +19,7 @@ async def test_open_valve_intent(hass: HomeAssistant) -> None:
 
     entity_id = f"{DOMAIN}.test_valve"
     hass.states.async_set(entity_id, ValveState.CLOSED)
-    calls = async_mock_service(hass, DOMAIN, SERVICE_OPEN_VALVE)
+    calls = async_mock_service(hass, DOMAIN, ValveService.OPEN)
 
     response = await intent.async_handle(
         hass, "test", intent.INTENT_TURN_ON, {"name": {"value": "test valve"}}
@@ -32,7 +30,7 @@ async def test_open_valve_intent(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
-    assert call.service == SERVICE_OPEN_VALVE
+    assert call.service == ValveService.OPEN
     assert call.data == {"entity_id": entity_id}
 
 
@@ -42,7 +40,7 @@ async def test_close_valve_intent(hass: HomeAssistant) -> None:
 
     entity_id = f"{DOMAIN}.test_valve"
     hass.states.async_set(entity_id, ValveState.OPEN)
-    calls = async_mock_service(hass, DOMAIN, SERVICE_CLOSE_VALVE)
+    calls = async_mock_service(hass, DOMAIN, ValveService.CLOSE)
 
     response = await intent.async_handle(
         hass, "test", intent.INTENT_TURN_OFF, {"name": {"value": "test valve"}}
@@ -53,7 +51,7 @@ async def test_close_valve_intent(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
-    assert call.service == SERVICE_CLOSE_VALVE
+    assert call.service == ValveService.CLOSE
     assert call.data == {"entity_id": entity_id}
 
 
@@ -63,9 +61,11 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
 
     entity_id = f"{DOMAIN}.test_valve"
     hass.states.async_set(
-        entity_id, ValveState.CLOSED, attributes={ATTR_CURRENT_POSITION: 0}
+        entity_id,
+        ValveState.CLOSED,
+        attributes={ValveEntityStateAttribute.CURRENT_POSITION: 0},
     )
-    calls = async_mock_service(hass, DOMAIN, SERVICE_SET_VALVE_POSITION)
+    calls = async_mock_service(hass, DOMAIN, ValveService.SET_POSITION)
 
     response = await intent.async_handle(
         hass,
@@ -79,5 +79,5 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
-    assert call.service == SERVICE_SET_VALVE_POSITION
+    assert call.service == ValveService.SET_POSITION
     assert call.data == {"entity_id": entity_id, "position": 50}

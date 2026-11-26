@@ -1,14 +1,20 @@
 """Test Tuya camera platform."""
 
+import asyncio
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, _Call, call, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN, CameraService
+from homeassistant.components.camera import (
+    DOMAIN as CAMERA_DOMAIN,
+    CameraService,
+    get_camera_from_entity_id,
+)
+from homeassistant.components.stream import Stream
 from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -93,3 +99,108 @@ async def test_action(
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, [expected_command]
     )
+
+
+@pytest.mark.parametrize("mock_device_code", ["sp_rudejjigkywujjvs"])
+@pytest.mark.parametrize(
+    ("outputs", "available", "expected_updates"),
+    [
+        pytest.param({"hls": object()}, True, [], id="active"),
+        pytest.param({}, True, [call("rtsps://example.com/refreshed")], id="idle"),
+        pytest.param(
+            {"hls": object()},
+            False,
+            [call("rtsps://example.com/refreshed")],
+            id="failed",
+        ),
+    ],
+)
+async def test_camera_stream_source_refresh(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    outputs: dict[str, object],
+    available: bool,
+    expected_updates: list[_Call],
+) -> None:
+    """Refresh idle or failed Tuya URLs, but keep a healthy active stream."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    camera = get_camera_from_entity_id(hass, "camera.burocam")
+    mock_manager.get_device_stream_allocate.side_effect = [
+        "rtsps://example.com/initial",
+        "rtsps://example.com/refreshed",
+    ]
+    stream = MagicMock(spec=Stream)
+    stream.outputs.return_value = outputs
+    stream.available = available
+
+    with patch(
+        "homeassistant.components.camera.entity.create_stream", return_value=stream
+    ):
+        assert await camera.async_create_stream() is stream
+        assert await camera.async_create_stream() is stream
+
+    assert stream.update_source.call_args_list == expected_updates
+    assert mock_manager.get_device_stream_allocate.call_count == 1 + len(
+        expected_updates
+    )
+
+
+@pytest.mark.parametrize("mock_device_code", ["sp_rudejjigkywujjvs"])
+async def test_camera_stream_refresh_without_source(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Return None instead of trying an expired URL when Tuya returns no URL."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    camera = get_camera_from_entity_id(hass, "camera.burocam")
+    mock_manager.get_device_stream_allocate.side_effect = [
+        "rtsps://example.com/initial",
+        None,
+    ]
+    stream = MagicMock(spec=Stream)
+    stream.outputs.return_value = {}
+
+    with patch(
+        "homeassistant.components.camera.entity.create_stream", return_value=stream
+    ):
+        assert await camera.async_create_stream() is stream
+        assert await camera.async_create_stream() is None
+
+    stream.update_source.assert_not_called()
+    assert mock_manager.get_device_stream_allocate.call_count == 2
+
+
+@pytest.mark.parametrize("mock_device_code", ["sp_rudejjigkywujjvs"])
+async def test_camera_stream_refresh_timeout(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Bound the time waiting for Tuya to allocate a replacement source."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    camera = get_camera_from_entity_id(hass, "camera.burocam")
+    mock_manager.get_device_stream_allocate.return_value = "rtsps://example.com/initial"
+    stream = MagicMock(spec=Stream)
+    stream.outputs.return_value = {}
+
+    async def stalled_source() -> str:
+        await asyncio.Event().wait()
+        return "rtsps://example.com/never"
+
+    with patch(
+        "homeassistant.components.camera.entity.create_stream", return_value=stream
+    ):
+        assert await camera.async_create_stream() is stream
+        with (
+            patch.object(camera, "stream_source", side_effect=stalled_source),
+            patch("homeassistant.components.tuya.camera._STREAM_SOURCE_TIMEOUT", 0.05),
+            pytest.raises(TimeoutError),
+        ):
+            await camera.async_create_stream()
+
+    stream.update_source.assert_not_called()

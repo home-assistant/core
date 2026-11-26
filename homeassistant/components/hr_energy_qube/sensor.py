@@ -14,9 +14,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolumeFlowRate,
 )
 from homeassistant.helpers.typing import StateType
@@ -227,6 +229,51 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.state.setpoint_room_cool_night,
+    ),
+    QubeSensorEntityDescription(
+        key="working_hours_dhw",
+        translation_key="working_hours_dhw",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.state.workinghours_dhw_hrsret,
+    ),
+    QubeSensorEntityDescription(
+        key="working_hours_heating",
+        translation_key="working_hours_heating",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.state.workinghours_heat_hrsret,
+    ),
+    QubeSensorEntityDescription(
+        key="working_hours_cooling",
+        translation_key="working_hours_cooling",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.state.workinghours_cool_hrsret,
+    ),
+    *(
+        QubeSensorEntityDescription(
+            key=f"working_hours_heater_{number}",
+            translation_key="working_hours_heater",
+            translation_placeholders={"number": str(number)},
+            device_class=SensorDeviceClass.DURATION,
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            value_fn=value_fn,
+        )
+        for number, value_fn in (
+            (1, lambda data: data.state.workinghours_heater1_hrs),
+            (2, lambda data: data.state.workinghours_heater2_hrs),
+            (3, lambda data: data.state.workinghours_heater3_hrs),
+        )
     ),
     QubeSensorEntityDescription(
         key="status_heatpump",

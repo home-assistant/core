@@ -54,7 +54,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '2.5',
   })
 # ---
 # name: test_all_entities[sensor.aerosmart_brine_temperature_after_outdoor_air_preheating-entry]
@@ -396,7 +396,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '1.0',
   })
 # ---
 # name: test_all_entities[sensor.aerosmart_conveyed_air_volume_since_filter_change-entry]
@@ -570,7 +570,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '3.0',
   })
 # ---
 # name: test_all_entities[sensor.aerosmart_evaporator_coil_temperature-entry]
@@ -1456,7 +1456,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '2.0',
   })
 # ---
 # name: test_all_entities[sensor.aerosmart_hot_water_heat_pump_temperature-entry]
@@ -1630,7 +1630,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '1.5',
   })
 # ---
 # name: test_all_entities[sensor.aerosmart_maximum_permissible_extract_air_fan_speed-entry]

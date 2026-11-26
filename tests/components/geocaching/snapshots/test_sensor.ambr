@@ -1,0 +1,409 @@
+# serializer version: 1
+# name: test_entities_are_linked_to_subentries[sensor.geocache_test_cache_favorite_points-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='tracked_cache' title='GC12345'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('geocaching', 'GC12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.geocache_test_cache_favorite_points',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Favorite points',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Favorite points',
+    'platform': 'geocaching',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cache_favorite_points',
+    'unique_id': 'PR12345_GC12345_favorite_points',
+    'unit_of_measurement': 'points',
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocache_test_cache_favorite_points-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Geocache Test cache Favorite points',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.geocache_test_cache_favorite_points',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocache_test_cache_found_date-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='tracked_cache' title='GC12345'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('geocaching', 'GC12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.geocache_test_cache_found_date',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Found date',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_icon': None,
+    'original_name': 'Found date',
+    'platform': 'geocaching',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cache_found_date',
+    'unique_id': 'PR12345_GC12345_found_date',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocache_test_cache_found_date-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'date',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Geocache Test cache Found date',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.geocache_test_cache_found_date',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocache_test_cache_hidden_date-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='tracked_cache' title='GC12345'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('geocaching', 'GC12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.geocache_test_cache_hidden_date',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hidden date',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_icon': None,
+    'original_name': 'Hidden date',
+    'platform': 'geocaching',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cache_hidden_date',
+    'unique_id': 'PR12345_GC12345_hidden_date',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocache_test_cache_hidden_date-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'date',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Geocache Test cache Hidden date',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.geocache_test_cache_hidden_date',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocaching_mock_user_awarded_favorite_points-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('geocaching', 'PR12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.geocaching_mock_user_awarded_favorite_points',
+    'has_entity_name': True,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Awarded favorite points',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Awarded favorite points',
+    'platform': 'geocaching',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'awarded_favorite_points',
+    'unique_id': 'PR12345_awarded_favorite_points',
+    'unit_of_measurement': 'points',
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocaching_mock_user_awarded_favorite_points-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Geocaching mock_user Awarded favorite points',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.geocaching_mock_user_awarded_favorite_points',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocaching_mock_user_favorite_points-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('geocaching', 'PR12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.geocaching_mock_user_favorite_points',
+    'has_entity_name': True,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Favorite points',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Favorite points',
+    'platform': 'geocaching',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'favorite_points',
+    'unique_id': 'PR12345_favorite_points',
+    'unit_of_measurement': 'points',
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocaching_mock_user_favorite_points-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Geocaching mock_user Favorite points',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.geocaching_mock_user_favorite_points',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocaching_mock_user_total_finds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('geocaching', 'PR12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.geocaching_mock_user_total_finds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total finds',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total finds',
+    'platform': 'geocaching',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'find_count',
+    'unique_id': 'PR12345_find_count',
+    'unit_of_measurement': 'caches',
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocaching_mock_user_total_finds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Geocaching mock_user Total finds',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'caches',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.geocaching_mock_user_total_finds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocaching_mock_user_total_hides-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('geocaching', 'PR12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.geocaching_mock_user_total_hides',
+    'has_entity_name': True,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total hides',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total hides',
+    'platform': 'geocaching',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hide_count',
+    'unique_id': 'PR12345_hide_count',
+    'unit_of_measurement': 'caches',
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocaching_mock_user_total_hides-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Geocaching mock_user Total hides',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'caches',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.geocaching_mock_user_total_hides',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocaching_mock_user_total_souvenirs-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('geocaching', 'PR12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.geocaching_mock_user_total_souvenirs',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total souvenirs',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total souvenirs',
+    'platform': 'geocaching',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'souvenir_count',
+    'unique_id': 'PR12345_souvenir_count',
+    'unit_of_measurement': 'souvenirs',
+  })
+# ---
+# name: test_entities_are_linked_to_subentries[sensor.geocaching_mock_user_total_souvenirs-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Geocaching mock_user Total souvenirs',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'souvenirs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.geocaching_mock_user_total_souvenirs',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
