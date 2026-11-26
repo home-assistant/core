@@ -134,6 +134,9 @@ async def test_remove_stale_device(
 
     response = await client.remove_device(device.id)
     assert not response["success"]
+    assert response["error"]["message"] == (
+        "Failed to remove device entry, rejected by integration"
+    )
 
     mock_touchline_controller.fetch_async.return_value = make_state()
     freezer.tick(UPDATE_INTERVAL)
@@ -150,9 +153,36 @@ async def test_remove_stale_device(
     assert controller is not None
     response = await client.remove_device(controller.id)
     assert not response["success"]
+    assert response["error"]["message"] == (
+        "Failed to remove device entry, rejected by integration"
+    )
     assert (
         device_registry.async_get_device_by_identifier(
             (DOMAIN, "1_0"), init_integration.entry_id
         )
         is None
+    )
+
+
+async def test_remove_device_entry_not_loaded(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a thermostat cannot be removed while the integration is not loaded."""
+    assert await async_setup_component(hass, "config", {})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1_0"), init_integration.entry_id
+    )
+    assert device is not None
+    await hass.config_entries.async_unload(init_integration.entry_id)
+    await hass.async_block_till_done()
+    client = await hass_ws_client(hass)
+
+    response = await client.remove_device(device.id)
+
+    assert not response["success"]
+    assert response["error"]["message"] == (
+        "Failed to remove device entry, rejected by integration"
     )

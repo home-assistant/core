@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -53,6 +54,9 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: TouchlineConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Allow removing a thermostat that the controller no longer reports."""
+    if entry.state is not ConfigEntryState.LOADED:
+        # Without the latest poll it is unknown which thermostats are still paired.
+        return False
     return not any(
         identifier[0] == DOMAIN
         and (
