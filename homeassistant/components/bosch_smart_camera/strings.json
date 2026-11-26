@@ -41,6 +41,11 @@
       "privacy_mode": {
         "name": "Privacy mode"
       }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
     }
   },
   "exceptions": {

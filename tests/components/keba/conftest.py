@@ -28,9 +28,15 @@ def expected_lingering_tasks() -> bool:
 
 
 @pytest.fixture
-def keba_data() -> dict[str, Any]:
-    """Return the data the library reports for an idle P30."""
-    return load_json_object_fixture("p30.json", DOMAIN)
+def keba_fixture() -> str:
+    """Return the fixture file with the station's data, an idle P30 by default."""
+    return "p30.json"
+
+
+@pytest.fixture
+def keba_data(keba_fixture: str) -> dict[str, Any]:
+    """Return the data the library reports for the station."""
+    return load_json_object_fixture(keba_fixture, DOMAIN)
 
 
 @pytest.fixture
@@ -40,18 +46,26 @@ def mock_keba(
     """Mock the keba-kecontact methods the integration calls."""
     client = MagicMock()
     client.setup = AsyncMock()
-    client.request_data = AsyncMock()
     client.get_value = MagicMock(side_effect=keba_data.get)
     client.set_failsafe = AsyncMock()
     client.enable = AsyncMock()
-    with patch.multiple(
-        KebaKeContact,
-        setup=client.setup,
-        request_data=client.request_data,
-        get_value=client.get_value,
-        set_failsafe=client.set_failsafe,
-        enable=client.enable,
+    with (
+        patch.multiple(
+            KebaKeContact,
+            setup=client.setup,
+            get_value=client.get_value,
+            set_failsafe=client.set_failsafe,
+            enable=client.enable,
+        ),
+        # With autospec the mock gets the handler, and reports the data to it.
+        patch.object(
+            KebaKeContact,
+            "request_data",
+            autospec=True,
+            side_effect=lambda keba: keba.hass_callback(keba_data),
+        ) as request_data,
     ):
+        client.request_data = request_data.mock
         yield client
 
 

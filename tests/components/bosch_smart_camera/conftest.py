@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from bosch_shc_camera_client.cameras import Camera, CameraModel
 from bosch_shc_camera_client.cloud import CloudPutResult
 from bosch_shc_camera_client.settings import AudioSettings, SettingWriteResult
-from bosch_shc_camera_client.states import CameraAccountStates, WifiInfo
+from bosch_shc_camera_client.states import CameraAccountStates, FirmwareStatus, WifiInfo
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -85,6 +85,17 @@ def mock_set_audio_settings() -> Generator[AsyncMock]:
         "bosch_shc_camera_client.client.set_audio_settings",
         autospec=True,
         return_value=SettingWriteResult(204, None, None),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_get_firmware_status() -> Generator[AsyncMock]:
+    """Mock the firmware status of the library."""
+    with patch(
+        "homeassistant.components.bosch_smart_camera.coordinator.get_firmware_status",
+        autospec=True,
+        return_value=FirmwareStatus("9.40.25", None, True, False),
     ) as mock:
         yield mock
 
