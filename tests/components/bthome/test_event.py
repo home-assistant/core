@@ -1,8 +1,12 @@
 """Test the BTHome events."""
 
 from collections.abc import Generator
+import logging
 import time
+from typing import Any
+from unittest.mock import patch
 
+from cryptography.hazmat.primitives.ciphers.aead import AESCCM
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 from pytest_homeassistant.components.bluetooth import (
@@ -17,6 +21,7 @@ from pytest_homeassistant.components.bluetooth import (
 from homeassistant.components.bluetooth import async_register_scanner
 from homeassistant.components.bthome.const import (
     BTHOME_BLE_EVENT,
+    CONF_BINDKEY,
     CONF_SLEEPY_DEVICE,
     DOMAIN,
 )
@@ -351,8 +356,11 @@ async def test_setup_replays_accepted_packet(hass: HomeAssistant) -> None:
     [({}, {BUTTON_ADDRESS: (WEAK_PROXY, (b"\x44\x00\x07\x3a\x01", -90, 7200))})],
     indirect=True,
 )
-async def test_restored_press_fires_no_event(hass: HomeAssistant) -> None:
+async def test_restored_press_fires_no_event(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test a press replayed from before a restart doesn't fire an event."""
+    caplog.set_level(logging.DEBUG, "homeassistant.components.bthome")
     events = async_capture_events(hass, BTHOME_BLE_EVENT)
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=BUTTON_ADDRESS, data={CONF_SLEEPY_DEVICE: True}
@@ -364,6 +372,10 @@ async def test_restored_press_fires_no_event(hass: HomeAssistant) -> None:
 
     assert events == []
     assert hass.states.get(BUTTON_ENTITY_ID).state == STATE_UNKNOWN
+    assert (
+        "Not firing button press of a replayed packet restored from before the start"
+        in caplog.text
+    )
 
     _inject_button_payload(
         hass, b"\x44\x00\x08\x3a\x01", STRONG_PROXY, -60, time.monotonic()
@@ -453,3 +465,87 @@ async def test_identical_press_during_reload_fires_event(hass: HomeAssistant) ->
     await hass.async_block_till_done()
 
     assert [event.data["event_type"] for event in events] == ["press", "press"]
+
+
+BINDKEY = "231d39c1d7cc1ab1aee224cd096db932"
+
+
+def _encrypted_payload(payload: bytes, counter: int) -> bytes:
+    """Return a BTHome v2 payload of a trigger-based device, encrypted."""
+    adv_info = 0x45
+    counter_bytes = counter.to_bytes(4, "little")
+    nonce = (
+        bytes.fromhex(BUTTON_ADDRESS.replace(":", ""))
+        + b"\xd2\xfc"
+        + bytes([adv_info])
+        + counter_bytes
+    )
+    encrypted = AESCCM(bytes.fromhex(BINDKEY), tag_length=4).encrypt(
+        nonce, payload, None
+    )
+    return bytes([adv_info]) + encrypted[:-4] + counter_bytes + encrypted[-4:]
+
+
+@pytest.mark.usefixtures("proxies")
+async def test_press_decrypted_after_reauth_fires_event(hass: HomeAssistant) -> None:
+    """Test a press that couldn't be decrypted fires once the bindkey is added."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=BUTTON_ADDRESS)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    events = async_capture_events(hass, BTHOME_BLE_EVENT)
+    _inject_button_payload(
+        hass,
+        _encrypted_payload(b"\x00\x01\x3a\x01", 1),
+        STRONG_PROXY,
+        -60,
+        time.monotonic(),
+    )
+    await hass.async_block_till_done()
+    assert events == []
+
+    hass.config_entries.async_update_entry(
+        entry, data=entry.data | {CONF_BINDKEY: BINDKEY}
+    )
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert [event.data["event_type"] for event in events] == ["press"]
+
+
+@pytest.mark.usefixtures("proxies")
+async def test_press_while_unloading_reaches_event_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test a press after the event entity unloaded is delivered after reload."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=BUTTON_ADDRESS)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    events = async_capture_events(hass, BTHOME_BLE_EVENT)
+    now = time.monotonic()
+    _inject_button_payload(hass, b"\x44\x00\x01\x3a\x01", STRONG_PROXY, -60, now)
+    await hass.async_block_till_done()
+    unload_platforms = hass.config_entries.async_unload_platforms_or_raise
+
+    async def _unload_platforms_then_press(*args: Any) -> None:
+        await unload_platforms(*args)
+        _inject_button_payload(
+            hass, b"\x44\x00\x02\x3a\x02", STRONG_PROXY, -60, now + 5
+        )
+
+    with patch.object(
+        hass.config_entries,
+        "async_unload_platforms_or_raise",
+        _unload_platforms_then_press,
+    ):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert [event.data["event_type"] for event in events] == ["press", "double_press"]
+    assert (
+        hass.states.get(BUTTON_ENTITY_ID).attributes[
+            EventEntityStateAttribute.EVENT_TYPE
+        ]
+        == "double_press"
+    )

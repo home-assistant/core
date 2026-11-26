@@ -50,6 +50,7 @@ class BTHomePassiveBluetoothProcessorCoordinator(
         self.encryption_downgrade_logged = False
         self._cancel_event_driven: CALLBACK_TYPE | None = None
         self.replaying = False
+        self.paused = False
 
     @property
     def sleepy_device(self) -> bool:
