@@ -32,7 +32,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import OumanDevice
 from .coordinator import OumanEh800ConfigEntry, OumanEh800Coordinator
-from .entity import OumanEh800Entity, OumanEh800EntityDescription
+from .entity import OumanEh800EndpointEntity, OumanEh800EntityDescription
 
 PARALLEL_UPDATES = 1
 
@@ -243,13 +243,13 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         OumanEh800NumberEntity(coordinator, endpoint, description)
-        for endpoint in coordinator.data
+        for endpoint in coordinator.data.values
         if isinstance(endpoint, IntControlOumanEndpoint | FloatControlOumanEndpoint)
         and (description := NUMBER_DESCRIPTIONS.get(endpoint)) is not None
     )
 
 
-class OumanEh800NumberEntity(OumanEh800Entity, NumberEntity):
+class OumanEh800NumberEntity(OumanEh800EndpointEntity, NumberEntity):
     """Ouman EH-800 number entity."""
 
     entity_description: OumanEh800NumberEntityDescription
@@ -273,7 +273,7 @@ class OumanEh800NumberEntity(OumanEh800Entity, NumberEntity):
     @override
     def native_value(self) -> float:
         """Return the current value."""
-        value = self.coordinator.data[self._endpoint]
+        value = self.coordinator.data.values[self._endpoint]
         assert isinstance(value, float)
         return value
 

@@ -5,15 +5,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
-
-from homeassistant.components.lock import DOMAIN, LockEntity, LockEntityFeature
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
@@ -21,6 +13,13 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
+
+from homeassistant.components.lock import DOMAIN, LockEntity, LockEntityFeature
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 TEST_DOMAIN = "test"
 
@@ -93,12 +92,11 @@ async def setup_lock_platform_test_entity(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.LOCK]
         )
-        return True
 
     mock_integration(
         hass,

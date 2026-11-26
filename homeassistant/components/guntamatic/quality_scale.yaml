@@ -64,13 +64,22 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
+
   icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      No conditions requiring user intervention via a repair issue have been
+      identified; connection problems are surfaced through entity availability.
+
   stale-devices: todo
 
   # Platinum
   async-dependency: todo
   inject-websession: todo
-  strict-typing: todo
+  strict-typing:
+    status: todo
+    comment: |
+      Requirement 'guntamatic==1.12.0' does not conform to PEP 561 (no py.typed file).

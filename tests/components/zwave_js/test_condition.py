@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
@@ -21,8 +22,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.translation import async_get_translations
 
 from .common import COMMAND_CLASS_MARKERS
-
-from tests.common import MockConfigEntry
 
 
 async def _checker(

@@ -8,10 +8,11 @@ from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from pyairnow import WebServiceAPI
 from pyairnow.conv import aqi_to_concentration
-from pyairnow.errors import AirNowError, InvalidJsonError
+from pyairnow.errors import AirNowError, InvalidJsonError, InvalidKeyError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -77,6 +78,10 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.longitude,
             )
 
+        except InvalidKeyError as error:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from error
         except (AirNowError, ClientConnectorError, InvalidJsonError) as error:
             raise UpdateFailed(error) from error
 

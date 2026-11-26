@@ -23,7 +23,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import AugustConfigEntry, AugustData
+from . import AugustConfigEntry
+from .data import AugustData
 from .entity import AugustDescriptionEntity
 from .util import (
     retrieve_ding_activity,

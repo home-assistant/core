@@ -3,11 +3,10 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
 
 from homeassistant.components.melissa import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import async_load_json_object_fixture
 
 
 @pytest.fixture

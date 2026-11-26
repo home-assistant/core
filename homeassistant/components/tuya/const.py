@@ -474,6 +474,11 @@ class DeviceCategory(StrEnum):
     """Single Phase power meter (undocumented)"""
     BZYD = "bzyd"
     """White noise machine (undocumented)"""
+    CDSXJ = "cdsxj"
+    """Security camera (undocumented)
+
+    see https://github.com/home-assistant/core/issues/177197
+    """
     CWJWQ = "cwjwq"
     """Smart Odor Eliminator-Pro (undocumented)
 
@@ -718,6 +723,7 @@ class DPCode(StrEnum):
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
+    DROP_STATE = "drop_state"
     DUSTER_CLOTH = "duster_cloth"
     EC_CURRENT = "ec_current"
     ECO2 = "eco2"
@@ -739,8 +745,10 @@ class DPCode(StrEnum):
     FAN_VERTICAL = "fan_vertical"  # Vertical swing flap angle
     FAR_DETECTION = "far_detection"
     FAULT = "fault"
+    FEED_BLOCK_STATUS = "feed_block_status"
     FEED_REPORT = "feed_report"
     FEED_STATE = "feed_state"
+    FEED_STUCK_STATUS = "feed_stuck_status"
     FEEDIN_POWER_LIMIT_ENABLE = "feedin_power_limit_enable"
     FEELLIKE_TEMP = "feellike_temp"
     FILTER = "filter"
@@ -749,12 +757,15 @@ class DPCode(StrEnum):
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
+    FLOW_RATE = "flow_rate"
+    FOOD_STORAGE_STATUS = "food_storage_status"
     FORWARD_ENERGY_TOTAL = "forward_energy_total"
     FROST = "frost"  # Frost protection
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
     HEAT_INDEX = "heat_index"
+    HEIGHT = "height"
     HUMIDIFIER = "humidifier"  # Humidification
     HUMIDITY = "humidity"  # Humidity
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
@@ -765,6 +776,7 @@ class DPCode(StrEnum):
     HUMIDITY_OUTDOOR_3 = "humidity_outdoor_3"  # Outdoor humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
+    INLET_TEMP = "inlet_temp"  # Inlet temperature
     INSTALLATION_HEIGHT = "installation_height"
     INVERTER_OUTPUT_POWER = "inverter_output_power"
     IPC_AUTO_SIREN = "ipc_auto_siren"
@@ -772,6 +784,7 @@ class DPCode(StrEnum):
     IPC_CONTRAST = "ipc_contrast"
     IPC_SHARP = "ipc_sharp"
     IPC_WORK_MODE = "ipc_work_mode"
+    LEAKAGE_CURRENT = "leakage_current"
     LED_TYPE_1 = "led_type_1"
     LED_TYPE_2 = "led_type_2"
     LED_TYPE_3 = "led_type_3"
@@ -795,6 +808,7 @@ class DPCode(StrEnum):
     MAX_SET = "max_set"
     MINI_SET = "mini_set"
     MODE = "mode"  # Working mode / Mode
+    MODE_ECO = "mode_eco"  # Eco mode
     MOODLIGHTING = "moodlighting"  # Mood light
     MOTION_AREA_SWITCH = "motion_area_switch"  # Activity area
     MOTION_RECORD = "motion_record"
@@ -806,6 +820,7 @@ class DPCode(StrEnum):
     NEAR_DETECTION = "near_detection"
     OPPOSITE = "opposite"
     ORP_CURRENT = "orp_current"
+    OUTLET_TEMP = "outlet_temp"  # Outlet temperature
     OUTPUT_POWER_LIMIT = "output_power_limit"
     OXYGEN = "oxygen"  # Oxygen bar
     PAUSE = "pause"
@@ -865,6 +880,8 @@ class DPCode(StrEnum):
     PV_POWER_TOTAL = "pv_power_total"
     RAIN_24H = "rain_24h"  # Total daily rainfall in mm
     RAIN_RATE = "rain_rate"  # Rain intensity in mm/h
+    REACTIVE_POWER1 = "reactive_power1"
+    REACTIVE_POWER2 = "reactive_power2"
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
@@ -874,6 +891,8 @@ class DPCode(StrEnum):
     RESET_FILTER = "reset_filter"
     RESET_MAP = "reset_map"
     RESET_ROLL_BRUSH = "reset_roll_brush"
+    REVERSE_ENERGY1 = "reverse_energy1"
+    REVERSE_ENERGY2 = "reverse_energy2"
     REVERSE_ENERGY_TOTAL = "reverse_energy_total"
     ROLL_BRUSH = "roll_brush"
     SEEK = "seek"
@@ -893,6 +912,7 @@ class DPCode(StrEnum):
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
+    SPEED_CURRENT = "speed_current"
     SPEED_SET = "speed_set"
     SPRAY_MODE = "spray_mode"  # Spraying mode
     START = "start"  # Start

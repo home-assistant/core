@@ -3,17 +3,25 @@
 from collections.abc import Generator
 
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from watergate_local_api import WatergateApiException, WatergateIndeterminateError
 
-from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN, ValveState
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_CLOSE_VALVE, SERVICE_OPEN_VALVE
+from homeassistant.components.valve import (
+    DOMAIN as VALVE_DOMAIN,
+    ValveService,
+    ValveState,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_CLOSE_VALVE,
+    SERVICE_OPEN_VALVE,
+    TargetKey,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import init_integration
-
-from tests.common import AsyncMock, MockConfigEntry
 
 
 async def test_change_valve_state_snapshot(
@@ -49,8 +57,8 @@ async def test_change_valve_state(
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_CLOSE_VALVE,
-        {ATTR_ENTITY_ID: entity_id},
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -63,8 +71,8 @@ async def test_change_valve_state(
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_OPEN_VALVE,
-        {ATTR_ENTITY_ID: entity_id},
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 

@@ -117,6 +117,9 @@
           "stop": "mdi:stop"
         }
       },
+      "picture_mode": {
+        "default": "mdi:television"
+      },
       "robot_cleaner_cleaning_type": {
         "default": "mdi:vacuum"
       },

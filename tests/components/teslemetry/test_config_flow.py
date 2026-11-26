@@ -10,11 +10,6 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from urllib.parse import parse_qs, urlparse
 
 from aiohttp import ClientConnectionError, ClientError
-from aiopowerwall import (
-    PowerwallAuthenticationError,
-    PowerwallConnectionError,
-    PowerwallFaultError,
-)
 from bleak.backends.device import BLEDevice
 from bleak.exc import BleakDeviceNotFoundError, BleakError
 from bleak_retry_connector import (
@@ -27,6 +22,16 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    FakeScanner,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement,
+    inject_advertisement_with_time_and_source_connectable,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from tesla_fleet_api.const import AuthorizedClientState
 from tesla_fleet_api.exceptions import (
     BadGateway,
@@ -49,6 +54,11 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
+from tesla_fleet_api.tesla.powerwall import (
+    PowerwallAuthenticationError,
+    PowerwallConnectionError,
+    PowerwallFaultError,
+)
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, AuthorizedClients
 
 from homeassistant.components.application_credentials import (
@@ -59,9 +69,11 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     async_register_scanner,
 )
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
+    CONF_LEGACY_GATEWAY,
     CONF_SITE_ID,
     CONF_VIN,
     DOMAIN,
@@ -78,7 +90,7 @@ from homeassistant.config_entries import (
     ConfigSubentryData,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PASSWORD, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 from homeassistant.helpers import (
@@ -89,18 +101,7 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from . import mock_config_entry, setup_platform
-from .const import CONFIG_V1, METADATA, PRODUCTS, UNIQUE_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import (
-    FakeScanner,
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_advertisement,
-    inject_advertisement_with_time_and_source_connectable,
-)
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
+from .const import ADDRESS, CONFIG_V1, METADATA, PRODUCTS, SITE_INFO, UNIQUE_ID, VIN
 
 REDIRECT = "https://example.com/auth/external/callback"
 
@@ -722,8 +723,7 @@ async def test_migrate_error_from_future(
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
-VIN = "LRW3F7EK4NC700000"
-ADDRESS = "AA:BB:CC:DD:EE:FF"
+NEW_ADDRESS = "11:22:33:44:55:66"
 
 
 def _entry_with_ble() -> MockConfigEntry:
@@ -809,7 +809,14 @@ async def _setup_paired_entry(hass: HomeAssistant) -> MockConfigEntry:
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
-        mock_parent.return_value.vehicles.createBluetooth.return_value = AsyncMock()
+        vehicle = AsyncMock()
+        vehicle.listen_vehicle_lock_state = MagicMock()
+        vehicle.listen_charge_port = MagicMock()
+        vehicle.listen_closure_statuses = MagicMock()
+        vehicle.listen_gear = MagicMock()
+        vehicle.listen_tonneau = MagicMock()
+        vehicle.listen_tonneau_percent_open = MagicMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = vehicle
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     return entry
@@ -1240,6 +1247,21 @@ async def test_subentry_authorize_failure(
         "disconnect",
     ]
 
+    release.clear()
+    vehicle.pair = AsyncMock(side_effect=release.wait)
+    with patch.object(hass.config_entries, "async_schedule_reload"):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        release.set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("enable_bluetooth")
 async def test_subentry_authorize_unexpected_error_disconnects(
@@ -1549,6 +1571,24 @@ async def test_subentry_scan_device_not_found(
     assert "No connectable advertisement matched Bluetooth name Sdcdcb1a343110fba" in (
         caplog.text
     )
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(_mock_vehicle()),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -1876,13 +1916,14 @@ async def test_subentry_add_flow_keeps_device_on_parent(
     assert bound_device.id == existing_device.id
     assert bound_device.config_subentry_id is None
 
-    # The vehicle entities keep their unique IDs and stay on the parent entry.
+    # The vehicle entities keep their unique IDs and stay on the parent entry;
+    # pairing only adds the vehicle's Bluetooth entities.
     bound_entities = er.async_entries_for_device(
         entity_registry, bound_device.id, include_disabled_entities=True
     )
     assert {entity.unique_id for entity in bound_entities} == {
         entity.unique_id for entity in vehicle_entities
-    }
+    } | {f"{VIN}-bluetooth", f"{VIN}-bluetooth_session"}
     assert all(entity.config_subentry_id is None for entity in bound_entities)
 
 
@@ -2027,6 +2068,171 @@ async def test_subentry_add_flow_entry_not_loaded(hass: HomeAssistant) -> None:
     assert result["reason"] == "entry_not_loaded"
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_reconfigure_updates_address(hass: HomeAssistant) -> None:
+    """Reconfigure re-scans and re-pairs an already added vehicle, updating its address."""
+    entry = await _setup_paired_entry(hass)
+    subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+
+    vehicle = _mock_vehicle(on_whitelist=True)
+    parent = _mock_ble_parent(vehicle)
+    info = _discovered_info()
+    info.address = NEW_ADDRESS
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[info],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=parent,
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "scan"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    updated = entry.subentries[subentry.subentry_id]
+    assert updated.unique_id == VIN
+    assert updated.data == {CONF_VIN: VIN, CONF_ADDRESS: NEW_ADDRESS}
+    # The scan looks for the subentry's own vehicle, not whichever one is nearest.
+    parent.get_name.assert_called_once_with(VIN)
+    vehicle.connect.assert_awaited_once()
+    vehicle.disconnect.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_reconfigure_reloads_onto_new_address(
+    hass: HomeAssistant,
+) -> None:
+    """Reconfigure reloads the entry so the live router uses the new address."""
+    entry = await _setup_paired_entry(hass)
+    subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+
+    vehicle = _mock_vehicle(on_whitelist=True)
+    info = _discovered_info()
+    info.address = NEW_ADDRESS
+
+    # async_schedule_reload is left unpatched so the real reload runs here with the
+    # committed BLE address; it reuses the parent cached by the initial setup, so no
+    # key file is written and no real connection is opened.
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[info],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=None,
+        ) as mock_ble_device,
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        # The reconfigure schedules the reload, which runs to completion here.
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert entry.state is ConfigEntryState.LOADED
+
+        mock_ble_device.reset_mock()
+        # Commanding a vehicle entity routes through the reloaded router, which
+        # first checks whether the vehicle is in Bluetooth range.
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.test_flash_lights"},
+            blocking=True,
+        )
+
+    # The reloaded router looks for the new address, not the one it was set up with.
+    assert mock_ble_device.call_args.args[1] == NEW_ADDRESS
+
+
+async def test_subentry_reconfigure_no_bluetooth(hass: HomeAssistant) -> None:
+    """Reconfigure aborts immediately when no Bluetooth integration is set up."""
+    # No enable_bluetooth fixture here, so the scanner count is zero.
+    entry = await _setup_paired_entry(hass)
+    subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "bluetooth_not_available"
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subentry_reconfigure_device_not_found(hass: HomeAssistant) -> None:
+    """Reconfigure re-shows the scan form when the vehicle cannot be found."""
+    entry = await _setup_paired_entry(hass)
+    subentry = next(iter(entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)))
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=MagicMock(),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "scan"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scan"
+    assert result["errors"] == {"base": "device_not_found"}
+    # The stored address is untouched by a failed re-scan.
+    assert entry.subentries[subentry.subentry_id].data == {
+        CONF_VIN: VIN,
+        CONF_ADDRESS: ADDRESS,
+    }
+
+    info = _discovered_info()
+    info.address = NEW_ADDRESS
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[info],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(_mock_vehicle(on_whitelist=True)),
+        ),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.subentries[subentry.subentry_id].data == {
+        CONF_VIN: VIN,
+        CONF_ADDRESS: NEW_ADDRESS,
+    }
+
+
 SITE_ID = 123456
 WALL_CONNECTOR_SITE_ID = 555555
 HOST = "192.168.91.1"
@@ -2036,7 +2242,7 @@ GATEWAY_DIN = "ABC123"
 PUBLIC_KEY_DER = b"public-key-der"
 PUBLIC_KEY_B64 = "cHVibGljLWtleS1kZXI="
 
-# aiopowerwall's PowerwallClient parses the PEM at construction time, so tests
+# PowerwallClient parses the PEM at construction time, so tests
 # that build one need a real (if undersized, for speed) RSA key rather than
 # arbitrary bytes.
 _TEST_RSA_KEY_PEM = rsa.generate_private_key(
@@ -2086,7 +2292,7 @@ def mock_gateway_discovery() -> Generator[AsyncMock]:
 def mock_local_authorized_clients() -> Generator[AsyncMock]:
     """Default a paired gateway's local authorized-clients read to unreachable."""
     with patch(
-        "aiopowerwall.client.PowerwallClient.list_authorized_clients",
+        "tesla_fleet_api.tesla.powerwall.client.PowerwallClient.list_authorized_clients",
         new=AsyncMock(side_effect=PowerwallConnectionError),
     ) as mock_list:
         yield mock_list
@@ -2124,7 +2330,7 @@ def _mock_powerwall_client(
     din: str = GATEWAY_DIN,
     status_error: Exception | None = None,
 ) -> MagicMock:
-    """Return a mock aiopowerwall PowerwallClient async context manager."""
+    """Return a mock PowerwallClient async context manager."""
     client = MagicMock()
     client.__aenter__ = AsyncMock(return_value=client)
     client.__aexit__ = AsyncMock(return_value=False)
@@ -2402,6 +2608,20 @@ async def test_subentry_credentials_errors(
     assert result["errors"] == {"base": expected_error}
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)
 
+    with (
+        patch(
+            "homeassistant.components.teslemetry.helpers.PowerwallClient",
+            return_value=_mock_powerwall_client(),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mock_rsa_key")
 async def test_subentry_credentials_prefills_discovered_host(
@@ -2577,9 +2797,72 @@ async def test_add_flow_creates_subentry_bound_to_existing_device(
     assert [device.id for device in site_devices] == [site_device.id]
 
 
+def _site_info_with_gateway(din: str, gateways: list[dict[str, Any]]) -> dict[str, Any]:
+    """Return site_info with the given site DIN and gateway components."""
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["id"] = din
+    site_info["response"]["components"]["gateways"] = gateways
+    return site_info
+
+
+@pytest.mark.parametrize(
+    ("site_info", "step_id", "stored_password", "legacy_gateway"),
+    [
+        pytest.param(SITE_INFO, "credentials", "sword", False, id="gateway_2"),
+        pytest.param(
+            _site_info_with_gateway(
+                SITE_INFO["response"]["id"],
+                [
+                    {
+                        **SITE_INFO["response"]["components"]["gateways"][0],
+                        "din": "1118431-01-F--TG000000000000",
+                        "part_number": "1118431-01-F",
+                    }
+                ],
+            ),
+            "legacy_credentials",
+            "long-wifi-password",
+            True,
+            id="gateway_1_part_number",
+        ),
+        pytest.param(
+            _site_info_with_gateway("1118431-01-F--TG000000000000", []),
+            "legacy_credentials",
+            "long-wifi-password",
+            True,
+            id="gateway_1_site_din",
+        ),
+        pytest.param(
+            _site_info_with_gateway(
+                SITE_INFO["response"]["id"],
+                [
+                    {
+                        key: value
+                        for key, value in SITE_INFO["response"]["components"][
+                            "gateways"
+                        ][0].items()
+                        if key != "part_number"
+                    }
+                ],
+            ),
+            "credentials",
+            "sword",
+            False,
+            id="gateway_without_part_number",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_subentry_credentials_password_truncated(hass: HomeAssistant) -> None:
-    """A full Wi-Fi password is trimmed to its final five characters."""
+async def test_subentry_credentials_password_by_gateway(
+    hass: HomeAssistant,
+    mock_site_info: AsyncMock,
+    site_info: dict[str, Any],
+    step_id: str,
+    stored_password: str,
+    legacy_gateway: bool,
+) -> None:
+    """A Gateway 1 keeps the full password; other gateways keep its last 5 characters."""
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
     entry = await _setup_account_no_subentry(hass)
 
     client = _mock_powerwall_client()
@@ -2596,8 +2879,9 @@ async def test_subentry_credentials_password_truncated(hass: HomeAssistant) -> N
         ) as mock_client,
         patch.object(hass.config_entries, "async_schedule_reload"),
     ):
+        mock_client.legacy_gateway.return_value = client
         result = await _start_add_flow_select_site(hass, entry)
-        assert result["step_id"] == "credentials"
+        assert result["step_id"] == step_id
 
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {CONF_HOST: HOST, CONF_PASSWORD: "long-wifi-password"}
@@ -2606,8 +2890,20 @@ async def test_subentry_credentials_password_truncated(hass: HomeAssistant) -> N
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0]
-    assert subentry.data[CONF_PASSWORD] == "sword"
-    assert mock_client.call_args.kwargs["gateway_password"] == "sword"
+    assert subentry.data == {
+        CONF_SITE_ID: SITE_ID,
+        CONF_HOST: HOST,
+        CONF_PASSWORD: stored_password,
+        CONF_LEGACY_GATEWAY: legacy_gateway,
+    }
+    assert mock_client.legacy_gateway.called is legacy_gateway
+    assert [
+        call.kwargs["gateway_password"]
+        for call in (
+            *mock_client.call_args_list,
+            *mock_client.legacy_gateway.call_args_list,
+        )
+    ] == [stored_password]
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
@@ -2939,6 +3235,35 @@ async def test_pair_step_second_lookup_errors(
     assert result["step_id"] == "pair"
     assert result["errors"] == {"base": expected_error}
 
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
+            new=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.PowerwallClient",
+            return_value=_mock_powerwall_client(),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["step_id"] == "credentials"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mock_rsa_key")
 async def test_pair_step_timeout_retry_reopens_window_and_succeeds(
@@ -3226,6 +3551,7 @@ async def test_reconfigure_updates_credentials_and_schedules_reload(
     subentry = entry.subentries[subentry_id]
     assert subentry.data[CONF_HOST] == new_host
     assert subentry.data[CONF_PASSWORD] == "wxyz9"
+    assert subentry.data[CONF_LEGACY_GATEWAY] is False
     # The subentry-change reload listener fires only on membership changes, so the
     # step must schedule the reload itself for the new credentials to take effect.
     mock_reload.assert_called_once_with(entry.entry_id)

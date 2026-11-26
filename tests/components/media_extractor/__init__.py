@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from pytest_homeassistant.common import load_json_object_fixture
+
 from .const import (
     AUDIO_QUERY,
     NO_FORMATS_RESPONSE,
@@ -10,8 +12,6 @@ from .const import (
     YOUTUBE_PLAYLIST,
     YOUTUBE_VIDEO,
 )
-
-from tests.common import load_json_object_fixture
 
 
 def _get_base_fixture(url: str) -> str:

@@ -7,16 +7,74 @@ from pyintelliclima.intelliclima_types import (
     IntelliClimaDevices,
     IntelliClimaFilterStatus,
 )
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.intelliclima.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+
+async def test_mixed_account_device_registration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_interface: AsyncMock,
+    mixed_eco_devices: IntelliClimaDevices,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Register the two models as independent devices with their own fan entities."""
+    mock_cloud_interface.get_all_device_status.return_value = mixed_eco_devices
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, mock_config_entry.entry_id
+            )
+        )
+        == 2
+    )
+    assert (
+        eco2 := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "56789"), mock_config_entry.entry_id
+        )
+    )
+    assert (
+        eco3 := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "33333"), mock_config_entry.entry_id
+        )
+    )
+    assert eco2.id != eco3.id
+    assert eco2.model == "ECOCOMFORT 2.0"
+    assert eco3.model == "ECOCOMFORT 3"
+    assert (eco2_fan := entity_registry.async_get("fan.test_vmc"))
+    assert (eco3_fan := entity_registry.async_get("fan.test_vmc_3"))
+    assert eco2_fan.device_id == eco2.id
+    assert eco3_fan.device_id == eco3.id
+
+
+@pytest.mark.parametrize("device_fixture", ["single_eco3_device", "mixed_eco_devices"])
+async def test_unload_eco3_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_interface: AsyncMock,
+    request: pytest.FixtureRequest,
+    device_fixture: str,
+) -> None:
+    """Unload ECO3-only and mixed accounts through the normal config-entry flow."""
+    mock_cloud_interface.get_all_device_status.return_value = request.getfixturevalue(
+        device_fixture
+    )
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_setup_succeeds_when_filter_status_unavailable(

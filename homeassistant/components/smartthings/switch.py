@@ -5,21 +5,15 @@ from typing import Any, cast, override
 
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SwitchEntity,
-    SwitchEntityDescription,
-)
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import INVALID_SWITCH_CATEGORIES, MAIN
+from .const import DOMAIN, INVALID_SWITCH_CATEGORIES, MAIN
 from .entity import SmartThingsEntity
-from .util import deprecate_entity
 
 CAPABILITIES = (
     Capability.SWITCH_LEVEL,
@@ -362,61 +356,20 @@ async def async_setup_entry(
         )
         if attribute in DISHWASHER_WASHING_OPTIONS_TO_SWITCHES
     )
-    entity_registry = er.async_get(hass)
-    for device in entry_data.devices.values():
-        if (
-            Capability.SWITCH in device.status[MAIN]
-            and not any(
-                capability in device.status[MAIN] for capability in CAPABILITIES
-            )
-            and not all(
-                capability in device.status[MAIN] for capability in AC_CAPABILITIES
-            )
-        ):
-            media_player = all(
-                capability in device.status[MAIN]
-                for capability in MEDIA_PLAYER_CAPABILITIES
-            )
-            appliance = (
-                device.device.components[MAIN].manufacturer_category
-                in INVALID_SWITCH_CATEGORIES
-            )
-            dhw = Capability.SAMSUNG_CE_EHS_FSV_SETTINGS in device.status[MAIN]
-            if media_player or appliance or dhw:
-                if appliance:
-                    issue = "appliance"
-                    version = "2025.10.0"
-                elif media_player:
-                    issue = "media_player"
-                    version = "2025.10.0"
-                else:
-                    issue = "dhw"
-                    version = "2025.12.0"
-                if deprecate_entity(
-                    hass,
-                    entity_registry,
-                    SWITCH_DOMAIN,
-                    f"{device.device.device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
-                    f"deprecated_switch_{issue}",
-                    version,
-                ):
-                    entities.append(
-                        SmartThingsSwitch(
-                            entry_data.client,
-                            device,
-                            SWITCH,
-                            Capability.SWITCH,
-                        )
-                    )
-                continue
-            entities.append(
-                SmartThingsSwitch(
-                    entry_data.client,
-                    device,
-                    SWITCH,
-                    Capability.SWITCH,
-                )
-            )
+    entities.extend(
+        SmartThingsSwitch(entry_data.client, device, SWITCH, Capability.SWITCH)
+        for device in entry_data.devices.values()
+        if Capability.SWITCH in device.status[MAIN]
+        and not any(capability in device.status[MAIN] for capability in CAPABILITIES)
+        and not all(capability in device.status[MAIN] for capability in AC_CAPABILITIES)
+        and not all(
+            capability in device.status[MAIN]
+            for capability in MEDIA_PLAYER_CAPABILITIES
+        )
+        and device.device.components[MAIN].manufacturer_category
+        not in INVALID_SWITCH_CATEGORIES
+        and Capability.SAMSUNG_CE_EHS_FSV_SETTINGS not in device.status[MAIN]
+    )
     async_add_entities(entities)
 
 
@@ -539,7 +492,7 @@ class SmartThingsDishwasherWashingOptionSwitch(SmartThingsCommandSwitch):
             == "false"
         ):
             raise ServiceValidationError(
-                "Can only be updated when remote control is enabled"
+                translation_domain=DOMAIN, translation_key="remote_control_status"
             )
         if (
             self.get_attribute_value(
@@ -548,7 +501,9 @@ class SmartThingsDishwasherWashingOptionSwitch(SmartThingsCommandSwitch):
             != "stop"
         ):
             raise ServiceValidationError(
-                "Can only be updated when dishwasher machine state is stop"
+                translation_domain=DOMAIN,
+                translation_key="dishwasher_machine_state",
+                translation_placeholders={"machine_state": "stop"},
             )
         selected_course = self.get_attribute_value(
             Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE, Attribute.WASHING_COURSE
@@ -566,7 +521,9 @@ class SmartThingsDishwasherWashingOptionSwitch(SmartThingsCommandSwitch):
             [],
         )
         if not course_settable:
-            raise ServiceValidationError("Option is not supported by selected cycle")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="option_not_supported"
+            )
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:

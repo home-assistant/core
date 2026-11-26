@@ -4,13 +4,14 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from stookwijzer import StookwijzerMap
 
+from homeassistant.components.stookwijzer import PLATFORMS
 from homeassistant.components.stookwijzer.const import DOMAIN
 from homeassistant.components.stookwijzer.services import Forecast
-from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -49,7 +50,7 @@ def mock_v1_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.stookwijzer.async_setup_entry", return_value=True
+        "homeassistant.components.stookwijzer.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -81,6 +82,10 @@ def mock_stookwijzer() -> Generator[MagicMock]:
         client.windspeed_ms = 2.5
         client.windspeed_bft = 2
         client.advice = "code_yellow"
+        client.async_get_map.return_value = StookwijzerMap(
+            image=b"stookwijzer_map_png",
+            coverage={"code_yellow": 80.0, "code_orange": 15.0, "code_red": 5.0},
+        )
         client.async_get_forecast.return_value = (
             Forecast(
                 datetime="2025-02-12T17:00:00+01:00",
@@ -108,15 +113,23 @@ def mock_stookwijzer() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def platforms() -> list[Platform]:
+    """Return the platforms to set up."""
+    return PLATFORMS
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_stookwijzer: MagicMock,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the Stookwijzer integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.stookwijzer.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     return mock_config_entry

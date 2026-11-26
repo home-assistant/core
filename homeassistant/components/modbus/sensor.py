@@ -109,17 +109,6 @@ class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
             SlaveSensor(self._coordinator, idx, entry) for idx in range(slave_count)
         ]
 
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
-
     @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -174,12 +163,6 @@ class SlaveSensor(
 ):
     """Modbus slave register sensor."""
 
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._attr_available
-
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[list[float | None] | None],
@@ -199,16 +182,11 @@ class SlaveSensor(
         self._attr_available = False
         super().__init__(coordinator)
 
-    @callback
+    @property
     @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._attr_available
 
     @override
     async def async_added_to_hass(self) -> None:

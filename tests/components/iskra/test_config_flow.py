@@ -10,6 +10,7 @@ from pyiskra.exceptions import (
     NotAuthorised,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.iskra import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -35,14 +36,12 @@ from .const import (
     USERNAME,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.iskra.async_setup_entry", return_value=True
+        "homeassistant.components.iskra.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

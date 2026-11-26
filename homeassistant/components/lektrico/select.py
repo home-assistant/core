@@ -7,11 +7,12 @@ from typing import Any, override
 from lektricowifi import Device
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_TYPE, EntityCategory
+from homeassistant.const import CONF_TYPE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
+from .const import CONF_SERIAL_NUMBER
+from .coordinator import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
 from .entity import LektricoEntity
 
 
@@ -56,7 +57,7 @@ async def async_setup_entry(
         LektricoSelect(
             description,
             coordinator,
-            f"{entry.data[CONF_TYPE]}_{entry.data[ATTR_SERIAL_NUMBER]}",
+            f"{entry.data[CONF_TYPE]}_{entry.data[CONF_SERIAL_NUMBER]}",
         )
         for description in SELECTS
     )

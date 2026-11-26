@@ -5,23 +5,21 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,
-    SERVICE_DISABLE_MOTION,
-    SERVICE_ENABLE_MOTION,
+    CameraService,
     async_get_stream_source,
 )
 from homeassistant.components.freebox import SCAN_INTERVAL
 from homeassistant.components.freebox.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
 from .const import DATA_HOME_GET_NODES
-
-from tests.common import async_fire_time_changed
 
 
 async def test_setup(hass: HomeAssistant, router: Mock) -> None:
@@ -104,16 +102,16 @@ async def test_motion_detection_toggle(
 
     await hass.services.async_call(
         CAMERA_DOMAIN,
-        SERVICE_DISABLE_MOTION,
-        service_data={ATTR_ENTITY_ID: "camera.camera_i"},
+        CameraService.DISABLE_MOTION_DETECTION,
+        service_data={TargetKey.ENTITY_ID: "camera.camera_i"},
         blocking=True,
     )
     router().home.set_home_endpoint_value.assert_called_with(15, 0, {"value": False})
 
     await hass.services.async_call(
         CAMERA_DOMAIN,
-        SERVICE_ENABLE_MOTION,
-        service_data={ATTR_ENTITY_ID: "camera.camera_i"},
+        CameraService.ENABLE_MOTION_DETECTION,
+        service_data={TargetKey.ENTITY_ID: "camera.camera_i"},
         blocking=True,
     )
     router().home.set_home_endpoint_value.assert_called_with(15, 0, {"value": True})

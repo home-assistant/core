@@ -1,7 +1,7 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 
-import datetime
-from typing import Any, override
+import datetime as dt
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientConnectionError
 from aiosomecomfort import (
@@ -35,16 +35,11 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.temperature import display_temp
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import HoneywellConfigEntry, HoneywellData
-from .const import (
-    CONF_COOL_AWAY_TEMPERATURE,
-    CONF_HEAT_AWAY_TEMPERATURE,
-    DOMAIN,
-    LOGGER,
-    RETRY,
-)
+from .const import CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE, DOMAIN, RETRY
 
 MODE_PERMANENT_HOLD = 2
 MODE_TEMPORARY_HOLD = 1
@@ -90,7 +85,7 @@ HW_FAN_MODE_TO_HA = {
     "follow schedule": FAN_AUTO,
 }
 
-SCAN_INTERVAL = datetime.timedelta(seconds=30)
+SCAN_INTERVAL = dt.timedelta(seconds=30)
 
 
 async def async_setup_entry(
@@ -382,11 +377,11 @@ class HoneywellUSThermostat(ClimateEntity):
                 # Set temporary hold time and temperature
                 if mode in COOLING_MODES:
                     await self._device.set_hold_cool(
-                        datetime.time(hour_cool, minute_cool), temperature
+                        dt.time(hour_cool, minute_cool), temperature
                     )
                 if mode in HEATING_MODES:
                     await self._device.set_hold_heat(
-                        datetime.time(hour_heat, minute_heat), temperature
+                        dt.time(hour_heat, minute_heat), temperature
                     )
 
             # Set temperature if not in auto - set the temperature
@@ -403,7 +398,6 @@ class HoneywellUSThermostat(ClimateEntity):
             ) from err
 
         except SomeComfortError as err:
-            LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="temp_failed_value",
@@ -428,7 +422,6 @@ class HoneywellUSThermostat(ClimateEntity):
                 ) from err
 
             except SomeComfortError as err:
-                LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="temp_failed_value",
@@ -484,14 +477,6 @@ class HoneywellUSThermostat(ClimateEntity):
             ) from err
 
         except SomeComfortError as err:
-            LOGGER.error(
-                "Temperature out of range. Mode: %s,"
-                " Heat Temperature:  %.1f,"
-                " Cool Temperature: %.1f",
-                mode,
-                self._heat_away_temp,
-                self._cool_away_temp,
-            )
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="temp_failed_range",
@@ -516,13 +501,11 @@ class HoneywellUSThermostat(ClimateEntity):
                     await self._device.set_hold_heat(True)
 
             except SomeComfortError as err:
-                LOGGER.error("Couldn't set permanent hold")
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="set_hold_failed",
                 ) from err
         else:
-            LOGGER.error("Invalid system mode returned: %s", mode)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_mode_failed",
@@ -538,11 +521,73 @@ class HoneywellUSThermostat(ClimateEntity):
             await self._device.set_hold_heat(False)
 
         except SomeComfortError as err:
-            LOGGER.error("Can not stop hold mode")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="stop_hold_failed",
             ) from err
+
+    async def async_set_hold_until(
+        self, until: dt.time, temperature: float | None = None
+    ) -> None:
+        """Set a temporary hold that ends at the given time."""
+        if until.minute % 15 or until.second:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="hold_until_invalid_time",
+            )
+        mode = self._device.system_mode
+        if mode not in HEATING_MODES | COOLING_MODES:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="hold_until_invalid_mode",
+                translation_placeholders={"mode": mode},
+            )
+        if temperature is not None:
+            if mode in HEATING_MODES & COOLING_MODES:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="hold_until_temperature_mode",
+                    translation_placeholders={"mode": mode},
+                )
+            unit = self.native_temperature_unit
+            min_temp = self.min_temp
+            max_temp = self.max_temp
+            native_temperature = TemperatureConverter.convert(
+                temperature, self.hass.config.units.temperature_unit, unit
+            )
+            # The limits are shown rounded in the configured unit. Accept the
+            # shown limits and clamp to the range of the thermostat.
+            shown_min_temp = display_temp(self.hass, min_temp, unit, self.precision)
+            shown_max_temp = display_temp(self.hass, max_temp, unit, self.precision)
+            if TYPE_CHECKING:
+                assert shown_min_temp is not None
+                assert shown_max_temp is not None
+            if not (
+                min_temp <= native_temperature <= max_temp
+                or shown_min_temp <= temperature <= shown_max_temp
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="hold_until_invalid_temperature",
+                    translation_placeholders={
+                        "temperature": str(temperature),
+                        "min_temp": str(shown_min_temp),
+                        "max_temp": str(shown_max_temp),
+                    },
+                )
+            temperature = min(max(native_temperature, min_temp), max_temp)
+        try:
+            if mode in COOLING_MODES:
+                await self._device.set_hold_cool(until, temperature)
+            if mode in HEATING_MODES:
+                await self._device.set_hold_heat(until, temperature)
+
+        except SomeComfortError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_hold_until_failed",
+            ) from err
+        self._away = False
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:

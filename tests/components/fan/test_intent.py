@@ -1,16 +1,16 @@
 """Intent tests for the fan platform."""
 
+from pytest_homeassistant.common import async_mock_service
+
 from homeassistant.components.fan import (
-    ATTR_PERCENTAGE,
     DOMAIN,
-    SERVICE_TURN_ON,
+    FanService,
+    FanServiceArgument,
     intent as fan_intent,
 )
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
-
-from tests.common import async_mock_service
 
 
 async def test_set_speed_intent(hass: HomeAssistant) -> None:
@@ -19,13 +19,13 @@ async def test_set_speed_intent(hass: HomeAssistant) -> None:
 
     entity_id = f"{DOMAIN}.test_fan"
     hass.states.async_set(entity_id, STATE_OFF)
-    calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
+    calls = async_mock_service(hass, DOMAIN, FanService.TURN_ON)
 
     response = await intent.async_handle(
         hass,
         "test",
         fan_intent.INTENT_FAN_SET_SPEED,
-        {"name": {"value": "test fan"}, ATTR_PERCENTAGE: {"value": 50}},
+        {"name": {"value": "test fan"}, FanServiceArgument.PERCENTAGE: {"value": 50}},
     )
     await hass.async_block_till_done()
 
@@ -33,5 +33,5 @@ async def test_set_speed_intent(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
-    assert call.service == SERVICE_TURN_ON
+    assert call.service == FanService.TURN_ON
     assert call.data == {"entity_id": entity_id, "percentage": 50}

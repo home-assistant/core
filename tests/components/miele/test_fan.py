@@ -5,24 +5,25 @@ from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
+    FanService,
+    FanServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = pytest.mark.parametrize("platforms", [(Platform.FAN,)])
 
@@ -121,8 +122,8 @@ async def test_fan_set_percentage_no_op_when_already_at_target(
     """Test that set_percentage is a no-op when already at the target step."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, FanServiceArgument.PERCENTAGE: 50},
         blocking=True,
     )
     mock_miele_client.send_action.assert_called_once_with(
@@ -132,8 +133,8 @@ async def test_fan_set_percentage_no_op_when_already_at_target(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, FanServiceArgument.PERCENTAGE: 50},
         blocking=True,
     )
     mock_miele_client.send_action.assert_not_called()
@@ -148,8 +149,8 @@ async def test_fan_turn_on_w_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, FanServiceArgument.PERCENTAGE: 50},
         blocking=True,
     )
     mock_miele_client.send_action.assert_called_with(
@@ -193,8 +194,8 @@ async def test_set_percentage(
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
+            FanService.SET_PERCENTAGE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, FanServiceArgument.PERCENTAGE: 50},
             blocking=True,
         )
     mock_miele_client.send_action.assert_called_once()

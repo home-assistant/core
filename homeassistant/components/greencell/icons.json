@@ -25,6 +25,11 @@
       "voltage_l3": {
         "default": "mdi:meter-electric"
       }
+    },
+    "switch": {
+      "charging": {
+        "default": "mdi:ev-station"
+      }
     }
   }
 }

@@ -3,9 +3,7 @@
 from typing import Any, override
 
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
-from homeassistant.components.script.config import (  # pylint: disable=home-assistant-component-root-import
-    async_validate_config_item,
-)
+from homeassistant.components.script.config import async_validate_config_item  # pylint: disable=home-assistant-component-root-import
 from homeassistant.config import SCRIPT_CONFIG_PATH
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
@@ -51,6 +49,8 @@ def async_setup(hass: HomeAssistant) -> bool:
 
 class EditScriptConfigView(EditKeyBasedConfigView):
     """Edit script config."""
+
+    structured_errors = True
 
     @override
     def _write_value(

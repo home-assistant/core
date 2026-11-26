@@ -8,14 +8,13 @@ from unittest.mock import AsyncMock, patch
 
 from pyblu import Input, Player, Preset, Status, SyncStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bluesound.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .utils import LongPollingMock
-
-from tests.common import MockConfigEntry
 
 
 @dataclass
@@ -128,7 +127,7 @@ class PlayerMocks:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.bluesound.async_setup_entry", return_value=True
+        "homeassistant.components.bluesound.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

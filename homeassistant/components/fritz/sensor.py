@@ -10,6 +10,7 @@ from fritzconnection.lib.fritzstatus import FritzStatus
 from requests.exceptions import RequestException
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -17,20 +18,29 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import DSL_CONNECTION, LOGGER
-from .coordinator import FritzConfigEntry
-from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
-from .models import ConnectionInfo
+from .const import CONNECTION_TYPE_WLAN, DOMAIN, DSL_CONNECTION, LOGGER
+from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
+from .entity import (
+    FritzBoxBaseCoordinatorEntity,
+    FritzDeviceBase,
+    FritzEntityDescription,
+)
+from .helpers import _is_tracked
+from .models import ConnectionInfo, FritzDevice, LinkInfo
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -55,9 +65,11 @@ def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
     return status.external_ip  # type: ignore[no-any-return]
 
 
-def _retrieve_external_ipv6_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_external_ipv6_state(
+    status: FritzStatus, last_value: str | None
+) -> str | None:
     """Return external ipv6 from device."""
-    return str(status.external_ipv6)
+    return str(status.external_ipv6) or None
 
 
 def _retrieve_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
@@ -133,9 +145,13 @@ def _retrieve_cpu_temperature_state(
 ) -> float | None:
     """Return the first CPU temperature value."""
     try:
-        return status.get_cpu_temperatures()[0]  # type: ignore[no-any-return]
-    except RequestException:
+        cpu_temp: float = status.get_cpu_temperatures()[0]
+    except RequestException, IndexError, FritzConnectionException:
         return None
+    # Reported while the device is still booting
+    if cpu_temp == 0:
+        return None
+    return cpu_temp
 
 
 def _is_suitable_cpu_temperature(status: FritzStatus) -> bool:
@@ -158,6 +174,7 @@ class FritzConnectionSensorEntityDescription(
     """Describes Fritz connection sensor entity."""
 
     is_suitable: Callable[[ConnectionInfo], bool] = lambda info: info.wan_enabled
+    keep_if_registered: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -167,6 +184,17 @@ class FritzDeviceSensorEntityDescription(
     """Describes Fritz device sensor entity."""
 
     is_suitable: Callable[[FritzStatus], bool] = lambda status: True
+    keep_if_registered: bool = False
+
+
+@dataclass(frozen=True, kw_only=True)
+class FritzLinkSensorEntityDescription(SensorEntityDescription):
+    """Describes Fritz connected device link sensor entity."""
+
+    value_fn: Callable[[LinkInfo], StateType]
+    is_suitable: Callable[[FritzDevice], bool] = lambda device: True
+    entity_category = EntityCategory.DIAGNOSTIC
+    entity_registry_enabled_default = False
 
 
 CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
@@ -180,6 +208,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         translation_key="external_ipv6",
         value_fn=_retrieve_external_ipv6_state,
         is_suitable=lambda info: info.ipv6_active,
+        keep_if_registered=True,
     ),
     FritzConnectionSensorEntityDescription(
         key="connection_uptime",
@@ -195,6 +224,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         value_fn=_retrieve_kb_s_sent_state,
+        is_suitable=lambda info: info.addon_infos_supported,
     ),
     FritzConnectionSensorEntityDescription(
         key="kb_s_received",
@@ -203,6 +233,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         value_fn=_retrieve_kb_s_received_state,
+        is_suitable=lambda info: info.addon_infos_supported,
     ),
     FritzConnectionSensorEntityDescription(
         key="max_kb_s_sent",
@@ -225,6 +256,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         value_fn=_retrieve_gb_sent_state,
+        is_suitable=lambda info: info.addon_infos_supported,
     ),
     FritzConnectionSensorEntityDescription(
         key="gb_received",
@@ -233,6 +265,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         value_fn=_retrieve_gb_received_state,
+        is_suitable=lambda info: info.addon_infos_supported,
     ),
     FritzConnectionSensorEntityDescription(
         key="link_kb_s_sent",
@@ -304,8 +337,155 @@ DEVICE_SENSOR_TYPES: tuple[FritzDeviceSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_retrieve_cpu_temperature_state,
         is_suitable=_is_suitable_cpu_temperature,
+        keep_if_registered=True,
     ),
 )
+
+LINK_SENSOR_TYPES: tuple[FritzLinkSensorEntityDescription, ...] = (
+    FritzLinkSensorEntityDescription(
+        key="signal_strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda link_info: link_info.signal_strength,
+        is_suitable=lambda device: device.connection_type == CONNECTION_TYPE_WLAN,
+    ),
+    FritzLinkSensorEntityDescription(
+        key="link_download_rate",
+        translation_key="link_download_rate",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda link_info: link_info.download_rate,
+        is_suitable=lambda device: device.connection_type == CONNECTION_TYPE_WLAN,
+    ),
+    FritzLinkSensorEntityDescription(
+        key="link_upload_rate",
+        translation_key="link_upload_rate",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda link_info: link_info.upload_rate,
+        is_suitable=lambda device: device.connection_type == CONNECTION_TYPE_WLAN,
+    ),
+    FritzLinkSensorEntityDescription(
+        key="link_max_download_rate",
+        translation_key="link_max_download_rate",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=1,
+        value_fn=lambda link_info: link_info.max_download_rate,
+    ),
+    FritzLinkSensorEntityDescription(
+        key="link_max_upload_rate",
+        translation_key="link_max_upload_rate",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=1,
+        value_fn=lambda link_info: link_info.max_upload_rate,
+    ),
+)
+
+
+@callback
+def _async_registered_keys(avm_wrapper: AvmWrapper) -> set[str]:
+    """Return keys of sensors already registered, kept while the device boots."""
+    entity_registry = er.async_get(avm_wrapper.hass)
+    descriptions: tuple[
+        FritzConnectionSensorEntityDescription | FritzDeviceSensorEntityDescription,
+        ...,
+    ] = (*CONNECTION_SENSOR_TYPES, *DEVICE_SENSOR_TYPES)
+    return {
+        description.key
+        for description in descriptions
+        if description.keep_if_registered
+        and entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{avm_wrapper.unique_id}-{description.key}"
+        )
+    }
+
+
+async def _async_connection_sensors(
+    avm_wrapper: AvmWrapper, device_friendly_name: str, registered_keys: set[str]
+) -> list[FritzBoxSensor]:
+    connection_info = await avm_wrapper.async_get_connection_info()
+    return [
+        FritzBoxSensor(avm_wrapper, device_friendly_name, description)
+        for description in CONNECTION_SENSOR_TYPES
+        if description.key in registered_keys
+        or description.is_suitable(connection_info)
+    ]
+
+
+async def _async_device_sensors(
+    avm_wrapper: AvmWrapper, device_friendly_name: str, registered_keys: set[str]
+) -> list[FritzBoxSensor]:
+    def _generate_device_sensors() -> list[FritzBoxSensor]:
+        return [
+            FritzBoxSensor(avm_wrapper, device_friendly_name, description)
+            for description in DEVICE_SENSOR_TYPES
+            if description.key in registered_keys
+            or description.is_suitable(avm_wrapper.fritz_status)
+        ]
+
+    return await avm_wrapper.hass.async_add_executor_job(_generate_device_sensors)
+
+
+@callback
+def _async_link_sensors(
+    avm_wrapper: AvmWrapper,
+    data_fritz: FritzData,
+) -> list[FritzBoxLinkSensor]:
+    """Add link sensors for connected devices once their link is known."""
+    new_link_sensors: list[FritzBoxLinkSensor] = []
+
+    known_link_sensors = data_fritz.link_sensors[avm_wrapper.unique_id]
+
+    for mac, device in avm_wrapper.devices.items():
+        if device.link_info is None:
+            continue
+        # Link sensor unique IDs don't include the FRITZ!Box, so only one box
+        # may provide them
+        if mac not in known_link_sensors and _is_tracked(
+            mac, data_fritz.link_sensors.values()
+        ):
+            continue
+
+        known_keys = known_link_sensors.setdefault(mac, set())
+        for description in LINK_SENSOR_TYPES:
+            if description.key in known_keys or not description.is_suitable(device):
+                continue
+            known_keys.add(description.key)
+            new_link_sensors.append(
+                FritzBoxLinkSensor(avm_wrapper, device, description)
+            )
+
+    return new_link_sensors
+
+
+async def async_all_entities_list(
+    avm_wrapper: AvmWrapper,
+    device_friendly_name: str,
+    data_fritz: FritzData,
+) -> list[Entity]:
+    """Get a list of all entities."""
+    registered_keys = _async_registered_keys(avm_wrapper)
+
+    return [
+        *await _async_connection_sensors(
+            avm_wrapper, device_friendly_name, registered_keys
+        ),
+        *await _async_device_sensors(
+            avm_wrapper, device_friendly_name, registered_keys
+        ),
+        *_async_link_sensors(avm_wrapper, data_fritz),
+    ]
 
 
 async def async_setup_entry(
@@ -316,26 +496,22 @@ async def async_setup_entry(
     """Set up entry."""
     LOGGER.debug("Setting up FRITZ!Box sensors")
     avm_wrapper = entry.runtime_data
+    data_fritz = hass.data[FRITZ_DATA_KEY]
 
-    connection_info = await avm_wrapper.async_get_connection_info()
-    entities = [
-        FritzBoxSensor(avm_wrapper, entry.title, description)
-        for description in CONNECTION_SENSOR_TYPES
-        if description.is_suitable(connection_info)
-    ]
+    entities_list = await async_all_entities_list(avm_wrapper, entry.title, data_fritz)
+    async_add_entities(entities_list)
 
-    fritz_status = avm_wrapper.fritz_status
+    @callback
+    def async_update_avm_device() -> None:
+        """Add link sensors that became available with the latest scan."""
+        if new_link_sensors := _async_link_sensors(avm_wrapper, data_fritz):
+            async_add_entities(new_link_sensors)
 
-    def _generate_device_sensors() -> list[FritzBoxSensor]:
-        return [
-            FritzBoxSensor(avm_wrapper, entry.title, description)
-            for description in DEVICE_SENSOR_TYPES
-            if description.is_suitable(fritz_status)
-        ]
-
-    entities += await hass.async_add_executor_job(_generate_device_sensors)
-
-    async_add_entities(entities)
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, avm_wrapper.signal_device_update, async_update_avm_device
+        )
+    )
 
 
 class FritzBoxSensor(FritzBoxBaseCoordinatorEntity, SensorEntity):
@@ -350,3 +526,28 @@ class FritzBoxSensor(FritzBoxBaseCoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.coordinator.data["entity_states"].get(self.entity_description.key)
+
+
+class FritzBoxLinkSensor(FritzDeviceBase, SensorEntity):
+    """Define FRITZ!Box connected device link sensor."""
+
+    entity_description: FritzLinkSensorEntityDescription
+
+    def __init__(
+        self,
+        avm_wrapper: AvmWrapper,
+        device: FritzDevice,
+        description: FritzLinkSensorEntityDescription,
+    ) -> None:
+        """Initialize the link sensor."""
+        super().__init__(avm_wrapper, device)
+        self.entity_description = description
+        self._attr_unique_id = f"{self._mac}_{description.key}"
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        if (link_info := self._avm_wrapper.devices[self._mac].link_info) is None:
+            return None
+        return self.entity_description.value_fn(link_info)

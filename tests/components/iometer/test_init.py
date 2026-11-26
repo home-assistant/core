@@ -14,6 +14,7 @@ from iometer import (
     Status,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.iometer.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -27,8 +28,6 @@ from . import (
     get_status_error_callback,
     setup_platform,
 )
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_new_firmware_version(

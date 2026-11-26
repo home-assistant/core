@@ -4,8 +4,6 @@ from contextlib import suppress
 import logging
 from typing import Any, override
 
-from PyViCare.PyViCareDevice import Device as PyViCareDevice
-from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
@@ -53,10 +51,11 @@ VICARE_HOLD_MODE_OFF = "off"
 VICARE_TEMP_HEATING_MIN = 3
 VICARE_TEMP_HEATING_MAX = 60
 
+# Setting a mode picks the first supported key, so standby has to come first.
 VICARE_TO_HA_HVAC_HEATING: dict[str, HVACMode] = {
-    VICARE_MODE_FORCEDREDUCED: HVACMode.OFF,
     VICARE_MODE_OFF: HVACMode.OFF,
     VICARE_MODE_DHW: HVACMode.OFF,
+    VICARE_MODE_FORCEDREDUCED: HVACMode.OFF,
     VICARE_MODE_DHWANDHEATINGCOOLING: HVACMode.AUTO,
     VICARE_MODE_DHWANDHEATING: HVACMode.AUTO,
     VICARE_MODE_HEATINGCOOLING: HVACMode.AUTO,
@@ -78,9 +77,7 @@ def _build_entities(
     """Create ViCare climate entities for a device."""
     return [
         ViCareClimate(
-            device.serial,
-            device.config,
-            device.api,
+            device,
             circuit,
         )
         for device in device_list
@@ -124,16 +121,12 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
     def __init__(
         self,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
+        device: ViCareDevice,
         circuit: PyViCareHeatingCircuit,
     ) -> None:
         """Initialize the climate device."""
-        super().__init__(
-            self._attr_translation_key, device_serial, device_config, device, circuit
-        )
-        self._device = device
+        super().__init__(self._attr_translation_key, device, circuit)
+        self._device = device.api
         self._attributes: dict[str, Any] = {}
         self._attributes["vicare_programs"] = self._api.getPrograms()
         self._attr_preset_modes = [
@@ -169,7 +162,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_native_target_temperature = (
-                    self._api.getCurrentDesiredTemperature()
+                    self._api.getActiveProgramTemperature()
                 )
 
             with suppress(PyViCareNotSupportedFeatureError):

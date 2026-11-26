@@ -8,10 +8,19 @@ from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, setup
 from homeassistant.components import binary_sensor, template
+from homeassistant.components.template.const import BINARY_SENSOR_DEPRECATED_ATTRIBUTES
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     EVENT_HOMEASSISTANT_START,
@@ -22,7 +31,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
@@ -37,6 +50,7 @@ from .conftest import (
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
+    get_issues_with_prefix,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
@@ -44,15 +58,6 @@ from .conftest import (
     setup_mock_template_entity_restore_state,
     setup_restore_template_entity,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_mock_restore_state_shutdown_restart,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-)
-from tests.typing import WebSocketGenerator
 
 _BEER_TRIGGER_VALUE_TEMPLATE = (
     "{% if trigger.event.data.beer < 0 %}"
@@ -598,6 +603,43 @@ async def test_delay_off(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
     await hass.async_block_till_done()
 
     assert hass.states.get(TEST_BINARY_SENSOR.entity_id).state == STATE_OFF
+
+
+async def test_self_referencing_delay_loop(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a self referencing loop through delayed writes is detected."""
+    assert await setup.async_setup_component(
+        hass,
+        template.DOMAIN,
+        {
+            "template": {
+                "binary_sensor": {
+                    "name": "test",
+                    "state": "{{ not is_state('binary_sensor.test', 'on') }}",
+                    "delay_on": 1,
+                    "delay_off": 1,
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    for _ in range(10):
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert "Template loop detected" in caplog.text
+    last_changed = hass.states.get("binary_sensor.test").last_changed
+
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test").last_changed == last_changed
 
 
 @pytest.mark.parametrize(
@@ -1734,3 +1776,77 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_BINARY_SENSOR.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+def get_deprecated_attributes_issues(
+    issue_registry: ir.IssueRegistry,
+) -> list[ir.IssueEntry]:
+    """Return the deprecated attributes issues."""
+    return get_issues_with_prefix(
+        issue_registry, BINARY_SENSOR_DEPRECATED_ATTRIBUTES.translation_key
+    )
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "extra_config", "options"),
+    [
+        pytest.param(
+            1,
+            "{{ True }}",
+            {"attributes": {"device_class": "door"}},
+            "- `attributes: device_class` → `device_class`",
+            id="device_class",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_binary_sensor")
+async def test_deprecated_attributes_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, options: str
+) -> None:
+    """Test a repair issue is created for attributes that have a dedicated option."""
+    issues = get_deprecated_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.6.0"
+    assert issues[0].is_fixable is False
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].learn_more_url == (
+        "https://www.home-assistant.io/integrations/template/#binary-sensor"
+    )
+    assert (
+        issues[0].translation_key == BINARY_SENSOR_DEPRECATED_ATTRIBUTES.translation_key
+    )
+    assert issues[0].translation_placeholders == {
+        "identifier": f"name: {TEST_BINARY_SENSOR.object_id}",
+        "options": options,
+    }
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "extra_config"),
+    [
+        pytest.param(
+            1,
+            "{{ True }}",
+            {"device_class": "door", "attributes": {"other": "{{ 1 }}"}},
+            id="dedicated_option",
+        ),
+        pytest.param(
+            1,
+            "{{ True }}",
+            {"attributes": "{{ {'device_class': 'door'} }}"},
+            id="attributes_template",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_binary_sensor")
+async def test_no_deprecated_attributes_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test no repair issue is created for dedicated options or allowed attributes."""
+    assert get_deprecated_attributes_issues(issue_registry) == []

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from notifications_android_tv.notifications import ConnectError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nfandroidtv.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import CONF_CONFIG_FLOW, CONF_DATA, NAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_notifications_android_tv")

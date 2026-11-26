@@ -1,31 +1,38 @@
 """Tests for the Backup integration's utility functions."""
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
 import dataclasses
 import hashlib
+import inspect
+import io
+import json
 import os
 from pathlib import Path
 import tarfile
+import threading
+from typing import Any
 from unittest.mock import Mock, patch
 
 import nacl.bindings.crypto_secretstream as nss
 import pytest
+from pytest_homeassistant.common import get_fixture_path
 import securetar
 
 from homeassistant.components.backup import DOMAIN, AddonInfo, AgentBackup, Folder
+from homeassistant.components.backup.const import SECURETAR_CREATE_VERSION
 from homeassistant.components.backup.models import InvalidBackupFilename
 from homeassistant.components.backup.util import (
     DecryptedBackupStreamer,
     EncryptedBackupStreamer,
+    decrypt_backup,
+    encrypt_backup,
     read_backup,
     receive_file,
     suggested_filename,
     validate_password,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import get_fixture_path
 
 
 def _deterministic_init_push(
@@ -306,6 +313,131 @@ def test_validate_password_no_homeassistant(caplog: pytest.LogCaptureFixture) ->
     assert "No homeassistant.tar or homeassistant.tar.gz found" in caplog.text
 
 
+@pytest.fixture
+def local_addons_backup() -> AgentBackup:
+    """Return metadata for a backup of local add-ons and the share folder."""
+    return AgentBackup(
+        addons=[],
+        backup_id="1234",
+        date="2024-12-02T07:23:58.261875-05:00",
+        database_included=False,
+        extra_metadata={},
+        folders=[Folder.ADDONS, Folder.SHARE],
+        homeassistant_included=False,
+        homeassistant_version=None,
+        name="test",
+        protected=False,
+        size=0,
+    )
+
+
+@pytest.fixture
+def local_addons_members() -> dict[str, bytes]:
+    """Create two inner tar archives with distinct contents."""
+    members = {}
+    for name, content in (
+        ("addons_local.tar", b"local add-on"),
+        ("share.tar", b"share"),
+    ):
+        with io.BytesIO() as stream:
+            with tarfile.open(fileobj=stream, mode="w") as archive:
+                member = tarfile.TarInfo("example.txt")
+                member.size = len(content)
+                archive.addfile(member, io.BytesIO(content))
+            members[name] = stream.getvalue()
+    return members
+
+
+def test_encrypt_backup_preserves_local_addons(
+    local_addons_backup: AgentBackup, local_addons_members: dict[str, bytes]
+) -> None:
+    """Encrypt both folders and mark the backup as protected."""
+    source = io.BytesIO()
+    with tarfile.open(fileobj=source, mode="w") as archive:
+        for name, data in {
+            "backup.json": b'{"protected":false}',
+            **local_addons_members,
+        }.items():
+            member = tarfile.TarInfo(name)
+            member.size = len(data)
+            archive.addfile(member, io.BytesIO(data))
+    source.seek(0)
+
+    destination = io.BytesIO()
+    errors: list[Exception | None] = []
+    encrypt_backup(
+        local_addons_backup,
+        source,
+        destination,
+        "hunter2",
+        errors.append,
+        0,
+        securetar.SecureTarRootKeyContext("hunter2"),
+    )
+    assert errors == [None]
+
+    destination.seek(0)
+    with securetar.SecureTarArchive(
+        fileobj=destination, mode="r", password="hunter2"
+    ) as archive:
+        metadata = archive.tar.extractfile("backup.json")
+        assert metadata is not None
+        assert json.load(metadata)["protected"] is True
+        for name in ("share.tar", "addons_local.tar"):
+            assert name in archive.tar.getnames()
+            expected = local_addons_members[name]
+            with archive.extract_tar(archive.tar.getmember(name)) as member:
+                assert member.plaintext_size == len(expected)
+                assert member.read(len(expected)) == expected
+
+
+def test_decrypt_backup_restores_local_addons(
+    local_addons_backup: AgentBackup, local_addons_members: dict[str, bytes]
+) -> None:
+    """Decrypt both folders and mark the backup as unprotected."""
+    source = io.BytesIO()
+    with securetar.SecureTarArchive(
+        fileobj=source,
+        mode="w",
+        root_key_context=securetar.SecureTarRootKeyContext("hunter2"),
+        create_version=SECURETAR_CREATE_VERSION,
+    ) as archive:
+        metadata = b'{"protected":true}'
+        member = tarfile.TarInfo("backup.json")
+        member.size = len(metadata)
+        archive.tar.addfile(member, io.BytesIO(metadata))
+        for key_id, (name, data) in enumerate(local_addons_members.items()):
+            member = tarfile.TarInfo(name)
+            member.size = len(data)
+            archive.import_tar(io.BytesIO(data), member, derived_key_id=key_id)
+    source.seek(0)
+
+    destination = io.BytesIO()
+    errors: list[Exception | None] = []
+    decrypt_backup(
+        dataclasses.replace(local_addons_backup, protected=True),
+        source,
+        destination,
+        "hunter2",
+        errors.append,
+        0,
+        securetar.SecureTarRootKeyContext("hunter2"),
+    )
+    assert errors == [None]
+
+    destination.seek(0)
+    with tarfile.open(fileobj=destination) as archive:
+        metadata_file = archive.extractfile("backup.json")
+        assert metadata_file is not None
+        assert json.load(metadata_file)["protected"] is False
+        share = archive.extractfile("share.tar")
+        assert share is not None
+        assert share.read() == local_addons_members["share.tar"]
+        local_addons = archive.extractfile("addons_local.tar")
+        assert local_addons is not None
+        assert local_addons.read() == local_addons_members["addons_local.tar"]
+
+
 @pytest.mark.parametrize(
     ("addons", "padding_size", "encrypted_backup", "decrypted_backup"),
     [
@@ -417,12 +549,17 @@ async def test_decrypted_backup_streamer_interrupt_stuck_reader(
                 await stuck.wait()
                 yield chunk
 
+    streams: list[AsyncGenerator[bytes]] = []
+
     async def open_backup() -> AsyncIterator[bytes]:
-        return send_backup()
+        stream = send_backup()
+        streams.append(stream)
+        return stream
 
     decryptor = DecryptedBackupStreamer(hass, backup, open_backup, "hunter2")
     await decryptor.open_stream()
     await decryptor.wait()
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
 
 
 async def test_decrypted_backup_streamer_interrupt_stuck_writer(
@@ -452,12 +589,87 @@ async def test_decrypted_backup_streamer_interrupt_stuck_writer(
             while chunk := f.read(1024):
                 yield chunk
 
+    streams: list[AsyncGenerator[bytes]] = []
+
     async def open_backup() -> AsyncIterator[bytes]:
-        return send_backup()
+        stream = send_backup()
+        streams.append(stream)
+        return stream
 
     decryptor = DecryptedBackupStreamer(hass, backup, open_backup, "hunter2")
     await decryptor.open_stream()
     await decryptor.wait()
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
+
+
+@pytest.mark.parametrize(
+    "streamer_class",
+    [
+        pytest.param(DecryptedBackupStreamer, id="decrypt"),
+        pytest.param(EncryptedBackupStreamer, id="encrypt"),
+    ],
+)
+async def test_backup_streamer_wait_joins_worker(
+    hass: HomeAssistant,
+    streamer_class: type[DecryptedBackupStreamer | EncryptedBackupStreamer],
+) -> None:
+    """Test wait does not return before a worker which reported done has exited."""
+    backup = AgentBackup(
+        addons=[],
+        backup_id="1234",
+        date="2024-12-02T07:23:58.261875-05:00",
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0.dev0",
+        name="test",
+        protected=False,
+        size=0,
+    )
+    done_reported = threading.Event()
+    release_worker = threading.Event()
+    join_called = threading.Event()
+    worker_threads: list[threading.Thread] = []
+
+    def cipher_func(*args: Any) -> None:
+        worker_threads.append(threading.current_thread())
+        on_done = args[4]
+        on_done(None)
+        done_reported.set()
+        # The thread is still running after it has reported done; bounded so a
+        # join blocking the event loop fails the test instead of hanging it
+        release_worker.wait(5)
+
+    async def send_backup() -> AsyncIterator[bytes]:
+        yield b""
+
+    async def open_backup() -> AsyncIterator[bytes]:
+        return send_backup()
+
+    with patch.object(streamer_class, "_cipher_func", staticmethod(cipher_func)):
+        streamer = streamer_class(hass, backup, open_backup, "hunter2")
+        await streamer.open_stream()
+
+    try:
+        assert await hass.async_add_executor_job(done_reported.wait, 5)
+        worker = worker_threads[0]
+        thread_join = worker.join
+
+        def join(timeout: float | None = None) -> None:
+            join_called.set()
+            thread_join(timeout)
+
+        with patch.object(worker, "join", join):
+            wait_task = asyncio.create_task(streamer.wait())
+            assert await hass.async_add_executor_job(join_called.wait, 5)
+            assert not wait_task.done()
+            release_worker.set()
+            await wait_task
+    finally:
+        release_worker.set()
+
+    assert not worker.is_alive()
 
 
 async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> None:
@@ -623,12 +835,17 @@ async def test_encrypted_backup_streamer_interrupt_stuck_reader(
                 await stuck.wait()
                 yield chunk
 
+    streams: list[AsyncGenerator[bytes]] = []
+
     async def open_backup() -> AsyncIterator[bytes]:
-        return send_backup()
+        stream = send_backup()
+        streams.append(stream)
+        return stream
 
     decryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
     await decryptor.open_stream()
     await decryptor.wait()
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
 
 
 async def test_encrypted_backup_streamer_interrupt_stuck_writer(
@@ -660,12 +877,17 @@ async def test_encrypted_backup_streamer_interrupt_stuck_writer(
             while chunk := f.read(1024):
                 yield chunk
 
+    streams: list[AsyncGenerator[bytes]] = []
+
     async def open_backup() -> AsyncIterator[bytes]:
-        return send_backup()
+        stream = send_backup()
+        streams.append(stream)
+        return stream
 
     decryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
     await decryptor.open_stream()
     await decryptor.wait()
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
 
 
 async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> None:

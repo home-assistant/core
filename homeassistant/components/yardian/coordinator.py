@@ -1,7 +1,7 @@
 """Update coordinators for Yardian."""
 
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -10,7 +10,7 @@ from pyyardian.typing import OperationInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -18,7 +18,7 @@ from .const import DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(seconds=30)
+SCAN_INTERVAL = dt.timedelta(seconds=30)
 
 
 @dataclass(slots=True)
@@ -94,10 +94,13 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
         except TimeoutError as e:
             raise UpdateFailed("Timeout communicating with device") from e
         except NotAuthorizedException as e:
-            raise ConfigEntryError("Invalid access token") from e
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from e
         except NetworkException as e:
             raise UpdateFailed("Failed to communicate with device") from e
         except Exception as e:  # safety net for tests to surface failure reason
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("Unexpected error while fetching Yardian data")
             raise UpdateFailed(f"Unexpected error: {type(e).__name__}: {e}") from e
 

@@ -2,19 +2,23 @@
 
 from datetime import timedelta
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from pyvesync import VeSync
-from pyvesync.utils.errors import VeSyncError
+from pyvesync.utils.errors import VeSyncError, VeSyncLoginError
 
-from homeassistant.components.vesync.const import UPDATE_INTERVAL_ENERGY
+from homeassistant.components.vesync.const import (
+    UPDATE_INTERVAL,
+    UPDATE_INTERVAL_ENERGY,
+)
 from homeassistant.components.vesync.coordinator import (
     COMMAND_GRACE_PERIOD,
     VeSyncDataCoordinator,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -109,3 +113,48 @@ async def test_update_does_not_fail_while_a_device_is_held(
 
     held.update.assert_not_called()
     other.update.assert_called_once()
+
+
+async def test_update_failed_on_vesync_error(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    manager: VeSync,
+    outlet: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test VeSync errors are surfaced as update failures."""
+    outlet.update = AsyncMock(side_effect=VeSyncError("API failure"))
+    manager.devices.outlets.append(outlet)
+    coordinator = VeSyncDataCoordinator(hass, config_entry, manager)
+    coordinator.async_add_listener(lambda: None)
+
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert str(coordinator.last_exception) == "The service is unavailable: API failure"
+
+
+async def test_reauth_started_on_login_error(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    manager: VeSync,
+    outlet: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a login error while polling starts a reauth flow."""
+    manager.devices.outlets.append(outlet)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Device poll errors are only logged, so update_energy is what can raise
+    outlet.update_energy = AsyncMock(side_effect=VeSyncLoginError("Login failed"))
+
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL_ENERGY))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    flows = list(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"

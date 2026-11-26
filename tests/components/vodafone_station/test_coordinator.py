@@ -1,24 +1,31 @@
 """Define tests for the Vodafone Station coordinator."""
 
 from json import JSONDecodeError
-import logging
 from unittest.mock import AsyncMock, create_autospec, patch
 
 from aiohttp import ClientSession
 from aiovodafone.api import VodafoneStationDevice
-from aiovodafone.exceptions import VodafoneError
+from aiovodafone.exceptions import CannotAuthenticate, VodafoneError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.vodafone_station.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import DEVICE_1_HOST, DEVICE_1_MAC, DEVICE_2_HOST, DEVICE_2_MAC
+from .const import (
+    DEVICE_1_HOST,
+    DEVICE_1_MAC,
+    DEVICE_2_HOST,
+    DEVICE_2_MAC,
+    TEST_SERIAL_NUMBER,
+)
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+UPTIME_ENTITY = f"sensor.vodafone_station_{TEST_SERIAL_NUMBER}_uptime"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -32,7 +39,6 @@ async def test_coordinator_device_cleanup(
 ) -> None:
     """Test Device cleanup on coordinator update."""
 
-    caplog.set_level(logging.DEBUG)
     await setup_integration(hass, mock_config_entry)
 
     device = device_registry.async_get_or_create(
@@ -116,3 +122,53 @@ async def test_coordinator_exceptions(
         assert mock_async_client_session.await_count == expected_session_calls
         assert mock_init_device_class.call_args.args[2] == mock_config_entry.data
         assert mock_init_device_class.call_args.args[3] == new_session
+
+
+async def test_coordinator_relogin_on_expired_session(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vodafone_station_router: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a session expired by the router is renewed without reauth."""
+    await setup_integration(hass, mock_config_entry)
+
+    login_calls = mock_vodafone_station_router.login.await_count
+    mock_vodafone_station_router.get_devices_data.side_effect = [
+        CannotAuthenticate("redirects to login page"),
+        mock_vodafone_station_router.get_devices_data.return_value,
+    ]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_vodafone_station_router.login.await_count > login_calls
+    assert (state := hass.states.get(UPTIME_ENTITY))
+    assert state.state != STATE_UNAVAILABLE
+    assert not hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": SOURCE_REAUTH}
+    )
+
+
+async def test_coordinator_relogin_rejected(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vodafone_station_router: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth starts when the router rejects the new login."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_vodafone_station_router.get_devices_data.side_effect = CannotAuthenticate(
+        "redirects to login page"
+    )
+    mock_vodafone_station_router.login.side_effect = CannotAuthenticate
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(UPTIME_ENTITY))
+    assert state.state == STATE_UNAVAILABLE
+    assert hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": SOURCE_REAUTH}
+    )

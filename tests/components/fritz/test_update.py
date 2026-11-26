@@ -2,10 +2,14 @@
 
 from unittest.mock import patch
 
+from fritzconnection.lib.fritzstatus import FritzStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.update import ATTR_LATEST_VERSION
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -16,8 +20,6 @@ from .const import (
     MOCK_FIRMWARE_RELEASE_URL,
     MOCK_USER_DATA,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 AVAILABLE_UPDATE = {
     "UserInterface1": {
@@ -105,3 +107,108 @@ async def test_available_update_can_be_installed(
             blocking=True,
         )
         mocked_update_call.assert_called_once()
+
+
+INTERNET_INTERRUPTION_MESSAGE = {
+    "severity": "warning",
+    "message": (
+        "If this FRITZ!Box is your main internet router, your internet connection "
+        "will be interrupted during the update. Depending on the model and the "
+        "connection type, this can take up to 10 minutes."
+    ),
+}
+DO_NOT_INTERRUPT_MESSAGE = {
+    "severity": "warning",
+    "message": (
+        "Do not restart, remove power from, or otherwise interrupt the device while "
+        "the update is in progress."
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    ("wan_enabled", "expected_messages"),
+    [
+        pytest.param(
+            True,
+            [INTERNET_INTERRUPTION_MESSAGE, DO_NOT_INTERRUPT_MESSAGE],
+            id="wan_enabled",
+        ),
+        pytest.param(False, [DO_NOT_INTERRUPT_MESSAGE], id="wan_disabled"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fh_class_mock")
+async def test_release_notes_messages(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    fc_class_mock,
+    wan_enabled: bool,
+    expected_messages: list[dict[str, str]],
+) -> None:
+    """Test the release notes messages are shown before an update."""
+
+    fc_class_mock().override_services({**MOCK_FB_SERVICES, **AVAILABLE_UPDATE})
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.fritz.PLATFORMS", [Platform.UPDATE]),
+        patch.object(FritzStatus, "has_wan_enabled", wan_enabled),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "update/release_notes", "entity_id": "update.mock_title_fritz_os"}
+    )
+    result = await client.receive_json()
+
+    assert result["success"]
+    assert result["result"] == {
+        "release_notes": None,
+        "messages": expected_messages,
+    }
+
+
+@pytest.mark.parametrize(
+    ("latest_version", "expected_version"),
+    [
+        pytest.param("256.07.50", "7.50", id="leading_zero"),
+        pytest.param("256.10.01", "10.01", id="no_leading_zero"),
+        pytest.param("256.08.03-123456", "8.03-123456", id="labor_build"),
+        pytest.param("8.50", "8.50", id="already_normalized"),
+        pytest.param(None, "7.29", id="not_matching"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fh_class_mock")
+async def test_update_available_version_normalized(
+    hass: HomeAssistant,
+    fc_class_mock,
+    latest_version: str,
+    expected_version: str,
+) -> None:
+    """Test the latest version reported by the FRITZ!Box is normalized."""
+
+    fc_class_mock().override_services(
+        {
+            **MOCK_FB_SERVICES,
+            "UserInterface1": {
+                "GetInfo": {
+                    "NewX_AVM-DE_Version": latest_version,
+                    "NewX_AVM-DE_InfoURL": MOCK_FIRMWARE_RELEASE_URL,
+                },
+            },
+        }
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.UPDATE]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (state := hass.states.get("update.mock_title_fritz_os"))
+    assert state.attributes[ATTR_LATEST_VERSION] == expected_version

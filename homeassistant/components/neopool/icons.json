@@ -39,6 +39,47 @@
         "default": "mdi:thermometer-chevron-down"
       }
     },
+    "select": {
+      "cell_boost": {
+        "default": "mdi:flash-outline"
+      },
+      "filt_mode": {
+        "default": "mdi:water-sync"
+      },
+      "filtration_speed": {
+        "default": "mdi:fan-speed-3"
+      },
+      "filtration_speed_timer": {
+        "default": "mdi:fan-speed-3"
+      },
+      "filtvalve_interval": {
+        "default": "mdi:timer-sand"
+      },
+      "filtvalve_mode": {
+        "default": "mdi:valve"
+      },
+      "filtvalve_period_minutes": {
+        "default": "mdi:timer-refresh-outline"
+      },
+      "intelligent_filt_min_time": {
+        "default": "mdi:timer-lock-outline"
+      },
+      "relay_activation_delay": {
+        "default": "mdi:timer-plus-outline"
+      },
+      "relay_aux_mode": {
+        "default": "mdi:speedometer-medium"
+      },
+      "relay_aux_period": {
+        "default": "mdi:repeat-variant"
+      },
+      "relay_light_mode": {
+        "default": "mdi:speedometer-medium"
+      },
+      "relay_light_period": {
+        "default": "mdi:repeat-variant"
+      }
+    },
     "sensor": {
       "filt_mode": {
         "default": "mdi:water-sync",

@@ -1,10 +1,21 @@
 """Platform for event integration."""
 
+from functools import partial
 from typing import TYPE_CHECKING, Any, override
 
-from boschshcpy import SHCMotionDetector, SHCMotionDetector2, SHCSmokeDetector
+from boschshcpy import (
+    KeypadService,
+    SHCMotionDetector,
+    SHCMotionDetector2,
+    SHCSmokeDetector,
+    SHCUniversalSwitch,
+)
 
-from homeassistant.components.event import EventDeviceClass, EventEntity
+from homeassistant.components.event import (
+    ButtonEventType,
+    EventDeviceClass,
+    EventEntity,
+)
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -15,6 +26,12 @@ from .entity import SHCEntity
 PARALLEL_UPDATES = 0
 
 ATTR_LAST_TIME_TRIGGERED = "last_time_triggered"
+
+_KEY_EVENT_TYPES = {
+    KeypadService.KeyEvent.PRESS_SHORT: ButtonEventType.SINGLE_PRESS,
+    KeypadService.KeyEvent.PRESS_LONG: ButtonEventType.LONG_PRESS_START,
+    KeypadService.KeyEvent.PRESS_LONG_RELEASED: ButtonEventType.LONG_PRESS_END,
+}
 
 
 async def async_setup_entry(
@@ -56,6 +73,17 @@ async def async_setup_entry(
         )
         for smoke_detector in session.device_helper.smoke_detectors
     )
+    entities.extend(
+        UniversalSwitchEvent(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            key_id=key_id,
+        )
+        for switch in session.device_helper.universal_switches
+        for key_id in switch.keystates
+    )
 
     async_add_entities(entities)
 
@@ -85,17 +113,6 @@ class MotionDetectorEvent(SHCEntity, EventEntity):
         # pre-existing timestamp isn't replayed as a new event on startup.
         self._last_fired_timestamp = ""
 
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
-
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
@@ -104,15 +121,12 @@ class MotionDetectorEvent(SHCEntity, EventEntity):
         for service in self._device.device_services:
             if service.id == "LatestMotion":
                 service.register_event(self._device.id, self._event_callback)
+                # register_event() has no public unsubscribe counterpart.
+                self.async_on_remove(partial(self._unregister_event, service))
 
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister the LatestMotion event callback."""
-        await super().async_will_remove_from_hass()
-        # register_event() has no public unsubscribe counterpart.
-        for service in self._device.device_services:
-            if service.id == "LatestMotion":
-                service._event_callbacks.pop(self._device.id, None)  # noqa: SLF001
+    def _unregister_event(self, service: Any) -> None:
+        """Remove this entity's callback from the service."""
+        service._event_callbacks.pop(self._device.id, None)  # noqa: SLF001
 
     def _event_callback(self) -> None:
         """Handle a LatestMotion update from the SHC polling thread."""
@@ -165,17 +179,6 @@ class SmokeDetectorEvent(SHCEntity, EventEntity):
         # long-poll updates for the same device, same as LatestMotion above.
         self._last_fired_state = ""
 
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
-
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
@@ -184,15 +187,12 @@ class SmokeDetectorEvent(SHCEntity, EventEntity):
         for service in self._device.device_services:
             if service.id == "Alarm":
                 service.register_event(self._device.id, self._event_callback)
+                # register_event() has no public unsubscribe counterpart.
+                self.async_on_remove(partial(self._unregister_event, service))
 
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister the Alarm event callback."""
-        await super().async_will_remove_from_hass()
-        # register_event() has no public unsubscribe counterpart.
-        for service in self._device.device_services:
-            if service.id == "Alarm":
-                service._event_callbacks.pop(self._device.id, None)  # noqa: SLF001
+    def _unregister_event(self, service: Any) -> None:
+        """Remove this entity's callback from the service."""
+        service._event_callbacks.pop(self._device.id, None)  # noqa: SLF001
 
     def _event_callback(self) -> None:
         """Handle an Alarm update from the SHC polling thread."""
@@ -211,4 +211,61 @@ class SmokeDetectorEvent(SHCEntity, EventEntity):
             ATTR_NAME: self._device.name,
         }
         self._trigger_event(alarm_state, event_attributes)
+        self.async_write_ha_state()
+
+
+class UniversalSwitchEvent(SHCEntity, EventEntity):
+    """Representation of one key of a SHC Universal Switch."""
+
+    _attr_device_class = EventDeviceClass.BUTTON
+    _attr_event_types = [
+        ButtonEventType.SINGLE_PRESS,
+        ButtonEventType.LONG_PRESS_START,
+        ButtonEventType.LONG_PRESS_END,
+    ]
+    _device: SHCUniversalSwitch
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: SHCUniversalSwitch,
+        parent_id: str,
+        entry_id: str,
+        key_id: str,
+    ) -> None:
+        """Initialize the key event entity."""
+        super().__init__(
+            hass=hass, device=device, parent_id=parent_id, entry_id=entry_id
+        )
+        self._key_id = key_id
+        self._attr_translation_key = key_id.lower()
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_{key_id}"
+        # The SHC replays the last key event on unrelated long-poll updates.
+        self._last_fired_timestamp = -1
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to SHC events."""
+        await super().async_added_to_hass()
+        self._last_fired_timestamp = self._device.eventtimestamp
+        for service in self._device.device_services:
+            if service.id == "Keypad":
+                service.register_event(self._key_id, self._event_callback)
+                self.async_on_remove(partial(service.unregister_event, self._key_id))
+
+    def _event_callback(self) -> None:
+        """Handle a Keypad update from the SHC polling thread."""
+        key_event = self._device.eventtype
+        if key_event is None or (event_type := _KEY_EVENT_TYPES.get(key_event)) is None:
+            return
+        timestamp = self._device.eventtimestamp
+        if timestamp == self._last_fired_timestamp:
+            return
+        self._last_fired_timestamp = timestamp
+        self.hass.loop.call_soon_threadsafe(self._dispatch_event, event_type)
+
+    @callback
+    def _dispatch_event(self, event_type: ButtonEventType) -> None:
+        """Trigger the event and write state on the event loop."""
+        self._trigger_event(event_type)
         self.async_write_ha_state()

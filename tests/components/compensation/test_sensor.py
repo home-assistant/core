@@ -4,6 +4,12 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_platform_setup_creates_issue,
+    assert_setup_component,
+    get_fixture_path,
+)
 
 from homeassistant import config as hass_config
 from homeassistant.components.compensation.const import CONF_PRECISION, DOMAIN
@@ -25,14 +31,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    assert_platform_setup_creates_issue,
-    assert_setup_component,
-    get_fixture_path,
-)
 
 TEST_OBJECT_ID = "test_compensation"
 TEST_ENTITY_ID = "sensor.test_compensation"
@@ -137,6 +137,62 @@ async def test_linear_state(hass: HomeAssistant, config: dict[str, Any]) -> None
     assert state is not None
 
     assert state.state == STATE_UNKNOWN
+
+
+async def test_initial_state_from_existing_source(hass: HomeAssistant) -> None:
+    """Test the sensor uses the source state that exists before setup."""
+    hass.states.async_set(TEST_SOURCE, 4, {})
+
+    await async_setup_compensation(hass, TEST_CONFIG)
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state == "5.0"
+
+
+async def test_config_entry_initial_state_from_existing_source(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the config entry sensor uses the source state that exists before setup."""
+    hass.states.async_set(TEST_SOURCE, "5")
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_compensation")
+    assert state is not None
+    assert state.state == "6.0"
+
+
+async def test_device_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    sensor_entity_entry: er.RegistryEntry,
+) -> None:
+    """Test the config entry sensor is linked to the source entity's device."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    compensation_entity = entity_registry.async_get("sensor.mock_title_my_compensation")
+    assert compensation_entity is not None
+    assert compensation_entity.device_id == sensor_entity_entry.device_id
+
+
+@pytest.mark.usefixtures("sensor_entity_entry")
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured sensor."""
+    await async_setup_compensation(hass, {**TEST_CONFIG, "unique_id": "yaml"})
+
+    compensation_entity = entity_registry.async_get(TEST_ENTITY_ID)
+    assert compensation_entity is not None
+    assert compensation_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text
 
 
 @pytest.mark.parametrize("config", [{"name": TEST_OBJECT_ID, **TEST_BASE_CONFIG}])

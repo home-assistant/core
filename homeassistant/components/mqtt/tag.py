@@ -21,7 +21,6 @@ from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
 from .discovery import MQTTDiscoveryPayload
 from .entity import (
     MqttDiscoveryDeviceUpdateMixin,
-    async_handle_schema_error,
     async_setup_non_entity_entry_helper,
     send_discovery_done,
     update_device,
@@ -32,7 +31,7 @@ from .models import (
     MqttValueTemplateException,
     ReceiveMessage,
 )
-from .schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA
+from .schemas import MQTT_DEVICE_INFO_SCHEMA
 from .subscription import EntitySubscription
 from .util import valid_subscribe_topic
 
@@ -44,7 +43,7 @@ TAG = "tag"
 
 DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
-        probatio.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        probatio.Optional(CONF_DEVICE): MQTT_DEVICE_INFO_SCHEMA,
         probatio.Required(CONF_TOPIC): valid_subscribe_topic,
         probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
@@ -130,16 +129,13 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
     async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
         """Handle MQTT tag discovery updates."""
         # Update tag scanner
-        try:
-            config: DiscoveryInfoType = DISCOVERY_SCHEMA(discovery_data)
-        except probatio.Invalid as err:
-            async_handle_schema_error(discovery_data, err)
-            return
+        config: DiscoveryInfoType = DISCOVERY_SCHEMA(discovery_data)
+        # Update the device first, so a failing update does not change the scanner
+        update_device(self.hass, self._config_entry, config)
         self._config = config
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE)
         ).async_render_with_possible_json_value
-        update_device(self.hass, self._config_entry, config)
         await self.subscribe_topics()
 
     @callback

@@ -7,6 +7,7 @@ from typing import Any, override
 
 from melnor_bluetooth.device import Device, Valve
 
+from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -21,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .coordinator import MelnorConfigEntry, MelnorDataUpdateCoordinator
@@ -58,7 +60,17 @@ class MelnorZoneSensorEntityDescription(SensorEntityDescription):
 class MelnorSensorEntityDescription(SensorEntityDescription):
     """Describes Melnor sensor entity."""
 
-    state_fn: Callable[[Device], Any]
+    state_fn: Callable[[HomeAssistant, Device], Any]
+
+
+def rssi(hass: HomeAssistant, device: Device) -> int | None:
+    """Return the RSSI of the last advertisement seen from the device."""
+
+    # Bleak 1.0 removed BLEDevice.rssi, which Device.rssi still reads
+    if service_info := async_last_service_info(hass, device.mac, connectable=False):
+        return service_info.rssi
+
+    return None
 
 
 DEVICE_ENTITY_DESCRIPTIONS: list[MelnorSensorEntityDescription] = [
@@ -68,7 +80,7 @@ DEVICE_ENTITY_DESCRIPTIONS: list[MelnorSensorEntityDescription] = [
         key="battery",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        state_fn=lambda device: device.battery_level,
+        state_fn=lambda _, device: device.battery_level,
     ),
     MelnorSensorEntityDescription(
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -78,7 +90,7 @@ DEVICE_ENTITY_DESCRIPTIONS: list[MelnorSensorEntityDescription] = [
         translation_key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
-        state_fn=lambda device: device.rssi,
+        state_fn=rssi,
     ),
 ]
 
@@ -108,16 +120,16 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     # Device-level sensors
-    async_add_entities(
+    entities: list[CoordinatorEntity[MelnorDataUpdateCoordinator]] = [
         MelnorSensorEntity(
             coordinator,
             description,
         )
         for description in DEVICE_ENTITY_DESCRIPTIONS
-    )
+    ]
 
     # Valve/Zone-level sensors
-    async_add_entities(
+    entities.extend(
         get_entities_for_valves(
             coordinator,
             ZONE_ENTITY_DESCRIPTIONS,
@@ -126,6 +138,8 @@ async def async_setup_entry(
             ),
         )
     )
+
+    async_add_entities(entities)
 
 
 class MelnorSensorEntity(MelnorBluetoothEntity, SensorEntity):
@@ -149,22 +163,13 @@ class MelnorSensorEntity(MelnorBluetoothEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
-        return self.entity_description.state_fn(self._device)
+        return self.entity_description.state_fn(self.hass, self._device)
 
 
 class MelnorZoneSensorEntity(MelnorZoneEntity, SensorEntity):
     """Representation of a Melnor sensor."""
 
     entity_description: MelnorZoneSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: MelnorDataUpdateCoordinator,
-        entity_description: MelnorZoneSensorEntityDescription,
-        valve: Valve,
-    ) -> None:
-        """Initialize a sensor for a Melnor device."""
-        super().__init__(coordinator, entity_description, valve)
 
     @property
     @override

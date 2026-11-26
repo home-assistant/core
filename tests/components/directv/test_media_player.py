@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.directv.const import DOMAIN
 from homeassistant.components.directv.media_player import (
@@ -27,20 +28,13 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_SERIES_TITLE,
     ATTR_MEDIA_TITLE,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
     MediaPlayerDeviceClass,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
     MediaType,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
@@ -51,8 +45,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import RECEIVER_ID, setup_integration
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 ATTR_UNIQUE_ID = "unique_id"
 CLIENT_ENTITY_ID = f"{MP_DOMAIN}.client"
@@ -72,31 +64,31 @@ def mock_now() -> datetime:
 async def async_turn_on(hass: HomeAssistant, entity_id: str | None = None) -> None:
     """Turn on specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_ON, data)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.TURN_ON, data)
 
 
 async def async_turn_off(hass: HomeAssistant, entity_id: str | None = None) -> None:
     """Turn off specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_OFF, data)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.TURN_OFF, data)
 
 
 async def async_media_pause(hass: HomeAssistant, entity_id: str | None = None) -> None:
     """Send the media player the command for pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PAUSE, data)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.MEDIA_PAUSE, data)
 
 
 async def async_media_play(hass: HomeAssistant, entity_id: str | None = None) -> None:
     """Send the media player the command for play/pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.MEDIA_PLAY, data)
 
 
 async def async_media_stop(hass: HomeAssistant, entity_id: str | None = None) -> None:
     """Send the media player the command for stop."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_STOP, data)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.MEDIA_STOP, data)
 
 
 async def async_media_next_track(
@@ -104,7 +96,7 @@ async def async_media_next_track(
 ) -> None:
     """Send the media player the command for next track."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.MEDIA_NEXT_TRACK, data)
 
 
 async def async_media_previous_track(
@@ -112,7 +104,9 @@ async def async_media_previous_track(
 ) -> None:
     """Send the media player the command for prev track."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.MEDIA_PREVIOUS_TRACK, data
+    )
 
 
 async def async_play_media(
@@ -131,7 +125,7 @@ async def async_play_media(
     if enqueue:
         data[ATTR_MEDIA_ENQUEUE] = enqueue
 
-    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.PLAY_MEDIA, data)
 
 
 async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:

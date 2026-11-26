@@ -4,6 +4,7 @@ import os
 from unittest.mock import patch
 
 from fnv_hash_fast import fnv1a_32
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homekit.aidmanager import (
     AccessoryAidStorage,
@@ -13,8 +14,6 @@ from homeassistant.components.homekit.aidmanager import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import STORAGE_DIR
-
-from tests.common import MockConfigEntry
 
 
 async def test_aid_generation(

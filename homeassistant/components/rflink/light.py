@@ -8,14 +8,12 @@ import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    DOMAIN as PLATFORM_DOMAIN,
-    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityStateAttribute,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -35,11 +33,7 @@ from .const import (
     EVENT_KEY_ID,
 )
 from .entity import SwitchableRflinkDevice
-from .utils import (
-    brightness_to_rflink,
-    create_issue_yaml_migration,
-    rflink_to_brightness,
-)
+from .utils import brightness_to_rflink, rflink_to_brightness
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,11 +72,6 @@ RFLINK_PLATFORM = {
         )
     },
 }
-
-PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
-    RFLINK_PLATFORM,
-    extra=probatio.ALLOW_EXTRA,
-)
 
 
 def entity_type_for_device_id(device_id):
@@ -184,14 +173,10 @@ async def async_setup_platform(
             hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
 
     if discovery_info is None:
-        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
-        device_config = config[CONF_DEVICE_DEFAULTS]
-        async_add_entities(devices_from_config(config))
-        automatic_add_config(hass, config)
-    else:
-        device_config = discovery_info[CONF_DEVICE_DEFAULTS]
-        async_add_entities(devices_from_config(discovery_info))
-        automatic_add_config(hass, discovery_info)
+        return
+    device_config = discovery_info[CONF_DEVICE_DEFAULTS]
+    async_add_entities(devices_from_config(discovery_info))
+    automatic_add_config(hass, discovery_info)
 
 
 class RflinkLight(SwitchableRflinkDevice, LightEntity):
@@ -207,17 +192,6 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _brightness = 255
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

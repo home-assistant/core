@@ -25,8 +25,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AltruistConfigEntry
-from .coordinator import AltruistDataUpdateCoordinator
+from .coordinator import AltruistConfigEntry, AltruistDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,6 +3,8 @@
 import logging
 from typing import TYPE_CHECKING, override
 
+from homematicip.async_home import AsyncHome
+from homematicip.connection.rest_connection import RestResult
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
 from homeassistant.components.alarm_control_panel import (
@@ -16,10 +18,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .hap import AsyncHome, HomematicIPConfigEntry, HomematicipHAP
+from .const import DOMAIN, MODE_AWAY
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
+
+# arm anyway checks and then arms in two calls, a disarm must not run in between
+PARALLEL_UPDATES = 1
 
 CONST_ALARM_CONTROL_PANEL_NAME = "HmIP Alarm Control Panel"
 
@@ -47,7 +52,9 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
+        self._hap = hap
         self._home: AsyncHome = hap.home
+        self._blocking_channels: list[dict] = []
 
     @property
     @override
@@ -96,20 +103,38 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         result = await self._home.set_security_zones_activation_async(
             internal, external
         )
+        self._raise_for_result(result)
+
+    def _blocking_labels(self, result: RestResult) -> list[str]:
+        """Return the labels of the devices that refused the request."""
+        return sorted(
+            label.strip()
+            for label in self._home.get_security_zone_activation_problems(result)
+        )
+
+    def _raise_for_result(self, result: RestResult) -> None:
+        """Raise a translated error when the panel did not accept the request."""
+        problems = self._blocking_labels(result)
         # a request-based panel answers 200 without arming when a sensor blocks it
-        if result.success:
+        if result.success and not problems:
+            # the access point does not push a refusal, so the reply is published here
+            self._hap.async_set_arming_blocked(False)
+            self._blocking_channels = []
             return
 
-        problems = self._home.get_security_zone_activation_problems(result)
         if not problems:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="alarm_activation_failed",
             )
+        self._blocking_channels = (
+            self._home.get_security_zone_activation_problem_channels(result)
+        )
+        self._hap.async_set_arming_blocked(True)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="alarm_activation_blocked",
-            translation_placeholders={"devices": ", ".join(sorted(problems))},
+            translation_placeholders={"devices": ", ".join(problems)},
         )
 
     @override
@@ -127,16 +152,36 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         """Send arm away command."""
         await self._async_set_zones_activation(internal=True, external=True)
 
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
+    async def async_arm_anyway(self, mode: str) -> None:
+        """Arm although sensors report a problem, leaving them unmonitored."""
+        internal = mode == MODE_AWAY
+        approved = self._blocking_channels
 
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
+        # The access point ignores whatever blocks at the time of the call, not only
+        # what the refusal the user saw named, so check again first. Per channel,
+        # because one device can block on several of them under one label.
+        result = await self._home.set_security_zones_activation_async(internal, True)
+        channels = self._home.get_security_zone_activation_problem_channels(result)
+        if not channels:
+            # armed after all, or refused without naming a device
+            self._raise_for_result(result)
+            return
+
+        if any(channel not in approved for channel in channels):
+            self._blocking_channels = channels
+            self._hap.async_set_arming_blocked(True)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="alarm_activation_outdated",
+                translation_placeholders={
+                    "devices": ", ".join(self._blocking_labels(result))
+                },
+            )
+
+        result = await self._home.set_security_zones_activation_with_ignore_list_async(
+            internal, True, ignorable_device_channels=channels
+        )
+        self._raise_for_result(result)
 
     @override
     async def async_added_to_hass(self) -> None:

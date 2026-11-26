@@ -58,9 +58,6 @@
     }
   },
   "exceptions": {
-    "cant_write": {
-      "message": "Can't write to file, check logs for details."
-    },
     "failed_arm": {
       "message": "Blink failed to arm camera."
     },
@@ -81,6 +78,9 @@
     },
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
+    },
+    "migration_reauth_required": {
+      "message": "Cannot migrate configuration entry from version {version}, re-authentication is required"
     },
     "no_path": {
       "message": "Can't write to directory {target}, no access to path!"

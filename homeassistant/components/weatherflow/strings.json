@@ -78,9 +78,6 @@
       "wet_bulb_temperature": {
         "name": "Wet bulb temperature"
       },
-      "wind_direction": {
-        "name": "Wind direction"
-      },
       "wind_direction_average": {
         "name": "Wind direction average"
       },

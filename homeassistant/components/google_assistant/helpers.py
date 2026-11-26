@@ -649,9 +649,7 @@ class GoogleEntity:
         if "matter" in self.hass.config.components and any(
             x for x in device_entry.identifiers if x[0] == "matter"
         ):
-            from homeassistant.components.matter import (  # noqa: PLC0415
-                get_matter_device_info,
-            )
+            from homeassistant.components.matter import get_matter_device_info  # noqa: PLC0415
 
             # Import matter can block the event loop for multiple seconds
             # so we import it here to avoid blocking the event loop during

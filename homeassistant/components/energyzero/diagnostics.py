@@ -3,27 +3,27 @@
 from datetime import timedelta
 from typing import Any
 
+from energyzero import EnergyPrices
+
 from homeassistant.core import HomeAssistant
 
-from .coordinator import EnergyZeroConfigEntry, EnergyZeroData
+from .coordinator import EnergyZeroConfigEntry
 
 
-def get_gas_price(data: EnergyZeroData, hours: int) -> float | None:
+def get_gas_price(prices: EnergyPrices | None, hours: int) -> float | None:
     """Get the gas price for a given hour.
 
     Args:
-        data: The data object.
+        prices: The gas prices, if available.
         hours: The number of hours to add to the current time.
 
     Returns:
-        The gas market price value.
+        The gas price value.
 
     """
-    if not data.gas_today:
+    if not prices:
         return None
-    return data.gas_today.price_at_time(
-        data.gas_today.utcnow() + timedelta(hours=hours)
-    )
+    return prices.price_at_time(prices.utcnow() + timedelta(hours=hours))
 
 
 async def async_get_config_entry_diagnostics(
@@ -62,7 +62,11 @@ async def async_get_config_entry_diagnostics(
             "periods_priced_equal_or_lower": all_in_today.time_ranges_priced_equal_or_lower,
         },
         "gas": {
-            "current_hour_price": get_gas_price(coordinator_data, 0),
-            "next_hour_price": get_gas_price(coordinator_data, 1),
+            "current_hour_price": get_gas_price(coordinator_data.gas_today, 0),
+            "next_hour_price": get_gas_price(coordinator_data.gas_today, 1),
+        },
+        "gas_all_in": {
+            "current_hour_price": get_gas_price(coordinator_data.gas_all_in_today, 0),
+            "next_hour_price": get_gas_price(coordinator_data.gas_all_in_today, 1),
         },
     }

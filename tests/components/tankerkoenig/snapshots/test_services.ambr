@@ -1,0 +1,77 @@
+# serializer version: 1
+# name: test_get_opening_times[missing_lists]
+  dict({
+    'binary_sensor.station_somewhere_street_1_status': dict({
+      'opening_times': list([
+      ]),
+      'overrides': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_get_opening_times[no_opening_times]
+  dict({
+    'binary_sensor.station_somewhere_street_1_status': dict({
+      'opening_times': list([
+      ]),
+      'overrides': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_get_opening_times[opening_times]
+  dict({
+    'binary_sensor.station_somewhere_street_1_status': dict({
+      'opening_times': list([
+        dict({
+          'days': 'Mo-Fr',
+          'end_time': '22:00:00',
+          'start_time': '06:00:00',
+        }),
+        dict({
+          'days': 'Sa-So',
+          'end_time': '20:00:00',
+          'start_time': '08:00:00',
+        }),
+      ]),
+      'overrides': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_get_opening_times[overrides]
+  dict({
+    'binary_sensor.station_somewhere_street_1_status': dict({
+      'opening_times': list([
+        dict({
+          'days': 'Mo-Fr',
+          'end_time': '22:00:00',
+          'start_time': '06:00:00',
+        }),
+        dict({
+          'days': 'Sa-So',
+          'end_time': '20:00:00',
+          'start_time': '08:00:00',
+        }),
+      ]),
+      'overrides': list([
+        '24.12.2026, 14:00:00 - 26.12.2026, 23:59:00: geschlossen',
+      ]),
+    }),
+  })
+# ---
+# name: test_get_opening_times[whole_day]
+  dict({
+    'binary_sensor.station_somewhere_street_1_status': dict({
+      'opening_times': list([
+        dict({
+          'days': 'Mo-So',
+          'end_time': '23:59:59',
+          'start_time': '00:00:00',
+        }),
+      ]),
+      'overrides': list([
+      ]),
+    }),
+  })
+# ---

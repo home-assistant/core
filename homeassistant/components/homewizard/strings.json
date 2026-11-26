@@ -3,6 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "device_not_supported": "This device is not supported",
+      "flow_closed": "The setup was closed before the device was authorized.",
       "invalid_discovery_parameters": "Invalid discovery parameters",
       "reauth_enable_api_successful": "Enabling API was successful",
       "unknown_error": "[%key:common::config_flow::error::unknown%]",
@@ -11,20 +12,25 @@
     },
     "error": {
       "api_not_enabled": "The local API is disabled. Go to the HomeWizard app and enable the API in the device settings.",
-      "authorization_failed": "Failed to authorize, make sure to press the button of the device within 30 seconds",
       "network_error": "Device unreachable, make sure that you have entered the correct IP address and that the device is available in your network"
+    },
+    "progress": {
+      "wait_for_button": "Press the button on the HomeWizard device for two seconds. Setup continues automatically once the button is pressed."
     },
     "step": {
       "authorize": {
-        "description": "Press the button on the HomeWizard device for two seconds, then select the button below.",
         "title": "Authorize"
+      },
+      "authorize_timeout": {
+        "description": "The button on the HomeWizard device was not pressed within five minutes. Select the button below to try again.",
+        "title": "[%key:component::homewizard::config::step::authorize::title%]"
       },
       "discovery_confirm": {
         "description": "Do you want to set up {product_type} ({serial}) at {ip_address}?",
         "title": "Confirm"
       },
       "reauth_confirm_update_token": {
-        "description": "[%key:component::homewizard::config::step::authorize::description%]",
+        "description": "The access token for this HomeWizard device is no longer valid. Select the button below, then press the button on the device for two seconds.",
         "title": "Re-authenticate"
       },
       "reauth_enable_api": {
@@ -146,9 +152,6 @@
       "unique_meter_id": {
         "name": "Smart meter identifier"
       },
-      "uptime": {
-        "name": "Uptime"
-      },
       "voltage_sag_phase_count": {
         "name": "Voltage sags detected phase {phase}"
       },
@@ -202,16 +205,23 @@
     },
     "migrate_to_v2_api": {
       "fix_flow": {
-        "error": {
-          "authorization_failed": "[%key:component::homewizard::config::error::authorization_failed%]"
+        "progress": {
+          "wait_for_button": "Press the button on the HomeWizard device for two seconds. The reconfiguration continues automatically once the button is pressed."
         },
         "step": {
           "authorize": {
-            "description": "[%key:component::homewizard::config::step::authorize::description%]",
+            "title": "[%key:component::homewizard::config::step::authorize::title%]"
+          },
+          "authorize_timeout": {
+            "description": "[%key:component::homewizard::config::step::authorize_timeout::description%]",
             "title": "[%key:component::homewizard::config::step::authorize::title%]"
           },
           "confirm": {
             "description": "Your {title} now supports a more secure and feature-rich communication method. To take advantage of this, you need to reconfigure the integration.\n\nSelect **Submit** to start the reconfiguration.",
+            "title": "[%key:component::homewizard::issues::migrate_to_v2_api::title%]"
+          },
+          "confirm_identify": {
+            "description": "Your {title} now supports a more secure and feature-rich communication method. To take advantage of this, you need to reconfigure the integration.\n\nTo help you find the device, its status light blinks until the reconfiguration is done.\n\nSelect **Submit** to start the reconfiguration.",
             "title": "[%key:component::homewizard::issues::migrate_to_v2_api::title%]"
           }
         }

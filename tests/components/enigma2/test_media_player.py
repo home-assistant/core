@@ -7,15 +7,19 @@ from freezegun.api import FrozenDateTimeFactory
 from openwebif.api import OpenWebIfServiceEvent, OpenWebIfStatus
 from openwebif.enums import PowerState, RemoteControlCodes, SetVolumeOption
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 
 from homeassistant.components.enigma2.const import DOMAIN
 from homeassistant.components.enigma2.media_player import ATTR_MEDIA_CURRENTLY_RECORDING
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_SELECT_SOURCE,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
 )
 from homeassistant.const import (
@@ -25,20 +29,9 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
 
 
 @pytest.mark.parametrize(
@@ -60,7 +53,9 @@ async def test_turn_off(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "media_player.1_1_1_1"}
+        MEDIA_PLAYER_DOMAIN,
+        MediaPlayerService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "media_player.1_1_1_1"},
     )
 
     openwebif_device_mock.set_powerstate.assert_awaited_once_with(powerstate)
@@ -78,7 +73,9 @@ async def test_turn_on(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "media_player.1_1_1_1"}
+        MEDIA_PLAYER_DOMAIN,
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: "media_player.1_1_1_1"},
     )
 
     openwebif_device_mock.turn_on.assert_awaited_once()
@@ -97,8 +94,11 @@ async def test_set_volume_level(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: "media_player.1_1_1_1", ATTR_MEDIA_VOLUME_LEVEL: 0.2},
+        MediaPlayerService.VOLUME_SET,
+        {
+            TargetKey.ENTITY_ID: "media_player.1_1_1_1",
+            MediaPlayerServiceArgument.VOLUME_LEVEL: 0.2,
+        },
     )
 
     openwebif_device_mock.set_volume.assert_awaited_once_with(20)
@@ -116,7 +116,9 @@ async def test_volume_up(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: "media_player.1_1_1_1"}
+        MEDIA_PLAYER_DOMAIN,
+        MediaPlayerService.VOLUME_UP,
+        {TargetKey.ENTITY_ID: "media_player.1_1_1_1"},
     )
 
     openwebif_device_mock.set_volume.assert_awaited_once_with(SetVolumeOption.UP)
@@ -135,8 +137,8 @@ async def test_volume_down(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_DOWN,
-        {ATTR_ENTITY_ID: "media_player.1_1_1_1"},
+        MediaPlayerService.VOLUME_DOWN,
+        {TargetKey.ENTITY_ID: "media_player.1_1_1_1"},
     )
 
     openwebif_device_mock.set_volume.assert_awaited_once_with(SetVolumeOption.DOWN)
@@ -191,8 +193,11 @@ async def test_volume_mute(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: "media_player.1_1_1_1", ATTR_MEDIA_VOLUME_MUTED: mute},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: "media_player.1_1_1_1",
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: mute,
+        },
     )
 
     openwebif_device_mock.toggle_mute.assert_awaited_once()
@@ -213,8 +218,11 @@ async def test_select_source(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: "media_player.1_1_1_1", ATTR_INPUT_SOURCE: "Test"},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: "media_player.1_1_1_1",
+            MediaPlayerServiceArgument.SOURCE: "Test",
+        },
     )
 
     openwebif_device_mock.zap.assert_awaited_once_with("1")

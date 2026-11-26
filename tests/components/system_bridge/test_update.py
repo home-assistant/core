@@ -1,17 +1,24 @@
 """Tests for the System Bridge update platform."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from dataclasses import replace
+from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
+from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
+from systembridgeconnector.models.modules import Module, ModulesData
 
+from homeassistant.components.update import (
+    ATTR_INSTALLED_VERSION,
+    ATTR_LATEST_VERSION,
+    ATTR_RELEASE_URL,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -41,3 +48,48 @@ async def test_update_platform(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_update_no_latest_version(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test the release URL is unknown when there is no latest version."""
+    mock_websocket_client.get_data.return_value = ModulesData(
+        system=replace(FIXTURE_SYSTEM, version_latest=None)
+    )
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.attributes[ATTR_LATEST_VERSION] is None
+    assert state.attributes[ATTR_RELEASE_URL] is None
+
+
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+async def test_update_no_system_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the versions are unknown when the system module has no data."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await mock_config_entry.runtime_data.async_handle_module(Module.SYSTEM, None)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_INSTALLED_VERSION] is None
+    assert state.attributes[ATTR_LATEST_VERSION] is None
+    assert state.attributes[ATTR_RELEASE_URL] is None

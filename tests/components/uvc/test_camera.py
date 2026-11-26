@@ -4,13 +4,13 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import call, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from uvcclient import camera, nvr
 
 from homeassistant.components.camera import (
     DEFAULT_CONTENT_TYPE,
-    SERVICE_DISABLE_MOTION,
-    SERVICE_ENABLE_MOTION,
     CameraEntityFeature,
+    CameraService,
     CameraState,
     async_get_image,
     async_get_stream_source,
@@ -20,8 +20,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(name="mock_remote")
@@ -567,7 +565,10 @@ async def test_enable_disable_motion_detection(
     assert "motion_detection" not in state.attributes
 
     await hass.services.async_call(
-        "camera", SERVICE_ENABLE_MOTION, {"entity_id": "camera.front"}, True
+        "camera",
+        CameraService.ENABLE_MOTION_DETECTION,
+        {"entity_id": "camera.front"},
+        True,
     )
     await hass.async_block_till_done()
 
@@ -577,7 +578,10 @@ async def test_enable_disable_motion_detection(
     assert state.attributes["motion_detection"]
 
     await hass.services.async_call(
-        "camera", SERVICE_DISABLE_MOTION, {"entity_id": "camera.front"}, True
+        "camera",
+        CameraService.DISABLE_MOTION_DETECTION,
+        {"entity_id": "camera.front"},
+        True,
     )
     await hass.async_block_till_done()
 
@@ -589,7 +593,10 @@ async def test_enable_disable_motion_detection(
     mock_remote.return_value.set_recordmode.side_effect = nvr.NvrError
 
     await hass.services.async_call(
-        "camera", SERVICE_ENABLE_MOTION, {"entity_id": "camera.front"}, True
+        "camera",
+        CameraService.ENABLE_MOTION_DETECTION,
+        {"entity_id": "camera.front"},
+        True,
     )
     await hass.async_block_till_done()
 
@@ -601,7 +608,10 @@ async def test_enable_disable_motion_detection(
     mock_remote.return_value.set_recordmode.side_effect = set_recordmode
 
     await hass.services.async_call(
-        "camera", SERVICE_ENABLE_MOTION, {"entity_id": "camera.front"}, True
+        "camera",
+        CameraService.ENABLE_MOTION_DETECTION,
+        {"entity_id": "camera.front"},
+        True,
     )
     await hass.async_block_till_done()
 
@@ -613,7 +623,10 @@ async def test_enable_disable_motion_detection(
     mock_remote.return_value.set_recordmode.side_effect = nvr.NvrError
 
     await hass.services.async_call(
-        "camera", SERVICE_DISABLE_MOTION, {"entity_id": "camera.front"}, True
+        "camera",
+        CameraService.DISABLE_MOTION_DETECTION,
+        {"entity_id": "camera.front"},
+        True,
     )
     await hass.async_block_till_done()
 

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pyps4_2ndscreen.credential import get_ddp_message
 from pyps4_2ndscreen.ddp import DEFAULT_UDP_PORT
 from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import ps4
@@ -26,8 +27,8 @@ from homeassistant.components.ps4.const import (
     PS4_DATA,
 )
 from homeassistant.components.ps4.media_player import PS4Device
+from homeassistant.components.ps4.services import PS4ServiceArgument
 from homeassistant.const import (
-    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     ATTR_LOCKED,
     CONF_HOST,
@@ -38,12 +39,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PLAYING,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 MOCK_CREDS = "123412341234abcd12341234abcd12341234abcd12341234abcd12341234abcd"
 MOCK_NAME = "ha_ps4_name"
@@ -553,7 +553,10 @@ async def test_ps4_send_command(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             DOMAIN,
             "send_command",
-            {ATTR_ENTITY_ID: mock_entity_id, ATTR_COMMAND: "ps"},
+            {
+                CommonServiceArgument.ENTITY_ID: mock_entity_id,
+                PS4ServiceArgument.COMMAND: "ps",
+            },
             blocking=True,
         )
 

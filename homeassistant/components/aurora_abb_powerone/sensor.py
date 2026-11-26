@@ -13,8 +13,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -30,8 +28,10 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    ATTR_DEVICE_NAME,
-    ATTR_FIRMWARE,
+    CONF_DEVICE_NAME,
+    CONF_FIRMWARE,
+    CONF_MODEL,
+    CONF_SERIAL_NUMBER,
     DEFAULT_DEVICE_NAME,
     DOMAIN,
     MANUFACTURER,
@@ -210,13 +210,13 @@ class AuroraSensor(CoordinatorEntity[AuroraAbbDataUpdateCoordinator], SensorEnti
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{data[ATTR_SERIAL_NUMBER]}_{entity_description.key}"
+        self._attr_unique_id = f"{data[CONF_SERIAL_NUMBER]}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, data[ATTR_SERIAL_NUMBER])},
+            identifiers={(DOMAIN, data[CONF_SERIAL_NUMBER])},
             manufacturer=MANUFACTURER,
-            model=data[ATTR_MODEL],
-            name=data.get(ATTR_DEVICE_NAME, DEFAULT_DEVICE_NAME),
-            sw_version=data[ATTR_FIRMWARE],
+            model=data[CONF_MODEL],
+            name=data.get(CONF_DEVICE_NAME, DEFAULT_DEVICE_NAME),
+            sw_version=data[CONF_FIRMWARE],
         )
 
     @property

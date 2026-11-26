@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from homewizard_energy import UnsupportedError
 from homewizard_energy.errors import DisabledError, RequestError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import switch
@@ -13,6 +14,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -20,13 +22,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
 
-pytestmark = [
-    pytest.mark.usefixtures("init_integration"),
-]
-
-
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("device_fixture", "entity_ids"),
     [
@@ -83,14 +80,15 @@ async def test_entities_not_created_for_device(
         assert not hass.states.get(entity_id)
 
 
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("device_fixture", "entity_id", "method", "parameter"),
     [
-        ("HWE-SKT-11", "switch.device", "state", "power_on"),
-        ("HWE-SKT-11", "switch.device_switch_lock", "state", "switch_lock"),
+        ("HWE-SKT-11", "switch.device", "system", "power_on"),
+        ("HWE-SKT-11", "switch.device_switch_lock", "system", "switch_lock"),
         ("HWE-SKT-11", "switch.device_cloud_connection", "system", "cloud_enabled"),
-        ("HWE-SKT-21", "switch.device", "state", "power_on"),
-        ("HWE-SKT-21", "switch.device_switch_lock", "state", "switch_lock"),
+        ("HWE-SKT-21", "switch.device", "system", "power_on"),
+        ("HWE-SKT-21", "switch.device_switch_lock", "system", "switch_lock"),
         ("HWE-SKT-21", "switch.device_cloud_connection", "system", "cloud_enabled"),
         ("HWE-WTR", "switch.device_cloud_connection", "system", "cloud_enabled"),
         ("SDM230", "switch.device_cloud_connection", "system", "cloud_enabled"),
@@ -195,6 +193,7 @@ async def test_switch_entities(
         )
 
 
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("device_fixture", ["HWE-SKT-11", "HWE-SKT-21"])
 @pytest.mark.parametrize("exception", [RequestError, UnsupportedError])
 @pytest.mark.parametrize(
@@ -220,3 +219,68 @@ async def test_switch_unreachable(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration_v2")
+@pytest.mark.parametrize("device_fixture", ["HWE-SKT"])
+@pytest.mark.parametrize(
+    ("entity_id", "parameter"),
+    [
+        ("switch.device", "power_on"),
+        ("switch.device_switch_lock", "switch_lock"),
+        ("switch.device_cloud_connection", "cloud_enabled"),
+    ],
+)
+async def test_switch_entities_v2(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_homewizardenergy_v2: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_id: str,
+    parameter: str,
+) -> None:
+    """Test that switch entities are controlled via the v2 system endpoint."""
+    assert (state := hass.states.get(entity_id))
+    assert snapshot == state
+
+    assert (entity_entry := entity_registry.async_get(entity_id))
+    assert snapshot == entity_entry
+
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_homewizardenergy_v2.system.assert_called_with(**{parameter: True})
+
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_homewizardenergy_v2.system.assert_called_with(**{parameter: False})
+
+    assert len(mock_homewizardenergy_v2.system.mock_calls) == 2
+    assert len(mock_homewizardenergy_v2.state.mock_calls) == 0
+
+
+@pytest.mark.usefixtures("init_integration_v2")
+@pytest.mark.parametrize("device_fixture", ["HWE-SKT"])
+async def test_power_switch_unavailable_when_switch_lock_enabled_v2(
+    hass: HomeAssistant,
+    mock_homewizardenergy_v2: MagicMock,
+) -> None:
+    """Test the power switch is unavailable while the switch lock is enabled."""
+    assert (state := hass.states.get("switch.device"))
+    assert state.state == STATE_ON
+
+    mock_homewizardenergy_v2.combined.return_value.system.switch_lock = True
+    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("switch.device"))
+    assert state.state == STATE_UNAVAILABLE
+    assert (state := hass.states.get("switch.device_switch_lock"))
+    assert state.state == STATE_ON

@@ -19,10 +19,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
     EntityCategory,
     UnitOfPressure,
     UnitOfRadiationConcentration,
@@ -43,9 +39,9 @@ from .const import ARANET_MANUFACTURER_NAME
 class AranetSensorEntityDescription(SensorEntityDescription):
     """Class to describe an Aranet sensor entity."""
 
-    # PassiveBluetoothDataUpdate does not support UNDEFINED
+    # PassiveBluetoothDataUpdate does not support Undefined
     # Restrict the type to satisfy the type checker and catch attempts
-    # to use UNDEFINED in the entity descriptions.
+    # to use Undefined in the entity descriptions.
     name: str | None = None
     scale: float | int = 1
 
@@ -149,11 +145,11 @@ def _sensor_device_info_to_hass(
         connections={(CONNECTION_BLUETOOTH, adv.device.address)}
     )
     if adv.readings and adv.readings.name:
-        hass_device_info[ATTR_NAME] = adv.readings.name
-        hass_device_info[ATTR_MANUFACTURER] = ARANET_MANUFACTURER_NAME
-        hass_device_info[ATTR_MODEL] = adv.readings.type.model
+        hass_device_info.name = adv.readings.name
+        hass_device_info.manufacturer = ARANET_MANUFACTURER_NAME
+        hass_device_info.model = adv.readings.type.model
     if adv.manufacturer_data:
-        hass_device_info[ATTR_SW_VERSION] = str(adv.manufacturer_data.version)
+        hass_device_info.sw_version = str(adv.manufacturer_data.version)
     return hass_device_info
 
 

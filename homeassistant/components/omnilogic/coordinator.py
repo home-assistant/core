@@ -4,13 +4,14 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
-from omnilogic import OmniLogic, OmniLogicException
+from omnilogic import LoginException, OmniLogic, OmniLogicException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ALL_ITEM_KINDS, SCAN_INTERVAL
+from .const import ALL_ITEM_KINDS, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +48,15 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any
         try:
             data = await self.api.get_telemetry_data()
 
+        except LoginException as error:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="login_failed",
+            ) from error
         except OmniLogicException as error:
+            # The library only logs in again without a token, so drop a
+            # possibly rejected one to have the next update log in again.
+            self.api.token = None
             raise UpdateFailed(f"Error updating from OmniLogic: {error}") from error
 
         parsed_data = {}

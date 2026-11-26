@@ -5,6 +5,7 @@ from unittest.mock import patch
 from pyhap.characteristic import Characteristic
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
@@ -87,8 +88,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from tests.common import async_mock_service
 
 
 async def test_thermostat(hass: HomeAssistant, hk_driver, events: list[Event]) -> None:
@@ -1298,6 +1297,91 @@ async def test_thermostat_hvac_modes_with_auto_only(
     assert call_set_hvac_mode
     assert call_set_hvac_mode[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_hvac_mode[0].data[ATTR_HVAC_MODE] == HVACMode.AUTO
+
+
+@pytest.mark.parametrize(
+    ("initial_mode", "requested_mode", "expected_mode", "expected_notifications"),
+    [
+        pytest.param(
+            HVACMode.OFF,
+            1,
+            HVACMode.AUTO,
+            [(1, "mock_addr"), (3, None)],
+            id="heat-from-off",
+        ),
+        pytest.param(
+            HVACMode.AUTO,
+            1,
+            HVACMode.AUTO,
+            [(1, "mock_addr"), (3, None)],
+            id="heat-from-auto",
+        ),
+        pytest.param(
+            HVACMode.OFF,
+            2,
+            HVACMode.AUTO,
+            [(2, "mock_addr"), (3, None)],
+            id="cool-from-off",
+        ),
+        pytest.param(
+            HVACMode.AUTO,
+            2,
+            HVACMode.AUTO,
+            [(2, "mock_addr"), (3, None)],
+            id="cool-from-auto",
+        ),
+        pytest.param(
+            HVACMode.OFF, 3, HVACMode.AUTO, [(3, "mock_addr")], id="supported-auto"
+        ),
+        pytest.param(
+            HVACMode.AUTO, 0, HVACMode.OFF, [(0, "mock_addr")], id="supported-off"
+        ),
+    ],
+)
+async def test_thermostat_target_mode_correction_notifies_clients(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    initial_mode: HVACMode,
+    requested_mode: int,
+    expected_mode: HVACMode,
+    expected_notifications: list[tuple[int, str | None]],
+) -> None:
+    """Notify the writing client when an unsupported mode is normalized."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id, initial_mode, {ATTR_HVAC_MODES: [HVACMode.OFF, HVACMode.AUTO]}
+    )
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, "set_hvac_mode")
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    with patch.object(hk_driver, "publish") as publish:
+        hk_driver.set_characteristics(
+            {
+                HAP_REPR_CHARS: [
+                    {
+                        HAP_REPR_AID: acc.aid,
+                        HAP_REPR_IID: acc.char_target_heat_cool.to_HAP()[HAP_REPR_IID],
+                        HAP_REPR_VALUE: requested_mode,
+                    }
+                ]
+            },
+            "mock_addr",
+        )
+        await hass.async_block_till_done()
+
+    assert len(call_set_hvac_mode) == 1
+    assert call_set_hvac_mode[0].data == {
+        ATTR_ENTITY_ID: entity_id,
+        ATTR_HVAC_MODE: expected_mode,
+    }
+    assert [
+        (notification.args[0][HAP_REPR_VALUE], notification.args[1])
+        for notification in publish.call_args_list
+    ] == expected_notifications
 
 
 async def test_thermostat_hvac_modes_with_heat_only(

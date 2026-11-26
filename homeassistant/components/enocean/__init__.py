@@ -1,6 +1,6 @@
 """Support for EnOcean devices."""
 
-from enocean_async import Gateway
+from enocean_async import Gateway, SerialProtocol
 import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .const import CONF_PROTOCOL, DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
 type EnOceanConfigEntry = ConfigEntry[Gateway]
 
@@ -46,9 +46,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: EnOceanConfigEntry
-) -> bool:
+) -> None:
     """Set up an EnOcean gateway for the given entry."""
-    gateway = Gateway(port=config_entry.data[CONF_DEVICE])
+    gateway = Gateway(
+        port=config_entry.data[CONF_DEVICE],
+        protocol=SerialProtocol(
+            config_entry.data.get(CONF_PROTOCOL, SerialProtocol.ESP3)
+        ),
+    )
 
     gateway.add_erp1_received_callback(
         lambda packet: async_dispatcher_send(hass, SIGNAL_RECEIVE_MESSAGE, packet)
@@ -57,7 +62,7 @@ async def async_setup_entry(
     try:
         await gateway.start()
     except ConnectionError as err:
-        gateway.stop()
+        await gateway.stop()
         raise ConfigEntryNotReady(f"Failed to start EnOcean gateway: {err}") from err
 
     config_entry.runtime_data = gateway
@@ -65,13 +70,11 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_SEND_MESSAGE, gateway.send_esp3_packet)
     )
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: EnOceanConfigEntry
-) -> bool:
+) -> None:
     """Unload EnOcean config entry: stop the gateway."""
 
-    config_entry.runtime_data.stop()
-    return True
+    await config_entry.runtime_data.stop()

@@ -33,7 +33,11 @@ from miio import (
 
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -48,6 +52,7 @@ from .const import (
     DOMAIN,
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
+    MODEL_AIRPURIFIER_3H,
     MODEL_FAN_1C,
     MODEL_FAN_P5,
     MODEL_FAN_P9,
@@ -132,6 +137,7 @@ LAZY_DISCOVER_FOR_MODEL = {
     "zhimi.fan.za5": True,
     "zhimi.airpurifier.za1": True,
     "dmaker.fan.1c": True,
+    MODEL_AIRPURIFIER_3H: True,
 }
 
 
@@ -141,16 +147,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: XiaomiMiioConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: XiaomiMiioConfigEntry) -> None:
     """Set up the Xiaomi Miio components from a config entry."""
     if entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         await async_setup_gateway_entry(hass, entry)
-        return True
+        return
 
-    return bool(
-        entry.data[CONF_FLOW_TYPE] != CONF_DEVICE
-        or await async_setup_device_entry(hass, entry)
-    )
+    if entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+        await async_setup_device_entry(hass, entry)
 
 
 @callback
@@ -460,23 +464,25 @@ async def async_setup_gateway_entry(
 
 async def async_setup_device_entry(
     hass: HomeAssistant, entry: XiaomiMiioConfigEntry
-) -> bool:
+) -> None:
     """Set up the Xiaomi Miio device component from a config entry."""
     platforms = get_platforms(entry)
     await async_create_miio_device_and_coordinator(hass, entry)
 
     if not platforms:
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_model",
+            translation_placeholders={"model": entry.data[CONF_MODEL]},
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
-
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: XiaomiMiioConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     platforms = get_platforms(config_entry)
 
-    return await hass.config_entries.async_unload_platforms(config_entry, platforms)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, platforms)

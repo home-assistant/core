@@ -31,6 +31,9 @@ ALLOWED_TOKENS_IN_FILE: dict[str, dict[str, str]] = {
     "const.py": {
         '"hacs"': "the domain of the custom integration",
     },
+    "profiles.py": {
+        "hacs.vip": "the China mirrors",
+    },
     "migration.py": {
         '"hacs"': "the domain of the custom integration",
         '"hacstag"': "the query parameter on migrated dashboard resource URLs",
@@ -47,7 +50,7 @@ ALLOWED_TOKENS_IN_FILE: dict[str, dict[str, str]] = {
     },
     "utils/validate.py": {
         'probatio.Optional("hacs")': "the minimum version key of the repository manifest",
-        '"hacs": probatio.Schema(str)': "the minimum version key of the repository manifest",
+        '"hacs": manifest_optional_str': "the minimum version key of the repository manifest",
     },
 }
 

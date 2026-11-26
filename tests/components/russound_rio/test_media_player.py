@@ -6,43 +6,30 @@ from aiorussound.const import FeatureFlag
 from aiorussound.exceptions import CommandError
 from aiorussound.rio.models import PlayStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_SEEK_POSITION,
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOURCE,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 from homeassistant.components.russound_rio.const import CONF_ZONE_SOURCE_EXCLUSION
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
     STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import mock_state_update, setup_integration
 from .const import ENTITY_ID_ZONE_1
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -87,8 +74,8 @@ async def test_media_volume(
     # Test volume up
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_UP,
-        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1},
+        MediaPlayerService.VOLUME_UP,
+        {TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1},
         blocking=True,
     )
 
@@ -97,8 +84,8 @@ async def test_media_volume(
     # Test volume down
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_DOWN,
-        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1},
+        MediaPlayerService.VOLUME_DOWN,
+        {TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1},
         blocking=True,
     )
 
@@ -106,8 +93,11 @@ async def test_media_volume(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_MEDIA_VOLUME_LEVEL: 0.30},
+        MediaPlayerService.VOLUME_SET,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1,
+            MediaPlayerServiceArgument.VOLUME_LEVEL: 0.30,
+        },
         blocking=True,
     )
 
@@ -127,8 +117,11 @@ async def test_volume_mute(
     # Test mute (w/ toggle mute support)
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
 
@@ -140,8 +133,11 @@ async def test_volume_mute(
     # Test mute when already muted (w/ toggle mute support)
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
 
@@ -151,8 +147,11 @@ async def test_volume_mute(
     # Test mute (w/ dedicated commands)
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
 
@@ -161,8 +160,11 @@ async def test_volume_mute(
     # Test unmute (w/ dedicated commands)
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_MEDIA_VOLUME_MUTED: False},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: False,
+        },
         blocking=True,
     )
 
@@ -188,8 +190,11 @@ async def test_source_service(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_INPUT_SOURCE: source_name},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1,
+            MediaPlayerServiceArgument.SOURCE: source_name,
+        },
         blocking=True,
     )
 
@@ -216,8 +221,11 @@ async def test_invalid_source_service(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_INPUT_SOURCE: "Aux"},
+            MediaPlayerService.SELECT_SOURCE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1,
+                MediaPlayerServiceArgument.SOURCE: "Aux",
+            },
             blocking=True,
         )
 
@@ -232,11 +240,15 @@ async def test_power_service(
 
     data = {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1}
 
-    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.TURN_ON, data, blocking=True
+    )
 
     mock_russound_client.controllers[1].zones[1].zone_on.assert_called_once()
 
-    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, data, blocking=True
+    )
 
     mock_russound_client.controllers[1].zones[1].zone_off.assert_called_once()
 
@@ -251,8 +263,11 @@ async def test_media_seek(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_SEEK,
-        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_MEDIA_SEEK_POSITION: 100},
+        MediaPlayerService.MEDIA_SEEK,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1,
+            MediaPlayerServiceArgument.SEEK_POSITION: 100,
+        },
     )
 
     mock_russound_client.controllers[1].zones[1].set_seek_time.assert_called_once_with(
@@ -270,11 +285,11 @@ async def test_play_media_preset_item_id(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID_ZONE_1,
-            ATTR_MEDIA_CONTENT_TYPE: "preset",
-            ATTR_MEDIA_CONTENT_ID: "1",
+            TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "preset",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "1",
         },
         blocking=True,
     )
@@ -284,11 +299,11 @@ async def test_play_media_preset_item_id(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID_ZONE_1,
-            ATTR_MEDIA_CONTENT_TYPE: "preset",
-            ATTR_MEDIA_CONTENT_ID: "1,2",
+            TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "preset",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "1,2",
         },
         blocking=True,
     )
@@ -303,11 +318,11 @@ async def test_play_media_preset_item_id(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID_ZONE_1,
-                ATTR_MEDIA_CONTENT_TYPE: "preset",
-                ATTR_MEDIA_CONTENT_ID: "10",
+                TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "preset",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "10",
             },
             blocking=True,
         )
@@ -317,11 +332,11 @@ async def test_play_media_preset_item_id(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID_ZONE_1,
-                ATTR_MEDIA_CONTENT_TYPE: "preset",
-                ATTR_MEDIA_CONTENT_ID: "UNKNOWN_PRESET",
+                TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "preset",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "UNKNOWN_PRESET",
             },
             blocking=True,
         )
@@ -341,11 +356,11 @@ async def test_play_media_unknown_type(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID_ZONE_1,
-                ATTR_MEDIA_CONTENT_TYPE: "unsupported_content_type",
-                ATTR_MEDIA_CONTENT_ID: "1",
+                TargetKey.ENTITY_ID: ENTITY_ID_ZONE_1,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "unsupported_content_type",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "1",
             },
             blocking=True,
         )

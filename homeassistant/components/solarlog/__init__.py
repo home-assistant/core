@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> None:
     """Set up a config entry for solarlog."""
 
     host_entry = entry.data[CONF_HOST]
@@ -91,17 +91,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: SolarlogConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -137,5 +135,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

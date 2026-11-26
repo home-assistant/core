@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pyzonneplan import (
     Token,
     ZonneplanConnectionError,
@@ -20,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_ACCOUNT, MOCK_EMAIL, MOCK_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 MOCK_OTHER_ACCOUNT = replace(
     MOCK_ACCOUNT,

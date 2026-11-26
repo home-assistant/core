@@ -4,20 +4,29 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from homeassistant.components.update import (
+    RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
+    UpdateReleaseNotesMessage,
+    UpdateReleaseNotesMessageSeverity,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .coordinator import AvmWrapper, FritzConfigEntry
 from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 
 # Set a sane value to avoid too many updates
 PARALLEL_UPDATES = 5
+
+RELEASE_NOTES_MESSAGE_INTERNET_INTERRUPTION = UpdateReleaseNotesMessage(
+    translation_domain=DOMAIN,
+    translation_key="internet_interruption",
+    severity=UpdateReleaseNotesMessageSeverity.WARNING,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -43,7 +52,9 @@ class FritzBoxUpdateEntity(FritzBoxBaseCoordinatorEntity, UpdateEntity):
     """Mixin for update entity specific attributes."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_supported_features = UpdateEntityFeature.INSTALL
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.RELEASE_NOTES
+    )
     _attr_title = "FRITZ!OS"
     entity_description: FritzUpdateEntityDescription
 
@@ -53,8 +64,19 @@ class FritzBoxUpdateEntity(FritzBoxBaseCoordinatorEntity, UpdateEntity):
         device_friendly_name: str,
     ) -> None:
         """Init FRITZ!Box connectivity class."""
+        release_notes_messages: tuple[UpdateReleaseNotesMessage, ...] = (
+            RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
+        )
+        if avm_wrapper.device_is_router:
+            release_notes_messages = (
+                RELEASE_NOTES_MESSAGE_INTERNET_INTERRUPTION,
+                *release_notes_messages,
+            )
         description = FritzUpdateEntityDescription(
-            key="update", name="FRITZ!OS", value_fn=None
+            key="update",
+            name="FRITZ!OS",
+            value_fn=None,
+            release_notes_messages=release_notes_messages,
         )
         super().__init__(avm_wrapper, device_friendly_name, description)
 
@@ -77,6 +99,11 @@ class FritzBoxUpdateEntity(FritzBoxBaseCoordinatorEntity, UpdateEntity):
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         return self.coordinator.release_url
+
+    @override
+    async def async_release_notes(self) -> str | None:
+        """Return no release notes, FRITZ!OS only provides a release URL."""
+        return None
 
     @override
     async def async_install(

@@ -7,7 +7,6 @@ from typing import Any, override
 from adguardhome import AdGuardHome, AdGuardHomeError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -27,12 +26,21 @@ PARALLEL_UPDATES = 1
 class AdGuardHomeSwitchEntityDescription(SwitchEntityDescription):
     """Describes AdGuard Home switch entity."""
 
-    is_on_fn: Callable[[AdGuardHomeState], bool]
+    is_on_fn: Callable[[AdGuardHomeState], bool | None]
     turn_on_fn: Callable[[AdGuardHome], Callable[[], Coroutine[Any, Any, None]]]
     turn_off_fn: Callable[[AdGuardHome], Callable[[], Coroutine[Any, Any, None]]]
+    supported_fn: Callable[[AdGuardHomeState], bool] = lambda _: True
 
 
 SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
+    AdGuardHomeSwitchEntityDescription(
+        key="dhcp",
+        translation_key="dhcp",
+        is_on_fn=lambda data: data.dhcp_enabled,
+        turn_on_fn=lambda adguard: adguard.dhcp.enable,
+        turn_off_fn=lambda adguard: adguard.dhcp.disable,
+        supported_fn=lambda data: data.status.dhcp_available,
+    ),
     AdGuardHomeSwitchEntityDescription(
         key="protection",
         translation_key="protection",
@@ -87,7 +95,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.state
 
     async_add_entities(
-        AdGuardHomeSwitch(coordinator, description) for description in SWITCHES
+        AdGuardHomeSwitch(coordinator, description)
+        for description in SWITCHES
+        if description.supported_fn(coordinator.data)
     )
 
 
@@ -105,16 +115,7 @@ class AdGuardHomeSwitch(AdGuardHomeEntity[AdGuardHomeStateCoordinator], SwitchEn
         super().__init__(coordinator)
         entry = coordinator.config_entry
         self.entity_description = description
-        # Legacy format, kept as migrating existing unique IDs is not worth the risk
-        self._attr_unique_id = "_".join(  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
-            [
-                DOMAIN,
-                entry.data[CONF_HOST],
-                str(entry.data[CONF_PORT]),
-                "switch",
-                description.key,
-            ]
-        )
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -144,6 +145,12 @@ class AdGuardHomeSwitch(AdGuardHomeEntity[AdGuardHomeStateCoordinator], SwitchEn
 
     @property
     @override
-    def is_on(self) -> bool:
+    def available(self) -> bool:
+        """Return whether the switch state could be read."""
+        return super().available and self.is_on is not None
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
         """Return the state of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)

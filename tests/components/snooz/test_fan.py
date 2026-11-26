@@ -17,12 +17,8 @@ from pysnooz.testing import MockSnoozDevice
 import pytest
 
 from homeassistant.components import fan
-from homeassistant.components.snooz.const import (
-    ATTR_DURATION,
-    DOMAIN,
-    SERVICE_TRANSITION_OFF,
-    SERVICE_TRANSITION_ON,
-)
+from homeassistant.components.snooz.const import DOMAIN
+from homeassistant.components.snooz.services import SnoozService, SnoozServiceArgument
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -57,7 +53,7 @@ async def test_turn_on(hass: HomeAssistant, snooz_fan_entity_id: str) -> None:
     ("service", "command_name", "command", "expected_call", "expected_state"),
     [
         pytest.param(
-            SERVICE_TRANSITION_ON,
+            SnoozService.TRANSITION_ON,
             "turn_on",
             turn_on,
             {"volume": None, "duration": timedelta(seconds=1)},
@@ -65,7 +61,7 @@ async def test_turn_on(hass: HomeAssistant, snooz_fan_entity_id: str) -> None:
             id="on",
         ),
         pytest.param(
-            SERVICE_TRANSITION_OFF,
+            SnoozService.TRANSITION_OFF,
             "turn_off",
             turn_off,
             {"duration": timedelta(seconds=1)},
@@ -92,7 +88,7 @@ async def test_transition(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: [snooz_fan_entity_id], ATTR_DURATION: 1},
+            {ATTR_ENTITY_ID: [snooz_fan_entity_id], SnoozServiceArgument.DURATION: 1},
             blocking=True,
         )
 

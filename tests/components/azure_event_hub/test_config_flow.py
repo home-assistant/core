@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from azure.eventhub.exceptions import EventHubError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.azure_event_hub.const import (
@@ -28,8 +29,6 @@ from .const import (
     SAS_CONFIG_FULL,
     UPDATE_OPTIONS,
 )
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -162,6 +161,13 @@ async def test_connection_error_sas(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error_message}
 
+    mock_get_eventhub_properties.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        SAS_CONFIG.copy(),
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error_message"),
@@ -197,6 +203,13 @@ async def test_connection_error_cs(
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error_message}
+
+    mock_from_connection_string.return_value.get_eventhub_properties.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CS_CONFIG.copy(),
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow(hass: HomeAssistant, entry: MockConfigEntry) -> None:

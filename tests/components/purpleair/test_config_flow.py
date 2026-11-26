@@ -5,16 +5,21 @@ from unittest.mock import AsyncMock
 
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.purpleair.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    CONF_RADIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import TEST_API_KEY, TEST_SENSOR_INDEX1, TEST_SENSOR_INDEX2
-
-from tests.common import MockConfigEntry
 
 TEST_LATITUDE = 51.5285582
 TEST_LONGITUDE = -0.2416796
@@ -77,9 +82,11 @@ async def test_create_entry_by_coordinates(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            "latitude": TEST_LATITUDE,
-            "longitude": TEST_LONGITUDE,
-            "distance": 5,
+            CONF_LOCATION: {
+                CONF_LATITUDE: TEST_LATITUDE,
+                CONF_LONGITUDE: TEST_LONGITUDE,
+                CONF_RADIUS: 5000,
+            }
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -90,9 +97,11 @@ async def test_create_entry_by_coordinates(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            "latitude": TEST_LATITUDE,
-            "longitude": TEST_LONGITUDE,
-            "distance": 5,
+            CONF_LOCATION: {
+                CONF_LATITUDE: TEST_LATITUDE,
+                CONF_LONGITUDE: TEST_LONGITUDE,
+                CONF_RADIUS: 5000,
+            }
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -209,9 +218,11 @@ async def test_options_add_sensor(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "latitude": TEST_LATITUDE,
-            "longitude": TEST_LONGITUDE,
-            "distance": 5,
+            CONF_LOCATION: {
+                CONF_LATITUDE: TEST_LATITUDE,
+                CONF_LONGITUDE: TEST_LONGITUDE,
+                CONF_RADIUS: 5000,
+            }
         },
     )
 
@@ -224,9 +235,11 @@ async def test_options_add_sensor(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "latitude": TEST_LATITUDE,
-            "longitude": TEST_LONGITUDE,
-            "distance": 5,
+            CONF_LOCATION: {
+                CONF_LATITUDE: TEST_LATITUDE,
+                CONF_LONGITUDE: TEST_LONGITUDE,
+                CONF_RADIUS: 5000,
+            }
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -271,9 +284,11 @@ async def test_options_add_sensor_duplicate(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "latitude": TEST_LATITUDE,
-            "longitude": TEST_LONGITUDE,
-            "distance": 5,
+            CONF_LOCATION: {
+                CONF_LATITUDE: TEST_LATITUDE,
+                CONF_LONGITUDE: TEST_LONGITUDE,
+                CONF_RADIUS: 5000,
+            }
         },
     )
     assert result["type"] is FlowResultType.FORM

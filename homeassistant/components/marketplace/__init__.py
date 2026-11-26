@@ -53,6 +53,7 @@ from .migration import (
     async_remove_duplicate_entries,
     async_remove_legacy_files,
 )
+from .profiles import async_withdraw_profile_suggestions
 from .utils.backup import restore_interrupted_backups
 from .utils.file_system import async_exists
 from .utils.logger import LOGGER
@@ -96,7 +97,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Not tied to the entry, the panel explains a setup that failed. It is
     # reached from the Settings dashboard, so it never shows in the sidebar.
     async_register_built_in_panel(
-        hass, DOMAIN, require_admin=True, show_in_sidebar=False
+        hass,
+        DOMAIN,
+        sidebar_icon="mdi:store",
+        sidebar_title=DOMAIN,
+        require_admin=True,
+        show_in_sidebar=False,
     )
 
     # The custom integration lived at /hacs, where bookmarks still point
@@ -175,10 +181,12 @@ async def _async_ensure_www_directory(hass: HomeAssistant) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: MarketplaceConfigEntry
-) -> bool:
+) -> None:
     """Set up the Marketplace from its config entry."""
     async_adopt_legacy_install(hass, config_entry)
     await async_migrate_dashboard_resources(hass)
+    # Suggested again when the catalog is still out of reach with this profile
+    async_withdraw_profile_suggestions(hass)
 
     config_entry.runtime_data = marketplace = MarketplaceManager(hass, config_entry)
     LOGGER.info("Starting the Marketplace")
@@ -203,8 +211,6 @@ async def async_setup_entry(
     _async_start_once_started(hass, config_entry)
 
     await _async_follow_removed_users(hass, config_entry)
-
-    return True
 
 
 async def _async_prepare_config_directory(
@@ -322,7 +328,7 @@ async def _async_follow_removed_users(
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: MarketplaceConfigEntry
-) -> bool:
+) -> None:
     """Unload the Marketplace, once the installs that run are done."""
     marketplace = config_entry.runtime_data
 
@@ -330,8 +336,7 @@ async def async_unload_entry(
     await marketplace.async_wait_for_installs()
 
     # Nothing stops before this, a failed unload leaves the Marketplace running
-    if not await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
     # Cancelled first, the startup tasks add the recurring ones
     if (startup_task := marketplace.startup_task) is not None:
@@ -356,8 +361,6 @@ async def async_unload_entry(
     marketplace.disable(DisabledReason.REMOVED)
 
     hass.data.pop(STORAGE_CACHE_KEY, None)
-
-    return True
 
 
 async def async_remove_config_entry_device(

@@ -21,7 +21,7 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 
@@ -173,7 +173,7 @@ class ImmichMediaSource(MediaSource):
         )
 
     async def _async_build_immich(
-        self, item: MediaSourceItem, entries: list[ConfigEntry]
+        self, item: MediaSourceItem, entries: list[ImmichConfigEntry]
     ) -> tuple[str, list[BrowseMediaSource]]:
         """Return the title and the children of the browsed item."""
 
@@ -527,7 +527,9 @@ class ImmichMediaView(HomeAssistantView):
             if size == "person":
                 image = await immich_api.people.async_get_person_thumbnail(asset_id)
             else:
-                image = await immich_api.assets.async_view_asset(asset_id, size)
+                image = await immich_api.assets.async_view_asset(
+                    asset_id, size, edited=True
+                )
         except ImmichError as exc:
             raise HTTPNotFound from exc
         return Response(body=image, content_type=f"{mime_type_base}/{mime_type_format}")

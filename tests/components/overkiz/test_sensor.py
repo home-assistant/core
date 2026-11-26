@@ -1,26 +1,37 @@
 """Tests for the Overkiz sensor platform."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
 
+from aiohttp import ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import OverkizState
+from pyoverkiz.enums import MeasuredValueType, OverkizAttribute, OverkizState
+from pyoverkiz.models import Setup
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.components.overkiz.const import UPDATE_INTERVAL
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+    UnitOfEnergy,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
+from . import load_setup_fixture
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import (
     async_deliver_events,
     device_state_changed_event,
     device_unavailable_event,
 )
-
-from tests.common import snapshot_platform
 
 TEMPERATURE_SENSOR = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
@@ -48,11 +59,33 @@ COZYTOUCH_DHW = FixtureDevice(
     "io://1234-5678-5643/109286#2",
     "sensor.my_home_patio_water_heating_office_energy_meter_electric_energy_consumption",
 )
+HEATING_DISCRETE_RSSI = FixtureDevice(
+    "setup/cloud_nexity_rail_din_europe.json",
+    "io://1234-5678-1698/15702199#1",
+    "sensor.maple_residence_garden_radiator_discrete_rssi_level",
+)
+DHW_HEAT_PUMP_OPERATING_TIME = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "io://1234-5678-5643/6713703#1",
+    "sensor.my_home_water_heater_heat_pump_operating_time",
+)
+# Atlantic heater exposing core:ErrorCodeState (0 means no fault)
+COZYTOUCH_ERROR_CODE = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "modbuslink://1234-5678-5643/1#1",
+    "sensor.living_room_heater_error_code",
+)
 # Hitachi Yutaki heat pump exposing energy and temperature sensors
 YUTAKI = FixtureDevice(
     "setup/cloud_hi_kumo_europe.json",
     "modbus://1234-5678-2284/5416194/1#1",
     "sensor.my_house_yutaki_outdoor_ambient_temperature",
+)
+
+OVEN = FixtureDevice(
+    "setup/cloud_sauter_sop6615lb.json",
+    "ogp://1234-5678-9123/16000211",
+    "sensor.oven_end_time",
 )
 
 SNAPSHOT_FIXTURES = [
@@ -61,6 +94,7 @@ SNAPSHOT_FIXTURES = [
     HOMEKIT_STACK,
     COZYTOUCH_DHW,
     YUTAKI,
+    OVEN,
 ]
 
 
@@ -160,6 +194,165 @@ async def test_sensor_battery_level_state_update(
     assert state.state == "42"
 
 
+@pytest.mark.parametrize(
+    ("device", "state_name", "state_type", "value", "expected"),
+    [
+        pytest.param(
+            TEMPERATURE_SENSOR,
+            OverkizState.CORE_TEMPERATURE,
+            2,
+            0.0,
+            "0.0",
+            id="measurement",
+        ),
+        pytest.param(
+            COZYTOUCH_DHW,
+            OverkizState.CORE_ELECTRIC_ENERGY_CONSUMPTION,
+            1,
+            0,
+            "0",
+            id="total_increasing",
+        ),
+        pytest.param(
+            DHW_HEAT_PUMP_OPERATING_TIME,
+            OverkizState.IO_HEAT_PUMP_OPERATING_TIME,
+            1,
+            0,
+            "0",
+            id="no_state_class",
+        ),
+        pytest.param(
+            HEATING_DISCRETE_RSSI,
+            OverkizState.CORE_DISCRETE_RSSI_LEVEL,
+            3,
+            "",
+            STATE_UNKNOWN,
+            id="empty_string_enum",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_falsy_state_update(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    device: FixtureDevice,
+    state_name: OverkizState,
+    state_type: int,
+    value: float | str,
+    expected: str,
+) -> None:
+    """Test falsy values: 0 is a valid state, an empty string is unknown."""
+    await setup_overkiz_integration(fixture=device.fixture)
+
+    state = hass.states.get(device.entity_id)
+    assert state
+    assert state.state not in (expected, STATE_UNKNOWN)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=device.device_url,
+                device_states=[
+                    {"name": state_name.value, "type": state_type, "value": value},
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(device.entity_id)
+    assert state
+    assert state.state == expected
+
+
+async def test_sensor_dynamic_unit_with_zero_value(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the device-reported unit is used when the value is 0."""
+    await setup_overkiz_integration(fixture=COZYTOUCH_DHW.fixture)
+
+    state = hass.states.get(COZYTOUCH_DHW.entity_id)
+    assert state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.WATT_HOUR
+
+    # The unit is resolved on every state write, so switching the device's
+    # reported unit after setup is picked up by the next event
+    device = next(
+        device
+        for device in mock_client.setup.devices
+        if device.device_url == COZYTOUCH_DHW.device_url
+    )
+    device.attributes[
+        OverkizAttribute.CORE_MEASURED_VALUE_TYPE
+    ].value = MeasuredValueType.ELECTRICAL_ENERGY_IN_KWH
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=COZYTOUCH_DHW.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_ELECTRIC_ENERGY_CONSUMPTION.value,
+                        "type": 1,
+                        "value": 0,
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(COZYTOUCH_DHW.entity_id)
+    assert state
+    assert state.state == "0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.KILO_WATT_HOUR
+
+
+async def test_sensor_error_code_state_update(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test error code reports a fault and its clearing (0 → 370 → 0)."""
+    await setup_overkiz_integration(fixture=COZYTOUCH_ERROR_CODE.fixture)
+
+    state = hass.states.get(COZYTOUCH_ERROR_CODE.entity_id)
+    assert state
+    assert state.state == "0"
+
+    for value in (370, 0):
+        await async_deliver_events(
+            hass,
+            freezer,
+            mock_client,
+            [
+                device_state_changed_event(
+                    device_url=COZYTOUCH_ERROR_CODE.device_url,
+                    device_states=[
+                        {
+                            "name": OverkizState.CORE_ERROR_CODE.value,
+                            "type": 1,
+                            "value": value,
+                        },
+                    ],
+                )
+            ],
+        )
+
+        state = hass.states.get(COZYTOUCH_ERROR_CODE.entity_id)
+        assert state.state == str(value)
+
+
 async def test_sensor_unavailability(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
@@ -185,3 +378,149 @@ async def test_sensor_unavailability(
     )
 
     assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_oven_end_time(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the oven end time follows the pushed remaining time."""
+    await setup_overkiz_integration(fixture=OVEN.fixture)
+
+    assert hass.states.get(OVEN.entity_id).state == STATE_UNKNOWN
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                OVEN.device_url,
+                [
+                    {
+                        "name": OverkizState.CORE_RUNNING_TIMER.value,
+                        "type": 6,
+                        "value": True,
+                    },
+                    {
+                        "name": OverkizState.CORE_REMAINING_TIME.value,
+                        "type": 1,
+                        "value": 300,
+                    },
+                ],
+            )
+        ],
+    )
+
+    end_time = dt_util.utcnow().replace(microsecond=0) + timedelta(seconds=300)
+    assert hass.states.get(OVEN.entity_id).state == end_time.isoformat()
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                OVEN.device_url,
+                [
+                    {
+                        "name": OverkizState.CORE_RUNNING_TIMER.value,
+                        "type": 6,
+                        "value": False,
+                    }
+                ],
+            )
+        ],
+    )
+
+    assert hass.states.get(OVEN.entity_id).state == STATE_UNKNOWN
+
+
+def _timer_running(setup: Setup) -> None:
+    """Start the oven timer before Home Assistant sets up."""
+    setup.devices[0].states[OverkizState.CORE_RUNNING_TIMER.value].value = True
+
+
+async def test_oven_end_time_unknown_when_set_up_while_running(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the end time stays unknown when the timer was already running."""
+    await setup_overkiz_integration(fixture=OVEN.fixture, mutate=_timer_running)
+
+    assert hass.states.get(OVEN.entity_id).state == STATE_UNKNOWN
+
+
+def _timer_event(running: bool, remaining: int | None = None):
+    """Build an oven timer event."""
+    states = [
+        {"name": OverkizState.CORE_RUNNING_TIMER.value, "type": 6, "value": running}
+    ]
+    if remaining is not None:
+        states.append(
+            {
+                "name": OverkizState.CORE_REMAINING_TIME.value,
+                "type": 1,
+                "value": remaining,
+            }
+        )
+    return device_state_changed_event(OVEN.device_url, states)
+
+
+async def test_oven_end_time_restart_in_one_batch(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a timer restarted with the same duration within one poll is followed."""
+    await setup_overkiz_integration(fixture=OVEN.fixture)
+
+    await async_deliver_events(hass, freezer, mock_client, [_timer_event(True, 300)])
+    first_end = hass.states.get(OVEN.entity_id).state
+
+    freezer.tick(timedelta(minutes=2))
+    await async_deliver_events(
+        hass, freezer, mock_client, [_timer_event(False), _timer_event(True, 300)]
+    )
+
+    end_time = dt_util.utcnow().replace(microsecond=0) + timedelta(seconds=300)
+    assert hass.states.get(OVEN.entity_id).state == end_time.isoformat()
+    assert end_time.isoformat() != first_end
+
+
+@pytest.mark.parametrize(
+    ("refreshed_remaining", "kept"),
+    [(300, True), (600, False)],
+    ids=["same_duration", "new_duration"],
+)
+async def test_oven_end_time_after_device_refresh(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    refreshed_remaining: int,
+    kept: bool,
+) -> None:
+    """Test a device refresh keeps the end time only while the duration is unchanged."""
+    await setup_overkiz_integration(fixture=OVEN.fixture)
+    await async_deliver_events(hass, freezer, mock_client, [_timer_event(True, 300)])
+    end_time = hass.states.get(OVEN.entity_id).state
+
+    refreshed = load_setup_fixture(OVEN.fixture)
+    oven = refreshed.devices[0]
+    oven.states[OverkizState.CORE_RUNNING_TIMER.value].value = True
+    oven.states[OverkizState.CORE_REMAINING_TIME.value].value = refreshed_remaining
+    mock_client.get_devices.side_effect = None
+    mock_client.get_devices.return_value = refreshed.devices
+    mock_client.fetch_events.side_effect = ServerDisconnectedError()
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.get_devices.await_count >= 1
+    expected = end_time if kept else STATE_UNKNOWN
+    assert hass.states.get(OVEN.entity_id).state == expected

@@ -1,30 +1,17 @@
 """The tests for reproduction of state."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HUMIDITY,
-    ATTR_PRESET_MODE,
-    ATTR_SWING_HORIZONTAL_MODE,
-    ATTR_SWING_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_SWING_HORIZONTAL_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateEntityStateAttribute,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.climate.reproduce_state import async_reproduce_states
-from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import Context, HomeAssistant, State
-
-from tests.common import async_mock_service
 
 ENTITY_1 = "climate.test1"
 ENTITY_2 = "climate.test2"
@@ -33,7 +20,7 @@ ENTITY_2 = "climate.test2"
 @pytest.mark.parametrize("state", [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF])
 async def test_with_hvac_mode(hass: HomeAssistant, state) -> None:
     """Test that state different hvac states."""
-    calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HVAC_MODE)
+    calls = async_mock_service(hass, DOMAIN, ClimateService.SET_HVAC_MODE)
 
     await async_reproduce_states(hass, [State(ENTITY_1, state)])
 
@@ -45,7 +32,7 @@ async def test_with_hvac_mode(hass: HomeAssistant, state) -> None:
 
 async def test_multiple_state(hass: HomeAssistant) -> None:
     """Test that multiple states gets calls."""
-    calls_1 = async_mock_service(hass, DOMAIN, SERVICE_SET_HVAC_MODE)
+    calls_1 = async_mock_service(hass, DOMAIN, ClimateService.SET_HVAC_MODE)
 
     await async_reproduce_states(
         hass, [State(ENTITY_1, HVACMode.HEAT), State(ENTITY_2, HVACMode.AUTO)]
@@ -67,7 +54,7 @@ async def test_multiple_state(hass: HomeAssistant) -> None:
 
 async def test_state_with_none(hass: HomeAssistant) -> None:
     """Test that none is not a hvac state."""
-    calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HVAC_MODE)
+    calls = async_mock_service(hass, DOMAIN, ClimateService.SET_HVAC_MODE)
 
     await async_reproduce_states(hass, [State(ENTITY_1, None)])
 
@@ -78,7 +65,7 @@ async def test_state_with_none(hass: HomeAssistant) -> None:
 
 async def test_state_with_context(hass: HomeAssistant) -> None:
     """Test that context is forwarded."""
-    calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HVAC_MODE)
+    calls = async_mock_service(hass, DOMAIN, ClimateService.SET_HVAC_MODE)
 
     context = Context()
 
@@ -94,19 +81,56 @@ async def test_state_with_context(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("service", "attribute"),
+    ("service", "attribute", "argument"),
     [
-        (SERVICE_SET_PRESET_MODE, ATTR_PRESET_MODE),
-        (SERVICE_SET_SWING_MODE, ATTR_SWING_MODE),
-        (SERVICE_SET_SWING_HORIZONTAL_MODE, ATTR_SWING_HORIZONTAL_MODE),
-        (SERVICE_SET_FAN_MODE, ATTR_FAN_MODE),
-        (SERVICE_SET_HUMIDITY, ATTR_HUMIDITY),
-        (SERVICE_SET_TEMPERATURE, ATTR_TEMPERATURE),
-        (SERVICE_SET_TEMPERATURE, ATTR_TARGET_TEMP_HIGH),
-        (SERVICE_SET_TEMPERATURE, ATTR_TARGET_TEMP_LOW),
+        (
+            ClimateService.SET_PRESET_MODE,
+            ClimateEntityStateAttribute.PRESET_MODE,
+            ClimateServiceArgument.PRESET_MODE,
+        ),
+        (
+            ClimateService.SET_SWING_MODE,
+            ClimateEntityStateAttribute.SWING_MODE,
+            ClimateServiceArgument.SWING_MODE,
+        ),
+        (
+            ClimateService.SET_SWING_HORIZONTAL_MODE,
+            ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE,
+            ClimateServiceArgument.SWING_HORIZONTAL_MODE,
+        ),
+        (
+            ClimateService.SET_FAN_MODE,
+            ClimateEntityStateAttribute.FAN_MODE,
+            ClimateServiceArgument.FAN_MODE,
+        ),
+        (
+            ClimateService.SET_HUMIDITY,
+            ClimateEntityStateAttribute.TARGET_HUMIDITY,
+            ClimateServiceArgument.HUMIDITY,
+        ),
+        (
+            ClimateService.SET_TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE,
+            ClimateServiceArgument.TEMPERATURE,
+        ),
+        (
+            ClimateService.SET_TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMP_HIGH,
+            ClimateServiceArgument.TARGET_TEMP_HIGH,
+        ),
+        (
+            ClimateService.SET_TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMP_LOW,
+            ClimateServiceArgument.TARGET_TEMP_LOW,
+        ),
     ],
 )
-async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
+async def test_attribute(
+    hass: HomeAssistant,
+    service: str,
+    attribute: str,
+    argument: str,
+) -> None:
     """Test that service call is made for each attribute."""
     calls_1 = async_mock_service(hass, DOMAIN, service)
 
@@ -117,17 +141,23 @@ async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
     await hass.async_block_till_done()
 
     assert len(calls_1) == 1
-    assert calls_1[0].data == {"entity_id": ENTITY_1, attribute: value}
+    assert calls_1[0].data == {"entity_id": ENTITY_1, argument: value}
 
 
 @pytest.mark.parametrize(
     ("service", "attribute"),
     [
-        (SERVICE_SET_PRESET_MODE, ATTR_PRESET_MODE),
-        (SERVICE_SET_SWING_MODE, ATTR_SWING_MODE),
-        (SERVICE_SET_SWING_HORIZONTAL_MODE, ATTR_SWING_HORIZONTAL_MODE),
-        (SERVICE_SET_FAN_MODE, ATTR_FAN_MODE),
-        (SERVICE_SET_TEMPERATURE, ATTR_TEMPERATURE),
+        (ClimateService.SET_PRESET_MODE, ClimateEntityStateAttribute.PRESET_MODE),
+        (ClimateService.SET_SWING_MODE, ClimateEntityStateAttribute.SWING_MODE),
+        (
+            ClimateService.SET_SWING_HORIZONTAL_MODE,
+            ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE,
+        ),
+        (ClimateService.SET_FAN_MODE, ClimateEntityStateAttribute.FAN_MODE),
+        (
+            ClimateService.SET_TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE,
+        ),
     ],
 )
 async def test_attribute_with_none(hass: HomeAssistant, service, attribute) -> None:
@@ -143,7 +173,7 @@ async def test_attribute_with_none(hass: HomeAssistant, service, attribute) -> N
 
 async def test_attribute_partial_temperature(hass: HomeAssistant) -> None:
     """Test that service call ignores null attributes."""
-    calls_1 = async_mock_service(hass, DOMAIN, SERVICE_SET_TEMPERATURE)
+    calls_1 = async_mock_service(hass, DOMAIN, ClimateService.SET_TEMPERATURE)
 
     await async_reproduce_states(
         hass,
@@ -152,34 +182,9 @@ async def test_attribute_partial_temperature(hass: HomeAssistant) -> None:
                 ENTITY_1,
                 None,
                 {
-                    ATTR_TEMPERATURE: 23.1,
-                    ATTR_TARGET_TEMP_HIGH: None,
-                    ATTR_TARGET_TEMP_LOW: None,
-                },
-            )
-        ],
-    )
-
-    await hass.async_block_till_done()
-
-    assert len(calls_1) == 1
-    assert calls_1[0].data == {"entity_id": ENTITY_1, ATTR_TEMPERATURE: 23.1}
-
-
-async def test_attribute_partial_high_low_temperature(hass: HomeAssistant) -> None:
-    """Test that service call ignores null attributes."""
-    calls_1 = async_mock_service(hass, DOMAIN, SERVICE_SET_TEMPERATURE)
-
-    await async_reproduce_states(
-        hass,
-        [
-            State(
-                ENTITY_1,
-                None,
-                {
-                    ATTR_TEMPERATURE: None,
-                    ATTR_TARGET_TEMP_HIGH: 30.1,
-                    ATTR_TARGET_TEMP_LOW: 20.2,
+                    ClimateEntityStateAttribute.TARGET_TEMPERATURE: 23.1,
+                    ClimateEntityStateAttribute.TARGET_TEMP_HIGH: None,
+                    ClimateEntityStateAttribute.TARGET_TEMP_LOW: None,
                 },
             )
         ],
@@ -190,6 +195,34 @@ async def test_attribute_partial_high_low_temperature(hass: HomeAssistant) -> No
     assert len(calls_1) == 1
     assert calls_1[0].data == {
         "entity_id": ENTITY_1,
-        ATTR_TARGET_TEMP_HIGH: 30.1,
-        ATTR_TARGET_TEMP_LOW: 20.2,
+        ClimateServiceArgument.TEMPERATURE: 23.1,
+    }
+
+
+async def test_attribute_partial_high_low_temperature(hass: HomeAssistant) -> None:
+    """Test that service call ignores null attributes."""
+    calls_1 = async_mock_service(hass, DOMAIN, ClimateService.SET_TEMPERATURE)
+
+    await async_reproduce_states(
+        hass,
+        [
+            State(
+                ENTITY_1,
+                None,
+                {
+                    ClimateEntityStateAttribute.TARGET_TEMPERATURE: None,
+                    ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 30.1,
+                    ClimateEntityStateAttribute.TARGET_TEMP_LOW: 20.2,
+                },
+            )
+        ],
+    )
+
+    await hass.async_block_till_done()
+
+    assert len(calls_1) == 1
+    assert calls_1[0].data == {
+        "entity_id": ENTITY_1,
+        ClimateServiceArgument.TARGET_TEMP_HIGH: 30.1,
+        ClimateServiceArgument.TARGET_TEMP_LOW: 20.2,
     }

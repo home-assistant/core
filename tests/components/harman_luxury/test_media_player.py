@@ -7,26 +7,29 @@ from unittest.mock import AsyncMock, patch
 from aioharmanluxury import HarmanLuxuryError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -34,8 +37,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import PLAYER_STATE
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "media_player.dining_room"
 
@@ -62,8 +63,8 @@ async def test_volume_set(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        MediaPlayerService.VOLUME_SET,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5},
         blocking=True,
     )
     mock_client.async_set_volume.assert_awaited_once_with(50)
@@ -76,8 +77,11 @@ async def test_volume_mute(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
     mock_client.async_set_mute.assert_awaited_once_with(True)
@@ -119,8 +123,8 @@ async def test_command_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PAUSE,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            MediaPlayerService.MEDIA_PAUSE,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -144,8 +148,8 @@ async def test_media_play_when_paused(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        MediaPlayerService.MEDIA_PLAY,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_client.async_control.assert_awaited_once_with("play")

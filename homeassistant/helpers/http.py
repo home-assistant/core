@@ -70,11 +70,14 @@ def request_handler_factory(
             except NoURLAvailableError:
                 # Omit header to avoid leaking configured URLs
                 raise HTTPUnauthorized from None
+            resource_path = (
+                "" if request.rel_url.raw_path == "/" else request.rel_url.raw_path
+            )
             raise HTTPUnauthorized(
                 headers={
                     "WWW-Authenticate": (
                         f'Bearer resource_metadata="{url_prefix}'
-                        '/.well-known/oauth-protected-resource"'
+                        f'/.well-known/oauth-protected-resource{resource_path}"'
                     )
                 }
             )
@@ -86,6 +89,10 @@ def request_handler_factory(
                 request.remote,
                 authenticated,
             )
+
+        # Set before the handler, decorators like RequestDataValidator read the body
+        if view.max_body_size is not None:
+            request._client_max_size = view.max_body_size  # noqa: SLF001
 
         try:
             if is_coroutinefunction:
@@ -131,6 +138,8 @@ class HomeAssistantView:
     # Views inheriting from this class can override this
     requires_auth = True
     cors_allowed = False
+    # Maximum request body size in bytes, None keeps the server default
+    max_body_size: int | None = None
 
     @staticmethod
     def context(request: web.Request) -> Context:
@@ -183,7 +192,7 @@ class HomeAssistantView:
 
     def register(
         self, hass: HomeAssistant, app: web.Application, router: web.UrlDispatcher
-    ) -> None:
+    ) -> list[AbstractRoute]:
         """Register the view with a router."""
         assert self.url is not None, "No url set for view"
         urls = [self.url, *self.extra_urls]
@@ -206,3 +215,5 @@ class HomeAssistantView:
         if allow_cors:
             for route in routes:
                 allow_cors(route)
+
+        return routes

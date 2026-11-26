@@ -1,6 +1,7 @@
 """Tests for the Tankerkoening integration."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock
 
 from aiotankerkoenig.exceptions import (
@@ -9,7 +10,9 @@ from aiotankerkoenig.exceptions import (
     TankerkoenigInvalidKeyError,
     TankerkoenigRateLimitError,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -25,9 +28,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .const import CONFIG_DATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed
+from .const import CONFIG_DATA, STATION
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -35,7 +36,6 @@ async def test_rate_limit(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     tankerkoenig: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test detection of API rate limit."""
     assert config_entry.state is ConfigEntryState.LOADED
@@ -48,9 +48,6 @@ async def test_rate_limit(
         hass, dt_util.utcnow() + timedelta(minutes=DEFAULT_SCAN_INTERVAL)
     )
     await hass.async_block_till_done()
-    assert (
-        "API rate limit reached, consider to increase polling interval" in caplog.text
-    )
     state = hass.states.get("binary_sensor.station_somewhere_street_1_status")
     assert state
     assert state.state == STATE_UNAVAILABLE
@@ -74,7 +71,7 @@ async def test_rate_limit(
         ),
         (
             TankerkoenigRateLimitError,
-            "API rate limit reached, consider to increase polling interval",
+            "You have reached the rate limit for the Tankerkoenig API",
         ),
         (TankerkoenigConnectionError, "error occur during update of stations"),
         (TankerkoenigError, "error occur during update of stations"),
@@ -229,3 +226,111 @@ async def test_many_stations_warning(
     await hass.async_block_till_done()
 
     assert "Found more than 10 stations to check" in caplog.text
+
+
+async def test_station_details_cached(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tankerkoenig: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test station details are only fetched again after the cache expired."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert tankerkoenig.station_details.call_count == 1
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert tankerkoenig.station_details.call_count == 1
+    assert hass.states.get("binary_sensor.station_somewhere_street_1_status")
+    # The cached fuel fields still create the price sensors
+    for entity_id in (
+        "sensor.station_somewhere_street_1_super_e10",
+        "sensor.station_somewhere_street_1_super",
+        "sensor.station_somewhere_street_1_diesel",
+    ):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+
+    freezer.tick(timedelta(days=8))
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert tankerkoenig.station_details.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(TankerkoenigConnectionError, id="connection_error"),
+        pytest.param(TankerkoenigRateLimitError, id="rate_limit"),
+    ],
+)
+async def test_expired_cache_used_when_details_fail(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tankerkoenig: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    exception: type[Exception],
+) -> None:
+    """Test expired station details are used when they cannot be fetched."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(days=8))
+    tankerkoenig.station_details.side_effect = exception
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert tankerkoenig.station_details.call_count == 2
+    assert hass.states.get("binary_sensor.station_somewhere_street_1_status")
+
+
+@pytest.mark.usefixtures("tankerkoenig")
+async def test_station_cache_removed_with_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the station cache is removed together with the config entry."""
+    key = f"{DOMAIN}.{config_entry.entry_id}.stations"
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert key in hass_storage
+
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert key not in hass_storage
+
+
+async def test_fetched_stations_saved_when_setup_fails(
+    hass: HomeAssistant,
+    tankerkoenig: AsyncMock,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test stations fetched before a failing one are kept in the cache."""
+    first, second = (
+        "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8",
+        "36b4b812-xxxx-xxxx-xxxx-c51735325858",
+    )
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={CONF_SHOW_ON_MAP: True},
+        data={**CONFIG_DATA, CONF_STATIONS: [first, second]},
+    )
+    tankerkoenig.station_details.side_effect = [
+        STATION,
+        TankerkoenigConnectionError,
+    ]
+    config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    stations = hass_storage[f"{DOMAIN}.{config_entry.entry_id}.stations"]["data"][
+        "stations"
+    ]
+    assert list(stations) == [first]

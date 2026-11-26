@@ -3,11 +3,10 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.helpers.device_registry import HomeAssistant
 from homeassistant.helpers.entity_platform import timedelta
-
-from tests.common import async_fire_time_changed
 
 
 async def update_callback_entity(

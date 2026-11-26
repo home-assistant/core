@@ -30,16 +30,16 @@ from homeassistant.components.climate import (
     PRESET_ECO,
     PRESET_NONE,
     PRESET_SLEEP,
-    SERVICE_TURN_ON,
     ClimateEntityFeature,
+    ClimateService,
     HVACAction,
     HVACMode,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -538,8 +538,8 @@ async def test_thermostat_turn_on_already_on(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "climate.my_thermostat"},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: "climate.my_thermostat"},
         blocking=True,
     )
 
@@ -573,8 +573,8 @@ async def test_thermostat_turn_on_from_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "climate.my_thermostat"},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: "climate.my_thermostat"},
         blocking=True,
     )
 
@@ -1934,6 +1934,41 @@ async def test_thermostat_hvac_mode_failure(
     assert "preset mode" in str(e_info)
     assert "climate.my_thermostat" in str(e_info)
     assert PRESET_ECO in str(e_info)
+
+
+async def test_thermostat_set_temperature_eco(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+) -> None:
+    """Test setting a temperature while the thermostat is in eco mode."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "HEAT",
+            },
+            "sdm.devices.traits.ThermostatEco": {
+                "availableModes": ["MANUAL_ECO", "OFF"],
+                "mode": "MANUAL_ECO",
+                "heatCelsius": 15.0,
+                "coolCelsius": 28.0,
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 19.0,
+            },
+        },
+    )
+    await setup_platform()
+
+    with pytest.raises(HomeAssistantError) as err:
+        await common.async_set_temperature(hass, temperature=24.0)
+
+    assert "temperature to 24.0" in str(err.value)
+    assert "Cannot set temperature while in ECO preset mode." in str(err.value)
+    assert not auth.captured_requests
 
 
 async def test_thermostat_available(

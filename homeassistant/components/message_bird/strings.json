@@ -1,0 +1,7 @@
+{
+  "exceptions": {
+    "send_message_failed": {
+      "message": "Failed to send the MessageBird message to: {targets}."
+    }
+  }
+}

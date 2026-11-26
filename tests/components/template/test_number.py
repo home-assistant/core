@@ -4,6 +4,8 @@ from enum import StrEnum
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import number
@@ -52,9 +54,6 @@ from .conftest import (
     setup_mock_template_entity_restore_state,
     setup_restore_template_entity,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 TEST_AVAILABILITY_ENTITY_ID = "binary_sensor.test_availability"
 TEST_MAXIMUM_ENTITY_ID = "sensor.maximum"

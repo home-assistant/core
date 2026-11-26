@@ -1,0 +1,89 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This infrared emitter is already configured to control a bidet.",
+      "no_emitters": "[%key:component::infrared::common::no_infrared_emitters%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "infrared_emitter_entity_id": "[%key:component::infrared::common::infrared_entity_id%]"
+        },
+        "data_description": {
+          "infrared_emitter_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]"
+        },
+        "description": "Change the infrared emitter used to control your Alpha Bidet.",
+        "title": "Reconfigure Alpha Bidet IR"
+      },
+      "user": {
+        "data": {
+          "infrared_emitter_entity_id": "[%key:component::infrared::common::infrared_entity_id%]",
+          "model": "Bidet model"
+        },
+        "data_description": {
+          "infrared_emitter_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]",
+          "model": "Choose your Alpha Bidet model from the list."
+        },
+        "description": "Configure your Alpha Bidet for IR control.",
+        "title": "Set up Alpha Bidet IR"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "dry": {
+        "name": "Dry"
+      },
+      "easy_wash": {
+        "name": "Easy wash"
+      },
+      "front": {
+        "name": "Front"
+      },
+      "nozzle_down": {
+        "name": "Nozzle down"
+      },
+      "nozzle_up": {
+        "name": "Nozzle up"
+      },
+      "rear": {
+        "name": "Rear"
+      },
+      "stop": {
+        "name": "Stop"
+      },
+      "stop_hold": {
+        "name": "Stop (hold)"
+      },
+      "wash_and_dry": {
+        "name": "Wash and dry"
+      },
+      "water_dry_down": {
+        "name": "Water/dry down"
+      },
+      "water_dry_up": {
+        "name": "Water/dry up"
+      }
+    },
+    "select": {
+      "seat_temperature": {
+        "name": "Seat temperature",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "water_temperature": {
+        "name": "Water temperature",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    }
+  }
+}

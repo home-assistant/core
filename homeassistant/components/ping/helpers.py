@@ -3,6 +3,7 @@
 import asyncio
 from contextlib import suppress
 import logging
+import os
 import re
 from typing import TYPE_CHECKING, Any
 
@@ -21,6 +22,8 @@ PING_MATCHER = re.compile(
 PING_MATCHER_BUSYBOX = re.compile(
     r"(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)"
 )
+
+PING_LOSS_MATCHER = re.compile(r"(?P<loss>\d+(?:\.\d+)?)% packet loss")
 
 WIN32_PING_MATCHER = re.compile(r"(?P<min>\d+)ms.+(?P<max>\d+)ms.+(?P<avg>\d+)ms")
 
@@ -61,6 +64,7 @@ class PingDataICMPLib(PingData):
         except NameLookupError:
             _LOGGER.debug("Error resolving host: %s", self.ip_address)
             self.is_alive = False
+            self.data = None
             return
 
         _LOGGER.debug(
@@ -73,7 +77,8 @@ class PingDataICMPLib(PingData):
 
         self.is_alive = data.is_alive
         if not self.is_alive:
-            self.data = None
+            # No replies is still a measurement: report 100% packet loss
+            self.data = {"loss": data.packet_loss * 100}
             return
 
         self.data = {
@@ -115,6 +120,8 @@ class PingDataSubProcess(PingData):
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             close_fds=False,  # required for posix_spawn
+            # The output is parsed, so force the untranslated C locale
+            env={**os.environ, "LC_ALL": "C"},
         )
         try:
             async with asyncio.timeout(self._count + PING_TIMEOUT):
@@ -143,6 +150,17 @@ class PingDataSubProcess(PingData):
                     pinger.returncode,
                 )
 
+            # The statistics line is only printed when the host name resolved
+            # and the ping ran, so a missing line means no measurement
+            loss_match = PING_LOSS_MATCHER.search(str(out_data))
+            if loss_match is None:
+                _LOGGER.debug("No packet statistics in output of: %s", self.ip_address)
+                return None
+            loss = float(loss_match["loss"])
+            if loss == 100:
+                # No replies is still a measurement: report 100% packet loss
+                return {"loss": loss}
+
             if "max/" not in str(out_data):
                 match = PING_MATCHER_BUSYBOX.search(
                     str(out_data).rsplit("\n", maxsplit=1)[-1]
@@ -150,7 +168,7 @@ class PingDataSubProcess(PingData):
                 if TYPE_CHECKING:
                     assert match is not None
                 rtt_min, rtt_avg, rtt_max = match.groups()
-                return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max}
+                return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "loss": loss}
             match = PING_MATCHER.search(str(out_data).rsplit("\n", maxsplit=1)[-1])
             if TYPE_CHECKING:
                 assert match is not None
@@ -162,18 +180,23 @@ class PingDataSubProcess(PingData):
                 self._count + PING_TIMEOUT,
             )
 
-            if pinger:
-                with suppress(TypeError, ProcessLookupError):
-                    pinger.kill()
-                del pinger
+            with suppress(TypeError, ProcessLookupError):
+                pinger.kill()
+            del pinger
 
             return None
         except AttributeError as err:
             _LOGGER.debug("Error matching ping output: %s", err)
             return None
-        return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
+        return {
+            "min": rtt_min,
+            "avg": rtt_avg,
+            "max": rtt_max,
+            "mdev": rtt_mdev,
+            "loss": loss,
+        }
 
     async def async_update(self) -> None:
         """Retrieve the latest details from the host."""
         self.data = await self.async_ping()
-        self.is_alive = self.data is not None
+        self.is_alive = self.data is not None and "avg" in self.data

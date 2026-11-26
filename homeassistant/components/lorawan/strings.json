@@ -1,0 +1,6 @@
+{
+  "common": {
+    "no_lorawan_connections": "Please first configure your LoRaWAN backend and make sure it is connected, then try again.",
+    "no_supported_devices": "No supported devices were found on your LoRaWAN connections."
+  }
+}

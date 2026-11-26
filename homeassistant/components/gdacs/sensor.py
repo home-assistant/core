@@ -27,7 +27,6 @@ ATTR_CREATED = "created"
 ATTR_UPDATED = "updated"
 ATTR_REMOVED = "removed"
 
-DEFAULT_UNIT_OF_MEASUREMENT = "alerts"
 
 # An update of this entity is not making a web request, but uses internal data only.
 PARALLEL_UPDATES = 0
@@ -47,7 +46,6 @@ class GdacsSensor(SensorEntity):
     """Status sensor for the GDACS integration."""
 
     _attr_should_poll = False
-    _attr_native_unit_of_measurement = DEFAULT_UNIT_OF_MEASUREMENT
     _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = "alerts"
@@ -102,10 +100,9 @@ class GdacsSensor(SensorEntity):
     async def async_update(self) -> None:
         """Update this entity from the data held in the feed manager."""
         _LOGGER.debug("Updating %s", self._config_entry_id)
-        if self._manager:
-            status_info = self._manager.status_info()
-            if status_info:
-                self._update_from_status_info(status_info)
+        status_info = self._manager.status_info()
+        if status_info:
+            self._update_from_status_info(status_info)
 
     def _update_from_status_info(self, status_info: StatusUpdate) -> None:
         """Update the internal state from the provided information."""

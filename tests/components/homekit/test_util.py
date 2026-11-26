@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
@@ -49,9 +50,12 @@ from homeassistant.components.homekit.const import (
     TYPE_FAUCET,
     TYPE_HEATER_COOLER,
     TYPE_OUTLET,
+    TYPE_SET_TOP_BOX,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
+    TYPE_STREAMING_STICK,
     TYPE_SWITCH,
+    TYPE_TELEVISION,
     TYPE_THERMOSTAT,
     TYPE_VALVE,
 )
@@ -86,8 +90,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 
 from .util import async_init_integration
-
-from tests.common import MockConfigEntry
 
 
 def _mock_socket(failure_attempts: int = 0) -> MagicMock:
@@ -131,6 +133,8 @@ def test_validate_entity_config() -> None:
                 ]
             }
         },
+        {"media_player.test": {CONF_TYPE: "invalid_type"}},
+        {"media_player.test": {CONF_TYPE: TYPE_OUTLET}},
         {"switch.test": {CONF_TYPE: "invalid_type"}},
         {
             "switch.test": {
@@ -225,6 +229,19 @@ def test_validate_entity_config() -> None:
             CONF_LOW_BATTERY_THRESHOLD: 20,
         }
     }
+
+    for media_player_type in (
+        TYPE_SET_TOP_BOX,
+        TYPE_STREAMING_STICK,
+        TYPE_TELEVISION,
+    ):
+        assert vec({"media_player.demo": {CONF_TYPE: media_player_type}}) == {
+            "media_player.demo": {
+                CONF_FEATURE_LIST: {},
+                CONF_LOW_BATTERY_THRESHOLD: 20,
+                CONF_TYPE: media_player_type,
+            }
+        }
 
     assert vec({"switch.demo": {CONF_TYPE: TYPE_FAUCET}}) == {
         "switch.demo": {CONF_TYPE: TYPE_FAUCET, CONF_LOW_BATTERY_THRESHOLD: 20}

@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -46,20 +47,22 @@ class HikvisionData:
 type HikvisionConfigEntry = ConfigEntry[HikvisionData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> None:
     """Set up Hikvision from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     ssl = entry.data[CONF_SSL]
+    # Entries created before the option existed always verified the certificate
+    verify_ssl = entry.data.get(CONF_VERIFY_SSL, True)
 
     protocol = "https" if ssl else "http"
     url = f"{protocol}://{host}"
 
     try:
         camera = await hass.async_add_executor_job(
-            HikCamera, url, port, username, password, ssl
+            HikCamera, url, port, username, password, verify_ssl
         )
     except requests.exceptions.RequestException as err:
         raise ConfigEntryNotReady(f"Unable to connect to {host}") from err
@@ -75,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
     channels: dict[int, VideoChannel] = {}
     if device_type == "NVR":
         channel_list = await hass.async_add_executor_job(
-            get_video_channels, host, port, username, password, ssl
+            get_video_channels, host, port, username, password, ssl, verify_ssl
         )
         channels = {ch.id: ch for ch in channel_list}
         _LOGGER.debug("Found %d video channels", len(channels))
@@ -170,13 +173,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Stop the event stream
-        await hass.async_add_executor_job(entry.runtime_data.camera.disconnect)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Stop the event stream
+    await hass.async_add_executor_job(entry.runtime_data.camera.disconnect)

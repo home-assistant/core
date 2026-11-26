@@ -7,14 +7,17 @@ from unittest.mock import AsyncMock, patch
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from pydrawise.schema import Controller
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hydrawise.const import MAIN_SCAN_INTERVAL
 from homeassistant.const import STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_all_binary_sensors(

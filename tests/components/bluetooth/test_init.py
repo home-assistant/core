@@ -13,6 +13,20 @@ from bluetooth_adapters import DEFAULT_ADDRESS
 from habluetooth import scanner, set_manager
 from habluetooth.wrappers import HaBleakScannerWrapper
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    FakeRemoteScanner,
+    FakeScanner,
+    MockBleakClient,
+    _get_manager,
+    async_setup_with_default_adapter,
+    async_setup_with_one_adapter,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement,
+    inject_advertisement_with_time_and_source_connectable,
+    patch_discovered_devices,
+)
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -59,22 +73,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import get_scheduled_timer_handles
-
-from . import (
-    FakeRemoteScanner,
-    FakeScanner,
-    MockBleakClient,
-    _get_manager,
-    async_setup_with_default_adapter,
-    async_setup_with_one_adapter,
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_advertisement,
-    inject_advertisement_with_time_and_source_connectable,
-    patch_discovered_devices,
-)
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
@@ -3368,6 +3366,11 @@ async def test_three_adapters_one_missing(
     assert not await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.reason == "Bluetooth adapter with address 00:00:00:00:00:03 not found"
+    assert entry.error_reason_translation_key == "adapter_not_found"
+    assert entry.error_reason_translation_placeholders == {
+        "address": "00:00:00:00:00:03"
+    }
 
 
 @pytest.mark.usefixtures("one_adapter")

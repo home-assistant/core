@@ -19,7 +19,7 @@ async def test_binary_sensor(
     vera_device.vera_device_id = vera_device.device_id
     vera_device.name = "dev1"
     vera_device.is_tripped = False
-    entity_id = "binary_sensor.dev1_1"
+    entity_id = "binary_sensor.dev1"
 
     component_data = await vera_component_factory.configure_component(
         hass=hass,

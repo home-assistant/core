@@ -1,5 +1,7 @@
 """Storage handlers."""
 
+import glob
+import os
 from typing import Any
 
 from homeassistant.core import HomeAssistant
@@ -58,6 +60,17 @@ def get_storage_for_key(hass: HomeAssistant, key: str) -> Store[Any]:
     return cache[key]
 
 
+def corrupt_copy_of_missing_file(path: str) -> str | None:
+    """Return the path of the renamed copy of a corrupt storage file, or None.
+
+    The storage helper renames a file with invalid JSON to <path>.corrupt.<time>
+    and loads nothing. A copy next to an existing file is stale and ignored.
+    """
+    if os.path.exists(path):
+        return None
+    return max(glob.glob(f"{glob.escape(path)}.corrupt.*"), default=None)
+
+
 def _load_legacy_file(path: str) -> Any:
     """Read a storage file of the custom integration, None if there is none.
 
@@ -98,6 +111,9 @@ async def _async_adopt_legacy_data(
     from the custom integration picks up where it left off.
     """
     if (legacy_key := LEGACY_STORAGE_KEYS.get(key)) is None:
+        return None
+    # Our own file was renamed as corrupt, adopting the older legacy data would hide that
+    if await hass.async_add_executor_job(corrupt_copy_of_missing_file, store.path):
         return None
 
     legacy_path = hass.config.path(STORAGE_DIR, legacy_key)

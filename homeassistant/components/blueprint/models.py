@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 import logging
+import os
 import pathlib
 import shutil
 from typing import Any
@@ -21,6 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.field_visibility import get_hidden_fields
 from homeassistant.util import yaml as yaml_util
 
 from .const import (
@@ -31,6 +33,7 @@ from .const import (
     CONF_MIN_VERSION,
     CONF_SOURCE_URL,
     CONF_USE_BLUEPRINT,
+    CONF_VISIBLE,
     DOMAIN,
 )
 from .errors import (
@@ -57,6 +60,8 @@ class Blueprint:
         schema: Callable[[Any], Any],
     ) -> None:
         """Initialize a blueprint."""
+        self._original_data = data
+
         try:
             data = self.data = schema(data)
         except probatio.Invalid as err:
@@ -104,6 +109,21 @@ class Blueprint:
         return inputs
 
     @property
+    def input_visibility(self) -> dict[str, Any]:
+        """Return the visible condition of each input, including its section's."""
+        visibility = {}
+        for key, value in self.data[CONF_BLUEPRINT][CONF_INPUT].items():
+            if value and CONF_INPUT in value:
+                for name, blueprint_input in value[CONF_INPUT].items():
+                    visibility[name] = _combine_visible(
+                        value.get(CONF_VISIBLE),
+                        (blueprint_input or {}).get(CONF_VISIBLE),
+                    )
+            else:
+                visibility[key] = _combine_visible((value or {}).get(CONF_VISIBLE))
+        return visibility
+
+    @property
     def metadata(self) -> dict[str, Any]:
         """Return blueprint metadata."""
         return self.data[CONF_BLUEPRINT]  # type: ignore[no-any-return]
@@ -112,10 +132,11 @@ class Blueprint:
         """Update metadata."""
         if source_url is not None:
             self.data[CONF_BLUEPRINT][CONF_SOURCE_URL] = source_url
+            self._original_data[CONF_BLUEPRINT][CONF_SOURCE_URL] = source_url
 
     def yaml(self) -> str:
         """Dump blueprint as YAML."""
-        return yaml_util.dump(self.data)
+        return yaml_util.dump(self._original_data)
 
     @callback
     def validate(self) -> list[str] | None:
@@ -161,6 +182,16 @@ class BlueprintInputs:
             blueprint_input = self.blueprint.inputs[inp]
             if isinstance(blueprint_input, dict) and CONF_DEFAULT in blueprint_input:
                 inputs_with_default[inp] = blueprint_input[CONF_DEFAULT]
+
+        for inp in get_hidden_fields(
+            self.blueprint.input_visibility, inputs_with_default
+        ):
+            blueprint_input = self.blueprint.inputs[inp]
+            inputs_with_default[inp] = (
+                blueprint_input.get(CONF_DEFAULT)
+                if isinstance(blueprint_input, dict)
+                else None
+            )
 
         return inputs_with_default
 
@@ -215,6 +246,19 @@ class DomainBlueprints:
         """Return the blueprint folder."""
         return pathlib.Path(self.hass.config.path(BLUEPRINT_FOLDER, self.domain))
 
+    def _blueprint_file(self, blueprint_path: str) -> pathlib.Path:
+        """Return the file of a blueprint, which must be in the blueprint folder."""
+        folder = pathlib.Path(os.path.normpath(self.blueprint_folder))
+        # Checked without resolving links, so a blueprint linked into the folder
+        # from elsewhere still works
+        path = pathlib.Path(os.path.normpath(folder / blueprint_path))
+        if path == folder or not path.is_relative_to(folder):
+            raise BlueprintException(
+                self.domain,
+                f"Blueprint path {blueprint_path} is not in the blueprint folder",
+            )
+        return path
+
     async def async_reset_cache(self) -> None:
         """Reset the blueprint cache."""
         async with self._load_lock:
@@ -224,7 +268,7 @@ class DomainBlueprints:
         """Load a blueprint."""
         try:
             blueprint_data = yaml_util.load_yaml_dict(
-                self.blueprint_folder / blueprint_path
+                self._blueprint_file(blueprint_path)
             )
         except FileNotFoundError as err:
             raise FailedToLoad(
@@ -325,7 +369,7 @@ class DomainBlueprints:
         """Remove a blueprint file."""
         if self._blueprint_in_use(self.hass, blueprint_path):
             raise BlueprintInUse(self.domain, blueprint_path)
-        path = self.blueprint_folder / blueprint_path
+        path = self._blueprint_file(blueprint_path)
         await self.hass.async_add_executor_job(path.unlink)
         self._blueprints[blueprint_path] = None
 
@@ -337,9 +381,7 @@ class DomainBlueprints:
         Returns true if the action overrides an existing blueprint.
         """
 
-        path = pathlib.Path(
-            self.hass.config.path(BLUEPRINT_FOLDER, self.domain, blueprint_path)
-        )
+        path = self._blueprint_file(blueprint_path)
         exists = path.exists()
 
         if not allow_override and exists:
@@ -382,3 +424,15 @@ class DomainBlueprints:
             )
 
         await self.hass.async_add_executor_job(populate)
+
+
+def _combine_visible(*options: Any) -> bool | list[Any]:
+    """Combine visible options so all of them must match."""
+    conditions: list[Any] = []
+    for visible in options:
+        if visible is None or visible is True:
+            continue
+        if visible is False:
+            return False
+        conditions.extend(visible if isinstance(visible, list) else [visible])
+    return conditions

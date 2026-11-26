@@ -24,7 +24,7 @@ async def test_light(
     vera_device.get_brightness = MagicMock(return_value=0)
     vera_device.get_color = MagicMock(return_value=[0, 0, 0])
     vera_device.is_dimmable = True
-    entity_id = "light.dev1_1"
+    entity_id = "light.dev1"
 
     component_data = await vera_component_factory.configure_component(
         hass=hass,

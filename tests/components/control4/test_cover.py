@@ -1,37 +1,31 @@
 """Test Control4 Cover."""
 
 from collections.abc import Generator
-from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.control4.const import DEFAULT_SCAN_INTERVAL
+from homeassistant.components.control4.coordinator import SCAN_INTERVAL
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from . import mock_director_variables, setup_integration
 
 ENTITY_ID = "cover.test_controller_living_room_shade"
 
@@ -62,25 +56,17 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture
-def mock_cover_variables() -> dict:
+def mock_cover_variables() -> dict[int, dict[str, Any]]:
     """Mock cover variable data for default blind state."""
     return _make_cover_data()
 
 
 @pytest.fixture
 def mock_cover_update_variables(
-    mock_cover_variables: dict,
-) -> Generator[AsyncMock]:
-    """Mock update_variables for cover platform."""
-
-    async def _mock_update_variables(*args, **kwargs):
-        return mock_cover_variables
-
-    with patch(
-        "homeassistant.components.control4.cover.update_variables_for_config_entry",
-        new=_mock_update_variables,
-    ) as mock_update:
-        yield mock_update
+    mock_c4_director: MagicMock, mock_cover_variables: dict[int, dict[str, Any]]
+) -> None:
+    """Mock the cover variables reported by the director."""
+    mock_director_variables(mock_c4_director, mock_cover_variables)
 
 
 @pytest.fixture
@@ -188,8 +174,8 @@ async def test_open_cover(
     """Test opening the cover dispatches to pyControl4."""
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_c4_blind.open.assert_called_once_with()
@@ -208,8 +194,8 @@ async def test_close_cover(
     """Test closing the cover dispatches to pyControl4."""
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_c4_blind.close.assert_called_once_with()
@@ -228,8 +214,8 @@ async def test_stop_cover(
     """Test stopping the cover dispatches to pyControl4."""
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_c4_blind.stop.assert_called_once_with()
@@ -248,8 +234,8 @@ async def test_set_cover_position(
     """Test setting cover position calls set_level_target with the requested value."""
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 75},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: ENTITY_ID, CoverServiceArgument.POSITION: 75},
         blocking=True,
     )
     mock_c4_blind.set_level_target.assert_called_once_with(75)
@@ -274,10 +260,10 @@ async def test_cover_not_created_when_no_initial_data(
     ("mock_cover_variables", "expected_position", "expected_state"),
     [
         pytest.param(
-            {234: {}},
+            {234: {"Fully Open": False}},
             None,
             STATE_UNKNOWN,
-            id="all_missing",
+            id="level_missing",
         ),
         pytest.param(
             {234: {"Level": 0}},
@@ -328,7 +314,7 @@ async def test_cover_unavailable_when_data_disappears(
     assert state.state != STATE_UNAVAILABLE
 
     mock_cover_variables.clear()
-    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

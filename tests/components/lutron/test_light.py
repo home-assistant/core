@@ -3,26 +3,18 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_FLASH,
-    ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -70,8 +62,8 @@ async def test_light_turn_on_off(
     # Turn on
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 128},
         blocking=True,
     )
     light.set_level.assert_called_with(new_level=pytest.approx(50.196, rel=1e-3))
@@ -79,8 +71,8 @@ async def test_light_turn_on_off(
     # Turn off
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     light.set_level.assert_called_with(new_level=0)
@@ -131,8 +123,8 @@ async def test_light_transition(
     # Turn on with transition
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TRANSITION: 2.5},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.TRANSITION: 2.5},
         blocking=True,
     )
     # Default brightness is used if not specified (DEFAULT_DIMMER_LEVEL is 50%)
@@ -143,8 +135,8 @@ async def test_light_transition(
     # Turn off with transition
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TRANSITION: 3.0},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.TRANSITION: 3.0},
         blocking=True,
     )
     light.set_level.assert_called_with(new_level=0, fade_time_seconds=3.0)
@@ -166,8 +158,8 @@ async def test_light_flash(
     # Short flash
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_FLASH: "short"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.FLASH: "short"},
         blocking=True,
     )
     light.flash.assert_called_with(0.5)
@@ -175,8 +167,8 @@ async def test_light_flash(
     # Long flash
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_FLASH: "long"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.FLASH: "long"},
         blocking=True,
     )
     light.flash.assert_called_with(1.5)
@@ -200,8 +192,8 @@ async def test_light_brightness_restore(
     # Turn on first time - uses default (50%)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     light.set_level.assert_called_with(new_level=pytest.approx(50.0, abs=0.5))
@@ -220,8 +212,8 @@ async def test_light_brightness_restore(
     # Turn on again - should restore ~50%
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     # HA level 127 -> Lutron level ~49.8
@@ -251,8 +243,8 @@ async def test_light_state_published_without_waiting_for_a_report(
     # No callback is fired here: nothing reports the change back.
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 128},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -263,8 +255,8 @@ async def test_light_state_published_without_waiting_for_a_report(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -288,8 +280,8 @@ async def test_a_later_report_wins_over_the_commanded_value(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 128},
         blocking=True,
     )
     await hass.async_block_till_done()

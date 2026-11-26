@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, create_autospec, patch
 
 from haphilipsjs import PhilipsTV
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.philips_js.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -12,18 +13,16 @@ from homeassistant.helpers import device_registry as dr
 
 from . import MOCK_CONFIG, MOCK_ENTITY_ID, MOCK_NAME, MOCK_SERIAL_NO, MOCK_SYSTEM
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Disable component setup."""
     with (
         patch(
-            "homeassistant.components.philips_js.async_setup_entry", return_value=True
+            "homeassistant.components.philips_js.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
-            "homeassistant.components.philips_js.async_unload_entry", return_value=True
+            "homeassistant.components.philips_js.async_unload_entry", return_value=None
         ),
     ):
         yield mock_setup_entry

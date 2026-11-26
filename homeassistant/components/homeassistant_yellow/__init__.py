@@ -49,6 +49,11 @@ _LOGGER = logging.getLogger(__name__)
 
 type HomeAssistantYellowConfigEntry = ConfigEntry[HomeAssistantYellowData]
 
+__all__ = [
+    "DOMAIN",
+    "RADIO_DEVICE",
+]
+
 
 @dataclass
 class HomeAssistantYellowData:
@@ -61,7 +66,7 @@ class HomeAssistantYellowData:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: HomeAssistantYellowConfigEntry
-) -> bool:
+) -> None:
     """Set up a Home Assistant Yellow config entry."""
     if not is_hassio(hass):
         # Not running under supervisor, Home Assistant may have been migrated
@@ -138,19 +143,19 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, ["switch", "update"])
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: HomeAssistantYellowConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, ["switch", "update"])
+    await hass.config_entries.async_unload_platforms_or_raise(
+        entry, ["switch", "update"]
+    )
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: HomeAssistantYellowConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     _LOGGER.debug(
@@ -189,13 +194,8 @@ async def async_migrate_entry(
                 minor_version=4,
             )
 
-        _LOGGER.debug(
-            "Migration to version %s.%s successful",
-            config_entry.version,
-            config_entry.minor_version,
-        )
-
-        return True
-
-    # This means the user has downgraded from a future version
-    return False
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )

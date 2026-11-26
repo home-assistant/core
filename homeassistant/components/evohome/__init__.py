@@ -21,7 +21,8 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
@@ -33,7 +34,7 @@ from .const import (
     SCAN_INTERVAL_DEFAULT,
     SCAN_INTERVAL_MINIMUM,
 )
-from .coordinator import EvoDataUpdateCoordinator
+from .coordinator import EvoAccountCoordinator, EvoLocationCoordinator
 from .services import async_setup_services
 from .storage import TokenManager
 
@@ -62,13 +63,42 @@ CONFIG_SCHEMA: Final = probatio.Schema(
 class EvoData:
     """Dataclass for storing evohome data."""
 
-    coordinator: EvoDataUpdateCoordinator
+    account: EvoAccountCoordinator
+    coordinator: EvoLocationCoordinator
     loc_idx: int
     tcs: ec2.ControlSystem
 
 
+async def _async_first_refresh(
+    coordinator: EvoAccountCoordinator | EvoLocationCoordinator,
+) -> bool:
+    """Refresh a coordinator for the first time, and return True if it succeeded."""
+
+    await coordinator.async_register_shutdown()
+    await coordinator.async_first_refresh()
+
+    if not coordinator.last_update_success:
+        # translations aren't available until setup completes, so log the cause
+        err = coordinator.last_exception
+        if isinstance(err, HomeAssistantError) and err.translation_key:
+            err = err.__cause__ or err
+        _LOGGER.error("Failed to fetch initial data: %s", err)
+        return False
+    return True
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Evohome integration."""
+
+    # Remove any (persistent) repair issues for deprecations that have been completed
+    for issue_id in (
+        "deprecated_clear_zone_override_service",  # Remove in 2027.5.0
+        "deprecated_preset_reset",  # Remove in 2027.5.0
+        "deprecated_refresh_system_service",  # Remove in 2027.7.0
+        "deprecated_reset_system_service",  # Remove in 2027.5.0
+        "deprecated_set_system_mode_service",  # Remove in 2027.5.0
+    ):
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
 
     token_manager = TokenManager(
         hass,
@@ -76,29 +106,50 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         config[DOMAIN][CONF_PASSWORD],
         async_get_clientsession(hass),
     )
-    coordinator = EvoDataUpdateCoordinator(
+    account_coord = EvoAccountCoordinator(
         hass,
         _LOGGER,
         ec2.EvohomeClient(token_manager),
-        name=f"{DOMAIN}_coordinator",
+        name=f"{DOMAIN}_account_coordinator",
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
-        location_idx=config[DOMAIN][CONF_LOCATION_IDX],
         client_v1=ec1.EvohomeClient(token_manager),
     )
-
-    await coordinator.async_register_shutdown()
-    await coordinator.async_first_refresh()
-
-    if not coordinator.last_update_success:
-        _LOGGER.error(f"Failed to fetch initial data: {coordinator.last_exception}")  # noqa: G004
+    if not await _async_first_refresh(account_coord):
         return False
 
-    assert coordinator.tcs is not None  # mypy
+    locations = account_coord.client.locations
+    loc_idx = config[DOMAIN][CONF_LOCATION_IDX]
+
+    if loc_idx >= len(locations):
+        _LOGGER.error(
+            "Config error: 'location_idx' = %s, but the valid range is 0-%s. "
+            "Unable to continue. Fix any configuration errors and restart HA",
+            loc_idx,
+            len(locations) - 1,
+        )
+        return False
+
+    location = locations[loc_idx]
+    if location.tcs is None:
+        _LOGGER.error("Config error: location %s has no TCS", location.id)
+        return False
+
+    location_coord = EvoLocationCoordinator(
+        hass,
+        _LOGGER,
+        account_coord,
+        location,
+        name=f"{DOMAIN}_location_coordinator_{location.id}",
+        update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
+    )
+    if not await _async_first_refresh(location_coord):
+        return False
 
     hass.data[EVOHOME_DATA] = EvoData(
-        coordinator=coordinator,
-        loc_idx=coordinator.loc_idx,
-        tcs=coordinator.tcs,
+        account=account_coord,
+        coordinator=location_coord,
+        loc_idx=loc_idx,
+        tcs=location_coord.tcs,
     )
 
     hass.async_create_task(
@@ -107,11 +158,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.async_create_task(
         async_load_platform(hass, Platform.BUTTON, DOMAIN, {}, config)
     )
-    if coordinator.tcs.hotwater:
+    if location_coord.tcs.hotwater:
         hass.async_create_task(
             async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
 
-    async_setup_services(hass, coordinator)
+    async_setup_services(hass)
 
     return True

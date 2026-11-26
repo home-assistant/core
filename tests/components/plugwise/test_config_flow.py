@@ -11,6 +11,7 @@ from plugwise.exceptions import (
     UnsupportedDeviceError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.plugwise.const import DEFAULT_PORT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF, ConfigFlowResult
@@ -25,8 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.1.1.1"
 TEST_HOSTNAME = "smileabcdef"
@@ -208,6 +207,7 @@ async def test_zeroconf_flow_stretch(
         CONF_PORT: DEFAULT_PORT,
         CONF_USERNAME: TEST_USERNAME2,
     }
+    assert result2["result"].unique_id == TEST_SMILE_HOST
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_smile_config_flow.connect.mock_calls) == 1

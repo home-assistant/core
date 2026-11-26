@@ -1,0 +1,106 @@
+# serializer version: 1
+# name: test_valve[defaults][entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': None,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'valve',
+    'entity_category': None,
+    'entity_id': 'valve.ads_valve',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ADS valve',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'ADS valve',
+    'platform': 'ads',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ValveEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': 'GVL.valve',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_valve[defaults][state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ADS valve',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.ads_valve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_valve[water][entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': None,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': None,
+    'disabled_by': None,
+    'domain': 'valve',
+    'entity_category': None,
+    'entity_id': 'valve.water',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Water',
+    'options': dict({
+    }),
+    'original_device_class': <ValveDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Water',
+    'platform': 'ads',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ValveEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': 'GVL.valve',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_valve[water][state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---

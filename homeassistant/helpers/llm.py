@@ -1,8 +1,10 @@
 """Module to coordinate llm tools."""
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections import defaultdict
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field as dc_field
+import re
 from typing import Any, override
 
 import probatio
@@ -118,10 +120,17 @@ async def async_get_api(
     else:
         api = MergedAPI([apis[key] for key in api_id])
 
+    return await async_get_authorized_api_instance(api, llm_context)
+
+
+async def async_get_authorized_api_instance(
+    api: API, llm_context: LLMContext
+) -> APIInstance:
+    """Get an API instance, requiring an admin user if the API requires it."""
     if api.requires_admin and (
         not llm_context.context
         or not llm_context.context.user_id
-        or not (user := await hass.auth.async_get_user(llm_context.context.user_id))
+        or not (user := await api.hass.auth.async_get_user(llm_context.context.user_id))
         or not user.is_admin
     ):
         raise Unauthorized(context=llm_context.context)
@@ -158,6 +167,9 @@ class LLMContext:
     device_id: str | None
     """Device that is making the request."""
 
+    agent_id: str | None = None
+    """Conversation agent or AI task entity that is handling the LLM request."""
+
 
 @dataclass(slots=True)
 class ToolInput:
@@ -193,7 +205,11 @@ class ToolAnnotations:
 
 
 class Tool:
-    """LLM Tool base class."""
+    """LLM Tool base class.
+
+    Tools may implement equality to allow merged APIs to deduplicate
+    interchangeable instances with the same name.
+    """
 
     name: str
     title: str | None = None
@@ -347,6 +363,58 @@ def async_get_match_preferences(
     )
 
 
+def rank_name_match(
+    query: str, names: Iterable[str], aliases: Iterable[str], other: Iterable[str]
+) -> int | None:
+    """Return the rank of an item for a casefolded query, or None if no match.
+
+    Rank 0 is an exact name match, rank 1 an exact alias match, rank 2 a
+    partial name match and rank 3 a partial alias match or a match on another
+    field. Each field is only read when it can still improve the rank.
+    """
+    rank = None
+    for name in names:
+        folded = name.casefold()
+        if folded == query:
+            return 0
+        if query in folded:
+            rank = 2
+    for alias in aliases:
+        folded = alias.casefold()
+        if folded == query:
+            return 1
+        if rank is None and query in folded:
+            rank = 3
+    if rank is None and any(query in value.casefold() for value in other):
+        rank = 3
+    return rank
+
+
+SHORT_ID_MIN_LENGTH = 4
+
+
+def format_short_ids(pairs: Iterable[tuple[str, str]]) -> dict[str, str]:
+    """Return a mapping of full ID to short '<prefix>:<suffix>' ID.
+
+    Short IDs reduce token usage and LLM transcription errors across tool calls.
+    The trailing suffix starts at 4 characters and expands if another item with
+    the same prefix shares that suffix.
+    """
+    # A dict, so a full ID listed twice does not keep the suffix growing forever
+    groups: defaultdict[tuple[str, str], dict[str, None]] = defaultdict(dict)
+    for prefix, full_id in pairs:
+        groups[(prefix, full_id[-SHORT_ID_MIN_LENGTH:])][full_id] = None
+
+    result: dict[str, str] = {}
+    for (prefix, _), group in groups.items():
+        length = SHORT_ID_MIN_LENGTH
+        while len(group) > 1 and len({fid[-length:] for fid in group}) < len(group):
+            length += 1
+        for fid in group:
+            result[fid] = f"{prefix}:{fid[-length:]}"
+    return result
+
+
 class IntentTool(Tool):
     """LLM Tool representing an Intent."""
 
@@ -415,6 +483,7 @@ class IntentTool(Tool):
             language=llm_context.language,
             assistant=llm_context.assistant,
             device_id=llm_context.device_id,
+            conversation_agent_id=llm_context.agent_id,
         )
         return ToolResult(data=IntentResponseDict(intent_response))
 
@@ -496,18 +565,42 @@ class MergedAPI(API):
             await llm_api.async_get_api_instance(llm_context)
             for llm_api in self.llm_apis
         ]
-        prompt_parts = []
-        tools: list[Tool] = []
+        tools_by_name: dict[str, list[tuple[str, Tool]]] = {}
         for api_instance in llm_apis:
-            namespace = unicode_slug.slugify(api_instance.api.name)
+            namespace = unicode_slug.slugify(api_instance.api.id)
+            for tool in api_instance.tools:
+                entries = tools_by_name.setdefault(tool.name, [])
+                if all(candidate != tool for _, candidate in entries):
+                    entries.append((namespace, tool))
+
+        tools = [
+            tool if len(entries) == 1 else NamespacedTool(namespace, tool)
+            for entries in tools_by_name.values()
+            for namespace, tool in entries
+        ]
+
+        if len({tool.name for tool in tools}) != len(tools):
+            raise ValueError("Merged tool names must be unique")
+
+        prompt_parts = []
+        for api_instance in llm_apis:
+            namespace = unicode_slug.slugify(api_instance.api.id)
+            tool_names = []
+            for tool in api_instance.tools:
+                entries = tools_by_name[tool.name]
+                if len(entries) == 1:
+                    tool_names.append(tool.name)
+                else:
+                    tool_namespace = next(
+                        ns for ns, candidate in entries if candidate == tool
+                    )
+                    tool_names.append(f"{tool_namespace}__{tool.name}")
             prompt_parts.append(
-                f'Follow these instructions for tools from "{namespace}":\n'
+                f'Follow these instructions for tools from "{namespace}" '
+                f"({', '.join(tool_names)}):\n"
             )
             prompt_parts.append(api_instance.api_prompt)
             prompt_parts.append("\n\n")
-            tools.extend(
-                [NamespacedTool(namespace, tool) for tool in api_instance.tools]
-            )
 
         return APIInstance(
             api=self,
@@ -545,6 +638,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         schema is cv.entity_id
         or schema is cv.entity_id_or_uuid
         or schema is cv.strict_entity_id
+        or schema is cv.service
     ):
         return {"type": "string"}
     if schema is cv.boolean:
@@ -569,7 +663,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         }
 
     if isinstance(schema, selector.ConditionSelector):
-        return probatio.to_openapi(cv.CONDITIONS_SCHEMA)
+        return probatio.to_openapi(probatio.Schema([cv.CONDITION_SCHEMA]))
 
     if isinstance(schema, selector.ConstantSelector):
         return probatio.to_openapi(probatio.Schema(schema.config["value"]))
@@ -674,7 +768,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
 
     if isinstance(schema, selector.TargetSelector):
         return probatio.to_openapi(
-            cv.TARGET_FIELDS, custom_serializer=selector_serializer
+            cv.TARGET_ID_FIELDS, custom_serializer=selector_serializer
         )
 
     if isinstance(schema, selector.TemplateSelector):
@@ -823,3 +917,24 @@ class ActionTool(Tool):
         )
 
         return ToolResult(data={"result": result})
+
+
+_PLACEHOLDER_RE = re.compile(r"{([^{}]+)}")
+
+
+def substitute_translation_placeholders(
+    text: str | None, placeholders: Mapping[str, Any] | None
+) -> str | None:
+    """Replace {key} placeholders in a translated string using a single pass.
+
+    Leaves unknown placeholders intact and avoids re-expanding placeholder
+    syntax contained inside replacement values.
+    """
+    if not text or not placeholders:
+        return text
+    return _PLACEHOLDER_RE.sub(
+        lambda match: (
+            str(val) if (val := placeholders.get(match[1])) is not None else match[0]
+        ),
+        text,
+    )

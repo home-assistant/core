@@ -15,9 +15,9 @@ from uiprotect.exceptions import (
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.siren import (
-    ATTR_DURATION,
-    ATTR_VOLUME_LEVEL,
     DOMAIN as SIREN_DOMAIN,
+    SirenService,
+    SirenServiceArgument,
 )
 from homeassistant.components.unifiprotect.const import (
     CONF_CONNECTION_MODE,
@@ -25,13 +25,11 @@ from homeassistant.components.unifiprotect.const import (
     DOMAIN,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -40,6 +38,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .utils import (
     MockUFPFixture,
     assert_entity_counts,
+    bind_public_device_properties,
     init_entry,
     make_public_bootstrap,
 )
@@ -47,6 +46,7 @@ from .utils import (
 SIREN_ID = "siren-id-1"
 SIREN_MAC = "AA:BB:CC:DD:EE:02"
 SIREN_NAME = "Garage Siren"
+SIREN_TYPE = "UP-Siren-PoE"
 
 SIREN_ENTITY_ID = "siren.garage_siren"
 
@@ -56,9 +56,11 @@ def _make_siren(
 ) -> Mock:
     """Build a mock :class:`Siren`."""
     siren = Mock(spec=Siren)
+    bind_public_device_properties(siren, Siren)
     siren.id = SIREN_ID
     siren.mac = SIREN_MAC
     siren.name = SIREN_NAME
+    siren.type = SIREN_TYPE
     siren.model = ModelType.SIREN
     siren.state = state
     siren.volume = 50
@@ -171,11 +173,13 @@ async def test_siren_device_links_to_nvr_via_device_id(
     )
     assert nvr_device is not None
 
-    siren_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, SIREN_MAC), ufp_with_siren.entry.entry_id
+    siren_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, SIREN_MAC), ufp_with_siren.entry.entry_id
     )
     assert siren_device is not None
     assert siren_device.via_device_id == nvr_device.id
+    assert siren_device.name == SIREN_NAME
+    assert siren_device.model == SIREN_TYPE
 
 
 # ---------------------------------------------------------------------------
@@ -193,8 +197,8 @@ async def test_siren_turn_on(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
+        SirenService.TURN_ON,
+        {TargetKey.ENTITY_ID: SIREN_ENTITY_ID},
         blocking=True,
     )
     siren.play.assert_awaited_once_with(duration=None)
@@ -221,8 +225,8 @@ async def test_siren_turn_on_with_duration(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: SIREN_ENTITY_ID, ATTR_DURATION: seconds},
+        SirenService.TURN_ON,
+        {TargetKey.ENTITY_ID: SIREN_ENTITY_ID, SirenServiceArgument.DURATION: seconds},
         blocking=True,
     )
     siren.play.assert_awaited_once_with(duration=expected)
@@ -239,8 +243,8 @@ async def test_siren_turn_on_invalid_duration(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SIREN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: SIREN_ENTITY_ID, ATTR_DURATION: 15},
+            SirenService.TURN_ON,
+            {TargetKey.ENTITY_ID: SIREN_ENTITY_ID, SirenServiceArgument.DURATION: 15},
             blocking=True,
         )
     siren.play.assert_not_awaited()
@@ -261,11 +265,11 @@ async def test_siren_turn_on_invalid_duration_does_not_set_volume(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SIREN_DOMAIN,
-            SERVICE_TURN_ON,
+            SirenService.TURN_ON,
             {
-                ATTR_ENTITY_ID: SIREN_ENTITY_ID,
-                ATTR_DURATION: 15,
-                ATTR_VOLUME_LEVEL: 0.5,
+                TargetKey.ENTITY_ID: SIREN_ENTITY_ID,
+                SirenServiceArgument.DURATION: 15,
+                SirenServiceArgument.VOLUME_LEVEL: 0.5,
             },
             blocking=True,
         )
@@ -283,8 +287,8 @@ async def test_siren_turn_on_with_volume(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: SIREN_ENTITY_ID, ATTR_VOLUME_LEVEL: 0.75},
+        SirenService.TURN_ON,
+        {TargetKey.ENTITY_ID: SIREN_ENTITY_ID, SirenServiceArgument.VOLUME_LEVEL: 0.75},
         blocking=True,
     )
     siren.set_volume.assert_awaited_once_with(75)
@@ -306,8 +310,8 @@ async def test_siren_turn_off(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
+        SirenService.TURN_OFF,
+        {TargetKey.ENTITY_ID: SIREN_ENTITY_ID},
         blocking=True,
     )
     siren.stop.assert_awaited_once()
@@ -339,8 +343,8 @@ async def test_siren_turn_on_api_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SIREN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
+            SirenService.TURN_ON,
+            {TargetKey.ENTITY_ID: SIREN_ENTITY_ID},
             blocking=True,
         )
 
@@ -357,8 +361,8 @@ async def test_siren_turn_on_when_siren_gone(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SIREN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
+            SirenService.TURN_ON,
+            {TargetKey.ENTITY_ID: SIREN_ENTITY_ID},
             blocking=True,
         )
 
@@ -375,8 +379,8 @@ async def test_siren_turn_off_when_bootstrap_unavailable(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SIREN_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
+            SirenService.TURN_OFF,
+            {TargetKey.ENTITY_ID: SIREN_ENTITY_ID},
             blocking=True,
         )
 
@@ -540,6 +544,25 @@ async def test_siren_unavailable_on_delete_event(
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
+    # Re-adopting gives the siren a new id; the entity comes back and commands
+    # reach the new object.
+    readopted = _make_siren(is_active=True)
+    readopted.id = "siren-id-2"
+    _add_siren_frame(ufp_with_siren, readopted)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        SIREN_DOMAIN,
+        SirenService.TURN_OFF,
+        {TargetKey.ENTITY_ID: SIREN_ENTITY_ID},
+        blocking=True,
+    )
+    readopted.stop.assert_awaited_once()
+
 
 @pytest.fixture(name="setup_hybrid")
 def setup_hybrid_fixture(
@@ -620,8 +643,8 @@ async def test_public_only_siren_end_to_end(
     # Commands go to the public object; there is no private one to fall back to.
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: SIREN_ENTITY_ID},
+        SirenService.TURN_ON,
+        {TargetKey.ENTITY_ID: SIREN_ENTITY_ID},
         blocking=True,
     )
     siren.play.assert_awaited_once_with(duration=None)

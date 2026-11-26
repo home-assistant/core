@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hikvision import PLATFORMS
 from homeassistant.components.hikvision.const import DOMAIN
@@ -13,10 +14,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "192.168.1.100"
 TEST_PORT = 80
@@ -43,7 +43,7 @@ async def mock_patch_platforms(platforms: list[Platform]) -> AsyncGenerator[None
 def mock_setup_entry() -> Generator[MagicMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.hikvision.async_setup_entry", return_value=True
+        "homeassistant.components.hikvision.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -62,6 +62,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
         },
         unique_id=TEST_DEVICE_ID,
     )
