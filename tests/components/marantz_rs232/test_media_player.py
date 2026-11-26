@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 import math
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from marantz_rs232 import V2007ReceiverState, V2007Source
 import pytest
@@ -34,6 +34,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
     TargetKey,
 )
 from homeassistant.core import HomeAssistant
@@ -388,3 +389,43 @@ async def test_startup_with_unknown_power(
     await hass.async_block_till_done()
     assert hass.states.get(MULTI).state == STATE_UNAVAILABLE
     assert not receiver_callbacks
+
+
+async def test_multi_room_feedback_during_unload(
+    hass: HomeAssistant,
+    mock_receiver: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    receiver_update: Callable[[V2007ReceiverState | None], None],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Ignore discovery after platform teardown and discover on the next setup."""
+    mock_receiver.multi_room_a.power = None
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    unload_platforms = hass.config_entries.async_unload_platforms_or_raise
+
+    async def unload_with_feedback(
+        entry: MockConfigEntry, platforms: list[Platform]
+    ) -> None:
+        await unload_platforms(entry, platforms)
+        assert entry.state is ConfigEntryState.UNLOAD_IN_PROGRESS
+        mock_receiver.multi_room_a.power = True
+        state = V2007ReceiverState()
+        state.multi_room_a.power = True
+        receiver_update(state)
+
+    with patch.object(
+        hass.config_entries,
+        "async_unload_platforms_or_raise",
+        side_effect=unload_with_feedback,
+    ):
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(MULTI) is None
+    assert hass.states.get(MULTI) is None
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(MULTI).state == STATE_ON
+    assert len(hass.states.async_all(MP_DOMAIN)) == 2

@@ -19,6 +19,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -72,7 +73,12 @@ async def async_setup_entry(
     @callback
     def _async_add_multi_room(state: V2007ReceiverState | None) -> None:
         nonlocal multi_room_added
-        if state is None or multi_room_added or receiver.multi_room_a.power is None:
+        if (
+            state is None
+            or multi_room_added
+            or receiver.multi_room_a.power is None
+            or config_entry.state is ConfigEntryState.UNLOAD_IN_PROGRESS
+        ):
             return
         multi_room_added = True
         async_add_entities(
