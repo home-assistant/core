@@ -1,11 +1,11 @@
-"""Setup, camera, capture controller, and coordinator tests for reCamera Pro."""
+"""Setup, camera, and coordinator tests for reCamera Pro."""
 
 import asyncio
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
-from recamera_protocol import RecameraDeviceInfo, RecameraProtocolError
+from recamera_protocol import RecameraDeviceInfo
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.recamera_pro import _normalize_entry_title
@@ -13,28 +13,15 @@ from homeassistant.components.recamera_pro.camera import (
     RecameraMainstreamCamera,
     RecameraSubstreamCamera,
 )
-from homeassistant.components.recamera_pro.capture_controller import (
-    CaptureController,
-    CaptureOperation,
-    CaptureState,
-    CaptureTerminalFailureError,
-)
 from homeassistant.components.recamera_pro.coordinator import (
     FirmwareUpdateState,
     RecameraCoordinator,
 )
-from homeassistant.components.recamera_pro.services import async_setup_services
 from homeassistant.const import CONF_HOST
 
 
-def test_register_services_and_custom_title_preservation() -> None:
-    """Test platform service registration and custom entry title preservation."""
-    with patch(
-        "homeassistant.components.recamera_pro.services.service.async_register_platform_entity_service"
-    ) as register:
-        async_setup_services(SimpleNamespace())
-    assert register.call_count == 3
-
+def test_custom_title_preservation() -> None:
+    """Test custom entry title preservation on identity normalization."""
     updated = Mock()
     hass = SimpleNamespace(config_entries=SimpleNamespace(async_update_entry=updated))
     custom_entry = SimpleNamespace(
@@ -79,9 +66,6 @@ async def test_camera_on_off_and_offline_placeholder() -> None:
         is_stream_enabled=lambda _s: state["enabled"],
         get_stream_url=lambda _s: "rtsp://1.2.3.4/sub" if state["enabled"] else None,
         async_set_stream_enabled=AsyncMock(side_effect=_set_enabled),
-        async_capture_device_snapshot=AsyncMock(
-            return_value={"capture": {"sStatus": "COMPLETED"}}
-        ),
     )
     sub = RecameraSubstreamCamera(coordinator)
     main = RecameraMainstreamCamera(coordinator)
@@ -101,54 +85,9 @@ async def test_camera_on_off_and_offline_placeholder() -> None:
     assert offline_img is not None
     assert offline_img.startswith(b"\xff\xd8\xff")
 
-    snap = await sub.async_capture_device_snapshot("/mnt/test.jpg")
-    assert snap["capture"]["sStatus"] == "COMPLETED"
-
     await sub.async_turn_on()
     assert sub.is_on
     assert sub.extra_state_attributes["rtsp_enabled"] is True
-
-
-@pytest.mark.asyncio
-async def test_capture_controller_error_classification_and_shutdown() -> None:
-    """Test generic protocol errors stay UNKNOWN while terminal errors mark FAILED."""
-    controller = CaptureController(
-        SimpleNamespace(bus=SimpleNamespace(async_fire=Mock())),
-        SimpleNamespace(
-            async_start_capture=AsyncMock(
-                side_effect=RecameraProtocolError("invalid_json")
-            )
-        ),
-        device_id="dev1",
-        entry_id=None,
-    )
-    op = CaptureOperation(kind="snapshot", request_id="r1", fingerprint="fp1")
-    with (
-        patch.object(
-            controller,
-            "_async_reconcile_snapshot",
-            new=AsyncMock(side_effect=RecameraProtocolError("invalid_json")),
-        ),
-        pytest.raises(RecameraProtocolError),
-    ):
-        await controller._async_run_snapshot(op, "/mnt/test.jpg")
-    assert op.state == CaptureState.UNKNOWN
-
-    op2 = CaptureOperation(kind="snapshot", request_id="r2", fingerprint="fp2")
-    with (
-        patch.object(
-            controller,
-            "_async_reconcile_snapshot",
-            new=AsyncMock(side_effect=CaptureTerminalFailureError("capture_failed")),
-        ),
-        pytest.raises(CaptureTerminalFailureError),
-    ):
-        await controller._async_run_snapshot(op2, "/mnt/test.jpg")
-    assert op2.state == CaptureState.FAILED
-
-    controller._operation = op2
-    await controller.async_shutdown()
-    assert op2.completion_event.is_set()
 
 
 @pytest.mark.asyncio

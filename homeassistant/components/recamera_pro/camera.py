@@ -2,11 +2,9 @@
 
 import asyncio
 from functools import cache
-import logging
 from pathlib import Path
 import time
 from typing import override
-import uuid
 
 from recamera_protocol import RecameraError
 
@@ -19,7 +17,6 @@ from .coordinator import RecameraConfigEntry, RecameraCoordinator
 from .entity import RecameraEntity, recamera_service_error
 
 PARALLEL_UPDATES = 0
-_LOGGER = logging.getLogger(__name__)
 _STILL_CACHE_MAX_AGE_SECONDS = 1.0
 _STILL_FAILURE_COOLDOWN_SECONDS = 0.5
 _STREAM_OFF_IMAGE_PATH = Path(__file__).parent / "assets" / "stream_off.jpg"
@@ -332,53 +329,6 @@ class RecameraCamera(RecameraEntity, Camera):
                 time.monotonic() + _STILL_FAILURE_COOLDOWN_SECONDS
             )
             return None
-
-    async def async_capture_device_snapshot(
-        self, output: str | None = None
-    ) -> dict[str, object]:
-        """Capture a JPG on device storage and wait for completion."""
-        try:
-            return await self.coordinator.async_capture_device_snapshot(
-                output,
-                request_id=self._service_request_id,
-            )
-        except RecameraError as err:
-            raise recamera_service_error(err) from err
-
-    async def async_start_device_recording(
-        self,
-        output: str | None = None,
-        duration: int = 30,
-    ) -> dict[str, object]:
-        """Start an MP4 recording on device storage."""
-        try:
-            return await self.coordinator.async_start_device_recording(
-                output=output,
-                duration=duration,
-                request_id=self._service_request_id,
-            )
-        except RecameraError as err:
-            raise recamera_service_error(err) from err
-
-    async def async_stop_device_capture(self) -> dict[str, object]:
-        """Stop the device's active video capture."""
-        try:
-            return await self.coordinator.async_stop_device_capture(
-                request_id=self._service_request_id,
-            )
-        except RecameraError as err:
-            raise recamera_service_error(err) from err
-
-    @property
-    def _service_request_id(self) -> str:
-        """Return a unique request identifier for each service invocation."""
-        request_id = uuid.uuid4().hex
-        _LOGGER.debug(
-            "reCamera service request %s on %s",
-            request_id,
-            self.entity_id,
-        )
-        return request_id
 
 
 class RecameraSubstreamCamera(RecameraCamera):

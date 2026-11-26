@@ -1,8 +1,8 @@
 rules:
   # Bronze
   action-setup:
-    status: done
-    comment: Registered in integration async_setup through the platform entity service API.
+    status: exempt
+    comment: This initial PR does not provide custom actions; planned for a follow-up PR.
   appropriate-polling:
     status: done
     comment: OTA checks run on a bounded six-hour background task and do not gate local camera updates.
@@ -16,8 +16,8 @@ rules:
     comment: Config flow, zeroconf, reauth, reconfigure, and options flow tests are in tests/components/recamera_pro/test_config_flow.py.
   dependency-transparency: done
   docs-actions:
-    status: done
-    comment: Actions documented in home-assistant.io PR.
+    status: exempt
+    comment: This initial PR does not provide custom actions; planned for a follow-up PR.
   docs-conditions:
     status: exempt
     comment: This integration does not provide custom conditions.
@@ -41,7 +41,9 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: todo
+    comment: Planned for a follow-up PR with device capture actions.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: todo
@@ -53,7 +55,9 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow:
+    status: todo
+    comment: Planned for a follow-up PR.
   test-coverage:
     status: todo
     comment: Device API and coordinator behavior still need HA test coverage.
@@ -94,7 +98,9 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow:
+    status: todo
+    comment: Planned for a follow-up PR.
   repair-issues:
     status: exempt
     comment: No unrecoverable condition currently requires a separate repair issue.

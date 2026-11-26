@@ -189,61 +189,6 @@ async def test_zeroconf_confirm_does_not_trust_unverified_mdns_serial() -> None:
 
 
 @pytest.mark.asyncio
-async def test_reconfigure_and_reauth_flows() -> None:
-    """Test reconfigure keeping password blank and reauth updating password."""
-    entry = SimpleNamespace(
-        entry_id="e1",
-        unique_id="SN123456",
-        data={
-            CONF_HOST: "192.168.10.22",
-            CONF_USERNAME: "admin",
-            CONF_PASSWORD: "old_password",
-            CONF_MAC_ADDRESS: "4a:f8:34:07:ab:3d",
-            CONF_SERIAL_NUMBER: "SN123456",
-        },
-    )
-    flow = _make_flow()
-    flow.hass.config_entries.async_schedule_reload = Mock()
-    flow._get_reconfigure_entry = lambda: entry
-    flow.async_update_reload_and_abort = Mock(
-        return_value={"type": FlowResultType.ABORT, "reason": "reconfigure_successful"}
-    )
-
-    with patch(
-        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
-        new=AsyncMock(return_value=_probe()),
-    ) as probe_mock:
-        res = await flow.async_step_reconfigure(
-            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: ""}
-        )
-    assert res["reason"] == "reconfigure_successful"
-    assert probe_mock.await_args.args[3] == "old_password"
-
-    flow2 = _make_flow()
-    flow2._get_reauth_entry = lambda: entry
-    flow2.async_update_reload_and_abort = Mock(
-        return_value={"type": FlowResultType.ABORT, "reason": "reauth_successful"}
-    )
-    with patch(
-        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
-        new=AsyncMock(side_effect=RecameraAuthenticationError("bad")),
-    ):
-        res_err = await flow2.async_step_reauth_confirm(
-            {CONF_USERNAME: "admin", CONF_PASSWORD: "wrong"}
-        )
-    assert res_err["errors"]["base"] == "invalid_auth"
-
-    with patch(
-        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
-        new=AsyncMock(return_value=_probe()),
-    ):
-        res_ok = await flow2.async_step_reauth_confirm(
-            {CONF_USERNAME: "admin", CONF_PASSWORD: "new_password"}
-        )
-    assert res_ok["reason"] == "reauth_successful"
-
-
-@pytest.mark.asyncio
 async def test_options_flow_steps() -> None:
     """Test options flow vision, sound, classes, and compatibility steps."""
     entry = SimpleNamespace(
@@ -334,8 +279,8 @@ async def test_options_flow_sound_classes_and_compatibility() -> None:
 
 
 @pytest.mark.asyncio
-async def test_manual_and_reconfigure_error_paths() -> None:
-    """Test manual step and reconfigure error handling."""
+async def test_manual_user_error_and_recovery() -> None:
+    """Test manual step error handling and recovery."""
     flow = _make_flow()
     flow.hass.config_entries.async_schedule_reload = Mock()
     form = await flow.async_step_user()
@@ -350,41 +295,15 @@ async def test_manual_and_reconfigure_error_paths() -> None:
         )
     assert err_res["errors"]["base"] == "cannot_connect"
 
-    entry = SimpleNamespace(
-        entry_id="e1",
-        unique_id="SN123456",
-        update_listeners=[],
-        data={
-            CONF_HOST: "192.168.10.22",
-            CONF_USERNAME: "admin",
-            CONF_PASSWORD: "old_password",
-            CONF_MAC_ADDRESS: "4a:f8:34:07:ab:3d",
-            CONF_SERIAL_NUMBER: "SN123456",
-        },
-    )
-    flow._get_reconfigure_entry = lambda: entry
-    flow.async_update_reload_and_abort = Mock(
-        return_value={"type": FlowResultType.ABORT, "reason": "reconfigure_successful"}
-    )
-    reconf_form = await flow.async_step_reconfigure()
-    assert reconf_form["type"] == FlowResultType.FORM
-    with patch(
-        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
-        new=AsyncMock(side_effect=RecameraAuthenticationError("bad")),
-    ):
-        reconf_err = await flow.async_step_reconfigure(
-            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "bad"}
-        )
-    assert reconf_err["errors"]["base"] == "invalid_auth"
     with patch(
         "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
         new=AsyncMock(return_value=_probe()),
     ):
-        reconf_ok = await flow.async_step_reconfigure(
-            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "newpw"}
+        ok_res = await flow.async_step_user(
+            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "pw"}
         )
-    assert reconf_ok["type"] == FlowResultType.ABORT
-    assert reconf_ok["reason"] == "reconfigure_successful"
+    assert ok_res["type"] == FlowResultType.CREATE_ENTRY
+    assert flow.async_set_unique_id.call_args.args[0] == "SN123456"
 
 
 @pytest.mark.asyncio
@@ -717,8 +636,8 @@ async def test_config_flow_helper_edge_cases() -> None:
 
 
 @pytest.mark.asyncio
-async def test_user_reauth_reconfigure_and_options_forms() -> None:
-    """Test all error/recovery paths in user, reauth, reconfigure, and options."""
+async def test_user_and_options_forms() -> None:
+    """Test all error/recovery paths in user flow and options form rendering."""
     flow = _make_flow()
     assert isinstance(
         RecameraProConfigFlow.async_get_options_flow(SimpleNamespace()),
@@ -769,96 +688,6 @@ async def test_user_reauth_reconfigure_and_options_forms() -> None:
         )
     assert user_ok["type"] == FlowResultType.CREATE_ENTRY
     assert flow.async_set_unique_id.call_args.args[0] == "SN123456"
-
-    # Reauth form + error paths + recovery
-    entry = SimpleNamespace(
-        entry_id="e1",
-        unique_id="SN123456",
-        update_listeners=[],
-        data={
-            CONF_HOST: "192.168.10.22",
-            CONF_USERNAME: "admin",
-            CONF_PASSWORD: "old",
-            CONF_MAC_ADDRESS: "4a:f8:34:07:ab:3d",
-            CONF_SERIAL_NUMBER: "SN123456",
-        },
-    )
-    flow._get_reauth_entry = lambda: entry
-    flow._get_reconfigure_entry = lambda: entry
-    flow.async_update_reload_and_abort = Mock(
-        side_effect=lambda *_a, reason, **_kw: {
-            "type": FlowResultType.ABORT,
-            "reason": reason,
-        }
-    )
-
-    reauth_form = await flow.async_step_reauth(entry.data)
-    assert reauth_form["type"] == FlowResultType.FORM
-    for exc, expected_err in (
-        (RecameraAuthenticationError("bad"), "invalid_auth"),
-        (RecameraError("conn"), "cannot_connect"),
-        (RuntimeError("boom"), "unknown"),
-    ):
-        with patch(
-            "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
-            new=AsyncMock(side_effect=exc),
-        ):
-            err = await flow.async_step_reauth_confirm(
-                {CONF_USERNAME: "admin", CONF_PASSWORD: "bad"}
-            )
-        assert err["errors"]["base"] == expected_err
-
-    with patch(
-        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
-        new=AsyncMock(return_value=_probe(mac="aa:bb:cc:dd:ee:ff", serial="OTHER")),
-    ):
-        mismatch = await flow.async_step_reauth_confirm(
-            {CONF_USERNAME: "admin", CONF_PASSWORD: "ok"}
-        )
-    assert mismatch["errors"]["base"] == "identity_mismatch"
-
-    with patch(
-        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
-        new=AsyncMock(return_value=_probe()),
-    ):
-        reauth_ok = await flow.async_step_reauth_confirm(
-            {CONF_USERNAME: "admin", CONF_PASSWORD: "new"}
-        )
-    assert reauth_ok["type"] == FlowResultType.ABORT
-    assert reauth_ok["reason"] == "reauth_successful"
-
-    # Reconfigure error paths + recovery
-    for exc, expected_err in (
-        (RecameraError("conn"), "cannot_connect"),
-        (RuntimeError("boom"), "unknown"),
-    ):
-        with patch(
-            "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
-            new=AsyncMock(side_effect=exc),
-        ):
-            err = await flow.async_step_reconfigure(
-                {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "p"}
-            )
-        assert err["errors"]["base"] == expected_err
-
-    with patch(
-        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
-        new=AsyncMock(return_value=_probe(mac="aa:bb:cc:dd:ee:ff", serial="OTHER")),
-    ):
-        reconf_mismatch = await flow.async_step_reconfigure(
-            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "p"}
-        )
-    assert reconf_mismatch["errors"]["base"] == "identity_mismatch"
-
-    with patch(
-        "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
-        new=AsyncMock(return_value=_probe()),
-    ):
-        reconf_ok = await flow.async_step_reconfigure(
-            {CONF_HOST: "192.168.10.22", CONF_USERNAME: "admin", CONF_PASSWORD: "new"}
-        )
-    assert reconf_ok["type"] == FlowResultType.ABORT
-    assert reconf_ok["reason"] == "reconfigure_successful"
 
     # Options forms (GET without user_input)
     opts_entry = SimpleNamespace(

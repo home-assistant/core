@@ -49,7 +49,6 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .capture_controller import CaptureController
 from .const import (
     AUDIO_SOURCE_ID,
     CONF_AUDIO_CONFIDENCE,
@@ -247,12 +246,6 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
             config_entry.data.get(CONF_DEVICE_ID)
             or config_entry.unique_id
             or config_entry.entry_id
-        )
-        self.capture_controller = CaptureController(
-            hass,
-            self.client,
-            device_id=self.device_id,
-            entry_id=config_entry.entry_id,
         )
         self.tracked_class_keys = frozenset(
             str(item)
@@ -655,42 +648,6 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
         self.async_update_listeners()
         return self._firmware_update
 
-    async def async_capture_device_snapshot(
-        self,
-        output: str | None,
-        *,
-        request_id: str,
-    ) -> dict[str, object]:
-        """Capture one device snapshot for this service-call context."""
-        return await self.capture_controller.async_capture_snapshot(
-            output,
-            request_id=request_id,
-        )
-
-    async def async_start_device_recording(
-        self,
-        *,
-        output: str | None,
-        duration: int,
-        request_id: str,
-    ) -> dict[str, object]:
-        """Start one device recording for this service-call context."""
-        return await self.capture_controller.async_start_recording(
-            output,
-            duration,
-            request_id=request_id,
-        )
-
-    async def async_stop_device_capture(
-        self,
-        *,
-        request_id: str,
-    ) -> dict[str, object]:
-        """Stop a recording owned by this integration instance."""
-        return await self.capture_controller.async_stop_capture(
-            request_id=request_id,
-        )
-
     async def async_update_video_encode(
         self,
         stream: str,
@@ -764,7 +721,6 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
         except BaseException:
             await self.client.async_close()
             raise
-        await self.capture_controller.async_restore()
         if self.data is not None:
             self.async_set_updated_data(replace(self.data, class_catalog=catalog))
             if self.data.info.firmware_version:
@@ -2637,7 +2593,6 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
         self._firmware_check_task = None
         self._stale_task = None
         self._firmware_reboot_task = None
-        await self.capture_controller.async_shutdown()
         store = getattr(self, "_store", None)
         if store is not None and (
             getattr(store, "_delay_listener", None) is not None

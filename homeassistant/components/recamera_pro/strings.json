@@ -5,8 +5,6 @@
       "cannot_connect": "Cannot connect to the discovered device.",
       "identity_mismatch": "The discovered address reached a different device.",
       "invalid_auth": "The saved credentials were rejected by the discovered device.",
-      "reauth_successful": "Reauthentication completed.",
-      "reconfigure_successful": "Configuration updated.",
       "unknown": "Unexpected error.",
       "unsupported_discovery": "The discovered service is not a supported reCamera Pro service."
     },
@@ -18,23 +16,6 @@
       "unknown": "Unexpected error."
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "password": "Device password",
-          "username": "Device username"
-        },
-        "description": "The saved device credentials were rejected.",
-        "title": "Reauthenticate reCamera Pro"
-      },
-      "reconfigure": {
-        "data": {
-          "host": "IP address",
-          "password": "New password (leave blank to keep current)",
-          "username": "Device username"
-        },
-        "description": "Update the device address or credentials.",
-        "title": "Reconfigure reCamera Pro"
-      },
       "user": {
         "data": {
           "host": "IP address",
@@ -558,36 +539,6 @@
         },
         "title": "Visual recognition settings"
       }
-    }
-  },
-  "services": {
-    "capture_device_snapshot": {
-      "description": "Capture one JPG directly to device /mnt storage. Independent of main/sub RTSP stream state; shares the device's single capture slot.",
-      "fields": {
-        "output": {
-          "description": "Must start with /mnt/ (directory or .jpg/.jpeg file). Leave empty to use the active device storage directory.",
-          "name": "Output path"
-        }
-      },
-      "name": "Take device snapshot"
-    },
-    "start_device_recording": {
-      "description": "Record an MP4 clip directly to device /mnt storage. Independent of main/sub RTSP stream state; rejected if another capture is active.",
-      "fields": {
-        "duration": {
-          "description": "Recording length in seconds (1–3600).",
-          "name": "Duration"
-        },
-        "output": {
-          "description": "Must start with /mnt/ (directory or .mp4 file). Leave empty to use the active device storage directory.",
-          "name": "Output path"
-        }
-      },
-      "name": "Start device recording"
-    },
-    "stop_device_capture": {
-      "description": "Stop the active device recording started by this integration and wait until the file is finalized on /mnt storage.",
-      "name": "Stop device recording"
     }
   }
 }

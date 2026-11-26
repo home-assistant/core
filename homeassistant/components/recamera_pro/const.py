@@ -52,12 +52,6 @@ SOURCE_AVAILABLE = "available"
 SOURCE_UNKNOWN = "unknown"
 SOURCE_UNAVAILABLE = "unavailable"
 
-SERVICE_CAPTURE_DEVICE = "capture_device_snapshot"
-SERVICE_RECORD_DEVICE = "start_device_recording"
-SERVICE_STOP_DEVICE_CAPTURE = "stop_device_capture"
-ATTR_CAPTURE_OUTPUT = "output"
-ATTR_RECORD_DURATION = "duration"
-EVENT_CAPTURE_COMPLETED = f"{DOMAIN}_capture_completed"
 EVENT_FIRMWARE_UPDATE_COMPLETED = f"{DOMAIN}_firmware_update_completed"
 
 UPDATE_INTERVAL = timedelta(seconds=60)

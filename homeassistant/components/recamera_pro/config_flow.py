@@ -1,7 +1,6 @@
 """Config flow for reCamera Pro."""
 
 import asyncio
-from collections.abc import Mapping
 import contextlib
 from ipaddress import ip_address, ip_network
 import logging
@@ -1049,125 +1048,6 @@ class RecameraProConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Start reauthentication."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Update rejected credentials."""
-        errors: dict[str, str] = {}
-        entry = self._get_reauth_entry()
-        if user_input is not None:
-            password = str(user_input[CONF_PASSWORD])
-            try:
-                probe = await _async_probe_device_with_hass(
-                    getattr(self, "hass", None),
-                    entry.data[CONF_HOST],
-                    str(user_input[CONF_USERNAME]).strip() or "admin",
-                    password,
-                )
-            except RecameraAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except RecameraError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected reCamera Pro reauthentication error")
-                errors["base"] = "unknown"
-            else:
-                if self._identity_mismatch(entry, probe):
-                    errors["base"] = "identity_mismatch"
-                else:
-                    return self.async_update_reload_and_abort(
-                        entry,
-                        data=self._updated_entry_data(
-                            entry,
-                            probe,
-                            username=str(user_input[CONF_USERNAME]).strip() or "admin",
-                            password=password,
-                        ),
-                        reason="reauth_successful",
-                    )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(
-                        CONF_USERNAME,
-                        default=entry.data.get(CONF_USERNAME, "admin"),
-                    ): str,
-                    probatio.Required(CONF_PASSWORD): str,
-                }
-            ),
-            errors=errors,
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Update connection settings."""
-        errors: dict[str, str] = {}
-        entry = self._get_reconfigure_entry()
-        if user_input is not None:
-            host = str(user_input[CONF_HOST]).strip().lower()
-            password = str(user_input[CONF_PASSWORD]) or str(
-                entry.data.get(CONF_PASSWORD) or ""
-            )
-            try:
-                probe = await _async_probe_device_with_hass(
-                    getattr(self, "hass", None),
-                    host,
-                    str(user_input[CONF_USERNAME]).strip() or "admin",
-                    password,
-                )
-            except RecameraAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except RecameraError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected reCamera Pro reconfiguration error")
-                errors["base"] = "unknown"
-            else:
-                if self._identity_mismatch(entry, probe):
-                    errors["base"] = "identity_mismatch"
-                else:
-                    return self.async_update_reload_and_abort(
-                        entry,
-                        data={
-                            **self._updated_entry_data(
-                                entry,
-                                probe,
-                                username=str(user_input[CONF_USERNAME]).strip()
-                                or "admin",
-                                password=password,
-                            ),
-                            CONF_HOST: host,
-                        },
-                        reason="reconfigure_successful",
-                    )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(
-                        CONF_HOST,
-                        default=entry.data.get(CONF_HOST, ""),
-                    ): str,
-                    probatio.Required(
-                        CONF_USERNAME,
-                        default=entry.data.get(CONF_USERNAME, "admin"),
-                    ): str,
-                    probatio.Optional(CONF_PASSWORD, default=""): str,
-                }
-            ),
-            errors=errors,
-        )
-
     @staticmethod
     def _entry_data(
         *,
@@ -1188,37 +1068,6 @@ class RecameraProConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_MODEL: (probe.info.base_plate_model or "reCamera Pro"),
             CONF_HW_VERSION: (probe.info.hardware_version or probe.info.sensor_model),
             CONF_SW_VERSION: probe.info.firmware_version,
-        }
-
-    @staticmethod
-    def _updated_entry_data(
-        entry: ConfigEntry,
-        probe: RecameraProbeResult,
-        *,
-        username: str,
-        password: str,
-    ) -> dict[str, Any]:
-        """Return refreshed entry data while retaining stable identity."""
-        return {
-            **entry.data,
-            CONF_USERNAME: username,
-            CONF_PASSWORD: password,
-            CONF_SERIAL_NUMBER: (
-                probe.info.serial_number
-                or normalize_serial_number(entry.data.get(CONF_SERIAL_NUMBER))
-            ),
-            CONF_MAC_ADDRESS: (
-                probe.info.mac_address or entry.data.get(CONF_MAC_ADDRESS)
-            ),
-            CONF_MODEL: (probe.info.base_plate_model or entry.data.get(CONF_MODEL)),
-            CONF_HW_VERSION: (
-                probe.info.hardware_version
-                or probe.info.sensor_model
-                or entry.data.get(CONF_HW_VERSION)
-            ),
-            CONF_SW_VERSION: (
-                probe.info.firmware_version or entry.data.get(CONF_SW_VERSION)
-            ),
         }
 
     @staticmethod
