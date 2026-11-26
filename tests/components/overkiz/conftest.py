@@ -222,3 +222,14 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up the Overkiz integration for testing."""
     return await setup_overkiz_integration()
+
+
+@pytest.fixture
+def no_cancel_settle_delay() -> Generator[None]:
+    """Skip the pause between a boost cancel and the next heating level."""
+    with patch(
+        "homeassistant.components.overkiz.climate."
+        "atlantic_electrical_towel_dryer_heating_level.CANCEL_SETTLE_DELAY",
+        0,
+    ):
+        yield

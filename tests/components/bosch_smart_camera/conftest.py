@@ -3,7 +3,10 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from bosch_shc_camera_client.actions import ActionResult
 from bosch_shc_camera_client.cameras import Camera, CameraModel
+from bosch_shc_camera_client.cloud import CloudPutResult
+from bosch_shc_camera_client.states import CameraAccountStates, FirmwareStatus, WifiInfo
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -49,6 +52,61 @@ def mock_list_cameras() -> Generator[AsyncMock]:
         "bosch_shc_camera_client.client.list_cameras",
         autospec=True,
         return_value=list(CAMERAS),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_account_states() -> Generator[AsyncMock]:
+    """Mock the account states of the library."""
+    with patch(
+        "bosch_shc_camera_client.client.get_camera_account_states",
+        autospec=True,
+        return_value={CAMERA_ID: CameraAccountStates(False, "FOLLOW_CAMERA_SCHEDULE")},
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_get_firmware_status() -> Generator[AsyncMock]:
+    """Mock the firmware status of the library."""
+    with patch(
+        "homeassistant.components.bosch_smart_camera.coordinator.get_firmware_status",
+        autospec=True,
+        return_value=FirmwareStatus("9.40.25", None, True, False),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_set_privacy_mode() -> Generator[AsyncMock]:
+    """Mock the privacy mode write of the library."""
+    with patch(
+        "bosch_shc_camera_client.client.cloud_set_privacy_mode",
+        autospec=True,
+        return_value=CloudPutResult(ok=True, status=204),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_get_wifi_info() -> Generator[AsyncMock]:
+    """Mock the Wi-Fi signal strength of the library."""
+    with patch(
+        "homeassistant.components.bosch_smart_camera.coordinator.get_wifi_info",
+        autospec=True,
+        return_value=WifiInfo(signal_strength=72),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_soft_reset() -> Generator[AsyncMock]:
+    """Mock the restart of the library."""
+    with patch(
+        "homeassistant.components.bosch_smart_camera.coordinator.soft_reset",
+        autospec=True,
+        return_value=ActionResult(ok=True, status=204),
     ) as mock:
         yield mock
 

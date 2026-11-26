@@ -5,7 +5,13 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
-from aioshelly.const import MODEL_1PM, MODEL_CAMERA, MODEL_MOTION, MODEL_WALL_DISPLAY
+from aioshelly.const import (
+    MODEL_1PM,
+    MODEL_CAMERA,
+    MODEL_MOTION,
+    MODEL_PLUS_2PM,
+    MODEL_WALL_DISPLAY,
+)
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -16,7 +22,6 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.shelly.const import (
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
-    MODEL_TOP_EV_CHARGER_EVE01,
     MOTION_MODELS,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
@@ -26,13 +31,14 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
     Platform,
     TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
-from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 
 from . import (
     init_integration,
@@ -761,6 +767,128 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_switch_input_lock(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the input lock switch of a switch component."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+    monkeypatch.setitem(mock_rpc_device.config["switch:0"], "in_locked", False)
+    await init_integration(hass, 3)
+
+    entity_id = "switch.test_name_test_switch_0_input_lock"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-switch:0-switch_in_locked"
+    assert entry.entity_category is EntityCategory.CONFIG
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.switch_setconfig.assert_awaited_once_with(0, {"in_locked": True})
+
+    # the device applies the change and reports it with a config_changed event
+    async def _update_component_config(_key: str) -> set[str]:
+        monkeypatch.setitem(mock_rpc_device.config["switch:0"], "in_locked", True)
+        return {"in_locked"}
+
+    mock_rpc_device.update_component_config.side_effect = _update_component_config
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "switch:0",
+                    "event": "config_changed",
+                    "restart_required": False,
+                    "ts": 1668522399.2,
+                    "cfg_rev": 16,
+                },
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    mock_rpc_device.update_component_config.assert_awaited_once_with("switch:0")
+    assert mock_rpc_device.initialize.call_count == 1
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_cover_input_lock(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the input lock switch of a cover component."""
+    monkeypatch.setitem(mock_rpc_device.config["cover:0"], "in_locked", True)
+    await init_integration(hass, 3)
+
+    entity_id = "switch.test_name_test_cover_0_input_lock"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-cover:0-cover_in_locked"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.cover_setconfig.assert_awaited_once_with(0, {"in_locked": False})
+
+
+async def test_rpc_input_lock_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the input lock switch is disabled by default."""
+    monkeypatch.setitem(mock_rpc_device.config["cover:0"], "in_locked", False)
+    await init_integration(hass, 3)
+
+    entity_id = "switch.test_name_test_cover_0_input_lock"
+
+    assert hass.states.get(entity_id) is None
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.disabled_by is RegistryEntryDisabler.INTEGRATION
+
+
+async def test_rpc_input_lock_not_supported(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test no input lock switch is created when the device does not report it."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+    assert "in_locked" not in mock_rpc_device.config["switch:0"]
+
+    await init_integration(hass, 3)
+
+    assert hass.states.get("switch.test_name_test_switch_0")
+    assert (
+        entity_registry.async_get("switch.test_name_test_switch_0_input_lock") is None
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_device_script_switch(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -1041,7 +1169,7 @@ async def test_rpc_ev_charging_switch(
 
     entity_id = "switch.test_name_charging"
 
-    await init_integration(hass, 3, model=MODEL_TOP_EV_CHARGER_EVE01)
+    await init_integration(hass, 3)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
@@ -1295,3 +1423,109 @@ async def test_rpc_ledstrip_reverse_switch_availability(
 
     assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
     assert state.state == expected_state
+
+
+async def test_rpc_wall_display_auto_brightness_switch(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC Wall Display auto brightness switch."""
+    entity_id = f"{SWITCH_DOMAIN}.test_name_auto_display_brightness"
+    monkeypatch.setitem(mock_rpc_device.shelly, "ver", "2.8.5")
+    monkeypatch.setitem(
+        mock_rpc_device.config,
+        "ui",
+        {"brightness": {"auto": True, "level": 40, "min_level": 3}},
+    )
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert (state := hass.states.get(entity_id))
+    assert state == snapshot(name=f"{entity_id}-state")
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry == snapshot(name=f"{entity_id}-entry")
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.wall_display_ui_setconfig.assert_called_once_with(
+        {"brightness": {"auto": False}}
+    )
+
+    mock_rpc_device.wall_display_ui_setconfig.reset_mock()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.wall_display_ui_setconfig.assert_called_once_with(
+        {"brightness": {"auto": True}}
+    )
+
+    # The device reports the change with an event, the new config is then fetched
+    def _update_component_config(key: str) -> set[str]:
+        mock_rpc_device.config[key]["brightness"].update(auto=False)
+        return {"brightness"}
+
+    mock_rpc_device.update_component_config.side_effect = _update_component_config
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "ui",
+                    "event": "config_changed",
+                    "restart_required": False,
+                    "ts": 1668522399.2,
+                    "cfg_rev": 16,
+                },
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("model", "firmware", "ui_config"),
+    [
+        pytest.param(
+            MODEL_WALL_DISPLAY,
+            "2.6.1",
+            {"brightness": {"auto": True, "level": 40}},
+            id="old_firmware",
+        ),
+        pytest.param(MODEL_WALL_DISPLAY, "2.8.5", {}, id="no_brightness_config"),
+        pytest.param(
+            MODEL_PLUS_2PM,
+            "2.8.5",
+            {"brightness": {"auto": True, "level": 40}},
+            id="not_wall_display",
+        ),
+    ],
+)
+async def test_rpc_wall_display_auto_brightness_switch_not_supported(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    model: str,
+    firmware: str,
+    ui_config: dict[str, Any],
+) -> None:
+    """Test RPC Wall Display auto brightness switch needs model, firmware and config."""
+    monkeypatch.setitem(mock_rpc_device.shelly, "ver", firmware)
+    monkeypatch.setitem(mock_rpc_device.config, "ui", ui_config)
+    await init_integration(hass, 2, model=model)
+
+    assert hass.states.get(f"{SWITCH_DOMAIN}.test_name_auto_display_brightness") is None

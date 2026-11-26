@@ -10,20 +10,19 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
-    ATTR_HVAC_MODE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.components.ephember.const import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     CONF_PASSWORD,
     CONF_USERNAME,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -64,16 +63,22 @@ async def test_set_temperature_and_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.radiators", ATTR_TEMPERATURE: 21.5},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.radiators",
+            ClimateServiceArgument.TEMPERATURE: 21.5,
+        },
         blocking=True,
     )
     mock_ember.set_zone_target_temperature.assert_called_once_with("zone1", 21.5)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.radiators", ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.radiators",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     mock_ember.set_zone_mode.assert_called_once_with("zone1", ZoneMode.OFF)
@@ -189,3 +194,27 @@ async def test_yaml_import_keeps_existing_entities(
     entity = entity_registry.async_get("climate.my_radiators")
     assert entity.config_entry_id == entry.entry_id
     assert hass.states.get("climate.my_radiators").state == HVACMode.HEAT
+
+
+async def test_live_update(
+    hass: HomeAssistant, mock_ember: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test a live update from the cloud is shown straight away."""
+    zone_updated = mock_ember.start_listening.call_args.args[0]
+
+    radiators = mock_ember.get_zone("zone1")
+    radiators["pointDataList"] = [
+        {"pointIndex": 5, "value": "188"},
+        {"pointIndex": 6, "value": "220"},
+        {"pointIndex": 7, "value": "3"},
+        {"pointIndex": 10, "value": "1"},
+    ]
+    # the library calls back from its listener thread
+    await hass.async_add_executor_job(zone_updated, radiators)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.radiators")
+    assert state.state == HVACMode.OFF
+    assert state.attributes["current_temperature"] == 18.8
+    assert state.attributes[ATTR_TEMPERATURE] == 22.0
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE

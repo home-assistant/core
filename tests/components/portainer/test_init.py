@@ -1,5 +1,6 @@
 """Test the Portainer initial specific behavior."""
 
+from types import MappingProxyType
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
@@ -24,7 +25,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import DOMAIN, SUBENTRY_TYPE_ENVIRONMENT
 from homeassistant.components.portainer.coordinator import DEFAULT_SCAN_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_API_TOKEN,
@@ -595,6 +596,40 @@ async def test_new_endpoint_callback(
     )
     assert stack_device is not None
     assert stack_device.via_device_id == endpoint_device.id
+
+
+async def test_non_docker_endpoint_skipped(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a configured Kubernetes environment is skipped without failing setup."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            data=MappingProxyType({}),
+            subentry_type=SUBENTRY_TYPE_ENVIRONMENT,
+            title="my-kubernetes",
+            unique_id="7",
+        ),
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert 7 not in mock_config_entry.runtime_data.data
+    assert 1 in mock_config_entry.runtime_data.data
+    assert 7 not in {
+        call.args[0] for call in mock_portainer_client.get_containers.call_args_list
+    }
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{mock_config_entry.entry_id}_7"), mock_config_entry.entry_id
+        )
+        is None
+    )
 
 
 async def test_removed_endpoint_stops_event_listener(

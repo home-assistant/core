@@ -1,20 +1,20 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This Marantz device has already been configured with this transmitter.",
-      "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
+      "already_configured": "This Marantz device has already been configured with this infrared emitter.",
+      "no_emitters": "[%key:component::infrared::common::no_infrared_emitters%]"
     },
     "step": {
       "user": {
         "data": {
-          "infrared_emitter_entity_id": "Infrared transmitter",
+          "infrared_emitter_entity_id": "[%key:component::infrared::common::infrared_entity_id%]",
           "model": "Model"
         },
         "data_description": {
-          "infrared_emitter_entity_id": "The infrared transmitter entity to use for sending commands.",
+          "infrared_emitter_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]",
           "model": "The Marantz model to control."
         },
-        "description": "Select the Marantz model and the infrared transmitter entity to use for controlling your Marantz device.",
+        "description": "Select the Marantz model and the infrared emitter entity to use for controlling your Marantz device.",
         "title": "Set up Marantz IR Remote"
       }
     }
@@ -36,6 +36,8 @@
         "state_attributes": {
           "source": {
             "state": {
+              "aux_1": "Aux",
+              "aux_pm8006": "Aux",
               "cd": "CD",
               "coax": "Coax",
               "laserdisc": "LaserDisc",
@@ -52,6 +54,17 @@
             }
           }
         }
+      }
+    },
+    "switch": {
+      "power_amp_direct": {
+        "name": "Power amp direct"
+      },
+      "speaker_a": {
+        "name": "Speaker A"
+      },
+      "speaker_b": {
+        "name": "Speaker B"
       }
     }
   }

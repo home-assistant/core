@@ -29,7 +29,6 @@ from homeassistant.components.roborock.const import A01_UPDATE_INTERVAL
 from homeassistant.components.roborock.services import RoborockService
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
-    SERVICE_CLEAN_AREA,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -38,6 +37,7 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
+    VacuumService,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
@@ -164,8 +164,8 @@ async def test_set_fan_speed_invalid(
     with pytest.raises(ServiceValidationError, match="Invalid fan speed: some-mode"):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_ENTITY_ID: entity_id, "fan_speed": "some-mode"},
+            VacuumService.SET_FAN_SPEED,
+            {TargetKey.ENTITY_ID: entity_id, "fan_speed": "some-mode"},
             blocking=True,
         )
 
@@ -206,7 +206,7 @@ async def test_resume_cleaning(
     data = {ATTR_ENTITY_ID: ENTITY_ID}
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_START,
+        VacuumService.START,
         data,
         blocking=True,
     )
@@ -227,7 +227,7 @@ async def test_failed_user_command(
     ):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            VacuumService.SEND_COMMAND,
             data,
             blocking=True,
         )
@@ -534,8 +534,8 @@ async def test_clean_segments(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_CLEAN_AREA,
-        {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
+        VacuumService.CLEAN_AREA,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
         blocking=True,
     )
 
@@ -572,8 +572,8 @@ async def test_clean_segments_different_map(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_CLEAN_AREA,
-        {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
+        VacuumService.CLEAN_AREA,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
         blocking=True,
     )
 
@@ -604,8 +604,8 @@ async def test_clean_segments_mixed_maps(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_CLEAN_AREA,
-        {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
+        VacuumService.CLEAN_AREA,
+        {TargetKey.ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
         blocking=True,
     )
 
@@ -774,8 +774,8 @@ async def test_q7_locate_command(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_LOCATE,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+        VacuumService.LOCATE,
+        {TargetKey.ENTITY_ID: Q7_ENTITY_ID},
         blocking=True,
     )
     assert q7_vacuum_api.find_me.call_count == 1
@@ -793,8 +793,8 @@ async def test_q7_set_fan_speed_command(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "fan_speed": "quiet"},
+        VacuumService.SET_FAN_SPEED,
+        {TargetKey.ENTITY_ID: Q7_ENTITY_ID, "fan_speed": "quiet"},
         blocking=True,
     )
     assert q7_vacuum_api.set_fan_speed.call_count == 1
@@ -813,8 +813,8 @@ async def test_q7_send_command(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "command": "test_command"},
+        VacuumService.SEND_COMMAND,
+        {TargetKey.ENTITY_ID: Q7_ENTITY_ID, "command": "test_command"},
         blocking=True,
     )
     assert q7_vacuum_api.send.call_count == 1
@@ -1169,8 +1169,8 @@ async def test_q7_clean_segments(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_CLEAN_AREA,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
+        VacuumService.CLEAN_AREA,
+        {TargetKey.ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
         blocking=True,
     )
 
@@ -1205,8 +1205,8 @@ async def test_q7_clean_segments_failed(
     with pytest.raises(HomeAssistantError, match="Error while calling clean_segments"):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_CLEAN_AREA,
-            {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
+            VacuumService.CLEAN_AREA,
+            {TargetKey.ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
             blocking=True,
         )
     fake_q7_vacuum.b01_q7_properties.map.refresh.assert_awaited()
@@ -1240,8 +1240,8 @@ async def test_q7_clean_segments_refresh_failure(
     ):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_CLEAN_AREA,
-            {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
+            VacuumService.CLEAN_AREA,
+            {TargetKey.ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
             blocking=True,
         )
 
@@ -1272,8 +1272,8 @@ async def test_q7_clean_segments_ignores_other_map(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_CLEAN_AREA,
-        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
+        VacuumService.CLEAN_AREA,
+        {TargetKey.ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
         blocking=True,
     )
 
@@ -1304,8 +1304,8 @@ async def test_q7_clean_segments_invalid_id(
     with pytest.raises(HomeAssistantError, match="Invalid segment ID format"):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_CLEAN_AREA,
-            {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
+            VacuumService.CLEAN_AREA,
+            {TargetKey.ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
             blocking=True,
         )
 
@@ -1534,8 +1534,8 @@ async def test_q10_locate_command(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_LOCATE,
-        {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+        VacuumService.LOCATE,
+        {TargetKey.ENTITY_ID: Q10_ENTITY_ID},
         blocking=True,
     )
     assert q10_vacuum_api.command.send.call_count == 1
@@ -1553,8 +1553,8 @@ async def test_q10_set_fan_speed_command(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {ATTR_ENTITY_ID: Q10_ENTITY_ID, "fan_speed": "quiet"},
+        VacuumService.SET_FAN_SPEED,
+        {TargetKey.ENTITY_ID: Q10_ENTITY_ID, "fan_speed": "quiet"},
         blocking=True,
     )
     assert q10_vacuum_api.vacuum.set_fan_level.call_count == 1
@@ -1581,8 +1581,8 @@ async def test_q10_send_command(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: Q10_ENTITY_ID, "command": command},
+        VacuumService.SEND_COMMAND,
+        {TargetKey.ENTITY_ID: Q10_ENTITY_ID, "command": command},
         blocking=True,
     )
     assert q10_vacuum_api.command.send.call_count == 1
@@ -1601,8 +1601,8 @@ async def test_q10_send_command_invalid(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_SEND_COMMAND,
-            {ATTR_ENTITY_ID: Q10_ENTITY_ID, "command": "INVALID_COMMAND"},
+            VacuumService.SEND_COMMAND,
+            {TargetKey.ENTITY_ID: Q10_ENTITY_ID, "command": "INVALID_COMMAND"},
             blocking=True,
         )
     q10_vacuum_api.vacuum.cancel_goto.assert_not_called()
@@ -1789,8 +1789,8 @@ async def test_q10_clean_segments(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_CLEAN_AREA,
-        {ATTR_ENTITY_ID: Q10_ENTITY_ID, "cleaning_area_id": ["bedroom"]},
+        VacuumService.CLEAN_AREA,
+        {TargetKey.ENTITY_ID: Q10_ENTITY_ID, "cleaning_area_id": ["bedroom"]},
         blocking=True,
     )
 
@@ -1820,7 +1820,7 @@ async def test_q10_clean_segments_failed(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_CLEAN_AREA,
-            {ATTR_ENTITY_ID: Q10_ENTITY_ID, "cleaning_area_id": ["bedroom"]},
+            VacuumService.CLEAN_AREA,
+            {TargetKey.ENTITY_ID: Q10_ENTITY_ID, "cleaning_area_id": ["bedroom"]},
             blocking=True,
         )

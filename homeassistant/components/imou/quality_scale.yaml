@@ -78,6 +78,10 @@ rules:
     comment: Devices that leave the account can be deleted from the device page. Devices the cloud still reports cannot.
 
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
+  async-dependency:
+    status: done
+    comment: pyimouapi 1.4.4 performs Open Platform calls with aiohttp.
+  inject-websession:
+    status: done
+    comment: Setup and the config flow use Home Assistant's shared client session and do not close it.
   strict-typing: done

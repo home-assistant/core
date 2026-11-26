@@ -50,6 +50,7 @@ WAKE_WORDS_API_PATH = "/api/esphome/wake_words"
 
 # Built from the device info, so a cleanup path has to name them.
 ASSIST_SATELLITE_KEY: Final[str] = "assist_satellite"
+TIMER_LIST_KEY: Final[str] = "timer_list"
 VOICE_ASSISTANT_SELECT_COUNT: Final[int] = 2
 VOICE_ASSISTANT_SELECT_KEYS: Final[tuple[str, ...]] = (
     *(

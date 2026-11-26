@@ -17,7 +17,12 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components import camera
-from homeassistant.components.camera import Camera, async_register_webrtc_provider
+from homeassistant.components.camera import (
+    Camera,
+    CameraService,
+    CameraServiceArgument,
+    async_register_webrtc_provider,
+)
 from homeassistant.components.camera.const import (
     DOMAIN,
     PREF_ORIENTATION,
@@ -30,9 +35,9 @@ from homeassistant.components.camera.prefs import get_dynamic_camera_stream_sett
 from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
@@ -257,10 +262,10 @@ async def test_snapshot_service(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             camera.DOMAIN,
-            camera.SERVICE_SNAPSHOT,
+            CameraService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: "camera.demo_camera",
-                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+                TargetKey.ENTITY_ID: "camera.demo_camera",
+                CameraServiceArgument.FILENAME: "/test/snapshot.jpg",
             },
             blocking=True,
         )
@@ -287,10 +292,10 @@ async def test_snapshot_service_entity_id_variable_removed(hass: HomeAssistant) 
     ):
         await hass.services.async_call(
             camera.DOMAIN,
-            camera.SERVICE_SNAPSHOT,
+            CameraService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: "camera.demo_camera",
-                camera.ATTR_FILENAME: "/test/snapshot_{{ entity_id }}.jpg",
+                TargetKey.ENTITY_ID: "camera.demo_camera",
+                CameraServiceArgument.FILENAME: "/test/snapshot_{{ entity_id }}.jpg",
             },
             blocking=True,
         )
@@ -315,10 +320,10 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             camera.DOMAIN,
-            camera.SERVICE_SNAPSHOT,
+            CameraService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: "camera.demo_camera",
-                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+                TargetKey.ENTITY_ID: "camera.demo_camera",
+                CameraServiceArgument.FILENAME: "/test/snapshot.jpg",
             },
             blocking=True,
         )
@@ -351,10 +356,10 @@ async def test_snapshot_service_write_error(
     ):
         await hass.services.async_call(
             camera.DOMAIN,
-            camera.SERVICE_SNAPSHOT,
+            CameraService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: "camera.demo_camera",
-                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+                TargetKey.ENTITY_ID: "camera.demo_camera",
+                CameraServiceArgument.FILENAME: "/test/snapshot.jpg",
             },
             blocking=True,
         )
@@ -379,10 +384,10 @@ async def test_snapshot_service_timeout(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             camera.DOMAIN,
-            camera.SERVICE_SNAPSHOT,
+            CameraService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: "camera.demo_camera",
-                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+                TargetKey.ENTITY_ID: "camera.demo_camera",
+                CameraServiceArgument.FILENAME: "/test/snapshot.jpg",
             },
             blocking=True,
         )
@@ -631,13 +636,13 @@ async def test_prefs_follow_entity_id_change(
 async def test_play_stream_service_no_source(hass: HomeAssistant) -> None:
     """Test camera play_stream service."""
     data = {
-        ATTR_ENTITY_ID: "camera.demo_camera",
-        camera.ATTR_MEDIA_PLAYER: "media_player.test",
+        TargetKey.ENTITY_ID: "camera.demo_camera",
+        CameraServiceArgument.MEDIA_PLAYER: "media_player.test",
     }
     with pytest.raises(HomeAssistantError):
         # Call service
         await hass.services.async_call(
-            camera.DOMAIN, camera.SERVICE_PLAY_STREAM, data, blocking=True
+            camera.DOMAIN, CameraService.PLAY_STREAM, data, blocking=True
         )
 
 
@@ -658,10 +663,10 @@ async def test_handle_play_stream_service(
         # Call service
         await hass.services.async_call(
             camera.DOMAIN,
-            camera.SERVICE_PLAY_STREAM,
+            CameraService.PLAY_STREAM,
             {
-                ATTR_ENTITY_ID: "camera.demo_camera",
-                camera.ATTR_MEDIA_PLAYER: "media_player.test",
+                TargetKey.ENTITY_ID: "camera.demo_camera",
+                CameraServiceArgument.MEDIA_PLAYER: "media_player.test",
             },
             blocking=True,
         )
@@ -721,10 +726,10 @@ async def test_record_service_not_supported(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             camera.DOMAIN,
-            camera.SERVICE_RECORD,
+            CameraService.RECORD,
             {
-                ATTR_ENTITY_ID: "camera.demo_camera",
-                camera.CONF_FILENAME: "/test/recording.mp4",
+                TargetKey.ENTITY_ID: "camera.demo_camera",
+                CameraServiceArgument.FILENAME: "/test/recording.mp4",
             },
             blocking=True,
         )
@@ -746,10 +751,10 @@ async def test_record_service(hass: HomeAssistant) -> None:
         # Call service
         await hass.services.async_call(
             camera.DOMAIN,
-            camera.SERVICE_RECORD,
+            CameraService.RECORD,
             {
-                ATTR_ENTITY_ID: "camera.demo_camera",
-                camera.ATTR_FILENAME: "/test/recording.mpg",
+                TargetKey.ENTITY_ID: "camera.demo_camera",
+                CameraServiceArgument.FILENAME: "/test/recording.mpg",
             },
             blocking=True,
         )
@@ -1278,10 +1283,10 @@ async def test_snapshot_service_webrtc_provider(
         # WebRTC is not supporting get_image and the default implementation returns None
         await hass.services.async_call(
             camera.DOMAIN,
-            camera.SERVICE_SNAPSHOT,
+            CameraService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: camera_obj.entity_id,
-                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+                TargetKey.ENTITY_ID: camera_obj.entity_id,
+                CameraServiceArgument.FILENAME: "/test/snapshot.jpg",
             },
             blocking=True,
         )
@@ -1297,10 +1302,10 @@ async def test_snapshot_service_webrtc_provider(
         webrtc_get_image_mock.return_value = b"Images bytes"
         await hass.services.async_call(
             camera.DOMAIN,
-            camera.SERVICE_SNAPSHOT,
+            CameraService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: camera_obj.entity_id,
-                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+                TargetKey.ENTITY_ID: camera_obj.entity_id,
+                CameraServiceArgument.FILENAME: "/test/snapshot.jpg",
             },
             blocking=True,
         )
@@ -1318,10 +1323,10 @@ async def test_snapshot_service_webrtc_provider(
 
         await hass.services.async_call(
             camera.DOMAIN,
-            camera.SERVICE_SNAPSHOT,
+            CameraService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: camera_obj.entity_id,
-                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+                TargetKey.ENTITY_ID: camera_obj.entity_id,
+                CameraServiceArgument.FILENAME: "/test/snapshot.jpg",
             },
             blocking=True,
         )

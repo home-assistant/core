@@ -14,7 +14,7 @@
     "step": {
       "user": {
         "data": {
-          "address": "Device"
+          "address": "[%key:common::config_flow::data::device%]"
         },
         "data_description": {
           "address": "The Bluetooth device for the desk."

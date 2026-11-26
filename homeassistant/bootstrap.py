@@ -69,7 +69,6 @@ from .const import (
     EVENT_HOMEASSISTANT_STARTED,
     KEY_DATA_LOGGING as DATA_LOGGING,
     KEY_DATA_LOGGING_DISABLED_REASON as DATA_LOGGING_DISABLED_REASON,
-    SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .core_config import async_process_ha_core_config
 from .exceptions import HomeAssistantError, UnsupportedStorageVersionError
@@ -91,7 +90,6 @@ from .helpers import (
     translation,
     trigger,
 )
-from .helpers.dispatcher import async_dispatcher_send_internal
 from .helpers.storage import get_internal_store_manager
 from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
@@ -1059,7 +1057,6 @@ class _WatchPendingSetups:
         self._setup_started = setup_started
         self._duration_count = 0
         self._handle: asyncio.TimerHandle | None = None
-        self._previous_was_empty = True
         self._loop = hass.loop
         self._started = started
         self._phase = BootstrapPhase.PREPARING
@@ -1081,7 +1078,6 @@ class _WatchPendingSetups:
             _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
         elif waiting_tasks := self._hass._active_tasks:  # noqa: SLF001
             _LOGGER.debug("Waiting on tasks: %s", waiting_tasks)
-        self._async_dispatch(remaining_with_setup_started)
         _async_dispatch_bootstrap_progress(self._hass)
         if (
             self._setup_started
@@ -1096,14 +1092,6 @@ class _WatchPendingSetups:
 
         _LOGGER.debug("Running timeout Zones: %s", self._hass.timeout.zones)
         self._async_schedule_next()
-
-    def _async_dispatch(self, remaining_with_setup_started: dict[str, float]) -> None:
-        """Dispatch the signal."""
-        if remaining_with_setup_started or not self._previous_was_empty:
-            async_dispatcher_send_internal(
-                self._hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, remaining_with_setup_started
-            )
-        self._previous_was_empty = not remaining_with_setup_started
 
     @core.callback
     def async_set_planned_domains(self, domains: set[str]) -> None:
@@ -1202,7 +1190,6 @@ class _WatchPendingSetups:
 
         The progress is still dispatched on the start and started events.
         """
-        self._async_dispatch({})
         _async_dispatch_bootstrap_progress(self._hass)
         # Progress keeps the wrap up phase until the core state changes.
         for event_type, phase in (

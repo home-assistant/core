@@ -16,11 +16,11 @@ from pytest_homeassistant.common import (
 
 from homeassistant.components import conversation
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_TEMPERATURE,
     DOMAIN,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
+    ClimateServiceArgument,
     HVACMode,
     intent as climate_intent,
 )
@@ -119,7 +119,7 @@ class MockClimateEntity(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the thermostat temperature."""
-        value = kwargs[ATTR_TEMPERATURE]
+        value = kwargs[ClimateServiceArgument.TEMPERATURE]
         self._attr_native_target_temperature = value
 
 
@@ -278,7 +278,7 @@ async def test_set_temperature(
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_2.entity_id
     state = hass.states.get(climate_2.entity_id)
-    assert state.attributes[ATTR_TEMPERATURE] == 20.1
+    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 20.1
 
     # Select by area implicitly (climate_2)
     response = await intent.async_handle(
@@ -295,7 +295,7 @@ async def test_set_temperature(
     assert response.matched_states
     assert response.matched_states[0].entity_id == climate_2.entity_id
     state = hass.states.get(climate_2.entity_id)
-    assert state.attributes[ATTR_TEMPERATURE] == 20.2
+    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 20.2
 
     # Select by floor explicitly (climate_2)
     response = await intent.async_handle(
@@ -309,7 +309,7 @@ async def test_set_temperature(
     assert response.matched_states
     assert response.matched_states[0].entity_id == climate_2.entity_id
     state = hass.states.get(climate_2.entity_id)
-    assert state.attributes[ATTR_TEMPERATURE] == 20.3
+    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 20.3
 
     # Select by floor implicitly (climate_2)
     response = await intent.async_handle(
@@ -326,7 +326,7 @@ async def test_set_temperature(
     assert response.matched_states
     assert response.matched_states[0].entity_id == climate_2.entity_id
     state = hass.states.get(climate_2.entity_id)
-    assert state.attributes[ATTR_TEMPERATURE] == 20.4
+    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 20.4
 
     # Select by name (climate_2)
     response = await intent.async_handle(
@@ -340,7 +340,7 @@ async def test_set_temperature(
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_2.entity_id
     state = hass.states.get(climate_2.entity_id)
-    assert state.attributes[ATTR_TEMPERATURE] == 20.5
+    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 20.5
 
     # Check area with no climate entities (explicit)
     with pytest.raises(intent.MatchFailedError) as error:
@@ -458,7 +458,7 @@ async def test_set_fan_mode(
     assert response.matched_states[0].entity_id == climate_1.entity_id
 
     state = hass.states.get(climate_1.entity_id)
-    assert state.attributes[ATTR_FAN_MODE] == expected_fan_mode
+    assert state.attributes[ClimateEntityStateAttribute.FAN_MODE] == expected_fan_mode
 
 
 async def test_set_fan_mode_localized(hass: HomeAssistant) -> None:
@@ -491,7 +491,7 @@ async def test_set_fan_mode_localized(hass: HomeAssistant) -> None:
 
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
     state = hass.states.get(climate_1.entity_id)
-    assert state.attributes[ATTR_FAN_MODE] == "Low"
+    assert state.attributes[ClimateEntityStateAttribute.FAN_MODE] == "Low"
 
 
 async def test_set_fan_mode_unsupported_mode(hass: HomeAssistant) -> None:
@@ -516,7 +516,7 @@ async def test_set_fan_mode_unsupported_mode(hass: HomeAssistant) -> None:
 
     # Mode was not affected by failed intent
     state = hass.states.get(climate_1.entity_id)
-    assert state.attributes[ATTR_FAN_MODE] == "auto"
+    assert state.attributes[ClimateEntityStateAttribute.FAN_MODE] == "auto"
 
 
 async def test_set_fan_mode_not_supported(hass: HomeAssistant) -> None:
@@ -576,9 +576,19 @@ async def test_set_fan_mode_targeting(
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_2.entity_id
 
-    assert hass.states.get(climate_2.entity_id).attributes[ATTR_FAN_MODE] == "Low"
+    assert (
+        hass.states.get(climate_2.entity_id).attributes[
+            ClimateEntityStateAttribute.FAN_MODE
+        ]
+        == "Low"
+    )
     # The entity in the other area/floor is untouched
-    assert hass.states.get(climate_1.entity_id).attributes[ATTR_FAN_MODE] == "auto"
+    assert (
+        hass.states.get(climate_1.entity_id).attributes[
+            ClimateEntityStateAttribute.FAN_MODE
+        ]
+        == "auto"
+    )
 
 
 async def test_set_fan_mode_preferred_area_and_floor(
@@ -620,7 +630,12 @@ async def test_set_fan_mode_preferred_area_and_floor(
         assistant=conversation.DOMAIN,
     )
     assert response.matched_states[0].entity_id == climate_2.entity_id
-    assert hass.states.get(climate_2.entity_id).attributes[ATTR_FAN_MODE] == "Low"
+    assert (
+        hass.states.get(climate_2.entity_id).attributes[
+            ClimateEntityStateAttribute.FAN_MODE
+        ]
+        == "Low"
+    )
 
     # Select by floor implicitly (climate_2)
     response = await intent.async_handle(
@@ -634,9 +649,19 @@ async def test_set_fan_mode_preferred_area_and_floor(
         assistant=conversation.DOMAIN,
     )
     assert response.matched_states[0].entity_id == climate_2.entity_id
-    assert hass.states.get(climate_2.entity_id).attributes[ATTR_FAN_MODE] == "Turbo"
+    assert (
+        hass.states.get(climate_2.entity_id).attributes[
+            ClimateEntityStateAttribute.FAN_MODE
+        ]
+        == "Turbo"
+    )
 
-    assert hass.states.get(climate_1.entity_id).attributes[ATTR_FAN_MODE] == "auto"
+    assert (
+        hass.states.get(climate_1.entity_id).attributes[
+            ClimateEntityStateAttribute.FAN_MODE
+        ]
+        == "auto"
+    )
 
 
 @pytest.mark.parametrize(

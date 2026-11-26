@@ -23,12 +23,11 @@ from pytest_homeassistant.components.common import (
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
+    MediaPlayerEntityStateAttribute,
 )
 from homeassistant.components.media_player.condition import CONDITIONS
 from homeassistant.components.media_player.const import MediaPlayerState
-from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
+from homeassistant.const import CONF_OPTIONS, CONF_TARGET, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.condition import async_validate_condition_config
 
@@ -39,29 +38,47 @@ _IS_VOLUME_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 
 # is_muted=True states (mute attr True OR volume_level == 0)
 _IS_MUTED_STATES = [
-    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True}),
-    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 0}),
     (
         MediaPlayerState.PLAYING,
-        {ATTR_MEDIA_VOLUME_LEVEL: 0, ATTR_MEDIA_VOLUME_MUTED: True},
+        {MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: True},
+    ),
+    (MediaPlayerState.PLAYING, {MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 0}),
+    (
+        MediaPlayerState.PLAYING,
+        {
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 0,
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: True,
+        },
     ),
     (
         MediaPlayerState.PLAYING,
-        {ATTR_MEDIA_VOLUME_LEVEL: 0, ATTR_MEDIA_VOLUME_MUTED: False},
+        {
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 0,
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: False,
+        },
     ),
     (
         MediaPlayerState.PLAYING,
-        {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: True},
+        {
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 1,
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: True,
+        },
     ),
 ]
 
 # is_muted=False states (mute attr False/missing AND volume_level != 0)
 _IS_NOT_MUTED_STATES = [
-    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_MUTED: False}),
-    (MediaPlayerState.PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 1}),
     (
         MediaPlayerState.PLAYING,
-        {ATTR_MEDIA_VOLUME_LEVEL: 1, ATTR_MEDIA_VOLUME_MUTED: False},
+        {MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: False},
+    ),
+    (MediaPlayerState.PLAYING, {MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 1}),
+    (
+        MediaPlayerState.PLAYING,
+        {
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 1,
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: False,
+        },
     ),
 ]
 
@@ -202,11 +219,20 @@ def test_condition_target_support() -> None:
             condition="media_player.is_current_source",
             condition_options={ATTR_INPUT_SOURCE: ["HDMI 1", "HDMI 2"]},
             target_states=[
-                (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "HDMI 1"}),
-                (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "HDMI 2"}),
+                (
+                    MediaPlayerState.PLAYING,
+                    {MediaPlayerEntityStateAttribute.INPUT_SOURCE: "HDMI 1"},
+                ),
+                (
+                    MediaPlayerState.PLAYING,
+                    {MediaPlayerEntityStateAttribute.INPUT_SOURCE: "HDMI 2"},
+                ),
             ],
             other_states=[
-                (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "TV"}),
+                (
+                    MediaPlayerState.PLAYING,
+                    {MediaPlayerEntityStateAttribute.INPUT_SOURCE: "TV"},
+                ),
             ],
             extra_excluded_states=[
                 # States without a source attribute — filtered by _should_include
@@ -220,7 +246,7 @@ def test_condition_target_support() -> None:
         *parametrize_numerical_attribute_condition_above_below_any(
             "media_player.is_volume",
             MediaPlayerState.PLAYING,
-            ATTR_MEDIA_VOLUME_LEVEL,
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
             attribute_required=True,
             attribute_value_scale=_VOLUME_VALUE_SCALE,
         ),
@@ -300,11 +326,20 @@ async def test_media_player_state_condition_behavior_any(
             condition="media_player.is_current_source",
             condition_options={ATTR_INPUT_SOURCE: ["HDMI 1", "HDMI 2"]},
             target_states=[
-                (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "HDMI 1"}),
-                (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "HDMI 2"}),
+                (
+                    MediaPlayerState.PLAYING,
+                    {MediaPlayerEntityStateAttribute.INPUT_SOURCE: "HDMI 1"},
+                ),
+                (
+                    MediaPlayerState.PLAYING,
+                    {MediaPlayerEntityStateAttribute.INPUT_SOURCE: "HDMI 2"},
+                ),
             ],
             other_states=[
-                (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "TV"}),
+                (
+                    MediaPlayerState.PLAYING,
+                    {MediaPlayerEntityStateAttribute.INPUT_SOURCE: "TV"},
+                ),
             ],
             extra_excluded_states=[
                 # States without a source attribute — filtered by _should_include
@@ -318,7 +353,7 @@ async def test_media_player_state_condition_behavior_any(
         *parametrize_numerical_attribute_condition_above_below_all(
             "media_player.is_volume",
             MediaPlayerState.PLAYING,
-            ATTR_MEDIA_VOLUME_LEVEL,
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
             attribute_required=True,
             attribute_value_scale=_VOLUME_VALUE_SCALE,
         ),
@@ -388,7 +423,7 @@ async def test_media_player_is_current_source_condition_validation(
             hass,
             {
                 "condition": condition,
-                CONF_TARGET: {CONF_ENTITY_ID: "media_player.test"},
+                CONF_TARGET: {TargetKey.ENTITY_ID: "media_player.test"},
                 CONF_OPTIONS: condition_options,
             },
         )

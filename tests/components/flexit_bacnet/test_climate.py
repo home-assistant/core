@@ -16,14 +16,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
-    ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
     PRESET_HOME,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -31,12 +29,7 @@ from homeassistant.components.flexit_bacnet.const import (
     PRESET_HIGH,
     PRESET_TO_VENTILATION_MODE_MAP,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_TEMPERATURE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_component, entity_registry as er
@@ -72,10 +65,10 @@ async def test_set_hvac_preset_mode(
     mock_flexit_bacnet.operation_mode = 2  # OPERATION_MODE_AWAY
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_PRESET_MODE: PRESET_AWAY,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
         },
         blocking=True,
     )
@@ -92,10 +85,10 @@ async def test_set_hvac_preset_mode(
     mock_flexit_bacnet.operation_mode = 3  # OPERATION_MODE_HOME
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_PRESET_MODE: PRESET_HOME,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_HOME,
         },
         blocking=True,
     )
@@ -111,10 +104,10 @@ async def test_set_hvac_preset_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            ClimateService.SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_PRESET_MODE: PRESET_AWAY,
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
             },
             blocking=True,
         )
@@ -136,8 +129,11 @@ async def test_set_hvac_mode(
     mock_flexit_bacnet.operation_mode = 1  # OPERATION_MODE_OFF
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
 
@@ -151,8 +147,11 @@ async def test_set_hvac_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+            },
             blocking=True,
         )
 
@@ -194,10 +193,10 @@ async def test_set_temperature(
     mock_flexit_bacnet.ventilation_mode = VENTILATION_MODE_HOME
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: 22.5,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 22.5,
         },
         blocking=True,
     )
@@ -209,10 +208,10 @@ async def test_set_temperature(
     mock_flexit_bacnet.ventilation_mode = VENTILATION_MODE_AWAY
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: 18.0,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 18.0,
         },
         blocking=True,
     )
@@ -225,10 +224,10 @@ async def test_set_temperature(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_TEMPERATURE: 20.0,
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.TEMPERATURE: 20.0,
             },
             blocking=True,
         )

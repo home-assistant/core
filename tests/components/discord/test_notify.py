@@ -11,9 +11,9 @@ from homeassistant.components.discord.notify import DiscordNotificationService
 from homeassistant.components.notify import (
     ATTR_TARGET,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -151,8 +151,8 @@ async def test_notify_entity_send_message(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
-            {ATTR_ENTITY_ID: f"notify.{TARGET_NAME}", "message": MESSAGE},
+            NotifyService.SEND_MESSAGE,
+            {TargetKey.ENTITY_ID: f"notify.{TARGET_NAME}", "message": MESSAGE},
             blocking=True,
         )
 
@@ -181,8 +181,8 @@ async def test_notify_entity_target_not_found(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
-            {ATTR_ENTITY_ID: f"notify.{TARGET_NAME}", "message": MESSAGE},
+            NotifyService.SEND_MESSAGE,
+            {TargetKey.ENTITY_ID: f"notify.{TARGET_NAME}", "message": MESSAGE},
             blocking=True,
         )
 
@@ -206,7 +206,7 @@ async def test_notify_entity_communication_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
-            {ATTR_ENTITY_ID: f"notify.{TARGET_NAME}", "message": MESSAGE},
+            NotifyService.SEND_MESSAGE,
+            {TargetKey.ENTITY_ID: f"notify.{TARGET_NAME}", "message": MESSAGE},
             blocking=True,
         )

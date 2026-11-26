@@ -9,6 +9,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::foreca::config::step::user::data_description::api_key%]"
+        },
+        "description": "The Foreca API rejected the API key. Enter a new key from the My API page.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
@@ -48,6 +58,108 @@
   },
   "entity": {
     "sensor": {
+      "aqi_co": {
+        "name": "Carbon monoxide index"
+      },
+      "aqi_no2": {
+        "name": "Nitrogen dioxide index"
+      },
+      "aqi_o3": {
+        "name": "Ozone index"
+      },
+      "aqi_pm10": {
+        "name": "PM10 index"
+      },
+      "aqi_pm25": {
+        "name": "PM2.5 index"
+      },
+      "aqi_so2": {
+        "name": "Sulphur dioxide index"
+      },
+      "dominant_pollutant": {
+        "name": "Dominant pollutant",
+        "state": {
+          "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "nitrogen_dioxide": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+          "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
+          "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+          "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+          "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+        }
+      },
+      "observation_station": {
+        "name": "Observation station"
+      },
+      "observation_time": {
+        "name": "Observation time"
+      },
+      "observed_apparent_temperature": {
+        "name": "Observed apparent temperature"
+      },
+      "observed_condition": {
+        "name": "Observed condition",
+        "state": {
+          "clear-night": "[%key:component::weather::entity_component::_::state::clear-night%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "lightning-rainy": "[%key:component::weather::entity_component::_::state::lightning-rainy%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
+          "pouring": "[%key:component::weather::entity_component::_::state::pouring%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "sunny": "[%key:component::weather::entity_component::_::state::sunny%]"
+        }
+      },
+      "observed_humidity": {
+        "name": "Observed humidity"
+      },
+      "observed_precipitation": {
+        "name": "Observed hourly precipitation"
+      },
+      "observed_precipitation_12h": {
+        "name": "Observed 12-hour precipitation"
+      },
+      "observed_precipitation_24h": {
+        "name": "Observed 24-hour precipitation"
+      },
+      "observed_precipitation_3h": {
+        "name": "Observed 3-hour precipitation"
+      },
+      "observed_precipitation_6h": {
+        "name": "Observed 6-hour precipitation"
+      },
+      "observed_precipitation_type": {
+        "name": "Observed precipitation type",
+        "state": {
+          "hail": "Hail",
+          "icing": "Icing",
+          "rain": "Rain",
+          "sleet": "Sleet",
+          "snow": "Snow"
+        }
+      },
+      "observed_pressure": {
+        "name": "Observed pressure"
+      },
+      "observed_snow_depth": {
+        "name": "Observed snow depth"
+      },
+      "observed_temperature": {
+        "name": "Observed temperature"
+      },
+      "observed_visibility": {
+        "name": "Observed visibility"
+      },
+      "observed_wind_direction": {
+        "name": "Observed wind direction"
+      },
+      "observed_wind_gust_speed": {
+        "name": "Observed wind gust speed"
+      },
+      "observed_wind_speed": {
+        "name": "Observed wind speed"
+      },
       "precipitation_probability": {
         "name": "Precipitation probability"
       },
@@ -57,6 +169,18 @@
     }
   },
   "exceptions": {
+    "air_quality_forecast_error": {
+      "message": "Error fetching the air quality forecast."
+    },
+    "air_quality_update_error": {
+      "message": "Error fetching the air quality."
+    },
+    "fifteen_minute_forecast_error": {
+      "message": "Error fetching the 15-minute forecast."
+    },
+    "minute_forecast_error": {
+      "message": "Error fetching the minute forecast."
+    },
     "three_hour_forecast_error": {
       "message": "Error fetching the 3-hour forecast."
     }
@@ -70,9 +194,23 @@
     }
   },
   "services": {
+    "get_15_minute_forecast": {
+      "description": "Retrieves the forecast in 15-minute steps for the next three hours, in the weather entity's units. Every call makes a request to the Foreca Weather API and counts toward the daily limit of your plan.",
+      "name": "Get 15-minute forecast"
+    },
     "get_3_hour_forecast": {
       "description": "Retrieves the forecast in 3-hour steps for the next 14 days, in the weather entity's units, with the values weather.get_forecasts has no place for. Every call makes a request to the Foreca Weather API and counts toward the daily limit of your plan.",
       "name": "Get 3-hour forecast"
+    },
+    "get_air_quality_forecast": {
+      "description": "Retrieves the air quality index forecast, hourly for up to 85 hours or daily for 4 days. Every call makes a request to the Foreca Weather API and counts toward the daily limit of your plan.",
+      "fields": {
+        "type": {
+          "description": "The forecast to return.",
+          "name": "Forecast type"
+        }
+      },
+      "name": "Get air quality forecast"
     },
     "get_forecasts_extra": {
       "description": "Retrieves the forecast values that weather.get_forecasts has no place for, such as precipitation type, snow, solar radiation, sunshine, sunrise and the ensemble range of the daily forecast. They come from the forecast already fetched, so the action makes no API requests.",
@@ -83,6 +221,10 @@
         }
       },
       "name": "Get extra forecast values"
+    },
+    "get_minute_forecast": {
+      "description": "Retrieves the precipitation rate for each minute of the next hour, in the weather entity's precipitation unit per hour. Every call makes a request to the Foreca Weather API and counts toward the daily limit of your plan.",
+      "name": "Get minute forecast"
     }
   }
 }

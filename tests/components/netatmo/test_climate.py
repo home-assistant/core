@@ -11,16 +11,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
-    ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
     PRESET_BOOST,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -30,13 +26,7 @@ from homeassistant.components.netatmo.const import (
     NetatmoService,
     NetatmoServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    CONF_WEBHOOK_ID,
-    Platform,
-    TargetKey,
-)
+from homeassistant.const import CONF_WEBHOOK_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -118,8 +108,11 @@ async def test_webhook_event_handling_thermostats(
     # Test service setting the temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_TEMPERATURE: 21},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: climate_entity_livingroom,
+            ClimateServiceArgument.TEMPERATURE: 21,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -161,8 +154,11 @@ async def test_webhook_event_handling_thermostats(
     # Test service setting the HVAC mode to "heat"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: climate_entity_livingroom,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -199,8 +195,11 @@ async def test_webhook_event_handling_thermostats(
     # Test service setting the HVAC mode to "off"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: climate_entity_livingroom,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -234,8 +233,11 @@ async def test_webhook_event_handling_thermostats(
     # Test service setting the HVAC mode to "auto"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVACMode.AUTO},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: climate_entity_livingroom,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -291,10 +293,10 @@ async def test_service_preset_mode_frost_guard_thermostat(
     # Test service setting the preset mode to "frost guard"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: climate_entity_livingroom,
-            ATTR_PRESET_MODE: PRESET_FROST_GUARD,
+            TargetKey.ENTITY_ID: climate_entity_livingroom,
+            ClimateServiceArgument.PRESET_MODE: PRESET_FROST_GUARD,
         },
         blocking=True,
     )
@@ -319,10 +321,10 @@ async def test_service_preset_mode_frost_guard_thermostat(
     # Test service setting the preset mode to "frost guard"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: climate_entity_livingroom,
-            ATTR_PRESET_MODE: PRESET_SCHEDULE,
+            TargetKey.ENTITY_ID: climate_entity_livingroom,
+            ClimateServiceArgument.PRESET_MODE: PRESET_SCHEDULE,
         },
         blocking=True,
     )
@@ -364,8 +366,11 @@ async def test_service_preset_modes_thermostat(
     # Test service setting the preset mode to "away"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_PRESET_MODE: PRESET_AWAY},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: climate_entity_livingroom,
+            ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -388,8 +393,11 @@ async def test_service_preset_modes_thermostat(
     # Test service setting the preset mode to "boost"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_PRESET_MODE: PRESET_BOOST},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: climate_entity_livingroom,
+            ClimateServiceArgument.PRESET_MODE: PRESET_BOOST,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -862,8 +870,11 @@ async def test_service_preset_mode_already_boost_valves(
     # Test service setting the preset mode to "boost"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: climate_entity_entrada, ATTR_PRESET_MODE: PRESET_BOOST},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: climate_entity_entrada,
+            ClimateServiceArgument.PRESET_MODE: PRESET_BOOST,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -914,8 +925,11 @@ async def test_service_preset_mode_boost_valves(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: climate_entity_entrada, ATTR_PRESET_MODE: PRESET_BOOST},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: climate_entity_entrada,
+            ClimateServiceArgument.PRESET_MODE: PRESET_BOOST,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -960,8 +974,11 @@ async def test_service_preset_mode_invalid(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: "climate.cocina_cocina", ATTR_PRESET_MODE: "invalid"},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.cocina_cocina",
+                ClimateServiceArgument.PRESET_MODE: "invalid",
+            },
             blocking=True,
         )
 
@@ -986,8 +1003,8 @@ async def test_valves_service_turn_off(
     # Test turning valve off
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: climate_entity_entrada},
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: climate_entity_entrada},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1033,8 +1050,8 @@ async def test_valves_service_turn_on(
     # Test turning valve on
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: climate_entity_entrada},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: climate_entity_entrada},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1197,6 +1214,70 @@ async def test_thermostat_hvac_action_boiler_and_cooler_status(
     state = hass.states.get("climate.corridor_corridor")
     assert state is not None
     assert state.attributes[ATTR_HVAC_ACTION] == expected
+
+
+@pytest.mark.parametrize(
+    ("setpoint_mode", "setpoint_temperature", "hvac_mode", "preset_mode"),
+    [
+        pytest.param("hg", 7, HVACMode.AUTO, PRESET_FROST_GUARD, id="frost_guard"),
+        pytest.param("home", 23, HVACMode.AUTO, PRESET_SCHEDULE, id="schedule"),
+        pytest.param("manual", 23.5, HVACMode.AUTO, "manual", id="manual"),
+        pytest.param("max", None, HVACMode.HEAT, PRESET_BOOST, id="boost"),
+    ],
+)
+async def test_thermostat_update_with_cooling_setpoint(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setpoint_mode: str,
+    setpoint_temperature: float | None,
+    hvac_mode: HVACMode,
+    preset_mode: str,
+) -> None:
+    """Test thermostat setup for a home in cooling mode.
+
+    A home whose temperature control mode is cooling gets cooling_setpoint_mode
+    and cooling_setpoint_temperature from the backend, and no therm_setpoint_*
+    fields at all.
+    """
+
+    def set_cooling_setpoint(payload: dict[str, Any]) -> None:
+        """Replace the therm setpoint with a cooling one in the response."""
+        home = payload.get("body", {}).get("home")
+        if home is None:
+            return
+
+        for room in home.get("rooms", []):
+            if room["id"] == "2746182631":
+                room.pop("therm_setpoint_mode", None)
+                room.pop("therm_setpoint_temperature", None)
+                room["cooling_setpoint_mode"] = setpoint_mode
+                room["cooling_setpoint_temperature"] = setpoint_temperature
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Return backend data for a home in cooling mode."""
+        kwargs["msg_callback"] = set_cooling_setpoint
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        selected_platforms([Platform.CLIMATE]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_get_image.side_effect = fake_get_image
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("climate.livingroom_livingroom")
+    assert state is not None
+    assert state.state == hvac_mode
+    assert state.attributes[ATTR_PRESET_MODE] == preset_mode
+    assert state.attributes["temperature"] == setpoint_temperature
 
 
 async def test_webhook_set_point(

@@ -17,7 +17,7 @@ from homeassistant.components.light import (
     color_supported,
     color_temp_supported,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.const import STATE_ON, TargetKey
 from homeassistant.core import CALLBACK_TYPE, State, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.color import (
@@ -166,7 +166,7 @@ class Light(HomeAccessory):
         self._pending_events = {}
         events = []
         service = LightService.TURN_ON
-        params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         has_on = CHAR_ON in char_values
 
         if has_on:
@@ -190,7 +190,7 @@ class Light(HomeAccessory):
             self.async_call_service(
                 LIGHT_DOMAIN,
                 service,
-                {ATTR_ENTITY_ID: self.entity_id},
+                {TargetKey.ENTITY_ID: self.entity_id},
                 ", ".join(events),
             )
             return

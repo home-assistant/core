@@ -19,7 +19,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -110,7 +110,7 @@ async def async_send_text_commands(
                     MP_DOMAIN,
                     MediaPlayerService.PLAY_MEDIA,
                     {
-                        ATTR_ENTITY_ID: media_players,
+                        TargetKey.ENTITY_ID: media_players,
                         MediaPlayerServiceArgument.MEDIA_CONTENT_ID: audio_url,
                         MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                         MediaPlayerServiceArgument.ANNOUNCE: True,

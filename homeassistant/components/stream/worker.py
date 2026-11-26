@@ -641,6 +641,8 @@ def stream_worker(
         # the stimeout option was renamed to timeout as of ffmpeg 5.0
         pyav_options["timeout"] = pyav_options["stimeout"]
         del pyav_options["stimeout"]
+    if quit_event.is_set():
+        return
     container = try_open_stream(source, pyav_options)
     try:
         video_stream = container.streams.video[0]

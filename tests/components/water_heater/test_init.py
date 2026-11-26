@@ -20,11 +20,11 @@ from pytest_homeassistant.common import (
 
 from homeassistant.components.water_heater import (
     DOMAIN,
-    SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_TEMPERATURE,
     WaterHeaterCapabilityAttribute,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
     WaterHeaterStateAttribute,
 )
 from homeassistant.components.water_heater.services import (
@@ -32,12 +32,7 @@ from homeassistant.components.water_heater.services import (
     _async_service_temperature_set,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    STATE_UNAVAILABLE,
-    Platform,
-    UnitOfTemperature,
-)
+from homeassistant.const import STATE_UNAVAILABLE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -186,7 +181,7 @@ async def test_operation_mode_validation(
 
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
+            DOMAIN, WaterHeaterService.SET_OPERATION_MODE, data, blocking=True
         )
     assert (
         str(exc.value) == "Operation mode test is not valid for water_heater.test. "
@@ -202,7 +197,7 @@ async def test_operation_mode_validation(
     water_heater_entity._attr_operation_list = ["gas", "eco"]
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
+            DOMAIN, WaterHeaterService.SET_OPERATION_MODE, data, blocking=True
         )
     assert (
         str(exc.value) == "Operation mode test is not valid for water_heater.test. "
@@ -218,7 +213,7 @@ async def test_operation_mode_validation(
 
     data = {"entity_id": "water_heater.test", "operation_mode": "eco"}
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
+        DOMAIN, WaterHeaterService.SET_OPERATION_MODE, data, blocking=True
     )
     await hass.async_block_till_done()
     water_heater_entity.set_operation_mode.assert_has_calls([mock.call("eco")])
@@ -675,8 +670,8 @@ async def test_set_temperature_service_converts_to_native_unit(
         ServiceCall(
             hass,
             DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_TEMPERATURE: service_temperature},
+            WaterHeaterService.SET_TEMPERATURE,
+            {WaterHeaterServiceArgument.TEMPERATURE: service_temperature},
         ),
     )
 

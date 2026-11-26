@@ -183,6 +183,9 @@ async def test_scan_serial_ports_happy_path(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """A loaded entry with serial proxies emits a SerialDevice per proxy."""
+    _mock_identities(
+        mock_client, [SerialProxyIdentity(instance=0), SerialProxyIdentity(instance=1)]
+    )
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={
@@ -222,6 +225,7 @@ async def test_scan_serial_ports_uses_project_info(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Project information takes precedence over manufacturer and model."""
+    _mock_identities(mock_client, [SerialProxyIdentity(instance=0)])
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={
@@ -254,6 +258,7 @@ async def test_scan_serial_ports_defaults_manufacturer(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """A device without a manufacturer falls back to espressif."""
+    _mock_identities(mock_client, [SerialProxyIdentity(instance=0)])
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={
@@ -316,6 +321,25 @@ async def test_scan_serial_ports_usb(
         0: ZBT2,
         1: EMPTY_SOCKET,
     }
+    assert _async_scan_serial_ports(hass) == [_zbt2_port(device.entry.entry_id)]
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_scan_serial_ports_before_identity(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """A port is not listed until the device has sent its identity."""
+    callbacks = _mock_identities(mock_client, [])
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"serial_proxies": USB_PROXIES},
+    )
+
+    assert _async_scan_serial_ports(hass) == []
+
+    callbacks[0](ZBT2)
     assert _async_scan_serial_ports(hass) == [_zbt2_port(device.entry.entry_id)]
 
 

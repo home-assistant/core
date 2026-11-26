@@ -1,0 +1,99 @@
+"""Tests for the Danfoss Air switch platform."""
+
+from unittest.mock import MagicMock, call
+
+from pydanfossair.commands import UpdateCommand
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
+from homeassistant.core import HomeAssistant
+
+from . import setup_integration
+
+ENTITY_BOOST = "switch.danfoss_air_boost"
+ENTITY_BYPASS = "switch.danfoss_air_bypass"
+ENTITY_AUTOMATIC_BYPASS = "switch.danfoss_air_automatic_bypass"
+
+
+@pytest.mark.usefixtures("mock_danfoss_client")
+@pytest.mark.parametrize(
+    "entity_id", [ENTITY_BOOST, ENTITY_BYPASS, ENTITY_AUTOMATIC_BYPASS]
+)
+async def test_switch_state(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_id: str,
+) -> None:
+    """Test the switch states after the first poll."""
+    await setup_integration(hass)
+
+    assert hass.states.get(entity_id) == snapshot
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "service", "command", "expected_state"),
+    [
+        pytest.param(
+            ENTITY_BOOST,
+            SwitchService.TURN_ON,
+            UpdateCommand.boost_activate,
+            STATE_ON,
+            id="boost-on",
+        ),
+        pytest.param(
+            ENTITY_BOOST,
+            SwitchService.TURN_OFF,
+            UpdateCommand.boost_deactivate,
+            STATE_OFF,
+            id="boost-off",
+        ),
+        pytest.param(
+            ENTITY_BYPASS,
+            SwitchService.TURN_ON,
+            UpdateCommand.bypass_activate,
+            STATE_ON,
+            id="bypass-on",
+        ),
+        pytest.param(
+            ENTITY_BYPASS,
+            SwitchService.TURN_OFF,
+            UpdateCommand.bypass_deactivate,
+            STATE_OFF,
+            id="bypass-off",
+        ),
+        pytest.param(
+            ENTITY_AUTOMATIC_BYPASS,
+            SwitchService.TURN_ON,
+            UpdateCommand.automatic_bypass_activate,
+            STATE_ON,
+            id="automatic-bypass-on",
+        ),
+        pytest.param(
+            ENTITY_AUTOMATIC_BYPASS,
+            SwitchService.TURN_OFF,
+            UpdateCommand.automatic_bypass_deactivate,
+            STATE_OFF,
+            id="automatic-bypass-off",
+        ),
+    ],
+)
+async def test_switch_commands(
+    hass: HomeAssistant,
+    mock_danfoss_client: MagicMock,
+    entity_id: str,
+    service: SwitchService,
+    command: UpdateCommand,
+    expected_state: str,
+) -> None:
+    """Test that each switch sends its own command and reflects the read-back state."""
+    await setup_integration(hass)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, service, {TargetKey.ENTITY_ID: entity_id}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert mock_danfoss_client.command.mock_calls[-1] == call(command)
+    assert hass.states.get(entity_id).state == expected_state

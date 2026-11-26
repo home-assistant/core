@@ -30,9 +30,18 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, Platform, TargetKey
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_HOST,
+    EntityCategory,
+    Platform,
+    TargetKey,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -57,6 +66,8 @@ POWER_LIMITING = "switch.gen24_storage_ac_power_limiting"
 DISCHARGE_LIMIT = "number.gen24_storage_battery_discharge_power_limit"
 DISCHARGE_LIMITING = "switch.gen24_storage_battery_discharge_power_limiting"
 MINIMUM_RESERVE = "number.gen24_storage_battery_minimum_reserve"
+POWER_LIMIT_REFERENCE = "sensor.gen24_storage_ac_power_limit_reference"
+LIMIT_REFERENCE = "sensor.gen24_storage_battery_power_limit_reference"
 
 # number, switch, value to set, model holding it, its enable register
 LIMITS = [
@@ -564,6 +575,77 @@ async def test_control_refused_creates_no_control_entities(
         )
         if entry.domain == "number"
     ]
+    # read with the settings, and of no use without the limits
+    assert hass.states.get(POWER_LIMIT_REFERENCE) is None
+    assert hass.states.get(LIMIT_REFERENCE) is None
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "key", "expected", "limit_entity_id"),
+    [
+        pytest.param(
+            POWER_LIMIT_REFERENCE,
+            "ac_power_limit_reference",
+            "8000",
+            POWER_LIMIT,
+            id="power",
+        ),
+        pytest.param(
+            LIMIT_REFERENCE,
+            "battery_power_limit_reference",
+            "12800",
+            DISCHARGE_LIMIT,
+            id="battery",
+        ),
+    ],
+)
+async def test_power_limit_references(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    key: str,
+    expected: str,
+    limit_entity_id: str,
+) -> None:
+    """Test the powers the limits are a percentage of are sensors."""
+    mock_fronius_modbus.for_unit(1).holding.update(
+        build_sunspec_map(GEN24_HYBRID_MODULES, storage_wcha_max=12800, max_power=8000)
+    )
+    mock_responses(aioclient_mock, fixture_set="gen24_storage")
+    await setup_fronius_integration(hass, is_logger=False, unique_id="12345678")
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.unique_id == f"12345678-modbus-{key}"
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+    # on the inverter, next to the limit it belongs to
+    limit_entry = entity_registry.async_get(limit_entity_id)
+    assert limit_entry
+    assert entity_entry.device_id == limit_entry.device_id
+
+
+async def test_no_battery_power_limit_reference_without_storage(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+) -> None:
+    """Test an inverter without a storage only gets its own reference sensor."""
+    mock_fronius_modbus.for_unit(1).holding.update(
+        build_sunspec_map(GEN24_HYBRID_MODULES)
+    )
+    mock_responses(aioclient_mock, fixture_set="gen24_storage")
+    await setup_fronius_integration(hass, is_logger=False, unique_id="12345678")
+
+    assert_state(hass, POWER_LIMIT_REFERENCE, 10000)
+    assert hass.states.get(LIMIT_REFERENCE) is None
 
 
 async def _setup_with_controls(

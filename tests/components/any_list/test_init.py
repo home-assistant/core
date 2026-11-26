@@ -8,7 +8,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.any_list.const import CONF_REFRESH_TOKEN, CONF_USER_LOCALE
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
@@ -81,7 +81,7 @@ async def test_setup_auth_failure(
     mock_config_entry: MockConfigEntry,
     mock_anylist_client: MagicMock,
 ) -> None:
-    """Test invalid stored credentials fail setup without a reauth flow."""
+    """Test invalid stored credentials fail setup and start a reauth flow."""
     mock_anylist_client.load.side_effect = AuthenticationError()
     mock_config_entry.add_to_hass(hass)
 
@@ -89,7 +89,10 @@ async def test_setup_auth_failure(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert not hass.config_entries.flow.async_progress()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_setup_retries_on_connection_error(
@@ -142,12 +145,12 @@ async def test_runtime_sync_failure_marks_entities_unavailable_and_recovers(
     assert caplog.text.count("Fetching any_list data recovered") == 1
 
 
-async def test_runtime_auth_failure_marks_unavailable(
+async def test_runtime_auth_failure_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_anylist_client: MagicMock,
 ) -> None:
-    """Test a runtime authentication failure marks entities unavailable."""
+    """Test a runtime authentication failure starts a reauth flow."""
     await setup_integration(hass, mock_config_entry)
     status_listener = mock_anylist_client.sync_status_listener
     assert status_listener is not None
@@ -159,4 +162,7 @@ async def test_runtime_auth_failure_marks_unavailable(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "unavailable"
-    assert not hass.config_entries.flow.async_progress()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id

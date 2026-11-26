@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_entities[switch.living_room_living_room_disable_global_overrides-entry]
+# name: test_switch_entities[switch.living_room_heating_disable_global_overrides-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.living_room_living_room_disable_global_overrides',
+    'entity_id': 'switch.living_room_heating_disable_global_overrides',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,13 +36,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[switch.living_room_living_room_disable_global_overrides-state]
+# name: test_switch_entities[switch.living_room_heating_disable_global_overrides-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Disable global overrides',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating Disable global overrides',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.living_room_living_room_disable_global_overrides',
+    'entity_id': 'switch.living_room_heating_disable_global_overrides',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

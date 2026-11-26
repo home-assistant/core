@@ -17,6 +17,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import LutronCasetaUpdatableEntity
 from .models import LutronCasetaConfigEntry
 
+OPEN_TILT_POSITION = 50
+
 
 class ShadeMovementDirection(Enum):
     """Enum for shade movement direction."""
@@ -118,6 +120,8 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
         | CoverEntityFeature.OPEN_TILT
     )
     _attr_device_class = CoverDeviceClass.BLIND
+    _attr_tilt_start_angle = -90
+    _attr_tilt_end_angle = 90
 
     @property
     @override
@@ -141,7 +145,7 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
     @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the blind."""
-        await self._smartbridge.set_tilt(self.device_id, 50)
+        await self._smartbridge.set_tilt(self.device_id, OPEN_TILT_POSITION)
         await self.async_update()
         self.async_write_ha_state()
 
