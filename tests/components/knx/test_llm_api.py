@@ -1495,6 +1495,12 @@ async def test_project_group_addresses_name_their_entities(
     assert result["found"] is False
     assert result["group_address"] is None
 
+    result = await _call_api(
+        hass, hass_admin_user, "list_group_addresses", {"text": "matches nothing"}
+    )
+    assert result["group_addresses"] == []
+    assert result["total_count"] == 0
+
 
 def _addressed_channel_project() -> dict[str, Any]:
     """The channel project with its group addresses, and one central address."""
@@ -1613,6 +1619,32 @@ async def test_describe_entity_group_addresses_of_yaml_entity(
         ("1/1/0", [])
     ]
     assert [channel["channel"] for channel in result["channels"]] == ["CH-1"]
+
+
+async def test_describe_entity_group_addresses_channel_not_in_device(
+    hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser
+) -> None:
+    """A channel the device does not list, as in older project data, has no name."""
+    await knx.setup_integration()
+    await _create_switch(hass, hass_admin_user, "A", "1/1/0")
+    project = _addressed_channel_project()
+    del project["devices"]["1.1.1"]["channels"]["CH-1"]
+
+    with patch.object(
+        hass.data[KNX_MODULE_KEY].project,
+        "get_knxproject",
+        AsyncMock(return_value=project),
+    ):
+        result = await _call_api(
+            hass,
+            hass_admin_user,
+            "describe_entity_group_addresses",
+            {"entity_id": "switch.a"},
+        )
+
+    assert [
+        (channel["channel"], channel["channel_name"]) for channel in result["channels"]
+    ] == [("CH-1", None)]
 
 
 @pytest.mark.usefixtures("load_knxproj")

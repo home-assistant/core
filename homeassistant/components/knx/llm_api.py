@@ -370,7 +370,11 @@ def _group_address_func(
         result = asdict(await project_func(knx, args))
         entity_registry = er.async_get(knx.hass)
         usage = knx.get_group_address_entities()
-        group_addresses = result.get("group_addresses") or [result["group_address"]]
+        group_addresses = (
+            result["group_addresses"]
+            if "group_addresses" in result
+            else [result["group_address"]]
+        )
         for group_address in filter(None, group_addresses):
             group_address["entity_ids"] = sorted(
                 entity_id
@@ -754,13 +758,12 @@ async def _describe_entity_group_addresses(
             device_address = communication_object["device_address"]
             device = project["devices"][device_address]
             channel_id = communication_object["channel"]
+            project_channel = device["channels"].get(channel_id) if channel_id else None
             channel = {
                 "device_address": device_address,
                 "device_name": device["name"],
                 "channel": channel_id,
-                "channel_name": (
-                    device["channels"][channel_id]["name"] if channel_id else None
-                ),
+                "channel_name": project_channel["name"] if project_channel else None,
             }
             linked.append(
                 {
