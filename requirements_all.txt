@@ -353,7 +353,7 @@ aiokef==0.2.16
 aiokem==1.0.1
 
 # homeassistant.components.librenms
-aiolibrenms==0.0.4
+aiolibrenms==0.0.5
 
 # homeassistant.components.libresync
 aiolibresync==0.5.3
