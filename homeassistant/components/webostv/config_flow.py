@@ -223,10 +223,10 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         """Manage the options."""
         errors = {}
         if user_input is not None:
-            options_input = {CONF_SOURCES: user_input[CONF_SOURCES]}
+            options_input = {CONF_SOURCES: user_input.get(CONF_SOURCES, [])}
             return self.async_create_entry(title="", data=options_input)
-        sources_list = []
         entry = self.config_entry
+        option_sources = entry.options.get(CONF_SOURCES, [])
         if (
             entry.state is ConfigEntryState.LOADED
             and (client := entry.runtime_data.client).is_connected()
@@ -234,8 +234,8 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             sources_list = get_sources(client.tv_state)
         else:
             errors["base"] = "cannot_connect"
+            sources_list = option_sources
 
-        option_sources = self.config_entry.options.get(CONF_SOURCES, [])
         sources = [s for s in option_sources if s in sources_list]
         if not sources:
             sources = sources_list
