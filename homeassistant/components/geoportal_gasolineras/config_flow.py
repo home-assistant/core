@@ -1,6 +1,5 @@
 """Config flow for Spain fuel prices (Geoportal Gasolineras)."""
 
-import logging
 from typing import Any, override
 
 from aioprecioscarburantes import PreciosCarburantes, PreciosCarburantesError, Station
@@ -30,8 +29,6 @@ from .const import (
     SUBENTRY_TYPE_STATION,
 )
 from .names import brand_name, clean_address, station_name
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _selector(options: list[SelectOptionDict]) -> SelectSelector:
@@ -69,7 +66,6 @@ class GeoportalGasolinerasConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await client.get_provinces()
             except PreciosCarburantesError:
-                _LOGGER.debug("Cannot reach the service", exc_info=True)
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(title="Spain fuel prices", data={})
@@ -106,7 +102,6 @@ class StationSubentryFlow(ConfigSubentryFlow):
         try:
             provinces = await self._client.get_provinces()
         except PreciosCarburantesError:
-            _LOGGER.debug("Cannot get provinces", exc_info=True)
             return self.async_abort(reason="cannot_connect")
         return self.async_show_form(
             step_id="user",
@@ -135,7 +130,6 @@ class StationSubentryFlow(ConfigSubentryFlow):
                     self._municipality_id
                 )
             except PreciosCarburantesError:
-                _LOGGER.debug("Cannot get stations", exc_info=True)
                 return self.async_abort(reason="cannot_connect")
             self._stations = {
                 station.id: station
@@ -148,7 +142,6 @@ class StationSubentryFlow(ConfigSubentryFlow):
         try:
             municipalities = await self._client.get_municipalities(self._province_id)
         except PreciosCarburantesError:
-            _LOGGER.debug("Cannot get municipalities", exc_info=True)
             return self.async_abort(reason="cannot_connect")
         return self.async_show_form(
             step_id="municipality",
@@ -172,6 +165,8 @@ class StationSubentryFlow(ConfigSubentryFlow):
         """Choose the station."""
         if user_input is not None:
             station = self._stations[user_input[CONF_STATION_ID]]
+            if self._is_configured(station.id):
+                return self.async_abort(reason="already_configured")
             taken = {
                 subentry.title for subentry in self._get_entry().subentries.values()
             }
@@ -184,6 +179,13 @@ class StationSubentryFlow(ConfigSubentryFlow):
                 },
                 unique_id=station.id,
             )
+        labels = {
+            station.id: f"{brand_name(station.brand)} – {clean_address(station.address)}"
+            for station in self._stations.values()
+        }
+        repeated = {
+            label for label in labels.values() if list(labels.values()).count(label) > 1
+        }
         return self.async_show_form(
             step_id="station",
             data_schema=probatio.Schema(
@@ -191,13 +193,14 @@ class StationSubentryFlow(ConfigSubentryFlow):
                     probatio.Required(CONF_STATION_ID): _selector(
                         [
                             SelectOptionDict(
-                                value=station.id,
+                                value=station_id,
                                 label=(
-                                    f"{brand_name(station.brand)} – "
-                                    f"{clean_address(station.address)}"
+                                    f"{label} (#{station_id})"
+                                    if label in repeated
+                                    else label
                                 ),
                             )
-                            for station in self._stations.values()
+                            for station_id, label in labels.items()
                         ]
                     )
                 }

@@ -155,3 +155,43 @@ async def test_abort_cannot_connect(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
     getattr(mock_client, method).assert_called_once()
+
+
+async def test_same_label_gets_code(
+    hass: HomeAssistant, mock_client: AsyncMock, empty_entry: MockConfigEntry
+) -> None:
+    """Test stations with the same brand and address show their code."""
+    stations = mock_client.get_stations_by_municipality.return_value
+    shell = stations.stations[1]
+    mock_client.get_stations_by_municipality.return_value = replace(
+        stations, stations=[*stations.stations, replace(shell, id="1")]
+    )
+    result = await _start(hass, empty_entry)
+    result = await _configure(hass, result, {CONF_PROVINCE_ID: "41"})
+    result = await _configure(hass, result, {CONF_MUNICIPALITY_ID: "6139"})
+    labels = sorted(
+        option["label"]
+        for option in result["data_schema"].schema[CONF_STATION_ID].config["options"]
+    )
+    assert labels == [
+        "Repsol – Carretera Malaga, Granada, Sevilla Km. 124,90",
+        "Shell – Autovia Autovia A-92 Km. 123 (#1)",
+        "Shell – Autovia Autovia A-92 Km. 123 (#6440)",
+    ]
+
+
+async def test_added_meanwhile(
+    hass: HomeAssistant, mock_client: AsyncMock, empty_entry: MockConfigEntry
+) -> None:
+    """Test a station added in another flow meanwhile is not added twice."""
+    flows = []
+    for _ in range(2):
+        result = await _start(hass, empty_entry)
+        result = await _configure(hass, result, {CONF_PROVINCE_ID: "41"})
+        flows.append(await _configure(hass, result, {CONF_MUNICIPALITY_ID: "6139"}))
+    result = await _configure(hass, flows[0], {CONF_STATION_ID: "7370"})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    result = await _configure(hass, flows[1], {CONF_STATION_ID: "7370"})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(empty_entry.subentries) == 1

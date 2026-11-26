@@ -15,6 +15,7 @@
   "config_subentries": {
     "station": {
       "abort": {
+        "already_configured": "This fuel station is already added.",
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "no_stations": "There are no fuel stations left to add in this municipality."
       },

@@ -106,3 +106,32 @@ async def test_reload_on_new_station(
     hass.config_entries.async_remove_subentry(mock_config_entry, shell.subentry_id)
     await hass.async_block_till_done()
     assert not hass.states.get("sensor.shell_la_roda_de_andalucia_diesel_a")
+
+
+async def test_add_station_to_loaded_entry(
+    hass: HomeAssistant, mock_client: AsyncMock
+) -> None:
+    """Test a station added to a loaded, empty entry gets its sensors."""
+    entry = MockConfigEntry(domain="geoportal_gasolineras", data={})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.LOADED
+    mock_client.get_stations_by_municipality.assert_not_called()
+
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            subentry_type=SUBENTRY_TYPE_STATION,
+            title="Repsol La Roda de Andalucía",
+            unique_id="7370",
+            data={
+                CONF_PROVINCE_ID: "41",
+                CONF_MUNICIPALITY_ID: "6139",
+                CONF_STATION_ID: "7370",
+            },
+        ),
+    )
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("sensor.repsol_la_roda_de_andalucia_diesel_a").state == "1.825"
+    )
