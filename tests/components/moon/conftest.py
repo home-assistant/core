@@ -24,7 +24,13 @@ def moon_data() -> MoonData:
 def mock_moon_data(moon_data: MoonData) -> Generator[None]:
     """Avoid network downloads during integration tests."""
     with (
-        patch("homeassistant.components.moon.load_moon_data", return_value=moon_data),
+        patch(
+            "homeassistant.components.moon.helpers._async_download_ephemeris",
+        ),
+        patch(
+            "homeassistant.components.moon.helpers._load_moon_data",
+            return_value=moon_data,
+        ),
         patch(
             "homeassistant.components.moon.helpers.almanac.moon_phase",
             return_value=Angle(degrees=0),

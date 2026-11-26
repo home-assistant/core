@@ -53,9 +53,9 @@ async def _arm(hass: HomeAssistant, options: dict[str, Any] | None = None) -> No
     await hass.async_block_till_done()
 
 
-def _next_local_midnight() -> datetime:
-    """Return the next local midnight, when the phase trigger re-evaluates."""
-    return dt_util.start_of_local_day() + timedelta(days=1)
+def _next_check() -> datetime:
+    """Return the time of the next phase check."""
+    return dt_util.utcnow() + timedelta(minutes=10)
 
 
 async def test_phase_changed_fires_on_any_change(
@@ -67,7 +67,7 @@ async def test_phase_changed_fires_on_any_change(
     assert len(service_calls) == 0
 
     with patch(_PHASE, return_value=_phase_angle(14.0)):
-        async_fire_time_changed(hass, _next_local_midnight())
+        async_fire_time_changed(hass, _next_check())
         await hass.async_block_till_done()
 
     assert len(service_calls) == 1
@@ -81,7 +81,7 @@ async def test_phase_changed_ignores_same_phase(
     """Test the trigger does not fire when the phase is unchanged."""
     with patch(_PHASE, return_value=_phase_angle(14.0)):
         await _arm(hass)
-        async_fire_time_changed(hass, _next_local_midnight())
+        async_fire_time_changed(hass, _next_check())
         await hass.async_block_till_done()
 
     assert len(service_calls) == 0
@@ -102,7 +102,7 @@ async def test_phase_changed_with_phase_filter(
         await _arm(hass, options={"phase": "full_moon"})
 
     with patch(_PHASE, return_value=_phase_angle(new_value)):
-        async_fire_time_changed(hass, _next_local_midnight())
+        async_fire_time_changed(hass, _next_check())
         await hass.async_block_till_done()
 
     assert len(service_calls) == expected_calls
