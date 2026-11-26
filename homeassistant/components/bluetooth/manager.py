@@ -70,6 +70,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         "_callback_index",
         "_cancel_logging_listener",
         "_event_driven_addresses",
+        "_event_driven_disappeared",
         "_event_driven_restore",
         "_integration_matcher",
         "hass",
@@ -92,8 +93,17 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         self._cancel_logging_listener: CALLBACK_TYPE | None = None
         self._event_driven_addresses: dict[str, set[object]] = {}
         # address -> (history entry loaded at startup, stored accepted entry)
+        # address -> last advertisement before it left the history, for addresses
+        # registered as event-driven
+        self._event_driven_disappeared: dict[str, BluetoothServiceInfoBleak] = {}
+        # address -> (startup entry, startup connectable entry, stored accepted)
         self._event_driven_restore: dict[
-            str, tuple[BluetoothServiceInfoBleak, BluetoothServiceInfoBleak]
+            str,
+            tuple[
+                BluetoothServiceInfoBleak | None,
+                BluetoothServiceInfoBleak | None,
+                BluetoothServiceInfoBleak,
+            ],
         ] = {}
         super().__init__(bluetooth_adapters, slot_manager)
         self._async_logging_changed()
@@ -136,13 +146,18 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         """Register an event-driven address, starting from its accepted advertisement.
 
         The history loaded at startup holds the strongest stored advertisement,
-        which can be older than the one accepted before the restart. It is only
-        replaced while nothing newer has been heard.
+        which can be older than the one accepted before the restart. Each history
+        is only replaced while it still holds its startup entry.
         """
-        if (
-            restore := self._event_driven_restore.pop(address, None)
-        ) is not None and self._all_history.get(address) is restore[0]:
-            self._all_history[address] = restore[1]
+        if (restore := self._event_driven_restore.pop(address, None)) is not None:
+            loaded, loaded_connectable, accepted = restore
+            if self._all_history.get(address) is loaded:
+                self._all_history[address] = accepted
+            if (
+                accepted.connectable
+                and self._connectable_history.get(address) is loaded_connectable
+            ):
+                self._connectable_history[address] = accepted
         token = object()
         self._event_driven_addresses.setdefault(address, set()).add(token)
         return partial(
@@ -164,6 +179,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         tokens.remove(token)
         if not tokens:
             del self._event_driven_addresses[address]
+            self._event_driven_disappeared.pop(address, None)
         unregister()
 
     @hass_callback
@@ -217,6 +233,11 @@ class HomeAssistantBluetoothManager(BluetoothManager):
     @override
     def _address_disappeared(self, address: str) -> None:
         """Dismiss all discoveries for the given address."""
+        # Called before the address leaves the history
+        if address in self._event_driven_addresses and (
+            service_info := self._all_history.get(address)
+        ):
+            self._event_driven_disappeared[address] = service_info
         self._integration_matcher.async_clear_address(address)
         self.hass.config_entries.flow.async_dismiss_discovery_flows(
             BluetoothServiceInfoBleak,
@@ -231,9 +252,12 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             self._bluetooth_adapters, self.storage
         )
         self._event_driven_restore = {
-            address: (loaded, accepted)
+            address: (
+                self._all_history.get(address),
+                self._connectable_history.get(address),
+                accepted,
+            )
             for address, accepted in self.storage.async_get_event_driven_history().items()
-            if (loaded := self._all_history.get(address)) is not None
         }
         self._cancel_logging_listener = self.hass.bus.async_listen(
             EVENT_LOGGING_CHANGED, self._async_logging_changed
@@ -343,7 +367,11 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             {
                 address: service_info
                 for address in self._event_driven_addresses
-                if (service_info := self._all_history.get(address)) is not None
+                if (
+                    service_info := self._all_history.get(address)
+                    or self._event_driven_disappeared.get(address)
+                )
+                is not None
             }
         )
         super().async_stop()
