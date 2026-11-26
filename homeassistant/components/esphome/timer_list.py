@@ -102,21 +102,8 @@ class EsphomeTimerList(RestoreTimerListEntity):
 
     @override
     def _restore_extra_data(self, data: dict[str, Any]) -> None:
-        """Restore which timers the device was told about.
-
-        Stored before this was, the timers that were running are the best
-        guess: the device was told about them.
-        """
-        device_timers = data.get("device_timers")
-        if isinstance(device_timers, dict):
-            self._device_timers.update(
-                {
-                    str(timer_id): name if isinstance(name, str) else None
-                    for timer_id, name in device_timers.items()
-                }
-            )
-        else:
-            self._device_timers.update(self._restored_running)
+        """Restore which timers the device was told about."""
+        self._device_timers.update(data.get("device_timers", {}))
 
     @callback
     def _async_sync_device(self) -> None:

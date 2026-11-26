@@ -277,13 +277,6 @@ class RestoreTimerListEntity(InMemoryTimerListEntity, RestoreEntity):
     acting at all.
     """
 
-    def __init__(self) -> None:
-        """Initialize the timer list."""
-        super().__init__()
-        self._restored_running: dict[str, str | None] = {}
-        """Timers that were active or paused when the list was stored, by id,
-        with their names; whether they are still running or not."""
-
     @property
     @override
     def extra_restore_state_data(self) -> TimerListExtraStoredData:
@@ -316,10 +309,7 @@ class RestoreTimerListEntity(InMemoryTimerListEntity, RestoreEntity):
             if timer.timer_id in self._timers:
                 continue
             self._timers[timer.timer_id] = timer
-            if timer.status not in (TimerStatus.ACTIVE, TimerStatus.PAUSED):
-                continue
-            self._restored_running[timer.timer_id] = timer.name
-            if timer.status == TimerStatus.PAUSED or timer.finishes_at is None:
+            if timer.status != TimerStatus.ACTIVE or timer.finishes_at is None:
                 continue
             if timer.finishes_at > now - RESTORED_LATE_FINISH:
                 # Finishes when it should, or right away if that was a moment

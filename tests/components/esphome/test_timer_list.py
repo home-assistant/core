@@ -569,7 +569,12 @@ async def test_timers_restored_after_restart(
                             "cancelled",
                             ended_at="2026-11-25T11:55:00+00:00",
                         ),
-                    ]
+                    ],
+                    "device_timers": {
+                        "running": "running",
+                        "paused": "paused",
+                        "overdue": "overdue",
+                    },
                 },
             )
         ],
@@ -660,7 +665,8 @@ async def test_timers_restored_while_device_offline(
                             "paused_remaining": None,
                             "ended_at": None,
                         }
-                    ]
+                    ],
+                    "device_timers": {"running": "running"},
                 },
             )
         ],
