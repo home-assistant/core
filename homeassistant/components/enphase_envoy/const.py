@@ -28,6 +28,7 @@ DEFAULT_ACB_SLEEP_SOC_BAND = "95-100"
 
 ACCESS_TOKEN_LOGIN_URL = "https://entrez.enphaseenergy.com"
 CONF_MANUAL_TOKEN = "use_manual_token"
+CONF_NO_SOLAR = "no_solar_mode"
 
 SETUP_RETRY_TIMEOUT = 50
 OPERATIONAL_RETRY_TIMEOUT = 200

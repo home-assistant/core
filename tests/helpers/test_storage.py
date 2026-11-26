@@ -614,6 +614,45 @@ async def test_multiple_delay_save_calls(
     assert data == {"delay": "no"}
 
 
+async def test_delay_save_shorter_delay_after_longer(
+    hass: HomeAssistant,
+    store: storage.Store,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a shorter delay after a longer one writes at the shorter delay."""
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    store.async_delay_save(lambda: MOCK_DATA, 5)
+    store.async_delay_save(lambda: MOCK_DATA, 0.2)
+    assert store.key not in hass_storage
+
+    freezer.tick(0.5)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+
+    assert hass_storage[store.key]["data"] == MOCK_DATA
+
+
+async def test_delay_save_after_cancelled_longer_delay(
+    hass: HomeAssistant,
+    store: storage.Store,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a delay after a cancelled longer delay writes at the new delay."""
+    store.async_delay_save(lambda: {"delay": "long"}, 5)
+    store.async_delay_save(lambda: {"delay": "long"}, 10)
+    await store.async_save({"delay": "saved"})
+
+    store.async_delay_save(lambda: {"delay": "short"}, 0.2)
+
+    freezer.tick(0.5)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+
+    assert hass_storage[store.key]["data"] == {"delay": "short"}
+
+
 async def test_delay_save_zero(
     hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
 ) -> None:

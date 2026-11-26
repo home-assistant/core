@@ -1,0 +1,67 @@
+# serializer version: 1
+# name: test_diagnostics[view_plus]
+  dict({
+    'devices': list([
+      dict({
+        'device_type': 'VIEW_PLUS',
+        'is_active': True,
+        'product_name': 'View Plus',
+        'sensors': dict({
+          'battery': 1.1,
+          'co2': 2.2,
+          'humidity': 3.3,
+          'pm1': 4.4,
+          'pm25': 5.5,
+          'pressure': 6.6,
+          'radonShortTermAvg': 7.7,
+          'temp': 8.8,
+          'voc': 9.9,
+        }),
+      }),
+    ]),
+    'last_update_success': True,
+  })
+# ---
+# name: test_diagnostics[wave_enhance]
+  dict({
+    'devices': list([
+      dict({
+        'device_type': 'WAVE_ENHANCE',
+        'is_active': True,
+        'product_name': 'Wave Enhance',
+        'sensors': dict({
+          'battery': 1.1,
+          'co2': 2.2,
+          'humidity': 3.3,
+          'lux': 4.4,
+          'pressure': 5.5,
+          'sla': 6.6,
+          'temp': 7.7,
+          'voc': 8.8,
+        }),
+      }),
+    ]),
+    'last_update_success': True,
+  })
+# ---
+# name: test_diagnostics[wave_plus]
+  dict({
+    'devices': list([
+      dict({
+        'device_type': 'WAVE_PLUS',
+        'is_active': True,
+        'product_name': 'Wave Plus',
+        'sensors': dict({
+          'battery': 1.1,
+          'co2': 2.2,
+          'humidity': 3.3,
+          'pressure': 4.4,
+          'radonShortTermAvg': 5.5,
+          'temp': 6.6,
+          'voc': 7.7,
+        }),
+      }),
+    ]),
+    'last_update_success': True,
+  })
+# ---

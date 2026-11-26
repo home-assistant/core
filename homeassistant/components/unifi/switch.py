@@ -36,7 +36,7 @@ from aiounifi.models.device import (
 from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
 from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
-from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicyUpdateRequest
+from aiounifi.models.firewall_policy import FirewallPolicy
 from aiounifi.models.object_oriented_network_config import (
     ObjectOrientedNetworkConfig,
     ObjectOrientedNetworkInternetMode,
@@ -68,9 +68,10 @@ from .entity import (
     UnifiEntityDescription,
     async_client_device_info_fn,
     async_device_available_fn,
-    async_device_device_info_fn,
     async_device_supported_fn,
     async_firewall_policy_supported_fn,
+    async_outlet_device_info_fn,
+    async_port_device_info_fn,
     async_port_poe_supported_fn,
     async_unifi_network_device_info_fn,
     async_wlan_device_info_fn,
@@ -136,9 +137,7 @@ async def async_firewall_policy_control_fn(
     hub: UnifiHub, obj_id: str, target: bool
 ) -> None:
     """Control firewall policy state."""
-    policy = hub.api.firewall_policies[obj_id].raw
-    policy["enabled"] = target
-    await hub.api.request(FirewallPolicyUpdateRequest.create(policy))
+    await hub.async_save_firewall_policy(obj_id, enabled=target)
 
 
 async def async_object_oriented_network_config_control_fn(
@@ -318,9 +317,8 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         api_handler_fn=lambda api: api.outlets,
         available_fn=async_device_available_fn,
         control_fn=async_outlet_control_fn,
-        device_info_fn=async_device_device_info_fn,
+        device_info_fn=async_outlet_device_info_fn,
         is_on_fn=lambda hub, outlet: outlet.relay_state,
-        name_fn=lambda outlet: outlet.name,
         object_fn=lambda api, obj_id: api.outlets[obj_id],
         supported_fn=async_outlet_switching_supported_fn,
         unique_id_fn=lambda hub, obj_id: f"outlet-{obj_id}",
@@ -370,11 +368,10 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         api_handler_fn=lambda api: api.ports,
         available_fn=async_device_available_fn,
         control_fn=async_poe_port_control_fn,
-        device_info_fn=async_device_device_info_fn,
+        device_info_fn=async_port_device_info_fn,
         is_on_fn=lambda hub, port: port.poe_mode != "off",
         object_fn=lambda api, obj_id: api.ports[obj_id],
         supported_fn=async_port_poe_supported_fn,
-        translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"poe-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](
@@ -385,9 +382,8 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         api_handler_fn=lambda api: api.ports,
         available_fn=async_device_available_fn,
         control_fn=async_port_control_fn,
-        device_info_fn=async_device_device_info_fn,
+        device_info_fn=async_port_device_info_fn,
         is_on_fn=lambda hub, port: bool(port.enabled),
-        name_fn=lambda port: port.name,
         object_fn=lambda api, obj_id: api.ports[obj_id],
         supported_fn=async_port_control_supported_fn,
         unique_id_fn=lambda hub, obj_id: f"port-{obj_id}",

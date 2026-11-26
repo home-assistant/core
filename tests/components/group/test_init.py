@@ -2413,3 +2413,57 @@ async def test_entity_platforms_with_multiple_on_states_with_state_match(
         group_state2,
         grouped_groups,
     )
+
+
+@pytest.mark.parametrize(
+    ("options", "expected_options"),
+    [
+        pytest.param(
+            {"group_type": "sensor", "type": "sum"},
+            {"group_type": "sensor", "type": "sum", "ignore_non_numeric": True},
+            id="sensor_without_option",
+        ),
+        pytest.param(
+            {"group_type": "sensor", "type": "sum", "ignore_non_numeric": False},
+            {"group_type": "sensor", "type": "sum", "ignore_non_numeric": False},
+            id="sensor_with_option",
+        ),
+        pytest.param(
+            {"group_type": "switch", "all": False},
+            {"group_type": "switch", "all": False},
+            id="other_group_type",
+        ),
+    ],
+)
+async def test_migrate_entry_to_minor_version_2(
+    hass: HomeAssistant,
+    options: dict[str, Any],
+    expected_options: dict[str, Any],
+) -> None:
+    """Test sensor groups without ignore_non_numeric keep ignoring non-numeric."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": [],
+            "hide_members": False,
+            "name": "My group",
+            **options,
+        },
+        title="My group",
+        version=1,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 2
+    assert config_entry.options == {
+        "entities": [],
+        "hide_members": False,
+        "name": "My group",
+        **expected_options,
+    }

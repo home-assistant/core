@@ -2,12 +2,14 @@
 
 from datetime import datetime, timedelta
 from typing import Any
+from unittest.mock import AsyncMock
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.typing import WebSocketGenerator
+from pytomorrowio.const import FORECASTS, NOWCAST
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tomorrowio.const import ATTRIBUTION, DOMAIN
@@ -19,12 +21,13 @@ from homeassistant.components.weather import (
     WeatherService,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import make_v2_config_entry
+from . import make_location_subentry_data, make_v2_config_entry
 from .const import API_V4_ENTRY_DATA, BASE_UNIQUE_ID
 
 
@@ -350,3 +353,83 @@ async def test_forecast_subscription(
 
     assert forecast2 != []
     assert forecast2 == snapshot
+
+
+MINUTE_FORECAST_ENTITY_ID = "weather.tomorrow_io_daily"
+
+
+async def _setup_minute_forecast(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Set up a location with 5 minute nowcast intervals."""
+    # The first nowcast interval (17:48-17:53) has already ended at 17:55
+    freezer.move_to(datetime(2021, 3, 7, 17, 55, tzinfo=dt_util.UTC))
+    config_entry = make_v2_config_entry(
+        subentries_data=[make_location_subentry_data(timestep=5)]
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def _get_minute_forecast(hass: HomeAssistant) -> dict[str, Any]:
+    """Call the get_minute_forecast action."""
+    return await hass.services.async_call(
+        DOMAIN,
+        "get_minute_forecast",
+        {ATTR_ENTITY_ID: MINUTE_FORECAST_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+
+
+async def test_minute_forecast_service(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    tomorrowio_config_entry_update: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the get_minute_forecast action."""
+    nowcast = tomorrowio_config_entry_update.return_value[FORECASTS][NOWCAST]
+    # 1.2 mm/h over a 5 minute interval is 0.1 mm
+    nowcast[1]["values"]["precipitationIntensityAvg"] = 1.2
+    await _setup_minute_forecast(hass, freezer)
+
+    response = await _get_minute_forecast(hass)
+
+    forecast = response[MINUTE_FORECAST_ENTITY_ID]["forecast"]
+    assert forecast[0]["datetime"] == "2021-03-07T17:53:00+00:00"
+    assert forecast[0]["precipitation"] == pytest.approx(0.1)
+    assert response == snapshot
+
+
+async def test_minute_forecast_service_keeps_small_amounts(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    tomorrowio_config_entry_update: AsyncMock,
+) -> None:
+    """Test small per-interval amounts survive conversion to coarser units."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    nowcast = tomorrowio_config_entry_update.return_value[FORECASTS][NOWCAST]
+    nowcast[1]["values"]["precipitationIntensityAvg"] = 1.2
+    await _setup_minute_forecast(hass, freezer)
+
+    response = await _get_minute_forecast(hass)
+
+    # 0.1 mm is 0.0039 in; rounding to two decimals would report 0.0
+    amount = response[MINUTE_FORECAST_ENTITY_ID]["forecast"][0]["precipitation"]
+    assert amount == pytest.approx(0.1 / 25.4)
+
+
+async def test_minute_forecast_service_no_data(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    tomorrowio_config_entry_update: AsyncMock,
+) -> None:
+    """Test the get_minute_forecast action without nowcast data."""
+    tomorrowio_config_entry_update.return_value[FORECASTS][NOWCAST] = []
+    await _setup_minute_forecast(hass, freezer)
+
+    assert await _get_minute_forecast(hass) == {
+        MINUTE_FORECAST_ENTITY_ID: {"forecast": []}
+    }

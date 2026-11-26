@@ -35,7 +35,7 @@ rules:
 
   # Silver
   log-when-unavailable: todo
-  config-entry-unloading: todo
+  config-entry-unloading: done
   reauthentication-flow: done
   action-exceptions: todo
   docs-installation-parameters: todo
@@ -70,5 +70,5 @@ rules:
 
   # Platinum
   async-dependency: todo
-  strict-typing: todo
+  strict-typing: done
   inject-websession: todo

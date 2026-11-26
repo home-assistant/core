@@ -351,6 +351,21 @@
         "connectionStatus": "online",
         "uuid": "00000000-1111-2222-3333-777777777777",
         "configModule": "configModule"
+      },
+      {
+        "deviceRegion": "US",
+        "isOwner": true,
+        "cid": "sprout-humidifier",
+        "deviceType": "LEH-B381S-WUS",
+        "deviceName": "Humidifier Sprout",
+        "deviceImg": "",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "type": "wifi-air",
+        "connectionType": "",
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-888888888888",
+        "configModule": "configModule"
       }
     ]
   }

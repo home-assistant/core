@@ -14,7 +14,11 @@ from pyportainer.exceptions import (
     PortainerNotFoundError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer, PortainerImageUpdateStatus
+from pyportainer.models.docker import (
+    DockerContainer,
+    LocalImageInformation,
+    PortainerImageUpdateStatus,
+)
 from pyportainer.models.docker_inspect import DockerInspect
 from pyportainer.models.image_pull import DockerImagePullEvent
 from pyportainer.models.portainer import PortainerSystemVersion
@@ -38,7 +42,7 @@ from homeassistant.components.update import (
     ATTR_RELEASE_URL,
     ATTR_UPDATE_PERCENTAGE,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
@@ -407,6 +411,57 @@ async def test_update_installed_version_without_repo_digest(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes[ATTR_INSTALLED_VERSION] is None
+
+
+async def test_update_missing_local_image(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a container whose image is gone has no installed version until it returns."""
+    missing_image = "sha256:missing"
+    missing_inspect = DockerInspect.from_dict(
+        load_json_value_fixture("container_inspect.json", DOMAIN)
+        | {"Image": missing_image}
+    )
+    mock_portainer_client.inspect_container.side_effect = lambda _, container_id: (
+        missing_inspect
+        if container_id == missing_inspect.id
+        else mock_portainer_client.inspect_container.return_value
+    )
+
+    async def _get_image(endpoint_id: int, image: str) -> LocalImageInformation:
+        if image == missing_image:
+            raise PortainerNotFoundError("Image not found")
+        return mock_portainer_client.get_image.return_value
+
+    mock_portainer_client.get_image.side_effect = _get_image
+
+    with patch(
+        "homeassistant.components.portainer._PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_INSTALLED_VERSION] is None
+    state = hass.states.get("update.serene_banach_image_update_available")
+    assert state is not None
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "sha256:afcc7f1ac1b4"
+
+    # The missing image isn't cached, so the next poll fetches it again
+    mock_portainer_client.get_image.side_effect = None
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_portainer_client.get_image.assert_called_with(1, missing_image)
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "sha256:afcc7f1ac1b4"
 
 
 async def test_update_using_cache(

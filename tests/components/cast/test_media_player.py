@@ -901,7 +901,13 @@ async def test_entity_availability(hass: HomeAssistant) -> None:
     assert state.state == "unavailable"
 
 
-@pytest.mark.parametrize(("port", "entry_type"), [(8009, None), (12345, None)])
+@pytest.mark.parametrize(
+    ("port", "entry_type", "connections"),
+    [
+        (8009, None, {(dr.CONNECTION_UPNP, f"uuid:{FakeUUID}")}),
+        (12345, None, set()),
+    ],
+)
 async def test_device_registry(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -909,6 +915,7 @@ async def test_device_registry(
     entity_registry: er.EntityRegistry,
     port,
     entry_type,
+    connections,
 ) -> None:
     """Test device registry integration."""
     assert await async_setup_component(hass, "config", {})
@@ -936,6 +943,7 @@ async def test_device_registry(
     device_entry = device_registry.async_get(entity_entry.device_id)
     assert entity_entry.device_id == device_entry.id
     assert device_entry.entry_type == entry_type
+    assert device_entry.connections == connections
 
     # Check that the chromecast object is torn down when the device is removed
     chromecast.disconnect.assert_not_called()

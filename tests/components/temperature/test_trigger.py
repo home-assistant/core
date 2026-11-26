@@ -38,7 +38,7 @@ from homeassistant.components.weather import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ENTITY_ID,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -672,7 +672,7 @@ async def test_temperature_trigger_unit_conversion_sensor_celsius_to_fahrenheit(
                 "value": {"number": 70, "unit_of_measurement": "°F"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 
@@ -729,7 +729,7 @@ async def test_temperature_trigger_unit_conversion_sensor_fahrenheit_to_celsius(
                 "value": {"number": 25, "unit_of_measurement": "°C"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 
@@ -788,7 +788,7 @@ async def test_temperature_trigger_unit_conversion_changed(
                 "value_max": {"number": 77, "unit_of_measurement": "°F"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 
@@ -858,7 +858,7 @@ async def test_temperature_trigger_unit_conversion_weather(
                 "value": {"number": 25, "unit_of_measurement": "°C"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 
@@ -937,7 +937,7 @@ async def test_temperature_trigger_unit_conversion_temperature_unit_attribute(
                 "value": {"number": 25, "unit_of_measurement": "°C"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 

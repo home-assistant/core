@@ -1,0 +1,10 @@
+{
+  "dataPoints": [
+    {
+      "dailyHeartRateVariability": {
+        "averageHeartRateVariabilityMilliseconds": 42.5,
+        "date": { "year": 2026, "month": 6, "day": 29 }
+      }
+    }
+  ]
+}

@@ -6,11 +6,9 @@ import pytest
 from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
     DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
+    CoverEntityStateAttribute,
+    CoverService,
     CoverState,
     intent as cover_intent,
 )
@@ -35,7 +33,7 @@ async def test_open_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) -> 
         CoverState.CLOSED,
         attributes={"device_class": "garage"},
     )
-    calls = async_mock_service(hass, DOMAIN, SERVICE_OPEN_COVER)
+    calls = async_mock_service(hass, DOMAIN, CoverService.OPEN)
 
     response = await intent.async_handle(
         hass, "test", cover_intent.INTENT_OPEN_COVER, slots
@@ -46,7 +44,7 @@ async def test_open_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) -> 
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
-    assert call.service == SERVICE_OPEN_COVER
+    assert call.service == CoverService.OPEN
     assert call.data == {"entity_id": f"{DOMAIN}.garage_door"}
 
 
@@ -64,7 +62,7 @@ async def test_close_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) ->
     hass.states.async_set(
         f"{DOMAIN}.garage_door", CoverState.OPEN, attributes={"device_class": "garage"}
     )
-    calls = async_mock_service(hass, DOMAIN, SERVICE_CLOSE_COVER)
+    calls = async_mock_service(hass, DOMAIN, CoverService.CLOSE)
 
     response = await intent.async_handle(
         hass,
@@ -78,7 +76,7 @@ async def test_close_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) ->
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
-    assert call.service == SERVICE_CLOSE_COVER
+    assert call.service == CoverService.CLOSE
     assert call.data == {"entity_id": f"{DOMAIN}.garage_door"}
 
 
@@ -123,9 +121,12 @@ async def test_set_cover_position(hass: HomeAssistant, slots: dict[str, Any]) ->
     hass.states.async_set(
         entity_id,
         CoverState.CLOSED,
-        attributes={ATTR_CURRENT_POSITION: 0, "device_class": "shade"},
+        attributes={
+            CoverEntityStateAttribute.CURRENT_POSITION: 0,
+            "device_class": "shade",
+        },
     )
-    calls = async_mock_service(hass, DOMAIN, SERVICE_SET_COVER_POSITION)
+    calls = async_mock_service(hass, DOMAIN, CoverService.SET_POSITION)
 
     response = await intent.async_handle(
         hass,
@@ -139,5 +140,5 @@ async def test_set_cover_position(hass: HomeAssistant, slots: dict[str, Any]) ->
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
-    assert call.service == SERVICE_SET_COVER_POSITION
+    assert call.service == CoverService.SET_POSITION
     assert call.data == {"entity_id": entity_id, "position": 50}

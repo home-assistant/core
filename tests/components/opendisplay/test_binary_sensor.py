@@ -46,7 +46,7 @@ async def test_connectivity_created_for_all_device_types(
     is_flex: bool,
 ) -> None:
     """Connectivity sensor is created for both Flex and non-Flex devices."""
-    mock_opendisplay_device.is_flex = is_flex
+    mock_opendisplay_device.legacy.is_flex = is_flex
     await setup_entry()
 
     assert hass.states.get(ENTITY_ID) is not None

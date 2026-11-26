@@ -85,10 +85,22 @@ SWITCHES = (
         state=lambda data: data.block_disguised_trackers,
     ),
     NextDnsSwitchEntityDescription(
+        key="block_rotating_ad_domains",
+        translation_key="block_rotating_ad_domains",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_rotating_ad_domains,
+    ),
+    NextDnsSwitchEntityDescription(
         key="ai_threat_detection",
         translation_key="ai_threat_detection",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.ai_threat_detection,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_algorithmically_generated_domains",
+        translation_key="block_algorithmically_generated_domains",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_algorithmically_generated_domains,
     ),
     NextDnsSwitchEntityDescription(
         key="block_csam",

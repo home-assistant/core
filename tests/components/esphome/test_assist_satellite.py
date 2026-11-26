@@ -7,7 +7,7 @@ import io
 import socket
 import struct
 from typing import Any
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 import wave
 
 from aioesphomeapi import (
@@ -20,7 +20,6 @@ from aioesphomeapi import (
     VoiceAssistantCommandFlag,
     VoiceAssistantEventType,
     VoiceAssistantFeature,
-    VoiceAssistantTimerEventType,
     VoiceAssistantWakeWordAudio,
 )
 import pytest
@@ -56,7 +55,7 @@ from homeassistant.components.esphome.assist_satellite import (
 from homeassistant.components.esphome.const import NO_WAKE_WORD
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectService
 from homeassistant.components.tts import TextToSpeechCommonOption
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, CommonServiceArgument
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, intent as intent_helper
 from homeassistant.helpers.network import get_url
@@ -790,118 +789,6 @@ async def test_pipeline_media_player(
             await tts_finished.wait()
 
             assert satellite.state == AssistSatelliteState.IDLE
-
-
-async def test_timer_events(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-) -> None:
-    """Test that injecting timer events results in the correct api client calls."""
-
-    mock_device = await mock_esphome_device(
-        mock_client=mock_client,
-        device_info={
-            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
-            | VoiceAssistantFeature.TIMERS
-        },
-    )
-    await hass.async_block_till_done()
-    dev = device_registry.async_get_device_by_connection(
-        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
-        mock_device.entry.entry_id,
-    )
-
-    total_seconds = (1 * 60 * 60) + (2 * 60) + 3
-    await intent_helper.async_handle(
-        hass,
-        "test",
-        intent_helper.INTENT_START_TIMER,
-        {
-            "name": {"value": "test timer"},
-            "hours": {"value": 1},
-            "minutes": {"value": 2},
-            "seconds": {"value": 3},
-        },
-        device_id=dev.id,
-    )
-
-    mock_client.send_voice_assistant_timer_event.assert_called_with(
-        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED,
-        ANY,
-        "test timer",
-        total_seconds,
-        total_seconds,
-        True,
-    )
-
-    # Increase timer beyond original time and check total_seconds has increased
-    mock_client.send_voice_assistant_timer_event.reset_mock()
-
-    total_seconds += 5 * 60
-    await intent_helper.async_handle(
-        hass,
-        "test",
-        intent_helper.INTENT_INCREASE_TIMER,
-        {
-            "name": {"value": "test timer"},
-            "minutes": {"value": 5},
-        },
-        device_id=dev.id,
-    )
-
-    mock_client.send_voice_assistant_timer_event.assert_called_with(
-        VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED,
-        ANY,
-        "test timer",
-        total_seconds,
-        ANY,
-        True,
-    )
-
-
-async def test_unknown_timer_event(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-) -> None:
-    """Test that unknown (new) timer event types do not result in api calls."""
-
-    mock_device = await mock_esphome_device(
-        mock_client=mock_client,
-        device_info={
-            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
-            | VoiceAssistantFeature.TIMERS
-        },
-    )
-    await hass.async_block_till_done()
-    assert mock_device.entry.unique_id is not None
-    dev = device_registry.async_get_device_by_connection(
-        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
-        mock_device.entry.entry_id,
-    )
-    assert dev is not None
-
-    with patch(
-        "homeassistant.components.esphome.assist_satellite._TIMER_EVENT_TYPES.from_hass",
-        side_effect=KeyError,
-    ):
-        await intent_helper.async_handle(
-            hass,
-            "test",
-            intent_helper.INTENT_START_TIMER,
-            {
-                "name": {"value": "test timer"},
-                "hours": {"value": 1},
-                "minutes": {"value": 2},
-                "seconds": {"value": 3},
-            },
-            device_id=dev.id,
-        )
-
-        mock_client.send_voice_assistant_timer_event.assert_not_called()
 
 
 async def test_streaming_tts_errors(
@@ -2012,7 +1899,7 @@ async def test_wake_word_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word",
+            TargetKey.ENTITY_ID: "select.test_wake_word",
             "option": "Okay Nabu",
         },
         blocking=True,
@@ -2040,7 +1927,7 @@ async def test_wake_word_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word_2",
+            TargetKey.ENTITY_ID: "select.test_wake_word_2",
             "option": "Hey Jarvis",
         },
         blocking=True,
@@ -2066,7 +1953,7 @@ async def test_wake_word_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word_2",
+            TargetKey.ENTITY_ID: "select.test_wake_word_2",
             "option": NO_WAKE_WORD,
         },
         blocking=True,
@@ -2084,7 +1971,7 @@ async def test_wake_word_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word",
+            TargetKey.ENTITY_ID: "select.test_wake_word",
             "option": NO_WAKE_WORD,
         },
         blocking=True,
@@ -2163,7 +2050,7 @@ async def test_secondary_pipeline(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word",
+            TargetKey.ENTITY_ID: "select.test_wake_word",
             "option": "Okay Nabu",
         },
         blocking=True,
@@ -2172,7 +2059,7 @@ async def test_secondary_pipeline(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_assistant",
+            TargetKey.ENTITY_ID: "select.test_assistant",
             "option": "Primary Pipeline",
         },
         blocking=True,
@@ -2181,7 +2068,7 @@ async def test_secondary_pipeline(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word_2",
+            TargetKey.ENTITY_ID: "select.test_wake_word_2",
             "option": "Hey Jarvis",
         },
         blocking=True,
@@ -2190,7 +2077,7 @@ async def test_secondary_pipeline(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_assistant_2",
+            TargetKey.ENTITY_ID: "select.test_assistant_2",
             "option": "Secondary Pipeline",
         },
         blocking=True,
@@ -2317,7 +2204,7 @@ async def test_pipeline_start_missing_wake_word_entity_state(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word",
+            TargetKey.ENTITY_ID: "select.test_wake_word",
             "option": "Okay Nabu",
         },
         blocking=True,
@@ -2326,7 +2213,7 @@ async def test_pipeline_start_missing_wake_word_entity_state(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_assistant",
+            TargetKey.ENTITY_ID: "select.test_assistant",
             "option": "Primary Pipeline",
         },
         blocking=True,
@@ -2335,7 +2222,7 @@ async def test_pipeline_start_missing_wake_word_entity_state(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word_2",
+            TargetKey.ENTITY_ID: "select.test_wake_word_2",
             "option": "Hey Jarvis",
         },
         blocking=True,
@@ -2344,7 +2231,7 @@ async def test_pipeline_start_missing_wake_word_entity_state(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_assistant_2",
+            TargetKey.ENTITY_ID: "select.test_assistant_2",
             "option": "Secondary Pipeline",
         },
         blocking=True,

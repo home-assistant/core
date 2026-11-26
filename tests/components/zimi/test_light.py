@@ -4,8 +4,12 @@ from unittest.mock import MagicMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, ColorMode
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, Platform
+from homeassistant.components.light import (
+    DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+    LightService,
+)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -42,7 +46,7 @@ async def test_light_entity(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {"entity_id": entity_key},
         blocking=True,
     )
@@ -51,7 +55,7 @@ async def test_light_entity(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {"entity_id": entity_key},
         blocking=True,
     )
@@ -89,7 +93,7 @@ async def test_dimmer_entity(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {"entity_id": entity_key},
         blocking=True,
     )
@@ -98,7 +102,7 @@ async def test_dimmer_entity(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {"entity_id": entity_key},
         blocking=True,
     )

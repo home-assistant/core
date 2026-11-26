@@ -109,6 +109,7 @@ Every check has a code following the
 | `C7458` | [`home-assistant-logger-const-name`](#c7458-home-assistant-logger-const-name) | Logger in an integration's `const.py` should use `__package__` |
 | `C7459` | [`home-assistant-placeholder-key`](#c7459-home-assistant-placeholder-key) | Placeholder keys should be string literals, not constants such as `CONF_*` |
 | `C7464` | [`home-assistant-type-checking-block-position`](#c7464-home-assistant-type-checking-block-position) | `if TYPE_CHECKING:` block should come after all module-level imports |
+| `C7465` | [`home-assistant-action-target-key`](#c7465-home-assistant-action-target-key) | Target keys of action calls should use `TargetKey` |
 | `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
 | `E7402` | [`home-assistant-argument-type`](#e7402-home-assistant-argument-type) | Function argument should have the specified type hint |
 | `E7403` | [`home-assistant-return-type`](#e7403-home-assistant-return-type) | Function should have the specified return type hint |
@@ -125,6 +126,7 @@ Every check has a code following the
 | `R7403` | [`home-assistant-tests-redundant-usefixtures`](#r7403-home-assistant-tests-redundant-usefixtures) | `@pytest.mark.usefixtures` redundant when `pytestmark` already applies it |
 | `R7404` | [`home-assistant-tests-registry-fixtures`](#r7404-home-assistant-tests-registry-fixtures) | Use the registry fixture instead of calling `<registry>.async_get(hass)` directly in tests |
 | `R7405` | [`home-assistant-tests-user-flow-no-data`](#r7405-home-assistant-tests-user-flow-no-data) | User config flow init in tests must not pass `data` |
+| `R7406` | [`home-assistant-tests-snapshot-enable-entities`](#r7406-home-assistant-tests-snapshot-enable-entities) | Use the `entity_registry_enabled_by_default` fixture instead of enabling entities before `snapshot_platform` |
 | `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
 | `W7402` | [`home-assistant-async-callback-decorator`](#w7402-home-assistant-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
 | `W7403` | [`home-assistant-pytest-fixture-decorator`](#w7403-home-assistant-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
@@ -370,8 +372,7 @@ event loop, where it must not do blocking I/O:
 ```python
 class MyEntity(CoordinatorEntity[MyCoordinator]):
     @callback
-    def _handle_coordinator_update(self) -> None:
-        ...
+    def _handle_coordinator_update(self) -> None: ...
 ```
 
 
@@ -461,8 +462,7 @@ it for the `config_entry` class annotation and `__init__` argument, so
 class MyCoordinator(DataUpdateCoordinator[MyData]):
     config_entry: MyConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None:
-        ...
+    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None: ...
 ```
 
 When the alias lives in `__init__.py`, import it in the coordinator under
@@ -837,9 +837,7 @@ cause and finish the flow, so the test proves the flow recovers:
 assert result["errors"] == {"base": "cannot_connect"}
 
 mock_client.connect.side_effect = None
-result = await hass.config_entries.flow.async_configure(
-    result["flow_id"], USER_INPUT
-)
+result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
 assert result["type"] is FlowResultType.CREATE_ENTRY
 ```
 
@@ -1196,16 +1194,55 @@ such as `CONF_USERNAME`. Integrations that need a constant can use a dedicated
 
 ```python
 # Bad
-description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]}
+description_placeholders = {CONF_USERNAME: entry.data[CONF_USERNAME]}
 
 # Good
-description_placeholders={"username": entry.data[CONF_USERNAME]}
+description_placeholders = {"username": entry.data[CONF_USERNAME]}
 
 # Bad
 self.context["title_placeholders"] = {CONF_HOST: discovery_info.host}
 
 # Good
 self.context["title_placeholders"] = {"host": discovery_info.host}
+```
+
+## `home_assistant_target_key` checker
+
+Checks the target keys of `hass.services.async_call` calls: the keys of a
+`target=` dict literal, including the keys of its `exclude` dict literal, and the
+`entity_id` key of a data dict literal.
+
+### `C7465`: `home-assistant-action-target-key`
+
+Target keys select what the action applies to, so they use `TargetKey`: every
+constant key of the `target=` dict, such as `ATTR_ENTITY_ID`, `ATTR_AREA_ID` or
+`CommonServiceArgument.DEVICE_ID`, should be the matching `TargetKey` member.
+
+This also applies to the `entity_id` key of the data, when the action is a
+`<Prefix>Service` enum member which declares a `target` in its `services.yaml`.
+`CommonServiceArgument.ENTITY_ID` is for actions with their own `entity_id`
+field.
+
+```python
+# Bad
+await hass.services.async_call(
+    LIGHT_DOMAIN, LightService.TURN_ON, target={ATTR_AREA_ID: "kitchen"}
+)
+
+# Good
+await hass.services.async_call(
+    LIGHT_DOMAIN, LightService.TURN_ON, target={TargetKey.AREA_ID: "kitchen"}
+)
+
+# Bad
+await hass.services.async_call(
+    LIGHT_DOMAIN, LightService.TURN_ON, {ATTR_ENTITY_ID: "light.kitchen"}
+)
+
+# Good
+await hass.services.async_call(
+    LIGHT_DOMAIN, LightService.TURN_ON, {TargetKey.ENTITY_ID: "light.kitchen"}
+)
 ```
 
 ## `home_assistant_mdi_icons` checker
@@ -1298,6 +1335,56 @@ dynamic source values (a variable rather than a known user source), and user
 flows without
 `data` are not flagged. The checker is scoped to test modules.
 
+
+## `home_assistant_tests_snapshot_enable_entities` checker
+
+Detects snapshot tests that enable entities by hand. A test that calls
+`snapshot_platform` should snapshot every entity, including the ones that
+are disabled by default. The `entity_registry_enabled_by_default` fixture
+enables them before the integration is set up, so there is no need to
+update the registry and reload the config entry in the test.
+
+### `R7406`: `home-assistant-tests-snapshot-enable-entities`
+
+A `test_*` function calls `snapshot_platform` and also calls
+`<registry>.async_update_entity(..., disabled_by=None)`:
+
+```python
+async def test_all_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    await setup_integration(hass, mock_config_entry)
+    for entry in er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    ):
+        entity_registry.async_update_entity(  # <-- flagged
+            entry.entity_id, disabled_by=None
+        )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+```
+
+Use the fixture instead:
+
+```python
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    await setup_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+```
+
+Calls in nested helpers defined inside the test are checked too. Tests
+that enable an entity without calling `snapshot_platform` (for example,
+to test what happens when a user enables it) are not flagged. The checker
+is scoped to test modules.
 
 ## `home_assistant_test_determinism` checker
 

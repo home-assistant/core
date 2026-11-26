@@ -8,8 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
+    ValveService,
     ValveState,
 )
 from homeassistant.const import STATE_UNKNOWN, Platform
@@ -37,7 +36,7 @@ async def test_watering_valve(
     assert ha_state.state == ValveState.CLOSED
 
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {"entity_id": entity_id}, blocking=True
+        VALVE_DOMAIN, ValveService.OPEN, {"entity_id": entity_id}, blocking=True
     )
 
     await async_manipulate_test_data(
@@ -71,7 +70,7 @@ async def test_water_supply_valve(
     channel = hmip_device.functionalChannels[1]
 
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_CLOSE_VALVE, {"entity_id": entity_id}, blocking=True
+        VALVE_DOMAIN, ValveService.CLOSE, {"entity_id": entity_id}, blocking=True
     )
     assert channel.mock_calls[-1][0] == "set_water_supply_state_async"
     assert channel.mock_calls[-1][1] == (WaterSupplyState.NO_WATERFLOW,)
@@ -81,7 +80,7 @@ async def test_water_supply_valve(
     assert hass.states.get(entity_id).state == ValveState.CLOSED
 
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {"entity_id": entity_id}, blocking=True
+        VALVE_DOMAIN, ValveService.OPEN, {"entity_id": entity_id}, blocking=True
     )
     assert channel.mock_calls[-1][0] == "set_water_supply_state_async"
     assert channel.mock_calls[-1][1] == (WaterSupplyState.FULL_OPENED,)
