@@ -27,6 +27,7 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.components.common import assert_trigger_options_supported
 
 from homeassistant.components import automation, calendar
+from homeassistant.components.automation import AutomationService
 from homeassistant.components.calendar.trigger import (
     CONF_OFFSET_TYPE,
     EVENT_END,
@@ -35,12 +36,10 @@ from homeassistant.components.calendar.trigger import (
     OFFSET_TYPE_BEFORE,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_OFFSET,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
-    SERVICE_TURN_OFF,
     TargetKey,
 )
 from homeassistant.core import HomeAssistant
@@ -405,8 +404,8 @@ async def create_automation(
         # Disable automation to cleanup lingering timers
         await hass.services.async_call(
             automation.DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: f"automation.{event_type}"},
+            AutomationService.TURN_OFF,
+            {TargetKey.ENTITY_ID: f"automation.{event_type}"},
             blocking=True,
         )
 
@@ -1535,13 +1534,13 @@ async def test_trigger_with_targets(
     # Disable automations to cleanup lingering timers
     await hass.services.async_call(
         automation.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "automation.start_trigger"},
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "automation.start_trigger"},
         blocking=True,
     )
     await hass.services.async_call(
         automation.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "automation.end_trigger"},
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "automation.end_trigger"},
         blocking=True,
     )

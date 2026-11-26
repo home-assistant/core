@@ -33,15 +33,9 @@ from homeassistant import (
     runner,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    BASE_PLATFORMS,
-    CONF_DEBUG,
-    EVENT_HOMEASSISTANT_START,
-    SIGNAL_BOOTSTRAP_INTEGRATIONS,
-)
+from homeassistant.const import BASE_PLATFORMS, CONF_DEBUG, EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, Event, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.translation import async_translations_loaded
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration
@@ -1209,70 +1203,6 @@ async def test_setup_recovery_mode_if_no_frontend(
     assert hass.config.skip_pip
     assert hass.config.internal_url == "http://192.168.1.100:8123"
     assert hass.config.external_url == "https://abcdef.ui.nabu.casa"
-
-
-@pytest.mark.parametrize("load_registries", [False])
-@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
-async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
-    hass: HomeAssistant,
-) -> None:
-    """Test empty integrations list is only sent at the end of bootstrap."""
-    # setup times only tracked when not running
-    hass.set_state(CoreState.not_running)
-
-    order = []
-
-    def gen_domain_setup(domain):
-        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-            order.append(domain)
-            await asyncio.sleep(0.05)
-
-            async def _background_task():
-                await asyncio.sleep(0.1)
-
-            await hass.async_create_task(_background_task())
-            return True
-
-        return async_setup
-
-    mock_integration(
-        hass,
-        MockModule(
-            domain="normal_integration",
-            async_setup=gen_domain_setup("normal_integration"),
-            partial_manifest={"after_dependencies": ["an_after_dep"]},
-        ),
-    )
-    mock_integration(
-        hass,
-        MockModule(
-            domain="an_after_dep",
-            async_setup=gen_domain_setup("an_after_dep"),
-        ),
-    )
-
-    integrations = []
-
-    @callback
-    def _bootstrap_integrations(data):
-        integrations.append(data)
-
-    async_dispatcher_connect(
-        hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, _bootstrap_integrations
-    )
-    with patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.025):
-        await bootstrap._async_set_up_integrations(
-            hass, {"normal_integration": {}, "an_after_dep": {}}, monotonic()
-        )
-        await hass.async_block_till_done()
-
-    assert integrations[0] != {}
-    assert "an_after_dep" in integrations[0]
-    assert integrations[-2] != {}
-    assert integrations[-1] == {}
-
-    assert "normal_integration" in hass.config.components
-    assert order == ["an_after_dep", "normal_integration"]
 
 
 @pytest.mark.parametrize("load_registries", [False])

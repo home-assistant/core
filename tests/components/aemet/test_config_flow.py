@@ -174,7 +174,7 @@ async def test_form_errors(
     mocked_aemet.select_coordinates.side_effect = exception
 
     with patch(
-        "homeassistant.components.aemet.config_flow.AEMET",
+        "homeassistant.components.aemet.util.AEMET",
         return_value=mocked_aemet,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -224,7 +224,7 @@ async def test_reauth(hass: HomeAssistant, exception: Exception, error: str) -> 
     mocked_aemet.select_coordinates.side_effect = exception
 
     with patch(
-        "homeassistant.components.aemet.config_flow.AEMET",
+        "homeassistant.components.aemet.util.AEMET",
         return_value=mocked_aemet,
     ):
         result = await entry.start_reauth_flow(hass)
@@ -275,7 +275,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     mocked_aemet.select_coordinates = AsyncMock()
 
     with patch(
-        "homeassistant.components.aemet.config_flow.AEMET",
+        "homeassistant.components.aemet.util.AEMET",
         return_value=mocked_aemet,
     ):
         result = await entry.start_reconfigure_flow(hass)
@@ -315,7 +315,7 @@ async def test_reconfigure_errors(
     mocked_aemet.select_coordinates.side_effect = exception
 
     with patch(
-        "homeassistant.components.aemet.config_flow.AEMET",
+        "homeassistant.components.aemet.util.AEMET",
         return_value=mocked_aemet,
     ):
         result = await entry.start_reconfigure_flow(hass)
@@ -346,7 +346,7 @@ async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
     mocked_aemet.select_coordinates = AsyncMock()
 
     with patch(
-        "homeassistant.components.aemet.config_flow.AEMET",
+        "homeassistant.components.aemet.util.AEMET",
         return_value=mocked_aemet,
     ):
         result = await entry.start_reconfigure_flow(hass)

@@ -10,6 +10,7 @@ from homeassistant.components import cover
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA,
     CoverEntity,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverEntityStateAttribute,
     CoverServiceArgument,
@@ -27,7 +28,7 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
@@ -40,6 +41,7 @@ from homeassistant.util.percentage import (
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import (
+    ATTR_DISCOVERY_TOPIC,
     CONF_COMMAND_TOPIC,
     CONF_GET_POSITION_TEMPLATE,
     CONF_GET_POSITION_TOPIC,
@@ -80,18 +82,34 @@ from .const import (
     DEFAULT_TILT_MIN,
     DEFAULT_TILT_OPEN_POSITION,
     DEFAULT_TILT_OPTIMISTIC,
+    DOMAIN,
     PAYLOAD_NONE,
 )
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
-from .util import valid_publish_topic, valid_subscribe_topic
+from .util import learn_more_url, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
+CONF_CLOSED_TILT_POSITIONS = "closed_tilt_positions"
+CONF_OPEN_TILT_POSITION = "open_tilt_position"
+CONF_TILT_END_ANGLE = "tilt_end_angle"
+CONF_TILT_START_ANGLE = "tilt_start_angle"
+
 DEFAULT_NAME = "MQTT Cover"
+
+DEPRECATED_TILT_VALUES_BREAKS_IN_HA_VERSION = "2027.7.0"
+
+LEGACY_TILT_OPTIONS = (CONF_TILT_OPEN_POSITION, CONF_TILT_CLOSED_POSITION)
+TILT_POSITION_OPTIONS = (
+    CONF_TILT_START_ANGLE,
+    CONF_TILT_END_ANGLE,
+    CONF_OPEN_TILT_POSITION,
+    CONF_CLOSED_TILT_POSITIONS,
+)
 
 TILT_FEATURES = (
     CoverEntityFeature.OPEN_TILT
@@ -104,8 +122,35 @@ MQTT_COVER_ATTRIBUTES_BLOCKED = frozenset(
     {
         CoverEntityStateAttribute.CURRENT_POSITION,
         CoverEntityStateAttribute.CURRENT_TILT_POSITION,
+        CoverEntityCapabilityAttribute.OPEN_TILT_POSITION,
+        CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS,
+        CoverEntityCapabilityAttribute.TILT_START_ANGLE,
+        CoverEntityCapabilityAttribute.TILT_END_ANGLE,
     }
 )
+
+
+def resolve_tilt_positions(config: ConfigType) -> tuple[int, list[int]]:
+    """Return the open and closed tilt positions, as the cover entity derives them."""
+    start: int | None = config.get(CONF_TILT_START_ANGLE)
+    end: int | None = config.get(CONF_TILT_END_ANGLE)
+    if (open_position := config.get(CONF_OPEN_TILT_POSITION)) is None:
+        if start is None or end is None:
+            open_position = 100
+        else:
+            open_position = min(max(round(-start * 100 / (end - start)), 0), 100)
+    closed_positions: list[int] | None
+    if (closed_positions := config.get(CONF_CLOSED_TILT_POSITIONS)) is None:
+        if start is None or end is None:
+            closed_positions = [100 if open_position == 0 else 0]
+        else:
+            flattest = max(abs(start), abs(end))
+            closed_positions = [
+                position
+                for position, angle in ((0, start), (100, end))
+                if abs(angle) == flattest
+            ]
+    return open_position, closed_positions
 
 
 def validate_options(config: ConfigType) -> ConfigType:
@@ -150,6 +195,37 @@ def validate_options(config: ConfigType) -> ConfigType:
             f" '{CONF_TILT_STATUS_TOPIC}'."
         )
 
+    if (CONF_TILT_START_ANGLE in config) != (CONF_TILT_END_ANGLE in config):
+        raise probatio.Invalid(
+            f"'{CONF_TILT_START_ANGLE}' must be set together with"
+            f" '{CONF_TILT_END_ANGLE}'."
+        )
+
+    if (
+        CONF_TILT_START_ANGLE in config
+        and config[CONF_TILT_START_ANGLE] == config[CONF_TILT_END_ANGLE]
+    ):
+        raise probatio.Invalid(
+            f"'{CONF_TILT_START_ANGLE}' and '{CONF_TILT_END_ANGLE}' must differ."
+        )
+
+    if any(option in config for option in LEGACY_TILT_OPTIONS) and any(
+        option in config for option in TILT_POSITION_OPTIONS
+    ):
+        raise probatio.Invalid(
+            f"'{CONF_TILT_OPEN_POSITION}' and '{CONF_TILT_CLOSED_POSITION}' cannot"
+            f" be used together with '{CONF_TILT_START_ANGLE}',"
+            f" '{CONF_TILT_END_ANGLE}', '{CONF_OPEN_TILT_POSITION}' or"
+            f" '{CONF_CLOSED_TILT_POSITIONS}'."
+        )
+
+    open_position, closed_positions = resolve_tilt_positions(config)
+    if open_position in closed_positions:
+        raise probatio.Invalid(
+            f"The open tilt position {open_position} must not be one of the closed"
+            f" tilt positions {closed_positions}."
+        )
+
     return config
 
 
@@ -180,15 +256,27 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         probatio.Optional(CONF_STATE_OPENING, default=STATE_OPENING): cv.string,
         probatio.Optional(CONF_STATE_STOPPED, default=DEFAULT_STATE_STOPPED): cv.string,
         probatio.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-        probatio.Optional(
-            CONF_TILT_CLOSED_POSITION, default=DEFAULT_TILT_CLOSED_POSITION
-        ): int,
+        probatio.Optional(CONF_TILT_CLOSED_POSITION): int,
         probatio.Optional(CONF_TILT_COMMAND_TOPIC): valid_publish_topic,
         probatio.Optional(CONF_TILT_MAX, default=DEFAULT_TILT_MAX): int,
         probatio.Optional(CONF_TILT_MIN, default=DEFAULT_TILT_MIN): int,
-        probatio.Optional(
-            CONF_TILT_OPEN_POSITION, default=DEFAULT_TILT_OPEN_POSITION
-        ): int,
+        probatio.Optional(CONF_TILT_OPEN_POSITION): int,
+        probatio.Optional(CONF_TILT_START_ANGLE): probatio.All(
+            int, probatio.Range(min=-90, max=90)
+        ),
+        probatio.Optional(CONF_TILT_END_ANGLE): probatio.All(
+            int, probatio.Range(min=-90, max=90)
+        ),
+        probatio.Optional(CONF_OPEN_TILT_POSITION): probatio.All(
+            int, probatio.Range(min=0, max=100)
+        ),
+        probatio.Optional(CONF_CLOSED_TILT_POSITIONS): probatio.All(
+            probatio.EnsureList(),
+            [probatio.In([0, 100])],
+            probatio.Length(min=1),
+            probatio.Unique(),
+            sorted,
+        ),
         probatio.Optional(
             CONF_TILT_STATE_OPTIMISTIC, default=DEFAULT_TILT_OPTIMISTIC
         ): cv.boolean,
@@ -240,8 +328,11 @@ class MqttCover(MqttEntity, CoverEntity):
     _entity_id_format: str = cover.ENTITY_ID_FORMAT
     _optimistic: bool
     _tilt_optimistic: bool
+    _legacy_tilt: bool
+    _deprecated_tilt_values: bool
     _tilt_closed_percentage: int
     _tilt_open_percentage: int
+    _tilt_closed_positions: list[int]
     _pos_range: tuple[int, int]
     _tilt_range: tuple[int, int]
 
@@ -256,12 +347,7 @@ class MqttCover(MqttEntity, CoverEntity):
         """Set up cover from config."""
         self._pos_range = (config[CONF_POSITION_CLOSED] + 1, config[CONF_POSITION_OPEN])
         self._tilt_range = (config[CONF_TILT_MIN] + 1, config[CONF_TILT_MAX])
-        self._tilt_closed_percentage = ranged_value_to_percentage(
-            self._tilt_range, config[CONF_TILT_CLOSED_POSITION]
-        )
-        self._tilt_open_percentage = ranged_value_to_percentage(
-            self._tilt_range, config[CONF_TILT_OPEN_POSITION]
-        )
+        self._setup_tilt_positions(config)
         no_position = (
             config.get(CONF_SET_POSITION_TOPIC) is None
             and config.get(CONF_GET_POSITION_TOPIC) is None
@@ -348,6 +434,99 @@ class MqttCover(MqttEntity, CoverEntity):
             supported_features |= TILT_FEATURES
 
         self._attr_supported_features = supported_features
+
+    def _setup_tilt_positions(self, config: ConfigType) -> None:
+        """Set up the open and closed tilt positions and the tilt angles."""
+        self._deprecated_tilt_values = any(
+            option in config for option in LEGACY_TILT_OPTIONS
+        )
+        # Without the new options, keep sending the raw tilt values as before
+        self._legacy_tilt = not any(
+            option in config for option in TILT_POSITION_OPTIONS
+        )
+        if not self._legacy_tilt:
+            self._tilt_open_percentage, self._tilt_closed_positions = (
+                resolve_tilt_positions(config)
+            )
+            self._attr_open_tilt_position = config.get(CONF_OPEN_TILT_POSITION)
+            self._attr_closed_tilt_positions = config.get(CONF_CLOSED_TILT_POSITIONS)
+            self._attr_tilt_start_angle = config.get(CONF_TILT_START_ANGLE)
+            self._attr_tilt_end_angle = config.get(CONF_TILT_END_ANGLE)
+            return
+
+        self._tilt_open_percentage = self._tilt_value_to_percentage(
+            config.get(CONF_TILT_OPEN_POSITION, DEFAULT_TILT_OPEN_POSITION)
+        )
+        self._tilt_closed_percentage = self._tilt_value_to_percentage(
+            config.get(CONF_TILT_CLOSED_POSITION, DEFAULT_TILT_CLOSED_POSITION)
+        )
+        # The cover entity only accepts closed tilt positions at the ends
+        closed_at_end = self._tilt_closed_percentage in (0, 100)
+        self._tilt_closed_positions = (
+            [self._tilt_closed_percentage]
+            if closed_at_end
+            else [100 if self._tilt_open_percentage == 0 else 0]
+        )
+        consistent = self._tilt_open_percentage not in self._tilt_closed_positions
+        self._attr_open_tilt_position = (
+            self._tilt_open_percentage if consistent else None
+        )
+        self._attr_closed_tilt_positions = (
+            self._tilt_closed_positions if consistent and closed_at_end else None
+        )
+        self._attr_tilt_start_angle = None
+        self._attr_tilt_end_angle = None
+
+    def _tilt_value_to_percentage(self, value: int) -> int:
+        """Convert a tilt value of the device to a percentage from 0 to 100."""
+        return min(max(ranged_value_to_percentage(self._tilt_range, value), 0), 100)
+
+    @override
+    async def mqtt_async_added_to_hass(self) -> None:
+        """Report the use of the deprecated tilt options."""
+        if (discovery_data := self._discovery_data) is not None:
+            if self._deprecated_tilt_values:
+                _LOGGER.warning(
+                    "The MQTT cover %s, discovered on topic %s, uses the deprecated"
+                    " '%s' or '%s' option, which will stop working in Home"
+                    " Assistant %s. Update the discovery payload to use '%s' and"
+                    " '%s', or '%s' and '%s' instead",
+                    self.entity_id,
+                    discovery_data[ATTR_DISCOVERY_TOPIC],
+                    CONF_TILT_OPEN_POSITION,
+                    CONF_TILT_CLOSED_POSITION,
+                    DEPRECATED_TILT_VALUES_BREAKS_IN_HA_VERSION,
+                    CONF_TILT_START_ANGLE,
+                    CONF_TILT_END_ANGLE,
+                    CONF_OPEN_TILT_POSITION,
+                    CONF_CLOSED_TILT_POSITIONS,
+                )
+            return
+        # Subentries still store the legacy options until the UI is migrated
+        if (
+            self.registry_entry is not None
+            and self.registry_entry.config_subentry_id is not None
+        ):
+            return
+        issue_id = f"deprecated_tilt_values_{self.entity_id}"
+        if not self._deprecated_tilt_values:
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            return
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version=DEPRECATED_TILT_VALUES_BREAKS_IN_HA_VERSION,
+            is_fixable=False,
+            issue_domain=cover.DOMAIN,
+            learn_more_url=learn_more_url(cover.DOMAIN),
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_tilt_values",
+            translation_placeholders={
+                "entity_id": self.entity_id,
+                "breaks_in_ha_version": DEPRECATED_TILT_VALUES_BREAKS_IN_HA_VERSION,
+            },
+        )
 
     @callback
     def _update_state(self, state: str | None) -> None:
@@ -534,7 +713,14 @@ class MqttCover(MqttEntity, CoverEntity):
     @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover open."""
-        tilt_open_position = self._config[CONF_TILT_OPEN_POSITION]
+        if not self._legacy_tilt:
+            await self.async_set_cover_tilt_position(
+                tilt_position=self._tilt_open_percentage
+            )
+            return
+        tilt_open_position = self._config.get(
+            CONF_TILT_OPEN_POSITION, DEFAULT_TILT_OPEN_POSITION
+        )
         variables = {
             "tilt_position": tilt_open_position,
             "entity_id": self.entity_id,
@@ -551,10 +737,30 @@ class MqttCover(MqttEntity, CoverEntity):
             self._attr_current_cover_tilt_position = self._tilt_open_percentage
             self.async_write_ha_state()
 
+    def _closed_tilt_target(self) -> int:
+        """Return the closed tilt position to move the slats to."""
+        if len(self._tilt_closed_positions) == 1:
+            return self._tilt_closed_positions[0]
+        start: int | None = self._config.get(CONF_TILT_START_ANGLE)
+        end: int | None = self._config.get(CONF_TILT_END_ANGLE)
+        if start is not None and end is not None and abs(start) != abs(end):
+            # Close at the end where the slats lie the flattest
+            return 0 if abs(start) > abs(end) else 100
+        if (current := self.current_cover_tilt_position) is None:
+            return 0
+        return 0 if current <= 50 else 100
+
     @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover closed."""
-        tilt_closed_position = self._config[CONF_TILT_CLOSED_POSITION]
+        if not self._legacy_tilt:
+            await self.async_set_cover_tilt_position(
+                tilt_position=self._closed_tilt_target()
+            )
+            return
+        tilt_closed_position = self._config.get(
+            CONF_TILT_CLOSED_POSITION, DEFAULT_TILT_CLOSED_POSITION
+        )
         variables = {
             "tilt_position": tilt_closed_position,
             "entity_id": self.entity_id,
@@ -639,6 +845,9 @@ class MqttCover(MqttEntity, CoverEntity):
     @override
     async def async_toggle_tilt(self, **kwargs: Any) -> None:
         """Toggle the entity."""
+        if not self._legacy_tilt:
+            await super().async_toggle_tilt(**kwargs)
+            return
         if (
             self.current_cover_tilt_position is not None
             and self.current_cover_tilt_position <= self._tilt_closed_percentage
