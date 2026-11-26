@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
+import copy
 from http import HTTPStatus
 import os
 from typing import Any, cast, override
@@ -91,9 +92,7 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
     async def get(self, request: web.Request, config_key: str) -> web.Response:
         """Fetch device specific config."""
         hass = request.app[KEY_HASS]
-        async with self.mutation_lock:
-            current = await self.read_config(hass)
-            value = self._get_value(hass, current, config_key)
+        value = await self.async_get_value(hass, config_key)
 
         if value is None:
             return self.json_message("Resource not found", HTTPStatus.NOT_FOUND)
@@ -116,23 +115,61 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
         hass = request.app[KEY_HASS]
 
         try:
-            # We just validate, we don't store that data because
-            # we don't want to store the defaults.
-            if self.data_validator:
-                await self.data_validator(hass, config_key, data)
-            else:
-                # We either have a data_schema or a data_validator, ignore mypy
-                self.data_schema(data)  # type: ignore[misc]
+            await self.async_validate(hass, config_key, data)
         except (probatio.Invalid, HomeAssistantError) as err:
             result: dict[str, Any] = {"message": f"Message malformed: {err}"}
             if self.structured_errors:
                 result["errors"] = validation_errors_as_dicts(err)
             return self.json(result, HTTPStatus.BAD_REQUEST)
 
+        await self.async_write_value(hass, config_key, data)
+
+        return self.json({"result": "ok"})
+
+    @require_admin
+    async def delete(self, request: web.Request, config_key: str) -> web.Response:
+        """Remove an entry."""
+        hass = request.app[KEY_HASS]
+        if await self.async_delete_value(hass, config_key) is None:
+            return self.json_message("Resource not found", HTTPStatus.BAD_REQUEST)
+
+        return self.json({"result": "ok"})
+
+    async def async_get_value(
+        self, hass: HomeAssistant, config_key: str
+    ) -> dict[str, Any] | None:
+        """Return the stored config for a key, or None if there is none."""
+        async with self.mutation_lock:
+            current = await self.read_config(hass)
+            return self._get_value(hass, current, config_key)
+
+    async def async_validate(
+        self, hass: HomeAssistant, config_key: str, data: dict[str, Any]
+    ) -> None:
+        """Validate config without storing it.
+
+        We just validate, we don't store the result because we don't want to
+        store the defaults.
+        """
+        if self.data_validator:
+            await self.data_validator(hass, config_key, data)
+        else:
+            # We either have a data_schema or a data_validator, ignore mypy
+            self.data_schema(data)  # type: ignore[misc]
+
+    async def async_write_value(
+        self, hass: HomeAssistant, config_key: str, data: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Write validated config for a key and run the post write hook.
+
+        Return the config that was stored for the key before, or None if there
+        was none.
+        """
         path = hass.config.path(self.path)
 
         async with self.mutation_lock:
             current = await self.read_config(hass)
+            previous = copy.deepcopy(self._get_value(hass, current, config_key))
             self._write_value(hass, current, config_key, data)
 
             await hass.async_add_executor_job(_write, path, current)
@@ -142,19 +179,22 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
                 self.post_write_hook(ACTION_CREATE_UPDATE, config_key)
             )
 
-        return self.json({"result": "ok"})
+        return previous
 
-    @require_admin
-    async def delete(self, request: web.Request, config_key: str) -> web.Response:
-        """Remove an entry."""
-        hass = request.app[KEY_HASS]
+    async def async_delete_value(
+        self, hass: HomeAssistant, config_key: str
+    ) -> dict[str, Any] | None:
+        """Delete the config for a key.
+
+        Return the deleted config, or None if there was none.
+        """
         async with self.mutation_lock:
             current = await self.read_config(hass)
             value = self._get_value(hass, current, config_key)
             path = hass.config.path(self.path)
 
             if value is None:
-                return self.json_message("Resource not found", HTTPStatus.BAD_REQUEST)
+                return None
 
             self._delete_value(hass, current, config_key)
             await hass.async_add_executor_job(_write, path, current)
@@ -162,7 +202,7 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
         if self.post_write_hook is not None:
             hass.async_create_task(self.post_write_hook(ACTION_DELETE, config_key))
 
-        return self.json({"result": "ok"})
+        return value
 
     async def read_config(self, hass: HomeAssistant) -> _DataT:
         """Read the config."""
