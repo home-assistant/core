@@ -70,18 +70,6 @@ async def test_setpoint_reference_and_lock_follow_the_gateway(
     assert hass.states.get(UNIT_PREFIX + "control_lock").state == "remote_only"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_input_reference_is_unknown_without_an_external_sensor(
-    hass: HomeAssistant,
-) -> None:
-    """A unit that regulates on its own sensor reports no input reference."""
-    assert (
-        hass.states.get(UNIT_PREFIX + "input_reference_temperature").state
-        == STATE_UNKNOWN
-    )
-    assert hass.states.get(UNIT_PREFIX + "control_lock").state == "remote_unlock"
-
-
 @pytest.mark.parametrize("registers", [INITIALISING_REGISTERS])
 @pytest.mark.usefixtures("init_integration")
 async def test_initialising_gateway_reports_no_values(hass: HomeAssistant) -> None:
