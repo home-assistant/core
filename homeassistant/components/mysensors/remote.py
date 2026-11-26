@@ -4,9 +4,9 @@ from collections.abc import Iterable
 from typing import Any, cast, override
 
 from homeassistant.components.remote import (
-    ATTR_COMMAND,
     RemoteEntity,
     RemoteEntityFeature,
+    RemoteServiceArgument,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -84,7 +84,7 @@ class MySensorsRemote(MySensorsChildEntity, RemoteEntity):
     async def async_learn_command(self, **kwargs: Any) -> None:
         """Learn a command from a device."""
         set_req = self.gateway.const.SetReq
-        commands: list[str] | None = kwargs.get(ATTR_COMMAND)
+        commands: list[str] | None = kwargs.get(RemoteServiceArgument.COMMAND)
         if commands is None:
             raise ValueError("Command not specified for learn_command service")
 

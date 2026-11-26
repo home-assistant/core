@@ -3,11 +3,7 @@
 from enum import Enum, unique
 from typing import Any, override
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
-    CoverEntity,
-)
+from homeassistant.components.cover import CoverEntity, CoverServiceArgument
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -129,7 +125,7 @@ class MySensorsCover(MySensorsChildEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs.get(ATTR_POSITION)
+        position = kwargs.get(CoverServiceArgument.POSITION)
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_DIMMER, position, ack=1
@@ -156,7 +152,7 @@ class MySensorsCover(MySensorsChildEntity, CoverEntity):
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         set_req = self.gateway.const.SetReq
-        position = kwargs[ATTR_TILT_POSITION]
+        position = kwargs[CoverServiceArgument.TILT_POSITION]
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_TILT, position, ack=1
         )

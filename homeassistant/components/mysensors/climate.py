@@ -3,13 +3,12 @@
 from typing import Any, override
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -159,9 +158,9 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        temp = kwargs.get(ClimateServiceArgument.TEMPERATURE)
+        low = kwargs.get(ClimateServiceArgument.TARGET_TEMP_LOW)
+        high = kwargs.get(ClimateServiceArgument.TARGET_TEMP_HIGH)
         heat = self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
         cool = self._values.get(set_req.V_HVAC_SETPOINT_COOL)
         updates = []
