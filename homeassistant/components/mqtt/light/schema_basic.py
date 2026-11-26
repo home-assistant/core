@@ -7,6 +7,15 @@ from typing import Any, cast, override
 import probatio
 
 from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_EFFECT,
+    ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
+    ATTR_XY_COLOR,
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
     ENTITY_ID_FORMAT,
@@ -631,21 +640,17 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         if self._topic[CONF_STATE_TOPIC] is None and self._optimistic and last_state:
             self._attr_is_on = last_state.state == STATE_ON
-        restore_state(LightEntityStateAttribute.BRIGHTNESS)
-        restore_state(LightEntityStateAttribute.RGB_COLOR)
-        restore_state(
-            LightEntityStateAttribute.HS_COLOR, LightEntityStateAttribute.RGB_COLOR
-        )
-        restore_state(LightEntityStateAttribute.RGBW_COLOR)
-        restore_state(LightEntityStateAttribute.RGBWW_COLOR)
-        restore_state(LightEntityStateAttribute.COLOR_MODE)
-        restore_state(LightEntityStateAttribute.COLOR_TEMP_KELVIN)
-        restore_state(LightEntityStateAttribute.EFFECT)
-        restore_state(LightEntityStateAttribute.HS_COLOR)
-        restore_state(LightEntityStateAttribute.XY_COLOR)
-        restore_state(
-            LightEntityStateAttribute.HS_COLOR, LightEntityStateAttribute.XY_COLOR
-        )
+        restore_state(ATTR_BRIGHTNESS)
+        restore_state(ATTR_RGB_COLOR)
+        restore_state(ATTR_HS_COLOR, ATTR_RGB_COLOR)
+        restore_state(ATTR_RGBW_COLOR)
+        restore_state(ATTR_RGBWW_COLOR)
+        restore_state(ATTR_COLOR_MODE)
+        restore_state(ATTR_COLOR_TEMP_KELVIN)
+        restore_state(ATTR_EFFECT)
+        restore_state(ATTR_HS_COLOR)
+        restore_state(ATTR_XY_COLOR)
+        restore_state(ATTR_HS_COLOR, ATTR_XY_COLOR)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:  # noqa: C901
@@ -732,9 +737,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 {"hue": hs_color[0], "sat": hs_color[1]},
             )
             await publish(CONF_HS_COMMAND_TOPIC, device_hs_payload)
-            should_update |= set_optimistic(
-                LightEntityStateAttribute.HS_COLOR, hs_color, ColorMode.HS
-            )
+            should_update |= set_optimistic(ATTR_HS_COLOR, hs_color, ColorMode.HS)
 
         rgb: tuple[int, int, int] | None
         if (rgb := kwargs.get(LightServiceArgument.RGB_COLOR)) and self._topic[
@@ -743,9 +746,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             scaled = scale_rgbx(rgb)
             rgb_s = render_rgbx(scaled, CONF_RGB_COMMAND_TEMPLATE, ColorMode.RGB)
             await publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
-            should_update |= set_optimistic(
-                LightEntityStateAttribute.RGB_COLOR, rgb, ColorMode.RGB
-            )
+            should_update |= set_optimistic(ATTR_RGB_COLOR, rgb, ColorMode.RGB)
 
         rgbw: tuple[int, int, int, int] | None
         if (rgbw := kwargs.get(LightServiceArgument.RGBW_COLOR)) and self._topic[
@@ -754,9 +755,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             scaled = scale_rgbx(rgbw)
             rgbw_s = render_rgbx(scaled, CONF_RGBW_COMMAND_TEMPLATE, ColorMode.RGBW)
             await publish(CONF_RGBW_COMMAND_TOPIC, rgbw_s)
-            should_update |= set_optimistic(
-                LightEntityStateAttribute.RGBW_COLOR, rgbw, ColorMode.RGBW
-            )
+            should_update |= set_optimistic(ATTR_RGBW_COLOR, rgbw, ColorMode.RGBW)
 
         rgbww: tuple[int, int, int, int, int] | None
         if (rgbww := kwargs.get(LightServiceArgument.RGBWW_COLOR)) and self._topic[
@@ -765,9 +764,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             scaled = scale_rgbx(rgbww)
             rgbww_s = render_rgbx(scaled, CONF_RGBWW_COMMAND_TEMPLATE, ColorMode.RGBWW)
             await publish(CONF_RGBWW_COMMAND_TOPIC, rgbww_s)
-            should_update |= set_optimistic(
-                LightEntityStateAttribute.RGBWW_COLOR, rgbww, ColorMode.RGBWW
-            )
+            should_update |= set_optimistic(ATTR_RGBWW_COLOR, rgbww, ColorMode.RGBWW)
 
         xy_color: tuple[float, float] | None
         if (xy_color := kwargs.get(LightServiceArgument.XY_COLOR)) and self._topic[
@@ -778,9 +775,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 {"x": xy_color[0], "y": xy_color[1]},
             )
             await publish(CONF_XY_COMMAND_TOPIC, device_xy_payload)
-            should_update |= set_optimistic(
-                LightEntityStateAttribute.XY_COLOR, xy_color, ColorMode.XY
-            )
+            should_update |= set_optimistic(ATTR_XY_COLOR, xy_color, ColorMode.XY)
 
         if (
             LightServiceArgument.BRIGHTNESS in kwargs
@@ -797,8 +792,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             device_brightness_payload = command_tpl(device_brightness, None)
             await publish(CONF_BRIGHTNESS_COMMAND_TOPIC, device_brightness_payload)
             should_update |= set_optimistic(
-                LightEntityStateAttribute.BRIGHTNESS,
-                kwargs[LightServiceArgument.BRIGHTNESS],
+                ATTR_BRIGHTNESS, kwargs[LightServiceArgument.BRIGHTNESS]
             )
         elif (
             LightServiceArgument.BRIGHTNESS in kwargs
@@ -810,8 +804,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             rgb_s = render_rgbx(rgb_scaled, CONF_RGB_COMMAND_TEMPLATE, ColorMode.RGB)
             await publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
             should_update |= set_optimistic(
-                LightEntityStateAttribute.BRIGHTNESS,
-                kwargs[LightServiceArgument.BRIGHTNESS],
+                ATTR_BRIGHTNESS, kwargs[LightServiceArgument.BRIGHTNESS]
             )
         elif (
             LightServiceArgument.BRIGHTNESS in kwargs
@@ -823,8 +816,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             rgbw_s = render_rgbx(rgbw_b, CONF_RGBW_COMMAND_TEMPLATE, ColorMode.RGBW)
             await publish(CONF_RGBW_COMMAND_TOPIC, rgbw_s)
             should_update |= set_optimistic(
-                LightEntityStateAttribute.BRIGHTNESS,
-                kwargs[LightServiceArgument.BRIGHTNESS],
+                ATTR_BRIGHTNESS, kwargs[LightServiceArgument.BRIGHTNESS]
             )
         elif (
             LightServiceArgument.BRIGHTNESS in kwargs
@@ -836,8 +828,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             rgbww_s = render_rgbx(rgbww_b, CONF_RGBWW_COMMAND_TEMPLATE, ColorMode.RGBWW)
             await publish(CONF_RGBWW_COMMAND_TOPIC, rgbww_s)
             should_update |= set_optimistic(
-                LightEntityStateAttribute.BRIGHTNESS,
-                kwargs[LightServiceArgument.BRIGHTNESS],
+                ATTR_BRIGHTNESS, kwargs[LightServiceArgument.BRIGHTNESS]
             )
         if (
             LightServiceArgument.COLOR_TEMP_KELVIN in kwargs
@@ -854,7 +845,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             )
             await publish(CONF_COLOR_TEMP_COMMAND_TOPIC, color_temp)
             should_update |= set_optimistic(
-                LightEntityStateAttribute.COLOR_TEMP_KELVIN,
+                ATTR_COLOR_TEMP_KELVIN,
                 kwargs[LightServiceArgument.COLOR_TEMP_KELVIN],
                 ColorMode.COLOR_TEMP,
             )
@@ -869,8 +860,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 effect = eff_command_tpl(kwargs[LightServiceArgument.EFFECT], None)
                 await publish(CONF_EFFECT_COMMAND_TOPIC, effect)
                 should_update |= set_optimistic(
-                    LightEntityStateAttribute.EFFECT,
-                    kwargs[LightServiceArgument.EFFECT],
+                    ATTR_EFFECT, kwargs[LightServiceArgument.EFFECT]
                 )
 
         if (
@@ -882,7 +872,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             device_white_value = min(round(percent_white * white_scale), white_scale)
             await publish(CONF_WHITE_COMMAND_TOPIC, device_white_value)
             should_update |= set_optimistic(
-                LightEntityStateAttribute.BRIGHTNESS,
+                ATTR_BRIGHTNESS,
                 kwargs[LightServiceArgument.WHITE],
                 ColorMode.WHITE,
             )
