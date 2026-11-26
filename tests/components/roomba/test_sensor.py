@@ -113,6 +113,36 @@ async def test_robot_without_dock_has_no_dock_sensor(
 
 
 @pytest.mark.parametrize(
+    ("phase", "expected"),
+    [
+        pytest.param("run", "cleaning", id="run"),
+        pytest.param("hmMidMsn", "recharging", id="recharging"),
+        pytest.param("refill", "refilling", id="refill"),
+        pytest.param("", STATE_UNKNOWN, id="no_phase"),
+        pytest.param("someNewPhase", STATE_UNKNOWN, id="unknown_phase"),
+    ],
+)
+async def test_status(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roomba: AsyncMock,
+    phase: str,
+    expected: str,
+) -> None:
+    """Test the status sensor maps the mission phase to a translated state."""
+    mock_roomba.master_state["state"]["reported"]["cleanMissionStatus"] = {
+        "cycle": "clean",
+        "phase": phase,
+    }
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_roomba_status").state == expected
+
+
+@pytest.mark.parametrize(
     ("reported", "expected"),
     [
         pytest.param({"bbchg3": {"nLithChrg": 310}}, "310", id="lithium"),
