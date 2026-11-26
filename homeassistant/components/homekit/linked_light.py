@@ -27,6 +27,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CHAR_BRIGHTNESS,
@@ -84,12 +85,23 @@ class LinkedLight:
     def async_subscribe(self) -> CALLBACK_TYPE:
         """Follow the light entity, starting from its current state."""
         self._async_update_state(self._accessory.hass.states.get(self.entity_id))
-        return async_track_state_change_event(
+        unsubscribe = async_track_state_change_event(
             self._accessory.hass,
             [self.entity_id],
             self._async_update_event,
             job_type=HassJobType.Callback,
         )
+
+        @callback
+        def _async_unsubscribe() -> None:
+            """Stop following the light, and send the writes still pending."""
+            unsubscribe()
+            if self._event_timer:
+                self._event_timer()
+            if self._pending_events:
+                self._async_send_events(dt_util.utcnow())
+
+        return _async_unsubscribe
 
     @callback
     def _async_update_event(self, event: Event[EventStateChangedData]) -> None:

@@ -574,3 +574,45 @@ async def test_linked_light_writes_after_window_not_coalesced(
 
     assert len(call_turn_off) == 1
     assert len(call_turn_on) == 1
+
+
+async def test_linked_light_pending_write_sent_on_stop(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a write still in the coalesce window is sent when the accessory stops."""
+    _set_light(hass)
+    acc = await _create(
+        hass, hk_driver, Fan, FAN_ID, FAN_ATTRS, {CONF_LINKED_LIGHT: LIGHT_ID}
+    )
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    call_turn_off = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
+
+    _set_chars(hk_driver, acc, {acc.linked_light.char_on: 0})
+    acc.async_stop()
+    await hass.async_block_till_done()
+    assert len(call_turn_off) == 1
+
+    # Nothing is left to fire once the window has passed
+    await _wait_for_coalesce(hass)
+    assert len(call_turn_off) == 1
+    assert call_turn_on == []
+
+
+async def test_linked_light_stop_without_pending_write(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test stopping after the writes were sent calls no light service."""
+    _set_light(hass)
+    acc = await _create(
+        hass, hk_driver, Fan, FAN_ID, FAN_ATTRS, {CONF_LINKED_LIGHT: LIGHT_ID}
+    )
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    call_turn_off = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
+
+    _set_chars(hk_driver, acc, {acc.linked_light.char_on: 0})
+    await _wait_for_coalesce(hass)
+    acc.async_stop()
+    await _wait_for_coalesce(hass)
+
+    assert len(call_turn_off) == 1
+    assert call_turn_on == []
