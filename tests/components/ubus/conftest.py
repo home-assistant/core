@@ -1,15 +1,18 @@
 """Fixtures for the OpenWrt (ubus) integration tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.ubus.config_flow import HUB_TITLE
 from homeassistant.components.ubus.const import (
     CONF_DHCP_SOFTWARE,
     DEFAULT_DHCP_SOFTWARE,
     DOMAIN,
+    SUBENTRY_TYPE_ROUTER,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -18,7 +21,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
 
 MOCK_HOST = "192.168.1.1"
 MOCK_HOST_B = "192.168.1.2"
@@ -33,9 +35,22 @@ MOCK_CONFIG = {
     CONF_DHCP_SOFTWARE: DEFAULT_DHCP_SOFTWARE,
 }
 
+MOCK_HOST_CONFIG_B = {**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B}
+MOCK_HOST_CONFIG_C = {**MOCK_CONFIG, CONF_HOST: MOCK_HOST_C}
+
 MAC_PHONE = "aa:bb:cc:dd:ee:ff"
 MAC_LAPTOP = "11:22:33:44:55:66"
 MAC_GUEST = "99:88:77:66:55:44"
+
+
+def router_subentry_data(config: dict[str, Any]) -> dict[str, Any]:
+    """Return the subentry data for a router configuration."""
+    return {
+        "data": dict(config),
+        "subentry_type": SUBENTRY_TYPE_ROUTER,
+        "title": config[CONF_HOST],
+        "unique_id": config[CONF_HOST],
+    }
 
 
 @pytest.fixture
@@ -49,17 +64,34 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def dhcp_software() -> str:
-    """Return the DHCP software the mock config entry is created with."""
+    """Return the DHCP software the router subentry is created with."""
     return DEFAULT_DHCP_SOFTWARE
 
 
 @pytest.fixture
-def mock_config_entry(dhcp_software: str) -> MockConfigEntry:
-    """Return a mock config entry."""
+def hub_entry(dhcp_software: str) -> MockConfigEntry:
+    """Return a mock hub entry with a single router subentry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_DHCP_SOFTWARE: dhcp_software},
-        title=MOCK_HOST,
+        data={},
+        title=HUB_TITLE,
+        subentries_data=[
+            router_subentry_data({**MOCK_CONFIG, CONF_DHCP_SOFTWARE: dhcp_software})
+        ],
+    )
+
+
+@pytest.fixture
+def two_router_hub() -> MockConfigEntry:
+    """Return a mock hub entry with two router subentries."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=HUB_TITLE,
+        subentries_data=[
+            router_subentry_data(MOCK_CONFIG),
+            router_subentry_data(MOCK_HOST_CONFIG_B),
+        ],
     )
 
 
@@ -109,26 +141,6 @@ def mock_ubus() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-async def two_router_entries(
-    hass: HomeAssistant,
-    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
-) -> tuple[MockConfigEntry, MockConfigEntry]:
-    """Return two ubus config entries, set up one per mock router."""
-    _mock, _instances = mock_ubus_by_host
-    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
-    entry_b = MockConfigEntry(
-        domain=DOMAIN,
-        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
-        title=MOCK_HOST_B,
-    )
-    entry_a.add_to_hass(hass)
-    entry_b.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry_a.entry_id)
-    await hass.async_block_till_done()
-    return entry_a, entry_b
-
-
-@pytest.fixture
 def mock_ubus_by_host() -> Generator[tuple[MagicMock, dict[str, MagicMock]]]:
     """Mock the Ubus client with a separate client instance per router host."""
     instances: dict[str, MagicMock] = {}
@@ -163,4 +175,8 @@ def mock_ubus_by_host() -> Generator[tuple[MagicMock, dict[str, MagicMock]]]:
         ) as mock,
         patch("homeassistant.components.ubus.config_flow.Ubus", side_effect=_create),
     ):
+        # Pre-create the known hosts so tests can configure the clients
+        # before the entry is set up.
+        _create(f"http://{MOCK_HOST}/ubus", "root", "password", verify=True)
+        _create(f"http://{MOCK_HOST_B}/ubus", "root", "password", verify=True)
         yield mock, instances

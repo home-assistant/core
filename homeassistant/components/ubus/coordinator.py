@@ -8,7 +8,7 @@ from typing import NamedTuple, override
 from openwrt.ubus import Ubus
 
 from homeassistant.components.device_tracker.const import DEFAULT_CONSIDER_HOME
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -34,11 +35,15 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(seconds=30)
 LEASE_REREAD_INTERVAL = timedelta(minutes=10)
 
-type UbusConfigEntry = ConfigEntry[UbusDataUpdateCoordinator]
+type UbusConfigEntry = ConfigEntry[dict[str, "UbusDataUpdateCoordinator"]]
+
+
+class InvalidCredentialsError(UpdateFailed):
+    """The router rejected the configured credentials."""
 
 
 class ClientStamp(NamedTuple):
-    """The most recent sighting of a client by one config entry."""
+    """The most recent sighting of a client by one router."""
 
     last_seen: datetime
     hostname: str | None
@@ -46,80 +51,86 @@ class ClientStamp(NamedTuple):
 
 
 class UbusSharedState:
-    """State shared between the ubus config entries.
+    """State shared between the ubus hub and its router subentries.
 
     ``presence`` maps a normalized (lowercase) MAC address to the most
-    recent stamp of each config entry which has seen the client; ``owners``
-    maps a MAC address to the config entry that owns its device tracker
-    entity; and ``health`` maps a config entry id to the success of its
-    last update.
+    recent stamp of each router subentry which has seen the client; and
+    ``health`` maps a subentry id to the success of its last update.
 
-    A client is home while its most recent stamp from a healthy entry is
-    within ``DEFAULT_CONSIDER_HOME``. It is unavailable while no healthy
-    entry has stamped it, or while its freshest stamp is from an entry
-    which no longer updates and its most recent healthy stamp is older
-    than ``DEFAULT_CONSIDER_HOME``.
+    A client is home while its most recent stamp from a healthy subentry is
+    within ``consider_home``. It is unavailable while no healthy subentry
+    has stamped it, or while its freshest stamp is from a subentry which no
+    longer updates and its most recent healthy stamp is older than
+    ``consider_home``.
     """
 
     presence: dict[str, dict[str, ClientStamp]]
-    owners: dict[str, str]
     health: dict[str, bool]
+    consider_home: timedelta
+    subentry_signatures: dict[str, tuple]
+    reloading_entries: set[str]
     seq: int
     _last_signature: tuple | None
 
     def __init__(self) -> None:
         """Initialize the shared state."""
         self.presence = {}
-        self.owners = {}
         self.health = {}
+        self.consider_home = DEFAULT_CONSIDER_HOME
+        # The signature of each entry's subentries as its coordinators were
+        # built, so an update listener can detect subentry data changes.
+        self.subentry_signatures = {}
+        # The ids of the entries whose subentries changed and which are
+        # reloaded because of it; their surviving subentries keep their
+        # stamps across the reload.
+        self.reloading_entries = set()
         self.seq = 0
         self._last_signature = None
 
     @callback
-    def stamp(self, entry_id: str, clients: dict[str, str | None]) -> None:
-        """Record the clients this entry sees right now."""
+    def stamp(self, subentry_id: str, clients: dict[str, str | None]) -> None:
+        """Record the clients this subentry sees right now."""
         now = dt_util.utcnow()
         for mac, hostname in clients.items():
             self.seq += 1
-            self.presence.setdefault(mac.lower(), {})[entry_id] = ClientStamp(
+            self.presence.setdefault(mac.lower(), {})[subentry_id] = ClientStamp(
                 now, hostname, self.seq
             )
 
     def latest_stamp(self, mac: str) -> tuple[str, ClientStamp] | None:
-        """Return the reporting entry id and most recent stamp of a client.
+        """Return the reporting subentry id and most recent stamp of a client.
 
-        Only stamps from healthy entries count, so a client is present
-        while its most recent healthy stamp is within
-        ``DEFAULT_CONSIDER_HOME``.
+        Only stamps from healthy subentries count, so a client is present
+        while its most recent healthy stamp is within ``consider_home``.
         """
         stamps = self.presence.get(mac.lower())
         if not stamps:
             return None
-        entry_id = max(
-            (entry for entry in stamps if self.health.get(entry, True)),
-            key=lambda entry: stamps[entry].seq,
+        subentry_id = max(
+            (subentry for subentry in stamps if self.health.get(subentry, True)),
+            key=lambda subentry: stamps[subentry].seq,
             default=None,
         )
-        if entry_id is None:
+        if subentry_id is None:
             return None
-        stamp = stamps[entry_id]
-        if dt_util.utcnow() - stamp.last_seen > DEFAULT_CONSIDER_HOME:
+        stamp = stamps[subentry_id]
+        if dt_util.utcnow() - stamp.last_seen > self.consider_home:
             return None
-        return entry_id, stamp
+        return subentry_id, stamp
 
     def has_reportable_stamp(self, mac: str) -> bool:
         """Return whether the client's state is grounded on a reachable router.
 
         The client is reported while its freshest stamp is from a healthy
-        entry, or while a healthy entry has seen it within
-        ``DEFAULT_CONSIDER_HOME``. A fresher stamp on an entry which no
-        longer updates is unverifiable, so once no healthy entry has seen
-        the client recently, it is unavailable rather than not home.
+        subentry, or while a healthy subentry has seen it within
+        ``consider_home``. A fresher stamp on a subentry which no longer
+        updates is unverifiable, so once no healthy subentry has seen the
+        client recently, it is unavailable rather than not home.
         """
         stamps = self.presence.get(mac.lower())
         if not stamps:
             return False
-        latest = max(stamps, key=lambda entry: stamps[entry].seq)
+        latest = max(stamps, key=lambda subentry: stamps[subentry].seq)
         return self.health.get(latest, True) or self.latest_stamp(mac) is not None
 
     def known_hostname(self, mac: str) -> str | None:
@@ -134,17 +145,14 @@ class UbusSharedState:
         return max(stamps, key=lambda stamp: stamp.seq).hostname
 
     @callback
-    def remove_entry(self, entry_id: str) -> None:
-        """Drop the stamps, claims and health of a config entry."""
+    def remove_subentry(self, subentry_id: str) -> None:
+        """Drop the stamps and health of a router subentry."""
         for stamps in list(self.presence.items()):
-            if entry_id in stamps[1]:
-                del stamps[1][entry_id]
+            if subentry_id in stamps[1]:
+                del stamps[1][subentry_id]
                 if not stamps[1]:
                     del self.presence[stamps[0]]
-        self.owners = {
-            mac: owner for mac, owner in self.owners.items() if owner != entry_id
-        }
-        self.health.pop(entry_id, None)
+        self.health.pop(subentry_id, None)
 
     @callback
     def async_notify(self, hass: HomeAssistant) -> None:
@@ -161,8 +169,8 @@ class UbusSharedState:
             if (latest := self.latest_stamp(mac)) is None:
                 home.append((mac, None, None, False))
             else:
-                entry_id, stamp = latest
-                home.append((mac, entry_id, stamp.hostname, True))
+                subentry_id, stamp = latest
+                home.append((mac, subentry_id, stamp.hostname, True))
         return (tuple(sorted(home)), tuple(sorted(self.health.items())))
 
 
@@ -170,17 +178,29 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
     """Fetch the authorized wireless clients from an OpenWrt router over ubus."""
 
     config_entry: UbusConfigEntry
+    subentry: ConfigSubentry
 
-    def __init__(self, hass: HomeAssistant, config_entry: UbusConfigEntry) -> None:
-        """Initialize the coordinator from a config entry."""
-        self.host: str = config_entry.data[CONF_HOST]
-        self.dhcp_software: str = config_entry.data[CONF_DHCP_SOFTWARE]
-        scheme = "https" if config_entry.data.get(CONF_SSL, DEFAULT_SSL) else "http"
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: UbusConfigEntry,
+        subentry: ConfigSubentry,
+    ) -> None:
+        """Initialize the coordinator from a router subentry.
+
+        The hub entry is passed as the coordinator's config entry so that the
+        entry-level "disable polling" preference acts on every router.
+        """
+        data = subentry.data
+        self.subentry = subentry
+        self.host: str = data[CONF_HOST]
+        self.dhcp_software: str = data[CONF_DHCP_SOFTWARE]
+        scheme = "https" if data.get(CONF_SSL, DEFAULT_SSL) else "http"
         self.ubus = Ubus(
             f"{scheme}://{self.host}/ubus",
-            config_entry.data[CONF_USERNAME],
-            config_entry.data[CONF_PASSWORD],
-            verify=config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            data[CONF_USERNAME],
+            data[CONF_PASSWORD],
+            verify=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
         self._hostapd: list[str] = []
         self._leasefile: str | None = None
@@ -201,11 +221,11 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
     async def _async_update_data(self) -> dict[str, str | None]:
         """Return the currently connected devices keyed by MAC address."""
         clients = await self.hass.async_add_executor_job(self._update)
-        # A refresh may finish after the entry was unloaded; stamping its
-        # results would resurrect the clients released during the unload.
+        # A refresh may finish after the subentry was removed; stamping its
+        # results would resurrect the clients released during the removal.
         if not self._unloaded:
             shared: UbusSharedState = self.hass.data[DOMAIN]
-            shared.stamp(self.config_entry.entry_id, clients)
+            shared.stamp(self.subentry.subentry_id, clients)
         return clients
 
     @callback
@@ -215,15 +235,42 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         if self._unloaded:
             return
         shared: UbusSharedState = self.hass.data[DOMAIN]
-        shared.health[self.config_entry.entry_id] = self.last_update_success
+        shared.health[self.subentry.subentry_id] = self.last_update_success
+        self._async_manage_credentials_issue()
         shared.async_notify(self.hass)
+
+    @callback
+    def _async_manage_credentials_issue(self) -> None:
+        """Keep a repair issue open while the credentials keep failing.
+
+        There is no subentry reauth, so persistent invalid credentials are
+        surfaced as a repair right away instead of prompting for them.
+        """
+        issue_id = f"invalid_credentials_{self.subentry.subentry_id}"
+        if self.last_update_success:
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            return
+        if not isinstance(self.last_exception, InvalidCredentialsError):
+            return
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            config_entry_id=self.config_entry.entry_id,
+            config_subentry_id=self.subentry.subentry_id,
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="persistent_invalid_credentials",
+            translation_placeholders={"host": self.host},
+        )
 
     @callback
     def async_unload(self) -> None:
         """Drop this router's stamps and signal the remaining trackers."""
         self._unloaded = True
         shared: UbusSharedState = self.hass.data[DOMAIN]
-        shared.remove_entry(self.config_entry.entry_id)
+        shared.remove_subentry(self.subentry.subentry_id)
         shared.async_notify(self.hass)
 
     def _update(self) -> dict[str, str | None]:
@@ -249,7 +296,9 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
             # fails, because it subscripts a None response.
             raise UpdateFailed(f"Error connecting to ubus at {self.host}") from err
         if session_id is None:
-            raise UpdateFailed(f"Invalid credentials for ubus at {self.host}")
+            raise InvalidCredentialsError(
+                f"Invalid credentials for ubus at {self.host}"
+            )
 
     def _read_clients(self) -> dict[str, str | None]:
         """Return authorized clients mapped to their DHCP hostname.

@@ -2,6 +2,7 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from functools import partial
+import logging
 from typing import TYPE_CHECKING, override
 
 import probatio
@@ -36,7 +37,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_DHCP_SOFTWARE,
@@ -47,7 +47,9 @@ from .const import (
     DOMAIN,
     SIGNAL_CLIENTS_UPDATED,
 )
-from .coordinator import UbusConfigEntry, UbusDataUpdateCoordinator, UbusSharedState
+from .coordinator import UbusConfigEntry, UbusSharedState
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -116,139 +118,10 @@ async def async_setup_scanner(
 
 
 @callback
-def _async_rehome_devices(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    config_entry_id: str,
-    mac: str,
-) -> None:
-    """Move a device left behind for this client, avoiding a duplicate."""
-    connection = (dr.CONNECTION_NETWORK_MAC, mac)
-    if device_registry.async_get_device_by_connection(connection, config_entry_id):
-        return
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if device := device_registry.async_get_device_by_connection(
-            connection, entry.entry_id
-        ):
-            device_registry.async_update_device(
-                device.id, new_config_entry_id=config_entry_id
-            )
-            return
-
-
-@callback
-def _async_release_removed_claim(
-    entity_registry: er.EntityRegistry,
-    entity_id: str,
-    tracked: set[str],
-    shared: UbusSharedState,
-) -> None:
-    """Release the claim on the MAC whose tracker was removed from the registry."""
-    if not entity_id.startswith(f"{DEVICE_TRACKER_DOMAIN}."):
-        return
-    for mac in list(tracked):
-        deleted = entity_registry.deleted_entities.get(
-            (DEVICE_TRACKER_DOMAIN, DOMAIN, mac)
-        )
-        if deleted is not None and deleted.entity_id == entity_id:
-            # A stale claim would block another entry from recreating the
-            # tracker when the client reconnects to a different router.
-            tracked.discard(mac)
-            shared.owners.pop(mac, None)
-
-
-def _can_take_over_tracker(
-    hass: HomeAssistant,
-    shared: UbusSharedState,
-    mac: str,
-    owner_entry_id: str | None,
-) -> bool:
-    """Check whether a tracker can be taken over from its owner.
-
-    A loaded owner keeps its claim, so only a tracker whose owner has no
-    live claim on the MAC and isn't loading (e.g. it is offline and its
-    platform never loaded, as after a restart) can be taken over.
-    """
-    if shared.owners.get(mac) is not None:
-        return False
-    if owner_entry_id is None:
-        return True
-    owner_entry = hass.config_entries.async_get_entry(owner_entry_id)
-    return owner_entry is None or owner_entry.state not in (
-        ConfigEntryState.LOADED,
-        ConfigEntryState.SETUP_IN_PROGRESS,
-    )
-
-
-@callback
-def _async_rename_devices(
-    shared: UbusSharedState,
-    device_registry: dr.DeviceRegistry,
-    config_entry_id: str,
-) -> None:
-    """Rename devices when a client hostname is seen.
-
-    Rename here, as trackers are disabled by default and get no updates.
-    """
-    for mac in shared.presence:
-        if (stamp := shared.latest_stamp(mac)) is None:
-            continue
-        if (
-            (hostname := stamp[1].hostname)
-            and (
-                device_entry := device_registry.async_get_device_by_connection(
-                    (dr.CONNECTION_NETWORK_MAC, mac), config_entry_id
-                )
-            )
-            and device_entry.name != hostname
-        ):
-            device_registry.async_update_device(device_entry.id, name=hostname)
-
-
-@callback
-def _async_merge_device(
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    entry: er.RegistryEntry,
-    survivor: er.RegistryEntry,
-) -> None:
-    """Merge a duplicate tracker's device into the survivor's device.
-
-    Left behind, the duplicate's device is where a later handoff
-    attaches the survivor, and deleting the survivor's router then
-    drops the survivor's own device, with its area, name and
-    automation references.
-    """
-    dup_device = device_registry.async_get(entry.device_id) if entry.device_id else None
-    survivor_device = (
-        device_registry.async_get(survivor.device_id) if survivor.device_id else None
-    )
-    if dup_device is None or dup_device is survivor_device:
-        return
-    if survivor_device is None:
-        # The survivor has no device; keep the duplicate's, moved to the
-        # survivor's config entry.
-        if survivor.config_entry_id is None:
-            return
-        device_registry.async_update_device(
-            dup_device.id, new_config_entry_id=survivor.config_entry_id
-        )
-        entity_registry.async_update_entity(survivor.entity_id, device_id=dup_device.id)
-        return
-    # The device removal below deletes the registry entries the entry still
-    # holds on it, so the disabled entities must be moved along too.
-    for device_entry in er.async_entries_for_device(
-        entity_registry, dup_device.id, include_disabled_entities=True
-    ):
-        entity_registry.async_update_entity(
-            device_entry.entity_id, device_id=survivor_device.id
-        )
-    device_registry.async_remove_device(dup_device.id)
-
-
-@callback
 def _async_migrate_unique_ids(
-    device_registry: dr.DeviceRegistry, entity_registry: er.EntityRegistry
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_id: str,
 ) -> None:
     """Normalize pre-existing tracker unique ids to lowercase MACs.
 
@@ -258,7 +131,9 @@ def _async_migrate_unique_ids(
     devices for the same client are merged into the survivor's device.
     """
     by_mac: dict[str, list[er.RegistryEntry]] = {}
-    for registry_entry in entity_registry.entities.values():
+    for registry_entry in er.async_entries_for_config_entry(
+        entity_registry, config_entry_id
+    ):
         if (
             registry_entry.domain == DEVICE_TRACKER_DOMAIN
             and registry_entry.platform == DOMAIN
@@ -294,101 +169,162 @@ def _async_migrate_unique_ids(
             )
 
 
+@callback
+def _async_merge_device(
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entry: er.RegistryEntry,
+    survivor: er.RegistryEntry,
+) -> None:
+    """Merge a duplicate tracker's device into the survivor's device.
+
+    Left behind, the duplicate's device is where a later re-parent
+    attaches the survivor, and deleting the survivor's device then
+    drops the survivor's own device, with its area, name and
+    automation references.
+    """
+    dup_device = device_registry.async_get(entry.device_id) if entry.device_id else None
+    survivor_device = (
+        device_registry.async_get(survivor.device_id) if survivor.device_id else None
+    )
+    if dup_device is None or dup_device is survivor_device:
+        return
+    if survivor_device is None:
+        # The survivor has no device; keep the duplicate's, moved to the
+        # survivor's config entry.
+        if survivor.config_entry_id is None:
+            return
+        device_registry.async_update_device(
+            dup_device.id, new_config_entry_id=survivor.config_entry_id
+        )
+        entity_registry.async_update_entity(survivor.entity_id, device_id=dup_device.id)
+        return
+    # The device removal below deletes the registry entries the entry still
+    # holds on it, so the disabled entities must be moved along too.
+    for device_entry in er.async_entries_for_device(
+        entity_registry, dup_device.id, include_disabled_entities=True
+    ):
+        entity_registry.async_update_entity(
+            device_entry.entity_id, device_id=survivor_device.id
+        )
+    device_registry.async_remove_device(dup_device.id)
+
+
+@callback
+def _async_rename_devices(
+    shared: UbusSharedState,
+    device_registry: dr.DeviceRegistry,
+    config_entry_id: str,
+) -> None:
+    """Rename devices when a client hostname is seen.
+
+    Rename here, as trackers are disabled by default and get no updates.
+    """
+    for mac in shared.presence:
+        if (stamp := shared.latest_stamp(mac)) is None:
+            continue
+        if (
+            (hostname := stamp[1].hostname)
+            and (
+                device_entry := device_registry.async_get_device_by_connection(
+                    (dr.CONNECTION_NETWORK_MAC, mac), config_entry_id
+                )
+            )
+            and device_entry.name != hostname
+        ):
+            device_registry.async_update_device(device_entry.id, name=hostname)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UbusConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the device tracker for a ubus config entry."""
-    coordinator = config_entry.runtime_data
+    """Set up the device tracker for the ubus hub."""
     tracked: set[str] = set()
 
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     shared: UbusSharedState = hass.data[DOMAIN]
 
-    _async_migrate_unique_ids(device_registry, entity_registry)
-
-    @callback
-    def _async_take_over(mac: str, entity_id: str, previous_owner: str | None) -> None:
-        """Re-home a tracker whose previous owner no longer hosts it."""
-        entity_registry.async_update_entity(
-            entity_id, config_entry_id=config_entry.entry_id
-        )
-        if previous_owner is None:
-            return
-        # Move the previous owner's device, so this entry's tracker reuses it
-        # instead of creating a duplicate for the same client.
-        device = device_registry.async_get_device_by_connection(
-            (dr.CONNECTION_NETWORK_MAC, mac), previous_owner
-        )
-        if device is not None:
-            target_device = device_registry.async_get_device_by_connection(
-                (dr.CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
-            )
-            if target_device is not None:
-                entity_registry.async_update_entity(
-                    entity_id, device_id=target_device.id
-                )
-            else:
-                device_registry.async_update_device(
-                    device.id, new_config_entry_id=config_entry.entry_id
-                )
+    _async_migrate_unique_ids(device_registry, entity_registry, config_entry.entry_id)
 
     @callback
     def _async_update_devices() -> None:
-        # Track every client this router sees, plus every tracker any ubus
-        # entry holds in the registry: this entry keeps reporting clients
-        # connected to another router, and adopts trackers left behind by an
-        # entry which no longer hosts them.
-        tracker_macs = {
+        # The entry's signal listeners disconnect only after
+        # async_unload_entry returns, so its own coordinators' unload signal
+        # still reaches it: stay out of the way.
+        if config_entry.state is ConfigEntryState.UNLOAD_IN_PROGRESS:
+            return
+        seen: set[str] = set()
+        for coordinator in config_entry.runtime_data.values():
+            # A failed poll sees nothing new.
+            if coordinator.last_update_success:
+                seen.update(coordinator.data)
+        # Track every client the routers see, plus every tracker this entry
+        # holds in the registry: the latter keeps trackers for clients no
+        # router currently sees alive as unavailable entities.
+        owned = {
             registry_entry.unique_id
-            for entry in hass.config_entries.async_entries(DOMAIN)
             for registry_entry in er.async_entries_for_config_entry(
-                entity_registry, entry.entry_id
+                entity_registry, config_entry.entry_id
             )
             if registry_entry.domain == DEVICE_TRACKER_DOMAIN
             and registry_entry.platform == DOMAIN
             and registry_entry.unique_id is not None
         }
-        # A failed poll sees nothing new, but trackers handed over to this
-        # entry must still be recreated while its own polls fail.
-        seen: set[str] = (
-            set(coordinator.data) if coordinator.last_update_success else set()
-        )
-        new_macs = [mac for mac in seen | tracker_macs if mac not in tracked]
-        claimed: list[str] = []
+        new_macs = [mac for mac in seen | owned if mac not in tracked]
         for mac in new_macs:
-            # One tracker per MAC: an entry only creates a tracker it owns, so
-            # another entry's tracker for the same MAC is left alone, unless
-            # that entry no longer hosts it.
+            # The registry entry lookup only guards the re-parent: the
+            # entity is added either way, as a registry entry alone does
+            # not produce a state.
             entity_id = entity_registry.async_get_entity_id(
                 DEVICE_TRACKER_DOMAIN, DOMAIN, mac
             )
-            if entity_id is not None:
-                registry_entry = entity_registry.async_get(entity_id)
-                if (
-                    registry_entry is not None
-                    and registry_entry.config_entry_id != config_entry.entry_id
-                ):
-                    if not _can_take_over_tracker(
-                        hass, shared, mac, registry_entry.config_entry_id
-                    ):
-                        continue
-                    _async_take_over(mac, entity_id, registry_entry.config_entry_id)
-            # The claim is made before adding the entity so two entries which
-            # see the same client at setup time don't both create it.
             if (
-                shared.owners.setdefault(mac, config_entry.entry_id)
-                != config_entry.entry_id
+                entity_id is not None
+                and (registry_entry := entity_registry.async_get(entity_id)) is not None
+                and registry_entry.config_entry_id != config_entry.entry_id
             ):
-                continue
-            if entity_id is None:
-                _async_rehome_devices(hass, device_registry, config_entry.entry_id, mac)
+                # Invariant violation after migration; re-parent the
+                # tracker instead of duplicating it.
+                previous_owner = registry_entry.config_entry_id
+                _LOGGER.warning(
+                    "Re-parenting tracker for %s from entry %s to %s",
+                    mac,
+                    previous_owner,
+                    config_entry.entry_id,
+                )
+                entity_registry.async_update_entity(
+                    entity_id, config_entry_id=config_entry.entry_id
+                )
+                if (
+                    previous_owner is not None
+                    and (
+                        device := device_registry.async_get_device_by_connection(
+                            (dr.CONNECTION_NETWORK_MAC, mac), previous_owner
+                        )
+                    )
+                    is not None
+                ):
+                    target_device = device_registry.async_get_device_by_connection(
+                        (dr.CONNECTION_NETWORK_MAC, mac),
+                        config_entry.entry_id,
+                    )
+                    if target_device is not None:
+                        entity_registry.async_update_entity(
+                            entity_id, device_id=target_device.id
+                        )
+                    else:
+                        device_registry.async_update_device(
+                            device.id,
+                            new_config_entry_id=config_entry.entry_id,
+                        )
             tracked.add(mac)
-            claimed.append(mac)
-        if claimed:
-            async_add_entities(UbusScannerEntity(coordinator, mac) for mac in claimed)
+        if new_macs:
+            async_add_entities(
+                UbusScannerEntity(hass, config_entry, mac) for mac in new_macs
+            )
 
     @callback
     def _async_device_removed(
@@ -404,10 +340,6 @@ async def async_setup_entry(
             if (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac)) in connections
         }
         tracked.difference_update(removed)
-        for mac in removed:
-            # Release the claim so another entry can create the tracker if
-            # the client reconnects to a different router.
-            shared.owners.pop(mac, None)
 
     @callback
     def _is_own_device_removed(event_data: dr.EventDeviceRegistryUpdatedData) -> bool:
@@ -424,17 +356,23 @@ async def async_setup_entry(
     def _async_entity_removed(
         event: Event[er.EventEntityRegistryUpdatedData],
     ) -> None:
-        """Track a client again when its registry entry is removed."""
+        """Track a client again when its tracker registry entry is removed."""
         if TYPE_CHECKING:
             assert event.data["action"] == "remove"
-        _async_release_removed_claim(
-            entity_registry, event.data["entity_id"], tracked, shared
-        )
+        entity_id = event.data["entity_id"]
+        for mac in list(tracked):
+            deleted = entity_registry.deleted_entities.get(
+                (DEVICE_TRACKER_DOMAIN, DOMAIN, mac)
+            )
+            if deleted is not None and deleted.entity_id == entity_id:
+                tracked.discard(mac)
+                break
+        else:
+            return
         # Defer rediscovery until the old entity's removal has released its
         # entity ID; otherwise the recreated tracker gets a suffixed one.
         hass.loop.call_soon(_async_update_devices)
 
-    config_entry.async_on_unload(coordinator.async_add_listener(_async_update_devices))
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
@@ -472,18 +410,31 @@ async def async_setup_entry(
     _async_rename_devices(shared, device_registry, config_entry.entry_id)
 
 
-class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEntity):
+class UbusScannerEntity(ScannerEntity):
     """Representation of a device connected to an OpenWrt router."""
 
-    def __init__(self, coordinator: UbusDataUpdateCoordinator, mac: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: UbusConfigEntry, mac: str
+    ) -> None:
         """Initialize the tracked device."""
-        super().__init__(coordinator)
+        super().__init__()
+        self._config_entry = config_entry
         self._mac = mac
         connection = (dr.CONNECTION_NETWORK_MAC, mac)
-        if name := coordinator.data.get(mac):
-            self._attr_device_info = dr.DeviceInfo(connections={connection}, name=name)
-        elif dr.async_get(coordinator.hass).async_get_device_by_connection(
-            connection, coordinator.config_entry.entry_id
+        shared: UbusSharedState = hass.data[DOMAIN]
+        hostname: str | None = None
+        if (stamp := shared.latest_stamp(mac)) is not None:
+            hostname = stamp[1].hostname
+        if not hostname:
+            # The newest stamp may have no lease; fall back to the hostname
+            # the client was known by before.
+            hostname = shared.known_hostname(mac)
+        if hostname:
+            self._attr_device_info = dr.DeviceInfo(
+                connections={connection}, name=hostname
+            )
+        elif dr.async_get(hass).async_get_device_by_connection(
+            connection, config_entry.entry_id
         ):
             # Without a hostname, keep the name of an existing device.
             self._attr_device_info = dr.DeviceInfo(connections={connection})
@@ -528,14 +479,15 @@ class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEnt
         shared: UbusSharedState = self.hass.data[DOMAIN]
         if (stamp := shared.latest_stamp(self._mac)) is None:
             return None
-        reporter = self.hass.config_entries.async_get_entry(stamp[0])
-        if reporter is None:
+        subentry = self._config_entry.subentries.get(stamp[0])
+        if subentry is None:
+            # The reporter's subentry is replaced while the entry reloads.
             return None
-        return {"source": reporter.data[CONF_HOST]}
+        return {"source": subentry.data[CONF_HOST]}
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Subscribe to client list updates from the other routers."""
+        """Subscribe to client list updates from the routers."""
         await super().async_added_to_hass()
         self.async_on_remove(
             async_dispatcher_connect(
@@ -545,5 +497,5 @@ class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEnt
 
     @callback
     def _async_clients_updated(self) -> None:
-        """Write the state when another router's client list changes."""
+        """Write the state when the client list changes."""
         self.async_write_ha_state()
