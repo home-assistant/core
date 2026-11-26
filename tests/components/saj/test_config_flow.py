@@ -6,25 +6,13 @@ import aiosaj
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.saj.const import CONNECTION_TYPES, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.components.saj.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_SERIAL_NUMBER, MOCK_USER_INPUT_ETHERNET, MOCK_USER_INPUT_WIFI
-
-IMPORT_DATA_ETHERNET = {
-    CONF_HOST: "192.168.1.88",
-    CONF_TYPE: CONNECTION_TYPES[0],
-}
-
-IMPORT_DATA_WIFI = {
-    CONF_HOST: "192.168.1.88",
-    CONF_TYPE: CONNECTION_TYPES[1],
-    CONF_USERNAME: "u",
-    CONF_PASSWORD: "p",
-}
 
 
 async def test_form_ethernet(
@@ -194,16 +182,17 @@ async def test_form_wifi_probe_fails_shows_user_error(
 
 
 @pytest.mark.parametrize(
-    ("exception", "error"),
+    ("side_effect", "error"),
     [
         (aiosaj.UnexpectedResponseException("Connection failed"), "cannot_connect"),
         (aiosaj.UnauthorizedException("Auth failed"), "cannot_connect"),
         (Exception("Unknown error"), "cannot_connect"),
+        ([False], "cannot_connect"),
     ],
 )
 async def test_form_exceptions(
     hass: HomeAssistant,
-    exception: Exception,
+    side_effect: Exception | list[bool],
     error: str,
     mock_aiosaj_saj: MagicMock,
 ) -> None:
@@ -212,7 +201,7 @@ async def test_form_exceptions(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_aiosaj_saj.read.side_effect = exception
+    mock_aiosaj_saj.read.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_USER_INPUT_ETHERNET,
@@ -250,123 +239,6 @@ async def test_form_already_configured(
         user_input=MOCK_USER_INPUT_ETHERNET,
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
-
-
-async def test_import_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_aiosaj_saj: MagicMock
-) -> None:
-    """Test YAML import creates a config entry."""
-    data = {
-        CONF_HOST: "192.168.1.88",
-        CONF_TYPE: CONNECTION_TYPES[0],
-    }
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=data,
-    )
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "SAJ Solar Inverter"
-    assert result.get("data") == {
-        **data,
-        CONF_USERNAME: None,
-        CONF_PASSWORD: None,
-    }
-    result_entry = result.get("result")
-    assert result_entry is not None
-    assert result_entry.unique_id == MOCK_SERIAL_NUMBER
-
-
-@pytest.mark.parametrize(
-    ("import_data", "exception", "abort_reason"),
-    [
-        pytest.param(
-            IMPORT_DATA_ETHERNET,
-            aiosaj.UnexpectedResponseException("bad response"),
-            "cannot_connect",
-            id="unexpected_response",
-        ),
-        pytest.param(
-            IMPORT_DATA_ETHERNET,
-            aiosaj.UnauthorizedException("auth failed"),
-            "cannot_connect",
-            id="unauthorized_ethernet",
-        ),
-        pytest.param(
-            IMPORT_DATA_ETHERNET,
-            Exception("Unknown error"),
-            "cannot_connect",
-            id="unexpected_error",
-        ),
-        pytest.param(
-            IMPORT_DATA_WIFI,
-            aiosaj.UnauthorizedException("auth failed"),
-            "invalid_auth",
-            id="unauthorized_wifi",
-        ),
-    ],
-)
-async def test_import_aborts(
-    hass: HomeAssistant,
-    mock_aiosaj_saj: MagicMock,
-    import_data: dict[str, str],
-    exception: Exception,
-    abort_reason: str,
-) -> None:
-    """Test YAML import aborts for validation failures."""
-    mock_aiosaj_saj.read.side_effect = exception
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=import_data,
-    )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == abort_reason
-
-
-async def test_import_aborts_read_failed(
-    hass: HomeAssistant, mock_aiosaj_saj: MagicMock
-) -> None:
-    """Test YAML import aborts when the inverter read returns false."""
-    mock_aiosaj_saj.read.return_value = False
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=IMPORT_DATA_ETHERNET,
-    )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "cannot_connect"
-
-
-async def test_import_aborts_missing_serial(
-    hass: HomeAssistant, mock_aiosaj_saj: MagicMock
-) -> None:
-    """Test YAML import aborts when the device does not return a serial number."""
-    mock_aiosaj_saj.serialnumber = aiosaj.UNKNOWN_SERIAL
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=IMPORT_DATA_ETHERNET,
-    )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "cannot_connect"
-
-
-async def test_import_already_configured_aborts(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_aiosaj_saj: MagicMock,
-) -> None:
-    """Test YAML import aborts when the device is already configured."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=IMPORT_DATA_ETHERNET,
-    )
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 

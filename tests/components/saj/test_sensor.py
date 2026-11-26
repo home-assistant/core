@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-import aiosaj
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -12,13 +11,11 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.saj.const import DOMAIN
 from homeassistant.components.saj.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
@@ -63,44 +60,6 @@ async def test_sensor_update_failure(
     state = hass.states.get("sensor.saj_current_power")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-
-async def test_yaml_import_creates_deprecated_issue(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_aiosaj_saj: MagicMock,
-) -> None:
-    """YAML platform triggers import; successful import creates remove-YAML issue."""
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {"sensor": {"platform": DOMAIN, CONF_HOST: "192.168.1.10"}},
-    )
-    await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
-    assert issue is not None
-    assert issue.issue_domain == DOMAIN
-
-
-async def test_yaml_import_failure_creates_domain_issue(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_aiosaj_saj: MagicMock,
-) -> None:
-    """YAML import failure creates an integration issue explaining the error."""
-    mock_aiosaj_saj.read.side_effect = aiosaj.UnexpectedResponseException("bad")
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {"sensor": {"platform": DOMAIN, CONF_HOST: "192.168.1.10"}},
-    )
-    await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
-    )
-    assert issue is not None
 
 
 @pytest.mark.usefixtures("mock_aiosaj_saj")

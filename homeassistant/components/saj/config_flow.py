@@ -8,15 +8,8 @@ import aiosaj
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_TYPE,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONNECTION_TYPES, DOMAIN, INTEGRATION_TITLE
 
@@ -42,38 +35,6 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
         self._connection_type: str | None = None
         self._pending_username: str = ""
         self._pending_password: str = ""
-
-    async def async_step_import(self, import_config: ConfigType) -> ConfigFlowResult:
-        """Import a config entry from configuration.yaml (sensor platform)."""
-        _LOGGER.warning("Importing SAJ from YAML is deprecated and will be removed")
-        entry_input: dict[str, Any] = {
-            CONF_HOST: import_config[CONF_HOST],
-            CONF_TYPE: import_config.get(CONF_TYPE, CONNECTION_TYPES[0]),
-            CONF_USERNAME: import_config.get(CONF_USERNAME),
-            CONF_PASSWORD: import_config.get(CONF_PASSWORD),
-        }
-        try:
-            serial_number = await self._async_validate_input(entry_input)
-        except InvalidAuth:
-            return self.async_abort(reason="invalid_auth")
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception("Unexpected error importing SAJ from YAML")
-            return self.async_abort(reason="unknown")
-
-        data = {
-            CONF_HOST: entry_input[CONF_HOST],
-            CONF_TYPE: entry_input[CONF_TYPE],
-            CONF_USERNAME: entry_input.get(CONF_USERNAME),
-            CONF_PASSWORD: entry_input.get(CONF_PASSWORD),
-        }
-        title = (import_config.get(CONF_NAME) or "").strip() or INTEGRATION_TITLE
-
-        await self.async_set_unique_id(serial_number)
-        self._abort_if_unique_id_configured(updates=data)
-
-        return self.async_create_entry(title=title, data=data)
 
     async def _async_validate_input(self, user_input: dict[str, Any]) -> str:
         """Validate the user input allows us to connect.

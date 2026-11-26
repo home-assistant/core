@@ -3,38 +3,24 @@
 from typing import override
 
 import aiosaj
-import probatio
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_TYPE,
-    CONF_USERNAME,
     UnitOfEnergy,
     UnitOfMass,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONNECTION_TYPES, DOMAIN, INTEGRATION_TITLE
 from .coordinator import SAJConfigEntry, SAJDataUpdateCoordinator
 
 SAJ_UNIT_MAPPINGS = {
@@ -45,18 +31,6 @@ SAJ_UNIT_MAPPINGS = {
     "W": UnitOfPower.WATT,
     "°C": UnitOfTemperature.CELSIUS,
 }
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_NAME): cv.string,
-        probatio.Optional(CONF_TYPE, default=CONNECTION_TYPES[0]): probatio.In(
-            CONNECTION_TYPES
-        ),
-        probatio.Inclusive(CONF_USERNAME, "credentials"): cv.string,
-        probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "credentials"): cv.string,
-    }
-)
 
 
 async def async_setup_entry(
@@ -73,55 +47,6 @@ async def async_setup_entry(
         SAJsensor(coordinator, entry.unique_id, sensor)
         for sensor in coordinator.sensor_def
         if sensor.enabled and sensor.unit in SAJ_UNIT_MAPPINGS
-    )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Migrate YAML sensor platform configuration to a config entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=dict(config),
-    )
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
-    ):
-        reason = result.get("reason", "unknown")
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{reason}",
-            breaks_in_ha_version="2027.1.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{reason}",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": INTEGRATION_TITLE,
-            },
-        )
-        return
-
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2027.1.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": INTEGRATION_TITLE,
-        },
     )
 
 
