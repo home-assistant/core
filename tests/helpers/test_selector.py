@@ -385,6 +385,29 @@ def test_device_selector_schema_error(schema) -> None:
             ("light.abc123", "blah.blah", FAKE_UUID),
             (None,),
         ),
+        (
+            {
+                "filter": [
+                    {"capability": {"event_types": ["single_press", "press_start"]}},
+                ]
+            },
+            ("event.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {
+                        "capability": {
+                            "event_types": [["long_press_start", "long_press_end"]],
+                            "hvac_modes": ["heat", ["cool", "dry"]],
+                        }
+                    },
+                ]
+            },
+            ("event.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
     ],
 )
 def test_entity_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -411,6 +434,14 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"unit_of_measurement": ["currywurst", "bratwurst"]},
         # Invalid unit_of_measurement
         {"filter": [{"unit_of_measurement": 42}]},
+        # capability should be used under the filter key
+        {"capability": {"event_types": ["single_press"]}},
+        # capability should map capability names to values
+        {"filter": [{"capability": ["single_press"]}]},
+        # Capability values should be a list
+        {"filter": [{"capability": {"event_types": "single_press"}}]},
+        # Invalid capability value
+        {"filter": [{"capability": {"event_types": [42]}}]},
         # Device properties must be grouped under the device key
         {"filter": [{"manufacturer": "mock-manuf"}]},
         {"filter": [{"model": "mock-model"}]},

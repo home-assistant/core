@@ -14,6 +14,7 @@ from homeassistant.helpers.condition import (
 )
 from homeassistant.helpers.entity import (
     entity_sources,
+    get_capability,
     get_device_class,
     get_supported_features,
 )
@@ -56,6 +57,7 @@ class _EntityFilter:
     domains: set[str]
     device_classes: set[str]
     supported_features: set[int]
+    capabilities: dict[str, list[frozenset[str]]]
 
     def matches(
         self, hass: HomeAssistant, entity_id: str, domain: str, integration: str
@@ -79,6 +81,15 @@ class _EntityFilter:
                 feature & entity_supported_features == feature
                 for feature in self.supported_features
             ):
+                return False
+
+        for capability, any_of in self.capabilities.items():
+            entity_values = get_capability(hass, entity_id, capability)
+            if entity_values is None:
+                return False
+            if not isinstance(entity_values, (list, tuple, set, frozenset)):
+                entity_values = [entity_values]
+            if not any(all_of.issubset(entity_values) for all_of in any_of):
                 return False
 
         return True
@@ -107,6 +118,12 @@ class _AutomationComponentLookupData:
                 supported_features=set(
                     entity_filter_config.get("supported_features", [])
                 ),
+                capabilities={
+                    capability: [frozenset(all_of) for all_of in any_of]
+                    for capability, any_of in entity_filter_config.get(
+                        "capability", {}
+                    ).items()
+                },
             )
             filters.append(entity_filter)
 

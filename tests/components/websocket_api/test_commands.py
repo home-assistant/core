@@ -5534,6 +5534,149 @@ async def test_get_triggers_conditions_for_target(
         )
 
 
+@patch("annotatedyaml.loader.load_yaml")
+@pytest.mark.parametrize("automation_component", ["trigger", "condition"])
+@pytest.mark.parametrize(
+    ("capability_attributes", "expected"),
+    [
+        pytest.param({}, ["component1.match_all"], id="no_capabilities"),
+        pytest.param(
+            {"event_types": None}, ["component1.match_all"], id="capability_is_none"
+        ),
+        pytest.param(
+            {"event_types": ["other"]}, ["component1.match_all"], id="other_value"
+        ),
+        pytest.param(
+            {"event_types": ["press_start"]},
+            ["component1.any_value", "component1.match_all"],
+            id="one_of_any",
+        ),
+        pytest.param(
+            {"event_types": ["long_press_start"]},
+            ["component1.match_all"],
+            id="one_of_all",
+        ),
+        pytest.param(
+            {"event_types": ["long_press_start", "long_press_end", "other"]},
+            ["component1.all_values", "component1.match_all"],
+            id="all_of_all",
+        ),
+        pytest.param(
+            {"mode": "auto"},
+            ["component1.match_all", "component1.scalar_value"],
+            id="scalar",
+        ),
+        pytest.param({"mode": "other"}, ["component1.match_all"], id="other_scalar"),
+        pytest.param(
+            {"event_types": ["single_press"], "mode": "auto"},
+            [
+                "component1.any_value",
+                "component1.match_all",
+                "component1.multiple_capabilities",
+                "component1.scalar_value",
+            ],
+            id="multiple_capabilities",
+        ),
+    ],
+)
+async def test_get_triggers_conditions_for_target_capability(
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    automation_component: str,
+    capability_attributes: dict[str, Any],
+    expected: list[str],
+) -> None:
+    """Test get triggers/conditions for target with a capability filter."""
+    mock_platform(
+        hass,
+        f"component1.{automation_component}",
+        Mock(
+            **{
+                f"async_get_{automation_component}s": AsyncMock(
+                    return_value={
+                        "match_all": Mock,
+                        "any_value": Mock,
+                        "all_values": Mock,
+                        "scalar_value": Mock,
+                        "multiple_capabilities": Mock,
+                    }
+                )
+            }
+        ),
+    )
+
+    descriptions = """
+        match_all:
+          target:
+            entity:
+              domain: event
+        any_value:
+          target:
+            entity:
+              domain: event
+              capability:
+                event_types:
+                  - single_press
+                  - press_start
+        all_values:
+          target:
+            entity:
+              domain: event
+              capability:
+                event_types: # both required values
+                  - - long_press_start
+                    - long_press_end
+        scalar_value:
+          target:
+            entity:
+              domain: event
+              capability:
+                mode:
+                  - auto
+                  - manual
+        multiple_capabilities:
+          target:
+            entity:
+              domain: event
+              capability: # both required capabilities
+                event_types:
+                  - single_press
+                mode:
+                  - auto
+    """
+
+    def _load_yaml(fname: str, secrets: Any = None) -> JSON_TYPE:
+        with io.StringIO(descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    event_platform = MockEntityPlatform(hass, domain="event", platform_name="test")
+    await event_platform.async_add_entities(
+        [
+            MockEntity(
+                entity_id="event.test", capability_attributes=capability_attributes
+            )
+        ]
+    )
+
+    with patch.object(Integration, f"has_{automation_component}s", return_value=True):
+        assert await async_setup_component(hass, "component1", {})
+        await hass.async_block_till_done()
+
+        await websocket_client.send_json_auto_id(
+            {
+                "type": f"get_{automation_component}s_for_target",
+                "target": {"entity_id": ["event.test"]},
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["success"]
+    assert sorted(msg["result"]) == expected
+
+
 @pytest.mark.usefixtures("target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @patch.object(Integration, "has_services", return_value=True)
