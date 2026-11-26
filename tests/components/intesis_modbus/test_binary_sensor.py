@@ -14,9 +14,17 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.intesis_modbus.coordinator import SCAN_INTERVAL
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from . import INITIALISING_REGISTERS, SINGLE_UNIT_REGISTERS
 
 ALARM = "binary_sensor.inmbsmhi001r000_air_conditioner_alarm"
 WINDOW = "binary_sensor.inmbsmhi001r000_air_conditioner_window"
@@ -94,6 +102,24 @@ async def test_failed_block_only_takes_its_own_binary_sensor(
     unit.fail_read(address, None)
     await _poll(hass, freezer)
     assert hass.states.get(entity_id).state == STATE_OFF
+
+
+@pytest.mark.parametrize("registers", [INITIALISING_REGISTERS])
+@pytest.mark.usefixtures("init_integration")
+async def test_initialising_gateway_reports_no_alarm(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """The alarm the gateway reads while it starts up is not shown as a problem."""
+    assert hass.states.get(ALARM).state == STATE_UNKNOWN
+    assert hass.states.get(WINDOW).state == STATE_OFF
+    unit = mock_connection.for_unit(1)
+    for address, value in SINGLE_UNIT_REGISTERS.items():
+        unit.holding[address] = value
+    await _poll(hass, freezer)
+    assert hass.states.get(ALARM).state == STATE_OFF
+    assert hass.states.get(WINDOW).state == STATE_OFF
 
 
 @pytest.mark.usefixtures("init_integration")
