@@ -339,6 +339,17 @@ async def test_dsp_preset_select_registry(
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
+async def test_dsp_preset_select_older_server(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test a server below schema 101 gets no DSP preset select."""
+    music_assistant_client.server_info.schema_version = 100
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    assert entity_registry.async_get("select.test_player_1_dsp_preset") is None
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_dsp_preset_select_presets_request_fails(
     hass: HomeAssistant,
