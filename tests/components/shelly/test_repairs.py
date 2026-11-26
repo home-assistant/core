@@ -979,6 +979,9 @@ async def test_coiot_peer_on_device_interface_no_issue(
         await mock_block_device_push_update_failure(hass, mock_block_device)
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    assert issue_registry.async_get_issue(
+        DOMAIN, PUSH_UPDATE_ISSUE_ID.format(unique=MOCK_MAC)
+    )
 
 
 async def test_coiot_fix_flow_sets_device_interface_peer(
