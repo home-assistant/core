@@ -1,6 +1,5 @@
 """Coordinator module for Miele integration."""
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -19,10 +18,14 @@ from pymiele import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# Miele does not publish a rate limit, so bound the fan-out per refresh.
+_MAX_CONCURRENT_ACTION_REQUESTS = 5
 
 
 @dataclass
@@ -85,9 +88,11 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
         }
         self.devices = devices
         # Device actions are independent of each other, so fetch them
-        # concurrently instead of one appliance at a time.
-        actions = await asyncio.gather(
-            *(self._async_fetch_actions(device_id) for device_id in devices)
+        # concurrently, bounded so a large installation does not burst against
+        # the undisclosed Miele rate limit.
+        actions = await gather_with_limited_concurrency(
+            _MAX_CONCURRENT_ACTION_REQUESTS,
+            *(self._async_fetch_actions(device_id) for device_id in devices),
         )
         return MieleCoordinatorData(
             devices=devices,

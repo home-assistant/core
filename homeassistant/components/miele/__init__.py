@@ -1,7 +1,5 @@
 """The Miele integration."""
 
-import asyncio
-
 from pymiele import MieleAPI
 
 from homeassistant.const import Platform
@@ -54,17 +52,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> Non
     auth = AsyncConfigEntryAuth(async_get_clientsession(hass), session)
     await auth.async_get_access_token()
 
-    # Setup MieleAPI and coordinators for data fetch. The two coordinators
-    # poll independent endpoints, so their first refresh runs concurrently.
+    # Setup MieleAPI and coordinators for data fetch
     _api = MieleAPI(auth)
     _coordinator = MieleDataUpdateCoordinator(hass, entry, _api)
+    await _coordinator.async_config_entry_first_refresh()
     _aux_coordinator = MieleAuxDataUpdateCoordinator(hass, entry, _api)
     # Filling levels are optional. Their endpoint fails independently of the
     # appliance data, so a failure must not block setup of the whole entry.
-    await asyncio.gather(
-        _coordinator.async_config_entry_first_refresh(),
-        _aux_coordinator.async_refresh(),
-    )
+    await _aux_coordinator.async_refresh()
 
     entry.runtime_data = MieleRuntimeData(_api, _coordinator, _aux_coordinator)
 
