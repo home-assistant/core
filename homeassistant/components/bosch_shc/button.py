@@ -94,6 +94,7 @@ PREVIEW_MIN_BRIGHTNESS_DESCRIPTION = SHCButtonEntityDescription[SHCMicromoduleDi
     press_fn=_preview_min_brightness,
 )
 
+
 def _function_test_start(device: SHCMotionDetector2) -> None:
     if device.supports_walk_test:
         device.set_walk_state_request(WalkTestService.WalkStateRequest.WALK_STATE_START)
