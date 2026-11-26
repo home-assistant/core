@@ -5,12 +5,7 @@ from typing import Any, override
 from pydeconz.models.event import EventType
 from pydeconz.models.light.siren import Siren
 
-from homeassistant.components.siren import (
-    ATTR_DURATION,
-    DOMAIN as SIREN_DOMAIN,
-    SirenEntity,
-    SirenEntityFeature,
-)
+from homeassistant.components.siren import (DOMAIN, as, SIREN_DOMAIN, SirenEntity, SirenEntityFeature, SirenServiceArgument)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -58,7 +53,7 @@ class DeconzSiren(DeconzDevice[Siren], SirenEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
-        if (duration := kwargs.get(ATTR_DURATION)) is not None:
+        if (duration := kwargs.get(SirenServiceArgument.DURATION)) is not None:
             duration *= 10
         await self.hub.api.lights.sirens.set_state(
             id=self._device.resource_id,

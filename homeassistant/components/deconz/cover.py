@@ -7,14 +7,7 @@ from pydeconz.models import ResourceType
 from pydeconz.models.event import EventType
 from pydeconz.models.light.cover import Cover
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
-    DOMAIN as COVER_DOMAIN,
-    CoverDeviceClass,
-    CoverEntity,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import (DOMAIN, as, COVER_DOMAIN, CoverDeviceClass, CoverEntity, CoverEntityFeature, CoverServiceArgument)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -92,7 +85,7 @@ class DeconzCover(DeconzDevice[Cover], CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = 100 - cast(int, kwargs[ATTR_POSITION])
+        position = 100 - cast(int, kwargs[CoverServiceArgument.POSITION])
         await self.hub.api.lights.covers.set_state(
             id=self._device.resource_id,
             lift=position,
@@ -137,7 +130,7 @@ class DeconzCover(DeconzDevice[Cover], CoverEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Tilt the cover to a specific position."""
-        position = 100 - cast(int, kwargs[ATTR_TILT_POSITION])
+        position = 100 - cast(int, kwargs[CoverServiceArgument.TILT_POSITION])
         await self.hub.api.lights.covers.set_state(
             id=self._device.resource_id,
             tilt=position,
