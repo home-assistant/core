@@ -5,12 +5,11 @@ import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
 from homeassistant.components.tis_control.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_capture_events
 
 
 async def test_async_setup_entry_success(
