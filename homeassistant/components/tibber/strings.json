@@ -182,6 +182,9 @@
       "power_production": {
         "name": "Power production"
       },
+      "production_electricity_price": {
+        "name": "Production electricity price"
+      },
       "range_remaining": {
         "name": "Estimated remaining driving range"
       },
@@ -199,6 +202,9 @@
       },
       "storage_target_state_of_charge": {
         "name": "Target state of charge"
+      },
+      "subsidized_electricity_price": {
+        "name": "Subsidized electricity price"
       },
       "temp_comfort": {
         "name": "Comfort temperature"
@@ -245,7 +251,7 @@
   },
   "services": {
     "get_prices": {
-      "description": "Fetches hourly energy prices including price level.",
+      "description": "Fetches the 15-minute energy prices of your homes.",
       "fields": {
         "end": {
           "description": "Specifies the date and time until which to retrieve prices. Defaults to the last hour of today if omitted.",

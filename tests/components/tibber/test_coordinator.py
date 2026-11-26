@@ -8,10 +8,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import tibber
+from tibber.data_api import PriceDetails, PriceInterval
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -21,9 +22,15 @@ from .conftest import create_tibber_device, create_tibber_home
 from .test_common import CONSUMPTION_DATA_1
 
 
-def _prices_for_days(*days: str) -> dict[str, float]:
-    """Return price data keyed by ISO timestamps for the given days."""
-    return {f"{day}T12:00:00+00:00": 1.0 for day in days}
+def _prices_for_days(*days: str) -> list[PriceInterval]:
+    """Return a price interval for each of the given days."""
+    return [
+        PriceInterval(
+            start=datetime.fromisoformat(f"{day}T12:00:00+00:00"),
+            consumption=PriceDetails(price=1.0),
+        )
+        for day in days
+    ]
 
 
 async def _async_setup_price_sensor(
@@ -91,24 +98,24 @@ async def test_price_fetch_refreshes_when_today_prices_are_missing(
     """Test price fetching when cached prices do not include today."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2026-04-26 00:10:00+00:00")
-    home = create_tibber_home(price_total=_prices_for_days("2026-04-25"))
+    home = create_tibber_home(prices=_prices_for_days("2026-04-25"))
 
-    async def update_info_and_price_info() -> None:
-        home.price_total = _prices_for_days("2026-04-26")
+    async def update_prices() -> None:
+        home.prices = _prices_for_days("2026-04-26")
 
-    home.update_info_and_price_info.side_effect = update_info_and_price_info
+    home.update_prices.side_effect = update_prices
 
     await _async_setup_price_sensor(
         hass, config_entry, tibber_mock, entity_registry, home
     )
 
     # Update immediately when no prices are available for today
-    assert home.update_info_and_price_info.await_count == 1
+    assert home.update_prices.await_count == 1
 
     await _async_fire_coordinator_update(hass, freezer, timedelta(hours=12))
 
     # No update after 12 hours
-    assert home.update_info_and_price_info.await_count == 1
+    assert home.update_prices.await_count == 1
 
 
 async def test_price_fetch_waits_until_tomorrow_price_polling_window(
@@ -123,33 +130,33 @@ async def test_price_fetch_waits_until_tomorrow_price_polling_window(
     """Test price fetching waits until the tomorrow-price polling window."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2026-04-26 13:00:00+00:00")
-    home = create_tibber_home(price_total=_prices_for_days("2026-04-26"))
+    home = create_tibber_home(prices=_prices_for_days("2026-04-26"))
 
-    async def update_info_and_price_info() -> None:
-        home.price_total = _prices_for_days("2026-04-26", "2026-04-27")
+    async def update_prices() -> None:
+        home.prices = _prices_for_days("2026-04-26", "2026-04-27")
 
-    home.update_info_and_price_info.side_effect = update_info_and_price_info
+    home.update_prices.side_effect = update_prices
 
     await _async_setup_price_sensor(
         hass, config_entry, tibber_mock, entity_registry, home
     )
 
-    assert home.update_info_and_price_info.await_count == 0
+    assert home.update_prices.await_count == 0
 
     await _async_fire_coordinator_update(hass, freezer, timedelta(minutes=10))
 
     # No update before the price polling window has passed
-    assert home.update_info_and_price_info.await_count == 0
+    assert home.update_prices.await_count == 0
 
     await _async_fire_coordinator_update(hass, freezer, timedelta(hours=9, minutes=50))
 
     # Update after the price polling window has passed
-    assert home.update_info_and_price_info.await_count == 1
+    assert home.update_prices.await_count == 1
 
     await _async_fire_coordinator_update(hass, freezer, timedelta(hours=10))
 
     # Ensure we only update once
-    assert home.update_info_and_price_info.await_count == 1
+    assert home.update_prices.await_count == 1
 
 
 async def test_price_fetch_skips_update_when_tomorrow_prices_exist(
@@ -164,7 +171,7 @@ async def test_price_fetch_skips_update_when_tomorrow_prices_exist(
     """Test price fetching skips homes that already have tomorrow prices."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2026-04-26 23:00:00+00:00")
-    home = create_tibber_home(price_total=_prices_for_days("2026-04-26", "2026-04-27"))
+    home = create_tibber_home(prices=_prices_for_days("2026-04-26", "2026-04-27"))
 
     await _async_setup_price_sensor(
         hass, config_entry, tibber_mock, entity_registry, home
@@ -173,7 +180,7 @@ async def test_price_fetch_skips_update_when_tomorrow_prices_exist(
     await _async_fire_coordinator_update(hass, freezer, timedelta(hours=10))
 
     # No update when tomorrow prices are already available
-    assert home.update_info_and_price_info.await_count == 0
+    assert home.update_prices.await_count == 0
 
 
 @pytest.mark.parametrize(
@@ -208,7 +215,7 @@ async def test_price_fetch_refresh_handles_update_exceptions(
     """Test handled exceptions during price fetching coordinator refresh."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2026-04-26 23:00:00+00:00")
-    home = create_tibber_home(price_total=_prices_for_days("2026-04-26"))
+    home = create_tibber_home(prices=_prices_for_days("2026-04-26"))
 
     entity_id = await _async_setup_price_sensor(
         hass, config_entry, tibber_mock, entity_registry, home
@@ -217,12 +224,12 @@ async def test_price_fetch_refresh_handles_update_exceptions(
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
-    initial_update_count = home.update_info_and_price_info.await_count
-    home.update_info_and_price_info.side_effect = exception
+    initial_update_count = home.update_prices.await_count
+    home.update_prices.side_effect = exception
 
     await _async_fire_coordinator_update(hass, freezer, timedelta(hours=1))
 
-    assert home.update_info_and_price_info.await_count == initial_update_count + 1
+    assert home.update_prices.await_count == initial_update_count + 1
     assert (
         f"Error fetching {DOMAIN} price fetch data: {expected_message}" in caplog.text
     )
@@ -230,6 +237,27 @@ async def test_price_fetch_refresh_handles_update_exceptions(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_price_fetch_missing_prices_scope_starts_reauth(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tibber_mock: MagicMock,
+    setup_credentials: None,
+) -> None:
+    """Test the Data API denying prices starts a reauth flow to request the scope."""
+    home = create_tibber_home()
+    home.update_prices.side_effect = tibber.InsufficientScopeError(403, "Forbidden")
+    tibber_mock.get_homes.return_value = [home]
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
 @pytest.mark.parametrize(
@@ -297,7 +325,7 @@ async def test_price_sensor_unavailable_when_cached_prices_run_out(
     """Test price sensor becomes unavailable when cached prices no longer apply."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2026-04-26 23:50:00+00:00")
-    home = create_tibber_home(price_total=_prices_for_days("2026-04-26"))
+    home = create_tibber_home(prices=_prices_for_days("2026-04-26"))
 
     def current_price_data() -> tuple[float | None, datetime | None, float | None]:
         if dt_util.now().date() == date(2026, 4, 26):

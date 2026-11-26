@@ -1,6 +1,7 @@
 """Support for Tibber sensors."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any, override
@@ -43,6 +44,7 @@ from .const import DOMAIN, MANUFACTURER, TibberConfigEntry
 from .coordinator import (
     TibberDataAPICoordinator,
     TibberDataCoordinator,
+    TibberHomeData,
     TibberPriceCoordinator,
 )
 
@@ -51,6 +53,39 @@ _LOGGER = logging.getLogger(__name__)
 ICON = "mdi:currency-usd"
 SCAN_INTERVAL = timedelta(minutes=1)
 PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class TibberPriceSensorEntityDescription(SensorEntityDescription):
+    """Describes a Tibber price sensor."""
+
+    exists_fn: Callable[[TibberHome], bool]
+    value_fn: Callable[[TibberHomeData], float | None]
+
+
+PRICE_SENSORS: tuple[TibberPriceSensorEntityDescription, ...] = (
+    TibberPriceSensorEntityDescription(
+        key="subsidized_price",
+        translation_key="subsidized_electricity_price",
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=lambda home: any(
+            interval.consumption is not None
+            and interval.consumption.subsidized_price is not None
+            for interval in home.prices
+        ),
+        value_fn=lambda data: data["current_subsidized_price"],
+    ),
+    TibberPriceSensorEntityDescription(
+        key="production_price",
+        translation_key="production_electricity_price",
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=lambda home: any(
+            interval.production is not None and interval.production.price is not None
+            for interval in home.prices
+        ),
+        value_fn=lambda data: data["current_production_price"],
+    ),
+)
 
 RT_SENSORS_UNIQUE_ID_MIGRATION = {
     "accumulated_consumption_last_hour": "accumulated consumption current hour",
@@ -626,6 +661,11 @@ async def _async_setup_graphql_sensors(
 
         if price_coordinator is not None and home.has_active_subscription:
             entities.append(TibberSensorElPrice(price_coordinator, home))
+            entities.extend(
+                TibberSensorPrice(price_coordinator, home, description)
+                for description in PRICE_SENSORS
+                if description.exists_fn(home)
+            )
         if coordinator is not None and home.has_active_subscription:
             entities.extend(
                 TibberDataSensor(home, coordinator, entity_description)
@@ -816,6 +856,44 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
             "estimated_annual_consumption"
         ]
         self._price_data_available = True
+
+
+class TibberSensorPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator]):
+    """Representation of a Tibber price sensor, such as the price after subsidy."""
+
+    entity_description: TibberPriceSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: TibberPriceCoordinator,
+        tibber_home: TibberHome,
+        entity_description: TibberPriceSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator=coordinator, tibber_home=tibber_home)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{tibber_home.home_id}_{entity_description.key}"
+        self._attr_native_unit_of_measurement = tibber_home.price_unit
+        self._model = "Price Sensor"
+        self._device_name = self._home_name
+
+    @property
+    def _home_data(self) -> TibberHomeData | None:
+        return (self.coordinator.data or {}).get(self._tibber_home.home_id)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        return super().available and self.native_value is not None
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the price for the current 15-minute interval."""
+        if (home_data := self._home_data) is None:
+            return None
+        return self.entity_description.value_fn(home_data)
 
 
 class TibberDataSensor(TibberSensor, CoordinatorEntity[TibberDataCoordinator]):

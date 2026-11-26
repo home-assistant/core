@@ -7,6 +7,7 @@ import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 import tibber
+from tibber.data_api import PriceDetails, PriceInterval
 
 from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.components.tibber.services import TibberService
@@ -16,46 +17,32 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 START_TIME = dt.datetime.fromtimestamp(1615766400).replace(tzinfo=dt.UTC)
 
 
-def generate_mock_home_data():
-    """Create mock data from the tibber connection."""
+def _mock_home(name: str) -> MagicMock:
+    """Create a mock home whose Data API returns its prices in the requested range."""
     tomorrow = START_TIME + dt.timedelta(days=1)
-    mock_homes = [
-        MagicMock(
-            name="first_home",
-            price_total={
-                START_TIME.isoformat(): 0.36914,
-                (START_TIME + dt.timedelta(hours=1)).isoformat(): 0.36914,
-                tomorrow.isoformat(): 0.46914,
-                (tomorrow + dt.timedelta(hours=1)).isoformat(): 0.46914,
-            },
-            price_level={
-                START_TIME.isoformat(): "VERY_EXPENSIVE",
-                (START_TIME + dt.timedelta(hours=1)).isoformat(): "VERY_EXPENSIVE",
-                tomorrow.isoformat(): "VERY_EXPENSIVE",
-                (tomorrow + dt.timedelta(hours=1)).isoformat(): "VERY_EXPENSIVE",
-            },
-        ),
-        MagicMock(
-            name="second_home",
-            price_total={
-                START_TIME.isoformat(): 0.36914,
-                (START_TIME + dt.timedelta(hours=1)).isoformat(): 0.36914,
-                tomorrow.isoformat(): 0.46914,
-                (tomorrow + dt.timedelta(hours=1)).isoformat(): 0.46914,
-            },
-            price_level={
-                START_TIME.isoformat(): "VERY_EXPENSIVE",
-                (START_TIME + dt.timedelta(hours=1)).isoformat(): "VERY_EXPENSIVE",
-                tomorrow.isoformat(): "VERY_EXPENSIVE",
-                (tomorrow + dt.timedelta(hours=1)).isoformat(): "VERY_EXPENSIVE",
-            },
-        ),
+    intervals = [
+        PriceInterval(start=start, consumption=PriceDetails(price=price))
+        for start, price in (
+            (START_TIME, 0.36914),
+            (START_TIME + dt.timedelta(hours=1), 0.36914),
+            (tomorrow, 0.46914),
+            (tomorrow + dt.timedelta(hours=1), 0.46914),
+        )
     ]
-    # set name again, as the name is special in mock objects
-    # see documentation: https://docs.python.org/3/library/unittest.mock.html#mock-names-and-the-name-attribute
-    mock_homes[0].name = "first_home"
-    mock_homes[1].name = "second_home"
-    return mock_homes
+
+    async def get_prices(start: dt.datetime, end: dt.datetime) -> list[PriceInterval]:
+        return [interval for interval in intervals if start <= interval.start < end]
+
+    home = MagicMock()
+    # The name is special in mock objects, so it is set after creation.
+    home.name = name
+    home.get_prices = AsyncMock(side_effect=get_prices)
+    return home
+
+
+def generate_mock_home_data() -> list[MagicMock]:
+    """Create mock homes from the tibber connection."""
+    return [_mock_home("first_home"), _mock_home("second_home")]
 
 
 @pytest.mark.parametrize(
@@ -286,8 +273,7 @@ async def test_get_prices_refresh_raises_handled_exception(
     freezer.move_to(START_TIME)
     mock_home = MagicMock()
     mock_home.name = "home"
-    mock_home.price_total = {}
-    mock_home.update_info_and_price_info = AsyncMock(side_effect=exception)
+    mock_home.get_prices = AsyncMock(side_effect=exception)
     mock_tibber_setup.get_homes.return_value = [mock_home]
 
     with pytest.raises(HomeAssistantError):
@@ -298,3 +284,56 @@ async def test_get_prices_refresh_raises_handled_exception(
             blocking=True,
             return_response=True,
         )
+
+
+async def test_get_prices_for_past_range(
+    mock_tibber_setup: MagicMock,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test get_prices fetches the requested range, also in the past."""
+    freezer.move_to(START_TIME + dt.timedelta(days=30))
+    homes = generate_mock_home_data()
+    mock_tibber_setup.get_homes.return_value = homes
+    end = START_TIME + dt.timedelta(hours=1)
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        TibberService.GET_PRICES,
+        {"start": START_TIME.isoformat(), "end": end.isoformat()},
+        blocking=True,
+        return_response=True,
+    )
+
+    homes[0].get_prices.assert_awaited_once_with(START_TIME, end)
+    assert result == {
+        "prices": {
+            "first_home": [{"start_time": START_TIME.isoformat(), "price": 0.36914}],
+            "second_home": [{"start_time": START_TIME.isoformat(), "price": 0.36914}],
+        }
+    }
+
+
+async def test_get_prices_home_without_prices(
+    mock_tibber_setup: MagicMock,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test get_prices returns no prices for a home the Data API has no prices for."""
+    freezer.move_to(START_TIME)
+    mock_home = MagicMock()
+    mock_home.name = "home"
+    mock_home.get_prices = AsyncMock(
+        side_effect=tibber.PricesNotAvailableError(403, "No prices")
+    )
+    mock_tibber_setup.get_homes.return_value = [mock_home]
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        TibberService.GET_PRICES,
+        {},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result == {"prices": {"home": []}}

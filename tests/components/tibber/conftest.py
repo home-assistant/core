@@ -9,6 +9,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import RecorderInstanceContextManager
 import tibber
+from tibber.data_api import PriceInterval
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -149,7 +150,8 @@ def create_tibber_device(
 def create_tibber_home(
     *,
     current_price: float | None = 1.25,
-    price_total: dict[str, float] | None = None,
+    prices: list[PriceInterval] | None = None,
+    current_price_interval: PriceInterval | None = None,
 ) -> MagicMock:
     """Create a mocked Tibber home with an active subscription."""
     home = MagicMock()
@@ -157,12 +159,14 @@ def create_tibber_home(
     home.name = "Home"
     home.currency = "NOK"
     home.price_unit = "NOK/kWh"
-    home.price_total = price_total or {}
+    home.prices = prices or []
+    home.current_price_interval = current_price_interval
     home.has_active_subscription = True
     home.has_real_time_consumption = False
     home.last_data_timestamp = None
     home.update_info = AsyncMock(return_value=None)
-    home.update_info_and_price_info = AsyncMock(return_value=None)
+    home.update_prices = AsyncMock(return_value=None)
+    home.get_prices = AsyncMock(return_value=[])
     home.current_price_data = MagicMock(
         return_value=(current_price, dt_util.utcnow(), 0.4)
     )

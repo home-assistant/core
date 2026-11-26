@@ -24,6 +24,7 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
@@ -45,6 +46,8 @@ class TibberHomeData(TypedDict):
     price_unit: str
     current_price: float | None
     current_price_time: datetime | None
+    current_subsidized_price: float | None
+    current_production_price: float | None
     intraday_price_ranking: float | None
     max_price: float
     avg_price: float
@@ -61,15 +64,33 @@ class TibberHomeData(TypedDict):
     estimated_annual_consumption: int | None
 
 
+def _round_price(price: float | None) -> float | None:
+    return None if price is None else round(price, 4)
+
+
 def _build_home_data(home: tibber.TibberHome) -> TibberHomeData:
-    """Build TibberHomeData from a TibberHome for the price sensor."""
+    """Build TibberHomeData from a TibberHome for the price sensors."""
     current_price, last_updated, price_rank = home.current_price_data()
     attributes = home.current_attributes()
+    subsidized_price: float | None = None
+    production_price: float | None = None
+    if (interval := home.current_price_interval) is not None:
+        if (consumption := interval.consumption) is not None:
+            # Without a subsidy for this interval, the price after subsidy is the price.
+            subsidized_price = (
+                consumption.price
+                if consumption.subsidized_price is None
+                else consumption.subsidized_price
+            )
+        if interval.production is not None:
+            production_price = interval.production.price
     result: TibberHomeData = {
         "currency": home.currency,
         "price_unit": home.price_unit,
         "current_price": current_price,
         "current_price_time": last_updated,
+        "current_subsidized_price": _round_price(subsidized_price),
+        "current_production_price": _round_price(production_price),
         "intraday_price_ranking": price_rank,
         "max_price": attributes["max_price"],
         "avg_price": attributes["avg_price"],
@@ -411,48 +432,31 @@ class TibberFetchPriceCoordinator(TibberCoordinator[dict[str, tibber.TibberHome]
 
         now = dt_util.now()
         today_start = dt_util.start_of_local_day(now)
-        today_end = today_start + timedelta(days=1)
-        tomorrow_start = today_end
-        tomorrow_end = tomorrow_start + timedelta(days=1)
-
-        def _has_prices_today(home: tibber.TibberHome) -> bool:
-            """Return True if the home has any prices today."""
-            for start in home.price_total:
-                start_dt = dt_util.as_local(datetime.fromisoformat(str(start)))
-                if today_start <= start_dt < today_end:
-                    return True
-            return False
-
-        def _has_prices_tomorrow(home: tibber.TibberHome) -> bool:
-            """Return True if the home has any prices tomorrow."""
-            for start in home.price_total:
-                start_dt = dt_util.as_local(datetime.fromisoformat(str(start)))
-                if tomorrow_start <= start_dt < tomorrow_end:
-                    return True
-            return False
+        today = today_start.date()
+        tomorrow = today + timedelta(days=1)
 
         def _needs_update(home: tibber.TibberHome) -> bool:
             """Return True if the home needs to be updated."""
-            if not _has_prices_today(home):
+            days = {dt_util.as_local(interval.start).date() for interval in home.prices}
+            if today not in days:
                 return True
-            if _has_prices_tomorrow(home):
+            if tomorrow in days:
                 return False
-            if now >= today_start + timedelta(
+            return now >= today_start + timedelta(
                 seconds=self._tomorrow_price_poll_threshold_seconds
-            ):
-                return True
-            return False
+            )
 
         self.update_interval = timedelta(seconds=random.uniform(60, 60 * 10))
 
         try:
             await asyncio.gather(
-                *(
-                    home.update_info_and_price_info()
-                    for home in active_homes
-                    if _needs_update(home)
-                )
+                *(home.update_prices() for home in active_homes if _needs_update(home))
             )
+        except tibber.InsufficientScopeError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="data_api_reauth_required",
+            ) from err
         except tibber.exceptions.RateLimitExceededError as err:
             raise UpdateFailed(
                 f"Rate limit exceeded, retry after {err.retry_after} seconds",

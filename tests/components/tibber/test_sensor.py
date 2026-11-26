@@ -1,9 +1,11 @@
 """Tests for the Tibber Data API sensors and coordinator."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from tibber.data_api import PriceDetails, PriceInterval
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber.const import DOMAIN
@@ -19,6 +21,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.util import dt as dt_util
 
 from .conftest import create_tibber_device, create_tibber_home
 
@@ -206,6 +209,77 @@ async def test_price_sensor_state_unit_and_attributes(
     assert state.attributes["off_peak_1"] == 0.9
     assert state.attributes["peak"] == 1.7
     assert state.attributes["off_peak_2"] == 1.0
+
+
+@pytest.mark.usefixtures("recorder_mock", "setup_credentials")
+async def test_subsidized_and_production_price_sensors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tibber_mock: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the price after subsidy and the production price of the current interval."""
+    interval = PriceInterval(
+        start=dt_util.utcnow(),
+        consumption=PriceDetails(price=1.25, subsidized_price=0.5),
+        production=PriceDetails(price=0.751234),
+    )
+    home = create_tibber_home(prices=[interval], current_price_interval=interval)
+    tibber_mock.get_homes.return_value = [home]
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for unique_id, expected in (
+        ("home-id_subsidized_price", "0.5"),
+        ("home-id_production_price", "0.7512"),
+    ):
+        entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected
+        assert state.attributes["unit_of_measurement"] == "NOK/kWh"
+
+
+@pytest.mark.usefixtures("recorder_mock", "setup_credentials")
+async def test_subsidized_price_without_subsidy_is_the_price(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tibber_mock: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the price after subsidy is the price when no subsidy applies.
+
+    A home without production prices gets no production price sensor.
+    """
+    now = dt_util.utcnow()
+    subsidized = PriceInterval(
+        start=now - timedelta(hours=1),
+        consumption=PriceDetails(price=2.0, subsidized_price=1.0),
+    )
+    current = PriceInterval(start=now, consumption=PriceDetails(price=1.25))
+    home = create_tibber_home(
+        prices=[subsidized, current], current_price_interval=current
+    )
+    tibber_mock.get_homes.return_value = [home]
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "home-id_subsidized_price"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "1.25"
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "home-id_production_price"
+        )
+        is None
+    )
 
 
 @pytest.mark.usefixtures("recorder_mock", "setup_credentials")
