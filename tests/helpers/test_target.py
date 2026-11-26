@@ -17,16 +17,12 @@ from pytest_homeassistant.common import (
 
 from homeassistant.components.group import Group
 from homeassistant.const import (
-    ATTR_AREA_ID,
-    ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
     CONF_EXCLUDE,
     ENTITY_MATCH_NONE,
     STATE_OFF,
     STATE_ON,
     EntityCategory,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -340,31 +336,31 @@ def registries_mock(hass: HomeAssistant) -> None:
     [
         (
             {
-                ATTR_ENTITY_ID: ENTITY_MATCH_NONE,
-                ATTR_AREA_ID: ENTITY_MATCH_NONE,
-                ATTR_FLOOR_ID: ENTITY_MATCH_NONE,
-                ATTR_LABEL_ID: ENTITY_MATCH_NONE,
+                TargetKey.ENTITY_ID: ENTITY_MATCH_NONE,
+                TargetKey.AREA_ID: ENTITY_MATCH_NONE,
+                TargetKey.FLOOR_ID: ENTITY_MATCH_NONE,
+                TargetKey.LABEL_ID: ENTITY_MATCH_NONE,
             },
             False,
             target.SelectedEntities(),
         ),
         (
-            {ATTR_ENTITY_ID: "light.bowl"},
+            {TargetKey.ENTITY_ID: "light.bowl"},
             False,
             target.SelectedEntities(referenced={"light.bowl"}),
         ),
         (
-            {ATTR_ENTITY_ID: "group.test"},
+            {TargetKey.ENTITY_ID: "group.test"},
             True,
             target.SelectedEntities(referenced={"light.ceiling", "light.kitchen"}),
         ),
         (
-            {ATTR_ENTITY_ID: "group.test"},
+            {TargetKey.ENTITY_ID: "group.test"},
             False,
             target.SelectedEntities(referenced={"group.test"}),
         ),
         (
-            {ATTR_AREA_ID: "own-area"},
+            {TargetKey.AREA_ID: "own-area"},
             False,
             target.SelectedEntities(
                 indirectly_referenced={"light.in_own_area"},
@@ -373,7 +369,7 @@ def registries_mock(hass: HomeAssistant) -> None:
             ),
         ),
         (
-            {ATTR_AREA_ID: "test-area"},
+            {TargetKey.AREA_ID: "test-area"},
             False,
             target.SelectedEntities(
                 indirectly_referenced={
@@ -385,7 +381,7 @@ def registries_mock(hass: HomeAssistant) -> None:
             ),
         ),
         (
-            {ATTR_AREA_ID: ["test-area", "diff-area"]},
+            {TargetKey.AREA_ID: ["test-area", "diff-area"]},
             False,
             target.SelectedEntities(
                 indirectly_referenced={
@@ -399,7 +395,7 @@ def registries_mock(hass: HomeAssistant) -> None:
             ),
         ),
         (
-            {ATTR_DEVICE_ID: "device-no-area-id"},
+            {TargetKey.DEVICE_ID: "device-no-area-id"},
             False,
             target.SelectedEntities(
                 indirectly_referenced={"light.no_area"},
@@ -407,7 +403,7 @@ def registries_mock(hass: HomeAssistant) -> None:
             ),
         ),
         (
-            {ATTR_DEVICE_ID: "device-area-a-id"},
+            {TargetKey.DEVICE_ID: "device-area-a-id"},
             False,
             target.SelectedEntities(
                 indirectly_referenced={"light.in_area_a", "light.in_area_b"},
@@ -415,7 +411,7 @@ def registries_mock(hass: HomeAssistant) -> None:
             ),
         ),
         (
-            {ATTR_FLOOR_ID: "test-floor"},
+            {TargetKey.FLOOR_ID: "test-floor"},
             False,
             target.SelectedEntities(
                 indirectly_referenced={"light.in_area", "light.assigned_to_area"},
@@ -425,7 +421,7 @@ def registries_mock(hass: HomeAssistant) -> None:
             ),
         ),
         (
-            {ATTR_FLOOR_ID: ["test-floor", "floor-a"]},
+            {TargetKey.FLOOR_ID: ["test-floor", "floor-a"]},
             False,
             target.SelectedEntities(
                 indirectly_referenced={
@@ -440,7 +436,7 @@ def registries_mock(hass: HomeAssistant) -> None:
             ),
         ),
         (
-            {ATTR_LABEL_ID: "my-label"},
+            {TargetKey.LABEL_ID: "my-label"},
             False,
             target.SelectedEntities(
                 indirectly_referenced={
@@ -452,7 +448,7 @@ def registries_mock(hass: HomeAssistant) -> None:
             ),
         ),
         (
-            {ATTR_LABEL_ID: "label1"},
+            {TargetKey.LABEL_ID: "label1"},
             False,
             target.SelectedEntities(
                 indirectly_referenced={
@@ -466,7 +462,7 @@ def registries_mock(hass: HomeAssistant) -> None:
             ),
         ),
         (
-            {ATTR_LABEL_ID: ["label2"]},
+            {TargetKey.LABEL_ID: ["label2"]},
             False,
             target.SelectedEntities(
                 indirectly_referenced={
@@ -478,7 +474,7 @@ def registries_mock(hass: HomeAssistant) -> None:
             ),
         ),
         (
-            {ATTR_LABEL_ID: ["label_area"]},
+            {TargetKey.LABEL_ID: ["label_area"]},
             False,
             target.SelectedEntities(
                 indirectly_referenced={"light.with_labels_from_device"},
@@ -529,15 +525,15 @@ async def test_extract_referenced_entity_ids(
     [
         # An exclude block on its own doesn't target anything
         (
-            {CONF_EXCLUDE: {ATTR_ENTITY_ID: "light.bowl"}},
+            {CONF_EXCLUDE: {TargetKey.ENTITY_ID: "light.bowl"}},
             False,
             target.SelectedEntities(),
         ),
         # Excludes win over explicitly referenced entities
         (
             {
-                ATTR_ENTITY_ID: ["light.bowl", "light.kitchen"],
-                CONF_EXCLUDE: {ATTR_ENTITY_ID: "light.kitchen"},
+                TargetKey.ENTITY_ID: ["light.bowl", "light.kitchen"],
+                CONF_EXCLUDE: {TargetKey.ENTITY_ID: "light.kitchen"},
             },
             False,
             target.SelectedEntities(referenced={"light.bowl"}),
@@ -545,32 +541,32 @@ async def test_extract_referenced_entity_ids(
         # Groups in the exclude block are expanded like the included entities
         (
             {
-                ATTR_ENTITY_ID: "group.test",
-                CONF_EXCLUDE: {ATTR_ENTITY_ID: "group.test"},
+                TargetKey.ENTITY_ID: "group.test",
+                CONF_EXCLUDE: {TargetKey.ENTITY_ID: "group.test"},
             },
             True,
             target.SelectedEntities(),
         ),
         (
             {
-                ATTR_ENTITY_ID: ["light.bowl", "light.kitchen"],
-                CONF_EXCLUDE: {ATTR_ENTITY_ID: "group.test"},
+                TargetKey.ENTITY_ID: ["light.bowl", "light.kitchen"],
+                CONF_EXCLUDE: {TargetKey.ENTITY_ID: "group.test"},
             },
             True,
             target.SelectedEntities(referenced={"light.bowl"}),
         ),
         (
             {
-                ATTR_ENTITY_ID: ["group.test", "light.kitchen"],
-                CONF_EXCLUDE: {ATTR_ENTITY_ID: "group.test"},
+                TargetKey.ENTITY_ID: ["group.test", "light.kitchen"],
+                CONF_EXCLUDE: {TargetKey.ENTITY_ID: "group.test"},
             },
             False,
             target.SelectedEntities(referenced={"light.kitchen"}),
         ),
         (
             {
-                ATTR_AREA_ID: "test-area",
-                CONF_EXCLUDE: {ATTR_ENTITY_ID: "light.in_area"},
+                TargetKey.AREA_ID: "test-area",
+                CONF_EXCLUDE: {TargetKey.ENTITY_ID: "light.in_area"},
             },
             False,
             target.SelectedEntities(
@@ -581,16 +577,16 @@ async def test_extract_referenced_entity_ids(
         ),
         (
             {
-                ATTR_AREA_ID: "test-area",
-                CONF_EXCLUDE: {ATTR_DEVICE_ID: "device-test-area"},
+                TargetKey.AREA_ID: "test-area",
+                CONF_EXCLUDE: {TargetKey.DEVICE_ID: "device-test-area"},
             },
             False,
             target.SelectedEntities(referenced_areas={"test-area"}),
         ),
         (
             {
-                ATTR_FLOOR_ID: ["test-floor", "floor-a"],
-                CONF_EXCLUDE: {ATTR_AREA_ID: "area-a"},
+                TargetKey.FLOOR_ID: ["test-floor", "floor-a"],
+                CONF_EXCLUDE: {TargetKey.AREA_ID: "area-a"},
             },
             False,
             target.SelectedEntities(
@@ -602,8 +598,8 @@ async def test_extract_referenced_entity_ids(
         ),
         (
             {
-                ATTR_AREA_ID: ["test-area", "area-a"],
-                CONF_EXCLUDE: {ATTR_FLOOR_ID: "floor-a"},
+                TargetKey.AREA_ID: ["test-area", "area-a"],
+                CONF_EXCLUDE: {TargetKey.FLOOR_ID: "floor-a"},
             },
             False,
             target.SelectedEntities(
@@ -613,7 +609,10 @@ async def test_extract_referenced_entity_ids(
             ),
         ),
         (
-            {ATTR_LABEL_ID: "label1", CONF_EXCLUDE: {ATTR_LABEL_ID: "label2"}},
+            {
+                TargetKey.LABEL_ID: "label1",
+                CONF_EXCLUDE: {TargetKey.LABEL_ID: "label2"},
+            },
             False,
             target.SelectedEntities(
                 indirectly_referenced={
@@ -627,24 +626,24 @@ async def test_extract_referenced_entity_ids(
         # Hidden entities are excluded by an area, device or label
         (
             {
-                ATTR_ENTITY_ID: "light.hidden_in_area",
-                CONF_EXCLUDE: {ATTR_AREA_ID: "test-area"},
+                TargetKey.ENTITY_ID: "light.hidden_in_area",
+                CONF_EXCLUDE: {TargetKey.AREA_ID: "test-area"},
             },
             False,
             target.SelectedEntities(),
         ),
         (
             {
-                ATTR_ENTITY_ID: "light.hidden_in_area",
-                CONF_EXCLUDE: {ATTR_DEVICE_ID: "device-test-area"},
+                TargetKey.ENTITY_ID: "light.hidden_in_area",
+                CONF_EXCLUDE: {TargetKey.DEVICE_ID: "device-test-area"},
             },
             False,
             target.SelectedEntities(),
         ),
         (
             {
-                ATTR_ENTITY_ID: "light.hidden_with_my_label",
-                CONF_EXCLUDE: {ATTR_LABEL_ID: "my-label"},
+                TargetKey.ENTITY_ID: "light.hidden_with_my_label",
+                CONF_EXCLUDE: {TargetKey.LABEL_ID: "my-label"},
             },
             False,
             target.SelectedEntities(),
@@ -652,13 +651,13 @@ async def test_extract_referenced_entity_ids(
         # Missing items in the exclude block are not reported
         (
             {
-                ATTR_AREA_ID: "test-area",
+                TargetKey.AREA_ID: "test-area",
                 CONF_EXCLUDE: {
-                    ATTR_AREA_ID: "missing-area",
-                    ATTR_DEVICE_ID: "missing-device",
-                    ATTR_ENTITY_ID: "light.missing",
-                    ATTR_FLOOR_ID: "missing-floor",
-                    ATTR_LABEL_ID: "missing-label",
+                    TargetKey.AREA_ID: "missing-area",
+                    TargetKey.DEVICE_ID: "missing-device",
+                    TargetKey.ENTITY_ID: "light.missing",
+                    TargetKey.FLOOR_ID: "missing-floor",
+                    TargetKey.LABEL_ID: "missing-label",
                 },
             },
             False,
@@ -707,7 +706,10 @@ async def test_extract_referenced_entity_ids_exclude_non_primary(
 ) -> None:
     """Test excluding an area also excludes its config entities."""
     target_selection = target.TargetSelection(
-        {ATTR_DEVICE_ID: "device-test-area", CONF_EXCLUDE: {ATTR_AREA_ID: "test-area"}}
+        {
+            TargetKey.DEVICE_ID: "device-test-area",
+            CONF_EXCLUDE: {TargetKey.AREA_ID: "test-area"},
+        }
     )
     selected = target.async_extract_referenced_entity_ids(
         hass, target_selection, expand_group=False, primary_entities_only=False
@@ -718,10 +720,13 @@ async def test_extract_referenced_entity_ids_exclude_non_primary(
 @pytest.mark.parametrize(
     ("config", "expected_excluded"),
     [
-        ({ATTR_ENTITY_ID: "all"}, set()),
-        ({ATTR_ENTITY_ID: "all", CONF_EXCLUDE: {}}, set()),
+        ({TargetKey.ENTITY_ID: "all"}, set()),
+        ({TargetKey.ENTITY_ID: "all", CONF_EXCLUDE: {}}, set()),
         (
-            {ATTR_ENTITY_ID: "all", CONF_EXCLUDE: {ATTR_AREA_ID: "test-area"}},
+            {
+                TargetKey.ENTITY_ID: "all",
+                CONF_EXCLUDE: {TargetKey.AREA_ID: "test-area"},
+            },
             {
                 "light.in_area",
                 "light.config_in_area",
@@ -747,12 +752,12 @@ async def test_explain_target(hass: HomeAssistant) -> None:
     """Test explaining what each exclude takes out of each targeted item."""
     target_selection = target.TargetSelection(
         {
-            ATTR_ENTITY_ID: ["light.hidden_in_area"],
-            ATTR_DEVICE_ID: "device-no-area-id",
-            ATTR_AREA_ID: "test-area",
+            TargetKey.ENTITY_ID: ["light.hidden_in_area"],
+            TargetKey.DEVICE_ID: "device-no-area-id",
+            TargetKey.AREA_ID: "test-area",
             CONF_EXCLUDE: {
-                ATTR_ENTITY_ID: ["light.no_area", "light.kitchen"],
-                ATTR_DEVICE_ID: "device-test-area",
+                TargetKey.ENTITY_ID: ["light.no_area", "light.kitchen"],
+                TargetKey.DEVICE_ID: "device-test-area",
             },
         }
     )
@@ -815,7 +820,7 @@ async def test_explain_target(hass: HomeAssistant) -> None:
 async def test_explain_target_without_exclude(hass: HomeAssistant) -> None:
     """Test explaining a target selection without an exclude block."""
     assert target.async_explain_target(
-        hass, target.TargetSelection({ATTR_DEVICE_ID: "device-no-area-id"})
+        hass, target.TargetSelection({TargetKey.DEVICE_ID: "device-no-area-id"})
     ) == target.TargetExplanation(
         includes=[
             target.TargetIncludeEntities(
@@ -836,7 +841,7 @@ async def test_explain_target_all_entities(hass: HomeAssistant) -> None:
     explanation = target.async_explain_target(
         hass,
         target.TargetSelection(
-            {ATTR_ENTITY_ID: "all", CONF_EXCLUDE: {ATTR_AREA_ID: "test-area"}}
+            {TargetKey.ENTITY_ID: "all", CONF_EXCLUDE: {TargetKey.AREA_ID: "test-area"}}
         ),
     )
     assert explanation.includes == [
@@ -888,8 +893,8 @@ async def test_explain_target_expand_group(
         hass,
         target.TargetSelection(
             {
-                ATTR_ENTITY_ID: "light.direct_group",
-                CONF_EXCLUDE: {ATTR_ENTITY_ID: "light.no_area"},
+                TargetKey.ENTITY_ID: "light.direct_group",
+                CONF_EXCLUDE: {TargetKey.ENTITY_ID: "light.no_area"},
             }
         ),
         expand_group=expand_group,
@@ -902,9 +907,9 @@ async def test_explain_target_expand_group(
 @pytest.mark.parametrize(
     ("selector_config", "non_primary_entities"),
     [
-        ({ATTR_AREA_ID: "own-area"}, {"light.config_in_own_area"}),
-        ({ATTR_DEVICE_ID: "device-no-area-id"}, {"light.config_no_area"}),
-        ({ATTR_AREA_ID: "test-area"}, {"light.config_in_area"}),
+        ({TargetKey.AREA_ID: "own-area"}, {"light.config_in_own_area"}),
+        ({TargetKey.DEVICE_ID: "device-no-area-id"}, {"light.config_no_area"}),
+        ({TargetKey.AREA_ID: "test-area"}, {"light.config_in_area"}),
     ],
 )
 @pytest.mark.usefixtures("registries_mock")
@@ -1016,11 +1021,11 @@ async def test_async_track_target_selector_state_change_event(
     floor = fr.async_get(hass).async_create("Test Floor").floor_id
 
     selector_config = {
-        ATTR_ENTITY_ID: targeted_entity,
-        ATTR_DEVICE_ID: device_entry.id,
-        ATTR_AREA_ID: area,
-        ATTR_FLOOR_ID: floor,
-        ATTR_LABEL_ID: label,
+        TargetKey.ENTITY_ID: targeted_entity,
+        TargetKey.DEVICE_ID: device_entry.id,
+        TargetKey.AREA_ID: area,
+        TargetKey.FLOOR_ID: floor,
+        TargetKey.LABEL_ID: label,
     }
     unsub = await target.async_track_target_selector_state_change_event(
         hass, selector_config, state_change_callback
@@ -1155,8 +1160,8 @@ async def test_async_track_target_selector_state_change_event_filter(
     await set_states_and_check_events(targeted_entities, [])
 
     selector_config = {
-        ATTR_ENTITY_ID: targeted_entity,
-        ATTR_LABEL_ID: label,
+        TargetKey.ENTITY_ID: targeted_entity,
+        TargetKey.LABEL_ID: label,
     }
     unsub = await target.async_track_target_selector_state_change_event(
         hass, selector_config, state_change_callback, entity_filter
@@ -1237,7 +1242,7 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
 
     unsub = await target.async_track_target_selector_state_change_event(
         hass,
-        {ATTR_LABEL_ID: label.label_id},
+        {TargetKey.LABEL_ID: label.label_id},
         state_change_callback,
         on_entities_update=on_entities_update,
     )
@@ -1338,8 +1343,8 @@ async def test_async_track_target_selector_state_change_event_exclude(
     unsub = await target.async_track_target_selector_state_change_event(
         hass,
         {
-            ATTR_LABEL_ID: label.label_id,
-            CONF_EXCLUDE: {ATTR_LABEL_ID: excluded_label.label_id},
+            TargetKey.LABEL_ID: label.label_id,
+            CONF_EXCLUDE: {TargetKey.LABEL_ID: excluded_label.label_id},
         },
         state_change_callback,
         on_entities_update=on_entities_update,
@@ -1415,7 +1420,7 @@ async def test_async_track_target_selector_cancels_update_task_on_unsubscribe(
     # No entity has the label yet, so the awaited initial update does not fire.
     unsub = await target.async_track_target_selector_state_change_event(
         hass,
-        {ATTR_LABEL_ID: label.label_id},
+        {TargetKey.LABEL_ID: label.label_id},
         state_change_callback,
         on_entities_update=on_entities_update,
     )
@@ -1452,7 +1457,7 @@ async def test_async_track_target_selector_no_on_entities_update(
     # No on_entities_update — should work without errors
     unsub = await target.async_track_target_selector_state_change_event(
         hass,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         state_change_callback,
     )
 
