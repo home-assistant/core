@@ -2,13 +2,16 @@
 
 from unittest.mock import AsyncMock
 
-from aioprecioscarburantes import PreciosCarburantesConnectionError
-from pytest_homeassistant.common import MockConfigEntry
+from aioprecioscarburantes import PreciosCarburantesConnectionError, StationList
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.geoportal_gasolineras.const import (
     CONF_MUNICIPALITY_ID,
     CONF_PROVINCE_ID,
     CONF_STATION_ID,
+    SCAN_INTERVAL,
     SUBENTRY_TYPE_STATION,
 )
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
@@ -41,14 +44,20 @@ async def test_setup_retry(
 
 
 async def test_partial_failure(
-    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a municipality that cannot be fetched does not stop the others."""
+    """Test a failing municipality does not stop the others and is logged once."""
+    antequera_down = True
+    stations = mock_client.get_stations_by_municipality.return_value
 
-    async def by_municipality(municipality_id: str):  # type: ignore[no-untyped-def]
-        if municipality_id == "4469":
+    async def by_municipality(municipality_id: str) -> StationList:
+        if municipality_id == "4469" and antequera_down:
             raise PreciosCarburantesConnectionError
-        return mock_client.get_stations_by_municipality.return_value
+        return stations
 
     mock_client.get_stations_by_municipality.side_effect = by_municipality
     mock_config_entry.add_to_hass(hass)
@@ -68,6 +77,20 @@ async def test_partial_failure(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.repsol_la_roda_de_andalucia_diesel_a")
+    assert caplog.text.count("Prices of municipality 4469 are unavailable") == 1
+
+    # Still down: not logged again
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert caplog.text.count("Prices of municipality 4469 are unavailable") == 1
+
+    # Back: the recovery is logged
+    antequera_down = False
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert "Prices of municipality 4469 are available again" in caplog.text
 
 
 async def test_reload_on_new_station(

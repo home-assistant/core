@@ -129,20 +129,29 @@ async def test_added_stations_not_offered(
 
 
 @pytest.mark.parametrize(
-    "method", ["get_provinces", "get_municipalities", "get_stations_by_municipality"]
+    ("method", "steps"),
+    [
+        ("get_provinces", []),
+        ("get_municipalities", [{CONF_PROVINCE_ID: "41"}]),
+        (
+            "get_stations_by_municipality",
+            [{CONF_PROVINCE_ID: "41"}, {CONF_MUNICIPALITY_ID: "6139"}],
+        ),
+    ],
 )
 async def test_abort_cannot_connect(
     hass: HomeAssistant,
     mock_client: AsyncMock,
     empty_entry: MockConfigEntry,
     method: str,
+    steps: list[dict[str, Any]],
 ) -> None:
-    """Test adding a station aborts when the lists cannot be fetched."""
+    """Test adding a station aborts when a list cannot be fetched."""
     getattr(mock_client, method).side_effect = PreciosCarburantesConnectionError
     result = await _start(hass, empty_entry)
-    if result["type"] is FlowResultType.FORM:
-        result = await _configure(hass, result, {CONF_PROVINCE_ID: "41"})
-    if result["type"] is FlowResultType.FORM:
-        result = await _configure(hass, result, {CONF_MUNICIPALITY_ID: "6139"})
+    for step in steps:
+        assert result["type"] is FlowResultType.FORM
+        result = await _configure(hass, result, step)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+    getattr(mock_client, method).assert_called_once()

@@ -41,6 +41,8 @@ class GeoportalGasolinerasCoordinator(DataUpdateCoordinator[dict[str, Station]])
             update_interval=SCAN_INTERVAL,
         )
         self.client = PreciosCarburantes(session=async_get_clientsession(hass))
+        # Municipalities whose last request failed, to log outages and recoveries once
+        self._unavailable: set[str] = set()
 
     @override
     async def _async_update_data(self) -> dict[str, Station]:
@@ -61,9 +63,20 @@ class GeoportalGasolinerasCoordinator(DataUpdateCoordinator[dict[str, Station]])
             try:
                 result = await self.client.get_stations_by_municipality(municipality_id)
             except PreciosCarburantesError as err:
-                _LOGGER.debug("Cannot fetch municipality %s: %s", municipality_id, err)
+                if municipality_id not in self._unavailable:
+                    self._unavailable.add(municipality_id)
+                    _LOGGER.info(
+                        "Prices of municipality %s are unavailable: %s",
+                        municipality_id,
+                        err,
+                    )
                 failed += 1
                 continue
+            if municipality_id in self._unavailable:
+                self._unavailable.discard(municipality_id)
+                _LOGGER.info(
+                    "Prices of municipality %s are available again", municipality_id
+                )
             stations.update(
                 (station.id, station)
                 for station in result.stations

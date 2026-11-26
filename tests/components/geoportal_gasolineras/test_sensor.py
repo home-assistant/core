@@ -13,7 +13,7 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.geoportal_gasolineras.const import SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -64,7 +64,9 @@ async def test_updates(
     await _tick(hass, freezer)
     assert hass.states.get(REPSOL_DIESEL).state == STATE_UNAVAILABLE
     assert hass.states.get(REPSOL_E5).state == "1.575"
-    assert hass.states.get("sensor.repsol_la_roda_de_andalucia_lpg").state == "0.999"
+    lpg = hass.states.get("sensor.repsol_la_roda_de_andalucia_lpg")
+    assert lpg.state == "0.999"
+    assert lpg.attributes[ATTR_UNIT_OF_MEASUREMENT] == "€/L"
     assert (
         hass.states.get("sensor.shell_la_roda_de_andalucia_diesel_a").state
         == STATE_UNAVAILABLE
@@ -76,3 +78,37 @@ async def test_updates(
     )
     await _tick(hass, freezer)
     assert hass.states.get(REPSOL_E5).state == STATE_UNAVAILABLE
+
+
+async def test_price_per_kilogram(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test fuels sold by weight are priced per kilogram."""
+    stations = mock_client.get_stations_by_municipality.return_value
+    repsol = stations.stations[0]
+    mock_client.get_stations_by_municipality.return_value = replace(
+        stations,
+        stations=[
+            replace(
+                repsol,
+                prices={
+                    **repsol.prices,
+                    FuelType.COMPRESSED_NATURAL_GAS: 1.249,
+                    FuelType.HYDROGEN: 13.5,
+                },
+            ),
+            stations.stations[1],
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    for entity_id, value in (
+        ("sensor.repsol_la_roda_de_andalucia_compressed_natural_gas", "1.249"),
+        ("sensor.repsol_la_roda_de_andalucia_hydrogen", "13.5"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state.state == value
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "€/kg"
