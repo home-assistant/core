@@ -30,19 +30,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_validate_connection() -> Generator[MagicMock]:
-    """Mock the connection probe the config flow runs before creating an entry.
-
-    The probe opens a connection of its own, so leaving it in place would show
-    up in every test asserting on the hub's connection.
-    """
-    with patch(
-        "homeassistant.components.ads.config_flow._validate_connection"
-    ) as mock_validate:
-        yield mock_validate
-
-
-@pytest.fixture
 def mock_create_connection() -> Generator[MagicMock]:
     """Mock the TCP check run before connecting, so the device is reachable."""
     with patch(
@@ -52,9 +39,7 @@ def mock_create_connection() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_pyads_connection(
-    mock_validate_connection: MagicMock, mock_create_connection: MagicMock
-) -> Generator[MagicMock]:
+def mock_pyads_connection(mock_create_connection: MagicMock) -> Generator[MagicMock]:
     """Mock the pyads Connection class."""
     with patch("pyads.Connection", autospec=True) as mock_connection:
         yield mock_connection

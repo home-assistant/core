@@ -1,68 +1,21 @@
 """Test the ADS hub's connection helpers."""
 
-from unittest.mock import MagicMock, patch
+import asyncio
+import threading
+from unittest.mock import MagicMock
 
 import pyads
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ads.const import DOMAIN
-from homeassistant.components.ads.hub import async_get_hub, connect
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_PORT, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
 
-from . import MockAdsDevice, setup_ads_platform
-from .const import AMS_NET_ID, IP_ADDRESS, PORT
-
-
-async def test_async_get_hub_not_loaded(hass: HomeAssistant) -> None:
-    """Test a platform set up before the connection is told to retry."""
-    with pytest.raises(PlatformNotReady):
-        async_get_hub(hass)
-
-
-@pytest.mark.usefixtures("mock_pyads_connection")
-async def test_async_get_hub(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test the hub of the loaded entry is returned."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert async_get_hub(hass) is mock_config_entry.runtime_data
-
-
-@pytest.mark.parametrize(
-    "configure_mock",
-    [
-        pytest.param(
-            lambda mock: setattr(
-                mock.return_value.read_state,
-                "side_effect",
-                pyads.ADSError(err_code=1861),
-            ),
-            id="timeout",
-        ),
-        pytest.param(
-            lambda mock: setattr(mock.return_value.read_state, "return_value", None),
-            id="port_closed",
-        ),
-    ],
-)
-def test_connect_closes_on_error(
-    mock_pyads_connection: MagicMock, configure_mock
-) -> None:
-    """Test a connection the device does not answer on is closed again."""
-    configure_mock(mock_pyads_connection)
-
-    with pytest.raises(pyads.ADSError):
-        connect(AMS_NET_ID, PORT, IP_ADDRESS)
-
-    mock_pyads_connection.return_value.close.assert_called_once()
+from . import ADS_CONFIG, MockAdsDevice, setup_ads_platform
+from .const import PORT
 
 
 async def test_platform_waits_for_the_import(
@@ -87,8 +40,11 @@ async def test_platform_waits_for_the_import(
 async def test_platform_gives_up_without_an_entry(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test a YAML platform retries on its own when no entry ever sets up."""
-    with patch("homeassistant.components.ads.hub.HUB_WAIT_TIMEOUT", 0):
+    """Test a YAML platform retries on its own when no entry ever sets up.
+
+    A malformed NetID aborts the import, so the platform does not wait for it.
+    """
+    async with asyncio.timeout(5):
         assert await async_setup_component(
             hass,
             SWITCH_DOMAIN,
@@ -105,3 +61,45 @@ async def test_platform_gives_up_without_an_entry(
 
     assert hass.states.get("switch.pump") is None
     assert "The ADS connection is not set up" in caplog.text
+
+
+async def test_platform_waits_for_a_retry_in_progress(
+    hass: HomeAssistant,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+) -> None:
+    """Test a YAML platform set up during a retry waits for it, not the failure."""
+    client = mock_pyads_connection.return_value
+    client.read_state.side_effect = pyads.ADSError(err_code=1861)
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: ADS_CONFIG})
+    await hass.async_block_till_done()
+    (entry,) = hass.config_entries.async_entries(DOMAIN)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    connecting, release = threading.Event(), threading.Event()
+
+    def _slow_read_state() -> tuple[int, int]:
+        connecting.set()
+        release.wait(5)
+        return (pyads.ADSSTATE_RUN, 0)
+
+    client.read_state.side_effect = _slow_read_state
+    mock_ads_device.values["GVL.pump"] = b"\x01"
+    retry = hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+    await hass.async_add_executor_job(connecting.wait, 5)
+    platform = hass.async_create_task(
+        async_setup_component(
+            hass,
+            SWITCH_DOMAIN,
+            {SWITCH_DOMAIN: {"platform": DOMAIN, "adsvar": "GVL.pump", "name": "Pump"}},
+        )
+    )
+    for _ in range(20):
+        await asyncio.sleep(0)
+    release.set()
+    await retry
+    assert await platform
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("switch.pump").state == STATE_ON

@@ -340,7 +340,7 @@ async def test_setup_and_unload(
 
 
 @pytest.mark.parametrize(
-    "configure_mock",
+    ("configure_mock", "opened"),
     [
         pytest.param(
             lambda mock: setattr(
@@ -348,7 +348,13 @@ async def test_setup_and_unload(
                 "side_effect",
                 pyads.ADSError(err_code=1861),
             ),
+            True,
             id="timeout",
+        ),
+        pytest.param(
+            lambda mock: setattr(mock.return_value.read_state, "return_value", None),
+            True,
+            id="port_closed",
         ),
         pytest.param(
             lambda mock: setattr(
@@ -356,6 +362,7 @@ async def test_setup_and_unload(
                 "side_effect",
                 RuntimeError("Failed to open port on AMS router."),
             ),
+            False,
             id="router_down",
         ),
     ],
@@ -365,8 +372,12 @@ async def test_setup_not_ready(
     mock_config_entry: MockConfigEntry,
     mock_pyads_connection: MagicMock,
     configure_mock: Callable[[MagicMock], None],
+    opened: bool,
 ) -> None:
-    """Test the entry is retried while the device or the router is unreachable."""
+    """Test the entry is retried while the device or the router is unreachable.
+
+    A connection that opened is closed again, so retries do not pile up ports.
+    """
     configure_mock(mock_pyads_connection)
 
     mock_config_entry.add_to_hass(hass)
@@ -374,6 +385,7 @@ async def test_setup_not_ready(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_pyads_connection.return_value.close.called is opened
 
 
 async def test_reload_resubscribes_yaml_entities(
