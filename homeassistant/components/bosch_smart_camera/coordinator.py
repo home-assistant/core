@@ -19,7 +19,9 @@ from bosch_shc_camera_client.client import BoschCameraClient
 from bosch_shc_camera_client.cloud import cloud_set_camera_light
 from bosch_shc_camera_client.states import (
     CameraAccountStates,
+    FirmwareStatus,
     LightState,
+    get_firmware_status,
     get_light_state,
     get_wifi_info,
 )
@@ -43,6 +45,9 @@ _LOGGER = logging.getLogger(__name__)
 # The camera list only changes when the user adds or removes a camera.
 SCAN_INTERVAL = timedelta(minutes=5)
 
+# Firmware updates are rolled out over days.
+FIRMWARE_SCAN_INTERVAL = timedelta(hours=6)
+
 # The signal strength fluctuates, but a diagnostic value needs no tight polling.
 WIFI_SCAN_INTERVAL = timedelta(minutes=10)
 
@@ -58,6 +63,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
     config_entry: BoschCameraConfigEntry
     _oauth_session: OAuth2Session
     _client: BoschCameraClient
+    firmware: BoschFirmwareCoordinator
 
     def __init__(
         self, hass: HomeAssistant, config_entry: BoschCameraConfigEntry
@@ -399,3 +405,54 @@ class BoschWifiCoordinator(DataUpdateCoordinator[dict[str, int | None]]):
                 continue
             data[camera_id] = info.signal_strength
         return data
+
+
+class BoschFirmwareCoordinator(DataUpdateCoordinator[dict[str, FirmwareStatus]]):
+    """Fetch the firmware status of every camera of the account."""
+
+    config_entry: BoschCameraConfigEntry
+    cameras: BoschCameraCoordinator
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: BoschCameraConfigEntry,
+        cameras: BoschCameraCoordinator,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN} firmware",
+            update_interval=FIRMWARE_SCAN_INTERVAL,
+        )
+        self.cameras = cameras
+        self._unavailable: set[str] = set()
+        # Entities are added even when the first refresh fails.
+        self.data = {}
+
+    @override
+    async def _async_update_data(self) -> dict[str, FirmwareStatus]:
+        """Fetch the firmware status of the known cameras."""
+        session = async_get_clientsession(self.hass)
+        token = await self.cameras.async_get_access_token()
+        statuses: dict[str, FirmwareStatus] = {}
+        for camera_id in self.cameras.data:
+            try:
+                statuses[camera_id] = await get_firmware_status(
+                    session, token, camera_id
+                )
+                if camera_id in self._unavailable:
+                    self._unavailable.discard(camera_id)
+                    _LOGGER.info("Firmware status of %s is back", camera_id)
+            except BoschCameraAuthError as err:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="auth_failed"
+                ) from err
+            except BoschCameraConnectionError, BoschCameraInvalidResponseError:
+                # Only this camera's entity goes unavailable.
+                if camera_id not in self._unavailable:
+                    self._unavailable.add(camera_id)
+                    _LOGGER.info("Firmware status of %s is unavailable", camera_id)
+        return statuses

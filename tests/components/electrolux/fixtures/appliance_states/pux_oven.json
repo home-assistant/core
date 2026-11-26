@@ -1,0 +1,45 @@
+{
+  "applianceId": "949288049_00:11112225-443E076A37D6",
+  "connectionState": "connected",
+  "status": "enabled",
+  "properties": {
+    "reported": {
+      "applianceInfo": {
+        "capabilityHash": "212e55b62f19cfec40ff724301b07f80adef9a0ccf072693d45e38049708ef03",
+        "applianceType": "OV"
+      },
+      "doorState": "CLOSED",
+      "preheatComplete": "OFF",
+      "remoteControl": "NOT_SAFETY_RELEVANT_ENABLED",
+      "cpv": "00",
+      "targetTemperatureF": 302,
+      "targetTemperatureC": 150,
+      "runningTime": 0,
+      "program": "TRUE_FAN",
+      "applianceState": "READY_TO_START",
+      "targetMicrowavePower": 65535,
+      "alerts": [],
+      "pizzaShieldState": "UNKNOWN",
+      "networkInterface": {
+        "autoLocalTimeOffset": -2147483648,
+        "niuSwUpdateCurrentDescription": "A23642205A-S00008458A",
+        "swVersion": "v4.0.0S_argo",
+        "otaState": "IDLE",
+        "timeZoneDatabaseName": "Etc/UTC",
+        "swAncAndRevision": "S00008458A",
+        "linkQualityIndicator": "VERY_GOOD"
+      },
+      "foodProbeInsertionState": "NOT_INSERTED",
+      "cavityLight": false,
+      "waterTrayInsertionState": "INSERTED",
+      "waterTankEmpty": "STEAM_TANK_FULL",
+      "targetDuration": 0,
+      "startTime": -1,
+      "processPhase": "NONE",
+      "connectivityState": "connected",
+      "timeToEnd": -1,
+      "displayTemperatureC": 30,
+      "displayTemperatureF": 86
+    }
+  }
+}

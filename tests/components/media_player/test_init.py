@@ -28,7 +28,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import DATA_COMPONENT
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, TargetKey
+from homeassistant.const import STATE_OFF, TargetKey
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -278,7 +278,6 @@ async def test_get_image_http_fetch_failure_logging(
     debug_detail: str,
 ) -> None:
     """Test a failed fetch logs only the host at warning and the URL at debug."""
-    caplog.set_level(logging.DEBUG)
     with patch(
         "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
         url,
@@ -762,7 +761,7 @@ async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "media_player",
         "turn_off",
-        {ATTR_ENTITY_ID: "media_player.group"},
+        {TargetKey.ENTITY_ID: "media_player.group"},
         blocking=True,
     )
     await hass.async_block_till_done()

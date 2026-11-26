@@ -22,4 +22,5 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-UPDATE_INTERVAL = timedelta(minutes=1)
+CHARGER_UPDATE_INTERVAL = timedelta(minutes=1)
+SMART_METER_UPDATE_INTERVAL = timedelta(minutes=5)
