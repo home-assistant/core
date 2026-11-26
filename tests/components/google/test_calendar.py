@@ -1992,3 +1992,38 @@ async def test_multiple_calendars_persist_in_shared_store(
     assert list(store_data["event_sync"][second_calendar_id]["items"]) == [
         "cal-2-event"
     ]
+
+
+async def test_calendar_list_pagination(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    test_api_calendar: dict[str, Any],
+    mock_events_list_items: Callable[[list[dict[str, Any]]], None],
+    component_setup: ComponentSetup,
+) -> None:
+    """Test calendars on every page of the calendar list are added."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        f"{API_BASE_URL}/users/me/calendarList?pageToken=page-2",
+        json={
+            "items": [
+                {
+                    **test_api_calendar,
+                    "id": "second-page@group.calendar.google.com",
+                    "summary": "Second Page Calendar",
+                    "primary": False,
+                }
+            ],
+            "nextSyncToken": "sync-token",
+        },
+    )
+    aioclient_mock.get(
+        f"{API_BASE_URL}/users/me/calendarList",
+        json={"items": [test_api_calendar], "nextPageToken": "page-2"},
+    )
+    mock_events_list_items([])
+
+    assert await component_setup()
+
+    assert hass.states.get(TEST_ENTITY)
+    assert hass.states.get("calendar.second_page_calendar")
