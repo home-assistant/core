@@ -7,8 +7,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, Platform, TargetKey
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightService
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -42,7 +42,7 @@ async def test_async_turn_on(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
@@ -60,7 +60,7 @@ async def test_async_turn_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
@@ -70,8 +70,8 @@ async def test_async_turn_off(
 @pytest.mark.parametrize(
     ("service", "method_arg"),
     [
-        pytest.param(SERVICE_TURN_ON, True, id="turn_on"),
-        pytest.param(SERVICE_TURN_OFF, False, id="turn_off"),
+        pytest.param(LightService.TURN_ON, True, id="turn_on"),
+        pytest.param(LightService.TURN_OFF, False, id="turn_off"),
     ],
 )
 async def test_async_turn_on_off_error(
