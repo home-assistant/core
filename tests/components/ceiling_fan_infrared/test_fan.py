@@ -5,10 +5,15 @@ from unittest.mock import patch
 
 from infrared_protocols.codes.generic.e27_fan_light import E27FanLightCode
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_restore_cache,
+    snapshot_platform,
+)
 from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.ceiling_fan_infrared.fan import CeilingFanIrRestoreData
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
@@ -25,7 +30,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 
@@ -329,3 +334,48 @@ async def test_state_restored_after_a_reload_while_the_emitter_is_unavailable(
         blocking=True,
     )
     assert mock_infrared_emitter_entity.send_command_calls == []
+
+
+def test_restore_data_rejects_invalid_values() -> None:
+    """Test invalid extra stored data is ignored."""
+    assert CeilingFanIrRestoreData.from_dict({}) is None
+    assert (
+        CeilingFanIrRestoreData.from_dict({"is_on": "yes", "percentage": None}) is None
+    )
+    assert (
+        CeilingFanIrRestoreData.from_dict({"is_on": None, "percentage": "low"}) is None
+    )
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_state_restored_from_last_state_without_extra_data(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the last state is used when no extra stored data is available."""
+    entity_id = "fan.ceiling_fan_via_test_ir_emitter"
+    mock_restore_cache(hass, [State(entity_id, STATE_ON, {ATTR_PERCENTAGE: 33})])
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_PERCENTAGE] == 33
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_invalid_restored_state_is_ignored(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test a restored state that is neither on nor off is ignored."""
+    entity_id = "fan.ceiling_fan_via_test_ir_emitter"
+    mock_restore_cache(hass, [State(entity_id, STATE_UNKNOWN)])
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_PERCENTAGE] is None

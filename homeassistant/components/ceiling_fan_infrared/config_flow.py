@@ -87,8 +87,6 @@ class CeilingFanIrConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         entity_registry = er.async_get(self.hass)
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.entry_id == self.context.get("entry_id"):
-                continue
             if (uuid := entry.data.get(CONF_INFRARED_ENTITY_UUID)) is not None:
                 if (
                     resolved := er.async_resolve_entity_id(entity_registry, uuid)

@@ -173,6 +173,25 @@ async def test_entry_follows_the_emitter_when_it_is_renamed(
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_emitter_registry_update_without_a_rename_is_ignored(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an emitter update that does not change its entity ID is ignored."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    entry_data = dict(config_entry.data)
+
+    entity_registry.async_update_entity(EMITTER_ENTITY_ID, name="New emitter name")
+    await hass.async_block_till_done()
+
+    assert config_entry.data == entry_data
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_emitter_renamed_while_unloaded_is_followed_on_setup(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
