@@ -142,11 +142,28 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
-        scenes = {
-            x.metadata.name for x in self.api.scenes if x.group.rid == self.hue_group.id
+        scenes = list(
+            dict.fromkeys(
+                x.metadata.name
+                for x in self.api.scenes
+                if x.group.rid == self.hue_group.id
+            )
+        )
+        # A room's children are devices, a zone's children are lights
+        position = {
+            child.rid: index for index, child in enumerate(self.hue_group.children)
         }
         light_resource_ids = tuple(
-            x.id for x in self.controller.get_lights(self.resource.id)
+            light.id
+            for light in sorted(
+                self.controller.get_lights(self.resource.id),
+                key=lambda light: (
+                    position.get(
+                        light.id, position.get(light.owner.rid, len(position))
+                    ),
+                    light.id,
+                ),
+            )
         )
         light_names, light_entities = self._get_names_and_entity_ids_for_resource_ids(
             light_resource_ids
@@ -365,15 +382,15 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     @callback
     def _get_names_and_entity_ids_for_resource_ids(
         self, resource_ids: tuple[str]
-    ) -> tuple[set[str], set[str]]:
+    ) -> tuple[list[str], list[str]]:
         """Return the names and entity ids for the given Hue (light) resource IDs."""
         ent_reg = er.async_get(self.hass)
-        light_names: set[str] = set()
-        light_entities: set[str] = set()
+        light_names: dict[str, None] = {}
+        light_entities: dict[str, None] = {}
         for resource_id in resource_ids:
-            light_names.add(self.controller.get_device(resource_id).metadata.name)
+            light_names[self.controller.get_device(resource_id).metadata.name] = None
             if entity_id := ent_reg.async_get_entity_id(
                 self.platform.domain, DOMAIN, resource_id
             ):
-                light_entities.add(entity_id)
-        return light_names, light_entities
+                light_entities[entity_id] = None
+        return list(light_names), list(light_entities)
