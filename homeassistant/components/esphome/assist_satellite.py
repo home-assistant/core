@@ -689,7 +689,7 @@ class EsphomeAssistSatellite(
                 audio_settings=AudioSettings(
                     noise_suppression_level=audio_settings.noise_suppression_level,
                     auto_gain_dbfs=audio_settings.auto_gain,
-                    volume_multiplier=audio_settings.volume_multiplier,
+                    volume_multiplier=audio_settings.volume_multiplier or 1.0,
                 ),
             ),
             "esphome_assist_satellite_pipeline",
