@@ -53,7 +53,10 @@ class PalazzettiLightEntity(PalazzettiEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         try:
-            await self.coordinator.client.set_light(True)
+            if not await self.coordinator.client.set_light(True):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="cannot_connect"
+                )
         except CommunicationError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="cannot_connect"
@@ -65,7 +68,10 @@ class PalazzettiLightEntity(PalazzettiEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         try:
-            await self.coordinator.client.set_light(False)
+            if not await self.coordinator.client.set_light(False):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="cannot_connect"
+                )
         except CommunicationError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="cannot_connect"

@@ -78,11 +78,40 @@ async def test_async_turn_on_off_error(
     hass: HomeAssistant,
     mock_palazzetti_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    service: str,
+    service: LightService,
     method_arg: bool,
 ) -> None:
     """Test error handling during turn on/off."""
     mock_palazzetti_client.set_light.side_effect = CommunicationError()
+    await setup_integration(hass, mock_config_entry)
+
+    error_message = "Could not connect to the device"
+    with pytest.raises(HomeAssistantError, match=error_message):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+    mock_palazzetti_client.set_light.assert_called_once_with(method_arg)
+
+
+@pytest.mark.parametrize(
+    ("service", "method_arg"),
+    [
+        pytest.param(LightService.TURN_ON, True, id="turn_on"),
+        pytest.param(LightService.TURN_OFF, False, id="turn_off"),
+    ],
+)
+async def test_async_turn_on_off_rejected(
+    hass: HomeAssistant,
+    mock_palazzetti_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: LightService,
+    method_arg: bool,
+) -> None:
+    """Test error handling when device rejects turn on/off."""
+    mock_palazzetti_client.set_light.return_value = False
     await setup_integration(hass, mock_config_entry)
 
     error_message = "Could not connect to the device"
