@@ -26,6 +26,8 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 PERIODIC_UPDATE_INTERVAL = timedelta(minutes=5)
@@ -36,6 +38,7 @@ TELEMETRY_MAX_SECONDS = 30
 COMMAND_HOLD_SECONDS = 120
 MISSION_CHECK_SECONDS = 60
 ACTIVE_PHASES = frozenset({"run", "hmMidMsn", "hmPostMsn", "hmUsrDock", "evac"})
+MISSION_FIELDS = frozenset({"phase", "cycle"})
 
 type SessionCallable = Callable[[HomeAssistant, RoombaClient], Awaitable[object]]
 
@@ -71,7 +74,8 @@ class RoombaConnection:
         self._unsub_state: CALLBACK_TYPE | None = None
         self._session_start = 0.0
         self._last_message: float | None = None
-        self._mission_received = False
+        self._mission_fields: set[str] = set()
+        self._opening = False
         self._fresh = asyncio.Event()
         self._closed = False
         self._unreachable = False
@@ -102,7 +106,7 @@ class RoombaConnection:
             )
         # The state was just collected during setup.
         self._session_start = self._last_message = time.monotonic()
-        self._mission_received = True
+        self._mission_fields.update(MISSION_FIELDS)
         self._schedule_settle()
 
     async def async_stop(self) -> None:
@@ -132,14 +136,24 @@ class RoombaConnection:
         if len(reported) > 1 or (reported and "signal" not in reported):
             self._last_message = time.monotonic()
         mission = reported.get("cleanMissionStatus") or {}
-        if "phase" in mission and "cycle" in mission:
-            self._mission_received = True
+        self._mission_fields.update(MISSION_FIELDS.intersection(mission))
+
+    @property
+    def _mission_fresh(self) -> bool:
+        """Return True once this session has reported the mission state."""
+        return self._mission_fields >= MISSION_FIELDS
 
     @callback
     def _on_connection_state(self, state: str, _error: str | None) -> None:
-        """Forget the mission state when the session drops, even if it recovers."""
+        """Track sessions that the client drops and recovers on its own."""
         if state == "disconnected":
-            self._mission_received = False
+            self._mission_fields.clear()
+        elif not self._opening and not self._closed:
+            # Collect the recovered session's state before trusting it.
+            self._fresh.clear()
+            self._last_message = None
+            self._session_start = time.monotonic()
+            self._schedule_settle()
 
     async def async_ensure_connected(self, *, wait: bool = False) -> None:
         """Open a session if needed before a command.
@@ -160,9 +174,9 @@ class RoombaConnection:
             self._schedule_release(COMMAND_HOLD_SECONDS)
         if wait:
             await self._async_wait_fresh()
-            if not self._mission_received:
+            if not self._mission_fresh:
                 raise HomeAssistantError(
-                    f"Roomba at {self.host} did not report its mission state"
+                    translation_domain=DOMAIN, translation_key="no_mission_state"
                 )
 
     async def async_refresh(self, *, wait: bool = False) -> None:
@@ -213,8 +227,12 @@ class RoombaConnection:
         await self._disconnect(self.hass, self.roomba)
         self._fresh.clear()
         self._last_message = None
-        self._mission_received = False
-        await self._connect(self.hass, self.roomba)
+        self._mission_fields.clear()
+        self._opening = True
+        try:
+            await self._connect(self.hass, self.roomba)
+        finally:
+            self._opening = False
         self._session_start = time.monotonic()
         self._schedule_settle()
 
@@ -297,7 +315,8 @@ class RoombaConnection:
             if (hold_left := self._hold_until - time.monotonic()) > 0:
                 self._schedule_release(hold_left)
                 return
-            if self.robot_active:
+            # A mission phase cached from an earlier session must not pin it.
+            if self._mission_fresh and self.robot_active:
                 _LOGGER.debug("Robot on a mission, keeping the session open")
                 self._schedule_release(MISSION_CHECK_SECONDS)
                 return

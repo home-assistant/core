@@ -801,7 +801,7 @@ async def test_start_requires_mission_state(
     with pytest.raises(HomeAssistantError) as exc_info:
         await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, SERVICE_START)
 
-    assert exc_info.value.translation_key == "not_connected"
+    assert exc_info.value.translation_key == "no_mission_state"
     periodic_roomba.send_command.assert_not_awaited()
 
 
@@ -863,3 +863,70 @@ async def test_refresh_reconnects_when_settling_session_dropped(
     await _call_while_ticking(hass, freezer, HA_DOMAIN, SERVICE_UPDATE_ENTITY)
 
     assert periodic_roomba.connect.await_count == 3
+
+
+async def test_mission_fields_in_separate_messages(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test phase and cycle arriving in separate updates count as mission state."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    status = periodic_roomba.master_state["state"]["reported"]["cleanMissionStatus"]
+
+    async def _split_connect() -> None:
+        periodic_roomba.connected = True
+        status.update(phase="pause", cycle="clean")
+        _publish(periodic_roomba, {"cleanMissionStatus": {"phase": "pause"}})
+        _publish(periodic_roomba, {"cleanMissionStatus": {"cycle": "clean"}})
+
+    periodic_roomba.connect.side_effect = _split_connect
+    await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, SERVICE_START)
+
+    periodic_roomba.send_command.assert_awaited_once_with("resume", None)
+
+
+async def test_start_waits_for_state_after_background_recovery(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test start after the client recovers waits for the robot's new state."""
+    _set_phase(periodic_roomba, "run")
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    on_state = periodic_roomba.register_on_connection_state_callback.call_args.args[0]
+    on_state("disconnected", "Wi-Fi drop")
+    on_state("connected", None)
+    _set_phase(periodic_roomba, "pause")
+
+    task = _call(hass, VACUUM_DOMAIN, SERVICE_START)
+    for _ in range(5):
+        await asyncio.sleep(0)
+    assert not task.done()
+    status = periodic_roomba.master_state["state"]["reported"]["cleanMissionStatus"]
+    _publish(periodic_roomba, {"cleanMissionStatus": status})
+    await _tick_until_done(hass, freezer, task)
+
+    periodic_roomba.send_command.assert_awaited_once_with("resume", None)
+
+
+async def test_cached_mission_does_not_pin_session(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test a reconnect without mission state is released despite a cached run phase."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    # The robot reported a mission earlier, but this session only sends battery data.
+    _set_phase(periodic_roomba, "run")
+
+    await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+
+    assert not periodic_roomba.connected

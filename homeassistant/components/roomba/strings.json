@@ -116,6 +116,9 @@
     "invalid_spray_amount": {
       "message": "Invalid spray amount {spray_amount}. Expected one of: {spray_amounts}."
     },
+    "no_mission_state": {
+      "message": "The command was not sent because the robot did not report whether it is on a mission. Try again in a moment."
+    },
     "not_connected": {
       "message": "The command could not be sent because the robot is not connected."
     },

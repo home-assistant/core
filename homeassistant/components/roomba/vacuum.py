@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from . import roomba_reported_state
+from . import CannotConnect, roomba_reported_state
 from .connection import RoombaConnection
 from .const import DOMAIN
 from .entity import IRobotEntity
@@ -270,7 +270,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         """Open a session if the robot is polled rather than held."""
         try:
             await self._connection.async_ensure_connected(wait=wait)
-        except HomeAssistantError as err:
+        except CannotConnect as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="not_connected"
             ) from err
