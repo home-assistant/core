@@ -175,13 +175,13 @@ class MusicAssistantQueuePlaybackSpeed(MusicAssistantEntity, NumberEntity):
         """Register callbacks, also for the queue the server adds after the player."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.mass.subscribe(
-                self._on_queue_added, EventType.QUEUE_ADDED, self.player_id
-            )
+            self.mass.subscribe(self._on_queue_added, EventType.QUEUE_ADDED)
         )
 
     def _on_queue_added(self, event: MassEvent) -> None:
-        self.async_write_ha_state()
+        # the queue it plays from may be another player's, added after this player
+        if event.object_id in (self.player.active_source, self.player_id):
+            self.async_write_ha_state()
 
     @property
     def _queue(self) -> PlayerQueue | None:

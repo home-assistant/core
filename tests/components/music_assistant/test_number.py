@@ -290,14 +290,22 @@ async def test_queue_playback_speed_older_server(
     assert entity_registry.async_get("number.test_player_1_playback_speed") is None
 
 
+@pytest.mark.parametrize(
+    "queue_id",
+    [
+        pytest.param("00:00:00:00:00:01", id="own_queue"),
+        pytest.param("test_group_player_1", id="active_source_queue"),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_queue_playback_speed_follows_added_queue(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
+    queue_id: str,
 ) -> None:
     """Test the playback speed number becomes available when the server adds the queue."""
     music_assistant_client.server_info.schema_version = 101
-    # the server registers the player before its queue
+    # the server registers the player before the queue it plays from
     with patch(
         "tests.components.music_assistant.common.create_player_queues_from_fixture",
         return_value=[],
@@ -308,10 +316,13 @@ async def test_queue_playback_speed_follows_added_queue(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    queue = {queue.queue_id: queue for queue in create_player_queues_from_fixture()}[
+    music_assistant_client.players._players[
         "00:00:00:00:00:01"
+    ].active_source = queue_id
+    queue = {queue.queue_id: queue for queue in create_player_queues_from_fixture()}[
+        queue_id
     ]
-    queue.current_item = AUDIOBOOK_QUEUE_ITEM
+    queue.current_item = replace(AUDIOBOOK_QUEUE_ITEM, queue_id=queue_id)
     music_assistant_client.player_queues._queues[queue.queue_id] = queue
     await trigger_subscription_callback(
         hass, music_assistant_client, EventType.QUEUE_ADDED, queue.queue_id
