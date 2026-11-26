@@ -21,7 +21,7 @@ async def test_device_configuration_cache_interval(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_get_devices.assert_awaited_once()
-    assert mock_get_devices.await_args.kwargs["conf_update_interval"] == timedelta(
+    mock_get_devices.assert_called_once()
+    assert mock_get_devices.call_args.kwargs["conf_update_interval"] == timedelta(
         minutes=5
     )
