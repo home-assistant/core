@@ -6,9 +6,6 @@ from typing import TYPE_CHECKING, Any, Self, override
 import probatio
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_SPEED,
-    ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as COVER_DOMAIN,
     ENTITY_ID_FORMAT,
@@ -16,6 +13,7 @@ from homeassistant.components.cover import (
     CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverEntityStateAttribute,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -298,7 +296,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
         # Without speeds, a variable named speed from the config is kept
         if not self._attr_supported_speeds:
             return {}
-        return {"speed": kwargs.get(ATTR_SPEED)}
+        return {"speed": kwargs.get(CoverServiceArgument.SPEED)}
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -345,7 +343,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set cover position."""
-        position = kwargs[ATTR_POSITION]
+        position = kwargs[CoverServiceArgument.POSITION]
         await self.async_run_script(
             self._action_scripts[POSITION_ACTION],
             run_variables={"position": position, **self._speed_variables(kwargs)},
@@ -375,7 +373,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        await self._set_tilt_position(kwargs[ATTR_TILT_POSITION])
+        await self._set_tilt_position(kwargs[CoverServiceArgument.TILT_POSITION])
 
     @property
     @override
