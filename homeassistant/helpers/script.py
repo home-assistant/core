@@ -35,6 +35,7 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ELSE,
     CONF_ENABLED,
+    CONF_ENTITY_ID,
     CONF_ERROR,
     CONF_EVENT,
     CONF_EVENT_DATA,
@@ -2092,7 +2093,7 @@ class Script:
                 # id during validation; unvalidated configs hold an entity
                 # registry id.
                 if isinstance(
-                    entity_id := step.get(ATTR_ENTITY_ID), str
+                    entity_id := step.get(CONF_ENTITY_ID), str
                 ) and valid_entity_id(entity_id):
                     referenced.add(entity_id)
 

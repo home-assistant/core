@@ -30,12 +30,18 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_gateway() -> Generator[Mock]:
-    """Return a mocked EnOcean gateway."""
+def mock_gateway_class() -> Generator[Mock]:
+    """Return the mocked EnOcean gateway class."""
     with patch(
         "homeassistant.components.enocean.Gateway", autospec=True
     ) as gateway_class:
-        yield gateway_class.return_value
+        yield gateway_class
+
+
+@pytest.fixture
+def mock_gateway(mock_gateway_class: Mock) -> Mock:
+    """Return a mocked EnOcean gateway."""
+    return mock_gateway_class.return_value
 
 
 @pytest.fixture
