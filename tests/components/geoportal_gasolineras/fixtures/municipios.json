@@ -1,0 +1,26 @@
+[
+  {
+    "IDMunicipio": "6084",
+    "IDProvincia": "41",
+    "IDCCAA": "01",
+    "Municipio": "Castilleja de la Cuesta",
+    "Provincia": "SEVILLA",
+    "CCAA": "Andalucia"
+  },
+  {
+    "IDMunicipio": "6139",
+    "IDProvincia": "41",
+    "IDCCAA": "01",
+    "Municipio": "Roda de Andalucía (La)",
+    "Provincia": "SEVILLA",
+    "CCAA": "Andalucia"
+  },
+  {
+    "IDMunicipio": "6145",
+    "IDProvincia": "41",
+    "IDCCAA": "01",
+    "Municipio": "Sanlúcar la Mayor",
+    "Provincia": "SEVILLA",
+    "CCAA": "Andalucia"
+  }
+]

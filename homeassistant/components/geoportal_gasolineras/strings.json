@@ -1,0 +1,131 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "description": "Follow the prices of Spanish fuel stations. After adding the integration, add each station with **Add fuel station**."
+      }
+    }
+  },
+  "config_subentries": {
+    "station": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "no_stations": "There are no fuel stations left to add in this municipality."
+      },
+      "entry_type": "Fuel station",
+      "initiate_flow": {
+        "user": "Add fuel station"
+      },
+      "step": {
+        "municipality": {
+          "data": {
+            "municipality_id": "Municipality"
+          },
+          "data_description": {
+            "municipality_id": "Municipality where the fuel station is."
+          }
+        },
+        "station": {
+          "data": {
+            "station_id": "Fuel station"
+          },
+          "data_description": {
+            "station_id": "Fuel station whose prices you want to follow."
+          }
+        },
+        "user": {
+          "data": {
+            "province_id": "Province"
+          },
+          "data_description": {
+            "province_id": "Province where the fuel station is."
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "adblue": {
+        "name": "AdBlue"
+      },
+      "ammonia": {
+        "name": "Ammonia"
+      },
+      "biodiesel": {
+        "name": "Biodiesel"
+      },
+      "bioethanol": {
+        "name": "Bioethanol"
+      },
+      "compressed_biogas": {
+        "name": "Compressed biogas"
+      },
+      "compressed_natural_gas": {
+        "name": "Compressed natural gas"
+      },
+      "diesel_a": {
+        "name": "Diesel A"
+      },
+      "diesel_b": {
+        "name": "Diesel B"
+      },
+      "diesel_premium": {
+        "name": "Premium diesel"
+      },
+      "gasoline_95_e10": {
+        "name": "Gasoline 95 E10"
+      },
+      "gasoline_95_e25": {
+        "name": "Gasoline 95 E25"
+      },
+      "gasoline_95_e5": {
+        "name": "Gasoline 95 E5"
+      },
+      "gasoline_95_e5_premium": {
+        "name": "Premium gasoline 95 E5"
+      },
+      "gasoline_95_e85": {
+        "name": "Gasoline 95 E85"
+      },
+      "gasoline_98_e10": {
+        "name": "Gasoline 98 E10"
+      },
+      "gasoline_98_e5": {
+        "name": "Gasoline 98 E5"
+      },
+      "hydrogen": {
+        "name": "Hydrogen"
+      },
+      "liquefied_biogas": {
+        "name": "Liquefied biogas"
+      },
+      "liquefied_natural_gas": {
+        "name": "Liquefied natural gas"
+      },
+      "lpg": {
+        "name": "LPG"
+      },
+      "methanol": {
+        "name": "Methanol"
+      },
+      "renewable_diesel": {
+        "name": "Renewable diesel"
+      },
+      "renewable_gasoline": {
+        "name": "Renewable gasoline"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Error communicating with the Geoportal Gasolineras service."
+    }
+  }
+}

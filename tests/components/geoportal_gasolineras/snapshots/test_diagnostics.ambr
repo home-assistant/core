@@ -1,0 +1,87 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'entry': dict({
+      'data': dict({
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'geoportal_gasolineras',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+        dict({
+          'data': dict({
+            'municipality_id': '6139',
+            'province_id': '41',
+            'station_id': '7370',
+          }),
+          'subentry_type': 'station',
+          'title': 'Repsol La Roda de Andalucía',
+          'unique_id': '7370',
+        }),
+        dict({
+          'data': dict({
+            'municipality_id': '6139',
+            'province_id': '41',
+            'station_id': '6440',
+          }),
+          'subentry_type': 'station',
+          'title': 'Shell La Roda de Andalucía',
+          'unique_id': '6440',
+        }),
+      ]),
+      'title': 'Spain fuel prices',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'stations': dict({
+      '6440': dict({
+        'address': 'AUTOVIA AUTOVIA A-92 KM. 123',
+        'brand': 'SHELL',
+        'id': '6440',
+        'latitude': 37.19775,
+        'locality': 'RODA DE ANDALUCIA (LA)',
+        'longitude': -4.796694,
+        'municipality': 'Roda de Andalucía (La)',
+        'municipality_id': '6139',
+        'postal_code': '41590',
+        'prices': dict({
+          'Gasoleo A': 1.885,
+          'Gasoleo Premium': 1.978,
+          'Gasolina 95 E5': 1.809,
+          'Gasolina 98 E5': 1.849,
+        }),
+        'province': 'SEVILLA',
+        'province_id': '41',
+        'sale_type': 'P',
+        'schedule': 'L-D: 06:30-21:30',
+      }),
+      '7370': dict({
+        'address': 'CARRETERA MALAGA, GRANADA, SEVILLA KM. 124,90',
+        'brand': 'REPSOL',
+        'id': '7370',
+        'latitude': 37.214444,
+        'locality': 'RODA DE ANDALUCIA (LA)',
+        'longitude': -4.777056,
+        'municipality': 'Roda de Andalucía (La)',
+        'municipality_id': '6139',
+        'postal_code': '41590',
+        'prices': dict({
+          'Gasoleo A': 1.825,
+          'Gasoleo Premium': 1.875,
+          'Gasolina 95 E5': 1.575,
+        }),
+        'province': 'SEVILLA',
+        'province_id': '41',
+        'sale_type': 'P',
+        'schedule': 'L-S: 07:00-22:00',
+      }),
+    }),
+  })
+# ---

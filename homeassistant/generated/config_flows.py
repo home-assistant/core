@@ -303,6 +303,7 @@ FLOWS = {
         "geofency",
         "geonetnz_quakes",
         "geonetnz_volcano",
+        "geoportal_gasolineras",
         "geosphere_austria_warnings",
         "ghost",
         "gios",

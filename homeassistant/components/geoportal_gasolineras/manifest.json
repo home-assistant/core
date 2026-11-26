@@ -1,0 +1,14 @@
+{
+  "domain": "geoportal_gasolineras",
+  "name": "Spain fuel prices (Geoportal Gasolineras)",
+  "categories": ["local_services"],
+  "codeowners": ["@jjprz"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/geoportal_gasolineras",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["aioprecioscarburantes"],
+  "quality_scale": "bronze",
+  "requirements": ["aioprecioscarburantes==0.4.0"],
+  "single_config_entry": true
+}

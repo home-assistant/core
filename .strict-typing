@@ -259,6 +259,7 @@ homeassistant.components.generic_hygrostat.*
 homeassistant.components.generic_thermostat.*
 homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
+homeassistant.components.geoportal_gasolineras.*
 homeassistant.components.ghost.*
 homeassistant.components.gios.*
 homeassistant.components.github.*

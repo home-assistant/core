@@ -1,0 +1,75 @@
+{
+  "entity": {
+    "sensor": {
+      "adblue": {
+        "default": "mdi:water"
+      },
+      "ammonia": {
+        "default": "mdi:gas-station"
+      },
+      "biodiesel": {
+        "default": "mdi:leaf"
+      },
+      "bioethanol": {
+        "default": "mdi:leaf"
+      },
+      "compressed_biogas": {
+        "default": "mdi:gas-cylinder"
+      },
+      "compressed_natural_gas": {
+        "default": "mdi:gas-cylinder"
+      },
+      "diesel_a": {
+        "default": "mdi:gas-station"
+      },
+      "diesel_b": {
+        "default": "mdi:tractor"
+      },
+      "diesel_premium": {
+        "default": "mdi:gas-station"
+      },
+      "gasoline_95_e10": {
+        "default": "mdi:gas-station"
+      },
+      "gasoline_95_e25": {
+        "default": "mdi:gas-station"
+      },
+      "gasoline_95_e5": {
+        "default": "mdi:gas-station"
+      },
+      "gasoline_95_e5_premium": {
+        "default": "mdi:gas-station"
+      },
+      "gasoline_95_e85": {
+        "default": "mdi:gas-station"
+      },
+      "gasoline_98_e10": {
+        "default": "mdi:gas-station"
+      },
+      "gasoline_98_e5": {
+        "default": "mdi:gas-station"
+      },
+      "hydrogen": {
+        "default": "mdi:molecule"
+      },
+      "liquefied_biogas": {
+        "default": "mdi:gas-cylinder"
+      },
+      "liquefied_natural_gas": {
+        "default": "mdi:gas-cylinder"
+      },
+      "lpg": {
+        "default": "mdi:gas-cylinder"
+      },
+      "methanol": {
+        "default": "mdi:flask"
+      },
+      "renewable_diesel": {
+        "default": "mdi:leaf"
+      },
+      "renewable_gasoline": {
+        "default": "mdi:leaf"
+      }
+    }
+  }
+}
