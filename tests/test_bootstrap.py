@@ -25,7 +25,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant import bootstrap, config as config_util, core, loader, runner
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import BASE_PLATFORMS, CONF_DEBUG
-from homeassistant.core import HomeAssistant, async_get_hass, callback
+from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import bootstrap_progress
 from homeassistant.helpers.translation import async_translations_loaded
@@ -1541,6 +1541,54 @@ async def test_bootstrap_dependency_not_found(
     assert "bad_integration" not in hass.config.components
 
     assert "Unable to resolve dependencies for bad_integration" in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
+async def test_bootstrap_dropped_integration_dependencies(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test dependencies only a dropped integration needs are not set up."""
+    hass.set_state(CoreState.not_running)
+    # A stage 1 integration and a stage 2 integration.
+    mock_integration(hass, MockModule(domain="bluetooth"))
+    mock_integration(hass, MockModule(domain="dependency_only"))
+    # The after dependency cycle drops both from the domains to set up.
+    mock_integration(
+        hass,
+        MockModule(
+            domain="cycle_a",
+            dependencies=["bluetooth", "dependency_only"],
+            partial_manifest={"after_dependencies": ["cycle_b"]},
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="cycle_b", partial_manifest={"after_dependencies": ["cycle_a"]}
+        ),
+    )
+    # An after dependency does not get an integration set up.
+    mock_integration(
+        hass,
+        MockModule(
+            domain="good_integration",
+            partial_manifest={"after_dependencies": ["dependency_only"]},
+        ),
+    )
+
+    await bootstrap._async_set_up_integrations(
+        hass, {"cycle_a": {}, "cycle_b": {}, "good_integration": {}}, monotonic()
+    )
+
+    assert "Unable to resolve (after) dependencies for cycle_a" in caplog.text
+    assert "Unable to resolve (after) dependencies for cycle_b" in caplog.text
+    assert "good_integration" in hass.config.components
+    assert "bluetooth" not in hass.config.components
+    assert "dependency_only" not in hass.config.components
+    # No domain is left waiting to be loaded.
+    assert hass.data["setup_done"] == {}
 
 
 async def test_pre_import_no_requirements(hass: HomeAssistant) -> None:
