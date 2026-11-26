@@ -15,12 +15,14 @@
     }
   },
   "services": {
+    "clear_sleep_timer": { "service": "mdi:sleep-off" },
     "get_library": { "service": "mdi:music-box-multiple" },
     "get_queue": { "service": "mdi:playlist-music" },
     "play_announcement": { "service": "mdi:bullhorn" },
     "play_media": { "service": "mdi:play" },
     "play_queue_item": { "service": "mdi:playlist-play" },
     "search": { "service": "mdi:magnify" },
+    "set_sleep_timer": { "service": "mdi:sleep" },
     "transfer_queue": { "service": "mdi:transfer" }
   }
 }

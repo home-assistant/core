@@ -3,7 +3,7 @@
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from music_assistant_models.enums import MediaType, QueueOption
+from music_assistant_models.enums import MediaType, QueueOption, SleepTimerMode
 import probatio
 
 from homeassistant.components.media_player import (
@@ -74,6 +74,8 @@ class MusicAssistantService(StrEnum):
     SEARCH = "search"
     GET_LIBRARY = "get_library"
     PLAY_QUEUE_ITEM = "play_queue_item"
+    SET_SLEEP_TIMER = "set_sleep_timer"
+    CLEAR_SLEEP_TIMER = "clear_sleep_timer"
 
 
 class MusicAssistantServiceArgument(StrEnum):
@@ -106,6 +108,8 @@ class MusicAssistantServiceArgument(StrEnum):
     ALBUM_TYPE = "album_type"
     ALBUM_ARTISTS_ONLY = "album_artists_only"
     QUEUE_ITEM_ID = "queue_item_id"
+    MODE = "mode"
+    DURATION = "duration"
 
 
 @callback
@@ -268,6 +272,43 @@ def async_setup_services(hass: HomeAssistant) -> None:
             probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
         },
         func="_async_handle_play_queue_item",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        MusicAssistantService.SET_SLEEP_TIMER,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
+        schema={
+            probatio.Optional(
+                MusicAssistantServiceArgument.MODE, default=SleepTimerMode.DURATION
+            ): probatio.All(
+                probatio.In(
+                    [
+                        SleepTimerMode.DURATION,
+                        SleepTimerMode.END_OF_ITEM,
+                        SleepTimerMode.END_OF_CHAPTER,
+                    ]
+                ),
+                probatio.Coerce(SleepTimerMode),
+            ),
+            probatio.Optional(
+                MusicAssistantServiceArgument.DURATION
+            ): cv.positive_time_period,
+            probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
+        },
+        func="_async_handle_set_sleep_timer",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        MusicAssistantService.CLEAR_SLEEP_TIMER,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
+        schema={
+            probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
+        },
+        func="_async_handle_clear_sleep_timer",
     )
 
 
