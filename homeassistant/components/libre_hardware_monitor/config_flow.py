@@ -16,13 +16,15 @@ import probatio
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
+from .coordinator import LibreHardwareMonitorConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +44,7 @@ REAUTH_SCHEMA = probatio.Schema(
 
 
 async def _validate_connection(
+    hass: HomeAssistant,
     user_input: dict[str, Any],
 ) -> LibreHardwareMonitorData:
     """Ensure a connection can be established."""
@@ -50,6 +53,7 @@ async def _validate_connection(
         port=user_input[CONF_PORT],
         username=user_input.get(CONF_USERNAME),
         password=user_input.get(CONF_PASSWORD),
+        session=async_get_clientsession(hass),
     )
 
     return await api.get_data()
@@ -85,7 +89,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(user_input)
 
             try:
-                lhm_data = await _validate_connection(user_input)
+                lhm_data = await _validate_connection(self.hass, user_input)
             except LibreHardwareMonitorConnectionError as exception:
                 _LOGGER.error(exception)
                 errors["base"] = "cannot_connect"
@@ -125,7 +129,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         # we use this step both for initial auth and for re-auth / re-config
-        reauth_entry: ConfigEntry | None = None
+        reauth_entry: LibreHardwareMonitorConfigEntry | None = None
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
             self._host = reauth_entry.data[CONF_HOST]
@@ -136,7 +140,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             data = {CONF_HOST: self._host, CONF_PORT: self._port, **user_input}
             try:
-                lhm_data = await _validate_connection(data)
+                lhm_data = await _validate_connection(self.hass, data)
             except LibreHardwareMonitorConnectionError as exception:
                 _LOGGER.error(exception)
                 errors["base"] = "cannot_connect"
@@ -193,7 +197,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 lhm_data = await _validate_connection(
-                    {**reconfig_entry.data, **user_input}
+                    self.hass, {**reconfig_entry.data, **user_input}
                 )
             except LibreHardwareMonitorConnectionError as exception:
                 _LOGGER.error(exception)

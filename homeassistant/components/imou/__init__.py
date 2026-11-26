@@ -1,11 +1,15 @@
 """Support for Imou devices."""
 
+from collections.abc import Mapping
+from typing import Any
+
 from pyimouapi.device import ImouDeviceManager
 from pyimouapi.ha_device import ImouHaDeviceManager
 from pyimouapi.openapi import ImouOpenApiClient
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     API_URLS,
@@ -17,6 +21,20 @@ from .const import (
 )
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 
+# Entries saved before the Europe and North America hosts were corrected stored
+# the region key of the other server. Swap those keys so the entry keeps the
+# server it was already calling.
+_LEGACY_REGION_SWAP = {"eu": "na", "na": "eu"}
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> None:
+    """Keep an existing entry on the server it was already calling."""
+    if entry.minor_version < 2:
+        data: Mapping[str, Any] = entry.data
+        if (region := data.get(CONF_API_URL)) in _LEGACY_REGION_SWAP:
+            data = {**data, CONF_API_URL: _LEGACY_REGION_SWAP[region]}
+        hass.config_entries.async_update_entry(entry, data=data, minor_version=2)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> None:
     """Set up Imou integration from a config entry."""
@@ -24,6 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> None
         entry.data[CONF_APP_ID],
         entry.data[CONF_APP_SECRET],
         API_URLS[entry.data[CONF_API_URL]],
+        session=async_get_clientsession(hass),
     )
     device_manager = ImouDeviceManager(imou_client)
     imou_device_manager = ImouHaDeviceManager(device_manager)

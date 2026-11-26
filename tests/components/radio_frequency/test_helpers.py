@@ -18,6 +18,7 @@ from pytest_homeassistant.components.radio_frequency.common import (
 )
 
 from homeassistant.components.radio_frequency import (
+    DATA_COMPONENT,
     RadioFrequencyReceivedSignal,
     RadioFrequencyReceiverConsumerEntity,
     RadioFrequencyTransmitterConsumerEntity,
@@ -103,6 +104,33 @@ async def test_receiver_resubscribes_after_receiver_unavailable(
 
     mock_rf_receiver_entity._handle_received_signal(TEST_SIGNAL)
     assert mock_consumer_entity.received_signals == [TEST_SIGNAL]
+
+
+async def test_receiver_resubscribes_after_replaced_while_transmitter_unavailable(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+    mock_rf_receiver_entity: MockRadioFrequencyReceiverEntity,
+) -> None:
+    """Test the consumer subscribes to a new receiver when the transmitter recovers."""
+    mock_rf_entity._attr_available = False
+    mock_rf_entity.async_write_ha_state()
+    consumer = MockConsumerEntity(ENTITY_ID, RECEIVER_ENTITY_ID)
+    await MockEntityPlatform(hass).async_add_entities([consumer])
+    await hass.async_block_till_done()
+
+    await mock_rf_receiver_entity.async_remove()
+    new_receiver = MockRadioFrequencyReceiverEntity("test_rf_receiver")
+    await hass.data[DATA_COMPONENT].async_add_entities([new_receiver])
+    await hass.async_block_till_done()
+
+    mock_rf_entity._attr_available = True
+    mock_rf_entity.async_write_ha_state()
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(CONSUMER_ENTITY_ID)) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    new_receiver._handle_received_signal(TEST_SIGNAL)
+    assert consumer.received_signals == [TEST_SIGNAL]
 
 
 async def test_receiver_unsubscribed_on_remove(

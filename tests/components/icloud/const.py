@@ -56,10 +56,26 @@ TRUSTED_DEVICES = [
     {"deviceType": "SMS", "areaCode": "", "phoneNumber": "*******58", "deviceId": "1"}
 ]
 
+FEATURES = {
+    "MSG": True,
+    "SND": True,
+    "WIP": True,
+    "LOC": True,
+    "LCK": True,
+}
+
+LOCATION_TIMESTAMP_MS = 1_700_000_000_000
+
 LOCATION = {
     "latitude": 60.2,
     "longitude": 24.7,
     "horizontalAccuracy": 10,
+    "altitude": 5.0,
+    "floorLevel": 2,
+    "positionType": "GPS",
+    "isOld": False,
+    "isInaccurate": False,
+    "timeStamp": LOCATION_TIMESTAMP_MS,
 }
 
 DEVICE = {
@@ -72,7 +88,18 @@ DEVICE = {
     "deviceClass": "iPhone",
     "deviceDisplayName": "iPhone",
     "prsId": None,
+    "features": FEATURES,
+    "lostModeCapable": True,
     "lowPowerMode": False,
+    "activationLocked": False,
+    "isLocating": False,
+    "locationEnabled": True,
+    "wipeInProgress": False,
+    "remoteWipe": None,
+    "remoteLock": None,
+    "lockedTimestamp": None,
+    "lostTimestamp": "",
+    "wipedTimestamp": None,
     "location": LOCATION,
 }
 
@@ -136,4 +163,20 @@ DEVICE_WITH_HALF_A_LOCATION = {
     "prsId": None,
     "lowPowerMode": False,
     "location": {"latitude": 60.2, "longitude": None},
+}
+
+# A second device to stand next to the account's own in the tests that
+# exercise what happens to everything Apple reports but stops naming.
+DEVICE_2 = {
+    "id": "device6",
+    "name": "iPad",
+    "deviceStatus": "200",
+    "batteryStatus": "Charging",
+    "batteryLevel": 0.5,
+    "rawDeviceModel": "iPad13,1",
+    "deviceClass": "iPad",
+    "deviceDisplayName": "iPad",
+    "prsId": None,
+    "lowPowerMode": False,
+    "location": None,
 }

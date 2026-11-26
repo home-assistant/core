@@ -16,10 +16,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS
+
 if TYPE_CHECKING:
     from . import TessieConfigEntry
-
-from .const import DOMAIN, ENERGY_HISTORY_FIELDS
 
 # This matches the update interval Tessie performs server side
 TESSIE_SYNC_INTERVAL = 10
@@ -76,7 +76,10 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             vehicle = await self.api.state(use_cache=True)
         except (InvalidToken, MissingToken) as e:
-            raise ConfigEntryAuthFailed from e
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -84,7 +87,10 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from e
         except ClientResponseError as e:
             if e.status == HTTPStatus.UNAUTHORIZED:
-                raise ConfigEntryAuthFailed from e
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_failed",
+                ) from e
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
@@ -132,7 +138,10 @@ class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             data = (await self.api.live_status())["response"]
         except (InvalidToken, MissingToken) as e:
-            raise ConfigEntryAuthFailed from e
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -172,7 +181,10 @@ class TessieEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             data = (await self.api.site_info())["response"]
         except (InvalidToken, MissingToken) as e:
-            raise ConfigEntryAuthFailed from e
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

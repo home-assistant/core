@@ -10,6 +10,7 @@ from aiohttp.web_exceptions import HTTPUnauthorized
 import probatio
 
 from homeassistant.components.http import KEY_HASS
+from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.onboarding import (
     BaseOnboardingView,
@@ -83,6 +84,7 @@ class RestoreBackupView(NoAuthBaseOnboardingView):
 
     url = "/api/onboarding/backup/restore"
     name = "api:onboarding:backup:restore"
+    max_body_size = MAX_UNAUTHENTICATED_BODY_SIZE
 
     @RequestDataValidator(
         probatio.Schema(

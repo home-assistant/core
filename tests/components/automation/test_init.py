@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
 from typing import Any
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import Mock, patch
 
 import probatio
 import pytest
@@ -32,19 +32,19 @@ from homeassistant.components.automation import (
     EVENT_AUTOMATION_TRIGGERED,
     AutomationEntity,
 )
-from homeassistant.components.automation.const import CONF_STOP_ACTIONS, SERVICE_TRIGGER
+from homeassistant.components.automation.const import (
+    AutomationService,
+    AutomationServiceArgument,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     CONF_ID,
-    SERVICE_RELOAD,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -280,22 +280,31 @@ async def test_trigger_service_ignoring_condition(
     assert caplog.record_tuples[0][1] == logging.WARNING
 
     await hass.services.async_call(
-        DOMAIN, "trigger", {"entity_id": "automation.test"}, blocking=True
+        DOMAIN,
+        AutomationService.TRIGGER,
+        {"entity_id": "automation.test"},
+        blocking=True,
     )
     assert len(calls) == 1
 
     await hass.services.async_call(
         DOMAIN,
-        "trigger",
-        {"entity_id": "automation.test", "skip_condition": True},
+        AutomationService.TRIGGER,
+        {
+            "entity_id": "automation.test",
+            AutomationServiceArgument.SKIP_CONDITION: True,
+        },
         blocking=True,
     )
     assert len(calls) == 2
 
     await hass.services.async_call(
         DOMAIN,
-        "trigger",
-        {"entity_id": "automation.test", "skip_condition": False},
+        AutomationService.TRIGGER,
+        {
+            "entity_id": "automation.test",
+            AutomationServiceArgument.SKIP_CONDITION: False,
+        },
         blocking=True,
     )
     assert len(calls) == 2
@@ -583,9 +592,9 @@ async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
 
     await hass.services.async_call(
         automation.DOMAIN,
-        SERVICE_TURN_OFF,
+        AutomationService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -596,7 +605,10 @@ async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     assert len(calls) == 1
 
     await hass.services.async_call(
-        automation.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        automation.DOMAIN,
+        AutomationService.TOGGLE,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     assert automation.is_on(hass, entity_id)
@@ -606,8 +618,8 @@ async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
 
     await hass.services.async_call(
         automation.DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: entity_id},
+        AutomationService.TOGGLE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert not automation.is_on(hass, entity_id)
@@ -616,23 +628,38 @@ async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     assert len(calls) == 2
 
     await hass.services.async_call(
-        automation.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        automation.DOMAIN,
+        AutomationService.TOGGLE,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     await hass.services.async_call(
-        automation.DOMAIN, SERVICE_TRIGGER, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        automation.DOMAIN,
+        AutomationService.TRIGGER,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     assert len(calls) == 3
 
     await hass.services.async_call(
-        automation.DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        automation.DOMAIN,
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     await hass.services.async_call(
-        automation.DOMAIN, SERVICE_TRIGGER, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        automation.DOMAIN,
+        AutomationService.TRIGGER,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     assert len(calls) == 4
 
     await hass.services.async_call(
-        automation.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        automation.DOMAIN,
+        AutomationService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     assert automation.is_on(hass, entity_id)
 
@@ -689,13 +716,13 @@ async def test_reload_config_service(
         with pytest.raises(Unauthorized):
             await hass.services.async_call(
                 automation.DOMAIN,
-                SERVICE_RELOAD,
+                AutomationService.RELOAD,
                 context=Context(user_id=hass_read_only_user.id),
                 blocking=True,
             )
         await hass.services.async_call(
             automation.DOMAIN,
-            SERVICE_RELOAD,
+            AutomationService.RELOAD,
             context=Context(user_id=hass_admin_user.id),
             blocking=True,
         )
@@ -752,7 +779,9 @@ async def test_reload_config_when_invalid_config(
         autospec=True,
         return_value={automation.DOMAIN: "not valid"},
     ):
-        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            automation.DOMAIN, AutomationService.RELOAD, blocking=True
+        )
 
     assert hass.states.get("automation.hello") is None
 
@@ -796,7 +825,9 @@ async def test_reload_config_handles_load_fails(
             ServiceValidationError, match="Failed to load configuration: bla"
         ),
     ):
-        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            automation.DOMAIN, AutomationService.RELOAD, blocking=True
+        )
 
     assert hass.states.get("automation.hello") is not None
 
@@ -822,7 +853,9 @@ async def test_reload_config_handles_load_fails(
             match="Unknown error calling bla CONFIG_SCHEMA - bla",
         ) as exc_info,
     ):
-        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            automation.DOMAIN, AutomationService.RELOAD, blocking=True
+        )
     assert exc_info.value.translation_domain == "homeassistant"
     assert exc_info.value.translation_key == "config_schema_unknown_err"
     assert exc_info.value.translation_placeholders == {"domain": "bla", "error": "bla"}
@@ -873,15 +906,18 @@ async def test_automation_stops(
     if service == "turn_off_stop":
         await hass.services.async_call(
             automation.DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            AutomationService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
     elif service == "turn_off_no_stop":
         await hass.services.async_call(
             automation.DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id, CONF_STOP_ACTIONS: False},
+            AutomationService.TURN_OFF,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                AutomationServiceArgument.STOP_ACTIONS: False,
+            },
             blocking=True,
         )
     elif service == "reload":
@@ -892,7 +928,7 @@ async def test_automation_stops(
             return_value=config,
         ):
             await hass.services.async_call(
-                automation.DOMAIN, SERVICE_RELOAD, blocking=True
+                automation.DOMAIN, AutomationService.RELOAD, blocking=True
             )
     else:  # service == "reload_single"
         config[automation.DOMAIN]["alias"] = "goodbye"
@@ -903,7 +939,7 @@ async def test_automation_stops(
         ):
             await hass.services.async_call(
                 automation.DOMAIN,
-                SERVICE_RELOAD,
+                AutomationService.RELOAD,
                 {CONF_ID: "sun"},
                 blocking=True,
             )
@@ -953,7 +989,9 @@ async def test_reload_unchanged_does_not_stop(
         autospec=True,
         return_value=config,
     ):
-        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            automation.DOMAIN, AutomationService.RELOAD, blocking=True
+        )
 
     hass.states.async_set(test_entity, "goodbye")
     await hass.async_block_till_done()
@@ -1001,7 +1039,7 @@ async def test_reload_single_unchanged_does_not_stop(
     ):
         await hass.services.async_call(
             automation.DOMAIN,
-            SERVICE_RELOAD,
+            AutomationService.RELOAD,
             {CONF_ID: "sun"},
             blocking=True,
         )
@@ -1038,7 +1076,7 @@ async def test_reload_single_add_automation(
     ):
         await hass.services.async_call(
             automation.DOMAIN,
-            SERVICE_RELOAD,
+            AutomationService.RELOAD,
             {CONF_ID: "sun"},
             blocking=True,
         )
@@ -1098,49 +1136,49 @@ async def test_reload_single_parallel_calls(
         tasks = [
             hass.services.async_call(
                 automation.DOMAIN,
-                SERVICE_RELOAD,
+                AutomationService.RELOAD,
                 {CONF_ID: "sun"},
                 blocking=False,
             ),
             hass.services.async_call(
                 automation.DOMAIN,
-                SERVICE_RELOAD,
+                AutomationService.RELOAD,
                 {CONF_ID: "moon"},
                 blocking=False,
             ),
             hass.services.async_call(
                 automation.DOMAIN,
-                SERVICE_RELOAD,
+                AutomationService.RELOAD,
                 {CONF_ID: "mars"},
                 blocking=False,
             ),
             hass.services.async_call(
                 automation.DOMAIN,
-                SERVICE_RELOAD,
+                AutomationService.RELOAD,
                 {CONF_ID: "venus"},
                 blocking=False,
             ),
             hass.services.async_call(
                 automation.DOMAIN,
-                SERVICE_RELOAD,
+                AutomationService.RELOAD,
                 {CONF_ID: "sun"},
                 blocking=False,
             ),
             hass.services.async_call(
                 automation.DOMAIN,
-                SERVICE_RELOAD,
+                AutomationService.RELOAD,
                 {CONF_ID: "moon"},
                 blocking=False,
             ),
             hass.services.async_call(
                 automation.DOMAIN,
-                SERVICE_RELOAD,
+                AutomationService.RELOAD,
                 {CONF_ID: "mars"},
                 blocking=False,
             ),
             hass.services.async_call(
                 automation.DOMAIN,
-                SERVICE_RELOAD,
+                AutomationService.RELOAD,
                 {CONF_ID: "venus"},
                 blocking=False,
             ),
@@ -1189,7 +1227,7 @@ async def test_reload_single_remove_automation(
     ):
         await hass.services.async_call(
             automation.DOMAIN,
-            SERVICE_RELOAD,
+            AutomationService.RELOAD,
             {CONF_ID: "sun"},
             blocking=True,
         )
@@ -1240,7 +1278,7 @@ async def test_reload_moved_automation_without_alias(
             return_value=config,
         ):
             await hass.services.async_call(
-                automation.DOMAIN, SERVICE_RELOAD, blocking=True
+                automation.DOMAIN, AutomationService.RELOAD, blocking=True
             )
 
         assert automation_entity_init.call_count == 1
@@ -1301,7 +1339,7 @@ async def test_reload_identical_automations_without_id(
             return_value=config,
         ):
             await hass.services.async_call(
-                automation.DOMAIN, SERVICE_RELOAD, blocking=True
+                automation.DOMAIN, AutomationService.RELOAD, blocking=True
             )
 
         assert automation_entity_init.call_count == 0
@@ -1324,7 +1362,7 @@ async def test_reload_identical_automations_without_id(
             return_value=config,
         ):
             await hass.services.async_call(
-                automation.DOMAIN, SERVICE_RELOAD, blocking=True
+                automation.DOMAIN, AutomationService.RELOAD, blocking=True
             )
 
         assert automation_entity_init.call_count == 0
@@ -1345,7 +1383,7 @@ async def test_reload_identical_automations_without_id(
             return_value=config,
         ):
             await hass.services.async_call(
-                automation.DOMAIN, SERVICE_RELOAD, blocking=True
+                automation.DOMAIN, AutomationService.RELOAD, blocking=True
             )
 
         assert automation_entity_init.call_count == 2
@@ -1455,7 +1493,7 @@ async def test_reload_unchanged_automation(
             return_value=config,
         ):
             await hass.services.async_call(
-                automation.DOMAIN, SERVICE_RELOAD, blocking=True
+                automation.DOMAIN, AutomationService.RELOAD, blocking=True
             )
 
         assert automation_entity_init.call_count == 0
@@ -1519,7 +1557,7 @@ async def test_reload_automation_when_blueprint_changes(
             ),
         ):
             await hass.services.async_call(
-                automation.DOMAIN, SERVICE_RELOAD, blocking=True
+                automation.DOMAIN, AutomationService.RELOAD, blocking=True
             )
 
         assert automation_entity_init.call_count == 1
@@ -1769,13 +1807,23 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
     assert calls[0].data.get(ATTR_ENTITY_ID) == ["hello.world"]
 
 
+def _error_messages(caplog: pytest.LogCaptureFixture) -> list[str]:
+    """Return the errors which were logged by the automation integration."""
+    return [
+        record.getMessage()
+        for record in caplog.records
+        if record.name == automation.LOGGER.name and record.levelno == logging.ERROR
+    ]
+
+
 @pytest.mark.parametrize(
     ("broken_config", "problem", "details", "issue"),
     [
         (
             {},
             "could not be validated",
-            "required key not provided at 'actions'",
+            "required key not provided at 'triggers'. Got None\n"
+            "required key not provided at 'actions'. Got None",
             "validation_failed_schema",
         ),
         (
@@ -1785,7 +1833,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup triggers",
             "Integration 'automation' does not provide trigger support"
-            ". Got {'alias': 'bad_automation',",
+            " at 'triggers'. Got {'platform': 'automation'}",
             "validation_failed_triggers",
         ),
         (
@@ -1798,7 +1846,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup triggers",
             "Integration 'automation' does not provide trigger support"
-            ". Got {'alias': 'bad_automation',",
+            " at 'triggers[1]'. Got {'platform': 'automation'}",
             "validation_failed_triggers",
         ),
         (
@@ -1814,7 +1862,8 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup conditions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
-            ". Got {'alias': 'bad_automation',",
+            " at 'conditions'. Got {'condition': 'state',"
+            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'blah'}",
             "validation_failed_conditions",
         ),
         (
@@ -1829,7 +1878,8 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup actions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
-            ". Got {'alias': 'bad_automation',",
+            " at 'actions'. Got {'condition': 'state',"
+            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'blah'}",
             "validation_failed_actions",
         ),
         (
@@ -1844,8 +1894,116 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup actions",
             "Invalid trigger 'not_a_platform' specified"
-            ". Got {'alias': 'bad_automation',",
+            " at 'actions.wait_for_trigger[1]'. Got {'platform': 'not_a_platform'}",
             "validation_failed_actions",
+        ),
+        (
+            # Errors in all sections, the issue is about the first one
+            {
+                "trigger": [
+                    {"trigger": "event", "event_type": "test_event"},
+                    {"trigger": "not_a_platform"},
+                ],
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                        "state": "blah",
+                    },
+                ],
+                "actions": [
+                    {"delay": 1},
+                    {
+                        "device_id": "unknown_device",
+                        "domain": "light",
+                        "type": "turn_on",
+                        "entity_id": "light.kitchen",
+                    },
+                    {"if": [{"condition": "not_a_platform"}], "then": []},
+                ],
+            },
+            "failed to setup triggers",
+            "Invalid trigger 'not_a_platform' specified at 'trigger[1]'."
+            " Got {'trigger': 'not_a_platform'}\n"
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            " at 'conditions[0]'. Got {'condition': 'state',"
+            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'blah'}\n"
+            "Unknown device 'unknown_device' at 'actions[1]'."
+            " Got {'device_id': 'unknown_device', 'domain': 'light',"
+            " 'type': 'turn_on', 'entity_id': 'light.kitchen'}\n"
+            'Invalid condition "not_a_platform" specified'
+            " at 'actions[2].if[0]'. Got {'condition': 'not_a_platform'}",
+            "validation_failed_triggers",
+        ),
+        (
+            # Errors of the schema and of triggers and actions
+            {
+                "triggers": {"trigger": "not_a_platform"},
+                "actions": [
+                    {"not_an_action": 1},
+                    {
+                        "device_id": "unknown_device",
+                        "domain": "light",
+                        "type": "turn_on",
+                        "entity_id": "light.kitchen",
+                    },
+                ],
+            },
+            "could not be validated",
+            "Unable to determine action at 'actions[0]'. Got {'not_an_action': 1}\n"
+            "Invalid trigger 'not_a_platform' specified at 'triggers'."
+            " Got {'trigger': 'not_a_platform'}\n"
+            "Unknown device 'unknown_device' at 'actions[1]'."
+            " Got {'device_id': 'unknown_device', 'domain': 'light',"
+            " 'type': 'turn_on', 'entity_id': 'light.kitchen'}",
+            "validation_failed_schema",
+        ),
+        (
+            # More errors than are listed
+            {
+                "triggers": [],
+                "actions": [
+                    {"delay": {"seconds": index}, "not_a_key": index}
+                    for index in range(12)
+                ],
+            },
+            "could not be validated",
+            "".join(
+                f"not a valid option at 'actions[{index}].not_a_key'. Got {index}\n"
+                for index in range(10)
+            )
+            + "… and 2 more errors",
+            "validation_failed_schema",
+        ),
+        (
+            # A key and the key it is renamed to, no other error is reported
+            {
+                "trigger": {"trigger": "not_a_platform"},
+                "triggers": {"trigger": "not_a_platform"},
+                "actions": [{"not_an_action": 1}],
+            },
+            "could not be validated",
+            "Cannot specify both 'trigger' and 'triggers'."
+            " Please use 'triggers' only.. Got {'alias': 'bad_automation',"
+            " 'trigger': {'trigger': 'not_a_platform'},"
+            " 'triggers': {'trigger': 'not_a_platform'},"
+            " 'actions': [{'not_an_action': 1}]}",
+            "validation_failed_schema",
+        ),
+        (
+            # The same for a key which is checked after another was renamed
+            {
+                "trigger": {"trigger": "not_a_platform"},
+                "action": [{"not_an_action": 1}],
+                "actions": [{"not_an_action": 1}],
+            },
+            "could not be validated",
+            "Cannot specify both 'action' and 'actions'."
+            " Please use 'actions' only.. Got {'alias': 'bad_automation',"
+            " 'trigger': {'trigger': 'not_a_platform'},"
+            " 'action': [{'not_an_action': 1}],"
+            " 'actions': [{'not_an_action': 1}]}",
+            "validation_failed_schema",
         ),
     ],
 )
@@ -1878,11 +2036,11 @@ async def test_automation_bad_config_validation(
         },
     )
 
-    # Check we get the expected error message and issue
-    assert (
+    # Check we get the expected error message and issue, with all errors
+    assert _error_messages(caplog) == [
         f"Automation with alias 'bad_automation' {problem} and has been disabled:"
         f" {details}"
-    ) in caplog.text
+    ]
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 1
     assert issues[0]["issue_id"] == f"automation.bad_automation_{issue}"
@@ -1890,10 +2048,9 @@ async def test_automation_bad_config_validation(
     assert issues[0]["translation_placeholders"] == {
         "edit": "/config/automation/edit/None",
         "entity_id": "automation.bad_automation",
-        "error": ANY,
+        "error": details,
         "name": "bad_automation",
     }
-    assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # Make sure both automations are setup
     assert set(hass.states.async_entity_ids(DOMAIN)) == {
@@ -1920,12 +2077,51 @@ async def test_automation_bad_config_validation(
     ):
         await hass.services.async_call(
             automation.DOMAIN,
-            SERVICE_RELOAD,
+            AutomationService.RELOAD,
             context=Context(user_id=hass_admin_user.id),
             blocking=True,
         )
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 0
+
+
+async def test_automation_valid_config_does_not_collect_errors(
+    hass: HomeAssistant,
+) -> None:
+    """Test the errors of a config are only collected if it is not valid."""
+    with patch(
+        "homeassistant.components.automation.config._async_collect_errors",
+        wraps=automation.config._async_collect_errors,
+    ) as mock_collect_errors:
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: [
+                    {
+                        "alias": "good_automation",
+                        "triggers": {"trigger": "event", "event_type": "test_event"},
+                        "conditions": {"condition": "template", "value_template": "1"},
+                        "actions": {"action": "test.automation"},
+                    },
+                ]
+            },
+        )
+        assert hass.states.get("automation.good_automation").state == STATE_ON
+        mock_collect_errors.assert_not_called()
+
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={
+                automation.DOMAIN: {"alias": "bad_automation", "triggers": []}
+            },
+        ):
+            await hass.services.async_call(
+                automation.DOMAIN, AutomationService.RELOAD, blocking=True
+            )
+        assert hass.states.get("automation.bad_automation").state == STATE_UNAVAILABLE
+        mock_collect_errors.assert_called_once()
 
 
 async def test_automation_trigger_validation_home_assistant_error(
@@ -3593,8 +3789,24 @@ async def test_blueprint_automation_override(
                 "service_to_call": {"dict": "not allowed"},
                 "a_number": 5,
             },
-            "Blueprint 'Call service based on event' generated invalid automation",
-            "value should be a string at 'actions[0].action'",
+            "Blueprint 'Call service based on event' generated invalid automation"
+            " with inputs {'trigger_event': 'blueprint_event',"
+            " 'service_to_call': {'dict': 'not allowed'}, 'a_number': 5}",
+            "value should be a string at 'actions.action'. Got {'dict': 'not allowed'}",
+        ),
+        (
+            # Wrong inputs, used in triggers and actions
+            {
+                "trigger_event": {"dict": "not allowed"},
+                "service_to_call": {"dict": "not allowed"},
+                "a_number": 5,
+            },
+            "Blueprint 'Call service based on event' generated invalid automation"
+            " with inputs {'trigger_event': {'dict': 'not allowed'},"
+            " 'service_to_call': {'dict': 'not allowed'}, 'a_number': 5}",
+            "value should be a string at 'actions.action'."
+            " Got {'dict': 'not allowed'}\n"
+            "template value should be a string at 'triggers.event_type[0]'. Got None",
         ),
     ],
 )
@@ -3602,9 +3814,9 @@ async def test_blueprint_automation_bad_config(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
-    blueprint_inputs,
-    problem,
-    details,
+    blueprint_inputs: dict[str, Any],
+    problem: str,
+    details: str,
 ) -> None:
     """Test blueprint automation with bad inputs."""
     assert await async_setup_component(
@@ -3619,8 +3831,7 @@ async def test_blueprint_automation_bad_config(
             }
         },
     )
-    assert problem in caplog.text
-    assert details in caplog.text
+    assert _error_messages(caplog) == [f"{problem}: {details}"]
 
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 1
@@ -3630,10 +3841,9 @@ async def test_blueprint_automation_bad_config(
     assert issues[0]["translation_placeholders"] == {
         "edit": "/config/automation/edit/None",
         "entity_id": "automation.automation_0",
-        "error": ANY,
+        "error": details,
         "name": "automation 0",
     }
-    assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # The automation is broken, but still listed under its blueprint
     assert automation.automations_with_blueprint(hass, "test_event_service.yaml") == [
@@ -3705,7 +3915,7 @@ async def test_trigger_service(hass: HomeAssistant, calls: list[ServiceCall]) ->
     context = Context()
     await hass.services.async_call(
         DOMAIN,
-        "trigger",
+        AutomationService.TRIGGER,
         {"entity_id": "automation.hello"},
         blocking=True,
         context=context,
@@ -4202,7 +4412,7 @@ async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> Non
 
     await hass.services.async_call(
         DOMAIN,
-        "turn_on",
+        AutomationService.TURN_ON,
         {"entity_id": "automation.automation_1"},
         blocking=True,
     )
@@ -4526,7 +4736,9 @@ async def test_remove_automation_unloads_condition_and_script(
             wraps=entity.action_script.async_unload,
         ) as script_unload,
     ):
-        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            automation.DOMAIN, AutomationService.RELOAD, blocking=True
+        )
         await hass.async_block_till_done()
 
     condition_unload.assert_called_once()
@@ -4667,8 +4879,8 @@ async def _turn_off_automation(
     """Turn off the renamed automation."""
     await hass.services.async_call(
         automation.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "automation.second"},
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "automation.second"},
         blocking=True,
     )
 
@@ -4773,8 +4985,8 @@ async def _turn_on_automation(hass: HomeAssistant) -> None:
     """Turn on the automation."""
     await hass.services.async_call(
         automation.DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "automation.first"},
+        AutomationService.TURN_ON,
+        {TargetKey.ENTITY_ID: "automation.first"},
         blocking=True,
     )
 
@@ -4883,7 +5095,9 @@ async def test_unavailable_automation_changed_entity_id(
         autospec=True,
         return_value={automation.DOMAIN: []},
     ):
-        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            automation.DOMAIN, AutomationService.RELOAD, blocking=True
+        )
 
     assert not issue_registry.async_get_issue(
         automation.DOMAIN, "automation.renamed_validation_failed_schema"
@@ -4929,7 +5143,7 @@ async def test_reload_keeps_ignored_validation_issue(
         },
     ):
         await hass.services.async_call(
-            automation.DOMAIN, SERVICE_RELOAD, reload_data, blocking=True
+            automation.DOMAIN, AutomationService.RELOAD, reload_data, blocking=True
         )
     await hass.async_block_till_done()
 
@@ -4980,7 +5194,7 @@ async def test_reload_deletes_resolved_validation_issue(
         return_value={automation.DOMAIN: new_config},
     ):
         await hass.services.async_call(
-            automation.DOMAIN, SERVICE_RELOAD, reload_data, blocking=True
+            automation.DOMAIN, AutomationService.RELOAD, reload_data, blocking=True
         )
     await hass.async_block_till_done()
 
@@ -5025,7 +5239,7 @@ async def test_failed_reload_deletes_issue_of_removed_automation(
         pytest.raises(HomeAssistantError, match="Boom"),
     ):
         await hass.services.async_call(
-            automation.DOMAIN, SERVICE_RELOAD, reload_data, blocking=True
+            automation.DOMAIN, AutomationService.RELOAD, reload_data, blocking=True
         )
     await hass.async_block_till_done()
 

@@ -30,7 +30,7 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('tailwind', '_3c_e9_e_6d_21_84_')]>,
     'disabled_by': None,
@@ -63,7 +63,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
       tuple(

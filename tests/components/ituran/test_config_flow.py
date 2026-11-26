@@ -211,17 +211,9 @@ async def test_already_authenticated(
     assert result["result"].unique_id == MOCK_CONFIG_DATA[CONF_ID_OR_PASSPORT]
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_reauth(
-    hass: HomeAssistant, mock_ituran: AsyncMock, mock_config_entry: MockConfigEntry
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry", "mock_ituran")
+async def test_reauth(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
     """Test reauthenticating."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await __do_successful_user_step(hass, result, mock_ituran)
-    await __do_successful_otp_step(hass, result, mock_ituran)
-
     await setup_integration(hass, mock_config_entry)
     result = await mock_config_entry.start_reauth_flow(hass)
 

@@ -8,11 +8,10 @@
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Default',
-        'Winter',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
     'disabled_by': None,
@@ -48,7 +47,6 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MYHOME Schedule',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Default',
-        'Winter',
       ]),
     }),
     'context': <ANY>,

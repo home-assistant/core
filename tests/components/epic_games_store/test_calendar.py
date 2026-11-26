@@ -7,11 +7,10 @@ from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
-    SERVICE_GET_EVENTS,
+    CalendarService,
+    CalendarServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -149,11 +148,15 @@ async def test_get_events(
     # 1 week in range of data
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: ["calendar.epic_games_store_discount_games"],
-            EVENT_START_DATETIME: dt_util.parse_datetime("2022-10-20T00:00:00.000Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("2022-10-27T00:00:00.000Z"),
+            TargetKey.ENTITY_ID: ["calendar.epic_games_store_discount_games"],
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "2022-10-20T00:00:00.000Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "2022-10-27T00:00:00.000Z"
+            ),
         },
         blocking=True,
         return_response=True,
@@ -164,11 +167,15 @@ async def test_get_events(
     # 1 week out of range of data
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: ["calendar.epic_games_store_discount_games"],
-            EVENT_START_DATETIME: dt_util.parse_datetime("1970-01-01T00:00:00.000Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("1970-01-08T00:00:00.000Z"),
+            TargetKey.ENTITY_ID: ["calendar.epic_games_store_discount_games"],
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "1970-01-01T00:00:00.000Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "1970-01-08T00:00:00.000Z"
+            ),
         },
         blocking=True,
         return_response=True,

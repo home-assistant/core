@@ -73,7 +73,11 @@ from homeassistant.components.websocket_api import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    area_registry as ar,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -1237,6 +1241,12 @@ async def websocket_provision_smart_start_node(
                 config_entry_id=entry.entry_id,
             )
 
+        # Checked after the awaits, so a deleted area cannot slip through
+        area_id = msg.get(AREA_ID) or None
+        if area_id and ar.async_get(hass).async_get_area(area_id) is None:
+            connection.send_error(msg[ID], ERR_NOT_FOUND, f"Area {area_id} not found")
+            return
+
         # Create an empty device
         device = dev_reg.async_get_or_create(
             config_entry_id=entry.entry_id,
@@ -1247,7 +1257,7 @@ async def websocket_provision_smart_start_node(
             via_device_id=via_device_id,
         )
         dev_reg.async_update_device(
-            device.id, area_id=msg.get(AREA_ID), name_by_user=device_name
+            device.id, area_id=area_id, name_by_user=device_name
         )
         additional_properties["device_id"] = device.id
 
@@ -2411,7 +2421,6 @@ async def websocket_get_log_config(
     driver: Driver,
 ) -> None:
     """Get log configuration for the Z-Wave JS driver."""
-    assert client and client.driver
     connection.send_result(
         msg[ID],
         dataclasses.asdict(driver.log_config),
@@ -2473,7 +2482,6 @@ async def websocket_data_collection_status(
     driver: Driver,
 ) -> None:
     """Return data collection preference and status."""
-    assert client and client.driver
     result = {
         OPTED_IN: entry.data.get(CONF_DATA_COLLECTION_OPTED_IN),
         ENABLED: await driver.async_is_statistics_enabled(),

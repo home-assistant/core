@@ -11,6 +11,7 @@
   "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@elupus"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth"],
   "documentation": "https://www.home-assistant.io/integrations/togrill",
   "integration_type": "device",

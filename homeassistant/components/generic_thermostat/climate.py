@@ -80,8 +80,10 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_DUR,
     CONF_MIN_TEMP,
+    CONF_PRECISION,
     CONF_PRESETS,
     CONF_SENSOR,
+    CONF_TEMP_STEP,
     DEFAULT_TOLERANCE,
     DOMAIN,
     PLATFORMS,
@@ -92,9 +94,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Generic Thermostat"
 
 CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
-CONF_PRECISION = "precision"
 CONF_TARGET_TEMP = "target_temp"
-CONF_TEMP_STEP = "target_temp_step"
 
 
 PRESETS_SCHEMA: VolDictType = {
@@ -128,7 +128,8 @@ PLATFORM_SCHEMA_COMMON = probatio.Schema(
             probatio.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
         ),
         probatio.Optional(CONF_TEMP_STEP): probatio.All(
-            probatio.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE])
+            probatio.Coerce(float),
+            probatio.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
         ),
         probatio.Optional(CONF_UNIQUE_ID): cv.string,
         **PRESETS_SCHEMA,
@@ -550,6 +551,11 @@ class GenericThermostat(RestoreClimate):
             self._cancel_timers()
         self.async_write_ha_state()
 
+        if old_state is None:
+            # Control was skipped while the heater had no state, resume it now.
+            # Done last so the timers it schedules are not cleared above.
+            self.hass.async_create_task(self._async_control_heating(), eager_start=True)
+
     @callback
     def _async_update_temp(self, state: State) -> None:
         """Update thermostat with latest state from sensor."""
@@ -585,6 +591,12 @@ class GenericThermostat(RestoreClimate):
             if not self._active or self._hvac_mode == HVACMode.OFF:
                 return
 
+            if self._is_device_active is None:
+                # The heater has no state yet, e.g. its integration is still
+                # starting. Its real state is unknown, so don't send a command.
+                # Control resumes once the heater gets its first state.
+                return
+
             if force and called_by_timer and self.max_cycle_duration:
                 # We were invoked due to `max_cycle_duration`, so turn off
                 _LOGGER.debug(
@@ -594,6 +606,12 @@ class GenericThermostat(RestoreClimate):
                 )
                 self._cancel_cycle_timer()
                 await self._async_heater_turn_off()
+                if self.cycle_cooldown:
+                    self._check_callback = async_call_later(
+                        self.hass,
+                        self.cycle_cooldown,
+                        self._async_timer_control_heating,
+                    )
                 return
 
             assert self._cur_temp is not None and self._target_temp is not None

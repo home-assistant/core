@@ -57,6 +57,10 @@ type ConfiguratorCallback = Callable[[list[dict[str, str]]], None]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+__all__ = [
+    "DOMAIN",
+]
+
 
 def _report_deprecation() -> None:
     """Report use of the deprecated configurator integration."""

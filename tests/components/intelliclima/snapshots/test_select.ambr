@@ -1,40 +1,65 @@
 # serializer version: 1
-# name: test_all_select_entities.2
-  DeviceRegistryEntrySnapshot({
+# name: test_all_select_entities[select.test_vmc_3_fan_direction_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'forward',
+        'reverse',
+        'alternate',
+        'sensor',
+      ]),
+    }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'bluetooth',
-        '00:11:22:33:44:55',
-      ),
-      tuple(
-        'mac',
-        '00:11:22:33:44:55',
-      ),
-    }),
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('intelliclima', '33333')]>,
     'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_vmc_3_fan_direction_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
     'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'intelliclima',
-        '56789',
-      ),
-    }),
     'labels': set({
     }),
-    'manufacturer': 'Fantini Cosmi',
-    'model': 'ECOCOMFORT 2.0',
-    'model_id': None,
-    'name': 'Test VMC',
-    'name_by_user': None,
-    'serial_number': '11223344',
-    'sw_version': '0.6.8',
-    'via_device_id': None,
+    'name': None,
+    'object_id_base': 'Fan direction mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fan direction mode',
+    'platform': 'intelliclima',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fan_mode',
+    'unique_id': '33333_fan_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_select_entities[select.test_vmc_3_fan_direction_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test VMC 3 Fan direction mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'forward',
+        'reverse',
+        'alternate',
+        'sensor',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_vmc_3_fan_direction_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sensor',
   })
 # ---
 # name: test_all_select_entities[select.test_vmc_fan_direction_mode-entry]
@@ -52,7 +77,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('intelliclima', '56789')]>,
     'disabled_by': None,

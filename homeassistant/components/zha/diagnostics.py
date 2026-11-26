@@ -7,7 +7,7 @@ from typing import Any
 from zha.application.const import ATTR_IEEE
 from zha.application.gateway import Gateway
 from zigpy.application import ControllerApplication
-from zigpy.config import CONF_NWK_EXTENDED_PAN_ID
+from zigpy.config import CONF_BLOCKED_DEVICES, CONF_NWK_EXTENDED_PAN_ID
 from zigpy.types import Channels
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -19,9 +19,11 @@ from homeassistant.helpers import device_registry as dr
 from .const import CONF_ALARM_MASTER_CODE
 from .helpers import (
     ZHADeviceProxy,
+    _group_id_from_device,
     async_get_zha_device_proxy,
     get_zha_data,
     get_zha_gateway,
+    get_zha_gateway_proxy,
 )
 
 KEYS_TO_REDACT = {
@@ -30,6 +32,7 @@ KEYS_TO_REDACT = {
     CONF_ALARM_MASTER_CODE,
     "network_key",
     CONF_NWK_EXTENDED_PAN_ID,
+    CONF_BLOCKED_DEVICES,
     "partner_ieee",
     "device_ieee",
 }
@@ -122,6 +125,10 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
+    if (group_id := _group_id_from_device(config_entry.entry_id, device)) is not None:
+        group_proxy = get_zha_gateway_proxy(hass).group_proxies[group_id]
+        return async_redact_data(group_proxy.group_info, KEYS_TO_REDACT)
+
     zha_device_proxy: ZHADeviceProxy = async_get_zha_device_proxy(hass, device.id)
     diagnostics_json: dict[str, Any] = zha_device_proxy.device.get_diagnostics_json()
     return async_redact_data(diagnostics_json, KEYS_TO_REDACT)

@@ -31,6 +31,23 @@ USER_INPUT = {
     CONF_API_KEY: API_KEY,
 }
 
+API_ERRORS = [
+    pytest.param(OpenApiTimeoutError(), "timeout_connect", id="timeout"),
+    pytest.param(OpenApiAuthenticationError(), "invalid_auth", id="invalid_auth"),
+    pytest.param(OpenApiForbiddenError(), "access_forbidden", id="access_forbidden"),
+    pytest.param(
+        OpenApiVehicleNotFoundError(), "vehicle_not_found", id="vehicle_not_found"
+    ),
+    pytest.param(
+        OpenApiRateLimitError(), "rate_limit_exceeded", id="rate_limit_exceeded"
+    ),
+    pytest.param(
+        OpenApiServerError("server error"), "cannot_connect", id="server_error"
+    ),
+    pytest.param(OpenApiError("bad request"), "api_error", id="api_error"),
+    pytest.param(RuntimeError("unexpected"), "unknown", id="unknown"),
+]
+
 
 async def _init_flow(hass: HomeAssistant) -> ConfigFlowResult:
     """Start the user config flow."""
@@ -144,29 +161,7 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize(
-    ("exception", "expected_error"),
-    [
-        pytest.param(OpenApiTimeoutError(), "timeout_connect", id="timeout"),
-        pytest.param(OpenApiAuthenticationError(), "invalid_auth", id="invalid_auth"),
-        pytest.param(
-            OpenApiForbiddenError(), "access_forbidden", id="access_forbidden"
-        ),
-        pytest.param(
-            OpenApiVehicleNotFoundError(),
-            "vehicle_not_found",
-            id="vehicle_not_found",
-        ),
-        pytest.param(
-            OpenApiRateLimitError(), "rate_limit_exceeded", id="rate_limit_exceeded"
-        ),
-        pytest.param(
-            OpenApiServerError("server error"), "cannot_connect", id="server_error"
-        ),
-        pytest.param(OpenApiError("bad request"), "api_error", id="api_error"),
-        pytest.param(RuntimeError("unexpected"), "unknown", id="unknown"),
-    ],
-)
+@pytest.mark.parametrize(("exception", "expected_error"), API_ERRORS)
 async def test_api_errors(
     hass: HomeAssistant,
     exception: Exception,
@@ -190,4 +185,63 @@ async def test_api_errors(
     assert result["title"] == "Škoda Enyaq Coupé"
     assert result["result"].unique_id == VIN
     assert mock_skoda_client.get_vehicle.await_count == 2
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_skoda_client: AsyncMock,
+) -> None:
+    """Test a successful reauth stores the new API key and reloads the entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert _serialized_api_key_field(result)["selector"]["text"]["type"] == "password"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: " new-api-key "}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {CONF_VIN: VIN, CONF_API_KEY: "new-api-key"}
+    mock_skoda_client.get_vehicle.assert_awaited_once_with(VIN)
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(("exception", "expected_error"), API_ERRORS)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    exception: Exception,
+    expected_error: str,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_skoda_client: AsyncMock,
+) -> None:
+    """Test reauth failures show an error and the flow recovers on retry."""
+    mock_config_entry.add_to_hass(hass)
+    mock_skoda_client.get_vehicle.side_effect = exception
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new-api-key"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+    mock_skoda_client.get_vehicle.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new-api-key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
     assert len(mock_setup_entry.mock_calls) == 1

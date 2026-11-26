@@ -116,7 +116,6 @@ async def test_user_has_confirmation(
     assert len(progress) == 1
     assert progress[0]["flow_id"] == result["flow_id"]
     assert progress[0]["context"] == {
-        "confirm_only": True,
         "source": config_entries.SOURCE_USER,
         "unique_id": "test",
     }
@@ -143,7 +142,6 @@ async def test_user_has_confirmation_async_discovery_flow(
     assert len(progress) == 1
     assert progress[0]["flow_id"] == result["flow_id"]
     assert progress[0]["context"] == {
-        "confirm_only": True,
         "source": config_entries.SOURCE_USER,
         "unique_id": "test",
     }

@@ -22,7 +22,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -30,6 +29,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -39,6 +39,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 from .util import find_state_attributes, mean_circle, mean_tuple, reduce_attribute
 
@@ -146,7 +147,9 @@ class LightGroup(GroupEntity, LightEntity):
         self._entity_ids = entity_ids
 
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entity_ids
+        }
         self._attr_unique_id = unique_id
         self.mode = any
         if mode:
@@ -161,7 +164,7 @@ class LightGroup(GroupEntity, LightEntity):
         data = {
             key: value for key, value in kwargs.items() if key in FORWARDED_ATTRIBUTES
         }
-        data[ATTR_ENTITY_ID] = self._entity_ids
+        data[TargetKey.ENTITY_ID] = self._entity_ids
 
         _LOGGER.debug("Forwarded turn_on command: %s", data)
 
@@ -176,7 +179,7 @@ class LightGroup(GroupEntity, LightEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Forward the turn_off command to all lights in the light group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._entity_ids}
 
         if LightServiceArgument.TRANSITION in kwargs:
             data[LightServiceArgument.TRANSITION] = kwargs[

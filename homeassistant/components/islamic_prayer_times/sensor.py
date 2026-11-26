@@ -1,5 +1,7 @@
 """Platform to retrieve Islamic prayer times information for Home Assistant."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 from typing import override
 
@@ -51,6 +53,65 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class IslamicPrayerContextSensorDescription(SensorEntityDescription):
+    """Describe a current or next prayer sensor."""
+
+    value_fn: Callable[[IslamicPrayerDataUpdateCoordinator], str | datetime | None]
+    requires_current: bool = False
+
+
+PRAYERS = ["fajr", "dhuhr", "asr", "maghrib", "isha"]
+CONTEXT_SENSOR_TYPES: tuple[IslamicPrayerContextSensorDescription, ...] = (
+    IslamicPrayerContextSensorDescription(
+        key="current_prayer",
+        translation_key="current_prayer",
+        device_class=SensorDeviceClass.ENUM,
+        options=[*PRAYERS, "between_prayers"],
+        value_fn=lambda coordinator: (
+            window.name.lower()
+            if (window := coordinator.current_prayer)
+            else "between_prayers"
+        ),
+    ),
+    IslamicPrayerContextSensorDescription(
+        key="current_prayer_started",
+        translation_key="current_prayer_started",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        requires_current=True,
+        value_fn=lambda coordinator: (
+            window.start if (window := coordinator.current_prayer) else None
+        ),
+    ),
+    IslamicPrayerContextSensorDescription(
+        key="current_prayer_ends",
+        translation_key="current_prayer_ends",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        requires_current=True,
+        value_fn=lambda coordinator: (
+            window.end if (window := coordinator.current_prayer) else None
+        ),
+    ),
+    IslamicPrayerContextSensorDescription(
+        key="next_prayer",
+        translation_key="next_prayer",
+        device_class=SensorDeviceClass.ENUM,
+        options=PRAYERS,
+        value_fn=lambda coordinator: (
+            window.name.lower() if (window := coordinator.next_prayer) else None
+        ),
+    ),
+    IslamicPrayerContextSensorDescription(
+        key="next_prayer_starts",
+        translation_key="next_prayer_starts",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda coordinator: (
+            window.start if (window := coordinator.next_prayer) else None
+        ),
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: IslamicPrayerTimesConfigEntry,
@@ -60,17 +121,24 @@ async def async_setup_entry(
 
     coordinator = config_entry.runtime_data
     async_add_entities(
-        IslamicPrayerTimeSensor(coordinator, description)
-        for description in SENSOR_TYPES
+        [
+            *(
+                IslamicPrayerTimeSensor(coordinator, description)
+                for description in SENSOR_TYPES
+            ),
+            *(
+                IslamicPrayerContextSensor(coordinator, description)
+                for description in CONTEXT_SENSOR_TYPES
+            ),
+        ]
     )
 
 
-class IslamicPrayerTimeSensor(
+class IslamicPrayerSensor(
     CoordinatorEntity[IslamicPrayerDataUpdateCoordinator], SensorEntity
 ):
-    """Representation of an Islamic prayer time sensor."""
+    """Base for prayer sensors belonging to a location."""
 
-    _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_has_entity_name = True
 
     def __init__(
@@ -88,8 +156,39 @@ class IslamicPrayerTimeSensor(
             entry_type=DeviceEntryType.SERVICE,
         )
 
+
+class IslamicPrayerTimeSensor(IslamicPrayerSensor):
+    """Representation of an Islamic prayer time sensor."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
     @property
     @override
     def native_value(self) -> datetime:
         """Return the state of the sensor."""
         return self.coordinator.data[self.entity_description.key]
+
+
+class IslamicPrayerContextSensor(IslamicPrayerSensor):
+    """Current or next prayer context from the shared calendar windows."""
+
+    entity_description: IslamicPrayerContextSensorDescription
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether a calculated window is available for this sensor."""
+        return (
+            super().available
+            and self.coordinator.prayer_windows is not None
+            and (
+                not self.entity_description.requires_current
+                or self.coordinator.current_prayer is not None
+            )
+        )
+
+    @property
+    @override
+    def native_value(self) -> str | datetime | None:
+        """Return the prayer name or boundary timestamp."""
+        return self.entity_description.value_fn(self.coordinator)

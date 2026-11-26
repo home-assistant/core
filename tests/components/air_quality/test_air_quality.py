@@ -2,12 +2,7 @@
 
 import pytest
 
-from homeassistant.components.air_quality import (
-    ATTR_N2O,
-    ATTR_OZONE,
-    ATTR_PM_10,
-    DOMAIN,
-)
+from homeassistant.components.air_quality import DOMAIN, AirQualityEntityStateAttribute
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -47,9 +42,9 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert state is not None
 
     data = state.attributes
-    assert data.get(ATTR_PM_10) == 16
-    assert data.get(ATTR_N2O) is None
-    assert data.get(ATTR_OZONE) is None
+    assert data.get(AirQualityEntityStateAttribute.PARTICULATE_MATTER_10) == 16
+    assert data.get(AirQualityEntityStateAttribute.NITROGEN_OXIDE) is None
+    assert data.get(AirQualityEntityStateAttribute.OZONE) is None
     assert data.get(ATTR_ATTRIBUTION) == "Powered by Home Assistant"
     assert (
         data.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER

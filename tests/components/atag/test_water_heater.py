@@ -6,9 +6,10 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
-    SERVICE_SET_TEMPERATURE,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -39,8 +40,11 @@ async def test_setting_target_temperature(
     with patch("pyatag.entities.DHW.set_temp") as mock_set_temp:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: WATER_HEATER_ID, ATTR_TEMPERATURE: 50},
+            WaterHeaterService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: WATER_HEATER_ID,
+                WaterHeaterServiceArgument.TEMPERATURE: 50,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()

@@ -13,7 +13,6 @@ from uiprotect.data.devices import CameraZone
 from uiprotect.exceptions import BadRequest, ClientError
 
 from homeassistant.components.unifiprotect.const import (
-    ATTR_MESSAGE,
     DOMAIN,
     KEYRINGS_KEY_TYPE,
     KEYRINGS_KEY_TYPE_ID_FINGERPRINT,
@@ -23,23 +22,11 @@ from homeassistant.components.unifiprotect.const import (
     KEYRINGS_USER_STATUS,
 )
 from homeassistant.components.unifiprotect.services import (
-    ATTR_PRESET,
-    ATTR_TRIGGER_ID,
-    SERVICE_ADD_DOORBELL_TEXT,
-    SERVICE_GET_USER_KEYRING_INFO,
-    SERVICE_PTZ_GOTO_PRESET,
-    SERVICE_REMOVE_DOORBELL_TEXT,
-    SERVICE_REMOVE_PRIVACY_ZONE,
-    SERVICE_SET_CHIME_PAIRED,
-    SERVICE_TRIGGER_ALARM_WEBHOOK,
+    ProtectService,
+    ProtectServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryDisabler
-from homeassistant.const import (
-    ATTR_CONFIG_ENTRY_ID,
-    ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
-    ATTR_NAME,
-)
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CommonServiceArgument
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Context, HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -92,8 +79,11 @@ async def test_global_service_bad_device(
         with pytest.raises(ServiceValidationError) as error:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_ADD_DOORBELL_TEXT,
-                {ATTR_DEVICE_ID: "bad_device_id", ATTR_MESSAGE: "Test Message"},
+                ProtectService.ADD_DOORBELL_TEXT,
+                {
+                    CommonServiceArgument.DEVICE_ID: "bad_device_id",
+                    ProtectServiceArgument.MESSAGE: "Test Message",
+                },
                 blocking=True,
             )
         assert not mock_method.called
@@ -121,8 +111,11 @@ async def test_global_service_device_from_other_integration(
     with pytest.raises(ServiceValidationError) as error:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_DOORBELL_TEXT,
-            {ATTR_DEVICE_ID: other_device.id, ATTR_MESSAGE: "Test Message"},
+            ProtectService.ADD_DOORBELL_TEXT,
+            {
+                CommonServiceArgument.DEVICE_ID: other_device.id,
+                ProtectServiceArgument.MESSAGE: "Test Message",
+            },
             blocking=True,
         )
 
@@ -146,8 +139,11 @@ async def test_global_service_exception(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_ADD_DOORBELL_TEXT,
-                {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
+                ProtectService.ADD_DOORBELL_TEXT,
+                {
+                    CommonServiceArgument.DEVICE_ID: device.id,
+                    ProtectServiceArgument.MESSAGE: "Test Message",
+                },
                 blocking=True,
             )
         assert mock_method.called
@@ -165,8 +161,11 @@ async def test_add_doorbell_text(
     ) as mock_method:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_DOORBELL_TEXT,
-            {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
+            ProtectService.ADD_DOORBELL_TEXT,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ProtectServiceArgument.MESSAGE: "Test Message",
+            },
             blocking=True,
         )
         mock_method.assert_called_once_with("Test Message")
@@ -184,8 +183,11 @@ async def test_remove_doorbell_text(
     ) as mock_method:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_REMOVE_DOORBELL_TEXT,
-            {ATTR_DEVICE_ID: subdevice.id, ATTR_MESSAGE: "Test Message"},
+            ProtectService.REMOVE_DOORBELL_TEXT,
+            {
+                CommonServiceArgument.DEVICE_ID: subdevice.id,
+                ProtectServiceArgument.MESSAGE: "Test Message",
+            },
             blocking=True,
         )
         mock_method.assert_called_once_with("Test Message")
@@ -208,8 +210,11 @@ async def test_add_doorbell_text_disabled_config_entry(
         with pytest.raises(ServiceValidationError) as error:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_ADD_DOORBELL_TEXT,
-                {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
+                ProtectService.ADD_DOORBELL_TEXT,
+                {
+                    CommonServiceArgument.DEVICE_ID: device.id,
+                    ProtectServiceArgument.MESSAGE: "Test Message",
+                },
                 blocking=True,
             )
         assert not mock_method.called
@@ -235,14 +240,14 @@ async def _setup_chime_pairing(
     await init_entry(hass, ufp, [camera1, camera2, chime])
 
     chime_entry = entity_registry.async_get("button.test_chime_play_chime")
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_2_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_2_doorbell")
     assert chime_entry is not None
     assert camera_entry is not None
 
     data = {
         ATTR_DEVICE_ID: chime_entry.device_id,
         "doorbells": {
-            ATTR_ENTITY_ID: ["binary_sensor.test_camera_1_doorbell"],
+            ATTR_ENTITY_ID: ["event.test_camera_1_doorbell"],
             ATTR_DEVICE_ID: [camera_entry.device_id],
         },
     }
@@ -264,12 +269,72 @@ async def test_set_chime_paired_doorbells(
     )
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+        DOMAIN, ProtectService.SET_CHIME_PAIRED_DOORBELLS, data, blocking=True
     )
 
     public = ufp.api.public_bootstrap.chimes[chime.id]
     public.set_camera_ids.assert_awaited_once_with(sorted([camera1.id, camera2.id]))
     ufp.api.update_device.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_private_only_entities_registered")
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("event.test_camera_1_doorbell", id="event"),
+        pytest.param("binary_sensor.test_camera_1_doorbell", id="binary_sensor"),
+    ],
+)
+async def test_set_chime_paired_doorbells_entity_target(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+    entity_id: str,
+) -> None:
+    """The doorbell event entity and the deprecated binary sensor both pick a doorbell."""
+    setup_public_chime(ufp)
+    data, camera1, _ = await _setup_chime_pairing(
+        hass, entity_registry, ufp, chime, doorbell
+    )
+    data["doorbells"] = {ATTR_ENTITY_ID: [entity_id]}
+
+    await hass.services.async_call(
+        DOMAIN, ProtectService.SET_CHIME_PAIRED_DOORBELLS, data, blocking=True
+    )
+
+    public = ufp.api.public_bootstrap.chimes[chime.id]
+    public.set_camera_ids.assert_awaited_once_with([camera1.id])
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("event.test_camera_1_motion_detection", id="other_event"),
+        pytest.param("binary_sensor.test_camera_1_motion", id="other_binary_sensor"),
+    ],
+)
+async def test_set_chime_paired_doorbells_ignores_other_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+    entity_id: str,
+) -> None:
+    """Other entities of a doorbell do not pick it."""
+    setup_public_chime(ufp)
+    data, _, _ = await _setup_chime_pairing(hass, entity_registry, ufp, chime, doorbell)
+    assert entity_registry.async_get(entity_id) is not None
+    data["doorbells"] = {ATTR_ENTITY_ID: [entity_id]}
+
+    await hass.services.async_call(
+        DOMAIN, ProtectService.SET_CHIME_PAIRED_DOORBELLS, data, blocking=True
+    )
+
+    public = ufp.api.public_bootstrap.chimes[chime.id]
+    public.set_camera_ids.assert_awaited_once_with([])
 
 
 async def test_set_chime_paired_doorbells_with_foreign_entity(
@@ -299,7 +364,7 @@ async def test_set_chime_paired_doorbells_with_foreign_entity(
     )
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+        DOMAIN, ProtectService.SET_CHIME_PAIRED_DOORBELLS, data, blocking=True
     )
 
     public = ufp.api.public_bootstrap.chimes[chime.id]
@@ -324,7 +389,7 @@ async def test_set_chime_paired_doorbells_readopted_chime(
     chimes[public.id] = public
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+        DOMAIN, ProtectService.SET_CHIME_PAIRED_DOORBELLS, data, blocking=True
     )
 
     public.set_camera_ids.assert_awaited_once_with(sorted([camera1.id, camera2.id]))
@@ -356,7 +421,7 @@ async def test_set_chime_paired_doorbells_error(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+            DOMAIN, ProtectService.SET_CHIME_PAIRED_DOORBELLS, data, blocking=True
         )
 
     assert exc_info.value.translation_key == "service_error"
@@ -377,7 +442,7 @@ async def test_set_chime_paired_doorbells_without_public_chime(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+            DOMAIN, ProtectService.SET_CHIME_PAIRED_DOORBELLS, data, blocking=True
         )
 
     assert exc_info.value.translation_key == "device_not_available"
@@ -400,7 +465,7 @@ async def test_set_chime_paired_doorbells_without_public_camera(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+            DOMAIN, ProtectService.SET_CHIME_PAIRED_DOORBELLS, data, blocking=True
         )
 
     assert exc_info.value.translation_key == "device_not_available"
@@ -418,14 +483,14 @@ async def test_set_chime_paired_doorbells_public_nvr_without_mac(
     """A public NVR without a mac does not break the not-a-chime check."""
     setup_public_chime(ufp)
     data, _, _ = await _setup_chime_pairing(hass, entity_registry, ufp, chime, doorbell)
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_2_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_2_doorbell")
     assert camera_entry is not None
     data[ATTR_DEVICE_ID] = camera_entry.device_id
     ufp.api.public_bootstrap.nvr.mac = None
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+            DOMAIN, ProtectService.SET_CHIME_PAIRED_DOORBELLS, data, blocking=True
         )
 
     assert exc_info.value.translation_key == "not_a_chime"
@@ -451,7 +516,7 @@ async def test_set_chime_paired_doorbells_device_without_mac(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+            DOMAIN, ProtectService.SET_CHIME_PAIRED_DOORBELLS, data, blocking=True
         )
 
     assert exc_info.value.translation_key == "device_not_available"
@@ -472,7 +537,7 @@ async def test_set_chime_paired_doorbells_unpair_all(
     del data["doorbells"]
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+        DOMAIN, ProtectService.SET_CHIME_PAIRED_DOORBELLS, data, blocking=True
     )
 
     public = ufp.api.public_bootstrap.chimes[chime.id]
@@ -510,7 +575,7 @@ async def test_set_chime_paired_doorbells_not_a_chime(
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+            DOMAIN, ProtectService.SET_CHIME_PAIRED_DOORBELLS, data, blocking=True
         )
 
     assert exc_info.value.translation_key == "not_a_chime"
@@ -531,13 +596,16 @@ async def test_remove_privacy_zone_no_zone(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_REMOVE_PRIVACY_ZONE,
-            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_NAME: "Testing"},
+            ProtectService.REMOVE_PRIVACY_ZONE,
+            {
+                CommonServiceArgument.DEVICE_ID: camera_entry.device_id,
+                ProtectServiceArgument.NAME: "Testing",
+            },
             blocking=True,
         )
     ufp.api.update_device.assert_not_called()
@@ -558,12 +626,15 @@ async def test_remove_privacy_zone(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REMOVE_PRIVACY_ZONE,
-        {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_NAME: "Testing"},
+        ProtectService.REMOVE_PRIVACY_ZONE,
+        {
+            CommonServiceArgument.DEVICE_ID: camera_entry.device_id,
+            ProtectServiceArgument.NAME: "Testing",
+        },
         blocking=True,
     )
     ufp.api.update_device.assert_called()
@@ -594,12 +665,12 @@ async def get_user_keyring_info(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_USER_KEYRING_INFO,
-        {ATTR_DEVICE_ID: camera_entry.device_id},
+        ProtectService.GET_USER_KEYRING_INFO,
+        {CommonServiceArgument.DEVICE_ID: camera_entry.device_id},
         blocking=True,
         return_response=True,
     )
@@ -638,15 +709,15 @@ async def test_get_user_keyring_info_no_users(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     with pytest.raises(
         HomeAssistantError, match="No users found, please check Protect permissions"
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_USER_KEYRING_INFO,
-            {ATTR_DEVICE_ID: camera_entry.device_id},
+            ProtectService.GET_USER_KEYRING_INFO,
+            {CommonServiceArgument.DEVICE_ID: camera_entry.device_id},
             blocking=True,
             return_response=True,
         )
@@ -691,8 +762,11 @@ async def test_ptz_goto_preset(
     public = ufp.api.public_bootstrap.cameras[ptz_camera.id]
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PTZ_GOTO_PRESET,
-        {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Preset 1"},
+        ProtectService.PTZ_GOTO_PRESET,
+        {
+            CommonServiceArgument.DEVICE_ID: camera_entry.device_id,
+            ProtectServiceArgument.PRESET: "Preset 1",
+        },
         blocking=True,
     )
     public.ptz_goto_preset.assert_awaited_once_with(slot=0)
@@ -715,8 +789,11 @@ async def test_ptz_goto_preset_home(
     public = ufp.api.public_bootstrap.cameras[ptz_camera.id]
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PTZ_GOTO_PRESET,
-        {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
+        ProtectService.PTZ_GOTO_PRESET,
+        {
+            CommonServiceArgument.DEVICE_ID: camera_entry.device_id,
+            ProtectServiceArgument.PRESET: "Home",
+        },
         blocking=True,
     )
     public.ptz_goto_preset.assert_awaited_once_with(slot=-1)
@@ -740,10 +817,10 @@ async def test_ptz_goto_preset_not_found(
     with pytest.raises(ServiceValidationError, match="Could not find PTZ preset"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PTZ_GOTO_PRESET,
+            ProtectService.PTZ_GOTO_PRESET,
             {
-                ATTR_DEVICE_ID: camera_entry.device_id,
-                ATTR_PRESET: "Does Not Exist",
+                CommonServiceArgument.DEVICE_ID: camera_entry.device_id,
+                ProtectServiceArgument.PRESET: "Does Not Exist",
             },
             blocking=True,
         )
@@ -758,13 +835,16 @@ async def test_ptz_goto_preset_not_ptz_camera(
     """Test ptz_goto_preset service on a non-PTZ camera."""
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     with pytest.raises(ServiceValidationError, match="does not support PTZ"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PTZ_GOTO_PRESET,
-            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
+            ProtectService.PTZ_GOTO_PRESET,
+            {
+                CommonServiceArgument.DEVICE_ID: camera_entry.device_id,
+                ProtectServiceArgument.PRESET: "Home",
+            },
             blocking=True,
         )
 
@@ -787,8 +867,11 @@ async def test_ptz_goto_preset_client_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PTZ_GOTO_PRESET,
-            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Preset 1"},
+            ProtectService.PTZ_GOTO_PRESET,
+            {
+                CommonServiceArgument.DEVICE_ID: camera_entry.device_id,
+                ProtectServiceArgument.PRESET: "Preset 1",
+            },
             blocking=True,
         )
 
@@ -813,8 +896,11 @@ async def test_ptz_goto_preset_public_client_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PTZ_GOTO_PRESET,
-            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Preset 1"},
+            ProtectService.PTZ_GOTO_PRESET,
+            {
+                CommonServiceArgument.DEVICE_ID: camera_entry.device_id,
+                ProtectServiceArgument.PRESET: "Preset 1",
+            },
             blocking=True,
         )
 
@@ -838,8 +924,11 @@ async def test_ptz_goto_home_preset_client_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PTZ_GOTO_PRESET,
-            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
+            ProtectService.PTZ_GOTO_PRESET,
+            {
+                CommonServiceArgument.DEVICE_ID: camera_entry.device_id,
+                ProtectServiceArgument.PRESET: "Home",
+            },
             blocking=True,
         )
 
@@ -861,8 +950,11 @@ async def test_ptz_goto_preset_no_public_camera(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PTZ_GOTO_PRESET,
-            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
+            ProtectService.PTZ_GOTO_PRESET,
+            {
+                CommonServiceArgument.DEVICE_ID: camera_entry.device_id,
+                ProtectServiceArgument.PRESET: "Home",
+            },
             blocking=True,
         )
     assert exc_info.value.translation_key == "device_not_available"
@@ -881,11 +973,14 @@ async def test_public_only_action_rejected(
     )
     assert device is not None
 
-    with pytest.raises(HomeAssistantError, match="requires full access"):
+    with pytest.raises(HomeAssistantError, match="requires a local user"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_DOORBELL_TEXT,
-            {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
+            ProtectService.ADD_DOORBELL_TEXT,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ProtectServiceArgument.MESSAGE: "Test Message",
+            },
             blocking=True,
         )
 
@@ -901,10 +996,10 @@ async def test_trigger_alarm_webhook(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TRIGGER_ALARM_WEBHOOK,
+        ProtectService.TRIGGER_ALARM_WEBHOOK,
         {
-            ATTR_CONFIG_ENTRY_ID: ufp_public_only.entry.entry_id,
-            ATTR_TRIGGER_ID: "test-trigger",
+            CommonServiceArgument.CONFIG_ENTRY_ID: ufp_public_only.entry.entry_id,
+            ProtectServiceArgument.TRIGGER_ID: "test-trigger",
         },
         blocking=True,
     )
@@ -923,8 +1018,11 @@ async def test_trigger_alarm_webhook_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TRIGGER_ALARM_WEBHOOK,
-            {ATTR_CONFIG_ENTRY_ID: ufp.entry.entry_id, ATTR_TRIGGER_ID: "test-trigger"},
+            ProtectService.TRIGGER_ALARM_WEBHOOK,
+            {
+                CommonServiceArgument.CONFIG_ENTRY_ID: ufp.entry.entry_id,
+                ProtectServiceArgument.TRIGGER_ID: "test-trigger",
+            },
             blocking=True,
         )
     assert exc_info.value.translation_key == "command_error"
@@ -941,8 +1039,11 @@ async def test_trigger_alarm_webhook_empty_trigger_id(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TRIGGER_ALARM_WEBHOOK,
-            {ATTR_CONFIG_ENTRY_ID: ufp.entry.entry_id, ATTR_TRIGGER_ID: ""},
+            ProtectService.TRIGGER_ALARM_WEBHOOK,
+            {
+                CommonServiceArgument.CONFIG_ENTRY_ID: ufp.entry.entry_id,
+                ProtectServiceArgument.TRIGGER_ID: "",
+            },
             blocking=True,
         )
     ufp.api.send_alarm_webhook_public.assert_not_awaited()
@@ -960,8 +1061,11 @@ async def test_trigger_alarm_webhook_non_admin(
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TRIGGER_ALARM_WEBHOOK,
-            {ATTR_CONFIG_ENTRY_ID: ufp.entry.entry_id, ATTR_TRIGGER_ID: "test-trigger"},
+            ProtectService.TRIGGER_ALARM_WEBHOOK,
+            {
+                CommonServiceArgument.CONFIG_ENTRY_ID: ufp.entry.entry_id,
+                ProtectServiceArgument.TRIGGER_ID: "test-trigger",
+            },
             blocking=True,
             context=Context(user_id=hass_read_only_user.id),
         )

@@ -30,6 +30,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
+    Platform.IMAGE,
     Platform.LIGHT,
     Platform.SELECT,
     Platform.SENSOR,

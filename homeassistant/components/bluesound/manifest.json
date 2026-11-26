@@ -5,9 +5,11 @@
   "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@thrawnarn", "@LouisChrist"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/bluesound",
   "integration_type": "device",
   "iot_class": "local_polling",
+  "quality_scale": "bronze",
   "requirements": ["pyblu==2.2.0"],
   "zeroconf": [
     {

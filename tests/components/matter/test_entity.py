@@ -2,17 +2,20 @@
 
 import copy
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
 from matter_server.common.models import EventType
 import pytest
 
+from homeassistant.components.matter.const import DOMAIN, ID_TYPE_DEVICE_ID
+from homeassistant.components.matter.helpers import get_device_id
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import (
+    EVE_ENERGY_LIGHT_PART_ATTRIBUTES,
     _setup_integration_with_nodes,
     create_node_from_fixture,
     set_node_attribute,
@@ -100,39 +103,95 @@ async def test_multi_endpoint_entity_translation_key(
     assert state_6.name == "Inovelli Light (6)"
 
 
+async def test_child_device_info_falls_back_to_node_device(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a split endpoint that is no longer named when its entity is added.
+
+    If the node changes after the entity was created so that its endpoint is no
+    longer named, the entity is placed on the node device instead of a child device.
+    """
+    with patch(
+        "homeassistant.components.matter.entity.get_child_device_names",
+        return_value={},
+    ):
+        node = await setup_integration_with_node_fixture(
+            hass, "eve_energy_20ecn4101", matter_client
+        )
+
+    node_device_id = get_device_id(matter_client.server_info, node.endpoints[0])
+    node_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
+    )
+    assert node_device is not None
+    assert not dr.async_entries_for_parent_device(device_registry, node_device.id)
+    entity_id = entity_registry.async_get_entity_id(
+        "switch", DOMAIN, f"{node_device_id}-1-MatterPlug-6-0"
+    )
+    assert entity_id is not None
+    switch_entry = entity_registry.async_get(entity_id)
+    assert switch_entry is not None
+    assert switch_entry.device_id == node_device.id
+
+
 @pytest.mark.usefixtures("matter_node")
 @pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
-async def test_label_modified_entity_translation_key(
+async def test_label_modified_endpoint_child_devices(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that label-modified entities have a translation key and a label postfix.
+    """Test endpoints labeled via Matter labels become named child devices.
 
-    When a device uses Matter labels to differentiate endpoints,
-    the entity name gets the label as a postfix. The translation key
-    must still always be set for translations.
+    The Eve Energy dual outlet exposes two On/Off Plug-in Unit endpoints labeled
+    ``top`` and ``bottom``. Each becomes its own child device, named from the
+    label, and its switch entity gets a clean name (no numeric/label postfix)
+    while still carrying the translation key for state attribute translations.
     """
     # Top outlet
-    entry_top = entity_registry.async_get("switch.eve_energy_20ecn4101_switch_top")
+    entry_top = entity_registry.async_get("switch.eve_energy_20ecn4101_top")
     assert entry_top is not None
     assert entry_top.translation_key == "switch"
-    assert entry_top.original_name == "Switch (top)"
+    assert entry_top.original_name is None
 
-    state_top = hass.states.get("switch.eve_energy_20ecn4101_switch_top")
+    state_top = hass.states.get("switch.eve_energy_20ecn4101_top")
     assert state_top is not None
-    assert state_top.name == "Eve Energy 20ECN4101 Switch (top)"
+    assert state_top.name == "Top"
 
     # Bottom outlet
-    entry_bottom = entity_registry.async_get(
-        "switch.eve_energy_20ecn4101_switch_bottom"
-    )
+    entry_bottom = entity_registry.async_get("switch.eve_energy_20ecn4101_bottom")
     assert entry_bottom is not None
     assert entry_bottom.translation_key == "switch"
-    assert entry_bottom.original_name == "Switch (bottom)"
+    assert entry_bottom.original_name is None
 
-    state_bottom = hass.states.get("switch.eve_energy_20ecn4101_switch_bottom")
+    state_bottom = hass.states.get("switch.eve_energy_20ecn4101_bottom")
     assert state_bottom is not None
-    assert state_bottom.name == "Eve Energy 20ECN4101 Switch (bottom)"
+    assert state_bottom.name == "Bottom"
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+@pytest.mark.parametrize("attributes", [EVE_ENERGY_LIGHT_PART_ATTRIBUTES])
+async def test_composed_part_on_child_device_keeps_postfix(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a part sharing the primary attribute with its child device's endpoint.
+
+    The part goes to the child device of its compose parent. Its entity keeps
+    the endpoint postfix, while the parent's entity is named by the child device.
+    """
+    top_entry = entity_registry.async_get("switch.eve_energy_20ecn4101_top")
+    assert top_entry is not None
+    assert hass.states.get("switch.eve_energy_20ecn4101_top").name == "Top"
+
+    light_entry = entity_registry.async_get("light.eve_energy_20ecn4101_top_light_3")
+    assert light_entry is not None
+    assert light_entry.device_id == top_entry.device_id
+    assert hass.states.get(light_entry.entity_id).name == "Top Light (3)"
 
 
 @pytest.mark.usefixtures("matter_node")
