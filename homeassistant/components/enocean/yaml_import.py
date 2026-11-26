@@ -89,10 +89,8 @@ def async_import_yaml_device(
         )
         hass.config_entries.async_add_subentry(entry, subentry)
     elif stored.data != data:
-        # A device is stored once: a second YAML entry with the same ID and other
-        # settings, which used to be an entity of its own, cannot be imported.
-        # Its settings are part of the issue ID, so that every such entry gets
-        # an issue of its own.
+        # A device is stored once per ID; the settings in the issue ID give each
+        # skipped YAML entry its own issue.
         settings = "_".join(str(options[key]) for key in sorted(options)) or "none"
         _async_create_issue(
             hass,
