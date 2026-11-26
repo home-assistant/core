@@ -5021,17 +5021,16 @@ async def test_automation_tools(
         )
     )
     assert result == llm.ToolResult(
-        data={
-            "result": {"automation_id": "morning", "id": "morning", **AUTOMATION_CONFIG}
-        }
+        data={"result": {"id": "morning", **AUTOMATION_CONFIG}}
     )
+    stored_config = result.data["result"]
 
     result = await automation_api.async_call_tool(
         llm.ToolInput(
             "config__set_automation_config",
             {
                 "automation_id": "morning",
-                "config": {**AUTOMATION_CONFIG, "alias": "Evening lights"},
+                "config": {**stored_config, "alias": "Evening lights"},
             },
         )
     )
@@ -5066,6 +5065,41 @@ async def test_automation_tools(
     )
     assert hass_config_store["automations.yaml"] == []
     assert hass.states.async_entity_ids("automation") == []
+
+    deleted_config = result.data["result"]["deleted_config"]
+    await automation_api.async_call_tool(
+        llm.ToolInput(
+            "config__set_automation_config",
+            {"automation_id": "morning", "config": deleted_config},
+        )
+    )
+    await hass.async_block_till_done()
+    assert hass_config_store["automations.yaml"] == [deleted_config]
+
+
+async def test_automation_tools_disabled_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    automation_api: llm.APIInstance,
+    hass_config_store: dict[str, Any],
+) -> None:
+    """Test a disabled automation can be addressed by its entity_id."""
+    hass_config_store["automations.yaml"] = [{"id": "sun", **AUTOMATION_CONFIG}]
+    entry = entity_registry.async_get_or_create(
+        "automation",
+        "automation",
+        "sun",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    assert hass.states.get(entry.entity_id) is None
+
+    result = await automation_api.async_call_tool(
+        llm.ToolInput(
+            "config__get_automation_config", {"automation_id": entry.entity_id}
+        )
+    )
+
+    assert result == llm.ToolResult(data={"result": {"id": "sun", **AUTOMATION_CONFIG}})
 
 
 @pytest.mark.parametrize(

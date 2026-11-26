@@ -2144,17 +2144,12 @@ def _resolve_automation_id(hass: HomeAssistant, automation_id: str) -> str:
     if not automation_id.startswith("automation."):
         return automation_id
     if (
-        (entry := er.async_get(hass).async_get(automation_id)) is not None
-        and entry.platform == "automation"
-    ):
-        return entry.unique_id
-    if (state := hass.states.get(automation_id)) is None or not (
-        config_id := state.attributes.get(CONF_ID)
-    ):
+        entry := er.async_get(hass).async_get(automation_id)
+    ) is None or entry.platform != "automation":
         raise HomeAssistantError(
             f"Automation '{automation_id}' not found or not editable (it has no id)."
         )
-    return str(config_id)
+    return entry.unique_id
 
 
 class GetAutomationConfigTool(Tool):
@@ -2190,7 +2185,7 @@ class GetAutomationConfigTool(Tool):
         view = hass.data[DATA_AUTOMATION_VIEW]
         if (config := await view.async_get_value(hass, automation_id)) is None:
             raise HomeAssistantError(f"Automation '{automation_id}' not found.")
-        return ToolResult(data={"result": {"automation_id": automation_id, **config}})
+        return ToolResult(data={"result": config})
 
 
 class SetAutomationConfigTool(Tool):
@@ -2201,10 +2196,9 @@ class SetAutomationConfigTool(Tool):
     description = (
         "Create an automation, or update an existing one when automation_id is "
         "given. The configuration is validated first and nothing is stored when it "
-        "is invalid. Keys left out of config keep their stored value, so send the "
-        "full configuration from config__get_automation_config with the changes "
-        "applied, without its id. The automation is reloaded after it is stored. "
-        "Returns the automation_id "
+        "is invalid. It replaces the whole automation, so start from "
+        "config__get_automation_config when changing an existing one. The "
+        "automation is reloaded after it is stored. Returns the automation_id "
         "and previous_config, the stored configuration from before the change "
         "(null for a new automation)."
     )
@@ -2273,8 +2267,8 @@ class DeleteAutomationTool(Tool):
     title = "Delete automation"
     description = (
         "Delete the automation with the given id from the configuration. Returns "
-        "deleted_config, which config__set_automation_config can store again to "
-        "restore the automation."
+        "deleted_config. To restore the automation, pass it as config to "
+        "config__set_automation_config together with the same automation_id."
     )
     annotations = ToolAnnotations(
         read_only=False, destructive=True, idempotent=True, open_world=False
