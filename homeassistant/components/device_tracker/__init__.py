@@ -3,6 +3,14 @@
 import asyncio
 from typing import Any
 
+from homeassistant.components.labs import (
+    EventLabsUpdatedData,
+    async_subscribe_preview_feature,
+)
+from homeassistant.components.zone import (
+    DOMAIN as ZONE_DOMAIN,
+    PREVIEW_FEATURE_IMPROVED_PRESENCE_DETECTION,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_HOME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -128,6 +136,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.config = {}
     component.register_shutdown()
+
+    async def _async_zone_presence_detection_changed(
+        _event_data: EventLabsUpdatedData,
+    ) -> None:
+        """Re-resolve the zones of tracker entities."""
+        for entity in list(component.entities):
+            if isinstance(entity, TrackerEntity):
+                entity.async_internal_zone_presence_detection_changed()
+
+    async_subscribe_preview_feature(
+        hass,
+        ZONE_DOMAIN,
+        PREVIEW_FEATURE_IMPROVED_PRESENCE_DETECTION,
+        _async_zone_presence_detection_changed,
+    )
 
     # The tracker is loaded in the async_setup_legacy_integration task so
     # we create a future to avoid waiting on it here so that only

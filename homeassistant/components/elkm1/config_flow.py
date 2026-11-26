@@ -1,5 +1,6 @@
 """Config flow for Elk-M1 Control integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, Self, override
 
@@ -59,6 +60,13 @@ SECURE_PROTOCOLS = ["secure", "TLS 1.2"]
 ALL_PROTOCOLS = [*SECURE_PROTOCOLS, "non-secure", "serial"]
 DEFAULT_SECURE_PROTOCOL = "secure"
 DEFAULT_NON_SECURE_PROTOCOL = "non-secure"
+
+REAUTH_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
+)
 
 PORT_PROTOCOL_MAP = {
     NON_SECURE_PORT: DEFAULT_NON_SECURE_PROTOCOL,
@@ -293,6 +301,54 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                         default=_get_protocol_from_url(existing_data[CONF_HOST]),
                     ): probatio.In(ALL_PROTOCOLS),
                 }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when the panel rejects the credentials."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for new credentials."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        if user_input is not None:
+            try:
+                await validate_input(
+                    {
+                        CONF_HOST: reauth_entry.data[CONF_HOST],
+                        CONF_PREFIX: reauth_entry.data[CONF_PREFIX],
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                    reauth_entry.unique_id,
+                )
+            except TimeoutError:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors[CONF_PASSWORD] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception during reauthentication")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                REAUTH_SCHEMA,
+                {CONF_USERNAME: (user_input or reauth_entry.data)[CONF_USERNAME]},
             ),
             errors=errors,
         )

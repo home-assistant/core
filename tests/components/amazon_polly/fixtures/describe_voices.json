@@ -1,0 +1,44 @@
+{
+  "Voices": [
+    {
+      "Gender": "Female",
+      "Id": "Joanna",
+      "LanguageCode": "en-US",
+      "LanguageName": "US English",
+      "Name": "Joanna",
+      "SupportedEngines": ["generative", "long-form", "neural", "standard"]
+    },
+    {
+      "Gender": "Male",
+      "Id": "Matthew",
+      "LanguageCode": "en-US",
+      "LanguageName": "US English",
+      "Name": "Matthew",
+      "SupportedEngines": ["generative", "neural", "standard"]
+    },
+    {
+      "Gender": "Female",
+      "Id": "Danielle",
+      "LanguageCode": "en-US",
+      "LanguageName": "US English",
+      "Name": "Danielle",
+      "SupportedEngines": ["generative", "long-form", "neural"]
+    },
+    {
+      "Gender": "Female",
+      "Id": "Amy",
+      "LanguageCode": "en-GB",
+      "LanguageName": "British English",
+      "Name": "Amy",
+      "SupportedEngines": ["generative", "neural", "standard"]
+    },
+    {
+      "Gender": "Male",
+      "Id": "Brian",
+      "LanguageCode": "en-GB",
+      "LanguageName": "British English",
+      "Name": "Brian",
+      "SupportedEngines": ["standard"]
+    }
+  ]
+}

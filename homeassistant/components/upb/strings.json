@@ -27,7 +27,7 @@
     "light_blink": {
       "description": "Blinks a light.",
       "fields": {
-        "rate": {
+        "blink_rate": {
           "description": "Amount of time that the link flashes on.",
           "name": "[%key:component::upb::services::light_fade_start::fields::rate::name%]"
         }
@@ -60,7 +60,7 @@
       "description": "Blinks a link.",
       "fields": {
         "blink_rate": {
-          "description": "[%key:component::upb::services::light_blink::fields::rate::description%]",
+          "description": "[%key:component::upb::services::light_blink::fields::blink_rate::description%]",
           "name": "Blink rate"
         }
       },

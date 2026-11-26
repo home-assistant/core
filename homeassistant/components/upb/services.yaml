@@ -36,7 +36,7 @@ light_blink:
       integration: upb
       domain: light
   fields:
-    rate:
+    blink_rate:
       default: 0.5
       selector:
         number:

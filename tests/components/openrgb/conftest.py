@@ -10,7 +10,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.openrgb.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 
@@ -36,7 +36,6 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Test Computer",
         data={
-            CONF_NAME: "Test Computer",
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 6742,
         },

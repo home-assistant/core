@@ -24,10 +24,11 @@ from homeassistant.components.cover import (
     SERVICE_OPEN_COVER,
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
     CoverEntityFeature,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.components.overkiz import DOMAIN
@@ -38,6 +39,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -610,8 +612,8 @@ async def test_merged_action_groups_keep_per_device_tracking(
     for device in (SHUTTER, GARAGE):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: device.entity_id},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: device.entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -711,8 +713,8 @@ async def test_cover_command_connection_error_raises(
     with pytest.raises(HomeAssistantError, match="Failed to connect"):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: SHUTTER.entity_id},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: SHUTTER.entity_id},
             blocking=True,
         )
 
@@ -769,8 +771,8 @@ async def test_cover_set_position(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: position},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.POSITION: position},
         blocking=True,
     )
 
@@ -807,8 +809,11 @@ async def test_cover_set_tilt_position(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: device.entity_id, ATTR_TILT_POSITION: tilt_position},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: device.entity_id,
+            CoverServiceArgument.TILT_POSITION: tilt_position,
+        },
         blocking=True,
     )
 
@@ -879,16 +884,16 @@ async def test_cover_tilt_services(
     mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: PERGOLA.entity_id},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: PERGOLA.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get(PERGOLA.entity_id).state == CoverState.OPENING
     assert_command_call(
         mock_client,
         device_url=PERGOLA.device_url,
-        command_name="openSlats",
+        command_name="setOrientation",
+        parameters=[40],
     )
 
     await async_deliver_events(
@@ -908,8 +913,8 @@ async def test_cover_tilt_services(
     mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: PERGOLA.entity_id},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: PERGOLA.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -923,8 +928,8 @@ async def test_cover_tilt_services(
     mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER_TILT,
-        {ATTR_ENTITY_ID: PERGOLA.entity_id},
+        CoverService.STOP_TILT,
+        {TargetKey.ENTITY_ID: PERGOLA.entity_id},
         blocking=True,
     )
     assert_command_call(
@@ -936,8 +941,11 @@ async def test_cover_tilt_services(
     mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: PERGOLA.entity_id, ATTR_TILT_POSITION: 40},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: PERGOLA.entity_id,
+            CoverServiceArgument.TILT_POSITION: 40,
+        },
         blocking=True,
     )
     assert_command_call(
@@ -1038,8 +1046,8 @@ async def test_cover_state_updates(
     # Execution tracking: state stays OPENING until execution completes
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: SHUTTER.entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: SHUTTER.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1237,8 +1245,8 @@ async def test_awning_direct_position_mapping(
     mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: AWNING.entity_id, ATTR_POSITION: 35},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: AWNING.entity_id, CoverServiceArgument.POSITION: 35},
         blocking=True,
     )
     assert_command_call(

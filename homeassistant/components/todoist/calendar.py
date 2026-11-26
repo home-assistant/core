@@ -115,7 +115,7 @@ async def async_setup_platform(
     # Look up IDs based on (lowercase) names.
     project_id_lookup = {}
 
-    api = TodoistAPIAsync(token)
+    api = await hass.async_add_executor_job(TodoistAPIAsync, token)
     coordinator = TodoistCoordinator(hass, _LOGGER, None, SCAN_INTERVAL, api, token)
     await coordinator.async_refresh()
 
@@ -125,6 +125,7 @@ async def async_setup_platform(
 
     async def _shutdown_coordinator(_: Event) -> None:
         await coordinator.async_shutdown()
+        await api.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_coordinator)
 

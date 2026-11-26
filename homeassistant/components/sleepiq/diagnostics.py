@@ -33,9 +33,7 @@ async def async_get_config_entry_diagnostics(
                         "in_bed": sleeper.in_bed,
                         "pressure": sleeper.pressure,
                         "sleep_number": sleeper.sleep_number,
-                        "sleep_data": (
-                            asdict(sleeper.sleep_data) if sleeper.sleep_data else None
-                        ),
+                        "sleep_data": asdict(sleeper.sleep_data),
                     }
                     for sleeper in bed.sleepers
                 ],
