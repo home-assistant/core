@@ -21,15 +21,5 @@
         "title": "Add openSenseMap station"
       }
     }
-  },
-  "issues": {
-    "deprecated_air_quality": {
-      "description": "The openSenseMap air quality entity (`{entity_id}`) is deprecated. The particulate matter measurements it provided are now available as individual sensor entities.\n\nUpdate your dashboards and templates to use those sensor entities, then disable the air quality entity to have it removed after the next restart.",
-      "title": "The openSenseMap air quality entity is deprecated"
-    },
-    "deprecated_air_quality_in_use": {
-      "description": "The openSenseMap air quality entity (`{entity_id}`) is deprecated. The particulate matter measurements it provided are now available as individual sensor entities.\n\nIt is still used in the following automations or scripts:\n{items}\n\nUpdate them to use the sensor entities, then disable the air quality entity to have it removed after the next restart.",
-      "title": "[%key:component::opensensemap::issues::deprecated_air_quality::title%]"
-    }
   }
 }
