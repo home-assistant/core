@@ -1,15 +1,27 @@
 """Test the BTHome events."""
 
+import time
+
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 from pytest_homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
+    FakeScanner,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement_with_time_and_source_connectable,
     inject_bluetooth_service_info,
 )
 
-from homeassistant.components.bthome.const import DOMAIN
+from homeassistant.components.bluetooth import async_register_scanner
+from homeassistant.components.bthome.const import BTHOME_BLE_EVENT, DOMAIN
 from homeassistant.components.event import EventEntityStateAttribute
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from . import make_bthome_v2_adv
@@ -154,3 +166,147 @@ async def test_v2_events(
         )
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+BUTTON_ADDRESS = "A4:C1:38:8D:18:B2"
+BTHOME_UUID = "0000fcd2-0000-1000-8000-00805f9b34fb"
+STRONG_PROXY = "strong_proxy"
+WEAK_PROXY = "weak_proxy"
+
+
+def _inject_button_payload(
+    hass: HomeAssistant, payload: bytes, source: str, rssi: int, adv_time: float
+) -> None:
+    """Inject a button advertisement heard by one proxy."""
+    inject_advertisement_with_time_and_source_connectable(
+        hass,
+        generate_ble_device(BUTTON_ADDRESS, "Test Device"),
+        generate_advertisement_data(
+            local_name="Test Device",
+            service_data={BTHOME_UUID: payload},
+            service_uuids=[BTHOME_UUID],
+            rssi=rssi,
+        ),
+        adv_time,
+        source,
+        connectable=False,
+    )
+
+
+@pytest.mark.parametrize(
+    ("first_payload", "second_payload", "expected_events"),
+    [
+        pytest.param(
+            b"\x44\x00\x01\x3a\x01",
+            b"\x44\x00\x02\x3a\x02",
+            ["press", "double_press"],
+            id="sleepy_with_packet_id",
+        ),
+        pytest.param(
+            b"\x40\x00\x01\x3a\x01",
+            b"\x40\x00\x02\x3a\x02",
+            ["press"],
+            id="not_sleepy",
+        ),
+        pytest.param(
+            b"\x44\x3a\x01",
+            b"\x44\x3a\x02",
+            ["press", "double_press"],
+            id="no_packet_id",
+        ),
+    ],
+)
+async def test_event_from_non_owner_proxy(
+    hass: HomeAssistant,
+    first_payload: bytes,
+    second_payload: bytes,
+    expected_events: list[str],
+) -> None:
+    """Test a sleepy device's new packet heard only by a weaker proxy."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=BUTTON_ADDRESS)
+    entry.add_to_hass(hass)
+    entry.async_on_unload(
+        async_register_scanner(hass, FakeScanner(STRONG_PROXY, STRONG_PROXY))
+    )
+    entry.async_on_unload(
+        async_register_scanner(hass, FakeScanner(WEAK_PROXY, WEAK_PROXY))
+    )
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    events = async_capture_events(hass, BTHOME_BLE_EVENT)
+    now = time.monotonic()
+
+    _inject_button_payload(hass, first_payload, STRONG_PROXY, -60, now)
+    # Hand the weak proxy a copy, so the device is known by both proxies
+    _inject_button_payload(hass, first_payload, WEAK_PROXY, -90, now + 0.1)
+    await hass.async_block_till_done()
+    # The weak proxy is not 16 dB stronger, so the manager keeps the strong owner
+    _inject_button_payload(hass, second_payload, WEAK_PROXY, -90, now + 5)
+    await hass.async_block_till_done()
+
+    assert [event.data["event_type"] for event in events] == expected_events
+
+
+async def test_copies_of_one_packet_fire_one_event(hass: HomeAssistant) -> None:
+    """Test copies of one packet from several proxies fire one event."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=BUTTON_ADDRESS)
+    entry.add_to_hass(hass)
+    entry.async_on_unload(
+        async_register_scanner(hass, FakeScanner(STRONG_PROXY, STRONG_PROXY))
+    )
+    entry.async_on_unload(
+        async_register_scanner(hass, FakeScanner(WEAK_PROXY, WEAK_PROXY))
+    )
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    events = async_capture_events(hass, BTHOME_BLE_EVENT)
+    now = time.monotonic()
+
+    _inject_button_payload(hass, b"\x44\x00\x01\x3a\x01", STRONG_PROXY, -60, now)
+    _inject_button_payload(hass, b"\x44\x00\x01\x3a\x01", WEAK_PROXY, -90, now + 1)
+    _inject_button_payload(hass, b"\x44\x00\x02\x3a\x02", WEAK_PROXY, -90, now + 5)
+    _inject_button_payload(hass, b"\x44\x00\x02\x3a\x02", STRONG_PROXY, -60, now + 5.5)
+    await hass.async_block_till_done()
+
+    assert [event.data["event_type"] for event in events] == ["press", "double_press"]
+
+
+async def test_reload_keeps_state_from_non_owner_proxy(hass: HomeAssistant) -> None:
+    """Test a reload does not replay an older packet of a sleepy device."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=BUTTON_ADDRESS)
+    entry.add_to_hass(hass)
+    entry.async_on_unload(
+        async_register_scanner(hass, FakeScanner(STRONG_PROXY, STRONG_PROXY))
+    )
+    entry.async_on_unload(
+        async_register_scanner(hass, FakeScanner(WEAK_PROXY, WEAK_PROXY))
+    )
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    events = async_capture_events(hass, BTHOME_BLE_EVENT)
+    now = time.monotonic()
+
+    _inject_button_payload(
+        hass, b"\x44\x00\x01\x3a\x01\x2d\x01", STRONG_PROXY, -60, now
+    )
+    _inject_button_payload(
+        hass, b"\x44\x00\x01\x3a\x01\x2d\x01", WEAK_PROXY, -90, now + 0.1
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.test_device_18b2_window").state == STATE_ON
+    # Only the weak proxy hears the window close, so the strong proxy's packet
+    # stays the last one in the Bluetooth history
+    _inject_button_payload(hass, b"\x44\x00\x02\x2d\x00", WEAK_PROXY, -90, now + 5)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.test_device_18b2_window").state == STATE_OFF
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test_device_18b2_window").state == STATE_OFF
+    assert [event.data["event_type"] for event in events] == ["press"]
+
+    # The device is still taken from any proxy after the reload
+    _inject_button_payload(hass, b"\x44\x00\x03\x2d\x01", STRONG_PROXY, -60, now + 10)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.test_device_18b2_window").state == STATE_ON

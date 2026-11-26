@@ -51,6 +51,7 @@ from homeassistant.components.bluetooth import (
     async_get_fallback_availability_interval,
     async_get_learned_advertising_interval,
     async_register_advertisement_callback,
+    async_register_event_driven,
     async_scanner_count,
     async_set_fallback_availability_interval,
     async_track_unavailable,
@@ -2100,6 +2101,45 @@ async def test_async_register_advertisement_callback(hass: HomeAssistant) -> Non
     cancel()
     inject_advertisement_with_source(hass, device, adv, "hci0")
     assert len(seen) == 2
+
+
+@pytest.mark.usefixtures(
+    "enable_bluetooth", "register_hci0_scanner", "register_hci1_scanner"
+)
+async def test_async_register_event_driven(hass: HomeAssistant) -> None:
+    """A new payload of an event-driven device is taken from a weaker scanner."""
+    address = "44:44:33:11:23:46"
+    start = MONOTONIC_TIME()
+
+    def _inject(payload: bytes, rssi: int, offset: float, source: str) -> None:
+        inject_advertisement_with_time_and_source(
+            hass,
+            generate_ble_device(address, "event"),
+            generate_advertisement_data(
+                local_name="event", service_data={"fcd2": payload}, rssi=rssi
+            ),
+            start + offset,
+            source,
+        )
+
+    def _last_payload() -> bytes:
+        service_info = bluetooth.async_last_service_info(hass, address, False)
+        assert service_info is not None
+        return service_info.service_data["fcd2"]
+
+    _inject(b"\x01", -50, 0, HCI0_SOURCE_ADDRESS)
+    _inject(b"\x01", -90, 0.1, HCI1_SOURCE_ADDRESS)
+    _inject(b"\x02", -90, 5, HCI1_SOURCE_ADDRESS)
+    assert _last_payload() == b"\x01"
+
+    cancel = async_register_event_driven(hass, address)
+    _inject(b"\x03", -90, 10, HCI1_SOURCE_ADDRESS)
+    assert _last_payload() == b"\x03"
+
+    cancel()
+    _inject(b"\x04", -50, 15, HCI0_SOURCE_ADDRESS)
+    _inject(b"\x05", -90, 20, HCI1_SOURCE_ADDRESS)
+    assert _last_payload() == b"\x04"
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
