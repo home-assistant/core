@@ -2229,6 +2229,38 @@ async def test_event_driven_history_saved_after_disappearing(
     }
 
 
+@pytest.mark.usefixtures(
+    "enable_bluetooth", "register_hci0_scanner", "register_hci1_scanner"
+)
+async def test_event_driven_history_saved_after_disappearing_and_reload(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """A registration ending and starting again keeps the last advertisement."""
+    start = MONOTONIC_TIME()
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+    inject_advertisement_with_time_and_source(
+        hass,
+        generate_ble_device(EVENT_DRIVEN_ADDRESS, "event"),
+        _event_advertisement(CLOSED, -90),
+        start,
+        HCI1_SOURCE_ADDRESS,
+    )
+    with patch_bluetooth_time(start + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+        await hass.async_block_till_done()
+    cancel()
+    async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+
+    await hass.async_stop()
+
+    data = hass_storage[storage.EVENT_DRIVEN_STORAGE_KEY]["data"]
+    assert data["sources"] == {
+        EVENT_DRIVEN_ADDRESS: {"source": HCI1_SOURCE_ADDRESS, "connectable": True}
+    }
+
+
 def _stored_advertisement(
     payload: bytes, rssi: int, heard: float, connectable: bool
 ) -> dict[str, Any]:
@@ -2468,6 +2500,86 @@ async def test_register_event_driven_after_live_advertisement_expired(
 
     assert bluetooth.async_last_service_info(hass, EVENT_DRIVEN_ADDRESS, False) is None
     cancel()
+
+
+@pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
+@pytest.mark.parametrize("restarted_bluetooth", [OLDER_STRONG_REMOTE], indirect=True)
+@pytest.mark.usefixtures("restarted_bluetooth")
+async def test_new_advertisement_before_registration_kept(
+    hass: HomeAssistant,
+) -> None:
+    """A weaker scanner's new advertisement before registration replaces the old."""
+    cancels = [
+        bluetooth.async_register_scanner(hass, FakeScanner(source, source))
+        for source in ("strong-proxy", "weak-proxy")
+    ]
+    inject_advertisement_with_time_and_source(
+        hass,
+        generate_ble_device(EVENT_DRIVEN_ADDRESS, "event"),
+        _event_advertisement(b"\x03", -90),
+        MONOTONIC_TIME(),
+        "weak-proxy",
+    )
+
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+
+    assert _event_driven_history() == ("weak-proxy", b"\x03")
+    cancel()
+    for cancel_scanner in cancels:
+        cancel_scanner()
+
+
+@pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
+@pytest.mark.parametrize(
+    "restarted_bluetooth",
+    [
+        (
+            {
+                "strong-proxy": (OPEN, -50, 60, True),
+                "weak-proxy": (CLOSED, -90, 10, True),
+            },
+            {},
+            ("weak-proxy", CLOSED, 10, True),
+        )
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("restarted_bluetooth")
+async def test_non_connectable_advertisement_keeps_connectable_restore(
+    hass: HomeAssistant,
+) -> None:
+    """A non-connectable advertisement leaves the connectable history to restore."""
+    inject_advertisement_with_time_and_source_connectable(
+        hass,
+        generate_ble_device(EVENT_DRIVEN_ADDRESS, "event"),
+        _event_advertisement(b"\x03", -90),
+        MONOTONIC_TIME(),
+        "weak-proxy",
+        False,
+    )
+
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+
+    assert _event_driven_history() == ("weak-proxy", b"\x03")
+    service_info = bluetooth.async_last_service_info(hass, EVENT_DRIVEN_ADDRESS, True)
+    assert service_info is not None
+    assert service_info.service_data["fcd2"] == CLOSED
+    cancel()
+
+
+@pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
+@pytest.mark.parametrize("restarted_bluetooth", [OLDER_STRONG_REMOTE], indirect=True)
+@pytest.mark.usefixtures("restarted_bluetooth")
+async def test_pending_accepted_advertisement_saved_again(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """An accepted advertisement still waiting for registration is saved at stop."""
+    await hass.async_stop()
+
+    data = hass_storage[storage.EVENT_DRIVEN_STORAGE_KEY]["data"]
+    assert data["sources"] == {
+        EVENT_DRIVEN_ADDRESS: {"source": "weak-proxy", "connectable": False}
+    }
 
 
 @pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
