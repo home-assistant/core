@@ -5,6 +5,7 @@ import logging
 from typing import override
 
 from pytouchline_extended import (
+    ControllerStatus,
     RoomStatus,
     TouchlineConnectionError,
     TouchlineController,
@@ -33,6 +34,7 @@ class TouchlineCoordinator(DataUpdateCoordinator[dict[str, RoomStatus]]):
     """Poll all thermostats on a Touchline controller, keyed by unique ID."""
 
     config_entry: TouchlineConfigEntry
+    controller_status: ControllerStatus
 
     def __init__(self, hass: HomeAssistant, entry: TouchlineConfigEntry) -> None:
         """Initialize the coordinator."""
@@ -60,6 +62,7 @@ class TouchlineCoordinator(DataUpdateCoordinator[dict[str, RoomStatus]]):
                 f"Error communicating with Touchline controller at {self.controller.url}"
             ) from err
 
+        self.controller_status = state.controller
         rooms: dict[str, RoomStatus] = {}
         for room in state.rooms:
             if room.controller_id is None or room.device_id is None:
