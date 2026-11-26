@@ -482,20 +482,24 @@ async def test_poll_less_while_connected(
     freezer: FrozenDateTimeFactory,
     mock_listen: AsyncMock,
 ) -> None:
-    """Test polling slows down while push notifications are received."""
+    """Test polling slows down, but keeps going, while push notifications are received."""
     await setup_integration(hass, aioclient_mock)
     _, on_update, on_connection_change = mock_listen.call_args.args
 
     on_connection_change(True)
-    # The device sends the current state right after subscribing
-    on_update()
+    # The poll that was already scheduled schedules the next one at the slow interval
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     calls = aioclient_mock.call_count
 
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    on_update()
     assert aioclient_mock.call_count == calls
 
+    # Push notifications must not postpone the poll
     freezer.tick(timedelta(seconds=31))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

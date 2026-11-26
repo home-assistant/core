@@ -59,7 +59,8 @@ class DevialetCoordinator(DataUpdateCoordinator[None]):
     @callback
     def _async_handle_push_update(self) -> None:
         """Handle a push update from the device."""
-        self.async_set_updated_data(None)
+        # Keep the poll schedule, the poll also starts the UPnP discovery
+        self.async_update_listeners()
 
     @callback
     def _async_handle_connection_change(self, connected: bool) -> None:
