@@ -10,7 +10,7 @@ from huawei_lte_api.exceptions import (
     ResponseErrorNotSupportedException,
 )
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from requests import ConnectTimeout
 
 from homeassistant.components.huawei_lte.const import DOMAIN
@@ -23,8 +23,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import magic_client
-
-from tests.common import async_fire_time_changed
 
 SWITCH_DHCP = "switch.test_router_dhcp_server"
 SCAN_INTERVAL = timedelta(seconds=30)
