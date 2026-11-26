@@ -360,6 +360,32 @@ def _last_values_func() -> _ToolFunc:
     return _call
 
 
+def _group_address_func(
+    lib_func: Callable, *, positional: tuple[str, ...] = ()
+) -> _ToolFunc:
+    """Add the entities using a group address to what the project says about it."""
+    project_func = _project_func(lib_func, positional=positional)
+
+    async def _call(knx: KNXModule, args: Any) -> Any:
+        result = asdict(await project_func(knx, args))
+        entity_registry = er.async_get(knx.hass)
+        usage = knx.get_group_address_entities()
+        group_addresses = result.get("group_addresses") or [result["group_address"]]
+        for group_address in filter(None, group_addresses):
+            group_address["entity_ids"] = sorted(
+                entity_id
+                for user in usage.get(group_address["address"], ())
+                if (
+                    entity_id := entity_registry.async_get_entity_id(
+                        user["platform"], DOMAIN, user["unique_id"]
+                    )
+                )
+            )
+        return result
+
+    return _call
+
+
 def _topology_func() -> _ToolFunc:
     """Page through the topology by line, which xknxproject returns in full.
 
@@ -874,15 +900,18 @@ def _tool_specs() -> list[_ToolSpec]:
         _ToolSpec(
             "list_group_addresses",
             "List group addresses",
-            "List project group addresses. Text matches address/name/description.",
+            "List project group addresses. Text matches address/name/description. "
+            "`entity_ids` are the Home Assistant entities using an address; it is "
+            "empty for an address no entity uses yet.",
             _schema_from_dataclass(xknxproject_mcp.GroupAddressFilter),
-            _project_func(xknxproject_mcp.list_group_addresses),
+            _group_address_func(xknxproject_mcp.list_group_addresses),
             _READ_ONLY,
         ),
         _ToolSpec(
             "describe_group_address",
             "Describe a group address",
-            "Resolve one group address to its communication objects and devices.",
+            "Resolve one group address to its communication objects and devices, "
+            "and to the Home Assistant entities using it (`entity_ids`).",
             probatio.Schema(
                 {
                     probatio.Required(
@@ -890,7 +919,7 @@ def _tool_specs() -> list[_ToolSpec]:
                     ): str
                 }
             ),
-            _project_func(
+            _group_address_func(
                 xknxproject_mcp.describe_group_address, positional=("address",)
             ),
             _READ_ONLY,

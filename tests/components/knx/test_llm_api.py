@@ -20,6 +20,7 @@ from xknx.dpt import DPTArray, DPTTime
 
 from homeassistant.components.knx import llm_api
 from homeassistant.components.knx.const import DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY
+from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.components.knx.schema import SwitchSchema
 from homeassistant.components.knx.storage.entity_suggestions.base import (
     SuggestionProvider,
@@ -1460,6 +1461,39 @@ async def test_list_group_address_usage_names_project_addresses(
         (ga["address"], ga["name"], [entity["entity_id"] for entity in ga["entities"]])
         for ga in result["group_addresses"]
     ] == [("0/0/1", "Binary", ["switch.a"]), ("9/7/9", None, ["switch.b"])]
+
+
+async def test_project_group_addresses_name_their_entities(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_admin_user: MockUser,
+    hass_storage: dict[str, Any],
+    current_project_data: dict[str, Any],
+) -> None:
+    """The group addresses of the project carry the entities using them."""
+    hass_storage[KNX_PROJECT_STORAGE_KEY] = {"version": 1, "data": current_project_data}
+    await knx.setup_integration()
+    await _create_switch(hass, hass_admin_user, "B", "1/0/0")
+    await _create_switch(hass, hass_admin_user, "A", "1/0/0")
+
+    result = await _call_api(hass, hass_admin_user, "list_group_addresses", {})
+    assert result["total_count"] == 19
+    assert {
+        ga["address"]: ga["entity_ids"]
+        for ga in result["group_addresses"]
+        if ga["entity_ids"]
+    } == {"1/0/0": ["switch.a", "switch.b"]}
+
+    result = await _call_api(
+        hass, hass_admin_user, "describe_group_address", {"address": "1/0/0"}
+    )
+    assert result["group_address"]["entity_ids"] == ["switch.a", "switch.b"]
+
+    result = await _call_api(
+        hass, hass_admin_user, "describe_group_address", {"address": "9/7/9"}
+    )
+    assert result["found"] is False
+    assert result["group_address"] is None
 
 
 def _addressed_channel_project() -> dict[str, Any]:
