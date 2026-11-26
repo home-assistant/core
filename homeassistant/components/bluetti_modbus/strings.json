@@ -63,6 +63,16 @@
         "name": "Discharge limit"
       }
     },
+    "select": {
+      "working_mode": {
+        "name": "Working mode",
+        "state": {
+          "backup": "Backup",
+          "custom": "Custom",
+          "self_consumption": "Self-consumption"
+        }
+      }
+    },
     "sensor": {
       "ac_output_current": {
         "name": "AC output current"
