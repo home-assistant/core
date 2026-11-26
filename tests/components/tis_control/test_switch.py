@@ -459,6 +459,71 @@ async def test_invalid_appliance_data(
     assert hass.states.get(entity_ids[0]).name == "TIS Device 1_2_3 Valid Switch"
 
 
+async def test_availability_restored_on_unchanged_feedback(
+    hass: HomeAssistant, tis_switch: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test valid feedback restores availability even if the on/off state is unchanged."""
+    signal = f"{DOMAIN}_{mock_config_entry.entry_id}_event"
+
+    # Put the switch into a known OFF state with a successful command.
+    tis_switch.is_on = False
+    tis_switch.turn_switch_off.return_value = True
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {"entity_id": ENTITY_ID}, blocking=True
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+    # A failed action marks only the entity unavailable; the wrapper still
+    # reports available=True because it never saw an offline event.
+    tis_switch.turn_switch_on.return_value = False
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {"entity_id": ENTITY_ID}, blocking=True
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # Valid feedback arrives with an unchanged on/off state, so the wrapper does
+    # not invoke its callback. The entity must still become available again.
+    async_dispatcher_send(
+        hass,
+        signal,
+        {
+            "device_id": [1, 2, 3],
+            "gateway": "mock_gateway",
+            "feedback_type": "update_response",
+        },
+    )
+    await hass.async_block_till_done()
+
+    tis_switch.register_callback.call_args[0][0]  # callback was never needed
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+
+async def test_availability_not_restored_by_unrelated_feedback(
+    hass: HomeAssistant, tis_switch: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test feedback types that don't prove the device is online don't restore availability."""
+    signal = f"{DOMAIN}_{mock_config_entry.entry_id}_event"
+
+    tis_switch.turn_switch_on.return_value = False
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {"entity_id": ENTITY_ID}, blocking=True
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    async_dispatcher_send(
+        hass,
+        signal,
+        {
+            "device_id": [1, 2, 3],
+            "gateway": "mock_gateway",
+            "feedback_type": "something_else",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
 async def test_dispatcher_event_routing(
     hass: HomeAssistant, tis_switch: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:

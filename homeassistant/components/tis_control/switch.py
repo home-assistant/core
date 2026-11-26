@@ -15,6 +15,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TISConfigEntry
 from .const import DOMAIN
 
+# Feedback types that prove the device answered (or was reported offline) and
+# therefore must be reflected in the entity availability.
+_AVAILABILITY_FEEDBACK_TYPES = ("control_response", "update_response", "offline_device")
+
 
 class SwitchDescription(TypedDict):
     """Normalized switch payload."""
@@ -190,6 +194,18 @@ class TISSwitch(SwitchEntity):
             and event_data.get("device_id") == self.device_api.device_id
         ):
             self.device_api.process_update(event_data)
+
+            # The wrapper only invokes its callback when its own state or
+            # availability changes. A failed action marks only this entity as
+            # unavailable, so valid feedback with an unchanged on/off state would
+            # never restore it. Re-sync the availability from the wrapper after
+            # every valid feedback so both stay synchronized.
+            if (
+                event_data.get("feedback_type") in _AVAILABILITY_FEEDBACK_TYPES
+                and self._attr_available != self.device_api.available
+            ):
+                self._attr_available = self.device_api.available
+                self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Update the entity state."""
