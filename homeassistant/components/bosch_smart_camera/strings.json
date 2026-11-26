@@ -56,6 +56,9 @@
     "privacy_mode_failed": {
       "message": "Unable to change the privacy mode at Bosch."
     },
+    "restart_failed": {
+      "message": "Unable to restart the camera through Bosch."
+    },
     "snapshot_failed": {
       "message": "Unable to fetch the camera image from Bosch."
     }
