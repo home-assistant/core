@@ -170,6 +170,7 @@ Every check has a code following the
 | `W7442` | [`home-assistant-redundant-translation-key`](#w7442-home-assistant-redundant-translation-key) | `translation_key` only repeats the name the `device_class` already provides |
 | `W7443` | [`home-assistant-step_id-match-method`](#w7443-home-assistant-step_id-match-method) | Config flow should use `step_id` parameter value same as the method it's in |
 | `W7445` | [`home-assistant-test-flow-start-helper`](#w7445-home-assistant-test-flow-start-helper) | Use `MockConfigEntry` helpers to start reauth/reconfigure flows in tests |
+| `W7447` | [`home-assistant-coordinator-untyped-config-entry`](#w7447-home-assistant-coordinator-untyped-config-entry) | Coordinator should use the integration's typed config entry instead of `ConfigEntry` |
 | `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
 | `W7449` | [`home-assistant-coordinator-entity-available`](#w7449-home-assistant-coordinator-entity-available) | `CoordinatorEntity` overrides `available` with only `coordinator.data` and without `super().available` |
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
@@ -450,6 +451,24 @@ for migration guidance.
 ## `home_assistant_coordinator_config_entry` checker
 
 Checks how a `DataUpdateCoordinator` handles its config entry.
+
+### `W7447`: `home-assistant-coordinator-untyped-config-entry`
+
+When an integration defines a typed config entry, such as
+`type MyConfigEntry = ConfigEntry[MyCoordinator]`, its coordinators should use
+it for the `config_entry` class annotation and `__init__` argument, so
+`self.config_entry.runtime_data` is typed as well:
+
+```python
+class MyCoordinator(DataUpdateCoordinator[MyData]):
+    config_entry: MyConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None: ...
+```
+
+When the alias lives in `__init__.py`, import it in the coordinator under
+`if TYPE_CHECKING:` to avoid a circular import, or move it to
+`coordinator.py`.
 
 ### `W7448`: `home-assistant-coordinator-redundant-config-entry`
 
