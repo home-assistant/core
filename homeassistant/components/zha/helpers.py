@@ -282,6 +282,14 @@ def _group_id_from_device(
     return None
 
 
+def _json_safe_signature(signature: dict[str, Any]) -> dict[str, Any]:
+    """Return a device signature with raw bytes as hex, so it can be sent as JSON."""
+    return {
+        key: value.hex() if isinstance(value, bytes) else value
+        for key, value in signature.items()
+    }
+
+
 def _group_entity_unique_id(domain: str, group_id: int) -> str:
     """Return the unique id of a group entity of the given HA domain."""
     return f"{domain}_zha_group_0x{group_id:04x}"
@@ -522,7 +530,7 @@ class ZHADeviceProxy(EventBase):
             ATTR_LAST_SEEN: info.last_seen,
             ATTR_AVAILABLE: info.available,
             ATTR_DEVICE_TYPE: info.device_type,
-            ATTR_SIGNATURE: info.signature,
+            ATTR_SIGNATURE: _json_safe_signature(info.signature),
         }
 
     @property
@@ -920,7 +928,7 @@ class ZHAGatewayProxy(EventBase):
                     DEVICE_PAIRING_STATUS: event.device_info.pairing_status.name,
                     ATTR_MODEL: (event.device_info.model or UNKNOWN_MODEL),
                     ATTR_MANUFACTURER: manuf or UNKNOWN_MANUFACTURER,
-                    ATTR_SIGNATURE: event.device_info.signature,
+                    ATTR_SIGNATURE: _json_safe_signature(event.device_info.signature),
                 },
             },
         )

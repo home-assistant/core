@@ -569,6 +569,7 @@ async def test_list_groupable_devices_device_bound_entities(
 
 async def _async_add_green_power_device(
     hass: HomeAssistant,
+    extra_commissioning_payload: bytes | None = None,
 ) -> ZigpyGreenPowerDevice:
     """Join a Green Power device."""
     gateway = get_zha_gateway(hass)
@@ -577,6 +578,7 @@ async def _async_add_green_power_device(
         application_id=ApplicationID.SrcID,
         src_id=GREEN_POWER_SRC_ID,
     )
+    zigpy_gpd.extra_commissioning_payload = extra_commissioning_payload
     gateway.application_controller.devices[zigpy_gpd.ieee] = zigpy_gpd
     gateway.get_or_create_device(zigpy_gpd)
     await gateway.async_device_initialized(zigpy_gpd)
@@ -629,6 +631,33 @@ async def test_green_power_device_listings(hass: HomeAssistant, zha_client) -> N
     )
     msg = await zha_client.receive_json()
     assert msg["success"]
+
+
+@pytest.mark.parametrize(
+    ("extra_commissioning_payload", "expected"),
+    [
+        pytest.param(None, None, id="no_payload"),
+        pytest.param(b"", "", id="empty_payload"),
+        pytest.param(b"\x01\xab", "01ab", id="payload"),
+    ],
+)
+async def test_green_power_device_signature(
+    hass: HomeAssistant,
+    zha_client: MockHAClientWebSocket,
+    extra_commissioning_payload: bytes | None,
+    expected: str | None,
+) -> None:
+    """Test the raw commissioning payload of a Green Power device is serialized."""
+    zigpy_gpd = await _async_add_green_power_device(hass, extra_commissioning_payload)
+
+    await zha_client.send_json({ID: 10, TYPE: "zha/devices"})
+    msg = await zha_client.receive_json()
+
+    assert msg["success"]
+    device = next(
+        device for device in msg["result"] if device[ATTR_IEEE] == str(zigpy_gpd.ieee)
+    )
+    assert device["signature"]["extra_commissioning_payload"] == expected
 
 
 @pytest.mark.parametrize(
