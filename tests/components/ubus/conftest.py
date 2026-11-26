@@ -18,8 +18,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 
 MOCK_HOST = "192.168.1.1"
+MOCK_HOST_B = "192.168.1.2"
+MOCK_HOST_C = "192.168.1.3"
 
 MOCK_CONFIG = {
     CONF_HOST: MOCK_HOST,
@@ -30,7 +33,7 @@ MOCK_CONFIG = {
     CONF_DHCP_SOFTWARE: DEFAULT_DHCP_SOFTWARE,
 }
 
-MAC_PHONE = "AA:BB:CC:DD:EE:FF"
+MAC_PHONE = "aa:bb:cc:dd:ee:ff"
 MAC_LAPTOP = "11:22:33:44:55:66"
 MAC_GUEST = "99:88:77:66:55:44"
 
@@ -103,3 +106,61 @@ def mock_ubus() -> Generator[MagicMock]:
             }
         }
         yield mock
+
+
+@pytest.fixture
+async def two_router_entries(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+) -> tuple[MockConfigEntry, MockConfigEntry]:
+    """Return two ubus config entries, set up one per mock router."""
+    _mock, _instances = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
+        title=MOCK_HOST_B,
+    )
+    entry_a.add_to_hass(hass)
+    entry_b.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+    return entry_a, entry_b
+
+
+@pytest.fixture
+def mock_ubus_by_host() -> Generator[tuple[MagicMock, dict[str, MagicMock]]]:
+    """Mock the Ubus client with a separate client instance per router host."""
+    instances: dict[str, MagicMock] = {}
+
+    def _create(
+        url: str, username: str, password: str, verify: bool = True
+    ) -> MagicMock:
+        host = (
+            url.removeprefix("https://").removeprefix("http://").removesuffix("/ubus")
+        )
+        if host not in instances:
+            instance = MagicMock()
+            instance.session_id = None
+
+            def _connect() -> str:
+                instance.session_id = "session-id"
+                return "session-id"
+
+            instance.connect.side_effect = _connect
+            instance.get_hostapd.return_value = {"hostapd.wlan0": {}}
+            instance.get_hostapd_clients.return_value = {"clients": {}}
+            instance.get_uci_config.return_value = {
+                "values": {"cfg01": {"leasefile": "/var/dhcp/dnsmasq.leases"}}
+            }
+            instance.file_read.return_value = {"data": ""}
+            instances[host] = instance
+        return instances[host]
+
+    with (
+        patch(
+            "homeassistant.components.ubus.coordinator.Ubus", side_effect=_create
+        ) as mock,
+        patch("homeassistant.components.ubus.config_flow.Ubus", side_effect=_create),
+    ):
+        yield mock, instances
