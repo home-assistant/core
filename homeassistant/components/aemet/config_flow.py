@@ -3,8 +3,6 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-from aemet_opendata.exceptions import AemetError, AuthError, TownNotFound
-from aemet_opendata.interface import AEMET, ConnectionOptions
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -15,21 +13,27 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandlerWithReload,
 )
-from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
-
-from .const import CONF_RADAR_UPDATES, CONF_STATION_UPDATES, DEFAULT_NAME, DOMAIN
-from .coordinator import AemetConfigEntry
-
-API_KEY_URL = "https://opendata.aemet.es/centrodedescargas/altaUsuario"
-
-API_KEY_SCHEMA = probatio.Schema(
-    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+from homeassistant.helpers.selector import (
+    LocationSelector,
+    LocationSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
+
+from .const import (
+    API_KEY_URL,
+    CONF_RADAR_UPDATES,
+    CONF_STATION_UPDATES,
+    DEFAULT_NAME,
+    DOMAIN,
+)
+from .coordinator import AemetConfigEntry
+from .util import API_KEY_SCHEMA, async_validate_api_key
 
 OPTIONS_SCHEMA = probatio.Schema(
     {
@@ -60,9 +64,15 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
 
-            errors = await self._async_validate_api_key(
-                user_input[CONF_API_KEY], latitude, longitude
+            error = await async_validate_api_key(
+                self.hass,
+                user_input[CONF_API_KEY],
+                latitude,
+                longitude,
             )
+            if error is not None:
+                errors["base"] = error
+
             if not errors:
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
@@ -75,7 +85,9 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = probatio.Schema(
             {
-                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                ),
                 probatio.Required(CONF_LOCATION): LocationSelector(
                     LocationSelectorConfig(radius=False)
                 ),
@@ -112,12 +124,15 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             entry = self._get_reauth_entry()
-            errors = await self._async_validate_api_key(
+            error = await async_validate_api_key(
+                self.hass,
                 user_input[CONF_API_KEY],
                 entry.data[CONF_LATITUDE],
                 entry.data[CONF_LONGITUDE],
             )
-            if not errors:
+            if error is not None:
+                errors["base"] = error
+            else:
                 return self.async_update_reload_and_abort(
                     entry, data_updates={CONF_API_KEY: user_input[CONF_API_KEY]}
                 )
@@ -143,10 +158,15 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_mismatch()
 
-            errors = await self._async_validate_api_key(
-                user_input[CONF_API_KEY], latitude, longitude
+            error = await async_validate_api_key(
+                self.hass,
+                user_input[CONF_API_KEY],
+                latitude,
+                longitude,
             )
-            if not errors:
+            if error is not None:
+                errors["base"] = error
+            else:
                 return self.async_update_reload_and_abort(
                     entry, data_updates={CONF_API_KEY: user_input[CONF_API_KEY]}
                 )
@@ -157,22 +177,6 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={"api_key_url": API_KEY_URL},
         )
-
-    async def _async_validate_api_key(
-        self, api_key: str, latitude: float, longitude: float
-    ) -> dict[str, str]:
-        """Validate the API key and return any form errors."""
-        options = ConnectionOptions(api_key)
-        aemet = AEMET(aiohttp_client.async_get_clientsession(self.hass), options)
-        try:
-            await aemet.select_coordinates(latitude, longitude)
-        except AuthError:
-            return {"base": "invalid_api_key"}
-        except TownNotFound:
-            return {"base": "town_not_found"}
-        except AemetError:
-            return {"base": "cannot_connect"}
-        return {}
 
     @staticmethod
     @callback

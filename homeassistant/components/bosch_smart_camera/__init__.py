@@ -10,6 +10,7 @@ from .coordinator import (
 )
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.CAMERA,
     Platform.LIGHT,
     Platform.SENSOR,

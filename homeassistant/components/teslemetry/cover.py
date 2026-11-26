@@ -17,9 +17,11 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
+from .const import DOMAIN
 from .entity import (
     TeslemetryRootEntity,
     TeslemetryVehiclePollingEntity,
@@ -437,28 +439,47 @@ class TeslemetryRearTrunkEntity(TeslemetryRootEntity, CoverEntity):
     """Cover entity for the rear trunk."""
 
     api: Vehicle | VehicleRouter
+    vehicle: TeslemetryVehicleData
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+
+    async def _async_move(self, closed: bool) -> None:
+        """Move the rear trunk to the requested position."""
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
+        # Vehicles without the command protocol report False, and None means unknown.
+        # A Bluetooth paired vehicle always has it.
+        directional = isinstance(self.api, VehicleRouter) or (
+            self.vehicle.config_entry.runtime_data.metadata_coordinator.data["vehicles"]
+            .get(self.vehicle.vin, {})
+            .get("proxy")
+            is True
+        )
+        if directional:
+            await handle_vehicle_command(
+                self.api.close_rear_trunk() if closed else self.api.open_rear_trunk()
+            )
+        elif self.is_closed is None:
+            # actuate_trunk is a toggle, so it cannot reach a set position from an unknown one.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="rear_trunk_state_unknown",
+            )
+        elif self.is_closed is not closed:
+            await handle_vehicle_command(self.api.actuate_trunk(Trunk.REAR))
+        else:
+            return
+        self._attr_is_closed = closed
+        self.async_write_ha_state()
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open rear trunk."""
-        if self.is_closed is not False:
-            self.raise_for_scope(Scope.VEHICLE_CMDS)
-
-            await handle_vehicle_command(self.api.actuate_trunk(Trunk.REAR))
-            self._attr_is_closed = False
-            self.async_write_ha_state()
+        await self._async_move(False)
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close rear trunk."""
-        if self.is_closed is not True:
-            self.raise_for_scope(Scope.VEHICLE_CMDS)
-
-            await handle_vehicle_command(self.api.actuate_trunk(Trunk.REAR))
-            self._attr_is_closed = True
-            self.async_write_ha_state()
+        await self._async_move(True)
 
 
 class TeslemetryVehiclePollingRearTrunkEntity(

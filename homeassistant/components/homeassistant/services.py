@@ -12,7 +12,12 @@ from homeassistant import config as conf_util, core_config
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components import persistent_notification
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.const import CONF_EXCLUDE, SERVICE_RELOAD, CommonServiceArgument
+from homeassistant.const import (
+    CONF_EXCLUDE,
+    SERVICE_RELOAD,
+    CommonServiceArgument,
+    TargetKey,
+)
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -113,7 +118,7 @@ async def _async_handle_turn_service(service: ServiceCall) -> None:
         data = dict(service.data)
 
         # ent_ids is a generator, convert it to a list.
-        data[CommonServiceArgument.ENTITY_ID] = list(ent_ids)
+        data[TargetKey.ENTITY_ID] = list(ent_ids)
 
         tasks.append(
             hass.services.async_call(
@@ -340,7 +345,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     service_schema = probatio.Schema(
         {
-            CommonServiceArgument.ENTITY_ID: cv.entity_ids,
+            TargetKey.ENTITY_ID: cv.entity_ids,
             probatio.Optional(CONF_EXCLUDE): cv.TARGET_EXCLUDE_SCHEMA,
         },
         extra=probatio.ALLOW_EXTRA,
