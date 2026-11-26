@@ -64,9 +64,7 @@ class EvoData:
     """Dataclass for storing evohome data."""
 
     account: EvoAccountCoordinator
-    coordinator: EvoLocationCoordinator
-    loc_idx: int
-    tcs: ec2.ControlSystem
+    locations: list[EvoLocationCoordinator]
 
 
 async def _async_first_refresh(
@@ -145,23 +143,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not await _async_first_refresh(location_coord):
         return False
 
-    hass.data[EVOHOME_DATA] = EvoData(
-        account=account_coord,
-        coordinator=location_coord,
-        loc_idx=loc_idx,
-        tcs=location_coord.tcs,
-    )
+    hass.data[EVOHOME_DATA] = EvoData(account=account_coord, locations=[location_coord])
 
-    hass.async_create_task(
-        async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
-    )
-    hass.async_create_task(
-        async_load_platform(hass, Platform.BUTTON, DOMAIN, {}, config)
-    )
-    if location_coord.tcs.hotwater:
-        hass.async_create_task(
-            async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
-        )
+    for platform in (Platform.CLIMATE, Platform.BUTTON, Platform.WATER_HEATER):
+        hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
     async_setup_services(hass)
 

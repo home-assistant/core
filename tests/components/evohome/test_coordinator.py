@@ -496,7 +496,7 @@ async def test_poll_api_call_failed(
 ) -> None:
     """Test a failed poll of a location raises UpdateFailed, by the error's reason."""
 
-    coordinator = hass.data[EVOHOME_DATA].coordinator
+    coordinator = hass.data[EVOHOME_DATA].locations[0]
 
     with patch("evohomeasync2.location.Location.get_status", side_effect=exception):
         freezer.tick(SCAN_INTERVAL_DEFAULT)
@@ -548,7 +548,7 @@ async def test_failed_schedule_poll_keeps_entities_available(
 ) -> None:
     """Test a failed background schedule GET is logged (and retried), not a failure."""
 
-    coordinator = hass.data[EVOHOME_DATA].coordinator
+    coordinator = hass.data[EVOHOME_DATA].locations[0]
     update_interval = SCAN_INTERVAL_DEFAULT
 
     with patch.object(Zone, "get_schedule", side_effect=exception) as mock_fcn:
