@@ -647,9 +647,18 @@ async def async_get_locations(hass: HomeAssistant) -> dict[str, list[str]]:
         for country, domains in LOCATIONS.items()
     }
     for integration in integrations.values():
-        if not integration.locations:
+        countries = integration.locations
+        if not countries:
             continue
-        for country in integration.locations:
+        # Custom manifests are not validated against the manifest schema.
+        if not isinstance(countries, list) or not all(
+            isinstance(country, str) for country in countries
+        ):
+            _LOGGER.warning(
+                "Ignoring invalid locations registration for %s", integration.domain
+            )
+            continue
+        for country in countries:
             locations.setdefault(country, []).append(integration.domain)
     return locations
 
