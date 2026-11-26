@@ -190,8 +190,9 @@ class HomeAssistantBluetoothManager(BluetoothManager):
     @hass_callback
     def _async_release_event_driven(self, _now: datetime | None = None) -> None:
         """Release startup registrations no integration registered again."""
-        for release in self._event_driven_early.values():
+        for address, release in self._event_driven_early.items():
             release()
+            self._event_driven_disappeared.pop(address, None)
         self._event_driven_early.clear()
         for pending in self._event_driven_restore.values():
             pending.cancel_heard()

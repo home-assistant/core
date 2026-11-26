@@ -2705,6 +2705,32 @@ async def test_unclaimed_startup_registration_released(
 @pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
 @pytest.mark.parametrize("restarted_bluetooth", [OLDER_STRONG_REMOTE], indirect=True)
 @pytest.mark.usefixtures("restarted_bluetooth")
+async def test_released_address_forgets_expired_advertisement(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Releasing an unclaimed address also drops its kept expired advertisement."""
+    inject_advertisement_with_time_and_source(
+        hass,
+        generate_ble_device(EVENT_DRIVEN_ADDRESS, "event"),
+        _event_advertisement(b"\x03", -90),
+        MONOTONIC_TIME(),
+        "weak-proxy",
+    )
+    await _expire_history(hass)
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=EVENT_DRIVEN_CLAIM_SECONDS + 1)
+    )
+    await hass.async_block_till_done()
+    async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+
+    await hass.async_stop()
+
+    assert hass_storage[storage.EVENT_DRIVEN_STORAGE_KEY]["data"]["sources"] == {}
+
+
+@pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
+@pytest.mark.parametrize("restarted_bluetooth", [OLDER_STRONG_REMOTE], indirect=True)
+@pytest.mark.usefixtures("restarted_bluetooth")
 async def test_event_driven_history_removed_after_loading(
     hass_storage: dict[str, Any],
 ) -> None:
