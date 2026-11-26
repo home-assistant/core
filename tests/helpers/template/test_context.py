@@ -1,9 +1,13 @@
 """Test template context management for Home Assistant."""
 
 import jinja2
+import pytest
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import template
 from homeassistant.helpers.template.context import (
     TemplateContextManager,
+    entity_filter_cv,
     render_with_context,
     template_context_manager,
     template_cv,
@@ -87,3 +91,42 @@ def test_render_with_context_sets_context() -> None:
     assert context_during_render[0] == ("{{ test_template }}", "rendering")
     # Context should be cleared after rendering
     assert template_cv.get() is None
+
+
+def _entity_filter(entity_id: str) -> bool:
+    return entity_id == "light.kitchen"
+
+
+def test_render_with_context_sets_entity_filter() -> None:
+    """Test render_with_context sets the entity filter only while rendering."""
+    env = jinja2.Environment()
+    env.globals["filter_set"] = lambda: entity_filter_cv.get() is _entity_filter
+    template_obj = env.from_string("{{ filter_set() }}")
+
+    assert render_with_context("", template_obj, _entity_filter) == "True"
+    assert entity_filter_cv.get() is None
+
+
+def test_render_with_context_resets_entity_filter_on_error() -> None:
+    """Test render_with_context resets the entity filter when rendering fails."""
+    template_obj = jinja2.Environment().from_string("{{ 1 / 0 }}")
+
+    with pytest.raises(ZeroDivisionError):
+        render_with_context("{{ 1 / 0 }}", template_obj, _entity_filter)
+
+    assert entity_filter_cv.get() is None
+
+
+async def test_render_with_context_variable_names(hass: HomeAssistant) -> None:
+    """Test template variables can use the names of the function parameters."""
+    tpl = template.Template(
+        "{{ template_str }} {{ template }} {{ entity_filter }}", hass
+    )
+
+    assert (
+        tpl.async_render(
+            {"template_str": "a", "template": "b", "entity_filter": "c"},
+            parse_result=False,
+        )
+        == "a b c"
+    )

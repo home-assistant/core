@@ -10,7 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import entity, entity_registry as er
+from homeassistant.helpers import entity, entity_registry as er, template
 from homeassistant.helpers.entity_platform import EntityPlatform
 
 from tests.helpers.template.helpers import assert_result_info, render, render_to_info
@@ -79,6 +79,38 @@ async def test_integration_entities(
     info = render_to_info(hass, "{{ integration_entities('abc123') }}")
     assert_result_info(info, [])
     assert info.rate_limit is None
+
+
+async def test_integration_entities_hides_unreadable_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test entities outside the registry are left out if they cannot be read."""
+    platform = EntityPlatform(
+        hass=hass,
+        logger=logging.getLogger(__name__),
+        domain="light",
+        platform_name="entryless_integration",
+        platform=None,
+        scan_interval=timedelta(seconds=30),
+        entity_namespace=None,
+    )
+    for entity_id in ("light.readable", "light.unreadable"):
+        mock_entity = entity.Entity()
+        mock_entity.hass = hass
+        mock_entity.entity_id = entity_id
+        mock_entity.platform = platform
+        await mock_entity.async_internal_added_to_hass()
+    template_str = "{{ integration_entities('entryless_integration') }}"
+
+    assert template.Template(template_str, hass).async_render() == [
+        "light.readable",
+        "light.unreadable",
+    ]
+    assert template.Template(
+        template_str,
+        hass,
+        entity_filter_factory=lambda: lambda entity_id: entity_id != "light.unreadable",
+    ).async_render() == ["light.readable"]
 
 
 async def test_config_entry_id(

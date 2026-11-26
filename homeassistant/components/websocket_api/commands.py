@@ -2,14 +2,16 @@
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from functools import lru_cache, partial
+from functools import partial
 import json
 import logging
 from typing import Any, Literal, cast
 
 import probatio
 
+from homeassistant.auth import EVENT_USER_UPDATED
 from homeassistant.auth.models import User
+from homeassistant.auth.permissions import entity_permission_filter
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
@@ -38,7 +40,9 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import (
     config_validation as cv,
+    device_registry as dr,
     entity,
+    entity_registry as er,
     system_state as system_state_helper,
     target as target_helpers,
     template,
@@ -50,6 +54,7 @@ from homeassistant.helpers.condition import (
     async_subscribe_platform_events as async_subscribe_condition_platform_events,
     async_validate_condition_config,
 )
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -840,10 +845,8 @@ def handle_slugify(
     connection.send_result(msg["id"], {"slug": slugify(msg["text"])})
 
 
-@lru_cache
-def _cached_template(template_str: str, hass: HomeAssistant) -> template.Template:
-    """Return a cached template."""
-    return template.Template(template_str, hass)
+_ENTITY_PERMISSION_KEYS = frozenset({"entity_id", "device_id"})
+_DEVICE_PERMISSION_KEYS = frozenset({"area_id", "parent_device_id"})
 
 
 @decorators.websocket_command(
@@ -864,10 +867,14 @@ async def handle_render_template(
     """Handle render_template command."""
     template_str = msg["template"]
     report_errors: bool = msg["report_errors"]
-    if report_errors:
-        template_obj = template.Template(template_str, hass)
-    else:
-        template_obj = _cached_template(template_str, hass)
+    template_obj = template.Template(
+        template_str,
+        hass,
+        # Resolved per render as permissions can change while subscribed
+        entity_filter_factory=partial(
+            entity_permission_filter, connection.user, POLICY_READ
+        ),
+    )
     variables = msg.get("variables")
     timeout = msg.get("timeout")
 
@@ -937,7 +944,46 @@ async def handle_render_template(
         connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
         return
 
-    connection.subscriptions[msg["id"]] = info.async_remove
+    @callback
+    def _async_user_updated(event: Event[dict[str, Any]]) -> None:
+        if event.data["user_id"] == connection.user.id:
+            info.async_refresh()
+
+    debouncer = Debouncer(
+        hass, _LOGGER, cooldown=1, immediate=True, function=info.async_refresh
+    )
+
+    @callback
+    def _async_registry_updated(keys: frozenset[str], event: Event[Any]) -> None:
+        if (
+            event.data["action"] == "remove"
+            or (
+                event.data["action"] == "update"
+                and not keys.isdisjoint(event.data["changes"])
+            )
+        ) and entity_permission_filter(connection.user, POLICY_READ) is not None:
+            debouncer.async_schedule_call()
+
+    unsubs = [
+        hass.bus.async_listen(EVENT_USER_UPDATED, _async_user_updated),
+        hass.bus.async_listen(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            partial(_async_registry_updated, _ENTITY_PERMISSION_KEYS),
+        ),
+        hass.bus.async_listen(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            partial(_async_registry_updated, _DEVICE_PERMISSION_KEYS),
+        ),
+    ]
+
+    @callback
+    def _async_unsubscribe() -> None:
+        info.async_remove()
+        debouncer.async_shutdown()
+        for unsub in unsubs:
+            unsub()
+
+    connection.subscriptions[msg["id"]] = _async_unsubscribe
 
     connection.send_result(msg["id"])
 

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.registry import NextNamePart
+from homeassistant.helpers.template.states import _get_readable_state
 
 from .base import BaseTemplateExtension, TemplateFunction
 
@@ -57,7 +58,7 @@ class EntityExtension(BaseTemplateExtension):
             return name
 
         # Fall back to state for entities without a unique_id (not in the registry)
-        if (state := self.hass.states.get(entity_id)) is not None:
+        if (state := _get_readable_state(self.hass, entity_id)) is not None:
             return state.name
 
         return None
