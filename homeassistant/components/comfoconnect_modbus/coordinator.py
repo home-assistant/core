@@ -81,8 +81,10 @@ class ComfoConnectProDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                 "all components failed to refresh", list(report.failed.values())
             )
 
+        # The cached status must keep entities unavailable until a status read
+        # confirms the unit is back
         status = self.device.status
-        if "status" in report.updated and not status.is_connected:
+        if not status.is_connected:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="no_ventilation_unit",

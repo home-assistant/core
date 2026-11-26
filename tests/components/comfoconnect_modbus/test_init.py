@@ -209,6 +209,30 @@ async def test_lost_ventilation_unit_makes_everything_unavailable(
     assert hass.states.get(AIRFLOW).state == "175"
 
 
+async def test_lost_ventilation_unit_stays_lost_until_status_reads_again(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_integration: MockConfigEntry,
+    mock_unit: MockModbusUnit,
+) -> None:
+    """Test that a lost unit stays unavailable while only the status read fails."""
+    seed(mock_unit, input_registers={0x0001: 7})  # Connection state
+    await _tick(hass, freezer)
+    seed(mock_unit, input_registers=INPUT)
+    # The first register of the status block
+    mock_unit.fail_read(
+        address(0x0001), IllegalDataAddressError(), register_type="input"
+    )
+    await _tick(hass, freezer)
+
+    assert hass.states.get(AIRFLOW).state == STATE_UNAVAILABLE
+
+    mock_unit.fail_read(address(0x0001), None, register_type="input")
+    await _tick(hass, freezer)
+
+    assert hass.states.get(AIRFLOW).state == "175"
+
+
 async def test_setup_fails_when_the_link_is_held_with_other_settings(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
