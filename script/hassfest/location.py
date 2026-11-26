@@ -11,7 +11,15 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config) 
     country_domains: defaultdict[str, list[str]] = defaultdict(list)
 
     for domain in sorted(integrations):
-        for country in integrations[domain].manifest.get("locations", []):
+        integration = integrations[domain]
+        locations = integration.manifest.get("locations", [])
+        # This plugin runs before manifest validation, so the value is unchecked.
+        if not isinstance(locations, list) or not all(
+            isinstance(country, str) for country in locations
+        ):
+            integration.add_error("locations", "locations must be a list of strings")
+            continue
+        for country in locations:
             country_domains[country].append(domain)
 
     return format_python_namespace(

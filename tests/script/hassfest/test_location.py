@@ -43,3 +43,22 @@ def test_validate_missing_file(config: Config) -> None:
 
     assert len(config.errors) == 1
     assert config.errors[0].fixable
+
+
+@pytest.mark.parametrize(
+    "locations",
+    [
+        pytest.param(None, id="none"),
+        pytest.param("NL", id="string"),
+        pytest.param([["NL"]], id="nested_list"),
+    ],
+)
+def test_generate_malformed_locations(config: Config, locations: object) -> None:
+    """Test malformed locations are reported and skipped."""
+    integration = get_integration("test_1", config)
+    integration.manifest["locations"] = locations
+
+    content = location.generate_and_validate({"test_1": integration}, config)
+
+    assert len(integration.errors) == 1
+    assert "test_1" not in content
