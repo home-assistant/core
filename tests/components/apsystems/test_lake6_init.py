@@ -69,7 +69,9 @@ async def test_migrate_entry(hass: HomeAssistant) -> None:
 
     await setup_integration(hass, entry)
 
-    assert entry.version == 2
+    # `device_type` only backfills EZ1 data, so the major version stays put.
+    assert entry.version == 1
+    assert entry.minor_version == 2
     assert entry.data[CONF_DEVICE_TYPE] == DEVICE_TYPE_EZ1
 
 

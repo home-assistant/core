@@ -25,6 +25,8 @@ from .coordinator import (
 from .entity import ApSystemsEntity, Lake6Entity
 from .lake6.const import LAKE6_SWITCH_ENTITY_TO_FIELD
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

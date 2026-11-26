@@ -25,6 +25,8 @@ from .lake6.const import (
     LAKE6_OPERATING_MODE_TO_STATE,
 )
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class Lake6SelectEntityDescription(SelectEntityDescription):

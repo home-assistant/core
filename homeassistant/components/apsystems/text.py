@@ -18,6 +18,8 @@ from .lake6.const import (
 )
 from .lake6.tou import async_write_tou_plan, parse_plan, render_plan
 
+PARALLEL_UPDATES = 1
+
 
 def _power_dropped_issue_id(device_id: str) -> str:
     """Return the issue id used to report dropped power on `self` rows."""

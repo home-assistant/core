@@ -739,7 +739,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:play-circle-outline',
+    'original_icon': None,
     'original_name': 'Send Instant Manual Control',
     'platform': 'apsystems',
     'previous_unique_id': None,
@@ -754,7 +754,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Send Instant Manual Control',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:play-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_title_send_instant_manual_control',
@@ -790,7 +789,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:stop-circle-outline',
+    'original_icon': None,
     'original_name': 'Stop Instant Manual Control',
     'platform': 'apsystems',
     'previous_unique_id': None,
@@ -805,7 +804,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Stop Instant Manual Control',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:stop-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_title_stop_instant_manual_control',

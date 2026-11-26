@@ -42,11 +42,11 @@ LAKE6_PLATFORMS: list[Platform] = [
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) -> None:
     """Backfill `device_type` on entries created before Lake support."""
-    if entry.version < 2:
+    if entry.version == 1 and entry.minor_version < 2:
         hass.config_entries.async_update_entry(
             entry,
             data={**entry.data, CONF_DEVICE_TYPE: DEVICE_TYPE_EZ1},
-            version=2,
+            minor_version=2,
         )
 
 

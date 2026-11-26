@@ -43,9 +43,11 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 class APsystemsLocalAPIFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Apsystems local."""
 
-    # Version 2 added `device_type`; entries from version 1 are EZ1 and are
-    # backfilled by `async_migrate_entry` in the component module.
-    VERSION = 2
+    # Adding `device_type` is a minor bump: a major bump would make an older
+    # Home Assistant refuse the entry after a downgrade. Version 1 entries are
+    # EZ1 and are backfilled by `async_migrate_entry`.
+    VERSION = 1
+    MINOR_VERSION = 2
 
     @override
     async def async_step_user(

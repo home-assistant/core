@@ -9,6 +9,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import ApSystemsConfigEntry, Lake6Coordinator, Lake6RuntimeData
 from .entity import Lake6Entity
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -41,7 +43,6 @@ class Lake6ManualControlApplyButton(Lake6Entity, ButtonEntity):
     """
 
     _attr_translation_key = "manual_control_apply"
-    _attr_icon = "mdi:play-circle-outline"
 
     def __init__(self, coordinator: Lake6Coordinator) -> None:
         """Initialize the dispatch button."""
@@ -100,7 +101,6 @@ class Lake6ManualControlInterruptButton(Lake6Entity, ButtonEntity):
     """
 
     _attr_translation_key = "manual_control_interrupt"
-    _attr_icon = "mdi:stop-circle-outline"
 
     def __init__(self, coordinator: Lake6Coordinator) -> None:
         """Initialize the interrupt button."""

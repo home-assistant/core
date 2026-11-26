@@ -39,6 +39,8 @@ from .lake6.const import (
     LAKE6_MODE_ATTR_TO_FIELD,
 )
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

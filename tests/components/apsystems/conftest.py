@@ -154,7 +154,8 @@ def mock_lake6_config_entry() -> MockConfigEntry:
             CONF_IP_ADDRESS: LAKE6_IP,
         },
         unique_id=LAKE6_DEV_ID,
-        # MockConfigEntry defaults to version 1, which would run the EZ1
-        # migration and overwrite device_type.
-        version=2,
+        # MockConfigEntry defaults to the pre-Lake minor version, which would run
+        # the EZ1 migration and overwrite device_type.
+        version=1,
+        minor_version=2,
     )

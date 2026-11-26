@@ -84,9 +84,6 @@
       "battery_power": {
         "default": "mdi:battery-charging-outline"
       },
-      "battery_soc": {
-        "default": "mdi:battery-charging-60"
-      },
       "battery_status": {
         "default": "mdi:battery-check"
       },
