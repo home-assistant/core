@@ -1,15 +1,8 @@
 """Tests for UniFi AP Direct device tracker."""
 
-from unifi_ap import UniFiAPConnectionException
-
-from homeassistant import config_entries
-from homeassistant.components.unifi_direct.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_registry import EntityRegistry
-from homeassistant.helpers.issue_registry import IssueRegistry
-from homeassistant.setup import async_setup_component
 
 
 async def test_device_tracker_entities_created(
@@ -53,59 +46,3 @@ async def test_device_tracker_entities_created(
         "AA:BB:CC:DD:EE:FF": {(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")},
         "11:22:33:44:55:66": {(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:66")},
     }
-
-
-async def test_setup_scanner_legacy_platform_imports_config_entry(
-    hass: HomeAssistant,
-    mock_unifiap,
-) -> None:
-    """Test legacy device tracker setup triggers config flow import."""
-    config = {
-        CONF_HOST: "192.168.1.2",
-        CONF_USERNAME: "admin",
-        CONF_PASSWORD: "password",
-        CONF_PORT: 22,
-    }
-
-    assert await async_setup_component(
-        hass,
-        "device_tracker",
-        {"device_tracker": [{"platform": DOMAIN, **config}]},
-    )
-    await hass.async_block_till_done()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].data == config
-    assert entries[0].source == config_entries.SOURCE_IMPORT
-
-
-async def test_setup_scanner_legacy_platform_creates_issue_on_cannot_connect(
-    hass: HomeAssistant, mock_unifiap, issue_registry: IssueRegistry
-) -> None:
-    """Test that issue is created when legacy device tracker setup cannot connect."""
-    config = {
-        CONF_HOST: "192.168.1.2",
-        CONF_USERNAME: "admin",
-        CONF_PASSWORD: "password",
-        CONF_PORT: 22,
-    }
-
-    mock_unifiap.return_value.get_clients.side_effect = UniFiAPConnectionException(
-        "fail"
-    )
-
-    assert await async_setup_component(
-        hass,
-        "device_tracker",
-        {"device_tracker": [{"platform": DOMAIN, **config}]},
-    )
-    await hass.async_block_till_done()
-
-    # Verify the issue was created in the registry
-    issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect")
-
-    assert len(issue_registry.issues) == 1
-    assert issue is not None
-    assert issue.translation_key == "yaml_import_cannot_connect"
-    assert issue.translation_placeholders == {"host": "192.168.1.2"}

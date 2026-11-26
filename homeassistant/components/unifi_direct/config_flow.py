@@ -65,22 +65,6 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import existing config from configuration.yaml."""
-        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
-
-        try:
-            await self.hass.async_add_executor_job(
-                validate_connection_data, import_data
-            )
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-
-        return self.async_create_entry(
-            title=f"{DEFAULT_NAME} ({import_data[CONF_HOST]})",
-            data=import_data,
-        )
-
 
 class CannotConnect(Exception):
     """Custom exception for failing to connect to the UniFiAP."""

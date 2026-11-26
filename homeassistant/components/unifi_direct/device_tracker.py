@@ -2,88 +2,13 @@
 
 from typing import override
 
-import probatio
-
-from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    AsyncSeeCallback,
-    ScannerEntity,
-)
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    issue_registry as ir,
-)
+from homeassistant.components.device_tracker import ScannerEntity
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_SSH_PORT, DOMAIN
 from .coordinator import UniFiDirectConfigEntry, UniFiDirectDataUpdateCoordinator
-
-PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {
-        probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): probatio.Port(),
-    }
-)
-
-
-async def async_setup_scanner(
-    hass: HomeAssistant,
-    config: ConfigType,
-    _async_see: AsyncSeeCallback,
-    _discovery_info: DiscoveryInfoType | None = None,
-) -> bool:
-    """Set up the legacy UniFi AP Direct device tracker."""
-    import_data = {
-        CONF_HOST: config[CONF_HOST],
-        CONF_USERNAME: config[CONF_USERNAME],
-        CONF_PASSWORD: config[CONF_PASSWORD],
-        CONF_PORT: config.get(CONF_PORT, DEFAULT_SSH_PORT),
-    }
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=import_data,
-    )
-
-    if result["type"] is FlowResultType.ABORT and result["reason"] == "cannot_connect":
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "yaml_import_cannot_connect",
-            breaks_in_ha_version="2027.1.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="yaml_import_cannot_connect",
-            translation_placeholders={"host": config[CONF_HOST]},
-        )
-        return False
-
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2027.1.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "UniFi AP",
-        },
-    )
-
-    return True
 
 
 async def async_setup_entry(
