@@ -1005,7 +1005,7 @@ energyid-webhooks==0.0.17
 energyzero==5.1.1
 
 # homeassistant.components.enocean
-enocean-async==0.17.0
+enocean-async==0.18.1
 
 # homeassistant.components.entur_public_transport
 enturclient==0.2.4
