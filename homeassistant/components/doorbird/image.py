@@ -1,10 +1,5 @@
 """Last motion and last ring image entities for a DoorBird device."""
 
-# These replace the same-named camera entities, which exposed stills through the
-# camera UI even though no live video is involved. The legacy camera entities are
-# kept to avoid breaking existing dashboards and automations; a follow-up should
-# deprecate them via a repair issue once users have had time to migrate.
-
 from dataclasses import dataclass
 from typing import override
 
@@ -83,11 +78,9 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
             else "motionsensor"
         )
         self._image_url = self._door_station.device.history_image_url(1, history_type)
-        self._matching_event_names = [
-            event.event
-            for event in self._door_station.event_descriptions
-            if event.event_type == description.doorbird_event_type
-        ]
+        self._matching_event_names = self._door_station.event_names_of_type(
+            description.doorbird_event_type
+        )
 
     @override
     async def async_image(self) -> bytes | None:
@@ -109,22 +102,12 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         self._attr_content_type = content_type
         return image_bytes
 
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
-
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the underlying DoorBird events."""
         await super().async_added_to_hass()
         for event_name in self._matching_event_names:
+            self._door_bird_data.event_entity_ids[event_name] = self.entity_id
             self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
@@ -132,6 +115,21 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
                     self._async_handle_event,
                 )
             )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Report the new entity_id in the events this image refreshes on."""
+        super().async_entity_id_changed(old_entity_id)
+        for event_name in self._matching_event_names:
+            self._door_bird_data.event_entity_ids[event_name] = self.entity_id
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop reporting this image in events."""
+        for event_name in self._matching_event_names:
+            self._door_bird_data.event_entity_ids.pop(event_name, None)
+        await super().async_will_remove_from_hass()
 
     @callback
     def _async_handle_event(self) -> None:

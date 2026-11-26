@@ -6,13 +6,8 @@ import json
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.components import camera
-from homeassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.core import HomeAssistant
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.mqtt.common import (
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -38,13 +33,16 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import (
+from pytest_homeassistant.typing import (
     ClientSessionGenerator,
     MqttMockHAClientGenerator,
     MqttMockPahoClient,
 )
+
+from homeassistant.components import camera
+from homeassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 DEFAULT_CONFIG = {DOMAIN: {camera.DOMAIN: {"name": "test", "topic": "test_topic"}}}
 

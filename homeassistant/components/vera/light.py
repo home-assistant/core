@@ -7,7 +7,6 @@ import pyvera as veraApi
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    ENTITY_ID_FORMAT,
     ColorMode,
     LightEntity,
 )
@@ -48,7 +47,6 @@ class VeraLight(VeraEntity[veraApi.VeraDimmer], LightEntity):
     ) -> None:
         """Initialize the light."""
         VeraEntity.__init__(self, vera_device, controller_data)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
     @override

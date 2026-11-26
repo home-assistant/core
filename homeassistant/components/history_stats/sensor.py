@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
-import datetime
+import datetime as dt
 from typing import Any, override
 
 import probatio
@@ -54,7 +54,7 @@ from .const import (
 )
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
-from .helpers import pretty_ratio
+from .helpers import pretty_ratio, resolve_period_config
 
 UNITS: dict[str, str] = {
     CONF_TYPE_TIME: UnitOfTime.HOURS,
@@ -63,7 +63,7 @@ UNITS: dict[str, str] = {
 }
 ICON = "mdi:chart-line"
 
-DEFAULT_MIN_STATE_DURATION = datetime.timedelta(0)
+DEFAULT_MIN_STATE_DURATION = dt.timedelta(0)
 
 
 def exactly_two_period_keys[_T: dict[str, Any]](conf: _T) -> _T:
@@ -130,8 +130,8 @@ async def async_setup_platform(
     entity_states: list[str] = config[CONF_STATE]
     start: Template | None = config.get(CONF_START)
     end: Template | None = config.get(CONF_END)
-    duration: datetime.timedelta | None = config.get(CONF_DURATION)
-    min_state_duration: datetime.timedelta = config[CONF_MIN_STATE_DURATION]
+    duration: dt.timedelta | None = config.get(CONF_DURATION)
+    min_state_duration: dt.timedelta = config[CONF_MIN_STATE_DURATION]
     sensor_type: str = config[CONF_TYPE]
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
@@ -169,7 +169,7 @@ async def async_setup_entry(
     sensor_type: str = entry.options[CONF_TYPE]
     coordinator = entry.runtime_data
     entity_id: str = entry.options[CONF_ENTITY_ID]
-    state_class: SensorStateClass | None = entry.options.get(CONF_STATE_CLASS)
+    state_class = resolve_period_config(entry.options, sensor_type).state_class
     async_add_entities(
         [
             HistoryStatsSensor(
@@ -206,6 +206,7 @@ class HistoryStatsSensorBase(
         await super().async_added_to_hass()
         self.async_on_remove(self.coordinator.async_setup_state_listener())
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Set attrs from value and count."""

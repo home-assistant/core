@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from webio_api.api_client import AuthError
 
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import NoURLAvailableError
 
 from .conftest import BASE_NASWEB_DATA
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

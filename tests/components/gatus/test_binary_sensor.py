@@ -5,6 +5,12 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from gatus_api import EndpointStatus, GatusClientError, Result
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
@@ -12,13 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_array_fixture,
-    snapshot_platform,
-)
 
 
 async def test_binary_sensor_setup_and_states(

@@ -1,5 +1,7 @@
 """Platform for Lunatone binary sensor integration."""
 
+from collections.abc import Callable
+from functools import partial
 from typing import override
 
 from homeassistant.components.binary_sensor import (
@@ -7,13 +9,18 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import LunatoneConfigEntry, LunatoneScanDataUpdateCoordinator
+from .coordinator import (
+    LunatoneConfigEntry,
+    LunatoneInfoDataUpdateCoordinator,
+    LunatoneScanDataUpdateCoordinator,
+)
+from .entity import LunatoneEntity
+from .helpers import add_entities_from_builder, format_device_identifier
 
 PARALLEL_UPDATES = 0
 
@@ -27,58 +34,88 @@ async def async_setup_entry(
     coordinator_info = config_entry.runtime_data.coordinator_info
     coordinator_scan = config_entry.runtime_data.coordinator_scan
 
-    assert config_entry.unique_id is not None
+    config_entry_unique_id = config_entry.unique_id
+    assert config_entry_unique_id is not None
 
-    entities: list[BinarySensorEntity] = [
-        LunatoneDALIScanStatus(coordinator_scan, config_entry.unique_id)
-    ]
-    entities.extend(
+    async_add_entities(
         [
             LunatoneDALIScanStatus(
-                coordinator_scan, config_entry.unique_id, int(line_id)
+                coordinator_scan, coordinator_info, config_entry_unique_id
             )
-            for line_id in coordinator_info.data.lines
         ]
     )
 
-    async_add_entities(entities)
+    known_entities: set[str] = set()
+
+    @callback
+    def _check_entities() -> None:
+        entity_builder: dict[str, Callable[[], BinarySensorEntity]] = {}
+        for line_id in map(int, coordinator_info.data.lines):
+            unique_id = LunatoneDALIScanStatus.construct_unique_id(
+                config_entry_unique_id, line_id
+            )
+            entity_builder[unique_id] = partial(
+                LunatoneDALIScanStatus,
+                coordinator_scan,
+                coordinator_info,
+                config_entry_unique_id,
+                line_id,
+            )
+        add_entities_from_builder(entity_builder, known_entities, async_add_entities)
+
+    _check_entities()
+    config_entry.async_on_unload(coordinator_info.async_add_listener(_check_entities))
 
 
 class LunatoneDALIScanStatus(
-    CoordinatorEntity[LunatoneScanDataUpdateCoordinator], BinarySensorEntity
+    LunatoneEntity[LunatoneScanDataUpdateCoordinator],
+    BinarySensorEntity,
 ):
     """Representation of a Lunatone DALI scan status."""
 
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
     _attr_translation_key = "scan_status"
 
     def __init__(
         self,
-        coordinator: LunatoneScanDataUpdateCoordinator,
+        coordinator_scan: LunatoneScanDataUpdateCoordinator,
+        coordinator_info: LunatoneInfoDataUpdateCoordinator,
         config_entry_unique_id: str,
         line: int | None = None,
     ) -> None:
         """Initialize a Lunatone DALI scan status."""
-        super().__init__(coordinator)
+        super().__init__(coordinator_scan, coordinator_info, line)
 
-        self._line = line
-
-        device_unique_id = config_entry_unique_id
-        if line is not None:
-            device_unique_id += f"-line{line}"
-
-        self._attr_unique_id = f"{device_unique_id}-scan-progress"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_unique_id)},
+            identifiers={
+                (DOMAIN, format_device_identifier(config_entry_unique_id, line))
+            },
+        )
+        self._attr_unique_id = self.construct_unique_id(config_entry_unique_id, line)
+
+    @staticmethod
+    def construct_unique_id(
+        config_entry_unique_id: str, line_id: int | None = None
+    ) -> str:
+        """Returns the unique_id for a device ID."""
+        return (
+            f"{format_device_identifier(config_entry_unique_id, line_id)}-scan-progress"
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        return super().available and (
+            self.line_id is None
+            or str(self.line_id) in self.coordinator_info.data.lines
         )
 
     @property
     @override
     def is_on(self) -> bool:
         """Return true if the DALI scan is on."""
-        if self._line is None:
+        if self.line_id is None:
             return self.coordinator.data.busy
-        line_scan_status = self.coordinator.line_scan_status.get(self._line)
+        line_scan_status = self.coordinator.line_scan_status.get(self.line_id)
         return line_scan_status.busy if line_scan_status is not None else False

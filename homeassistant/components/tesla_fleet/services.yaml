@@ -26,3 +26,17 @@ navigate_to_coordinates:
       selector:
         location:
           radius: false
+navigate_to_waypoints:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: tesla_fleet
+    place_ids:
+      required: true
+      example: '["ChIJVTPokywQkFQRmtVEaUZlJRA", "ChIJQWCmo89rkFQRZQfQ6oJUz7o"]'
+      selector:
+        text:
+          multiple: true

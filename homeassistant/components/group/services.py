@@ -8,31 +8,19 @@ from typing import Any
 
 import probatio
 
-from homeassistant.const import (
-    ATTR_ICON,
-    ATTR_NAME,
-    CONF_ENTITIES,
-    CONF_ICON,
-    CONF_NAME,
-    SERVICE_RELOAD,
-)
+from homeassistant.const import CONF_ENTITIES, CONF_ICON, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ATTR_ADD_ENTITIES,
-    ATTR_ALL,
-    ATTR_ENTITIES,
-    ATTR_OBJECT_ID,
-    ATTR_REMOVE_ENTITIES,
     CONF_ALL,
     DOMAIN,
     GROUP_ORDER,
     PLATFORMS,
-    SERVICE_REMOVE,
-    SERVICE_SET,
+    GroupService,
+    GroupServiceArgument,
 )
 from .entity import Group, async_get_component
 
@@ -114,25 +102,25 @@ async def _async_groups_service(service: ServiceCall) -> None:
     """Handle dynamic group service functions."""
     hass = service.hass
     component = async_get_component(hass)
-    object_id = service.data[ATTR_OBJECT_ID]
+    object_id = service.data[GroupServiceArgument.OBJECT_ID]
     entity_id = f"{DOMAIN}.{object_id}"
     group = component.get_entity(entity_id)
 
     # new group
-    if service.service == SERVICE_SET and group is None:
+    if service.service == GroupService.SET and group is None:
         entity_ids = (
-            service.data.get(ATTR_ENTITIES)
-            or service.data.get(ATTR_ADD_ENTITIES)
+            service.data.get(GroupServiceArgument.ENTITIES)
+            or service.data.get(GroupServiceArgument.ADD_ENTITIES)
             or None
         )
 
         await Group.async_create_group(
             hass,
-            service.data.get(ATTR_NAME, object_id),
+            service.data.get(GroupServiceArgument.NAME, object_id),
             created_by_service=True,
             entity_ids=entity_ids,
-            icon=service.data.get(ATTR_ICON),
-            mode=service.data.get(ATTR_ALL),
+            icon=service.data.get(GroupServiceArgument.ICON),
+            mode=service.data.get(GroupServiceArgument.ALL),
             object_id=object_id,
             order=None,
             context=service.context,
@@ -146,33 +134,33 @@ async def _async_groups_service(service: ServiceCall) -> None:
     group.async_set_context(service.context)
 
     # update group
-    if service.service == SERVICE_SET:
+    if service.service == GroupService.SET:
         need_update = False
 
-        if ATTR_ADD_ENTITIES in service.data:
-            delta = service.data[ATTR_ADD_ENTITIES]
+        if GroupServiceArgument.ADD_ENTITIES in service.data:
+            delta = service.data[GroupServiceArgument.ADD_ENTITIES]
             entity_ids = set(group.tracking) | set(delta)
             group.async_update_tracked_entity_ids(entity_ids)
 
-        if ATTR_REMOVE_ENTITIES in service.data:
-            delta = service.data[ATTR_REMOVE_ENTITIES]
+        if GroupServiceArgument.REMOVE_ENTITIES in service.data:
+            delta = service.data[GroupServiceArgument.REMOVE_ENTITIES]
             entity_ids = set(group.tracking) - set(delta)
             group.async_update_tracked_entity_ids(entity_ids)
 
-        if ATTR_ENTITIES in service.data:
-            entity_ids = service.data[ATTR_ENTITIES]
+        if GroupServiceArgument.ENTITIES in service.data:
+            entity_ids = service.data[GroupServiceArgument.ENTITIES]
             group.async_update_tracked_entity_ids(entity_ids)
 
-        if ATTR_NAME in service.data:
-            group.set_name(service.data[ATTR_NAME])
+        if GroupServiceArgument.NAME in service.data:
+            group.set_name(service.data[GroupServiceArgument.NAME])
             need_update = True
 
-        if ATTR_ICON in service.data:
-            group.set_icon(service.data[ATTR_ICON])
+        if GroupServiceArgument.ICON in service.data:
+            group.set_icon(service.data[GroupServiceArgument.ICON])
             need_update = True
 
-        if ATTR_ALL in service.data:
-            group.mode = all if service.data[ATTR_ALL] else any
+        if GroupServiceArgument.ALL in service.data:
+            group.mode = all if service.data[GroupServiceArgument.ALL] else any
             need_update = True
 
         if need_update:
@@ -181,7 +169,7 @@ async def _async_groups_service(service: ServiceCall) -> None:
         return
 
     # remove group
-    if service.service == SERVICE_REMOVE:
+    if service.service == GroupService.REMOVE:
         await component.async_remove_entity(entity_id)
 
 
@@ -199,29 +187,37 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service_lock = asyncio.Lock()
 
     hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, _async_reload_service, schema=probatio.Schema({})
+        DOMAIN, GroupService.RELOAD, _async_reload_service, schema=probatio.Schema({})
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET,
+        GroupService.SET,
         partial(_async_locked_groups_service, service_lock),
         schema=probatio.All(
             probatio.Schema(
                 {
-                    probatio.Required(ATTR_OBJECT_ID): cv.slug,
-                    probatio.Optional(ATTR_NAME): cv.string,
-                    probatio.Optional(ATTR_ICON): cv.string,
-                    probatio.Optional(ATTR_ALL): cv.boolean,
-                    probatio.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
-                    probatio.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
-                    probatio.Exclusive(ATTR_REMOVE_ENTITIES, "entities"): cv.entity_ids,
+                    probatio.Required(GroupServiceArgument.OBJECT_ID): cv.slug,
+                    probatio.Optional(GroupServiceArgument.NAME): cv.string,
+                    probatio.Optional(GroupServiceArgument.ICON): cv.string,
+                    probatio.Optional(GroupServiceArgument.ALL): cv.boolean,
+                    probatio.Exclusive(
+                        GroupServiceArgument.ENTITIES, "entities"
+                    ): cv.entity_ids,
+                    probatio.Exclusive(
+                        GroupServiceArgument.ADD_ENTITIES, "entities"
+                    ): cv.entity_ids,
+                    probatio.Exclusive(
+                        GroupServiceArgument.REMOVE_ENTITIES, "entities"
+                    ): cv.entity_ids,
                 }
             )
         ),
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_REMOVE,
+        GroupService.REMOVE,
         _async_groups_service,
-        schema=probatio.Schema({probatio.Required(ATTR_OBJECT_ID): cv.slug}),
+        schema=probatio.Schema(
+            {probatio.Required(GroupServiceArgument.OBJECT_ID): cv.slug}
+        ),
     )

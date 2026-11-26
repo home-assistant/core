@@ -9,11 +9,14 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
+    RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
     UpdateEntityStateAttribute,
+    UpdateReleaseNotesMessage,
+    UpdateReleaseNotesMessageSeverity,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -47,6 +50,12 @@ from .utils import get_device_entry_gen, get_release_url, get_version_from_fw_id
 
 PARALLEL_UPDATES = 0
 
+RELEASE_NOTES_MESSAGE_MULTI_STEP_UPDATE = UpdateReleaseNotesMessage(
+    translation_domain=DOMAIN,
+    translation_key="multi_step_update",
+    severity=UpdateReleaseNotesMessageSeverity.WARNING,
+)
+
 
 @dataclass(frozen=True, kw_only=True)
 class RpcUpdateDescription(RpcEntityDescription, UpdateEntityDescription):
@@ -69,8 +78,8 @@ class RestUpdateDescription(RestEntityDescription, UpdateEntityDescription):
     beta: bool
 
 
-REST_UPDATES: Final = {
-    "fwupdate": RestUpdateDescription(
+REST_UPDATES: Final = (
+    RestUpdateDescription(
         key="fwupdate",
         latest_version=lambda status: status["update"]["new_version"],
         beta=False,
@@ -78,8 +87,8 @@ REST_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
-    "fwupdate_beta": RestUpdateDescription(
-        key="fwupdate",
+    RestUpdateDescription(
+        key="fwupdate_beta",
         translation_key="beta_firmware",
         latest_version=lambda status: status["update"].get("beta_version"),
         beta=True,
@@ -87,7 +96,7 @@ REST_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
-}
+)
 
 
 class RpcLoraAddOnUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
@@ -192,7 +201,7 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         super().__init__(coordinator, key, attribute, description)
 
         self._attr_device_info = get_entity_blu_trv_device_info(coordinator, key)
-        self._blu_trv_name = cast(str, self._attr_device_info["name"])
+        self._blu_trv_name = cast(str, self._attr_device_info.name)
 
         update_coordinator = coordinator.config_entry.runtime_data.rpc_blu_trv_update
 
@@ -279,6 +288,7 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             assert self._id is not None
 
         self._ota_in_progress = True
+        self.async_write_ha_state()
 
         try:
             await self.coordinator.device.blu_trv_update_firmware(self._id)
@@ -296,22 +306,37 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
+        else:
+            await self._async_refresh_installed_version()
         finally:
             self._ota_in_progress = False
             self._ota_progress_percentage = None
 
+    async def _async_refresh_installed_version(self) -> None:
+        """Re-read the BLU TRV status since the gateway does not push the new fw_ver."""
+        try:
+            await self.coordinator.device.get_dynamic_components()
+        except (DeviceConnectionError, RpcCallError) as err:
+            LOGGER.debug(
+                "Failed to refresh the status of BLU TRV %s after OTA update: %r",
+                self._blu_trv_name,
+                err,
+            )
 
-RPC_UPDATES: Final = {
-    "fwupdate": RpcUpdateDescription(
-        key="sys",
+
+RPC_UPDATES: Final = (
+    RpcUpdateDescription(
+        key="fwupdate",
+        components=("sys",),
         sub_key="available_updates",
         latest_version=lambda status: status.get("stable", {"version": ""})["version"],
         beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
     ),
-    "fwupdate_beta": RpcUpdateDescription(
-        key="sys",
+    RpcUpdateDescription(
+        key="fwupdate_beta",
+        components=("sys",),
         sub_key="available_updates",
         translation_key="beta_firmware",
         latest_version=lambda status: status.get("beta", {"version": ""})["version"],
@@ -320,8 +345,9 @@ RPC_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
-    "loraupdate": RpcUpdateDescription(
-        key="lora",
+    RpcUpdateDescription(
+        key="loraupdate",
+        components=("lora",),
         translation_key="lora_firmware",
         # Right after firmware update, lora status can be None
         latest_version=lambda status: status or {},
@@ -330,14 +356,15 @@ RPC_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
         entity_class=RpcLoraAddOnUpdateEntity,
     ),
-    "blutrv_fwupdate": RpcBluTrvUpdateDescription(
-        key="blutrv",
+    RpcBluTrvUpdateDescription(
+        key="blutrv_fwupdate",
+        components=("blutrv",),
         sub_key="fw_ver",
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_class=RpcBluTrvUpdateEntity,
     ),
-}
+)
 
 
 async def async_setup_entry(
@@ -393,8 +420,11 @@ def _async_setup_rpc_entry(
 class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     """Represent a REST update entity."""
 
+    _attr_release_notes_messages = (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,)
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.RELEASE_NOTES
     )
     entity_description: RestUpdateDescription
 
@@ -436,6 +466,11 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     def in_progress(self) -> bool:
         """Update installation in progress."""
         return self._in_progress_old_version == self.installed_version
+
+    @override
+    async def async_release_notes(self) -> str | None:
+        """Return no release notes, Shelly only provides a release URL."""
+        return None
 
     @override
     async def async_install(
@@ -492,7 +527,9 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     """Represent a RPC update entity."""
 
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.RELEASE_NOTES
     )
     entity_description: RpcUpdateDescription
 
@@ -518,6 +555,12 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         self.async_on_remove(
             self.coordinator.async_subscribe_ota_events(self._ota_progress_callback)
         )
+
+    @callback
+    def _async_device_initialized(self) -> None:
+        """Clear OTA progress, the device can reboot before sending the final event."""
+        self._ota_in_progress = False
+        self._ota_progress_percentage = None
 
     @callback
     def _ota_progress_callback(self, event: dict[str, Any]) -> None:
@@ -561,6 +604,21 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         """Update installation progress."""
         return self._ota_progress_percentage
 
+    @property
+    @override
+    def release_notes_messages(self) -> tuple[UpdateReleaseNotesMessage, ...]:
+        """Messages shown before the release notes."""
+        channel = "beta" if self.entity_description.beta else "stable"
+        # nsteps marks an update that may install in two steps (repartitioning)
+        if "nsteps" in self.sub_status.get(channel, {}):
+            return (RELEASE_NOTES_MESSAGE_MULTI_STEP_UPDATE,)
+        return (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,)
+
+    @override
+    async def async_release_notes(self) -> str | None:
+        """Return no release notes, Shelly only provides a release URL."""
+        return None
+
     @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -599,6 +657,9 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         else:
             self._ota_in_progress = True
             self._ota_progress_percentage = None
+            self.async_on_remove(
+                self.coordinator.async_on_initialized(self._async_device_initialized)
+            )
             LOGGER.debug("OTA update call for %s successful", self.coordinator.name)
 
 

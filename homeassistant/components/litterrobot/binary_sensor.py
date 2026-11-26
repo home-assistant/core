@@ -66,6 +66,12 @@ BINARY_SENSOR_MAP: dict[
             entity_registry_enabled_default=False,
             is_on_fn=lambda robot: not robot.is_hopper_removed,
         ),
+        RobotBinarySensorEntityDescription[LitterRobot4](
+            key="laser_dirty",
+            translation_key="laser_dirty",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            is_on_fn=lambda robot: robot.is_laser_dirty,
+        ),
     ),
     LitterRobot5: (
         RobotBinarySensorEntityDescription[LitterRobot5](

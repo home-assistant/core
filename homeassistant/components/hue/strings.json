@@ -12,7 +12,10 @@
     },
     "error": {
       "linking": "[%key:common::config_flow::error::unknown%]",
-      "register_failed": "Failed to register, please try again"
+      "register_failed": "The link button was not pressed within 60 seconds. Please try again."
+    },
+    "progress": {
+      "wait_for_button": "Press the link button on the Hue bridge at {host}."
     },
     "step": {
       "init": {
@@ -26,8 +29,8 @@
         "title": "Pick Hue bridge"
       },
       "link": {
-        "description": "Press the button on the bridge to register Philips Hue with Home Assistant.",
-        "title": "Link Hub"
+        "description": "Do you want to set up the Hue bridge at {host}?\n\nAfter you continue, you have 60 seconds to press the link button on the bridge.",
+        "title": "Link Hue bridge"
       },
       "manual": {
         "data": {
@@ -109,6 +112,9 @@
       }
     },
     "light": {
+      "gradient_segment": {
+        "name": "Segment {segment}"
+      },
       "hue_light": {
         "state_attributes": {
           "effect": {
@@ -164,12 +170,9 @@
     },
     "duplicate_entry": {
       "message": "Another entry already exists for this Hue bridge, this entry will be removed"
-    }
-  },
-  "issues": {
-    "deprecated_effect_none": {
-      "description": "A light was turned on with the deprecated effect `None`. This has been replaced with `off`. Please update any automations, scenes, or scripts that use this effect.",
-      "title": "Light turned on with deprecated effect"
+    },
+    "unload_failed": {
+      "message": "Failed to unload the Hue bridge"
     }
   },
   "options": {

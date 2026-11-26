@@ -4,12 +4,15 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.volkszaehler.const import DOMAIN, SUBENTRY_TYPE_CHANNEL
+from homeassistant.components.volkszaehler.const import (
+    CONF_MIDDLEWARE,
+    DOMAIN,
+    SUBENTRY_TYPE_CHANNEL,
+)
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_UUID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -17,7 +20,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.volkszaehler.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -37,20 +40,35 @@ def mock_client_api() -> Generator[Mock]:
     ):
         api = mock_api.return_value
         api.get_data = AsyncMock(return_value=None)
+        mock_api.get_data = api.get_data
 
-        yield api
+        yield mock_api
 
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Fixture for a config entry with one existing channel subentry."""
+    """Fixture for a config entry with one existing channel subentry and middleware enabled."""
+    return _mock_config_entry(middleware=True)
+
+
+@pytest.fixture
+def mock_config_entry_without_middleware() -> MockConfigEntry:
+    """Fixture for a Volkszaehler config entry without middleware."""
+    return _mock_config_entry()
+
+
+def _mock_config_entry(*, middleware: bool | None = None) -> MockConfigEntry:
+    """Create a Volkszaehler config entry for testing."""
+    data = {
+        CONF_HOST: "localhost",
+        CONF_PORT: 80,
+    }
+    if middleware is not None:
+        data[CONF_MIDDLEWARE] = middleware
     return MockConfigEntry(
         domain=DOMAIN,
         title="localhost",
-        data={
-            CONF_HOST: "localhost",
-            CONF_PORT: 80,
-        },
+        data=data,
         subentries_data=[
             ConfigSubentryData(
                 subentry_type=SUBENTRY_TYPE_CHANNEL,

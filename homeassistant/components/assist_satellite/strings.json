@@ -66,6 +66,20 @@
       }
     }
   },
+  "exceptions": {
+    "builtin_agent_start_conversation_not_supported": {
+      "message": "The built-in conversation agent does not support starting conversations."
+    },
+    "invalid_entity_id": {
+      "message": "Invalid Assist satellite entity ID: {entity_id}."
+    },
+    "no_answer": {
+      "message": "No answer received from the satellite."
+    },
+    "tts_engine_not_found": {
+      "message": "Text-to-speech engine {engine} not found."
+    }
+  },
   "selector": {
     "answers": {
       "fields": {

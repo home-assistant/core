@@ -7,6 +7,12 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 from wled import (
     Device as WLEDDevice,
     WLEDConnectionClosedError,
@@ -19,17 +25,12 @@ from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
+from homeassistant.core import CoreState, HomeAssistant
 
 
 async def test_not_supporting_websocket(
@@ -212,6 +213,55 @@ async def test_websocket_error(
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
+@pytest.mark.parametrize(
+    ("update_error", "expected_states"),
+    [
+        pytest.param(None, [], id="polling_works"),
+        pytest.param(WLEDConnectionError, [STATE_UNAVAILABLE], id="device_unreachable"),
+    ],
+)
+async def test_websocket_closed(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    update_error: type[WLEDError] | None,
+    expected_states: list[str],
+) -> None:
+    """Test a closed WebSocket only marks lights unavailable if polling fails."""
+    connection_connected = asyncio.Future()
+    connection_finished = asyncio.Future()
+
+    async def connect(callback: Callable[[WLEDDevice], None]):
+        connection_connected.set_result(None)
+        await connection_finished
+
+    mock_wled.listen.side_effect = connect
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await connection_connected
+
+    # Catch a brief unavailable state, not just the final one
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    mock_wled.update.side_effect = update_error
+    # Keep polling in charge instead of reconnecting the WebSocket
+    mock_wled.connect.side_effect = WLEDConnectionError
+    connection_finished.set_exception(WLEDConnectionClosedError)
+    await hass.async_block_till_done()
+
+    # Let the debounced refresh after the close run
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        event.data["new_state"].state
+        for event in events
+        if event.data["entity_id"] == "light.wled_websocket"
+    ] == expected_states
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
 async def test_websocket_disconnect_on_home_assistant_stop(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -238,6 +288,46 @@ async def test_websocket_disconnect_on_home_assistant_stop(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert mock_wled.disconnect.call_count == 2
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
+async def test_websocket_not_reconnected_when_home_assistant_stops(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure the WebSocket closed on stop is not reconnected by the next poll.
+
+    A reconnected WebSocket has no stop listener, so it outlives the stop and
+    gets closed with the shared client session, after which its poll fails.
+    """
+    connection_connected = asyncio.Future()
+    connection_finished = asyncio.Future()
+
+    async def listen(callback: Callable[[WLEDDevice], None]) -> None:
+        connection_connected.set_result(None)
+        await connection_finished
+
+    async def disconnect() -> None:
+        if not connection_finished.done():
+            connection_finished.set_exception(WLEDConnectionClosedError)
+
+    mock_wled.listen.side_effect = listen
+    mock_wled.disconnect.side_effect = disconnect
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await connection_connected
+    assert mock_wled.connect.call_count == 2
+    update_count = mock_wled.update.call_count
+
+    hass.set_state(CoreState.stopping)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    # Polling took over once the WebSocket closed, without reconnecting it
+    assert mock_wled.update.call_count == update_count + 1
+    assert mock_wled.connect.call_count == 2
 
 
 async def test_fail_when_other_device(

@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pyisy.constants import CMD_ON
 from pyisy.helpers import EventEmitter, NodeProperty
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.isy994.binary_sensor import (
@@ -21,8 +22,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from . import entity_listeners
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 LEAK_SENSOR_ENTITY_ID = "binary_sensor.leak_sensor"
 HEARTBEAT_ENTITY_ID = "binary_sensor.leak_sensor_heartbeat"

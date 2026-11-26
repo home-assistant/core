@@ -7,6 +7,11 @@ from pyportainer import PortainerEventListenerResult
 from pyportainer.models.docker_inspect import DockerInspect
 from pyportainer.models.event import DockerEvent, DockerEventActor
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_value_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import CONTAINER_STATE_EVENT_TYPES, DOMAIN
@@ -17,8 +22,6 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import TEST_CONTAINER_ID, TEST_CONTAINER_NAME
-
-from tests.common import MockConfigEntry, load_json_value_fixture, snapshot_platform
 
 
 async def _fire_event(

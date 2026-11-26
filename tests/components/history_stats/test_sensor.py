@@ -1,18 +1,32 @@
 """The test for the History Statistics sensor platform."""
 
 from datetime import datetime, timedelta
+from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    get_fixture_path,
+)
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+from pytest_homeassistant.typing import RecorderInstanceGenerator
 
 from homeassistant import config as hass_config, core as ha
+from homeassistant.components.history_stats.config_flow import (
+    HistoryStatsConfigFlowHandler,
+)
 from homeassistant.components.history_stats.const import (
+    CONF_DURATION,
     CONF_END,
+    CONF_PERIOD,
     CONF_START,
     DEFAULT_NAME,
     DOMAIN,
+    Period,
 )
 from homeassistant.components.history_stats.sensor import (
     PLATFORM_SCHEMA as SENSOR_SCHEMA,
@@ -32,10 +46,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
-from tests.components.recorder.common import async_wait_recording_done
-from tests.typing import RecorderInstanceGenerator
 
 
 async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
@@ -67,6 +77,95 @@ async def test_setup_config_entry(
 
     state = hass.states.get("sensor.unnamed_statistics")
     assert state.state == "2"
+
+
+@pytest.mark.parametrize(
+    ("options", "expected_state", "expected_state_class"),
+    [
+        pytest.param({CONF_PERIOD: Period.TODAY}, "2", "total_increasing", id="today"),
+        pytest.param(
+            {CONF_PERIOD: Period.TODAY, CONF_TYPE: "ratio"},
+            "91.7",
+            "measurement",
+            id="today_ratio",
+        ),
+        pytest.param(
+            {CONF_PERIOD: Period.YESTERDAY}, "1", "measurement", id="yesterday"
+        ),
+        pytest.param(
+            {CONF_PERIOD: Period.ROLLING_WINDOW, CONF_DURATION: {"hours": 12}},
+            "2",
+            "measurement",
+            id="rolling_window",
+        ),
+    ],
+)
+async def test_setup_config_entry_period_preset(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    options: dict[str, Any],
+    expected_state: str,
+    expected_state_class: str,
+) -> None:
+    """Test a config entry using a period preset."""
+    await hass.config.async_set_time_zone("UTC")
+    now = dt_util.parse_datetime("2026-11-13 12:00:00+00:00")
+    yesterday_start = now.replace(day=12, hour=0)
+
+    def _fake_states(*args, **kwargs):
+        return {
+            "binary_sensor.test_monitored": [
+                ha.State(
+                    "binary_sensor.test_monitored",
+                    "off",
+                    last_changed=yesterday_start,
+                ),
+                ha.State(
+                    "binary_sensor.test_monitored",
+                    "on",
+                    last_changed=yesterday_start.replace(hour=20),
+                ),
+                ha.State(
+                    "binary_sensor.test_monitored",
+                    "off",
+                    last_changed=now.replace(hour=1),
+                ),
+                ha.State(
+                    "binary_sensor.test_monitored",
+                    "on",
+                    last_changed=now.replace(hour=2),
+                ),
+            ]
+        }
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=DEFAULT_NAME,
+        options={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: "binary_sensor.test_monitored",
+            CONF_STATE: ["on"],
+            CONF_TYPE: "count",
+            **options,
+        },
+        version=HistoryStatsConfigFlowHandler.VERSION,
+        minor_version=HistoryStatsConfigFlowHandler.MINOR_VERSION,
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(now),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.unnamed_statistics")
+    assert state.state == expected_state
+    assert state.attributes["state_class"] == expected_state_class
 
 
 async def test_setup_multiple_states(
@@ -1511,6 +1610,55 @@ async def test_measure_sliding_window(
     assert hass.states.get("sensor.sensor4").state == "8.3"
 
 
+async def test_ratio_over_daylight_saving_time_change(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test the ratio uses the real length of a day with a daylight saving change."""
+    # The US/Pacific day of the fall back to standard time lasts 25 hours
+    now = dt_util.parse_datetime("2026-11-02T12:00:00-08:00")
+
+    def _fake_states(*args, **kwargs):
+        return {
+            "binary_sensor.test_id": [
+                ha.State(
+                    "binary_sensor.test_id",
+                    "on",
+                    last_changed=dt_util.parse_datetime("2026-10-31T12:00:00-07:00"),
+                ),
+            ]
+        }
+
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(now),
+    ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor1",
+                        "state": "on",
+                        "start": "{{ as_timestamp(today_at() - timedelta(days=1)) }}",
+                        "end": "{{ as_timestamp(today_at()) }}",
+                        "type": "ratio",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+        await async_update_entity(hass, "sensor.sensor1")
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == "100.0"
+
+
 async def test_measure_from_end_going_backwards(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -2662,3 +2810,66 @@ async def test_open_block_precision_same_second(
     assert hass.states.get("sensor.precision_count").state == "1"
     assert hass.states.get("sensor.precision_time").state == "0.0"
     assert hass.states.get("sensor.precision_ratio").state == "0.0"
+
+
+@pytest.mark.parametrize(
+    ("off_offset", "expected_ratio"),
+    [
+        pytest.param(timedelta(seconds=99, milliseconds=500), "99.5", id="before_end"),
+        pytest.param(timedelta(seconds=100), "100.0", id="at_end"),
+        pytest.param(
+            timedelta(seconds=100, milliseconds=500),
+            "100.0",
+            id="within_second_after_end",
+        ),
+        pytest.param(timedelta(seconds=101), "100.0", id="after_end"),
+    ],
+)
+async def test_state_change_just_after_period_end(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    off_offset: timedelta,
+    expected_ratio: str,
+) -> None:
+    """Test a state change less than a second after the period end is not counted."""
+    await hass.config.async_set_time_zone("UTC")
+    start_time = dt_util.utcnow().replace(microsecond=0) - timedelta(hours=1)
+
+    def _fake_states(*args, **kwargs) -> dict[str, list[ha.State]]:
+        return {
+            "binary_sensor.test_id": [
+                ha.State("binary_sensor.test_id", "on", last_changed=start_time),
+                ha.State(
+                    "binary_sensor.test_id",
+                    "off",
+                    last_changed=start_time + off_offset,
+                ),
+            ]
+        }
+
+    with patch(
+        "homeassistant.components.recorder.history.state_changes_during_period",
+        _fake_states,
+    ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor1",
+                        "state": "on",
+                        "start": start_time.isoformat(),
+                        "duration": {"seconds": 100},
+                        "type": "ratio",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+        await async_update_entity(hass, "sensor.sensor1")
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == expected_ratio

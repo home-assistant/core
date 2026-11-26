@@ -3,18 +3,18 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_ON,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -67,8 +67,8 @@ async def test_light_set_on(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [entity_id]},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
 
@@ -99,8 +99,8 @@ async def test_light_set_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: [entity_id]},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
 
@@ -131,8 +131,8 @@ async def test_light_set_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: [entity_id], LightServiceArgument.BRIGHTNESS: 255},
         blocking=True,
     )
 
@@ -164,11 +164,11 @@ async def test_light_set_hue(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: [entity_id],
-            ATTR_BRIGHTNESS: 255,
-            ATTR_HS_COLOR: (352.32, 100.0),
+            TargetKey.ENTITY_ID: [entity_id],
+            LightServiceArgument.BRIGHTNESS: 255,
+            LightServiceArgument.HS_COLOR: (352.32, 100.0),
         },
         blocking=True,
     )

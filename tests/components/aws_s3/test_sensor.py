@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock
 from botocore.exceptions import BotoCoreError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aws_s3.coordinator import SCAN_INTERVAL
@@ -15,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_sensor(
@@ -103,6 +106,7 @@ async def test_calculate_backups_size(
     metadata_content = json.dumps(mock_agent_backup.as_dict())
     mock_body = AsyncMock()
     mock_body.read.return_value = metadata_content.encode()
+    mock_client.get_object.side_effect = None
     mock_client.get_object.return_value = {"Body": mock_body}
 
     paginate = mock_client.get_paginator.return_value.paginate

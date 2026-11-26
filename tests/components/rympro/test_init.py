@@ -4,13 +4,12 @@ from unittest.mock import patch
 
 from pyrympro import CannotConnectError, OperationError, UnauthorizedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.rympro.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TEST_DATA = {
     CONF_EMAIL: "test-email",

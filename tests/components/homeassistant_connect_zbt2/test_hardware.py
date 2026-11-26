@@ -1,14 +1,14 @@
 """Test the Home Assistant Connect ZBT-2 hardware platform."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.components.homeassistant_connect_zbt2.const import DOMAIN
 from homeassistant.components.usb import DOMAIN as USB_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 CONFIG_ENTRY_DATA = {
     "device": "/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_80B54EEFAE18-if01-port0",

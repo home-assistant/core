@@ -31,7 +31,7 @@ async def _async_configure_success(
         ),
         patch(
             "homeassistant.components.rainforest_eagle.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -74,7 +74,7 @@ async def test_form_multiple_meters_first_connected(hass: HomeAssistant) -> None
         ),
         patch(
             "homeassistant.components.rainforest_eagle.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -205,7 +205,7 @@ async def test_form_eagle_100(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.rainforest_eagle.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(

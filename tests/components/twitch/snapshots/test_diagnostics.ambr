@@ -1,0 +1,23 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'channels': dict({
+      '123': dict({
+        'followers': 42,
+        'following_since': '2023-08-01T00:00:00',
+        'follows': True,
+        'game': 'Good game',
+        'is_streaming': True,
+        'name': 'channel123',
+        'picture': 'logo.png',
+        'started_at': '2021-03-10T03:18:11+00:00',
+        'stream_picture': 'stream-medium.png',
+        'subscribed': True,
+        'subscription_gifted': True,
+        'subscription_tier': 2,
+        'title': 'Title',
+        'viewers': 42,
+      }),
+    }),
+  })
+# ---

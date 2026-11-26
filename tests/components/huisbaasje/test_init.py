@@ -2,16 +2,20 @@
 
 from unittest.mock import patch
 
-from energyflip import EnergyFlipException
+from energyflip import (
+    EnergyFlipConnectionException,
+    EnergyFlipException,
+    EnergyFlipUnauthenticatedException,
+)
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.huisbaasje.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .test_data import MOCK_CURRENT_MEASUREMENTS
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(hass: HomeAssistant) -> None:
@@ -64,7 +68,7 @@ async def test_setup_entry_error_authenticate(hass: HomeAssistant) -> None:
     with (
         patch(
             "energyflip.EnergyFlip.authenticate",
-            side_effect=EnergyFlipException("Boom"),
+            side_effect=EnergyFlipUnauthenticatedException("Boom"),
         ) as mock_authenticate,
         patch(
             "energyflip.EnergyFlip.customer_overview",
@@ -103,6 +107,47 @@ async def test_setup_entry_error_authenticate(hass: HomeAssistant) -> None:
         # Assert customer_overview wasn't called and authenticate exception was handled properly
         assert len(mock_customer_overview.mock_calls) == 0
 
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 1
+        assert flows[0]["context"]["source"] == SOURCE_REAUTH
+        assert flows[0]["context"]["entry_id"] == config_entry.entry_id
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(EnergyFlipConnectionException("Boom"), id="cannot_connect"),
+        pytest.param(EnergyFlipException("Boom"), id="error"),
+    ],
+)
+async def test_setup_entry_error_authenticate_no_reauth(
+    hass: HomeAssistant, side_effect: Exception
+) -> None:
+    """Test other errors on authenticate do not start a reauth flow."""
+    with patch(
+        "energyflip.EnergyFlip.authenticate",
+        side_effect=side_effect,
+    ):
+        config_entry = MockConfigEntry(
+            version=1,
+            domain=DOMAIN,
+            title="userId",
+            data={
+                CONF_ID: "userId",
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+            },
+            source="test",
+        )
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "Authentication failed"
+    assert hass.config_entries.flow.async_progress() == []
+
 
 async def test_setup_entry_error_customer_overview(hass: HomeAssistant) -> None:
     """Test for unsuccessfully setting a config entry, erroring on customer_overview."""
@@ -136,6 +181,7 @@ async def test_setup_entry_error_customer_overview(hass: HomeAssistant) -> None:
         assert config_entry.state is ConfigEntryState.SETUP_ERROR
         assert config_entry.reason == "Getting customer ID failed"
         assert DOMAIN not in hass.data
+        assert hass.config_entries.flow.async_progress() == []
 
         # Assert entities are not loaded
         entities = hass.states.async_entity_ids("sensor")

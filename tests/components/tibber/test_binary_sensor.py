@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.recorder import Recorder
@@ -16,8 +17,6 @@ from homeassistant.helpers import (
 )
 
 from .conftest import create_tibber_device
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture

@@ -1,35 +1,43 @@
 """Tests for the Portainer button platform."""
 
+import asyncio
+from collections.abc import AsyncGenerator
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from typing import Any, cast
+from unittest.mock import AsyncMock, _Call, call, patch
 
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
     PortainerConnectionError,
+    PortainerImagePullError,
+    PortainerNotFoundError,
     PortainerTimeoutError,
 )
+from pyportainer.models.docker_inspect import DockerInspect
+from pyportainer.models.image_pull import DockerImagePullEvent
 from pyportainer.models.stacks import Stack, StackType
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    load_json_value_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import SERVICE_PRESS
+from homeassistant.components.button import ButtonService
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_array_fixture,
-    snapshot_platform,
-)
-
 BUTTON_DOMAIN = "button"
 UPDATE_STACK_ENTITY_ID = "button.webstack_update_stack"
+PULL_IMAGE_ENTITY_ID = "button.practical_morse_pull_image"
 
 
 async def test_all_button_entities_snapshot(
@@ -72,8 +80,8 @@ async def test_buttons_containers(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -107,8 +115,8 @@ async def test_buttons_containers_exceptions(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -127,8 +135,8 @@ async def test_buttons_invalid_auth_starts_reauth(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.practical_morse_restart_container"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.practical_morse_restart_container"},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -139,33 +147,53 @@ async def test_buttons_invalid_auth_starts_reauth(
 
 
 @pytest.mark.parametrize(
-    ("action", "client_method"),
+    ("entity_id", "client_method", "expected_call"),
     [
-        ("prune", "images_prune"),
+        pytest.param(
+            "button.my_environment_prune_unused_images",
+            "images_prune",
+            call(endpoint_id=1, dangling=False, until=timedelta(days=0)),
+            id="images",
+        ),
+        pytest.param(
+            "button.my_environment_prune_unused_volumes",
+            "prune_volumes",
+            call(1),
+            id="volumes",
+        ),
+        pytest.param(
+            "button.my_environment_prune_build_cache",
+            "prune_build_cache",
+            call(1, all_cache=True),
+            id="build_cache",
+        ),
+        pytest.param(
+            "button.my_environment_prune_unused_networks",
+            "prune_networks",
+            call(1),
+            id="networks",
+        ),
     ],
 )
 async def test_buttons_endpoint(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    action: str,
+    entity_id: str,
     client_method: str,
+    expected_call: _Call,
 ) -> None:
-    """Test pressing a Portainer endpoint button triggers call."""
+    """Test pressing a Portainer endpoint button calls the library."""
     await setup_integration(hass, mock_config_entry)
-
-    entity_id = f"button.my_environment_{action}_unused_images"
-    method_mock = getattr(mock_portainer_client, client_method)
-    pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
-    assert len(method_mock.mock_calls) == pre_calls + 1
+    assert getattr(mock_portainer_client, client_method).mock_calls == [expected_call]
 
 
 @pytest.mark.parametrize(
@@ -192,8 +220,8 @@ async def test_buttons_endpoints_exceptions(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.my_environment_prune_unused_images"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.my_environment_prune_unused_images"},
             blocking=True,
         )
 
@@ -208,8 +236,8 @@ async def test_button_update_stack(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: UPDATE_STACK_ENTITY_ID},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: UPDATE_STACK_ENTITY_ID},
         blocking=True,
     )
 
@@ -240,8 +268,8 @@ async def test_button_update_stack_exceptions(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: UPDATE_STACK_ENTITY_ID},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: UPDATE_STACK_ENTITY_ID},
             blocking=True,
         )
     assert exc_info.value.translation_key == translation_key
@@ -263,3 +291,111 @@ async def test_button_update_stack_not_for_kubernetes(
 
     assert hass.states.get(UPDATE_STACK_ENTITY_ID) is None
     assert hass.states.get("button.dashy_update_stack") is not None
+
+
+@pytest.mark.parametrize(
+    ("exception", "translation_key"),
+    [
+        pytest.param(
+            PortainerImagePullError("unauthorized: authentication required"),
+            "image_pull_failed",
+            id="pull_error",
+        ),
+        pytest.param(
+            PortainerNotFoundError("pull access denied"),
+            "image_pull_failed",
+            id="not_found",
+        ),
+        pytest.param(PortainerAuthenticationError("auth"), "invalid_auth", id="auth"),
+    ],
+)
+async def test_button_pull_image_exceptions(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    translation_key: str,
+) -> None:
+    """Test the pull image button raises a translated error when the pull fails."""
+    await setup_integration(hass, mock_config_entry)
+    mock_portainer_client.image_pull.side_effect = exception
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: PULL_IMAGE_ENTITY_ID},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == translation_key
+
+
+async def test_button_pull_image_timeout(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a pull that takes too long raises a timeout error."""
+
+    async def _image_pull(
+        endpoint_id: int, image: str
+    ) -> AsyncGenerator[DockerImagePullEvent]:
+        await asyncio.Event().wait()
+        yield DockerImagePullEvent()
+
+    mock_portainer_client.image_pull.side_effect = _image_pull
+    await setup_integration(hass, mock_config_entry)
+
+    with (
+        patch(
+            "homeassistant.components.portainer.button.PULL_IMAGE_TIMEOUT",
+            timedelta(0),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: PULL_IMAGE_ENTITY_ID},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "image_pull_timeout"
+
+
+async def test_button_pull_image(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test pressing the pull image button pulls the image without a recreate."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: PULL_IMAGE_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_portainer_client.image_pull.assert_called_once_with(1, "example-image:1.0")
+    mock_portainer_client.container_recreate.assert_not_called()
+
+
+async def test_button_pull_image_unavailable_without_config_image(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the pull image button is unavailable when the container has no image."""
+    inspect = cast(
+        dict[str, Any], load_json_value_fixture("container_inspect.json", DOMAIN)
+    )
+    del inspect["Config"]
+    mock_portainer_client.inspect_container.return_value = DockerInspect.from_dict(
+        inspect
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(PULL_IMAGE_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE

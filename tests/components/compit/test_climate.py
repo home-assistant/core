@@ -9,12 +9,10 @@ from compit_inext_api.consts import (
     CompitPresetMode,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
@@ -25,24 +23,15 @@ from homeassistant.components.climate import (
     PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration, snapshot_compit_entities
-
-from tests.common import MockConfigEntry
 
 CLIMATE_R900 = "climate.r_900"
 CLIMATE_NANO_COLOR_2 = "climate.nano_color_2"
@@ -124,8 +113,11 @@ async def test_climate_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: CLIMATE_NANO_COLOR_2, ATTR_TEMPERATURE: 23.5},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: CLIMATE_NANO_COLOR_2,
+            ClimateServiceArgument.TEMPERATURE: 23.5,
+        },
         blocking=True,
     )
 
@@ -155,8 +147,11 @@ async def test_climate_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: CLIMATE_NANO_COLOR_2, ATTR_HVAC_MODE: ha_mode},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: CLIMATE_NANO_COLOR_2,
+            ClimateServiceArgument.HVAC_MODE: ha_mode,
+        },
         blocking=True,
     )
 
@@ -187,8 +182,11 @@ async def test_climate_set_preset_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: CLIMATE_NANO_COLOR_2, ATTR_PRESET_MODE: ha_preset},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: CLIMATE_NANO_COLOR_2,
+            ClimateServiceArgument.PRESET_MODE: ha_preset,
+        },
         blocking=True,
     )
 
@@ -222,8 +220,11 @@ async def test_climate_set_fan_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: CLIMATE_NANO_COLOR_2, ATTR_FAN_MODE: ha_fan_mode},
+        ClimateService.SET_FAN_MODE,
+        {
+            TargetKey.ENTITY_ID: CLIMATE_NANO_COLOR_2,
+            ClimateServiceArgument.FAN_MODE: ha_fan_mode,
+        },
         blocking=True,
     )
 
@@ -326,8 +327,11 @@ async def test_climate_r900_preset_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: CLIMATE_R900, ATTR_PRESET_MODE: PRESET_AWAY},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: CLIMATE_R900,
+            ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+        },
         blocking=True,
     )
 

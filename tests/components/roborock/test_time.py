@@ -6,17 +6,16 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import roborock
 from roborock.data import DnDTimer, RoborockBaseTimer, ValleyElectricityTimer
 
-from homeassistant.components.time import SERVICE_SET_VALUE
+from homeassistant.components.time import TimeService
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import FakeDevice
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -83,7 +82,7 @@ async def test_update_success(
 
     await hass.services.async_call(
         "time",
-        SERVICE_SET_VALUE,
+        TimeService.SET_VALUE,
         service_data={"time": time(hour=1, minute=1)},
         blocking=True,
         target={"entity_id": entity_id},
@@ -122,7 +121,7 @@ async def test_update_failure(
     with pytest.raises(HomeAssistantError, match="Failed to update Roborock options"):
         await hass.services.async_call(
             "time",
-            SERVICE_SET_VALUE,
+            TimeService.SET_VALUE,
             service_data={"time": time(hour=1, minute=1)},
             blocking=True,
             target={"entity_id": entity_id},

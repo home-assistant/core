@@ -125,7 +125,7 @@ def get_connection(hass: HomeAssistant, address: str) -> CachedConnection:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: GardenaBluetoothConfigEntry
-) -> bool:
+) -> None:
     """Set up Gardena Bluetooth from a config entry."""
 
     if entry.minor_version < 2:
@@ -149,11 +149,10 @@ async def async_setup_entry(
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await coordinator.async_request_refresh()
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GardenaBluetoothConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

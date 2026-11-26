@@ -2,13 +2,13 @@
 
 from collections.abc import AsyncGenerator
 from datetime import timedelta
-import logging
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from laundrify_aio import LaundrifyDevice
 from laundrify_aio.exceptions import LaundrifyDeviceException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.laundrify.const import (
     DEFAULT_POLL_INTERVAL,
@@ -26,8 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import slugify
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
@@ -91,7 +89,6 @@ async def test_laundrify_sensor_update_failure(
     laundrify_config_entry: MockConfigEntry,
 ) -> None:
     """Test that update failures are logged."""
-    caplog.set_level(logging.DEBUG)
 
     # test get_power() to raise a LaundrifyDeviceException
     with patch(

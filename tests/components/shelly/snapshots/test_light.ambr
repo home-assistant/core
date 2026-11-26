@@ -1,0 +1,156 @@
+# serializer version: 1
+# name: test_rpc_ledstrip_background_light[light.test_name_effect_background-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.RGB: 'rgb'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('shelly', '123456789ABC')]>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.test_name_effect_background',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Effect background',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Effect background',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ledstrip_background',
+    'unique_id': '123456789ABC-ledstrip:0-ledstrip_background',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_rpc_ledstrip_background_light[light.test_name_effect_background-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 171,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Effect background',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
+        0.0,
+        0.0,
+      ),
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
+        255,
+        255,
+        255,
+      ),
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.RGB: 'rgb'>,
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
+        0.323,
+        0.329,
+      ),
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.test_name_effect_background',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_rpc_ledstrip_light[light.test_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
+        'solid',
+        'blink',
+        'fade',
+        'rainbow',
+        'colorwipe',
+        'aurora',
+        'ddp',
+      ]),
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.RGB: 'rgb'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('shelly', '123456789ABC')]>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.test_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LightEntityFeature: 4>,
+    'translation_key': 'ledstrip',
+    'unique_id': '123456789ABC-ledstrip:0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_rpc_ledstrip_light[light.test_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: None,
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
+        'solid',
+        'blink',
+        'fade',
+        'rainbow',
+        'colorwipe',
+        'aurora',
+        'ddp',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.RGB: 'rgb'>,
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.test_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

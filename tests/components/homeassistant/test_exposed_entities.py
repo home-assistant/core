@@ -1,11 +1,19 @@
 """Test Home Assistant exposed entities helper."""
 
+from typing import Any
+from unittest.mock import Mock, patch
+
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, flush_store
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homeassistant import DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
+    LEGACY_ENTITY_PURGE_INTERVAL,
+    LEGACY_ENTITY_SWEEP_INTERVAL,
     ExposedEntities,
     ExposedEntity,
     async_expose_entity,
@@ -14,14 +22,11 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import flush_store
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(name="entities")
@@ -156,6 +161,7 @@ async def test_expose_entity(
 
     response = await ws_client.receive_json()
     assert response["success"]
+    assert response["result"] == {"changed_entity_ids": [entry1.entity_id]}
 
     entry1 = entity_registry.async_get(entry1.entity_id)
     assert entry1.options == {"cloud.alexa": {"should_expose": True}}
@@ -175,6 +181,8 @@ async def test_expose_entity(
 
     response = await ws_client.receive_json()
     assert response["success"]
+    # entry2 was not exposed by default, so stopping to expose it changes nothing
+    assert response["result"] == {"changed_entity_ids": [entry1.entity_id]}
 
     entry1 = entity_registry.async_get(entry1.entity_id)
     assert entry1.options == {
@@ -187,6 +195,20 @@ async def test_expose_entity(
         "cloud.google_assistant": {"should_expose": False},
     }
     assert len(exposed_entities.entities) == 0
+
+    # Setting the same options again changes nothing
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa", "cloud.google_assistant"],
+            "entity_ids": [entry1.entity_id, entry2.entity_id],
+            "should_expose": False,
+        }
+    )
+
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"changed_entity_ids": []}
 
 
 async def test_expose_entity_unknown(
@@ -213,6 +235,7 @@ async def test_expose_entity_unknown(
 
     response = await ws_client.receive_json()
     assert response["success"]
+    assert response["result"] == {"changed_entity_ids": ["test.test"]}
 
     assert len(exposed_entities.entities) == 1
     assert exposed_entities.entities == {
@@ -231,6 +254,8 @@ async def test_expose_entity_unknown(
 
     response = await ws_client.receive_json()
     assert response["success"]
+    # test.test2 was not exposed by default, so stopping to expose it changes nothing
+    assert response["result"] == {"changed_entity_ids": ["test.test"]}
 
     assert len(exposed_entities.entities) == 2
     assert exposed_entities.entities == {
@@ -247,6 +272,76 @@ async def test_expose_entity_unknown(
             }
         ),
     }
+
+    # Only entities whose exposure changed are returned
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa"],
+            "entity_ids": ["test.test", "test.test3"],
+            "should_expose": True,
+        }
+    )
+
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"changed_entity_ids": ["test.test", "test.test3"]}
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa"],
+            "entity_ids": ["test.test", "test.test3", "test.test4"],
+            "should_expose": False,
+        }
+    )
+
+    response = await ws_client.receive_json()
+    assert response["success"]
+    # test.test4 was not exposed by default, so it is not returned
+    assert response["result"] == {"changed_entity_ids": ["test.test", "test.test3"]}
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("light.test_unique1", id="registry_entity"),
+        pytest.param("light.legacy", id="legacy_entity"),
+    ],
+)
+async def test_expose_entity_default_notifies_listeners(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    entity_id: str,
+) -> None:
+    """Test exposing an entity which is exposed by default notifies listeners."""
+    ws_client = await hass_ws_client(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    entity_registry.async_get_or_create("light", "test", "unique1")
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_set_expose_new_entities("cloud.alexa", True)
+
+    calls = []
+    async_listen_entity_updates(hass, "cloud.alexa", lambda: calls.append(None))
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa"],
+            "entity_ids": [entity_id],
+            "should_expose": True,
+        }
+    )
+
+    response = await ws_client.receive_json()
+    assert response["success"]
+    # The entity was already exposed by default, so its exposure did not change
+    assert response["result"] == {"changed_entity_ids": []}
+    # The setting was stored for the first time, so listeners must still be notified
+    assert len(calls) == 1
 
 
 @pytest.mark.parametrize("expose_new", [True, False])
@@ -548,3 +643,317 @@ async def test_listeners(
 
     entry1 = entity_registry.async_get_or_create("switch", "test", "unique1")
     async_expose_entity(hass, "test1", entry1.entity_id, True)
+
+
+async def test_purge_stale_legacy_entities_periodic_sweep(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Stale legacy entries with no live state are purged by the periodic sweep."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    hass.states.async_set("sensor.still_around", "on", {})
+    async_expose_entity(hass, "test1", "sensor.still_around", True)
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assert set(exposed_entities.entities) == {"sensor.still_around", "sensor.long_gone"}
+
+    # First sweep observes sensor.long_gone missing and starts tracking it,
+    # but does not purge it yet.
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert set(exposed_entities.entities) == {"sensor.still_around", "sensor.long_gone"}
+    assert exposed_entities.entities["sensor.long_gone"].orphaned_since is not None
+
+    # Once it's stayed missing for the full retention window, a later sweep purges it.
+    freezer.tick(LEGACY_ENTITY_PURGE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert set(exposed_entities.entities) == {"sensor.still_around"}
+    assert exposed_entities.entities["sensor.still_around"].orphaned_since is None
+
+
+async def test_purge_notifies_assistant_listeners(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Purging a record notifies the affected assistant's listeners."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    hass.states.async_set("sensor.still_around", "on", {})
+    async_expose_entity(hass, "test1", "sensor.still_around", True)
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    listener_test1 = Mock()
+    exposed_entities.async_listen_entity_updates("test1", listener_test1)
+    listener_test2 = Mock()
+    exposed_entities.async_listen_entity_updates("test2", listener_test2)
+
+    # A sweep that only starts orphan tracking changes no settings, so
+    # nobody is notified.
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    listener_test1.assert_not_called()
+
+    # The purging sweep notifies the assistant with settings on the record,
+    # and only that assistant.
+    freezer.tick(LEGACY_ENTITY_PURGE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "sensor.long_gone" not in exposed_entities.entities
+    listener_test1.assert_called_once()
+    listener_test2.assert_not_called()
+
+
+async def test_purge_stale_legacy_entities_clears_tracking_on_reappearance(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """An entity that reappears between sweeps is not purged later."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "sensor.flaky", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert exposed_entities.entities["sensor.flaky"].orphaned_since is not None
+
+    # The entity comes back before the retention window elapses; the
+    # state-added listener clears tracking right away, not at the next sweep.
+    hass.states.async_set("sensor.flaky", "on", {})
+    await hass.async_block_till_done()
+    assert exposed_entities.entities["sensor.flaky"].orphaned_since is None
+
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert "sensor.flaky" in exposed_entities.entities
+
+    # Even after the full retention window, it's kept since it's live again.
+    freezer.tick(LEGACY_ENTITY_PURGE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert "sensor.flaky" in exposed_entities.entities
+
+
+async def test_sweep_clears_tracking_for_live_entity(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """A sweep clears a stored orphan marker when the entity has a state."""
+    hass_storage["homeassistant.exposed_entities"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "homeassistant.exposed_entities",
+        "data": {
+            "assistants": {},
+            "exposed_entities": {
+                "sensor.back_again": {"assistants": {"test1": {"should_expose": True}}}
+            },
+            "orphaned": {"sensor.back_again": 0},
+        },
+    }
+    # Set before setup, so the state-added listener does not clear the marker.
+    hass.states.async_set("sensor.back_again", "on", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assert exposed_entities.entities["sensor.back_again"].orphaned_since == 0
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert exposed_entities.entities["sensor.back_again"].orphaned_since is None
+
+
+async def test_sweep_purges_legacy_entity_shadowed_by_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """A sweep purges a legacy record once its entity ID is in the registry."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "switch.test_unique1", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assert "switch.test_unique1" in exposed_entities.entities
+    listener = Mock()
+    exposed_entities.async_listen_entity_updates("test1", listener)
+
+    entry = entity_registry.async_get_or_create("switch", "test", "unique1")
+    assert entry.entity_id == "switch.test_unique1"
+    hass.states.async_set("switch.test_unique1", "on", {})
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "switch.test_unique1" not in exposed_entities.entities
+    listener.assert_called_once()
+
+
+async def test_legacy_orphaned_since_persists_across_restart(
+    hass: HomeAssistant,
+) -> None:
+    """Orphan tracking survives a restart."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert exposed_entities.entities["sensor.long_gone"].orphaned_since is not None
+
+    await flush_store(exposed_entities._store)
+
+    exposed_entities2 = ExposedEntities(hass)
+    await exposed_entities2.async_initialize()
+
+    assert (
+        exposed_entities2.entities["sensor.long_gone"].orphaned_since
+        == exposed_entities.entities["sensor.long_gone"].orphaned_since
+    )
+
+
+async def test_orphaned_since_stored_outside_records(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Orphan timestamps are stored in a top-level map, not on the records."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await flush_store(exposed_entities._store)
+
+    stored = hass_storage["homeassistant.exposed_entities"]
+    # A minor bump would rewrite the whole store at load; the key is optional.
+    assert stored["minor_version"] == 1
+    assert stored["data"]["exposed_entities"]["sensor.long_gone"] == {
+        "assistants": {"test1": {"should_expose": True}}
+    }
+    assert stored["data"]["orphaned"] == {
+        "sensor.long_gone": exposed_entities.entities["sensor.long_gone"].orphaned_since
+    }
+
+
+async def test_purge_stale_legacy_entities_runs_on_startup(hass: HomeAssistant) -> None:
+    """A sweep also runs once on Home Assistant startup."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assert exposed_entities.entities["sensor.long_gone"].orphaned_since is None
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert exposed_entities.entities["sensor.long_gone"].orphaned_since is not None
+
+
+@pytest.mark.parametrize("config_attribute", ["recovery_mode", "safe_mode"])
+async def test_no_sweep_in_recovery_or_safe_mode(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, config_attribute: str
+) -> None:
+    """No sweep runs in recovery mode or safe mode."""
+    setattr(hass.config, config_attribute, True)
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert exposed_entities.entities["sensor.long_gone"].orphaned_since is None
+
+
+@patch(
+    "homeassistant.components.homeassistant.exposed_entities"
+    ".LEGACY_ENTITY_SWEEP_CHUNK_SIZE",
+    2,
+)
+async def test_purge_stale_legacy_entities_spans_multiple_chunks(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Entities on both sides of a chunk boundary are tracked and purged."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    entity_ids = [f"sensor.long_gone_{i}" for i in range(5)]
+    for entity_id in entity_ids:
+        async_expose_entity(hass, "test1", entity_id, True)
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assert len(exposed_entities.entities) == len(entity_ids)
+
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert all(
+        exposed_entities.entities[entity_id].orphaned_since is not None
+        for entity_id in entity_ids
+    )
+
+    # A purge spanning multiple chunks still notifies each assistant once.
+    listener = Mock()
+    exposed_entities.async_listen_entity_updates("test1", listener)
+
+    freezer.tick(LEGACY_ENTITY_PURGE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not exposed_entities.entities
+    listener.assert_called_once()
+
+
+@patch(
+    "homeassistant.components.homeassistant.exposed_entities"
+    ".LEGACY_ENTITY_SWEEP_CHUNK_SIZE",
+    2,
+)
+async def test_purge_sweep_checkpoints_each_chunk(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Each changed chunk schedules a save, so a cancelled sweep keeps progress."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    for i in range(3):
+        async_expose_entity(hass, "test1", f"sensor.long_gone_{i}", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    with patch.object(exposed_entities, "_async_schedule_save") as mock_save:
+        freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_save.call_count == 2
+
+
+async def test_update_exposed_entity_preserves_orphaned_since(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Changing an assistant option doesn't reset the orphan retention clock."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    orphaned_since = exposed_entities.entities["sensor.long_gone"].orphaned_since
+    assert orphaned_since is not None
+
+    async_expose_entity(hass, "test2", "sensor.long_gone", True)
+
+    assert (
+        exposed_entities.entities["sensor.long_gone"].orphaned_since == orphaned_since
+    )

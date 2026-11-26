@@ -1,6 +1,7 @@
 {
   "domain": "emulated_roku",
   "name": "Emulated Roku",
+  "categories": ["other_ecosystems", "buttons_remotes"],
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["network"],

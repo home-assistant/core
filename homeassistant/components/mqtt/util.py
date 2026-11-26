@@ -9,6 +9,7 @@ from pathlib import Path
 import tempfile
 from typing import Any
 
+from cryptography.x509 import Certificate, load_pem_x509_certificate
 import probatio
 
 from homeassistant import config as conf_util
@@ -34,6 +35,7 @@ from homeassistant.loader import async_get_integration
 from homeassistant.util.async_ import create_eager_task
 
 from .const import (
+    ATTR_DISCOVERY_PAYLOAD,
     ATTR_PAYLOAD,
     ATTR_QOS,
     ATTR_RETAIN,
@@ -45,8 +47,9 @@ from .const import (
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
+    INVALID_PLATFORM_CONFIG_ISSUE_PREFIX,
 )
-from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, MqttData, ReceiveMessage
+from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, ReceiveMessage
 
 AVAILABILITY_TIMEOUT = 50.0
 
@@ -240,8 +243,9 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
 
     try:
         async with asyncio.timeout(AVAILABILITY_TIMEOUT):
-            # Await the client setup or an error state was received
-            return await state_reached_future
+            # Await the client setup or an error state was received,
+            # a timeout must not cancel the future for other waiters and retries
+            return await asyncio.shield(state_reached_future)
     except TimeoutError:
         return False
 
@@ -333,6 +337,19 @@ def valid_publish_topic(topic: Any) -> str:
     if "+" in validated_topic or "#" in validated_topic:
         raise probatio.Invalid("Wildcards cannot be used in topic names")
     return validated_topic
+
+
+def valid_encoding(value: Any) -> str:
+    """Validate a payload encoding, an empty string passes the raw payload."""
+    encoding = cv.string(value)
+    if not encoding:
+        return encoding
+    # An empty string skips the codec lookup, so encode a character
+    try:
+        "a".encode(encoding)
+    except LookupError as err:
+        raise probatio.Invalid(f"Unknown payload encoding '{encoding}'") from err
+    return encoding
 
 
 def entity_category_without_config(value: Any) -> EntityCategory:
@@ -439,6 +456,19 @@ def get_file_path(option: str, default: str | None = None) -> str | None:
     return str(temp_dir / option)
 
 
+def load_certificate_file(certificate_file: str) -> Certificate | None:
+    """Load a PEM encoded certificate file."""
+    try:
+        with open(certificate_file, "rb") as file:
+            data = file.read()
+    except OSError:
+        return None
+    try:
+        return load_pem_x509_certificate(data)
+    except ValueError:
+        return None
+
+
 def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:
     """Convert certificate file or setting to config entry setting."""
     if file_name_or_auto == "auto":
@@ -456,45 +486,81 @@ def learn_more_url(platform: str) -> str:
     return f"https://www.home-assistant.io/integrations/{platform}.mqtt/"
 
 
+@callback
+def _async_device_has_entities(
+    hass: HomeAssistant, device_id: str, *, include_disabled_entities: bool
+) -> bool:
+    """Return if entities that keep the device remain.
+
+    Disabled entities only keep the device if include_disabled_entities is set,
+    or if they were discovered through device discovery, as removing the device
+    would remove them while they are still part of the device discovery payload.
+    """
+    device_discovered_disabled_entities = {
+        disabled_entity.registry_key
+        for disabled_entity in hass.data[
+            DATA_MQTT
+        ].discovery_discovered_and_disabled.values()
+        if disabled_entity.discovery_data[ATTR_DISCOVERY_PAYLOAD].device_discovery
+    }
+    return any(
+        not entry.disabled
+        or include_disabled_entities
+        or (entry.domain, entry.platform, entry.unique_id)
+        in device_discovered_disabled_entities
+        for entry in er.async_entries_for_device(
+            er.async_get(hass), device_id, include_disabled_entities=True
+        )
+    )
+
+
 async def async_cleanup_device_registry(
-    hass: HomeAssistant, device_id: str | None, config_entry_id: str | None
+    hass: HomeAssistant,
+    device_id: str | None,
+    config_entry_id: str | None,
+    *,
+    include_disabled_entities: bool = False,
 ) -> None:
     """Clean up the device registry after MQTT removal.
 
     Remove MQTT from the device registry entry if there are no remaining
-    entities, triggers or tags.
+    entities, triggers, tags or child devices. With include_disabled_entities,
+    all disabled entities keep the device.
     """
     # Local import to avoid circular dependencies
     from . import device_trigger, tag  # noqa: PLC0415
 
     device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
     if (
         device_id
         and config_entry_id
         and (device := device_registry.async_get(device_id)) is not None
         # Only remove the device if it is owned by the MQTT config entry
         and device.config_entry_id == config_entry_id
-        and not er.async_entries_for_device(
-            entity_registry, device_id, include_disabled_entities=False
+        # Removing a parent device also removes its child devices
+        and not dr.async_entries_for_parent_device(device_registry, device_id)
+        and not _async_device_has_entities(
+            hass, device_id, include_disabled_entities=include_disabled_entities
         )
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
     ):
         device_registry.async_remove_device(device_id)
+        if isinstance(device, dr.ChildDeviceEntry):
+            await async_cleanup_device_registry(
+                hass,
+                device.parent_device_id,
+                config_entry_id,
+                include_disabled_entities=include_disabled_entities,
+            )
 
 
 @callback
-def async_remove_mqtt_issues(hass: HomeAssistant, mqtt_data: MqttData) -> None:
-    """Unregister open config issues."""
-    issue_registry = ir.async_get(hass)
-    open_issues = [
-        issue_id
-        for (domain, issue_id), issue_entry in issue_registry.issues.items()
-        if domain == DOMAIN and issue_entry.translation_key == "invalid_platform_config"
-    ]
-    for issue in open_issues:
-        ir.async_delete_issue(hass, DOMAIN, issue)
+def async_refresh_mqtt_issues(hass: HomeAssistant) -> ir.IssuesRefresh:
+    """Begin a refresh of the issues for invalid manually configured items."""
+    return ir.async_refresh_issues(
+        hass, DOMAIN, issue_id_pattern=INVALID_PLATFORM_CONFIG_ISSUE_PREFIX
+    )
 
 
 async def async_check_config_schema(

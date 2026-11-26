@@ -28,6 +28,7 @@ from typing import (
 
 import probatio
 from propcache.api import cached_property
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -66,7 +67,7 @@ from .event import (
 from .frame import report_non_thread_safe_operation, report_usage
 from .group import Group
 from .singleton import singleton
-from .typing import UNDEFINED, StateType, UndefinedType
+from .typing import StateType, Undefined
 
 timer = time.time
 
@@ -115,15 +116,21 @@ _ADD_REMOVE_METHODS = (
 def _entity_class_requires_readd(entity_class: type[Entity]) -> bool:
     """Return if an entity_id change must remove and re-add entities of a class.
 
-    Add or remove methods in _ADD_REMOVE_METHODS defined by a class are covered
-    when that class, or a subclass of it in the MRO, defines
-    async_entity_id_changed. A sibling which is merely earlier in the MRO does
-    not cover them. Entity itself does not count, and neither do the internal add
-    and remove methods, which core handles in async_internal_entity_id_changed.
+    Only classes defined outside of Home Assistant Core count, entities of core
+    integrations are always changed in place. Add or remove methods in
+    _ADD_REMOVE_METHODS defined by such a class are covered when that class, or
+    a subclass of it in the MRO, defines async_entity_id_changed. A sibling
+    which is merely earlier in the MRO does not cover them. The internal add and
+    remove methods do not count, core handles them in
+    async_internal_entity_id_changed.
 
     This can be removed in Home Assistant Core 2027.11.
     """
-    mro = [cls for cls in entity_class.__mro__ if cls is not Entity]
+    mro = [
+        cls
+        for cls in entity_class.__mro__
+        if not cls.__module__.startswith("homeassistant.")
+    ]
     hook_owners = [cls for cls in mro if "async_entity_id_changed" in cls.__dict__]
     return any(
         any(method in cls.__dict__ for method in _ADD_REMOVE_METHODS)
@@ -200,12 +207,12 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
 
 def get_device_class_or_undefined(
     hass: HomeAssistant, entity_id: str
-) -> str | UndefinedType | None:
-    """Get the device class of an entity or UNDEFINED if not found."""
+) -> str | Undefined | None:
+    """Get the device class of an entity or Undefined if not found."""
     try:
         return get_device_class(hass, entity_id)
     except HomeAssistantError:
-        return UNDEFINED
+        return Undefined
 
 
 def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
@@ -273,7 +280,7 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 
 class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
@@ -289,7 +296,7 @@ class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     force_update: bool = False
     icon: str | None = None
     has_entity_name: bool = False
-    name: str | UndefinedType | None = UNDEFINED
+    name: str | Undefined | None = Undefined
     translation_key: str | None = None
     translation_placeholders: Mapping[str, str] | None = None
     unit_of_measurement: str | None = None
@@ -757,7 +764,7 @@ class Entity(
         self,
         device_class_name: str | None,
         platform_translations: dict[str, str],
-    ) -> str | UndefinedType | None:
+    ) -> str | Undefined | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
@@ -769,7 +776,7 @@ class Entity(
             return self._substitute_name_placeholders(name)
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
-            if description_name is UNDEFINED and self._default_to_device_class_name():
+            if description_name is Undefined and self._default_to_device_class_name():
                 return device_class_name
             return description_name
 
@@ -778,7 +785,7 @@ class Entity(
         # Check if the entity should be named by its device class
         if self._default_to_device_class_name():
             return device_class_name
-        return UNDEFINED
+        return Undefined
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -792,7 +799,7 @@ class Entity(
             is type.__getattribute__(Entity, "name")
             # The check for self.platform_data guards against integrations not using an
             # EntityComponent and can be removed in HA Core 2026.8
-            and self.platform_data
+            and self.platform_data  # type: ignore[truthy-bool]
         ):
             name = self._name_internal(
                 self._object_id_device_class_name,
@@ -801,14 +808,14 @@ class Entity(
         else:
             name = self.name
 
-        return None if name is UNDEFINED else name
+        return None if name is Undefined else name
 
     @cached_property
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """Return the name of the entity."""
         # The check for self.platform_data guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2026.8
-        if not self.platform_data:
+        if not self.platform_data:  # type: ignore[truthy-bool]
             return self._name_internal(None, {})
         return self._name_internal(
             self._device_class_name,
@@ -1078,7 +1085,7 @@ class Entity(
     @callback
     def _async_write_ha_state_from_call_soon_threadsafe(self) -> None:
         """Write the state to the state machine from the event loop thread."""
-        if not self.hass or not self._verified_state_writable:
+        if self.hass is None or not self._verified_state_writable:
             self._async_verify_state_writable()
         self._async_write_ha_state()
 
@@ -1090,7 +1097,7 @@ class Entity(
         Note: Integrations which need to customize state write should
         override _async_write_ha_state, not this method.
         """
-        if not self.hass or not self._verified_state_writable:
+        if self.hass is None or not self._verified_state_writable:
             self._async_verify_state_writable()
         if self.hass.loop_thread_id != threading.get_ident():
             report_non_thread_safe_operation("async_write_ha_state")
@@ -1181,7 +1188,7 @@ class Entity(
             attr[EntityStateAttribute.ICON] = icon
 
         original_name = self.name
-        if original_name is UNDEFINED:
+        if original_name is Undefined:
             original_name = None
 
         # Use cached friendly name if available and original_name hasn't changed.
@@ -1219,7 +1226,7 @@ class Entity(
         """Write the state to the state machine."""
         # The check for self.platform guards against integrations not using an
         # EntityComponent (which has not been allowed since HA Core 2024.1)
-        if not self.platform:
+        if not self.platform:  # type: ignore[truthy-bool]
             if self._platform_state is EntityPlatformState.REMOVED:
                 # Don't write state if the entity is not added to the platform.
                 return
@@ -1402,7 +1409,11 @@ class Entity(
 
         # Process update sequential
         if self.parallel_updates:
-            await self.parallel_updates.acquire()
+            try:
+                await self.parallel_updates.acquire()
+            except asyncio.CancelledError:
+                self._update_staged = False
+                raise
 
         if warning:
             update_warn = hass.loop.call_at(
@@ -1513,31 +1524,32 @@ class Entity(
 
         self._call_on_remove_callbacks()
 
-        await self.async_internal_will_remove_from_hass()
-        await self.async_will_remove_from_hass()
-
-        # Check if entry still exists in entity registry (e.g. unloading config entry)
-        if (
-            not force_remove
-            and self.registry_entry
-            and not self.registry_entry.disabled
-            # Check if entity is still in the entity registry
-            # by checking self._removed_from_registry
-            #
-            # Because self.registry_entry is unset in a task,
-            # its possible that the entity has been removed but
-            # the task has not yet been executed.
-            #
-            # self._removed_from_registry is set to True in a
-            # callback which does not have the same issue.
-            #
-            and not self._removed_from_registry
-        ):
-            # Set the entity's state will to unavailable and
-            # EntityStateAttribute.RESTORED: True
-            self.registry_entry.write_unavailable_state(self.hass)
-        else:
-            self.hass.states.async_remove(self.entity_id, context=self._context)
+        try:
+            await self.async_internal_will_remove_from_hass()
+            await self.async_will_remove_from_hass()
+        finally:
+            # Check if entry still exists in entity registry (e.g. unloading config entry)
+            if (
+                not force_remove
+                and self.registry_entry
+                and not self.registry_entry.disabled
+                # Check if entity is still in the entity registry
+                # by checking self._removed_from_registry
+                #
+                # Because self.registry_entry is unset in a task,
+                # its possible that the entity has been removed but
+                # the task has not yet been executed.
+                #
+                # self._removed_from_registry is set to True in a
+                # callback which does not have the same issue.
+                #
+                and not self._removed_from_registry
+            ):
+                # Set the entity's state will to unavailable and
+                # EntityStateAttribute.RESTORED: True
+                self.registry_entry.write_unavailable_state(self.hass)
+            else:
+                self.hass.states.async_remove(self.entity_id, context=self._context)
 
     async def async_prepare_to_add_to_hass(self) -> None:
         """Run before the entity is added to hass.
@@ -1633,7 +1645,7 @@ class Entity(
         """
         # The check for self.platform guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2026.8
-        if self.platform:
+        if self.platform:  # type: ignore[truthy-bool]
             del entity_sources(self.hass)[self.entity_id]
 
         if self.__group is not None:
@@ -1675,20 +1687,25 @@ class Entity(
         Called when self.entity_id is already the new entity_id, core bookkeeping
         (entity registry and device registry tracking, entity sources, restore
         state) has been moved to it and async_registry_entry_updated has run; the
-        old state has already been removed.
+        old state has already been removed but the new state has not been written.
 
         Re-key anything the state or attributes are derived from which depends on
         the entity_id, e.g. state change listeners or signals keyed on
-        self.entity_id. Writing the state is optional, core writes it after this
-        method returns if it has not been written under the new entity_id.
+        self.entity_id.
 
         Work which needs the state under the new entity_id, e.g. templates
-        rendering `this`, writes it with self.async_write_ha_state() first. This
-        method must not await; work which must await can be done in a task,
+        rendering `this`, may optionally write the state by calling
+        self.async_write_ha_state() first.
+
+        After the method returns, core will write the state under the new entity_id
+        if the method did not write it.
+
+        Call super() so base classes can do the same. If the method writes the state
+        the call to super() must happen before doing so.
+
+        This method must not await; work which must await can be done in a task,
         registry events are not serialized with it, so after an await re-check
         that the entity is still added and that self.entity_id is unchanged.
-
-        Call super() so base classes can do the same.
 
         To be extended by integrations.
 
@@ -1781,7 +1798,8 @@ class Entity(
     ) -> None:
         """Remove the entity and add it again with its new entity_id.
 
-        Used for entities which have not opted in to async_entity_id_changed.
+        Used for entities of custom integrations which have not opted in to
+        async_entity_id_changed.
         Can be removed in Home Assistant Core 2027.11.
         """
         await self.async_remove(force_remove=True)
@@ -1892,7 +1910,7 @@ class Entity(
         """Suggest to report an issue."""
         # The check for self.platform_data guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2026.8
-        platform_name = self.platform_data.platform_name if self.platform_data else None
+        platform_name = self.platform_data.platform_name if self.platform_data else None  # type: ignore[truthy-bool]
         return async_suggest_report_issue(
             self.hass, integration_domain=platform_name, module=type(self).__module__
         )

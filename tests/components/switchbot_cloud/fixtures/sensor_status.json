@@ -461,5 +461,16 @@
     "doorState": 1,
     "online": true,
     "version": "V3.1-6.3"
+  },
+  {
+    "version": "V0.5-0.3",
+    "temperature": 24.4,
+    "lightLevel": 10,
+    "humidity": 53,
+    "moveDetected": true,
+    "onlineStatus": "online",
+    "deviceId": "B0E9FE582974",
+    "deviceType": "Hub 4",
+    "hubDeviceId": "B0E9FE582974"
   }
 ]

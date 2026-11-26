@@ -4,14 +4,13 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 from laundrify_aio import exceptions
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.laundrify.const import DEFAULT_POLL_INTERVAL, DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_fire_time_changed
 
 # Device ID from fixtures/machines.json
 DEVICE_ID = "14"

@@ -1,0 +1,389 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_integer": "Enter a whole number.",
+      "same_unit": "The ventilation and heat pump unit IDs must be different."
+    },
+    "step": {
+      "serial": {
+        "data": {
+          "baudrate": "Baud rate",
+          "device": "[%key:common::config_flow::data::device%]",
+          "unit_heat_pump": "Heat pump unit",
+          "unit_ventilation": "Ventilation unit"
+        },
+        "data_description": {
+          "baudrate": "Speed of the Modbus RTU connection.",
+          "device": "Serial port connected to the aerosmart Modbus bus.",
+          "unit_heat_pump": "The heat pump / hot water controller's Modbus station address (default {default_unit_heat_pump}).",
+          "unit_ventilation": "The ventilation controller's Modbus station address (default {default_unit_ventilation})."
+        },
+        "description": "Enter the serial port and both station addresses used by the aerosmart installation."
+      },
+      "tcp": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_heat_pump": "[%key:component::aerosmart::config::step::serial::data::unit_heat_pump%]",
+          "unit_ventilation": "[%key:component::aerosmart::config::step::serial::data::unit_ventilation%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the Modbus TCP gateway.",
+          "port": "TCP port of the Modbus gateway (default {default_port}).",
+          "unit_heat_pump": "[%key:component::aerosmart::config::step::serial::data_description::unit_heat_pump%]",
+          "unit_ventilation": "[%key:component::aerosmart::config::step::serial::data_description::unit_ventilation%]"
+        },
+        "description": "Enter the Modbus TCP gateway and the two station addresses used by the aerosmart installation."
+      },
+      "user": {
+        "description": "Choose whether the aerosmart Modbus bus is reached through a TCP gateway or a serial port.",
+        "menu_options": {
+          "serial": "Serial port (Modbus RTU)",
+          "tcp": "Network (Modbus TCP)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "aggregate_fault_stoerung_summenstoerung": {
+        "name": "Aggregate fault"
+      },
+      "aggregate_fault_stoerung_summenstoerung2": {
+        "name": "Aggregate fault 2"
+      },
+      "carbon_dioxide_co2_sensor_available": {
+        "name": "CO2 sensor installed"
+      },
+      "carbon_dioxide_stoerung_co2_sensor": {
+        "name": "CO2 sensor fault"
+      },
+      "coarse_dust_filter_grobstaubfilter_vorhanden": {
+        "name": "Coarse dust filter installed"
+      },
+      "coarse_dust_filter_grobstaubfilter_wechseln": {
+        "name": "Replace coarse dust filter"
+      },
+      "cooling_kuehlung_vorhanden": {
+        "name": "Cooling installed"
+      },
+      "fans_anforderung_ventilatoren_durch_waermepumpe": {
+        "name": "Fan request from heat pump"
+      },
+      "fans_anforderung_ventilatoren_durch_zonenregelung": {
+        "name": "Fan request from zone control"
+      },
+      "fans_stoerung_abluftventilator": {
+        "name": "Extract air fan fault"
+      },
+      "fans_stoerung_zuluftventilator": {
+        "name": "Supply air fan fault"
+      },
+      "fine_dust_filter_feinstaubfilter_vorhanden": {
+        "name": "Fine dust filter installed"
+      },
+      "fine_dust_filter_feinstaubfilter_wechseln": {
+        "name": "Replace fine dust filter"
+      },
+      "fire_alarm_brandmeldealarm": {
+        "name": "Fire alarm"
+      },
+      "fire_alarm_brandmeldealarm_vorhanden": {
+        "name": "Fire alarm system installed"
+      },
+      "fire_alarm_kontakt_brandmeldealarm": {
+        "name": "Fire alarm contact"
+      },
+      "general_relaykontakt_ext_lu": {
+        "name": "External ventilation relay contact"
+      },
+      "heat_pump_wp_kontakt_evu": {
+        "name": "Utility contact"
+      },
+      "heat_pump_wp_relaiskontakt_ext": {
+        "name": "External heat pump relay contact"
+      },
+      "hot_water_heat_pump_wp_elektroheizstab_vorhanden": {
+        "name": "Electric heater installed"
+      },
+      "hot_water_ventilation_anforderung_brauchwasserheizung_elektroheizstab": {
+        "name": "Hot water electric heater request"
+      },
+      "hot_water_ventilation_anforderung_brauchwasserheizung_waermepumpe": {
+        "name": "Hot water heat pump request"
+      },
+      "hot_water_ventilation_anforderung_disbalance_boilerueberwaermung": {
+        "name": "Boiler overheating imbalance request"
+      },
+      "hot_water_ventilation_stoerung_boiler_uebertemperatur": {
+        "name": "Boiler overtemperature fault"
+      },
+      "hot_water_ventilation_stoerung_boilerfuehler_waermepumpe": {
+        "name": "Heat pump boiler sensor fault"
+      },
+      "hot_water_ventilation_stoerung_elektroheizstab": {
+        "name": "Electric heater fault"
+      },
+      "outside_temperature_aussenluftfuehler_vorhanden": {
+        "name": "Outdoor air sensor installed"
+      },
+      "outside_temperature_stoerung_temperaturfuehler_aussenluft": {
+        "name": "Outdoor air temperature sensor fault"
+      },
+      "outside_temperature_stoerung_temperaturfuehler_sole_aussenluft": {
+        "name": "Outdoor brine temperature sensor fault"
+      },
+      "room_temperature_anforderung_raum_heizstufe_1": {
+        "name": "Room heating stage 1 request"
+      },
+      "room_temperature_anforderung_raum_heizstufe_2": {
+        "name": "Room heating stage 2 request"
+      },
+      "room_temperature_stoerung_temperaturfuehler_raum": {
+        "name": "Room temperature sensor fault"
+      },
+      "room_temperature_timeout_soll_temp_raum": {
+        "name": "Room target temperature timeout"
+      },
+      "room_temperature_timeout_temp_fuehler_raum": {
+        "name": "Room temperature sensor timeout"
+      },
+      "summer_bypass_anforderung_sommerautomatik": {
+        "name": "Summer bypass request"
+      },
+      "summer_bypass_function_sommerautomatik": {
+        "name": "Summer bypass"
+      },
+      "utility_lockout_evu_sperre_brauchwasser_aktiv": {
+        "name": "Hot water utility lockout"
+      },
+      "utility_lockout_evu_sperre_elektroheizstab_aktiv": {
+        "name": "Electric heater utility lockout"
+      },
+      "utility_lockout_evu_sperre_raumheizung_aktiv": {
+        "name": "Space heating utility lockout"
+      },
+      "utility_lockout_evu_vorhanden": {
+        "name": "Utility control installed"
+      },
+      "ventilation_anforderung_abtauen": {
+        "name": "Defrost request"
+      },
+      "ventilation_anforderung_beschattung": {
+        "name": "Shading request"
+      },
+      "ventilation_anforderung_st3_ext": {
+        "name": "External fan level 3 request"
+      },
+      "ventilation_stoerung_teilnehmer_nicht_erreichbar": {
+        "name": "Controller participant unreachable"
+      },
+      "ventilation_stoerung_temperaturfuehler_verdampferregister": {
+        "name": "Evaporator temperature sensor fault"
+      },
+      "ventilation_stoerung_waermepumpe_hochdruck": {
+        "name": "Heat pump high pressure fault"
+      },
+      "ventilation_stoerung_waermepumpe_niederdruck": {
+        "name": "Heat pump low pressure fault"
+      },
+      "ventilation_stoerung_wert_nicht_zulaessig": {
+        "name": "Invalid controller value"
+      }
+    },
+    "number": {
+      "domestic_hot_water_temperature_setpoint": {
+        "name": "Domestic hot water temperature setpoint"
+      },
+      "room_temperature_setpoint": {
+        "name": "Room temperature setpoint"
+      }
+    },
+    "select": {
+      "ventilation_mode": {
+        "name": "Ventilation mode",
+        "state": {
+          "automatic": "Automatic",
+          "manual_0": "Manual level 0",
+          "manual_1": "Manual level 1",
+          "manual_2": "Manual level 2",
+          "manual_3": "Manual level 3",
+          "party": "Party"
+        }
+      }
+    },
+    "sensor": {
+      "air_condenser_solenoid_valve_operating_hours": {
+        "name": "Air condenser solenoid valve operating hours"
+      },
+      "brine_temperature_after_outdoor_air_preheating": {
+        "name": "Brine temperature after outdoor air preheating"
+      },
+      "coarse_dust_filter_maximum_conveyed_volume": {
+        "name": "Coarse dust filter maximum conveyed volume"
+      },
+      "coarse_dust_filter_operating_hours": {
+        "name": "Coarse dust filter operating hours"
+      },
+      "coarse_dust_filter_service_life": {
+        "name": "Coarse dust filter service life"
+      },
+      "compressor_motor_operating_hours": {
+        "name": "Compressor motor operating hours"
+      },
+      "conveyed_air_volume_since_filter_change": {
+        "name": "Conveyed air volume since filter change"
+      },
+      "domestic_hot_water_temperature_space_heating_lockout": {
+        "name": "Domestic hot water temperature space heating lockout"
+      },
+      "electric_heating_element_operating_hours": {
+        "name": "Electric heating element operating hours"
+      },
+      "evaporator_coil_temperature": {
+        "name": "Evaporator coil temperature"
+      },
+      "extract_air_fan_actual_speed": {
+        "name": "Extract air fan actual speed"
+      },
+      "extract_air_fan_operating_hours": {
+        "name": "Extract air fan operating hours"
+      },
+      "fan_level_operating_hours": {
+        "name": "Fan level {level} operating hours"
+      },
+      "fan_level_reduction": {
+        "name": "Fan level reduction"
+      },
+      "fine_dust_filter_operating_hours": {
+        "name": "Fine dust filter operating hours"
+      },
+      "fine_dust_filter_service_life": {
+        "name": "Fine dust filter service life"
+      },
+      "frost_protection_operating_hours": {
+        "name": "Frost protection operating hours"
+      },
+      "heat_pump_status": {
+        "name": "Heat pump status",
+        "state": {
+          "brine_pump_lead_time": "Brine pump lead time",
+          "defrosting": "Defrosting",
+          "draining_after_defrost": "Draining after defrost",
+          "fan_lead_time": "Fan lead time",
+          "minimum_runtime": "Minimum runtime",
+          "off": "Off",
+          "on": "On",
+          "opening_hot_gas_valve": "Opening hot gas valve",
+          "opening_liquid_refrigerant_valve": "Opening liquid refrigerant valve",
+          "pumping_down_for_defrost": "Pumping down for defrost",
+          "pumping_down_refrigerant": "Pumping down refrigerant",
+          "restart_lockout": "Restart lockout",
+          "starting_compressor": "Starting compressor"
+        }
+      },
+      "heating_stage_operating_hours": {
+        "name": "Heating stage {stage} operating hours"
+      },
+      "hot_gas_solenoid_valve_operating_hours": {
+        "name": "Hot gas solenoid valve operating hours"
+      },
+      "hot_water_heat_pump_temperature": {
+        "name": "Hot water heat pump temperature"
+      },
+      "hot_water_tank_upper_temperature": {
+        "name": "Hot water tank upper temperature"
+      },
+      "liquid_refrigerant_solenoid_valve_operating_hours": {
+        "name": "Liquid refrigerant solenoid valve operating hours"
+      },
+      "maximum_permissible_extract_air_fan_speed": {
+        "name": "Maximum permissible extract air fan speed"
+      },
+      "maximum_permissible_supply_air_fan_speed": {
+        "name": "Maximum permissible supply air fan speed"
+      },
+      "outdoor_air_brine_circuit_operating_hours": {
+        "name": "Outdoor air brine circuit operating hours"
+      },
+      "outdoor_air_temperature": {
+        "name": "Outdoor air temperature"
+      },
+      "outdoor_air_temperature_airflow_reduction": {
+        "name": "Outdoor air temperature airflow reduction {percentage}%"
+      },
+      "outdoor_air_temperature_cooling_off": {
+        "name": "Outdoor air temperature cooling off"
+      },
+      "outdoor_air_temperature_cooling_on": {
+        "name": "Outdoor air temperature cooling on"
+      },
+      "outdoor_air_temperature_frost_protection": {
+        "name": "Outdoor air temperature frost protection"
+      },
+      "outdoor_air_temperature_frost_protection_off": {
+        "name": "Outdoor air temperature frost protection off"
+      },
+      "outdoor_air_temperature_frost_protection_on": {
+        "name": "Outdoor air temperature frost protection on"
+      },
+      "outdoor_air_temperature_heating_and_cooling_threshold": {
+        "name": "Outdoor air temperature heating and cooling threshold"
+      },
+      "outdoor_air_temperature_shading": {
+        "name": "Outdoor air temperature shading"
+      },
+      "outdoor_air_temperature_summer_mode_off": {
+        "name": "Outdoor air temperature summer mode off"
+      },
+      "outdoor_air_temperature_summer_mode_on": {
+        "name": "Outdoor air temperature summer mode on"
+      },
+      "room_air_temperature": {
+        "name": "Room air temperature"
+      },
+      "room_temperature_shading": {
+        "name": "Room temperature shading"
+      },
+      "shading_operating_hours": {
+        "name": "Shading operating hours"
+      },
+      "supply_air_fan_actual_speed": {
+        "name": "Supply air fan actual speed"
+      },
+      "supply_air_fan_operating_hours": {
+        "name": "Supply air fan operating hours"
+      },
+      "supply_and_extract_airflow_balance": {
+        "name": "Supply and extract airflow balance"
+      },
+      "target_extract_airflow": {
+        "name": "Target extract airflow"
+      },
+      "target_supply_airflow": {
+        "name": "Target supply airflow"
+      },
+      "temporary_boiler_temperature": {
+        "name": "Temporary boiler temperature"
+      },
+      "total_conveyed_air_volume": {
+        "name": "Total conveyed air volume"
+      }
+    }
+  },
+  "exceptions": {
+    "connect_failed": {
+      "message": "Failed to connect to aerosmart: {error}"
+    },
+    "update_failed": {
+      "message": "Error communicating with aerosmart: {error}"
+    },
+    "write_failed": {
+      "message": "Failed to write aerosmart control {field}."
+    }
+  }
+}

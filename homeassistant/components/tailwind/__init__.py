@@ -10,7 +10,7 @@ from .coordinator import TailwindConfigEntry, TailwindDataUpdateCoordinator
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.COVER, Platform.NUMBER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TailwindConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TailwindConfigEntry) -> None:
     """Set up Tailwind device from a config entry."""
     coordinator = TailwindDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -32,9 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TailwindConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TailwindConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TailwindConfigEntry) -> None:
     """Unload Tailwind config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

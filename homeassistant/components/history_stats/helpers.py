@@ -1,13 +1,26 @@
 """Helpers to make instant statistics about your history."""
 
-import datetime
+from collections.abc import Mapping
+from dataclasses import dataclass
+import datetime as dt
 import logging
 import math
+from typing import Any
 
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util
+
+from .const import (
+    CONF_DURATION,
+    CONF_END,
+    CONF_PERIOD,
+    CONF_START,
+    CONF_TYPE_RATIO,
+    Period,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,16 +28,61 @@ _LOGGER = logging.getLogger(__name__)
 DURATION_START = "start"
 DURATION_END = "end"
 
+PERIOD_TEMPLATES: dict[Period, tuple[str | None, str]] = {
+    Period.TODAY: ("{{ today_at() }}", "{{ now() }}"),
+    Period.YESTERDAY: ("{{ today_at() - timedelta(days=1) }}", "{{ today_at() }}"),
+    Period.ROLLING_WINDOW: (None, "{{ now() }}"),
+}
+
+
+@dataclass(frozen=True, slots=True)
+class PeriodConfig:
+    """Period and state class resolved from config entry options."""
+
+    start: str | None
+    end: str | None
+    duration: dt.timedelta | None
+    state_class: SensorStateClass | None
+
+
+def resolve_period_config(options: Mapping[str, Any], sensor_type: str) -> PeriodConfig:
+    """Resolve the period and state class of a period preset."""
+    duration: dt.timedelta | None = None
+    if duration_dict := options.get(CONF_DURATION):
+        duration = dt.timedelta(**duration_dict)
+
+    if (period := Period(options[CONF_PERIOD])) is Period.CUSTOM:
+        return PeriodConfig(
+            options.get(CONF_START),
+            options.get(CONF_END),
+            duration,
+            options.get(CONF_STATE_CLASS),
+        )
+
+    start, end = PERIOD_TEMPLATES[period]
+    # Yesterday's value jumps at midnight, which total_increasing would count as growth
+    state_class = (
+        SensorStateClass.TOTAL_INCREASING
+        if period == Period.TODAY and sensor_type != CONF_TYPE_RATIO
+        else SensorStateClass.MEASUREMENT
+    )
+    return PeriodConfig(
+        start,
+        end,
+        duration if period == Period.ROLLING_WINDOW else None,
+        state_class,
+    )
+
 
 @callback
 def async_calculate_period(
-    duration: datetime.timedelta | None,
+    duration: dt.timedelta | None,
     start_template: Template | None,
     end_template: Template | None,
     log_errors: bool = True,
-) -> tuple[datetime.datetime, datetime.datetime]:
+) -> tuple[dt.datetime, dt.datetime]:
     """Parse the templates and return the period."""
-    bounds: dict[str, datetime.datetime | None] = {
+    bounds: dict[str, dt.datetime | None] = {
         DURATION_START: None,
         DURATION_END: None,
     }
@@ -76,17 +134,18 @@ def async_calculate_period(
     return start, end
 
 
-def pretty_ratio(
-    value: float, period: tuple[datetime.datetime, datetime.datetime]
-) -> float:
+def pretty_ratio(value: float, period: tuple[dt.datetime, dt.datetime]) -> float:
     """Format the ratio of value / period duration."""
-    if len(period) != 2 or period[0] == period[1]:
+    # Subtracting datetimes of the same time zone ignores daylight saving changes
+    duration = dt_util.as_utc(period[1]) - dt_util.as_utc(period[0])
+    # Bounds in a skipped hour can be distinct datetimes at the same instant
+    if not duration:
         return 0.0
 
-    ratio = 100 * value / (period[1] - period[0]).total_seconds()
+    ratio = 100 * value / duration.total_seconds()
     return round(ratio, 1)
 
 
-def floored_timestamp(incoming_dt: datetime.datetime) -> float:
+def floored_timestamp(incoming_dt: dt.datetime) -> float:
     """Calculate the floored value of a timestamp."""
     return math.floor(dt_util.as_timestamp(incoming_dt))

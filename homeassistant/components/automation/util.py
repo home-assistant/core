@@ -15,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import condition as condition_helper
+from homeassistant.helpers import condition as condition_helper, issue_registry as ir
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.script import CONF_MAX, CONF_MAX_EXCEEDED, Script
 from homeassistant.helpers.script_variables import ScriptVariables
@@ -237,22 +237,49 @@ async def async_process_config(
     # Find automations and configurations which have matches
     automation_matches, config_matches = find_matches(automations, automation_configs)
 
-    # Remove automations which have changed config or no longer exist
-    tasks = [
-        automation.async_remove()
-        for idx, automation in enumerate(automations)
-        if idx not in automation_matches
-    ]
-    await asyncio.gather(*tasks)
+    # Replace automations which have changed config, no longer exist or were added
+    await _async_replace_automations(
+        hass,
+        component,
+        [
+            automation
+            for idx, automation in enumerate(automations)
+            if idx not in automation_matches
+        ],
+        [
+            config
+            for idx, config in enumerate(automation_configs)
+            if idx not in config_matches
+        ],
+    )
 
-    # Create automations which have changed config or have been added
-    updated_automation_configs = [
-        config
-        for idx, config in enumerate(automation_configs)
-        if idx not in config_matches
+
+async def _async_replace_automations(
+    hass: HomeAssistant,
+    component: EntityComponent[BaseAutomationEntity],
+    old_automations: list[BaseAutomationEntity],
+    automation_configs: list[AutomationEntityConfig],
+) -> None:
+    """Remove old automations and add automations created from configs.
+
+    Repair issues of removed automations are kept if they are re-created by the new
+    automations, which preserves the user's ignore flag.
+    """
+    broken_automations = [
+        automation
+        for automation in old_automations
+        if isinstance(automation, UnavailableAutomationEntity)
     ]
-    entities = await _create_automation_entities(hass, updated_automation_configs)
-    await component.async_add_entities(entities)
+    with ir.async_refresh_issues(
+        hass,
+        DOMAIN,
+        issue_ids=[automation.repair_issue_id for automation in broken_automations],
+    ):
+        await asyncio.gather(
+            *(automation.async_remove() for automation in old_automations)
+        )
+        entities = await _create_automation_entities(hass, automation_configs)
+        await component.async_add_entities(entities)
 
 
 def _automation_matches_config(
@@ -284,10 +311,9 @@ async def async_process_single_config(
     if _automation_matches_config(automation, automation_config):
         return
 
-    if automation:
-        await automation.async_remove()
-    entities = await _create_automation_entities(hass, automation_configs)
-    await component.async_add_entities(entities)
+    await _async_replace_automations(
+        hass, component, [automation] if automation else [], automation_configs
+    )
 
 
 async def _async_process_if(

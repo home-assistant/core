@@ -7,6 +7,8 @@ from unittest.mock import MagicMock, patch
 
 from aiohttp.hdrs import AUTHORIZATION
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.html5.const import ATTR_ACTION, ATTR_TAG, DOMAIN
@@ -19,9 +21,6 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .test_notify import SUBSCRIPTION_1
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture

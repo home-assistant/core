@@ -1,13 +1,16 @@
 """Test reproduce state for Light."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import light
-from homeassistant.components.light import DOMAIN
+from homeassistant.components.light import (
+    DOMAIN,
+    LightEntityStateAttribute,
+    LightServiceArgument,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
-
-from tests.common import async_mock_service
 
 VALID_BRIGHTNESS = {"brightness": 180}
 VALID_EFFECT = {"effect": "random"}
@@ -176,7 +179,9 @@ async def test_filter_color_modes(
         },
         light.ColorMode.WHITE: {
             **VALID_BRIGHTNESS,
-            light.ATTR_WHITE: VALID_BRIGHTNESS[light.ATTR_BRIGHTNESS],
+            LightServiceArgument.WHITE: VALID_BRIGHTNESS[
+                LightEntityStateAttribute.BRIGHTNESS
+            ],
         },
         light.ColorMode.XY: {**VALID_BRIGHTNESS, **VALID_XY_COLOR},
     }

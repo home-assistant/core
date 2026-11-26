@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN, HassioNotReadyError
 from homeassistant.components.homeassistant_green.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
-from tests.typing import WebSocketGenerator
 
 
 async def test_hardware_info(

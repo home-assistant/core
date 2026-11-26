@@ -95,9 +95,6 @@
       "base_station_identity_code": {
         "name": "Base station identity code"
       },
-      "battery": {
-        "name": "Battery"
-      },
       "cell_id": {
         "name": "Cell ID"
       },

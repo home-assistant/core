@@ -314,7 +314,7 @@
           "id": "2940411577",
           "reachable": true,
           "therm_measured_temperature": 27,
-          "heating_power_request": 0,
+          "heating_power_request": 35,
           "therm_setpoint_temperature": 7,
           "therm_setpoint_mode": "hg",
           "therm_setpoint_start_time": 0,
@@ -345,6 +345,18 @@
           "therm_setpoint_temperature": 22,
           "therm_setpoint_start_time": 1647462737,
           "therm_setpoint_end_time": null,
+          "therm_setpoint_mode": "home"
+        },
+        {
+          "id": "222452125",
+          "reachable": true,
+          "anticipating": false,
+          "heating_power_request": 0,
+          "open_window": false,
+          "therm_measured_temperature": 21.5,
+          "therm_setpoint_temperature": 19,
+          "therm_setpoint_start_time": 0,
+          "therm_setpoint_end_time": 0,
           "therm_setpoint_mode": "home"
         }
       ],

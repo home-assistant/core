@@ -15,7 +15,8 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
 from ..const import DOMAIN
-from ..entity import OverkizDataUpdateCoordinator, OverkizEntity
+from ..coordinator import OverkizDataUpdateCoordinator
+from ..entity import OverkizEntity
 
 OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.MANU: HVACMode.HEAT,
@@ -62,7 +63,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         super().__init__(device_url, coordinator)
 
         if self._attr_device_info:
-            self._attr_device_info["manufacturer"] = "Hitachi"
+            self._attr_device_info.manufacturer = "Hitachi"
 
         if "Zone2" in self.device.controllable_name:
             self._auto_manu_mode_state = OverkizState.MODBUS_AUTO_MANU_MODE_ZONE2

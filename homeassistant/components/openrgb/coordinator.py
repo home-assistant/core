@@ -26,6 +26,43 @@ _LOGGER = logging.getLogger(__name__)
 type OpenRGBConfigEntry = ConfigEntry[OpenRGBCoordinator]
 
 
+def stable_location(location: str) -> str:
+    """Return the location with any unstable part replaced.
+
+    Some locations hold the path the device is currently reached through, which
+    the system reassigns when the device reconnects and on every reboot. A HID or
+    USB location is entirely such a path, for example "HID: /dev/hidraw14", so it
+    is replaced with a constant naming the bus. An I2C location is
+    "I2C: <bus>, <address>", where Linux renumbers the bus but the address is
+    fixed, so only the bus is replaced.
+
+    The constants carry an index so that a later change can tell two otherwise
+    identical devices apart as "hid_1" without needing a second migration.
+
+    OpenRGB applies the same reasoning when matching a saved profile to a live
+    controller, ignoring a HID location outright and comparing only the text
+    after the last ", " of an I2C one:
+    https://gitlab.com/CalcProgrammer1/OpenRGB/-/blob/f03b3472ea6291d005fa72fb628cdf411ebe24cd/ProfileManager.cpp#L1318-1347
+
+    It differs in one way that matters here. OpenRGB ignores a HID location for
+    any device, with or without a serial. A profile match can tolerate being
+    ambiguous, but a unique id cannot: two identical devices that both report no
+    serial would collapse onto one entity and one of them would disappear. This
+    is therefore only ever called for a device that reports a serial, and the
+    location of a device without one is left alone so it stays distinct.
+    """
+    if location.startswith("HID: "):
+        return "hid_0"
+    if location.startswith("USB: "):
+        return "usb_0"
+    if location.startswith("I2C: "):
+        # Two devices can share an address on different buses, but this is only
+        # reached when a serial is present, which already tells them apart
+        _, separator, address = location.rpartition(", ")
+        return f"i2c_0, {address}" if separator else location
+    return location
+
+
 class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to manage fetching OpenRGB data."""
 
@@ -108,14 +145,28 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
         Note: the OpenRGB device.id is intentionally not used because it is just
         a positional index that can change when devices are added or removed.
+
+        A device that reports a serial is identified by that serial, so any
+        unstable part of its location is replaced; see stable_location.
         """
+        # Devices that cannot report a serial may return padding instead, and
+        # "none" is the value written for a serial the device did not report, so
+        # it cannot also act as one
+        serial = (device.metadata.serial or "").strip()
+        if serial == "none":
+            serial = ""
+        location = device.metadata.location or "none"
+
+        if serial:
+            location = stable_location(location)
+
         parts = (
             self.entry_id,
             device.type.name,
             device.metadata.vendor or "none",
             device.metadata.description or "none",
-            device.metadata.serial or "none",
-            device.metadata.location or "none",
+            serial or "none",
+            location,
         )
         # Double pipe is readable and is unlikely to appear in metadata
         return UID_SEPARATOR.join(parts)

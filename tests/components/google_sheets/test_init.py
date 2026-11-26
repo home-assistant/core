@@ -10,6 +10,8 @@ from freezegun import freeze_time
 from google.auth.exceptions import RefreshError
 from gspread.exceptions import APIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from requests.models import Response
 from syrupy.assertion import SnapshotAssertion
 
@@ -20,13 +22,8 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.google_sheets.const import DOMAIN
 from homeassistant.components.google_sheets.services import (
-    ADD_CREATED_COLUMN,
-    DATA,
-    DATA_CONFIG_ENTRY,
-    ROWS,
-    SERVICE_APPEND_SHEET,
-    SERVICE_GET_SHEET,
-    WORKSHEET,
+    GoogleSheetsService,
+    GoogleSheetsServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -40,9 +37,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_SHEET_ID = "google-sheet-it"
 
@@ -222,21 +216,18 @@ async def test_setup_oauth_reauth_error(
         DOMAIN,
     )
 
-    with (
-        patch.object(config_entry, "async_start_reauth") as mock_async_start_reauth,
-        patch(
-            "homeassistant.components.google_sheets.OAuth2Session.async_ensure_token_valid",
-            side_effect=OAuth2TokenRequestReauthError(
-                domain=DOMAIN, request_info=Mock()
-            ),
-        ),
+    with patch(
+        "homeassistant.components.google_sheets.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestReauthError(domain=DOMAIN, request_info=Mock()),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_async_start_reauth.assert_called_once_with(hass, None, None)
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
 
 
 async def test_setup_oauth_transient_error(
@@ -269,8 +260,11 @@ async def test_setup_oauth_transient_error(
 @pytest.mark.parametrize(
     ("add_created_column_param", "expected_row"),
     [
-        ({ADD_CREATED_COLUMN: True}, ["bar", "2024-01-15 04:30:45.123456-08:00"]),
-        ({ADD_CREATED_COLUMN: False}, ["bar", ""]),
+        (
+            {GoogleSheetsServiceArgument.ADD_CREATED_COLUMN: True},
+            ["bar", "2024-01-15 04:30:45.123456-08:00"],
+        ),
+        ({GoogleSheetsServiceArgument.ADD_CREATED_COLUMN: False}, ["bar", ""]),
         ({}, ["bar", "2024-01-15 04:30:45.123456-08:00"]),
     ],
     ids=["created_column_true", "created_column_false", "created_column_default"],
@@ -298,11 +292,11 @@ async def test_append_sheet(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_APPEND_SHEET,
+            GoogleSheetsService.APPEND_SHEET,
             {
-                DATA_CONFIG_ENTRY: config_entry.entry_id,
-                WORKSHEET: "Sheet1",
-                DATA: {"foo": "bar"},
+                GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                GoogleSheetsServiceArgument.WORKSHEET: "Sheet1",
+                GoogleSheetsServiceArgument.DATA: {"foo": "bar"},
                 **add_created_column_param,
             },
             blocking=True,
@@ -311,6 +305,56 @@ async def test_append_sheet(
         mock_worksheet.append_rows.assert_called_once()
         rows_data = mock_worksheet.append_rows.call_args[0][0]
         assert rows_data[0] == expected_row
+
+
+@pytest.mark.parametrize(
+    ("header", "col_count", "expected_add_cols"),
+    [
+        pytest.param([f"col_{i}" for i in range(26)], 26, 1, id="grid_full"),
+        pytest.param(["foo"], 26, None, id="grid_has_room"),
+    ],
+)
+async def test_append_sheet_grows_grid_for_new_columns(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    header: list[str],
+    col_count: int,
+    expected_add_cols: int | None,
+) -> None:
+    """Test append to sheet adds grid columns before writing a header past the last one."""
+    await setup_integration()
+
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        mock_worksheet = (
+            mock_client.return_value.open_by_key.return_value.worksheet.return_value
+        )
+        mock_worksheet.get_values.return_value = [list(header)]
+        mock_worksheet.col_count = col_count
+
+        def add_cols(cols: int) -> None:
+            mock_worksheet.col_count += cols
+
+        mock_worksheet.add_cols.side_effect = add_cols
+
+        await hass.services.async_call(
+            DOMAIN,
+            GoogleSheetsService.APPEND_SHEET,
+            {
+                GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                GoogleSheetsServiceArgument.WORKSHEET: "Sheet1",
+                GoogleSheetsServiceArgument.DATA: {"new_column": "baz"},
+                GoogleSheetsServiceArgument.ADD_CREATED_COLUMN: False,
+            },
+            blocking=True,
+        )
+
+    if expected_add_cols is None:
+        mock_worksheet.add_cols.assert_not_called()
+    else:
+        mock_worksheet.add_cols.assert_called_once_with(expected_add_cols)
+    mock_worksheet.update_cell.assert_called_once_with(1, len(header) + 1, "new_column")
+    mock_worksheet.append_rows.assert_called_once()
 
 
 @freeze_time("2024-01-15 12:30:45.123456")
@@ -335,12 +379,12 @@ async def test_append_sheet_created_column_uses_configured_time_zone(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_APPEND_SHEET,
+            GoogleSheetsService.APPEND_SHEET,
             {
-                DATA_CONFIG_ENTRY: config_entry.entry_id,
-                WORKSHEET: "Sheet1",
-                DATA: {"foo": "bar"},
-                ADD_CREATED_COLUMN: True,
+                GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                GoogleSheetsServiceArgument.WORKSHEET: "Sheet1",
+                GoogleSheetsServiceArgument.DATA: {"foo": "bar"},
+                GoogleSheetsServiceArgument.ADD_CREATED_COLUMN: True,
             },
             blocking=True,
         )
@@ -372,11 +416,11 @@ async def test_get_sheet(
         ]
         response = await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_SHEET,
+            GoogleSheetsService.GET_SHEET,
             {
-                DATA_CONFIG_ENTRY: config_entry.entry_id,
-                WORKSHEET: "Sheet1",
-                ROWS: 2,
+                GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                GoogleSheetsServiceArgument.WORKSHEET: "Sheet1",
+                GoogleSheetsServiceArgument.ROWS: 2,
             },
             blocking=True,
             return_response=True,
@@ -398,6 +442,7 @@ async def test_append_sheet_multiple_rows(
     assert entries[0].state is ConfigEntryState.LOADED
 
     with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        mock_client.return_value.open_by_key.return_value.worksheet.return_value.col_count = 26
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -422,13 +467,14 @@ async def test_append_sheet_defaults_to_first_worksheet(
     with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
         sheet = mock_client.return_value.open_by_key.return_value
         sheet.sheet1.get_values.return_value = [["foo"]]
+        sheet.sheet1.col_count = 26
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_APPEND_SHEET,
+            GoogleSheetsService.APPEND_SHEET,
             {
-                DATA_CONFIG_ENTRY: config_entry.entry_id,
-                DATA: {"foo": "bar"},
+                GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                GoogleSheetsServiceArgument.DATA: {"foo": "bar"},
             },
             blocking=True,
         )
@@ -440,8 +486,16 @@ async def test_append_sheet_defaults_to_first_worksheet(
 @pytest.mark.parametrize(
     ("service", "service_data"),
     [
-        pytest.param(SERVICE_APPEND_SHEET, {DATA: {"foo": "bar"}}, id="append_sheet"),
-        pytest.param(SERVICE_GET_SHEET, {ROWS: 2}, id="get_sheet"),
+        pytest.param(
+            GoogleSheetsService.APPEND_SHEET,
+            {GoogleSheetsServiceArgument.DATA: {"foo": "bar"}},
+            id="append_sheet",
+        ),
+        pytest.param(
+            GoogleSheetsService.GET_SHEET,
+            {GoogleSheetsServiceArgument.ROWS: 2},
+            id="get_sheet",
+        ),
     ],
 )
 async def test_refresh_error_starts_reauth(
@@ -464,9 +518,12 @@ async def test_refresh_error_starts_reauth(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {DATA_CONFIG_ENTRY: config_entry.entry_id, **service_data},
+            {
+                GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                **service_data,
+            },
             blocking=True,
-            return_response=service == SERVICE_GET_SHEET,
+            return_response=service == GoogleSheetsService.GET_SHEET,
         )
 
     await hass.async_block_till_done()
@@ -501,16 +558,20 @@ async def test_append_sheet_api_error_while_writing(
             mock_client.return_value.open_by_key.return_value.worksheet.return_value
         )
         mock_worksheet.get_values.return_value = [["foo"]]
+        mock_worksheet.col_count = 26
         setattr(mock_worksheet, failing_call, Mock(side_effect=APIError(response)))
 
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_APPEND_SHEET,
+                GoogleSheetsService.APPEND_SHEET,
                 {
-                    DATA_CONFIG_ENTRY: config_entry.entry_id,
-                    WORKSHEET: "Sheet1",
-                    DATA: {"foo": "bar", "new_column": "baz"},
+                    GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                    GoogleSheetsServiceArgument.WORKSHEET: "Sheet1",
+                    GoogleSheetsServiceArgument.DATA: {
+                        "foo": "bar",
+                        "new_column": "baz",
+                    },
                 },
                 blocking=True,
             )
@@ -536,11 +597,11 @@ async def test_get_sheet_api_error_while_reading(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_GET_SHEET,
+                GoogleSheetsService.GET_SHEET,
                 {
-                    DATA_CONFIG_ENTRY: config_entry.entry_id,
-                    WORKSHEET: "Sheet1",
-                    ROWS: 2,
+                    GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                    GoogleSheetsServiceArgument.WORKSHEET: "Sheet1",
+                    GoogleSheetsServiceArgument.ROWS: 2,
                 },
                 blocking=True,
                 return_response=True,
@@ -671,11 +732,11 @@ async def test_get_sheet_invalid_config_entry(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_SHEET,
+            GoogleSheetsService.GET_SHEET,
             {
-                DATA_CONFIG_ENTRY: config_entry.entry_id + "XXX",
-                WORKSHEET: "Sheet1",
-                ROWS: 2,
+                GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id + "XXX",
+                GoogleSheetsServiceArgument.WORKSHEET: "Sheet1",
+                GoogleSheetsServiceArgument.ROWS: 2,
             },
             blocking=True,
             return_response=True,
@@ -724,11 +785,11 @@ async def test_get_sheet_invalid_worksheet(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_GET_SHEET,
+                GoogleSheetsService.GET_SHEET,
                 {
-                    DATA_CONFIG_ENTRY: config_entry.entry_id,
-                    WORKSHEET: "DoesNotExist",
-                    ROWS: 2,
+                    GoogleSheetsServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                    GoogleSheetsServiceArgument.WORKSHEET: "DoesNotExist",
+                    GoogleSheetsServiceArgument.ROWS: 2,
                 },
                 blocking=True,
                 return_response=True,

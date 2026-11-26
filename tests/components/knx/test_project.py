@@ -9,17 +9,21 @@ left to whoever asks for it, so setup does not populate the cache.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
+from xknx.telegram.address import GroupAddress, GroupAddressType
 
+from homeassistant.components.knx import async_set_project
 from homeassistant.components.knx.const import KNX_MODULE_KEY
+from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import KNXTestKit
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("load_knxproj")
@@ -100,3 +104,305 @@ async def test_cache_is_refreshed_on_upload(
     assert res["success"], res
     knxproject = await project.get_knxproject()
     assert knxproject["info"]["name"] == "Reuploaded"
+
+
+@pytest.mark.usefixtures("load_knxproj")
+async def test_new_project_replaces_group_addresses(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    project_data: dict[str, Any],
+) -> None:
+    """Group addresses of a previous project don't stay with a new one."""
+    await knx.setup_integration()
+    project = hass.data[KNX_MODULE_KEY].project
+    xknx = hass.data[KNX_MODULE_KEY].xknx
+    assert "0/0/1" in project.group_addresses
+
+    new_data = {
+        **project_data,
+        "group_addresses": {
+            address: ga
+            for address, ga in project_data["group_addresses"].items()
+            if address != "0/0/1"
+        },
+    }
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "knx/project_file_process", "file_id": "1234", "password": ""}
+    )
+    with (
+        patch(
+            "homeassistant.components.knx.project.process_uploaded_file"
+        ) as file_upload_mock,
+        patch("xknxproject.XKNXProj.parse", return_value=new_data),
+    ):
+        file_upload_mock.return_value.__enter__.return_value = ""
+        res = await client.receive_json()
+
+    assert res["success"], res
+    assert "0/0/1" not in project.group_addresses
+    assert "0/0/2" in project.group_addresses
+    assert xknx.group_address_dpt.get(GroupAddress("0/0/1")) is None
+    assert xknx.group_address_dpt.get(GroupAddress("0/0/2")) is not None
+
+
+async def test_project_without_data(
+    hass: HomeAssistant, knx: KNXTestKit, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Without project data, group addresses are shown in the 3-level format."""
+    # a format left by another project; monkeypatch restores it on teardown
+    monkeypatch.setattr(GroupAddress, "address_format", GroupAddressType.SHORT)
+    await knx.setup_integration()
+    knx_module = hass.data[KNX_MODULE_KEY]
+
+    assert not knx_module.project.loaded
+    assert GroupAddress.address_format is GroupAddressType.LONG
+
+
+@pytest.mark.usefixtures("load_knxproj")
+async def test_set_project(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    current_project_data: dict[str, Any],
+    hass_storage: dict[str, Any],
+) -> None:
+    """Project data from another source is stored and loaded like an upload."""
+    await knx.setup_integration()
+    project = hass.data[KNX_MODULE_KEY].project
+    xknx = hass.data[KNX_MODULE_KEY].xknx
+    assert await project.get_knxproject() is not None
+    assert "0/0/3" in project.group_addresses
+
+    group_addresses = current_project_data["group_addresses"]
+    new_data = {
+        **current_project_data,
+        "group_addresses": {
+            address: ga for address, ga in group_addresses.items() if address != "1/0/0"
+        },
+    }
+    await async_set_project(hass, new_data)
+
+    assert project.info is not None
+    assert project.info["name"] == "xknx test project"
+    assert set(project.group_addresses) == set(group_addresses) - {"1/0/0"}
+    assert xknx.group_address_dpt.get(GroupAddress("0/0/3")) is None
+    assert xknx.group_address_dpt.get(GroupAddress("2/0/1")) is not None
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == new_data
+    knxproject = await project.get_knxproject()
+    assert knxproject is not None
+    assert knxproject["info"]["name"] == "xknx test project"
+
+
+async def test_set_project_keeps_unknown_data(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    current_project_data: dict[str, Any],
+    hass_storage: dict[str, Any],
+) -> None:
+    """Data the installed xknxproject doesn't know is stored as it is."""
+    await knx.setup_integration()
+    new_data = {
+        **current_project_data,
+        "new_section": {},
+        "group_addresses": {
+            address: {**ga, "new_key": "kept"}
+            for address, ga in current_project_data["group_addresses"].items()
+        },
+    }
+
+    await async_set_project(hass, new_data)
+
+    assert hass.data[KNX_MODULE_KEY].project.loaded
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == new_data
+
+
+def _without(data: dict[str, Any], key: str) -> dict[str, Any]:
+    return {k: v for k, v in data.items() if k != key}
+
+
+# a device of the test project with channels
+DEVICE = "1.1.7"
+CHANNEL = "MD-2_M-20_MI-1_CH-81"
+
+
+def _with_group_address(data: dict[str, Any], **changes: Any) -> dict[str, Any]:
+    group_address = data["group_addresses"]["1/0/0"]
+    return {
+        **data,
+        "group_addresses": {
+            **data["group_addresses"],
+            "1/0/0": {**group_address, **changes},
+        },
+    }
+
+
+def _with_device(data: dict[str, Any], device: dict[str, Any]) -> dict[str, Any]:
+    return {**data, "devices": {**data["devices"], DEVICE: device}}
+
+
+def _with_channel(data: dict[str, Any], **changes: Any) -> dict[str, Any]:
+    device = data["devices"][DEVICE]
+    channel = device["channels"][CHANNEL]
+    return _with_device(
+        data,
+        {**device, "channels": {**device["channels"], CHANNEL: {**channel, **changes}}},
+    )
+
+
+def _with_info(data: dict[str, Any], **changes: Any) -> dict[str, Any]:
+    return {**data, "info": {**data["info"], **changes}}
+
+
+async def test_set_project_two_level(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    current_project_data: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The group addresses of a two level project are taken."""
+    # loading sets the address format of xknx for the whole process: setting
+    # the attribute to its own value restores it on teardown
+    monkeypatch.setattr(GroupAddress, "address_format", GroupAddress.address_format)
+    await knx.setup_integration()
+    group_address = current_project_data["group_addresses"]["1/0/0"]
+    new_data = {
+        **_with_info(current_project_data, group_address_style="TwoLevel"),
+        "group_addresses": {"0/1": {**group_address, "address": "0/1"}},
+    }
+
+    await async_set_project(hass, new_data)
+
+    assert set(hass.data[KNX_MODULE_KEY].project.group_addresses) == {"0/1"}
+
+
+async def test_remove_project_resets_xknx(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    current_project_data: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Removing the project also removes what it set in xknx."""
+    # setting the attribute to its own value restores it on teardown
+    monkeypatch.setattr(GroupAddress, "address_format", GroupAddress.address_format)
+    await knx.setup_integration()
+    knx_module = hass.data[KNX_MODULE_KEY]
+    group_address = current_project_data["group_addresses"]["1/0/0"]
+    await async_set_project(
+        hass,
+        {
+            **_with_info(current_project_data, group_address_style="TwoLevel"),
+            "group_addresses": {"0/1": {**group_address, "address": "0/1"}},
+        },
+    )
+    assert GroupAddress.address_format is GroupAddressType.SHORT
+    assert knx_module.xknx.group_address_dpt.get(GroupAddress("0/1")) is not None
+
+    await knx_module.project.remove_project_file()
+
+    assert GroupAddress.address_format is GroupAddressType.LONG
+    assert knx_module.xknx.group_address_dpt.get(GroupAddress("0/1")) is None
+
+
+@pytest.mark.parametrize(
+    ("change", "translation_key"),
+    [
+        (lambda data: _without(data, "devices"), "project_data_invalid"),
+        (lambda data: _without(data, "functions"), "project_data_invalid"),
+        (
+            lambda data: {**data, "info": _without(data["info"], "name")},
+            "project_data_invalid",
+        ),
+        (
+            lambda data: _with_info(data, group_address_style="FourLevel"),
+            "project_data_invalid",
+        ),
+        (lambda data: _with_group_address(data, address="x/y"), "project_data_invalid"),
+        (
+            # the address is read from the field, but links refer to the key
+            lambda data: _with_group_address(data, address="1/0/1"),
+            "project_data_invalid",
+        ),
+        (
+            lambda data: _with_group_address(data, dpt={"main": "1", "sub": None}),
+            "project_data_invalid",
+        ),
+        (
+            lambda data: _with_device(data, _without(data["devices"][DEVICE], "name")),
+            "project_data_invalid",
+        ),
+        (
+            # the semantics entity suggestions read
+            lambda data: _with_device(
+                data, _without(data["devices"][DEVICE], "channels")
+            ),
+            "project_data_invalid",
+        ),
+        (
+            lambda data: _with_channel(data, functional_blocks="FB-1"),
+            "project_data_invalid",
+        ),
+        (
+            lambda data: {
+                **data,
+                "communication_objects": {
+                    object_id: _without(com_object, "dpas")
+                    for object_id, com_object in data["communication_objects"].items()
+                },
+            },
+            "project_data_invalid",
+        ),
+        (
+            lambda data: {
+                **_without(data, "trades"),
+                "info": {**data["info"], "xknxproject_version": "3.10.0"},
+            },
+            "project_data_incompatible",
+        ),
+        (
+            # a required key of the installed version
+            lambda data: _without(data, "trades"),
+            "project_data_invalid",
+        ),
+        (
+            lambda data: _with_info(data, xknxproject_version="99.0.0"),
+            "project_data_incompatible",
+        ),
+        (
+            lambda data: _with_info(data, xknxproject_version="unknown"),
+            "project_data_incompatible",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("load_knxproj")
+async def test_set_project_invalid_data(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    project_data: dict[str, Any],
+    current_project_data: dict[str, Any],
+    hass_storage: dict[str, Any],
+    change: Callable[[dict[str, Any]], dict[str, Any]],
+    translation_key: str,
+) -> None:
+    """Invalid or incompatible data is refused and the project is kept."""
+    await knx.setup_integration()
+    project = hass.data[KNX_MODULE_KEY].project
+    stored = hass_storage[KNX_PROJECT_STORAGE_KEY]
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await async_set_project(hass, change(current_project_data))
+
+    assert exc_info.value.translation_key == translation_key
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY] is stored
+    assert project.info == project_data["info"]
+    assert "0/0/3" in project.group_addresses
+
+
+async def test_set_project_not_loaded(
+    hass: HomeAssistant, current_project_data: dict[str, Any]
+) -> None:
+    """Project data needs a loaded KNX integration."""
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await async_set_project(hass, current_project_data)
+
+    assert exc_info.value.translation_key == "integration_not_loaded"

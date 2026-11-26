@@ -1,0 +1,107 @@
+{
+  "observations": [
+    {
+      "station": "Northolt",
+      "distance": "21 km W",
+      "time": "2026-11-06T14:20:00Z",
+      "temperature": 12,
+      "feelsLikeTemp": 12,
+      "symbol": "d000",
+      "windDirString": "E",
+      "windDir": 70,
+      "windSpeed": 1,
+      "windGust": null,
+      "pressure": 1022,
+      "relHumidity": 71,
+      "visibility": 8000,
+      "snowDepth": null,
+      "longitude": -0.42,
+      "latitude": 51.55,
+      "elevation": 38,
+      "precipitation": [
+        { "period": "1h", "endtime": "2026-11-06T14:00:00+00:00", "accum": 0 },
+        {
+          "period": "6h",
+          "endtime": "2026-11-06T12:00:00+00:00",
+          "accum": 0.8
+        },
+        {
+          "period": "12h",
+          "endtime": "2026-11-06T09:00:00+00:00",
+          "accum": 1.2
+        },
+        {
+          "period": "24h",
+          "endtime": "2026-11-06T06:00:00+00:00",
+          "accum": 0.4
+        }
+      ]
+    },
+    {
+      "station": "London \/ Heathrow Airport",
+      "distance": "22 km W",
+      "time": "2026-11-06T14:20:00Z",
+      "temperature": 11,
+      "feelsLikeTemp": 11,
+      "symbol": "d300",
+      "windDirString": "E",
+      "windDir": 90,
+      "windSpeed": 1.5,
+      "windGust": null,
+      "pressure": 1023,
+      "relHumidity": 82,
+      "visibility": 9999,
+      "snowDepth": null,
+      "longitude": -0.45,
+      "latitude": 51.48,
+      "elevation": 24,
+      "precipitation": [
+        { "period": "1h", "endtime": "2026-11-06T14:00:00+00:00", "accum": 0 },
+        {
+          "period": "6h",
+          "endtime": "2026-11-06T12:00:00+00:00",
+          "accum": 0.2
+        },
+        {
+          "period": "12h",
+          "endtime": "2026-11-06T09:00:00+00:00",
+          "accum": 1.2
+        },
+        { "period": "24h", "endtime": "2026-11-06T06:00:00+00:00", "accum": 1 }
+      ]
+    },
+    {
+      "station": "Kenley",
+      "distance": "24 km S",
+      "time": "2026-11-06T14:00:00Z",
+      "temperature": 9.6,
+      "feelsLikeTemp": 9.6,
+      "symbol": "d400",
+      "windDirString": "NE",
+      "windDir": 30,
+      "windSpeed": 1.3,
+      "windGust": 2.4,
+      "pressure": 1022.9,
+      "relHumidity": 88,
+      "visibility": 4750,
+      "snowDepth": null,
+      "longitude": -0.09,
+      "latitude": 51.3,
+      "elevation": 170,
+      "precipitation": [
+        { "period": "1h", "endtime": "2026-11-06T14:00:00+00:00", "accum": 0 },
+        { "period": "6h", "endtime": "2026-11-06T12:00:00+00:00", "accum": 0 },
+        {
+          "period": "12h",
+          "endtime": "2026-11-06T09:00:00+00:00",
+          "accum": 1.2
+        },
+        {
+          "period": "24h",
+          "endtime": "2026-11-06T06:00:00+00:00",
+          "accum": 1.2
+        }
+      ]
+    }
+  ]
+}

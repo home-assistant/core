@@ -1,9 +1,10 @@
 """Test KNX select."""
 
-import logging
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.knx.const import (
     CONF_PAYLOAD_LENGTH,
@@ -20,9 +21,6 @@ from homeassistant.exceptions import ServiceValidationError
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import mock_restore_cache
-from tests.typing import WebSocketGenerator
 
 
 async def test_select_dpt_2_simple(
@@ -81,8 +79,7 @@ async def test_select_dpt_2_simple(
     assert state.state == "Control - On"
 
     # update from KNX with undefined value
-    with caplog.at_level(logging.DEBUG):
-        await knx.receive_write(test_address, 0b01)
+    await knx.receive_write(test_address, 0b01)
     state = hass.states.get("select.test")
     assert state.state is STATE_UNKNOWN
     # the unconfigured payload and its telegram are logged for diagnosis

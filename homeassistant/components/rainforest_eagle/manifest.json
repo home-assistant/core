@@ -1,8 +1,10 @@
 {
   "domain": "rainforest_eagle",
   "name": "Rainforest Eagle",
-  "codeowners": ["@gtdiehl", "@jcalbert", "@hastarin"],
+  "categories": ["energy.meters_monitoring"],
+  "codeowners": ["@gtdiehl", "@jcalbert"],
   "config_flow": true,
+  "connectivity": ["zigbee"],
   "dhcp": [
     {
       "macaddress": "D8D5B9*"

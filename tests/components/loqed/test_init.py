@@ -9,6 +9,15 @@ import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 from loqedAPI import loqed
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    async_load_json_array_fixture,
+    async_load_json_object_fixture,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.cloud import CloudNotConnected
 from homeassistant.components.lock import LockState
@@ -19,15 +28,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.network import get_url
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    async_load_json_array_fixture,
-    async_load_json_object_fixture,
-)
-from tests.typing import ClientSessionGenerator
 
 
 async def test_webhook_accepts_valid_message(
@@ -571,6 +571,47 @@ async def test_setup_starts_reauth_when_bridge_rejects_credentials(
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert list(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_state", "reauth_started"),
+    [
+        pytest.param(
+            HTTPStatus.UNAUTHORIZED, ConfigEntryState.SETUP_ERROR, True, id="401"
+        ),
+        pytest.param(
+            HTTPStatus.FORBIDDEN, ConfigEntryState.SETUP_ERROR, True, id="403"
+        ),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            ConfigEntryState.SETUP_RETRY,
+            False,
+            id="500",
+        ),
+    ],
+)
+async def test_setup_handles_bridge_status_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    status: HTTPStatus,
+    expected_state: ConfigEntryState,
+    reauth_started: bool,
+) -> None:
+    """Test bridge status errors from the real library map to reauth or retry."""
+    config_entry.add_to_hass(hass)
+    aioclient_mock.get(
+        f"http://{config_entry.data['bridge_ip']}/status", status=status, text="error"
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is expected_state
+    assert (
+        bool(list(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})))
+        is reauth_started
+    )
 
 
 @pytest.mark.parametrize(

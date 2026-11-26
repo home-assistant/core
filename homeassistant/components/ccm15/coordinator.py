@@ -1,6 +1,6 @@
 """Climate device for CCM15 coordinator."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -43,7 +43,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             _LOGGER,
             config_entry=entry,
             name=host,
-            update_interval=datetime.timedelta(seconds=DEFAULT_INTERVAL),
+            update_interval=dt.timedelta(seconds=DEFAULT_INTERVAL),
         )
         self._ccm15 = CCM15Device(
             host, port, DEFAULT_TIMEOUT, client=get_async_client(hass)
