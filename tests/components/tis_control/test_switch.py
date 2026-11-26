@@ -224,6 +224,52 @@ async def test_turn_off_service(hass: HomeAssistant, tis_switch: MagicMock) -> N
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
+async def test_turn_on_debounced_is_noop(
+    hass: HomeAssistant, tis_switch: MagicMock
+) -> None:
+    """Test a debounced turn_on (None) leaves the state untouched and available."""
+    # First put the switch into a known OFF state with a successful command.
+    tis_switch.turn_switch_off.return_value = True
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {"entity_id": ENTITY_ID}, blocking=True
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+    # The sender returns None when the command was debounced or superseded.
+    tis_switch.turn_switch_on.return_value = None
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {"entity_id": ENTITY_ID}, blocking=True
+    )
+
+    tis_switch.turn_switch_on.assert_awaited_once()
+    # The state must be unchanged and the entity must NOT be marked unavailable.
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+
+async def test_turn_off_debounced_is_noop(
+    hass: HomeAssistant, tis_switch: MagicMock
+) -> None:
+    """Test a debounced turn_off (None) leaves the state untouched and available."""
+    # First put the switch into a known ON state with a successful command.
+    tis_switch.turn_switch_on.return_value = True
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {"entity_id": ENTITY_ID}, blocking=True
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    # The sender returns None when the command was debounced or superseded.
+    tis_switch.turn_switch_off.return_value = None
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {"entity_id": ENTITY_ID}, blocking=True
+    )
+
+    tis_switch.turn_switch_off.assert_awaited_once()
+    # The state must be unchanged and the entity must NOT be marked unavailable.
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
 async def test_state_updates_from_callback(
     hass: HomeAssistant, tis_switch: MagicMock
 ) -> None:

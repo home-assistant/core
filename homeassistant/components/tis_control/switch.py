@@ -198,6 +198,11 @@ class TISSwitch(SwitchEntity):
         # Attempt to turn the switch on and wait for the result.
         result = await self.device_api.turn_switch_on()
 
+        # None means the command was debounced or superseded by a newer one and
+        # was never sent, so it is a no-op rather than a failed acknowledgement.
+        if result is None:
+            return
+
         if result:
             self._attr_is_on = True
             self._attr_available = True
@@ -212,6 +217,11 @@ class TISSwitch(SwitchEntity):
         """Turn the switch off."""
         # Send the 'off' packet and wait for an acknowledgement.
         result = await self.device_api.turn_switch_off()
+
+        # None means the command was debounced or superseded by a newer one and
+        # was never sent, so it is a no-op rather than a failed acknowledgement.
+        if result is None:
+            return
 
         if result:
             self._attr_is_on = False
