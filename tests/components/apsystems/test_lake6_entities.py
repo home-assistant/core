@@ -1,5 +1,6 @@
 """Test the APsystems Lake_6 writable entities."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -7,7 +8,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.apsystems.lake6.client import Lake6ApiError
+from homeassistant.components.apsystems.lake6.client import (
+    Lake6ApiError,
+    Lake6Modes,
+    parse_modes,
+)
 from homeassistant.components.apsystems.lake6.const import LAKE6_UPDATE_INTERVAL
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -30,7 +35,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 
-from . import setup_integration
+from . import LAKE6_MODES_PAYLOAD, setup_integration
 
 DOD_ENTITY_ID = "number.mock_title_backup_soc"
 ECO_ENTITY_ID = "switch.mock_title_economy_mode"
@@ -265,3 +270,81 @@ async def test_write_keeps_the_poll_schedule(
     await hass.async_block_till_done()
 
     assert mock_lake6.async_get_energies.await_count == 2
+
+
+async def test_poll_cannot_overwrite_a_newer_write(
+    hass: HomeAssistant,
+    mock_lake6: MagicMock,
+    mock_lake6_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a read that straddles a write keeps the written snapshot."""
+    freezer.move_to("2026-11-25 10:00:00+00:00")
+    await setup_integration(hass, mock_lake6_config_entry)
+    coordinator = mock_lake6_config_entry.runtime_data.coordinator
+
+    polled = parse_modes(LAKE6_MODES_PAYLOAD)
+    # The two reads have to differ in a field the assertion can see, otherwise
+    # keeping the written snapshot would be indistinguishable from keeping the
+    # polled one.
+    written = parse_modes({**LAKE6_MODES_PAYLOAD, "dod": "20"})
+    reading = asyncio.Event()
+    resume = asyncio.Event()
+    calls = 0
+
+    async def _read_modes() -> Lake6Modes:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            reading.set()
+            await resume.wait()
+            return polled
+        return written
+
+    mock_lake6.async_get_modes.side_effect = _read_modes
+
+    # Stop the scheduled refresh and let the five minute throttle expire, so
+    # this poll really reads and the manual one below runs in between.
+    coordinator.update_interval = None
+    freezer.tick(timedelta(minutes=5))
+
+    refresh = hass.async_create_task(coordinator.async_refresh())
+    await reading.wait()
+
+    # The write finishes while that older read is still in flight.
+    await coordinator.async_set_modes()
+
+    resume.set()
+    await refresh
+
+    assert coordinator.data.modes == written
+    assert coordinator.data.modes != polled
+
+
+async def test_text_unavailable_with_multi_slot_rules(
+    hass: HomeAssistant,
+    mock_lake6: MagicMock,
+    mock_lake6_config_entry: MockConfigEntry,
+) -> None:
+    """Test a rule holding extra slots is left to the app."""
+    mock_lake6.async_get_modes.return_value = parse_modes(
+        {
+            "mode": "3",
+            "eco": "0",
+            "dod": "15",
+            "time_cfg": [
+                {
+                    "E": "1",
+                    "W": [1, 2, 3, 4, 5],
+                    "TM": [
+                        {"T": "09000910", "F": "2", "FI": {"P": "200", "GD": 1}},
+                        {"T": "18001900", "F": "3", "FI": {}},
+                    ],
+                }
+            ],
+        }
+    )
+
+    await setup_integration(hass, mock_lake6_config_entry)
+
+    assert hass.states.get(PLAN_ENTITY_ID).state == "unavailable"

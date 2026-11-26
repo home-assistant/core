@@ -15,7 +15,7 @@ from APsystemsEZ1 import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -150,6 +150,17 @@ type ApSystemsConfigEntry = ConfigEntry[ApSystemsData | Lake6RuntimeData]
 type Lake6ConfigEntry = ConfigEntry[Lake6RuntimeData]
 
 
+def _round_up_end(end: datetime, time_format: str) -> datetime:
+    """Round the end up to the precision of the timestamp layout.
+
+    A minute-precision layout drops the seconds, which would shorten a request
+    made late in a minute by almost the whole minute.
+    """
+    if "%S" in time_format or (end.second == 0 and end.microsecond == 0):
+        return end
+    return end.replace(second=0, microsecond=0) + timedelta(minutes=1)
+
+
 class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
     """Coordinator used for all sensors."""
 
@@ -231,6 +242,10 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
         # Apply, stop and the mode writes each put the device into a state that
         # the other one reads back, so they must not overlap.
         self._write_lock = asyncio.Lock()
+        # Bumped every time a write installs a fresher snapshot, so a poll that
+        # started before the write cannot put its older read over it.
+        self._modes_generation = 0
+        self._control_panel_generation = 0
 
     @override
     async def _async_setup(self) -> None:
@@ -279,6 +294,7 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
             self._modes = await self.client.async_get_modes()
             self._modes_updated_at = monotonic()
             self._modes_dirty = False
+            self._modes_generation += 1
             self._async_publish(
                 Lake6Data(
                     energies=self.data.energies,
@@ -380,11 +396,11 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
             # The device reads MI1.time as UTC, so a local time window is
             # dropped silently with code 200.
             now = dt_util.now(UTC)
-            end = now + timedelta(minutes=duration)
             panel = Lake6ControlPanel(active=False, windows=[])
             for backdate in LAKE6_CONTROL_PANEL_START_BACKDATES:
                 start = now - timedelta(seconds=backdate)
                 for time_format in self._control_panel_time_formats():
+                    end = _round_up_end(now + timedelta(minutes=duration), time_format)
                     await self.client.async_set_control_panel(
                         {
                             "mode": LAKE6_CONTROL_PANEL_MODE_ACTIVE,
@@ -412,6 +428,7 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
                     break
             self._control_panel = panel
             self._control_panel_updated_at = monotonic()
+            self._control_panel_generation += 1
             if panel.active:
                 self.manual_control.mark_sent(staged)
             self.manual_control.last_sent_at = now
@@ -427,7 +444,7 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
                 )
             )
         if not panel.active:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="manual_control_not_applied",
                 translation_placeholders={
@@ -454,6 +471,7 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
             panel = await self.client.async_get_control_panel()
             self._control_panel = panel
             self._control_panel_updated_at = monotonic()
+            self._control_panel_generation += 1
             if not panel.active:
                 # An interrupt withdraws the request, so the three staged
                 # fields go as well; otherwise stale values would ride along
@@ -471,7 +489,7 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
                 )
             )
         if panel.active:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="manual_control_still_running",
             )
@@ -508,7 +526,12 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
         ):
             return self._control_panel
         was_active = self._control_panel.active if self._control_panel else False
+        generation = self._control_panel_generation
         panel = await self.client.async_get_control_panel()
+        if generation != self._control_panel_generation and self._control_panel:
+            # A send or stop landed while this read was in flight; its snapshot
+            # is newer than the one returned here.
+            return self._control_panel
         self._control_panel = panel
         self._control_panel_updated_at = now
         if was_active and not panel.active:
@@ -528,7 +551,12 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
 
         # On failure neither the timestamp nor the dirty flag is updated, so the
         # next cycle retries.
+        generation = self._modes_generation
         modes = await self.client.async_get_modes()
+        if generation != self._modes_generation and self._modes is not None:
+            # A write landed while this read was in flight; keep the written
+            # snapshot instead of the older one read here.
+            return self._modes
         self._modes = modes
         self._modes_updated_at = now
         self._modes_dirty = False

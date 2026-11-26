@@ -219,6 +219,9 @@
     "ai_mode_set_in_app": {
       "message": "AI mode can only be enabled from the APsystems app"
     },
+    "device_mismatch": {
+      "message": "The device at this address reports serial number {reported}, but this entry was set up with {expected}. Check that the address still points to the same device."
+    },
     "inverter_error": {
       "message": "Inverter returned an error"
     },

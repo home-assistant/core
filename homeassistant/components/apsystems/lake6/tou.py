@@ -125,6 +125,17 @@ def parse_plan(value: str) -> list[Lake6TouPlanRow]:
     return [_parse_row(chunk) for chunk in chunks]
 
 
+def has_multi_slot_rules(raw: list[dict[str, Any]]) -> bool:
+    """Return True when a rule carries slots the text form cannot show.
+
+    A rule renders one slot, so saving the displayed text unchanged would
+    shorten a rule the device holds more slots for.
+    """
+    return any(
+        isinstance(entry.get("TM"), list) and len(entry["TM"]) > 1 for entry in raw
+    )
+
+
 def build_payload(
     raw: list[dict[str, Any]],
     rows: list[Lake6TouPlanRow],

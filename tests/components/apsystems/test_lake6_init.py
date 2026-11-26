@@ -1,5 +1,6 @@
 """Test the APsystems Lake_6 setup."""
 
+from dataclasses import replace
 import datetime as dt
 from unittest.mock import MagicMock, patch
 
@@ -55,6 +56,21 @@ async def test_setup_retry(
     await setup_integration(hass, mock_lake6_config_entry)
 
     assert mock_lake6_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_rejects_another_device(
+    hass: HomeAssistant,
+    mock_lake6: MagicMock,
+    mock_lake6_config_entry: MockConfigEntry,
+) -> None:
+    """Test an address that now answers for another unit is refused."""
+    mock_lake6.async_get_device.return_value = replace(
+        mock_lake6.async_get_device.return_value, dev_id="OTHER_DEV_ID"
+    )
+
+    await setup_integration(hass, mock_lake6_config_entry)
+
+    assert mock_lake6_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.usefixtures("mock_apsystems")

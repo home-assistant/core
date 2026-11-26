@@ -1,5 +1,7 @@
 """Test the APsystems Lake_6 time-of-use text format."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.components.apsystems.lake6.client import Lake6TouRule
@@ -8,6 +10,7 @@ from homeassistant.components.apsystems.lake6.tou import (
     Lake6TouPlanRow,
     build_payload,
     format_weekdays,
+    has_multi_slot_rules,
     parse_plan,
     parse_weekdays,
     render_plan,
@@ -325,6 +328,29 @@ def test_build_payload_keeps_extra_slots() -> None:
         {"T": "09000910", "F": "2", "FI": {"P": "300", "GD": 1}},
         extra,
     ]
+
+
+@pytest.mark.parametrize(
+    ("time_cfg", "expected"),
+    [
+        pytest.param([{"TM": [{"T": "09000910"}]}], False, id="single-slot"),
+        pytest.param(
+            [{"TM": [{"T": "09000910"}, {"T": "10001100"}]}],
+            True,
+            id="two-slots",
+        ),
+        pytest.param([{"TM": []}], False, id="no-slot"),
+        pytest.param([{}], False, id="missing-tm"),
+        pytest.param(
+            [{"TM": [{"T": "09000910"}]}, {"TM": [{"T": "10001100"}]}],
+            False,
+            id="one-per-rule",
+        ),
+    ],
+)
+def test_has_multi_slot_rules(time_cfg: list[dict[str, Any]], expected: bool) -> None:
+    """Test only a rule that carries more than one slot is reported."""
+    assert has_multi_slot_rules(time_cfg) is expected
 
 
 def test_build_payload_adds_new_rows() -> None:

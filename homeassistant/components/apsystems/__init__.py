@@ -6,9 +6,16 @@ from APsystemsEZ1 import APsystemsEZ1M
 
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_DEVICE_TYPE, DEFAULT_PORT, DEVICE_TYPE_EZ1, DEVICE_TYPE_LAKE6
+from .const import (
+    CONF_DEVICE_TYPE,
+    DEFAULT_PORT,
+    DEVICE_TYPE_EZ1,
+    DEVICE_TYPE_LAKE6,
+    DOMAIN,
+)
 from .coordinator import (
     ApSystemsConfigEntry,
     ApSystemsData,
@@ -102,6 +109,17 @@ async def _async_setup_lake6(
     # A failed first refresh becomes ConfigEntryNotReady, which puts the entry
     # into a retry.
     await coordinator.async_config_entry_first_refresh()
+    # DHCP can hand the address to another unit, and the entry would then drive
+    # a device the user never added.
+    if entry.unique_id and entry.unique_id != coordinator.device.dev_id:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="device_mismatch",
+            translation_placeholders={
+                "expected": entry.unique_id,
+                "reported": coordinator.device.dev_id,
+            },
+        )
     return Lake6RuntimeData(
         coordinator=coordinator,
         device_id=coordinator.device.dev_id,

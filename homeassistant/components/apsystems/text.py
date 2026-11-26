@@ -16,7 +16,12 @@ from .lake6.const import (
     LAKE6_TOU_TEXT_MAX_LENGTH,
     LAKE6_TOU_TEXT_MAX_RULES,
 )
-from .lake6.tou import async_write_tou_plan, parse_plan, render_plan
+from .lake6.tou import (
+    async_write_tou_plan,
+    has_multi_slot_rules,
+    parse_plan,
+    render_plan,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -85,6 +90,8 @@ class Lake6TouPlanText(Lake6Entity, TextEntity):
             return False
         rules = self.coordinator.data.modes.tou_rules
         if len(rules) > LAKE6_TOU_TEXT_MAX_RULES:
+            return False
+        if has_multi_slot_rules(self.coordinator.data.modes.time_cfg):
             return False
         return render_plan(rules) is not None
 

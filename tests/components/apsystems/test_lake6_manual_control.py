@@ -25,7 +25,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import LAKE6_ACTIVE_PAYLOAD, LAKE6_IDLE_PAYLOAD, setup_integration
 
@@ -221,7 +221,7 @@ async def test_apply_not_applied(
         blocking=True,
     )
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
@@ -324,6 +324,58 @@ async def test_finished_run_clears_staged_request(
     assert coordinator.manual_control.mode is None
     assert coordinator.manual_control.power is None
     assert coordinator.manual_control.duration is None
+
+
+async def test_apply_rounds_a_minute_precision_end_up(
+    hass: HomeAssistant,
+    mock_lake6: MagicMock,
+    mock_lake6_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the minute-precision layout does not cut the run short."""
+    freezer.move_to("2026-11-25 10:00:59+00:00")
+    await setup_integration(hass, mock_lake6_config_entry)
+    mock_lake6.async_get_control_panel.return_value = parse_control_panel(
+        LAKE6_IDLE_PAYLOAD
+    )
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        service_data={ATTR_OPTION: "discharge"},
+        target={TargetKey.ENTITY_ID: MODE_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        service_data={ATTR_VALUE: 300},
+        target={TargetKey.ENTITY_ID: POWER_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        service_data={ATTR_VALUE: 1},
+        target={TargetKey.ENTITY_ID: DURATION_ENTITY_ID},
+        blocking=True,
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            target={TargetKey.ENTITY_ID: APPLY_ENTITY_ID},
+            blocking=True,
+        )
+
+    payloads = [
+        call.args[0] for call in mock_lake6.async_set_control_panel.await_args_list
+    ]
+    # Second precision: 10:00:49 to 10:01:59. The minute-precision layout drops
+    # the seconds, so the end moves up to 10:02 instead of 10:01.
+    assert payloads[0]["MI1"]["time"] == ["2026112510004920261125100159"]
+    assert payloads[1]["MI1"]["time"] == ["202611251000202611251002"]
 
 
 async def test_edit_during_send_survives_run_end(
