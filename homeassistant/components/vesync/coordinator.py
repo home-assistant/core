@@ -19,9 +19,9 @@ from .const import DOMAIN, UPDATE_INTERVAL, UPDATE_INTERVAL_ENERGY
 
 _LOGGER = logging.getLogger(__name__)
 
-# The VeSync cloud can return a device's old state for up to two minutes after a
-# command, so don't poll it in that window. It will undo the change.
-COMMAND_GRACE_PERIOD = 120
+# The VeSync cloud answers status requests from a copy it refreshes about every
+# 180 s, so a poll in that window after a command would undo the change.
+COMMAND_GRACE_PERIOD = 200
 
 type VesyncConfigEntry = ConfigEntry[VeSyncDataCoordinator]
 
