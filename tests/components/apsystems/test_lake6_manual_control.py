@@ -391,7 +391,13 @@ async def test_edit_during_send_survives_run_end(
 
     async def _read_back_while_editing() -> Lake6ControlPanel:
         # The user retypes the wattage before the send completes.
-        coordinator.manual_control.power = 999
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            service_data={ATTR_VALUE: 999},
+            target={TargetKey.ENTITY_ID: POWER_ENTITY_ID},
+            blocking=True,
+        )
         return parse_control_panel(LAKE6_ACTIVE_PAYLOAD)
 
     mock_lake6.async_get_control_panel.side_effect = _read_back_while_editing
