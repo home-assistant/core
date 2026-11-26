@@ -281,10 +281,9 @@ async def test_poll_cannot_overwrite_a_newer_write(
     """Test a read that straddles a write keeps the written snapshot."""
     freezer.move_to("2026-11-25 10:00:00+00:00")
     await setup_integration(hass, mock_lake6_config_entry)
-    coordinator = mock_lake6_config_entry.runtime_data.coordinator
 
     polled = parse_modes(LAKE6_MODES_PAYLOAD)
-    # The two reads have to differ in a field the assertion can see, otherwise
+    # The two reads have to differ in a field the entity shows, otherwise
     # keeping the written snapshot would be indistinguishable from keeping the
     # polled one.
     written = parse_modes({**LAKE6_MODES_PAYLOAD, "dod": "20"})
@@ -303,22 +302,32 @@ async def test_poll_cannot_overwrite_a_newer_write(
 
     mock_lake6.async_get_modes.side_effect = _read_modes
 
-    # Stop the scheduled refresh and let the five minute throttle expire, so
-    # this poll really reads and the manual one below runs in between.
-    coordinator.update_interval = None
+    # Let the five minute modes throttle lapse so the scheduled poll really
+    # reads, and hold it inside that read.
     freezer.tick(timedelta(minutes=5))
-
-    refresh = hass.async_create_task(coordinator.async_refresh())
+    async_fire_time_changed(hass)
     await reading.wait()
 
     # The write finishes while that older read is still in flight.
-    await coordinator.async_set_modes()
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        service_data={ATTR_VALUE: 20},
+        target={TargetKey.ENTITY_ID: DOD_ENTITY_ID},
+        blocking=True,
+    )
 
     resume.set()
-    await refresh
+    await hass.async_block_till_done()
 
-    assert coordinator.data.modes == written
-    assert coordinator.data.modes != polled
+    # The coordinator only notifies the entities when the data it ends up with
+    # differs from the snapshot the refresh started with. Both reads carry the
+    # polled value here, so the entity keeps showing the written one and a bare
+    # state check could not see the overwrite; notify once to publish what the
+    # next listener call would.
+    coordinator = mock_lake6_config_entry.runtime_data.coordinator
+    coordinator.async_update_listeners()
+    assert hass.states.get(DOD_ENTITY_ID).state == "20"
 
 
 async def test_text_unavailable_with_multi_slot_rules(
