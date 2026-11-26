@@ -28,12 +28,6 @@ from .entity import FullyKioskEntity
 
 PARALLEL_UPDATES = 1
 
-RELEASE_NOTES_MESSAGE_CONFIRM_INSTALL = UpdateReleaseNotesMessage(
-    translation_domain=DOMAIN,
-    translation_key="confirm_install",
-    severity=UpdateReleaseNotesMessageSeverity.WARNING,
-)
-
 POLL_INTERVAL = 2
 POLL_TIMEOUT = 10
 INSTALL_TIMEOUT = 300
@@ -159,20 +153,29 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
         """Explain how the latest release is installed."""
         if (release := self._get_release()) is None:
             return ()
-        install = UpdateReleaseNotesMessage(
-            translation_domain=DOMAIN,
-            translation_key="download_and_install",
-            translation_placeholders={
-                "version": self._installed_name(release),
-                "apk_url": release.url,
-            },
-        )
+        placeholders = {
+            "version": self._installed_name(release),
+            "apk_url": release.url,
+        }
         # Android only installs silently for device owners or with root
         if self.coordinator.data.get("isDeviceOwner") or self.coordinator.data.get(
             "isRooted"
         ):
-            return (install,)
-        return (install, RELEASE_NOTES_MESSAGE_CONFIRM_INSTALL)
+            return (
+                UpdateReleaseNotesMessage(
+                    translation_domain=DOMAIN,
+                    translation_key="install_without_confirmation",
+                    translation_placeholders=placeholders,
+                ),
+            )
+        return (
+            UpdateReleaseNotesMessage(
+                translation_domain=DOMAIN,
+                translation_key="install_with_confirmation",
+                severity=UpdateReleaseNotesMessageSeverity.WARNING,
+                translation_placeholders=placeholders,
+            ),
+        )
 
     @override
     async def async_release_notes(self) -> str | None:

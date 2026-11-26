@@ -339,20 +339,38 @@ async def test_reinstall(
 
 
 @pytest.mark.parametrize(
-    ("device_info", "messages"),
+    ("device_info", "message"),
     [
-        pytest.param({}, [], id="rooted"),
-        pytest.param({"isRooted": False, "isDeviceOwner": True}, [], id="device_owner"),
+        pytest.param(
+            {},
+            {
+                "severity": "info",
+                "message": "Fully Kiosk downloads [version 1.61.4]"
+                f"({APK_URL}) from its website and installs it without asking for "
+                "confirmation on the device, then restarts.",
+            },
+            id="rooted",
+        ),
+        pytest.param(
+            {"isRooted": False, "isDeviceOwner": True},
+            {
+                "severity": "info",
+                "message": "Fully Kiosk downloads [version 1.61.4]"
+                f"({APK_URL}) from its website and installs it without asking for "
+                "confirmation on the device, then restarts.",
+            },
+            id="device_owner",
+        ),
         pytest.param(
             {"isRooted": False},
-            [
-                {
-                    "severity": "warning",
-                    "message": "Fully Kiosk is neither the device owner nor rooted "
-                    "on this device, so someone has to confirm the installation on "
-                    "the device's screen before the update is installed.",
-                }
-            ],
+            {
+                "severity": "warning",
+                "message": "Fully Kiosk downloads [version 1.61.4]"
+                f"({APK_URL}) from its website, but someone has to confirm the "
+                "installation on the device's screen, because Fully Kiosk is not "
+                "the device owner and the device is not rooted. Fully Kiosk "
+                "restarts once the update is installed.",
+            },
             id="confirmation_required",
         ),
     ],
@@ -362,9 +380,9 @@ async def test_release_notes(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_integration: Callable[[], Awaitable[None]],
-    messages: list[dict[str, str]],
+    message: dict[str, str],
 ) -> None:
-    """Test the release notes explain the installation."""
+    """Test the release notes tell whether the installation needs confirmation."""
     await setup_integration()
 
     client = await hass_ws_client(hass)
@@ -376,14 +394,7 @@ async def test_release_notes(
     assert result["success"]
     assert result["result"] == {
         "release_notes": None,
-        "messages": [
-            {
-                "severity": "info",
-                "message": "Fully Kiosk downloads [version 1.61.4]"
-                f"({APK_URL}) from its website, installs it and restarts.",
-            },
-            *messages,
-        ],
+        "messages": [message],
     }
 
 

@@ -164,8 +164,8 @@
     },
     "update": {
       "release_notes_messages": {
-        "confirm_install": "Fully Kiosk is neither the device owner nor rooted on this device, so someone has to confirm the installation on the device's screen before the update is installed.",
-        "download_and_install": "Fully Kiosk downloads [version {version}]({apk_url}) from its website, installs it and restarts."
+        "install_with_confirmation": "Fully Kiosk downloads [version {version}]({apk_url}) from its website, but someone has to confirm the installation on the device's screen, because Fully Kiosk is not the device owner and the device is not rooted. Fully Kiosk restarts once the update is installed.",
+        "install_without_confirmation": "Fully Kiosk downloads [version {version}]({apk_url}) from its website and installs it without asking for confirmation on the device, then restarts."
       }
     }
   },
