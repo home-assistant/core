@@ -223,6 +223,109 @@ async def test_server_timeout_on_stop(
     mock_create_subprocess.return_value.kill.assert_called_once()
 
 
+@pytest.mark.usefixtures("rest_client")
+async def test_server_waits_for_process_after_kill(
+    mock_create_subprocess: MagicMock, server: Server, mock_tempfile: Mock
+) -> None:
+    """Test the server waits for the process to exit after killing it."""
+    await server.start()
+    process = mock_create_subprocess.return_value
+    killed_at_wait: list[bool] = []
+
+    async def wait() -> None:
+        killed_at_wait.append(process.kill.called)
+        if not process.kill.called:
+            await asyncio.sleep(1)
+
+    process.wait.side_effect = wait
+
+    with patch("homeassistant.components.go2rtc.server._TERMINATE_TIMEOUT", new=0.1):
+        await server.stop()
+
+    process.kill.assert_called_once()
+    assert killed_at_wait[-1] is True
+
+
+@pytest.mark.usefixtures("rest_client", "mock_tempfile")
+async def test_server_stop_cancelled_is_completed_by_next_stop(
+    mock_create_subprocess: MagicMock,
+    server: Server,
+    mock_remove_config_file: Mock,
+) -> None:
+    """Test a stop that is cancelled while waiting is completed by the next stop."""
+    await server.start()
+    process = mock_create_subprocess.return_value
+    exited = asyncio.Event()
+    waiting = asyncio.Event()
+
+    async def wait() -> None:
+        waiting.set()
+        await exited.wait()
+
+    process.wait.side_effect = wait
+
+    stop = asyncio.create_task(server.stop())
+    await waiting.wait()
+    stop.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await stop
+    mock_remove_config_file.assert_not_called()
+
+    exited.set()
+    await server.stop()
+    assert process.terminate.call_count == 2
+    mock_remove_config_file.assert_called_once_with("test.yaml")
+
+
+@pytest.mark.usefixtures("rest_client", "mock_create_subprocess", "mock_tempfile")
+async def test_server_retries_failed_config_removal(
+    server: Server, mock_remove_config_file: Mock
+) -> None:
+    """Test a config file that could not be removed is removed by the next stop."""
+    await server.start()
+    mock_remove_config_file.side_effect = [PermissionError, None]
+
+    with pytest.raises(PermissionError):
+        await server.stop()
+    await server.stop()
+
+    assert mock_remove_config_file.call_count == 2
+
+
+@pytest.mark.usefixtures("mock_tempfile")
+async def test_server_start_subprocess_error_removes_config(
+    mock_create_subprocess: MagicMock,
+    rest_client: AsyncMock,
+    server: Server,
+    mock_remove_config_file: Mock,
+) -> None:
+    """Test the config is removed when the go2rtc process can't be started."""
+    mock_create_subprocess.side_effect = OSError("go2rtc not found")
+
+    with pytest.raises(OSError, match="go2rtc not found"):
+        await server.start()
+
+    mock_remove_config_file.assert_called_once_with("test.yaml")
+    rest_client.validate_server_version.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_tempfile")
+async def test_server_start_version_error_stops_server(
+    mock_create_subprocess: MagicMock,
+    rest_client: AsyncMock,
+    server: Server,
+    mock_remove_config_file: Mock,
+) -> None:
+    """Test the server is stopped and its config removed when validation fails."""
+    rest_client.validate_server_version.side_effect = Exception("unsupported")
+
+    with pytest.raises(Exception, match="unsupported"):
+        await server.start()
+
+    mock_create_subprocess.return_value.terminate.assert_called_once()
+    mock_remove_config_file.assert_called_once_with("test.yaml")
+
+
 @pytest.mark.parametrize(
     "server_stdout",
     [
@@ -446,7 +549,8 @@ async def test_server_restart_error(
 ) -> None:
     """Test error handling when exception is raised during restart."""
     rest_client.streams.list.side_effect = Exception
-    mock_create_subprocess.return_value.terminate.side_effect = [Exception, None]
+    # The failed stop keeps the process, so the final stop terminates it again
+    mock_create_subprocess.return_value.terminate.side_effect = [Exception, None, None]
 
     await server.start()
     mock_create_subprocess.assert_awaited_once()

@@ -1723,6 +1723,58 @@ async def test_preload_client_error_hides_stream_source(
     rest_client.preload.enable.assert_not_called()
 
 
+@pytest.mark.usefixtures("init_integration", "ws_client")
+async def test_preload_enable_client_error_is_not_wrapped(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test a client error from the credential-free preload request is kept."""
+    camera = init_test_integration
+    await _setup_camera_prefs(
+        hass,
+        camera.entity_id,
+        DynamicStreamSettings(
+            orientation=Orientation.NO_TRANSFORM, preload_stream=True
+        ),
+    )
+    error = Go2RtcClientError("preload failed")
+    rest_client.preload.enable.side_effect = error
+    with pytest.raises(Go2RtcClientError) as exc_info:
+        await camera.webrtc_provider.async_register_camera(camera)
+    assert exc_info.value is error
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_preload_pref_update_error_does_not_log_stream_source(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test enabling preload through the camera prefs doesn't log the source."""
+    camera = init_test_integration
+    rest_client.streams.add.side_effect = Go2RtcClientError(
+        "PUT /api/streams?src=rtsp://user:secret@stream failed"
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "camera/update_prefs",
+            "entity_id": camera.entity_id,
+            "preload_stream": True,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert "Unable to update the preload stream in go2rtc" in caplog.text
+    assert "secret" not in caplog.text
+    rest_client.preload.enable.assert_not_called()
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_offer_go2rtc_error_is_sent_not_logged(
     hass_ws_client: WebSocketGenerator,
