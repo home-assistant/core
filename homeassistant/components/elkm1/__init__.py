@@ -10,7 +10,7 @@ from elkm1_lib.elk import Elk
 from elkm1_lib.util import parse_url
 import probatio
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_ENABLED,
     CONF_EXCLUDE,
@@ -25,7 +25,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -59,10 +63,8 @@ from .discovery import (
     async_update_entry_from_discovery,
 )
 from .entity import create_elk_system_device_info
-from .models import ELKM1Data
+from .models import ElkM1ConfigEntry, ELKM1Data
 from .services import async_setup_services
-
-type ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
 
 SYNC_TIMEOUT = 120
 
@@ -219,7 +221,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 @callback
 def _async_find_matching_config_entry(
     hass: HomeAssistant, prefix: str
-) -> ConfigEntry | None:
+) -> ElkM1ConfigEntry | None:
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.unique_id == prefix:
             return entry
@@ -293,7 +295,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> Non
         await ElkSyncWaiter(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT).async_wait()
         sync_success = True
     except LoginFailed as exc:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="login_failed",
             translation_placeholders={"host": conf[CONF_HOST]},

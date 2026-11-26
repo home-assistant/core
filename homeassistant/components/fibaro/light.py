@@ -104,7 +104,7 @@ class FibaroLight(FibaroEntity, LightEntity):
             self._attr_supported_color_modes = {ColorMode.ONOFF}
             self._attr_color_mode = ColorMode.ONOFF
 
-        super().__init__(fibaro_device, controller)
+        super().__init__(fibaro_device, controller, use_child_device_info=True)
 
     @override
     def turn_on(self, **kwargs: Any) -> None:

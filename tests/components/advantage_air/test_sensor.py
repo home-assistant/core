@@ -10,7 +10,7 @@ from homeassistant.components.advantage_air.const import (
     AdvantageAirService,
     AdvantageAirServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -43,7 +43,7 @@ async def test_sensor_platform(
     await hass.services.async_call(
         DOMAIN,
         AdvantageAirService.SET_TIME_TO,
-        {ATTR_ENTITY_ID: [entity_id], AdvantageAirServiceArgument.MINUTES: value},
+        {TargetKey.ENTITY_ID: [entity_id], AdvantageAirServiceArgument.MINUTES: value},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -63,7 +63,7 @@ async def test_sensor_platform(
     await hass.services.async_call(
         DOMAIN,
         AdvantageAirService.SET_TIME_TO,
-        {ATTR_ENTITY_ID: [entity_id], AdvantageAirServiceArgument.MINUTES: value},
+        {TargetKey.ENTITY_ID: [entity_id], AdvantageAirServiceArgument.MINUTES: value},
         blocking=True,
     )
     mock_update.assert_called_once()

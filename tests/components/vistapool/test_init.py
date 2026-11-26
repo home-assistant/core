@@ -8,10 +8,10 @@ from aioaquarite import AquariteError, AuthenticationError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightService
 from homeassistant.components.vistapool.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -363,8 +363,8 @@ async def test_entities_stay_unavailable_on_local_updates_during_outage(
     # while the push is down.
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: _LIGHT_ENTITY},
         blocking=True,
     )
     on_data({"light": {"status": 1}})

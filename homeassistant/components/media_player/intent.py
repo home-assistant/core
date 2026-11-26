@@ -18,8 +18,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from . import MediaPlayerEntity
 from .browse_media import SearchMedia
 from .const import (
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
     INTENT_MEDIA_NEXT,
     INTENT_MEDIA_PAUSE,
@@ -110,7 +108,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.VOLUME_SET,
             required_slots={
-                ATTR_MEDIA_VOLUME_LEVEL: intent.IntentSlotInfo(
+                MediaPlayerServiceArgument.VOLUME_LEVEL: intent.IntentSlotInfo(
                     description="The volume percentage of the media player",
                     value_schema=probatio.All(
                         probatio.Coerce(int),
@@ -243,7 +241,7 @@ class MediaPlayerMuteUnmuteHandler(intent.ServiceIntentHandler):
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.VOLUME_MUTE,
             optional_slots={
-                ATTR_MEDIA_VOLUME_MUTED: intent.IntentSlotInfo(
+                MediaPlayerServiceArgument.IS_VOLUME_MUTED: intent.IntentSlotInfo(
                     description="Whether the media player should be muted or unmuted",
                     value_schema=probatio.Boolean(),
                 ),
@@ -367,7 +365,7 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
             not search_response
             or not (
                 entity_response := cast(
-                    SearchMedia, search_response.get(target_entity_id)
+                    SearchMedia | None, search_response.get(target_entity_id)
                 )
             )
             or not (results := entity_response.result)
@@ -511,5 +509,15 @@ class MediaSetVolumeRelativeHandler(intent.IntentHandler):
             ) from err
 
         response = intent_obj.create_response()
+        response.async_set_results(
+            success_results=[
+                intent.IntentResponseTarget(
+                    type=intent.IntentResponseTargetType.ENTITY,
+                    name=state.name,
+                    id=state.entity_id,
+                )
+                for state in match_result.states
+            ]
+        )
         response.async_set_states(match_result.states)
         return response

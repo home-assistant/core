@@ -18,19 +18,19 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_TYPE,
     DOMAIN,
 )
-from homeassistant.components.denonavr.const import (
-    ATTR_DYNAMIC_EQ,
-    CONF_USE_TELNET,
-    CONF_ZONE2,
-)
+from homeassistant.components.denonavr.const import CONF_USE_TELNET, CONF_ZONE2
 from homeassistant.components.denonavr.services import (
-    ATTR_COMMAND,
-    SERVICE_GET_COMMAND,
-    SERVICE_SET_DYNAMIC_EQ,
-    SERVICE_UPDATE_AUDYSSEY,
+    DenonAvrService,
+    DenonAvrServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, STATE_UNAVAILABLE
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    STATE_UNAVAILABLE,
+    CommonServiceArgument,
+    TargetKey,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -102,10 +102,10 @@ async def test_get_command(hass: HomeAssistant, client: MagicMock) -> None:
     await setup_denonavr(hass)
 
     data = {
-        ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_COMMAND: "test_command",
+        CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+        DenonAvrServiceArgument.COMMAND: "test_command",
     }
-    await hass.services.async_call(DOMAIN, SERVICE_GET_COMMAND, data)
+    await hass.services.async_call(DOMAIN, DenonAvrService.GET_COMMAND, data)
     await hass.async_block_till_done()
 
     client.async_get_command.assert_awaited_with("test_command")
@@ -116,16 +116,16 @@ async def test_dynamic_eq(hass: HomeAssistant, client: MagicMock) -> None:
     await setup_denonavr(hass)
 
     data = {
-        ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_DYNAMIC_EQ: True,
+        CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+        DenonAvrServiceArgument.DYNAMIC_EQ: True,
     }
     # Verify on call
-    await hass.services.async_call(DOMAIN, SERVICE_SET_DYNAMIC_EQ, data)
+    await hass.services.async_call(DOMAIN, DenonAvrService.SET_DYNAMIC_EQ, data)
     await hass.async_block_till_done()
 
     # Verify off call
-    data[ATTR_DYNAMIC_EQ] = False
-    await hass.services.async_call(DOMAIN, SERVICE_SET_DYNAMIC_EQ, data)
+    data[DenonAvrServiceArgument.DYNAMIC_EQ] = False
+    await hass.services.async_call(DOMAIN, DenonAvrService.SET_DYNAMIC_EQ, data)
     await hass.async_block_till_done()
 
     client.async_dynamic_eq_on.assert_called_once()
@@ -139,9 +139,9 @@ async def test_update_audyssey(hass: HomeAssistant, client: MagicMock) -> None:
     # Verify call
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_AUDYSSEY,
+        DenonAvrService.UPDATE_AUDYSSEY,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
         },
     )
     await hass.async_block_till_done()
@@ -175,6 +175,49 @@ async def test_setup_retry_on_request_error(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "attribute", ["manufacturer", "name", "model_name", "receiver_type"]
+)
+@pytest.mark.parametrize(
+    ("use_telnet", "disconnects"),
+    [
+        pytest.param(True, 1, id="telnet"),
+        pytest.param(False, 0, id="no_telnet"),
+    ],
+)
+async def test_setup_retry_on_missing_receiver_info(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    attribute: str,
+    use_telnet: bool,
+    disconnects: int,
+) -> None:
+    """Test that a receiver missing identification retries the config entry."""
+    setattr(client, attribute, None)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_MODEL: TEST_MODEL,
+            CONF_TYPE: TEST_RECEIVER_TYPE,
+            CONF_MANUFACTURER: TEST_MANUFACTURER,
+            CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
+        },
+        options={CONF_USE_TELNET: use_telnet},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert not er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert client.async_telnet_disconnect.await_count == disconnects
 
 
 @pytest.mark.parametrize(

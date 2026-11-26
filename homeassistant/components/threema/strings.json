@@ -83,6 +83,11 @@
     }
   },
   "entity": {
+    "image": {
+      "gateway_qr_code": {
+        "name": "Gateway QR code"
+      }
+    },
     "sensor": {
       "credits": {
         "name": "Remaining credits",

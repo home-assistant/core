@@ -10,14 +10,10 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.tesla_fleet.const import DOMAIN
 from homeassistant.components.tesla_fleet.models import TeslaFleetVehicleData
 from homeassistant.components.tesla_fleet.services import (
-    ATTR_DESTINATION,
-    ATTR_GPS,
-    ATTR_PLACE_IDS,
-    SERVICE_NAVIGATE_TO_COORDINATES,
-    SERVICE_NAVIGATE_TO_DESTINATION,
-    SERVICE_NAVIGATE_TO_WAYPOINTS,
+    TeslaFleetService,
+    TeslaFleetServiceArgument,
 )
-from homeassistant.const import CONF_DEVICE_ID, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -54,12 +50,12 @@ async def test_navigate_to_destination(
     ) as navigation_request:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATE_TO_DESTINATION,
+            TeslaFleetService.NAVIGATE_TO_DESTINATION,
             {
-                CONF_DEVICE_ID: get_vehicle_device_id(
+                CommonServiceArgument.DEVICE_ID: get_vehicle_device_id(
                     device_registry, normal_config_entry
                 ),
-                ATTR_DESTINATION: "1600 Amphitheatre Parkway, Mountain View, CA",
+                TeslaFleetServiceArgument.DESTINATION: "1600 Amphitheatre Parkway, Mountain View, CA",
             },
             blocking=True,
         )
@@ -82,12 +78,15 @@ async def test_navigate_to_coordinates(
     ) as navigation_gps_request:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATE_TO_COORDINATES,
+            TeslaFleetService.NAVIGATE_TO_COORDINATES,
             {
-                CONF_DEVICE_ID: get_vehicle_device_id(
+                CommonServiceArgument.DEVICE_ID: get_vehicle_device_id(
                     device_registry, normal_config_entry
                 ),
-                ATTR_GPS: {CONF_LATITUDE: LAT, CONF_LONGITUDE: LON},
+                TeslaFleetServiceArgument.GPS: {
+                    CONF_LATITUDE: LAT,
+                    CONF_LONGITUDE: LON,
+                },
             },
             blocking=True,
         )
@@ -126,12 +125,12 @@ async def test_navigate_to_waypoints(
     ) as navigation_waypoints_request:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATE_TO_WAYPOINTS,
+            TeslaFleetService.NAVIGATE_TO_WAYPOINTS,
             {
-                CONF_DEVICE_ID: get_vehicle_device_id(
+                CommonServiceArgument.DEVICE_ID: get_vehicle_device_id(
                     device_registry, normal_config_entry
                 ),
-                ATTR_PLACE_IDS: place_ids,
+                TeslaFleetServiceArgument.PLACE_IDS: place_ids,
             },
             blocking=True,
         )
@@ -170,12 +169,12 @@ async def test_navigate_to_waypoints_invalid_input(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATE_TO_WAYPOINTS,
+            TeslaFleetService.NAVIGATE_TO_WAYPOINTS,
             {
-                CONF_DEVICE_ID: get_vehicle_device_id(
+                CommonServiceArgument.DEVICE_ID: get_vehicle_device_id(
                     device_registry, normal_config_entry
                 ),
-                ATTR_PLACE_IDS: place_ids,
+                TeslaFleetServiceArgument.PLACE_IDS: place_ids,
             },
             blocking=True,
         )
@@ -199,9 +198,9 @@ async def test_navigate_to_waypoints_missing_place_ids(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATE_TO_WAYPOINTS,
+            TeslaFleetService.NAVIGATE_TO_WAYPOINTS,
             {
-                CONF_DEVICE_ID: get_vehicle_device_id(
+                CommonServiceArgument.DEVICE_ID: get_vehicle_device_id(
                     device_registry, normal_config_entry
                 )
             },
@@ -228,12 +227,12 @@ async def test_navigate_to_destination_command_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATE_TO_DESTINATION,
+            TeslaFleetService.NAVIGATE_TO_DESTINATION,
             {
-                CONF_DEVICE_ID: get_vehicle_device_id(
+                CommonServiceArgument.DEVICE_ID: get_vehicle_device_id(
                     device_registry, normal_config_entry
                 ),
-                ATTR_DESTINATION: "Home",
+                TeslaFleetServiceArgument.DESTINATION: "Home",
             },
             blocking=True,
         )
@@ -265,12 +264,12 @@ async def test_navigate_to_waypoints_command_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATE_TO_WAYPOINTS,
+            TeslaFleetService.NAVIGATE_TO_WAYPOINTS,
             {
-                CONF_DEVICE_ID: get_vehicle_device_id(
+                CommonServiceArgument.DEVICE_ID: get_vehicle_device_id(
                     device_registry, normal_config_entry
                 ),
-                ATTR_PLACE_IDS: ["ID_A"],
+                TeslaFleetServiceArgument.PLACE_IDS: ["ID_A"],
             },
             blocking=True,
         )
@@ -311,12 +310,12 @@ async def test_navigate_to_waypoints_wake_before_command(
         run = asyncio.create_task(
             hass.services.async_call(
                 DOMAIN,
-                SERVICE_NAVIGATE_TO_WAYPOINTS,
+                TeslaFleetService.NAVIGATE_TO_WAYPOINTS,
                 {
-                    CONF_DEVICE_ID: get_vehicle_device_id(
+                    CommonServiceArgument.DEVICE_ID: get_vehicle_device_id(
                         device_registry, normal_config_entry
                     ),
-                    ATTR_PLACE_IDS: ["ID_A"],
+                    TeslaFleetServiceArgument.PLACE_IDS: ["ID_A"],
                 },
                 blocking=True,
             )
@@ -356,12 +355,12 @@ async def test_navigate_to_waypoints_wake_failure(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATE_TO_WAYPOINTS,
+            TeslaFleetService.NAVIGATE_TO_WAYPOINTS,
             {
-                CONF_DEVICE_ID: get_vehicle_device_id(
+                CommonServiceArgument.DEVICE_ID: get_vehicle_device_id(
                     device_registry, normal_config_entry
                 ),
-                ATTR_PLACE_IDS: ["ID_A"],
+                TeslaFleetServiceArgument.PLACE_IDS: ["ID_A"],
             },
             blocking=True,
         )
@@ -373,13 +372,13 @@ async def test_navigate_to_waypoints_wake_failure(
     ("service_name", "service_data"),
     [
         pytest.param(
-            SERVICE_NAVIGATE_TO_DESTINATION,
-            {ATTR_DESTINATION: "Home"},
+            TeslaFleetService.NAVIGATE_TO_DESTINATION,
+            {TeslaFleetServiceArgument.DESTINATION: "Home"},
             id="destination",
         ),
         pytest.param(
-            SERVICE_NAVIGATE_TO_WAYPOINTS,
-            {ATTR_PLACE_IDS: ["ID_A"]},
+            TeslaFleetService.NAVIGATE_TO_WAYPOINTS,
+            {TeslaFleetServiceArgument.PLACE_IDS: ["ID_A"]},
             id="waypoints",
         ),
     ],
@@ -404,7 +403,7 @@ async def test_missing_vehicle_cmds_scope(
             DOMAIN,
             service_name,
             {
-                CONF_DEVICE_ID: get_vehicle_device_id(
+                CommonServiceArgument.DEVICE_ID: get_vehicle_device_id(
                     device_registry, readonly_config_entry
                 ),
                 **service_data,
@@ -420,13 +419,13 @@ async def test_missing_vehicle_cmds_scope(
     ("service_name", "service_data"),
     [
         pytest.param(
-            SERVICE_NAVIGATE_TO_DESTINATION,
-            {ATTR_DESTINATION: "Home"},
+            TeslaFleetService.NAVIGATE_TO_DESTINATION,
+            {TeslaFleetServiceArgument.DESTINATION: "Home"},
             id="destination",
         ),
         pytest.param(
-            SERVICE_NAVIGATE_TO_WAYPOINTS,
-            {ATTR_PLACE_IDS: ["ID_A"]},
+            TeslaFleetService.NAVIGATE_TO_WAYPOINTS,
+            {TeslaFleetServiceArgument.PLACE_IDS: ["ID_A"]},
             id="waypoints",
         ),
     ],
@@ -457,7 +456,7 @@ async def test_energy_site_device(
         await hass.services.async_call(
             DOMAIN,
             service_name,
-            {CONF_DEVICE_ID: device.id, **service_data},
+            {CommonServiceArgument.DEVICE_ID: device.id, **service_data},
             blocking=True,
         )
     assert exc_info.value.translation_key == "no_vehicle_data_for_device"
@@ -469,13 +468,13 @@ async def test_energy_site_device(
     ("service_name", "service_data"),
     [
         pytest.param(
-            SERVICE_NAVIGATE_TO_COORDINATES,
-            {ATTR_GPS: {CONF_LATITUDE: LAT, CONF_LONGITUDE: LON}},
+            TeslaFleetService.NAVIGATE_TO_COORDINATES,
+            {TeslaFleetServiceArgument.GPS: {CONF_LATITUDE: LAT, CONF_LONGITUDE: LON}},
             id="coordinates",
         ),
         pytest.param(
-            SERVICE_NAVIGATE_TO_WAYPOINTS,
-            {ATTR_PLACE_IDS: ["ID_A"]},
+            TeslaFleetService.NAVIGATE_TO_WAYPOINTS,
+            {TeslaFleetServiceArgument.PLACE_IDS: ["ID_A"]},
             id="waypoints",
         ),
     ],
@@ -498,7 +497,7 @@ async def test_unknown_device(
         await hass.services.async_call(
             DOMAIN,
             service_name,
-            {CONF_DEVICE_ID: "nope", **service_data},
+            {CommonServiceArgument.DEVICE_ID: "nope", **service_data},
             blocking=True,
         )
     assert exc_info.value.translation_key == "service_device_not_found"

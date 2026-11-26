@@ -7,7 +7,6 @@ import logging
 from typing import override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
-from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
@@ -110,6 +109,12 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         value_getter=lambda api: api.getDomesticHotWaterPumpActive(),
     ),
     ViCareBinarySensorEntityDescription(
+        key="boiler_internal_pump_active",
+        translation_key="boiler_internal_pump",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        value_getter=lambda api: api.getBoilerInternalPumpActive(),
+    ),
+    ViCareBinarySensorEntityDescription(
         key="one_time_charge",
         translation_key="one_time_charge",
         device_class=BinarySensorDeviceClass.RUNNING,
@@ -175,9 +180,7 @@ def _build_entities(
         entities.extend(
             ViCareBinarySensor(
                 description,
-                device.serial,
-                device.config,
-                device.api,
+                device,
             )
             for description in GLOBAL_SENSORS
             if is_supported(description.key, description.value_getter, device.api)
@@ -192,9 +195,7 @@ def _build_entities(
             entities.extend(
                 ViCareBinarySensor(
                     description,
-                    device.serial,
-                    device.config,
-                    device.api,
+                    device,
                     component,
                 )
                 for component in component_list
@@ -226,15 +227,11 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
     def __init__(
         self,
         description: ViCareBinarySensorEntityDescription,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
+        device: ViCareDevice,
         component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(
-            description.key, device_serial, device_config, device, component
-        )
+        super().__init__(description.key, device, component)
         self.entity_description = description
 
     @property

@@ -19,14 +19,16 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_TOKEN,
     CONF_TYPE,
+    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_KEY, CONF_SN, CONF_SUBTYPE, DOMAIN, LOGGER
 from .entity import MideaConfigEntry
+from .utils import async_remove_unsupported_entities
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -135,9 +137,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> Non
     device.register_update(_log_availability)
     entry.async_on_unload(partial(device.unregister_update, _log_availability))
 
+    async_remove_unsupported_entities(hass, device)
+
     await device.open()
     entry.runtime_data = device
     entry.async_on_unload(device.close)
+
+    async def _async_close(_event: Event) -> None:
+        await device.close()
+
+    # Config entries are not unloaded at shutdown, so close the device here
+    # before the supervisor task is cancelled from under it.
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
+    )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
 

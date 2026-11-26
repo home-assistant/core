@@ -530,6 +530,11 @@ def test_get_unit_system_invalid(key: str) -> None:
         # Test volume flow rate conversion
         (
             SensorDeviceClass.VOLUME_FLOW_RATE,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_HOUR,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        ),
+        (
+            SensorDeviceClass.VOLUME_FLOW_RATE,
             UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
             UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
         ),
@@ -977,6 +982,7 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
         UnitOfVolumeFlowRate.GALLONS_PER_DAY,
+        UnitOfVolumeFlowRate.CUBIC_FEET_PER_HOUR,
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
     ),
     SensorDeviceClass.WATER: (

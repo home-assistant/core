@@ -9,8 +9,11 @@ from homeassistant.components.matrix import (
     DOMAIN,
     MatrixBot,
 )
-from homeassistant.components.matrix.const import FORMAT_HTML, SERVICE_SEND_MESSAGE
-from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
+from homeassistant.components.matrix.const import (
+    FORMAT_HTML,
+    MatrixService,
+    MatrixServiceArgument,
+)
 from homeassistant.core import Event, HomeAssistant
 
 from .conftest import TEST_BAD_ROOM, TEST_JOINABLE_ROOMS
@@ -30,37 +33,48 @@ async def test_send_message(
     await matrix_bot._login()
 
     # Send a message without an attached image.
-    data = {ATTR_MESSAGE: "Test message", ATTR_TARGET: list(TEST_JOINABLE_ROOMS)}
-    await hass.services.async_call(DOMAIN, SERVICE_SEND_MESSAGE, data, blocking=True)
+    data = {
+        MatrixServiceArgument.MESSAGE: "Test message",
+        MatrixServiceArgument.TARGET: list(TEST_JOINABLE_ROOMS),
+    }
+    await hass.services.async_call(
+        DOMAIN, MatrixService.SEND_MESSAGE, data, blocking=True
+    )
 
     for room_alias_or_id in TEST_JOINABLE_ROOMS:
         assert f"Message delivered to room '{room_alias_or_id}'" in caplog.messages
 
     # Send an HTML message without an attached image.
     data = {
-        ATTR_MESSAGE: "Test message",
-        ATTR_TARGET: list(TEST_JOINABLE_ROOMS),
-        ATTR_DATA: {ATTR_FORMAT: FORMAT_HTML},
+        MatrixServiceArgument.MESSAGE: "Test message",
+        MatrixServiceArgument.TARGET: list(TEST_JOINABLE_ROOMS),
+        MatrixServiceArgument.DATA: {ATTR_FORMAT: FORMAT_HTML},
     }
-    await hass.services.async_call(DOMAIN, SERVICE_SEND_MESSAGE, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, MatrixService.SEND_MESSAGE, data, blocking=True
+    )
 
     for room_alias_or_id in TEST_JOINABLE_ROOMS:
         assert f"Message delivered to room '{room_alias_or_id}'" in caplog.messages
 
     # Send a message with an attached image.
-    data[ATTR_DATA] = {ATTR_IMAGES: [image_path.name]}
-    await hass.services.async_call(DOMAIN, SERVICE_SEND_MESSAGE, data, blocking=True)
+    data[MatrixServiceArgument.DATA] = {ATTR_IMAGES: [image_path.name]}
+    await hass.services.async_call(
+        DOMAIN, MatrixService.SEND_MESSAGE, data, blocking=True
+    )
 
     for room_alias_or_id in TEST_JOINABLE_ROOMS:
         assert f"Message delivered to room '{room_alias_or_id}'" in caplog.messages
 
     # Send a message to a thread.
     data = {
-        ATTR_MESSAGE: "Test message",
-        ATTR_TARGET: list(TEST_JOINABLE_ROOMS),
-        ATTR_DATA: {ATTR_THREAD_ID: "thread_id"},
+        MatrixServiceArgument.MESSAGE: "Test message",
+        MatrixServiceArgument.TARGET: list(TEST_JOINABLE_ROOMS),
+        MatrixServiceArgument.DATA: {ATTR_THREAD_ID: "thread_id"},
     }
-    await hass.services.async_call(DOMAIN, SERVICE_SEND_MESSAGE, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, MatrixService.SEND_MESSAGE, data, blocking=True
+    )
 
     for room_alias_or_id in TEST_JOINABLE_ROOMS:
         assert f"Message delivered to room '{room_alias_or_id}'" in caplog.messages
@@ -76,9 +90,14 @@ async def test_unsendable_message(
     assert len(matrix_events) == 0
     await matrix_bot._login()
 
-    data = {ATTR_MESSAGE: "Test message", ATTR_TARGET: TEST_BAD_ROOM}
+    data = {
+        MatrixServiceArgument.MESSAGE: "Test message",
+        MatrixServiceArgument.TARGET: TEST_BAD_ROOM,
+    }
 
-    await hass.services.async_call(DOMAIN, SERVICE_SEND_MESSAGE, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, MatrixService.SEND_MESSAGE, data, blocking=True
+    )
 
     assert (
         f"Unable to deliver message to room '{TEST_BAD_ROOM}':"

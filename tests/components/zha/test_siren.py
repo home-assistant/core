@@ -14,12 +14,7 @@ import zigpy.zcl
 from zigpy.zcl.clusters import general, security
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.siren import (
-    ATTR_DURATION,
-    ATTR_TONE,
-    ATTR_VOLUME_LEVEL,
-    DOMAIN as SIREN_DOMAIN,
-)
+from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenServiceArgument
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
     ZHAGatewayProxy,
@@ -168,9 +163,9 @@ async def test_siren(
             "turn_on",
             {
                 "entity_id": entity_id,
-                ATTR_DURATION: 10,
-                ATTR_TONE: WarningMode.Emergency_Panic,
-                ATTR_VOLUME_LEVEL: SirenLevel.Medium_level_sound,
+                SirenServiceArgument.DURATION: 10,
+                SirenServiceArgument.TONE: WarningMode.Emergency_Panic,
+                SirenServiceArgument.VOLUME_LEVEL: SirenLevel.Medium_level_sound,
             },
             blocking=True,
         )

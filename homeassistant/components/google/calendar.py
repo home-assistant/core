@@ -16,7 +16,6 @@ from gcal_sync.model import (
     EventTypeEnum,
     ResponseStatus,
 )
-from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 
 from homeassistant.components.calendar import (
@@ -225,6 +224,7 @@ async def async_setup_entry(
             )
             new_calendars.append(calendar_info)
 
+        sync_coordinator: CalendarSyncUpdateCoordinator | None = None
         for entity_description in _get_entity_descriptions(
             hass, config_entry, calendar_item, calendar_info
         ):
@@ -272,23 +272,25 @@ async def async_setup_entry(
                     entity_description.search,
                 )
             else:
-                request_template = SyncEventsRequest(
-                    calendar_id=calendar_id,
-                    start_time=dt_util.now() + SYNC_EVENT_MIN_TIME,
-                )
-                sync = CalendarEventSyncManager(
-                    calendar_service,
-                    store=ScopedCalendarStore(
-                        store, unique_id or entity_description.device_id
-                    ),
-                    request_template=request_template,
-                )
-                coordinator = CalendarSyncUpdateCoordinator(
-                    hass,
-                    config_entry,
-                    sync,
-                    entity_description.name or entity_description.key,
-                )
+                # Share one coordinator and store cache across all entities for
+                # the same calendar (e.g. primary, birthdays, working location).
+                if sync_coordinator is None:
+                    request_template = SyncEventsRequest(
+                        calendar_id=calendar_id,
+                        start_time=dt_util.now() + SYNC_EVENT_MIN_TIME,
+                    )
+                    sync = CalendarEventSyncManager(
+                        calendar_service,
+                        store=store,
+                        request_template=request_template,
+                    )
+                    sync_coordinator = CalendarSyncUpdateCoordinator(
+                        hass,
+                        config_entry,
+                        sync,
+                        calendar_item.summary or calendar_id,
+                    )
+                coordinator = sync_coordinator
             entities.append(
                 GoogleCalendarEntity(
                     coordinator,

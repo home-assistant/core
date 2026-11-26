@@ -155,3 +155,55 @@ async def test_remove_config_entry_device(
     )
     assert readded_device is not None
     assert readded_device.name == "Back"
+
+
+@pytest.mark.usefixtures("connect_legacy")
+async def test_remove_config_entry_device_not_loaded(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test removing devices of an unloaded config entry."""
+    assert await async_setup_component(hass, "config", {})
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=CONFIG_DATA_TELNET, unique_id=ROUTER_MAC_ADDR
+    )
+    config_entry.add_to_hass(hass)
+    router_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, ROUTER_MAC_ADDR)},
+    )
+    offline_mac = dr.format_mac(MOCK_MACS[2])
+    entity_registry.async_get_or_create(
+        device_tracker.DOMAIN,
+        DOMAIN,
+        offline_mac,
+        config_entry=config_entry,
+        original_name="Offline",
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    ws_client = await hass_ws_client(hass)
+
+    response = await ws_client.remove_device(router_device.id)
+    assert not response["success"]
+
+    offline_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, offline_mac), config_entry.entry_id
+    )
+    assert offline_device is not None
+    response = await ws_client.remove_device(offline_device.id)
+    assert response["success"]
+
+    # The client is not restored, its tracker was removed with the device
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not entity_registry.async_get_entity_id(
+        device_tracker.DOMAIN, DOMAIN, offline_mac
+    )
+    assert not device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, offline_mac), config_entry.entry_id
+    )

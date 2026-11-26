@@ -3,7 +3,8 @@
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from functools import partial
+from typing import TYPE_CHECKING, Literal, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import (
@@ -15,10 +16,12 @@ from aiounifi.interfaces.api_handlers import (
 from aiounifi.models.api import ApiItem
 from aiounifi.models.event import Event, EventKey
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
+    ChildDeviceInfo,
     DeviceEntryType,
     DeviceInfo,
 )
@@ -40,6 +43,21 @@ def is_locally_administered_mac(mac: str) -> bool:
 
 
 @callback
+def async_client_ssid_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if client is connected to an allowed SSID."""
+    client = hub.api.clients[obj_id]
+
+    is_wireless = hub.entity_loader.wireless_clients.is_wireless(client)
+
+    return not (
+        is_wireless
+        and client.essid
+        and hub.config.option_ssid_filter
+        and client.essid not in hub.config.option_ssid_filter
+    )
+
+
+@callback
 def async_device_available_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if device is available."""
     if "_" in obj_id:  # Sub device (outlet or port)
@@ -47,6 +65,34 @@ def async_device_available_fn(hub: UnifiHub, obj_id: str) -> bool:
 
     device = hub.api.devices[obj_id]
     return hub.available and not device.disabled
+
+
+@callback
+def async_device_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if device is adopted by the controller.
+
+    The controller also lists devices that are only pending adoption,
+    like a neighbour's access point. Those are not part of the site.
+    """
+    if "_" in obj_id:  # Sub device (outlet or port)
+        obj_id = obj_id.partition("_")[0]
+
+    return hub.api.devices[obj_id].raw.get("adopted", True)
+
+
+@callback
+def async_port_poe_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if port supports PoE."""
+    return async_device_supported_fn(hub, obj_id) and bool(
+        hub.api.ports[obj_id].port_poe
+    )
+
+
+@callback
+def async_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if firewall policy can be controlled."""
+    policy = hub.api.firewall_policies[obj_id]
+    return not policy.predefined and policy.name != ""
 
 
 @callback
@@ -74,6 +120,39 @@ def async_device_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
 
 
 @callback
+def async_child_device_info_fn(
+    hub: UnifiHub, obj_id: str, *, kind: Literal["port", "outlet"]
+) -> ChildDeviceInfo:
+    """Create device information for a port or outlet."""
+    registry = dr.async_get(hub.hass)
+    parent = registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, obj_id.partition("_")[0]),
+        hub.config.entry.entry_id,
+    )
+    if parent is None:
+        parent = registry.async_get_or_create_from_info(
+            config_entry_id=hub.config.entry.entry_id,
+            device_info=async_device_device_info_fn(hub, obj_id),
+        )
+    child_info = ChildDeviceInfo(
+        identifiers={(DOMAIN, f"{kind}-{obj_id}")},
+        parent_device_id=parent.id,
+    )
+    if kind == "port":
+        child_info.name = hub.api.ports[obj_id].name
+    elif (outlet := hub.api.outlets[obj_id]).name:
+        child_info.name = outlet.name
+    else:
+        child_info.translation_key = "outlet"
+        child_info.translation_placeholders = {"index": str(outlet.index)}
+    return child_info
+
+
+async_port_device_info_fn = partial(async_child_device_info_fn, kind="port")
+async_outlet_device_info_fn = partial(async_child_device_info_fn, kind="outlet")
+
+
+@callback
 def async_wlan_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     """Create device registry entry for WLAN."""
     wlan = hub.api.wlans[obj_id]
@@ -97,13 +176,27 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     )
 
 
+@callback
+def async_unifi_network_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for the UniFi Network application."""
+    unique_id = hub.config.entry.unique_id
+    assert unique_id is not None
+    return DeviceInfo(
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(SWITCH_DOMAIN, unique_id)},
+        manufacturer=ATTR_MANUFACTURER,
+        model="UniFi Network",
+        name="UniFi Network",
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescription):
     """UniFi Entity Description."""
 
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
     """Provide api_handler from api."""
-    device_info_fn: Callable[[UnifiHub, str], DeviceInfo | None]
+    device_info_fn: Callable[[UnifiHub, str], DeviceInfo | ChildDeviceInfo | None]
     """Provide device info object based on hub and obj_id."""
     object_fn: Callable[[aiounifi.Controller, str], ItemT]
     """Retrieve object based on api and obj_id."""
@@ -173,6 +266,12 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             )
         self.async_initiate_state()
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the entity and its coordinator are available."""
+        return super().available and self.coordinator.last_update_success
+
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -223,9 +322,29 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             )
 
     @callback
+    @override
+    def add_to_platform_abort(self) -> None:
+        """Keep the object of a disabled entity known, forget any other.
+
+        A disabled entity is not added but keeps its registry entry, so its
+        object stays known until that entry is removed. Any other entity
+        that is not added is tried again on the next scan.
+        """
+        super().add_to_platform_abort()
+        loader = self.hub.entity_loader
+        obj = (self.entity_description.key, self._obj_id)
+        if (entry := self.registry_entry) and entry.disabled:
+            loader.known_but_disabled[entry.entity_id] = obj
+        else:
+            loader.known_objects.discard(obj)
+
+    @callback
     def _async_coordinator_updated(self) -> None:
         """Skip coordinator updates that changed a different object."""
         coordinator_data = self.coordinator.data
+        if coordinator_data is None and self.coordinator.supports_websocket:
+            self.async_write_ha_state()
+            return
         if coordinator_data is None:
             event = ItemEvent.CHANGED
             changed_obj_id = None
@@ -250,13 +369,11 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
 
         description = self.entity_description
         if not description.supported_fn(self.hub, self._obj_id):
+            self.hub.adoption.async_follow_if_unadopted(self._obj_id)
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
-        self._attr_available = (
-            description.available_fn(self.hub, self._obj_id)
-            and self.coordinator.last_update_success
-        )
+        self._attr_available = description.available_fn(self.hub, self._obj_id)
         self.async_update_state(event, self._obj_id)
         self.async_write_ha_state()
 
@@ -295,7 +412,10 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
 
     async def async_refresh_after_control(self) -> None:
         """Refresh handler data after a control call when polling."""
-        if self.coordinator.update_interval is not None:
+        if (
+            not self.coordinator.supports_websocket
+            and self.coordinator.update_interval is not None
+        ):
             await self.coordinator.async_refresh()
 
     @callback

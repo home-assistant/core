@@ -6,7 +6,11 @@ from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 
 from .const import DOMAIN, EMONCMS_UUID_DOC_URL, LOGGER
 from .coordinator import EmonCMSConfigEntry, EmoncmsCoordinator
@@ -38,14 +42,17 @@ async def _check_unique_id_migration(
 ) -> None:
     """Check if we can migrate to the emoncms uuid."""
     emoncms_unique_id = await emoncms_client.async_get_uuid()
+    issue_id = f"migrate_database_{entry.entry_id}"
     if emoncms_unique_id:
+        async_delete_issue(hass, DOMAIN, issue_id)
         if entry.unique_id != emoncms_unique_id:
             _migrate_unique_id(hass, entry, emoncms_unique_id)
     else:
         async_create_issue(
             hass,
             DOMAIN,
-            "migrate database",
+            issue_id,
+            config_entry_id=entry.entry_id,
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,

@@ -58,8 +58,10 @@ from ..utils.logger import LOGGER
 from ..utils.path import entry_in_directory, is_safe, resolve_in_directory
 from ..utils.tree import tree_entry_filename, tree_entry_is_directory
 from ..utils.url import (
+    RemoteFile,
     github_archive,
     github_commit_archive,
+    github_listed_release_asset,
     github_raw_file,
     github_release_asset,
     ref_version,
@@ -198,7 +200,7 @@ def _check_archive_size(archive: zipfile.ZipFile) -> None:
 class FileInformation:
     """FileInformation."""
 
-    def __init__(self, url: str, path: str, name: str) -> None:
+    def __init__(self, url: RemoteFile, path: str, name: str) -> None:
         """Initialize the file information."""
         self.download_url = url
         self.path = path
@@ -394,17 +396,34 @@ class RepositoryManifest:
         return attr.asdict(self)
 
     @staticmethod
-    def from_dict(manifest: dict[str, Any]) -> RepositoryManifest:
-        """Set attributes from dicts."""
+    def from_dict(
+        manifest: dict[str, Any], repository: str | None = None
+    ) -> RepositoryManifest:
+        """Set attributes from dicts.
+
+        The repository it was read from is named in the warning for a value
+        that is left out, the stored data of every repository in the catalog
+        is read and not only of the ones that are installed.
+        """
         manifest_data = RepositoryManifest()
         manifest_data.manifest = {}
         for key, value in manifest.items():
             if (validator := REPOSITORY_MANIFEST_VALUES.get(key)) is None:
                 continue
             try:
-                validator(value)
+                value = validator(value)
             except probatio.Invalid:
-                LOGGER.warning("Ignoring %s in hacs.json, %r is not valid", key, value)
+                if repository is None:
+                    LOGGER.warning(
+                        "Ignoring %s in hacs.json, %r is not valid", key, value
+                    )
+                else:
+                    LOGGER.warning(
+                        "Ignoring %s in hacs.json of %s, %r is not valid",
+                        key,
+                        repository,
+                        value,
+                    )
                 continue
             if value != getattr(manifest_data, key):
                 manifest_data.manifest[key] = value
@@ -640,7 +659,9 @@ class Repository:
             tree_entry_filename(entry) for entry in self.tree
         ]:
             if manifest := await self.async_get_repository_manifest():
-                self.repository_manifest = RepositoryManifest.from_dict(manifest)
+                self.repository_manifest = RepositoryManifest.from_dict(
+                    manifest, self.data.full_name
+                )
         else:
             # Every install reads it, a repository without one can not be updated
             self.validate.errors.append(
@@ -715,7 +736,9 @@ class Repository:
             tree_entry_filename(entry) for entry in self.tree
         ]:
             if manifest := await self.async_get_repository_manifest():
-                self.repository_manifest = RepositoryManifest.from_dict(manifest)
+                self.repository_manifest = RepositoryManifest.from_dict(
+                    manifest, self.data.full_name
+                )
 
         self.additional_info = await self.async_get_readme_contents()
 
@@ -762,7 +785,7 @@ class Repository:
                 MarketplaceError(
                     translation_domain=DOMAIN,
                     translation_key="file_not_downloaded",
-                    translation_placeholders={"file": content["url"]},
+                    translation_placeholders={"file": str(content["url"])},
                 )
             )
             return
@@ -1013,6 +1036,7 @@ class Repository:
 
         self.data.installed_version = None
         self.data.installed_commit = None
+        self._clear_readme_cache()
         self.async_dispatch_changed("uninstall")
 
         await self.async_remove_entity_device()
@@ -1177,7 +1201,18 @@ class Repository:
         """Forget the version picked for the install and end its progress."""
         self.data.selected_tag = None
         self.force_branch = False
+        # Clear it first, the panel asks for the page right after it hears of the end
+        self._clear_readme_cache()
         self._async_dispatch_install_progress(False)
+
+    def _clear_readme_cache(self) -> None:
+        """Clear the cached README, so the next info request fetches it again.
+
+        The cached README is of the version installed before, whose addresses
+        can point at files the version installed now no longer has.
+        """
+        self.additional_info = ""
+        self.updated_info = False
 
     async def async_post_installation(self) -> None:
         """Run post install steps."""
@@ -1678,7 +1713,14 @@ class Repository:
                 if ref == release.tag_name:
                     files.extend(
                         FileInformation(
-                            asset.browser_download_url, asset.name, asset.name
+                            github_listed_release_asset(
+                                repository=self.data.full_name,
+                                version=release.tag_name,
+                                filename=asset.name,
+                                url=asset.browser_download_url,
+                            ),
+                            asset.name,
+                            asset.name,
                         )
                         for asset in release.assets or []
                     )
@@ -1745,7 +1787,12 @@ class Repository:
 
         return [
             FileInformation(
-                url=asset.get("browser_download_url"),
+                url=github_listed_release_asset(
+                    repository=self.data.full_name,
+                    version=release.data.get("tag_name", version),
+                    filename=asset.get("name"),
+                    url=asset.get("browser_download_url"),
+                ),
                 path=asset.get("name"),
                 name=asset.get("name"),
             )
@@ -1912,7 +1959,9 @@ class Repository:
             return None
 
         result = await self.marketplace.async_download_file(
-            f"https://raw.githubusercontent.com/{self.data.full_name}/{target_version}/{filename}",
+            github_raw_file(
+                repository=self.data.full_name, ref=target_version, path=filename
+            ),
             nolog=True,
         )
 
@@ -1931,7 +1980,7 @@ class Repository:
         """Get the hacs.json file of the repository."""
         if (result := await self.get_repository_manifest_raw(version=version)) is None:
             return None
-        return RepositoryManifest.from_dict(result)
+        return RepositoryManifest.from_dict(result, self.data.full_name)
 
     @return_none_on_exception
     async def get_repository_manifest_raw(
@@ -1942,7 +1991,9 @@ class Repository:
         """Get the hacs.json file of the repository."""
         self.logger.debug("%s Getting hacs.json for version=%s", self.string, version)
         result = await self.marketplace.async_download_file(
-            f"https://raw.githubusercontent.com/{self.data.full_name}/{version}/hacs.json",
+            github_raw_file(
+                repository=self.data.full_name, ref=version, path="hacs.json"
+            ),
             nolog=True,
             handle_rate_limit=True,
         )
@@ -2166,7 +2217,17 @@ class Repository:
 
         self._check_minimum_version(manifest)
 
-        previous_manifest = self.repository_manifest
+        # The GitHub API path may find the repository unchanged and skip
+        # resolving it again, so it needs exactly what was there before
+        previous_state = (
+            self.repository_manifest,
+            self.ref,
+            self.content.path.remote,
+            self.content.single,
+            self.tree,
+            self.tree_ref,
+            self.treefiles,
+        )
         self.repository_manifest = manifest
         self.ref = version if commit else f"tags/{version}"
         self.content.path.remote = self.remote_path
@@ -2175,9 +2236,15 @@ class Repository:
         try:
             return await self._async_resolve_catalog_content(version, commit=commit)
         except MarketplaceError:
-            self.repository_manifest = previous_manifest
-            self.content.path.remote = self.remote_path
-            self.content.single = self.single_file
+            (
+                self.repository_manifest,
+                self.ref,
+                self.content.path.remote,
+                self.content.single,
+                self.tree,
+                self.tree_ref,
+                self.treefiles,
+            ) = previous_state
             raise
 
     async def _async_resolve_catalog_content(

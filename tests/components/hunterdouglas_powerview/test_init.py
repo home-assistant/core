@@ -3,13 +3,12 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiopvapi.helpers.aiorequest import PvApiMaintenance
+from aiopvapi.helpers.aiorequest import PvApiEmptyData, PvApiMaintenance
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
-from homeassistant.components.hunterdouglas_powerview.util import async_connect_hub
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -53,15 +52,22 @@ async def test_setup_not_primary_hub(
 
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")
 @pytest.mark.parametrize("api_version", [1, 2, 3])
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(PvApiEmptyData("Hub returned empty data"), id="empty_data"),
+    ],
+)
 async def test_setup_retry_when_hub_unreachable(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, error: Exception
 ) -> None:
-    """Test setup retries when the hub cannot be reached."""
+    """Test setup retries when the hub cannot be reached or returns no data."""
     mock_config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.hunterdouglas_powerview.util.Hub.query_firmware",
-        side_effect=TimeoutError,
+        side_effect=error,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -80,29 +86,6 @@ async def test_setup_retry_when_room_data_fails(
     with patch(
         "homeassistant.components.hunterdouglas_powerview.Rooms.get_rooms",
         side_effect=TimeoutError,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.usefixtures("mock_hunterdouglas_hub")
-@pytest.mark.parametrize("api_version", [1, 2, 3])
-async def test_setup_retry_without_device_info(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test setup retries when the hub returns no device info."""
-    mock_config_entry.add_to_hass(hass)
-
-    async def _connect_without_device_info(hass_, address, api_version=None):
-        api = await async_connect_hub(hass_, address, api_version)
-        api.device_info = None
-        return api
-
-    with patch(
-        "homeassistant.components.hunterdouglas_powerview.async_connect_hub",
-        side_effect=_connect_without_device_info,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

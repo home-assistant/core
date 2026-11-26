@@ -19,9 +19,12 @@ from packaging.version import Version
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_NAME,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -38,6 +41,7 @@ _logger = logging.getLogger(__name__)
 DIMMER_CHANNEL_TYPES = (
     FunctionalChannelType.DIMMER_CHANNEL,
     FunctionalChannelType.MULTI_MODE_INPUT_DIMMER_CHANNEL,
+    FunctionalChannelType.UNIVERSAL_DIMMING_CHANNEL,
 )
 
 # the HmIP-BSL names its two signal lamps by position
@@ -169,15 +173,32 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
             feature_id="color_light",
         )
 
+    def _optional_features(self) -> dict[str, bool]:
+        """Return the optional features of the channel."""
+        # the library does not parse the optional features of the channel
+        channel = self.get_channel_or_raise()
+        return getattr(channel, "_rawJSONData", {}).get("supportedOptionalFeatures", {})
+
     def _supports_color(self) -> bool:
         """Return true if device supports hue/saturation color control."""
+        if self._supports_color_temp():
+            # hue is unset while the light is in color temperature mode
+            return bool(
+                self._optional_features().get("IOptionalFeatureHueSaturationValue")
+            )
         channel = self.get_channel_or_raise()
         return channel.hue is not None and channel.saturationLevel is not None
+
+    def _supports_color_temp(self) -> bool:
+        """Return true if device supports color temperature control."""
+        return bool(self._optional_features().get("IOptionalFeatureColorTemperature"))
 
     @property
     @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
+        if self._supports_color_temp() and self.get_channel_or_raise().hue is None:
+            return ColorMode.COLOR_TEMP
         if self._supports_color():
             return ColorMode.HS
         return ColorMode.BRIGHTNESS
@@ -186,9 +207,30 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
     @override
     def supported_color_modes(self) -> set[ColorMode]:
         """Return the supported color modes."""
+        modes = set()
         if self._supports_color():
-            return {ColorMode.HS}
-        return {ColorMode.BRIGHTNESS}
+            modes.add(ColorMode.HS)
+        if self._supports_color_temp():
+            modes.add(ColorMode.COLOR_TEMP)
+        return modes or {ColorMode.BRIGHTNESS}
+
+    @property
+    @override
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color temperature the light supports."""
+        return self.get_channel_or_raise().minimalColorTemperature or DEFAULT_MIN_KELVIN
+
+    @property
+    @override
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color temperature the light supports."""
+        return self.get_channel_or_raise().maximumColorTemperature or DEFAULT_MAX_KELVIN
+
+    @property
+    @override
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature in Kelvin."""
+        return self.get_channel_or_raise().colorTemperature
 
     @property
     @override
@@ -226,8 +268,19 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
             # If no brightness is set, use the current brightness
             dim_level = channel.dimLevel or 1.0
 
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            await channel.set_color_temperature_dim_level_async(
+                color_temperature=kwargs[ATTR_COLOR_TEMP_KELVIN], dim_level=dim_level
+            )
+            return
+
         # Use dim-only method for monochrome mode (hue/saturation not supported)
         if not self._supports_color():
+            await channel.set_dim_level_async(dim_level=dim_level)
+            return
+
+        # Keep the color temperature when only the brightness changes
+        if ATTR_HS_COLOR not in kwargs and channel.hue is None:
             await channel.set_dim_level_async(dim_level=dim_level)
             return
 

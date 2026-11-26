@@ -10,6 +10,11 @@
         "default": "mdi:qrcode"
       }
     },
+    "select": {
+      "firewall_policy_schedule_mode": {
+        "default": "mdi:calendar-clock"
+      }
+    },
     "sensor": {
       "client_bandwidth_rx": {
         "default": "mdi:download"
@@ -31,6 +36,14 @@
       },
       "device_uplink_mac": {
         "default": "mdi:ethernet"
+      },
+      "firewall_policy_schedule_status": {
+        "default": "mdi:shield-alert-outline",
+        "state": {
+          "active": "mdi:shield-check",
+          "disabled": "mdi:shield-off-outline",
+          "inactive": "mdi:shield-outline"
+        }
       },
       "port_bandwidth_rx": {
         "default": "mdi:download"

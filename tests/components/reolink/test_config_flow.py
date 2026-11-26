@@ -42,6 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -69,8 +70,15 @@ pytestmark = pytest.mark.usefixtures("reolink_host")
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
+async def test_config_flow_manual_success(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
     """Successful flow manually initialized by the user."""
+    # No repair issue should be created while probing during the config flow
+    reolink_host.camera_sw_version_update_required.return_value = True
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -106,6 +114,7 @@ async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
     assert result["result"].unique_id == TEST_MAC
+    assert not issue_registry.issues
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

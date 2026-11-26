@@ -7,13 +7,11 @@ from pylgnetcast import LG_COMMAND
 import pytest
 
 from homeassistant.components.remote import (
-    ATTR_COMMAND,
-    ATTR_DELAY_SECS,
-    ATTR_NUM_REPEATS,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -38,8 +36,11 @@ async def test_send_command(hass: HomeAssistant, mock_lg_netcast: MagicMock) -> 
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: REMOTE_ENTITY_ID, ATTR_COMMAND: ["POWER"]},
+        RemoteService.SEND_COMMAND,
+        {
+            TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+            RemoteServiceArgument.COMMAND: ["POWER"],
+        },
         blocking=True,
     )
 
@@ -55,8 +56,11 @@ async def test_send_command_invalid(
     with pytest.raises(ServiceValidationError, match="Unknown command"):
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
-            {ATTR_ENTITY_ID: REMOTE_ENTITY_ID, ATTR_COMMAND: ["NOT_A_REAL_COMMAND"]},
+            RemoteService.SEND_COMMAND,
+            {
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: ["NOT_A_REAL_COMMAND"],
+            },
             blocking=True,
         )
 
@@ -70,8 +74,11 @@ async def test_send_multiple_commands(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: REMOTE_ENTITY_ID, ATTR_COMMAND: ["POWER", "NUMBER_0"]},
+        RemoteService.SEND_COMMAND,
+        {
+            TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+            RemoteServiceArgument.COMMAND: ["POWER", "NUMBER_0"],
+        },
         blocking=True,
     )
 
@@ -94,11 +101,11 @@ async def test_send_multiple_commands_with_delay(
     with patch("homeassistant.components.lg_netcast.remote.time.sleep") as mock_sleep:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: ["POWER", "NUMBER_0", "NUMBER_1"],
-                ATTR_DELAY_SECS: 0.5,
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: ["POWER", "NUMBER_0", "NUMBER_1"],
+                RemoteServiceArgument.DELAY_SECS: 0.5,
             },
             blocking=True,
         )
@@ -125,12 +132,12 @@ async def test_send_command_repeats_with_delay(
     with patch("homeassistant.components.lg_netcast.remote.time.sleep") as mock_sleep:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: ["POWER"],
-                ATTR_NUM_REPEATS: 3,
-                ATTR_DELAY_SECS: 0.5,
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: ["POWER"],
+                RemoteServiceArgument.NUM_REPEATS: 3,
+                RemoteServiceArgument.DELAY_SECS: 0.5,
             },
             blocking=True,
         )
@@ -151,12 +158,12 @@ async def test_send_multiple_commands_repeats_with_delay(
     with patch("homeassistant.components.lg_netcast.remote.time.sleep") as mock_sleep:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: ["POWER", "NUMBER_0"],
-                ATTR_NUM_REPEATS: 3,
-                ATTR_DELAY_SECS: 0.5,
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: ["POWER", "NUMBER_0"],
+                RemoteServiceArgument.NUM_REPEATS: 3,
+                RemoteServiceArgument.DELAY_SECS: 0.5,
             },
             blocking=True,
         )
