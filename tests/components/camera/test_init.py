@@ -1287,6 +1287,38 @@ async def test_webrtc_provider_stream_source_for_native_webrtc(
     on_candidate.assert_not_called()
 
 
+@pytest.mark.usefixtures("mock_provider_source_webrtc_camera")
+async def test_native_webrtc_camera_provider_not_asked_to_preload(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a provider used for a native camera's source doesn't set up streams."""
+    provider = SomeTestProvider()
+    with (
+        patch.object(provider, "async_register_camera") as register_camera,
+        patch.object(provider, "async_on_camera_prefs_update") as prefs_update,
+    ):
+        unsub = camera.async_register_webrtc_provider(hass, provider)
+        await hass.async_block_till_done()
+        camera_obj = get_camera_from_entity_id(hass, "camera.provider_source")
+        assert camera_obj.webrtc_provider is provider
+
+        client = await hass_ws_client(hass)
+        await client.send_json_auto_id(
+            {
+                "type": "camera/update_prefs",
+                "entity_id": "camera.provider_source",
+                "preload_stream": True,
+            }
+        )
+        msg = await client.receive_json()
+        assert msg["success"]
+
+    register_camera.assert_not_called()
+    prefs_update.assert_not_called()
+    unsub()
+
+
 @pytest.mark.usefixtures("mock_camera", "mock_stream_source")
 async def test_snapshot_service_webrtc_provider(
     hass: HomeAssistant,

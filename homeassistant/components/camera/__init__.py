@@ -519,8 +519,12 @@ async def websocket_update_prefs(
         _LOGGER.error("Error setting camera preferences: %s", ex)
         connection.send_error(msg["id"], "update_failed", str(ex))
     else:
-        if (camera := hass.data[DATA_COMPONENT].get_entity(entity_id)) and (
-            provider := camera.webrtc_provider
+        if (
+            (camera := hass.data[DATA_COMPONENT].get_entity(entity_id))
+            and (provider := camera.webrtc_provider)
+            # A native WebRTC camera only uses the provider for its provider
+            # stream source, so its stream preferences don't apply there
+            and not camera._supports_native_async_webrtc  # noqa: SLF001
         ):
             await async_call_webrtc_provider(
                 provider.async_on_camera_prefs_update(camera),
