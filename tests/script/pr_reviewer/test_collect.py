@@ -95,6 +95,7 @@ def pull_request(**fields: Any) -> dict[str, Any]:
         "head": {"ref": "demo-sensor", "sha": HEAD},
         "base": {"ref": "dev", "sha": "d" * 40},
         "labels": [label("new-feature")],
+        "changed_files": 1,
         **fields,
     }
 
@@ -647,6 +648,19 @@ def test_size_over_limit(
     collector.run()
 
     collector.assert_skipped(reason)
+    assert not (collector.out_dir / "pr.diff").exists()
+
+
+def test_files_not_all_listed(gh: FakeGh, collector: Collector) -> None:
+    """Test a pull request with more files than GitHub lists is skipped."""
+    gh.json(PULL_REQUEST, pull_request(changed_files=3001))
+    gh.json(
+        FILES, [changed_files(3000, "tests/components/demo/snapshots/test_{}.ambr")]
+    )
+
+    collector.run()
+
+    collector.assert_skipped(f"#{NUMBER} changes 3001 files, more than GitHub lists")
     assert not (collector.out_dir / "pr.diff").exists()
 
 

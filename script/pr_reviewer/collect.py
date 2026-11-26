@@ -271,11 +271,13 @@ def collect(
         ],
     )
 
-    files = [
-        file
-        for file in gh_list(f"repos/{repo}/pulls/{number}/files?per_page=100")
-        if not file["filename"].endswith(".ambr")
-    ]
+    all_files = gh_list(f"repos/{repo}/pulls/{number}/files?per_page=100")
+    # GitHub lists at most 3000 files.
+    if len(all_files) < pr["changed_files"]:
+        raise Skip(
+            f"#{number} changes {pr['changed_files']} files, more than GitHub lists"
+        )
+    files = [file for file in all_files if not file["filename"].endswith(".ambr")]
     changed_lines = sum(file["additions"] + file["deletions"] for file in files)
     if changed_lines > MAX_CHANGED_LINES or len(files) > MAX_CHANGED_FILES:
         raise Skip(
