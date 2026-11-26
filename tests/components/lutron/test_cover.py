@@ -2,12 +2,25 @@
 
 from unittest.mock import MagicMock, patch
 
+from pylutron import Motor, Shade
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverService
-from homeassistant.const import STATE_CLOSED, STATE_OPEN, Platform, TargetKey
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    DOMAIN as COVER_DOMAIN,
+    CoverEntityFeature,
+    CoverService,
+)
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_CLOSED,
+    STATE_OPEN,
+    Platform,
+    TargetKey,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -61,7 +74,7 @@ async def test_cover_services(
         {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert cover.level == 100
+    cover.start_raise.assert_called_once()
 
     # Close cover
     await hass.services.async_call(
@@ -70,7 +83,16 @@ async def test_cover_services(
         {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert cover.level == 0
+    cover.start_lower.assert_called_once()
+
+    # Stop cover
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    cover.stop.assert_called_once()
 
     # Set cover position
     await hass.services.async_call(
@@ -106,3 +128,107 @@ async def test_cover_update(
 
     assert hass.states.get(entity_id).state == STATE_OPEN
     assert hass.states.get(entity_id).attributes["current_position"] == 100
+
+
+def _mock_output(name: str, output_id: int, output_type: str) -> MagicMock:
+    """Build a pylutron output mock the way conftest does.
+
+    The mock is specced against the class pylutron instantiates for the
+    output type (Motor for MOTOR, Shade for the shade types), so calling a
+    method the library does not provide fails the test instead of being
+    silently accepted.
+    """
+    output = MagicMock(spec=Motor if output_type == "MOTOR" else Shade)
+    output.name = name
+    output.id = output_id
+    output.uuid = f"{name.lower().replace(' ', '_')}_uuid"
+    output.legacy_uuid = f"{name.lower().replace(' ', '_')}_legacy_uuid"
+    output.type = output_type
+    output.last_level.return_value = 0
+
+    def _set_level(new_level, fade_time_seconds=None):
+        output.last_level.return_value = new_level
+
+    output.set_level.side_effect = _set_level
+    return output
+
+
+async def test_sivoia_qed_is_not_a_cover(
+    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """SIVOIA_QED outputs are not covers yet; they stay lights for now."""
+    mock_config_entry.add_to_hass(hass)
+    qed = _mock_output("Test QED Shade", 10, "SIVOIA_QED")
+    mock_lutron.areas[0].outputs.append(qed)
+
+    with patch(
+        "homeassistant.components.lutron.PLATFORMS", [Platform.COVER, Platform.LIGHT]
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test_area_test_qed_shade") is None
+    assert hass.states.get("light.test_area_test_qed_shade") is not None
+
+
+async def test_motor_cover_services(
+    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """A MOTOR output is a raise/lower/stop cover without position control."""
+    mock_config_entry.add_to_hass(hass)
+    motor = _mock_output("Test Motor", 11, "MOTOR")
+    mock_lutron.areas[0].outputs.append(motor)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "cover.test_area_test_motor"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
+    assert state.attributes[ATTR_ASSUMED_STATE] is True
+    assert hass.states.get("switch.test_area_test_motor") is None
+
+    await hass.services.async_call(
+        COVER_DOMAIN, CoverService.OPEN, {TargetKey.ENTITY_ID: entity_id}, blocking=True
+    )
+    motor.start_raise.assert_called_once()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    motor.start_lower.assert_called_once()
+    await hass.services.async_call(
+        COVER_DOMAIN, CoverService.STOP, {TargetKey.ENTITY_ID: entity_id}, blocking=True
+    )
+    motor.stop.assert_called_once()
+    # the repeater ignores "set level" on motors and pylutron raises on it
+    motor.set_level.assert_not_called()
+
+
+async def test_motor_cover_update(
+    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Position reports from the repeater drive the motor cover's state."""
+    mock_config_entry.add_to_hass(hass)
+    motor = _mock_output("Test Motor", 11, "MOTOR")
+    mock_lutron.areas[0].outputs.append(motor)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "cover.test_area_test_motor"
+    assert hass.states.get(entity_id).state == STATE_CLOSED
+
+    motor.last_level.return_value = 100
+    callback = motor.subscribe.call_args[0][0]
+    callback(motor, None, None, None)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 100
