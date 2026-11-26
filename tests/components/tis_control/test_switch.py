@@ -1,6 +1,7 @@
 """Tests for the TIS Control switch platform."""
 
 from collections.abc import AsyncGenerator
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -549,6 +550,43 @@ async def test_unavailable_switch_is_probed(
     await hass.async_block_till_done()
     assert tis_switch.request_update.await_count == 1
 
+    freezer.tick(RECOVERY_PROBE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert tis_switch.request_update.await_count == 2
+
+
+async def test_probe_error_is_handled(
+    hass: HomeAssistant,
+    tis_switch: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failing probe is logged and retried instead of raising."""
+    tis_switch.turn_switch_on.return_value = False
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {"entity_id": ENTITY_ID}, blocking=True
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # Ignore the refresh that happened during setup, then make probes fail.
+    tis_switch.request_update.reset_mock()
+    tis_switch.request_update.side_effect = OSError("Network unreachable")
+
+    with caplog.at_level(
+        logging.DEBUG, logger="homeassistant.components.tis_control.switch"
+    ):
+        freezer.tick(RECOVERY_PROBE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    # The error is swallowed and logged, and the entity stays unavailable.
+    assert tis_switch.request_update.await_count == 1
+    assert "Recovery probe for" in caplog.text
+    assert "Network unreachable" in caplog.text
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # The probe keeps running and tries again on the next interval.
     freezer.tick(RECOVERY_PROBE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

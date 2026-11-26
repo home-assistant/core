@@ -188,11 +188,8 @@ class TISSwitch(SwitchEntity):
     @callback
     def _update_recovery_probe(self) -> None:
         """Run the recovery probe while the entity is unavailable."""
-        # `hass` is not set before the entity is added (e.g. during the initial
-        # `update_before_add` refresh); the probe is re-evaluated once added.
-        if self.hass is None:
-            return
-
+        # `hass` is always set here: the platform assigns it before the
+        # `update_before_add` refresh and before `async_added_to_hass` runs.
         if self._attr_available:
             self._stop_recovery_probe()
         elif self._unsub_recovery_probe is None:
