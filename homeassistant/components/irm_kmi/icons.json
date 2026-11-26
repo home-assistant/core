@@ -1,5 +1,10 @@
 {
   "entity": {
+    "image": {
+      "radar": {
+        "default": "mdi:radar"
+      }
+    },
     "sensor": {
       "pollen_alder": {
         "default": "mdi:tree"

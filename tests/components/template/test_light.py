@@ -35,12 +35,14 @@ from homeassistant.components.light import (
 from homeassistant.components.template.config import async_validate_config
 from homeassistant.components.template.const import (
     LIGHT_DEPRECATED_OPTIONS,
+    LIGHT_REQUIRED_ACTIONS_OPTIONS,
     WEATHER_DEPRECATED_OPTIONS,
     DeprecatedTemplateOptions,
     TemplateService,
 )
 from homeassistant.components.template.light import (
     DEFAULT_NAME,
+    DEPRECATED_HELPER_MISSING_ACTIONS_ISSUE_ID,
     DEPRECATED_TEMPERATURE_ISSUE_ID,
 )
 from homeassistant.const import (
@@ -64,6 +66,7 @@ from .conftest import (
     TemplatePlatformSetup,
     assert_action,
     assert_attributes_template,
+    assert_deprecated_missing_actions_issue,
     assert_extra_template_attributes,
     assert_invalid_config_entry_actions_do_not_create_entities,
     assert_invalid_yaml_actions_do_not_create_entities,
@@ -3222,3 +3225,247 @@ async def test_optimistic_effect(
     state = hass.states.get(TEST_LIGHT.entity_id)
     assert state is not None
     assert state.attributes.get("effect") == expected
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("extra_config", "options"),
+    [
+        pytest.param({"hs": "{{ (40, 50) }}"}, "- `hs` requires `set_hs`", id="hs"),
+        pytest.param(
+            {"level": "{{ 100 }}"}, "- `level` requires `set_level`", id="level"
+        ),
+        pytest.param(
+            {"rgb": "{{ (160, 78, 192) }}"}, "- `rgb` requires `set_rgb`", id="rgb"
+        ),
+        pytest.param(
+            {"rgbw": "{{ (160, 78, 192, 25) }}"},
+            "- `rgbw` requires `set_rgbw`",
+            id="rgbw",
+        ),
+        pytest.param(
+            {"rgbww": "{{ (160, 78, 192, 25, 50) }}"},
+            "- `rgbww` requires `set_rgbww`",
+            id="rgbww",
+        ),
+        pytest.param(
+            {"temperature": "{{ 250 }}"},
+            "- `temperature` requires `set_temperature`",
+            id="temperature",
+        ),
+        pytest.param(
+            {"temperature_kelvin": "{{ 3000 }}"},
+            "- `temperature_kelvin` requires `set_temperature`",
+            id="temperature_kelvin",
+        ),
+        pytest.param({"xy": "{{ (0.2, 0.5) }}"}, "- `xy` requires `set_xy`", id="xy"),
+    ],
+)
+async def test_deprecated_missing_actions_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    style: ConfigurationStyle,
+    extra_config: ConfigType,
+    options: str,
+) -> None:
+    """Test a repair is created for an option without its action."""
+    await setup_entity(
+        hass, TEST_LIGHT, style, 1, ON_OFF_ACTIONS, extra_config=extra_config
+    )
+    assert_deprecated_missing_actions_issue(
+        issue_registry, LIGHT_REQUIRED_ACTIONS_OPTIONS, TEST_LIGHT, options
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("config", "extra_config"),
+    [
+        pytest.param(ON_OFF_HS_ACTIONS, {"hs": "{{ (40, 50) }}"}, id="hs"),
+        pytest.param(ON_OFF_SET_LEVEL_ACTIONS, {"level": "{{ 100 }}"}, id="level"),
+        pytest.param(ON_OFF_RGB_ACTIONS, {"rgb": "{{ (160, 78, 192) }}"}, id="rgb"),
+        pytest.param(
+            ON_OFF_RGBW_ACTIONS, {"rgbw": "{{ (160, 78, 192, 25) }}"}, id="rgbw"
+        ),
+        pytest.param(
+            ON_OFF_RGBWW_ACTIONS,
+            {"rgbww": "{{ (160, 78, 192, 25, 50) }}"},
+            id="rgbww",
+        ),
+        pytest.param(
+            ON_OFF_COLOR_TEMP_ACTIONS, {"temperature": "{{ 250 }}"}, id="temperature"
+        ),
+        pytest.param(
+            ON_OFF_COLOR_TEMP_ACTIONS,
+            {"temperature_kelvin": "{{ 3000 }}"},
+            id="temperature_kelvin",
+        ),
+        pytest.param(ON_OFF_XY_ACTIONS, {"xy": "{{ (0.2, 0.5) }}"}, id="xy"),
+        pytest.param(ON_OFF_SET_LEVEL_ACTIONS, {}, id="level_action_only"),
+    ],
+)
+async def test_no_deprecated_missing_actions_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    extra_config: ConfigType,
+) -> None:
+    """Test no repair is created when options have their action."""
+    await setup_entity(hass, TEST_LIGHT, style, 1, config, extra_config=extra_config)
+    assert (
+        get_issues_with_prefix(
+            issue_registry, LIGHT_REQUIRED_ACTIONS_OPTIONS.translation_key
+        )
+        == []
+    )
+
+
+MISSING_ACTIONS_YAML = """\
+template:
+  - light:
+      - name: Test
+        turn_on: []
+        turn_off: []
+        level: "{{ 100 }}"
+        hs: "{{ (40, 50) }}"
+        set_hs: []
+"""
+
+
+async def test_deprecated_missing_actions_issue_file_and_line(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, tmp_path: Path
+) -> None:
+    """Test the repair lists file and line, and is removed after a fix."""
+    hass.config.config_dir = str(tmp_path)
+    yaml_path = tmp_path / "configuration.yaml"
+    await _async_setup_yaml(hass, yaml_path, MISSING_ACTIONS_YAML)
+
+    issues = get_issues_with_prefix(
+        issue_registry, LIGHT_REQUIRED_ACTIONS_OPTIONS.translation_key
+    )
+    assert len(issues) == 1
+    assert issues[0].translation_placeholders == {
+        "identifier": "name: Test",
+        "options": "- `configuration.yaml:6`: `level` requires `set_level`",
+    }
+
+    await _async_reload_yaml(
+        hass, yaml_path, MISSING_ACTIONS_YAML + "        set_level: []\n"
+    )
+
+    assert (
+        get_issues_with_prefix(
+            issue_registry, LIGHT_REQUIRED_ACTIONS_OPTIONS.translation_key
+        )
+        == []
+    )
+
+
+async def test_deprecated_missing_actions_issue_blueprint(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test all instances of a light blueprint share one repair."""
+    assert await async_setup_component(
+        hass,
+        template.DOMAIN,
+        {
+            template.DOMAIN: [
+                {
+                    "use_blueprint": {
+                        "path": "test_light_with_missing_actions.yaml",
+                        "input": {"sensor": sensor},
+                    },
+                    "name": name,
+                }
+                for sensor, name in (
+                    ("sensor.first", "First"),
+                    ("sensor.second", "Second"),
+                )
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    issues = get_issues_with_prefix(
+        issue_registry, LIGHT_REQUIRED_ACTIONS_OPTIONS.translation_key
+    )
+    assert len(issues) == 1
+    assert (
+        issues[0].translation_key
+        == LIGHT_REQUIRED_ACTIONS_OPTIONS.blueprint_translation_key
+    )
+    assert issues[0].translation_placeholders == {
+        "blueprint": "test_light_with_missing_actions.yaml",
+        "options": (
+            "- `blueprints/template/test_light_with_missing_actions.yaml:18`: "
+            "`level` requires `set_level`"
+        ),
+    }
+
+
+async def test_deprecated_missing_actions_config_entry_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a repair issue is tied to a helper with options without actions."""
+    config_entry = await _async_setup_light_config_entry(
+        hass,
+        {
+            "level": "{{ 100 }}",
+            "hs": "{{ (40, 50) }}",
+            "temperature_kelvin": "{{ 3000 }}",
+        },
+    )
+    issue_id = f"{DEPRECATED_HELPER_MISSING_ACTIONS_ISSUE_ID}_{config_entry.entry_id}"
+    issue = issue_registry.async_get_issue(template.DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.config_entry_id == config_entry.entry_id
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_key == DEPRECATED_HELPER_MISSING_ACTIONS_ISSUE_ID
+    assert issue.translation_placeholders == {
+        "name": "My template",
+        "breaks_in_ha_version": "2027.6.0",
+        "options": "- `level` requires `set_level`\n- `hs` requires `set_hs`",
+    }
+
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={**config_entry.options, "set_hs": [], "set_level": []},
+    )
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(template.DOMAIN, issue_id) is None
+
+
+async def test_deprecated_missing_actions_config_entry_removed(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the repair issue is removed with the helper."""
+    config_entry = await _async_setup_light_config_entry(hass, {"level": "{{ 100 }}"})
+    issue_id = f"{DEPRECATED_HELPER_MISSING_ACTIONS_ISSUE_ID}_{config_entry.entry_id}"
+    assert issue_registry.async_get_issue(template.DOMAIN, issue_id) is not None
+
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(template.DOMAIN, issue_id) is None
+
+
+async def test_no_deprecated_missing_actions_config_entry_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test no repair issue is created for a helper with all actions."""
+    config_entry = await _async_setup_light_config_entry(
+        hass, {"level": "{{ 100 }}", "set_level": []}
+    )
+    assert (
+        issue_registry.async_get_issue(
+            template.DOMAIN,
+            f"{DEPRECATED_HELPER_MISSING_ACTIONS_ISSUE_ID}_{config_entry.entry_id}",
+        )
+        is None
+    )

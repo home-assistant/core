@@ -17,6 +17,7 @@ from homeassistant.components.indi_allsky.const import DOMAIN
 from homeassistant.components.media_player import BrowseError, MediaType
 from homeassistant.components.media_source import (
     URI_SCHEME,
+    BrowseMediaSource,
     PlayMedia,
     Unresolvable,
     async_browse_media,
@@ -352,15 +353,23 @@ async def test_async_browse_media_root(
     assert res_root.domain == DOMAIN
     assert res_root.identifier == ""
     assert res_root.title == "INDI Allsky"
+    assert res_root.children is not None
     assert len(res_root.children) == 1
+    assert isinstance(res_root.children[0], BrowseMediaSource)
     assert res_root.children[0].identifier == mock_config_entry.entry_id
 
     # Instance level: Lists 3 categories (Latest media, Videos, Images)
     res_instance = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}"
     )
+    assert res_instance.children is not None
     assert len(res_instance.children) == 3
-    assert {c.identifier: c.title for c in res_instance.children} == {
+    actual_categories: dict[str, str] = {}
+    for child in res_instance.children:
+        assert isinstance(child, BrowseMediaSource)
+        assert child.identifier is not None
+        actual_categories[child.identifier] = child.title
+    assert actual_categories == {
         f"{mock_config_entry.entry_id}#latest": "Latest media",
         f"{mock_config_entry.entry_id}#videos": "Timelapses & generated media",
         f"{mock_config_entry.entry_id}#images": "Captured images history",
@@ -437,6 +446,7 @@ async def test_async_browse_latest_media(
     res_latest = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#latest"
     )
+    assert res_latest.children is not None
     assert len(res_latest.children) == 4
     titles = [c.title for c in res_latest.children]
     assert "Latest snapshot" in titles
@@ -501,6 +511,7 @@ async def test_async_browse_videos_hierarchy(
     res_years = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#videos"
     )
+    assert res_years.children is not None
     assert len(res_years.children) == 2
     assert res_years.children[0].title == "2026"
     assert res_years.children[1].title == "2025"
@@ -508,12 +519,14 @@ async def test_async_browse_videos_hierarchy(
     res_months = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#videos#2026"
     )
+    assert res_months.children is not None
     assert len(res_months.children) == 2
     assert res_months.children[0].title == "October"
 
     res_videos = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#videos#2026#10"
     )
+    assert res_videos.children is not None
     assert len(res_videos.children) == 5
     titles = [c.title for c in res_videos.children]
     assert "Night timelapse - October 11, 2026" in titles
@@ -565,30 +578,35 @@ async def test_async_browse_images_hierarchy(
     res_years = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images"
     )
+    assert res_years.children is not None
     assert len(res_years.children) == 1
     assert res_years.children[0].title == "2026"
 
     res_months = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026"
     )
+    assert res_months.children is not None
     assert len(res_months.children) == 1
     assert res_months.children[0].title == "October"
 
     res_days = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026#10"
     )
+    assert res_days.children is not None
     assert len(res_days.children) == 2
     assert res_days.children[0].title == "Day 11"
 
     res_hours = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026#10#11"
     )
+    assert res_hours.children is not None
     assert len(res_hours.children) == 2
     assert res_hours.children[0].title == "20:00 - 20:59"
 
     res_images = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026#10#11#20"
     )
+    assert res_images.children is not None
     assert len(res_images.children) == 1
     assert "20:00:00 (4056x3140)" in res_images.children[0].title
     assert res_images.children[0].media_content_type == MediaType.IMAGE

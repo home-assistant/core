@@ -38,10 +38,10 @@ rules:
     status: exempt
     comment: No options flow.
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates: todo
+  log-when-unavailable: done
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: The controller does not require authentication.
@@ -64,7 +64,7 @@ rules:
   entity-device-class: todo
   entity-disabled-by-default: todo
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo

@@ -17,7 +17,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import LOCALE_EN, async_get_translations
 
@@ -59,6 +59,28 @@ async def test_select(
         blocking=True,
     )
     mock_lock.set_auto_lock_time.assert_called_once_with(30)
+
+
+async def test_select_unsupported_option(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
+) -> None:
+    """Test a delay supported only by other lock models is rejected."""
+    with patch("homeassistant.components.schlage.PLATFORMS", [Platform.SELECT]):
+        await mock_add_config_entry()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                TargetKey.ENTITY_ID: "select.vault_door_auto_lock_time",
+                SelectServiceArgument.OPTION: "1800",
+            },
+            blocking=True,
+        )
+    mock_lock.set_auto_lock_time.assert_not_called()
 
 
 async def test_select_api_error(

@@ -1,10 +1,11 @@
 """DataUpdateCoordinator for the swiss_public_transport integration."""
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import TypedDict, override
 
-from opendata_transport import OpendataTransport
+from opendata_transport import OpendataTransport, OpendataTransportStationboard
 from opendata_transport.exceptions import (
     OpendataTransportConnectionError,
     OpendataTransportError,
@@ -18,6 +19,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .const import (
+    CONF_STOPS_AT,
     CONF_TIME_FIXED,
     CONF_TIME_STATION,
     CONNECTIONS_COUNT,
@@ -32,9 +34,12 @@ _LOGGER = logging.getLogger(__name__)
 # Spare connections which replace departed ones until the next update
 CONNECTIONS_SPARE = 2
 DEPARTED_GRACE = timedelta(seconds=30)
+# Departures to search for the ones which stop at the requested stations
+STOPS_AT_DEPARTURES = 40
 
 type SwissPublicTransportConfigEntry = ConfigEntry[
     SwissPublicTransportDataUpdateCoordinator
+    | SwissPublicTransportStationboardDataUpdateCoordinator
 ]
 
 
@@ -51,6 +56,16 @@ class DataConnection(TypedDict):
     transfers: int
     delay: int
     line: str
+
+
+class DataDeparture(TypedDict):
+    """A stationboard departure data class."""
+
+    departure: datetime | None
+    delay: int | None
+    platform: str | None
+    line: str
+    destination: str
 
 
 def calculate_duration_in_seconds(duration_text: str) -> int | None:
@@ -220,4 +235,89 @@ class SwissPublicTransportDataUpdateCoordinator(
                 "line": connection.get("line"),
             }
             for connection in await self.fetch_connections(limit)
+        ]
+
+
+class SwissPublicTransportStationboardDataUpdateCoordinator(
+    DataUpdateCoordinator[list[DataDeparture]]
+):
+    """A SwissPublicTransport stationboard Data Update Coordinator."""
+
+    config_entry: SwissPublicTransportConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SwissPublicTransportConfigEntry,
+        opendata: OpendataTransportStationboard,
+    ) -> None:
+        """Initialize the SwissPublicTransport stationboard data coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=DEFAULT_UPDATE_TIME),
+        )
+        self._opendata = opendata
+        self._stops_at: set[str] = set(config_entry.data[CONF_STOPS_AT])
+        # Updates and actions share the client, which collects the journeys
+        self._fetch_lock = asyncio.Lock()
+
+    @override
+    async def _async_update_data(self) -> list[DataDeparture]:
+        return await self.fetch_departures(limit=CONNECTIONS_COUNT)
+
+    async def fetch_departures(self, limit: int) -> list[DataDeparture]:
+        """Fetch departures using the opendata api."""
+        async with self._fetch_lock:
+            # The limit applies to each station, the merged list is cut below
+            self._opendata.limit = STOPS_AT_DEPARTURES if self._stops_at else limit
+
+            try:
+                await self._opendata.async_get_data()
+            except OpendataTransportConnectionError as e:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_connection_failed",
+                ) from e
+            except OpendataTransportError as e:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_failed",
+                ) from e
+            journeys = self._opendata.journeys
+        if self._stops_at:
+            # The first stop is the station the journey departs from
+            journeys = [
+                journey
+                for journey in journeys
+                if self._stops_at.intersection(
+                    stop["name"] for stop in journey["pass_list"][1:]
+                )
+            ]
+        return [
+            DataDeparture(
+                departure=dt_util.parse_datetime(journey["departure"]),
+                delay=journey["delay"],
+                platform=journey["platform"],
+                line="".join(filter(None, [journey["category"], journey["number"]])),
+                destination=journey["to"],
+            )
+            for journey in journeys[:limit]
+        ]
+
+    async def fetch_departures_as_json(self, limit: int) -> list[JsonValueType]:
+        """Fetch departures using the opendata api."""
+        return [
+            {
+                "departure": departure["departure"].isoformat()
+                if departure["departure"]
+                else None,
+                "delay": departure["delay"],
+                "platform": departure["platform"],
+                "line": departure["line"],
+                "destination": departure["destination"],
+            }
+            for departure in await self.fetch_departures(limit)
         ]

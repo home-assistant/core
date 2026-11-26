@@ -11522,3 +11522,411 @@
     'state': 'off',
   })
 # ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_phase_a_overpower-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_phase_a_overpower',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase A overpower',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Phase A overpower',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_a_overpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzfault_ov_pwr_a',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_phase_a_overpower-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-Circuit Energy Meter Phase A overpower',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_phase_a_overpower',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_phase_a_underpower-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_phase_a_underpower',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase A underpower',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Phase A underpower',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_a_underpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzfault_un_pwr_a',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_phase_a_underpower-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-Circuit Energy Meter Phase A underpower',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_phase_a_underpower',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_phase_b_overpower-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_phase_b_overpower',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase B overpower',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Phase B overpower',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_b_overpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzfault_ov_pwr_b',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_phase_b_overpower-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-Circuit Energy Meter Phase B overpower',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_phase_b_overpower',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_phase_b_underpower-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_phase_b_underpower',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase B underpower',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Phase B underpower',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_b_underpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzfault_un_pwr_b',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_phase_b_underpower-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-Circuit Energy Meter Phase B underpower',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_phase_b_underpower',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_phase_c_overpower-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_phase_c_overpower',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase C overpower',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Phase C overpower',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_c_overpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzfault_ov_pwr_c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_phase_c_overpower-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-Circuit Energy Meter Phase C overpower',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_phase_c_overpower',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_phase_c_underpower-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_phase_c_underpower',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Phase C underpower',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Phase C underpower',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_c_underpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzfault_un_pwr_c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_phase_c_underpower-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-Circuit Energy Meter Phase C underpower',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_phase_c_underpower',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_total_overpower-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_total_overpower',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total overpower',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Total overpower',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_overpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzfault_ov_pwr_t',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_total_overpower-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-Circuit Energy Meter Total overpower',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_total_overpower',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_total_underpower-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_total_underpower',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total underpower',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Total underpower',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_underpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzfault_un_pwr_t',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.multi_circuit_energy_meter_total_underpower-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multi-Circuit Energy Meter Total underpower',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.multi_circuit_energy_meter_total_underpower',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

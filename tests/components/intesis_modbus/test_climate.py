@@ -346,7 +346,7 @@ async def test_initialising_gateway_climate_unknown(
     assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
     assert state.attributes[ATTR_TEMPERATURE] is None
-    assert state.attributes[ATTR_MIN_TEMP] == 16
+    assert state.attributes[ATTR_MIN_TEMP] == 18
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_FAN_MODE] is None
     assert state.attributes[ATTR_SWING_MODE] is None

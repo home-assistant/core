@@ -25,12 +25,12 @@ workflows:
         - 'actions/setup-python@v7.1.0'
         - 'actions/upload-artifact@v7.0.2'
     '.github/workflows/check-requirements.lock.yml':
-        - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
         - 'actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333'
         - 'actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3'
+        - 'actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1'
         - 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9'
-        - 'github/gh-aw-actions@9271a1804551c0dc4fb0085a97979950aa2f8489'
+        - 'github/gh-aw-actions@b907753c079ddd7d6829a0d8c24e02e818b4b45f'
     '.github/workflows/ci.yaml':
         - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         - 'actions/cache@v6.1.0'
@@ -63,13 +63,13 @@ workflows:
         - 'dessant/lock-threads@v6.0.2'
     '.github/workflows/quality-scale-reviewer-trigger.yml': []
     '.github/workflows/quality-scale-reviewer.lock.yml':
-        - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
         - 'actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333'
         - 'actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3'
+        - 'actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1'
         - 'actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0'
         - 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9'
-        - 'github/gh-aw-actions@9271a1804551c0dc4fb0085a97979950aa2f8489'
+        - 'github/gh-aw-actions@b907753c079ddd7d6829a0d8c24e02e818b4b45f'
     '.github/workflows/restrict-task-creation.yml':
         - 'actions/github-script@v9.0.0'
     '.github/workflows/stale.yml':
@@ -163,6 +163,11 @@ dependencies:
         commit: 'sha1-3a2844b7e9c422d3c10d287c895573f7108da1b3'
         owner_id: 44036562
         repo_id: 205262760
+    'actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1':
+        ref: 'v7.1.0'
+        commit: 'sha1-949feb2413d6458794dcd2491c4babbbce0c15c1'
+        owner_id: 44036562
+        repo_id: 189476904
     'actions/setup-node@v7.1.0':
         ref: 'v7.1.0'
         commit: 'sha1-949feb2413d6458794dcd2491c4babbbce0c15c1'
@@ -291,9 +296,9 @@ dependencies:
         commit: 'sha1-33d7b85da1a04171e211befe2c739303b9a4c066'
         owner_id: 9919
         repo_id: 259445878
-    'github/gh-aw-actions@9271a1804551c0dc4fb0085a97979950aa2f8489':
-        ref: 'v0.88.2'
-        commit: 'sha1-9271a1804551c0dc4fb0085a97979950aa2f8489'
+    'github/gh-aw-actions@b907753c079ddd7d6829a0d8c24e02e818b4b45f':
+        ref: 'v1.4.0'
+        commit: 'sha1-b907753c079ddd7d6829a0d8c24e02e818b4b45f'
         owner_id: 9919
         repo_id: 1156386970
     'hadolint/hadolint-action@v3.5.0':

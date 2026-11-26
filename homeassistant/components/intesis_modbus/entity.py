@@ -1,4 +1,4 @@
-"""Base entity for the air conditioner behind an Intesis Modbus gateway."""
+"""Base entity for Intesis Modbus gateways and the air conditioner behind them."""
 
 from collections.abc import Awaitable, Callable
 from typing import override
@@ -6,41 +6,32 @@ from typing import override
 from modbus_connection import ModbusError
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import IntesisUnitCoordinator
+from .coordinator import IntesisCoordinator, IntesisUnitCoordinator
 
 
-class IntesisEntity(CoordinatorEntity[IntesisUnitCoordinator]):
-    """Defines a base entity of the air conditioner."""
+class IntesisEntity(CoordinatorEntity[IntesisCoordinator | IntesisUnitCoordinator]):
+    """Defines a base Intesis entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: IntesisUnitCoordinator, key: str, report_name: str
+        self,
+        coordinator: IntesisCoordinator | IntesisUnitCoordinator,
+        key: str,
+        report_name: str,
     ) -> None:
-        """Place the entity on the air conditioner behind the gateway.
+        """Place the entity on the device its coordinator follows.
 
-        report_name is the gateway sub-system the entity's value is read from.
+        That is the gateway, or the air conditioner behind it. report_name is
+        the gateway sub-system the entity's value is read from.
         """
         super().__init__(coordinator)
-        entry = coordinator.config_entry
         self._report_name = report_name
-        self._attr_unique_id = f"{entry.entry_id}_{key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}_unit")},
-            manufacturer=coordinator.device.brand.name,
-            translation_key="air_conditioner",
-            translation_placeholders={"gateway": entry.title},
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, entry.entry_id),
-                config_entry_id=entry.entry_id,
-            ),
-        )
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{key}"
+        self._attr_device_info = coordinator.device_info
 
     @property
     @override

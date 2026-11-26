@@ -205,6 +205,13 @@ class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders=STEP_MODBUS_PLACEHOLDERS,
             )
 
+        self._async_abort_entries_match(
+            {
+                CONF_MODBUS_URL: user_input[CONF_MODBUS_URL],
+                CONF_MODBUS_UNIT: user_input[CONF_MODBUS_UNIT],
+            }
+        )
+
         errors = {}
 
         try:
@@ -216,6 +223,13 @@ class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            # Another flow may have added the same pump while this one connected
+            self._async_abort_entries_match(
+                {
+                    CONF_MODBUS_URL: user_input[CONF_MODBUS_URL],
+                    CONF_MODBUS_UNIT: user_input[CONF_MODBUS_UNIT],
+                }
+            )
             return self.async_create_entry(title=title, data=data)
 
         return self.async_show_form(
@@ -234,6 +248,8 @@ class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="nibegw", data_schema=STEP_NIBEGW_DATA_SCHEMA
             )
 
+        self._async_abort_entries_match({CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]})
+
         errors = {}
 
         try:
@@ -245,6 +261,10 @@ class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            # Another flow may have added the same pump while this one connected
+            self._async_abort_entries_match(
+                {CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
+            )
             return self.async_create_entry(title=title, data=data)
 
         return self.async_show_form(

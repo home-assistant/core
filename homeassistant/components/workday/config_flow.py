@@ -3,7 +3,7 @@
 from functools import partial
 from typing import Any, override
 
-from holidays import PUBLIC, HolidayBase, country_holidays, list_supported_countries
+from holidays import PUBLIC, country_holidays, list_supported_countries
 import probatio
 
 from homeassistant.config_entries import (
@@ -51,7 +51,7 @@ from .const import (
     SECTION_COUNTRY_SETTINGS,
     SECTION_CUSTOM_HOLIDAYS,
 )
-from .util import get_country_options
+from .util import get_holidays_object
 
 
 def add_province_and_language_to_schema(
@@ -166,20 +166,15 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
         ):
             raise AddDatesError("Incorrect date")
 
-    year: int = dt_util.now().year
-    if country := user_input.get(CONF_COUNTRY):
-        country_settings: dict[str, Any] = user_input.get(SECTION_COUNTRY_SETTINGS, {})
-        obj_holidays = country_holidays(
-            country=country,
-            subdiv=country_settings.get(CONF_PROVINCE),
-            years=year,
-            language=country_settings.get(CONF_LANGUAGE),
-            categories=[PUBLIC, *country_settings.get(CONF_CATEGORY, [])],
-            **get_country_options(country, country_settings),
-        )
-
-    else:
-        obj_holidays = HolidayBase(years=year)
+    country_settings: dict[str, Any] = user_input.get(SECTION_COUNTRY_SETTINGS, {})
+    obj_holidays = get_holidays_object(
+        user_input.get(CONF_COUNTRY),
+        country_settings.get(CONF_PROVINCE),
+        dt_util.now().year,
+        country_settings.get(CONF_LANGUAGE),
+        country_settings.get(CONF_CATEGORY),
+        country_settings,
+    )
 
     for remove_date in custom_holidays[CONF_REMOVE_HOLIDAYS]:
         if (

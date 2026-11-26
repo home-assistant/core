@@ -58,8 +58,8 @@ class QbusCover(QbusEntity, CoverEntity):
     _attr_name = None
     _attr_supported_features: CoverEntityFeature
     _attr_device_class = CoverDeviceClass.BLIND
-    _attr_open_tilt_position = OPEN_TILT_POSITION
-    _attr_closed_tilt_positions = [0, 100]
+    _attr_tilt_start_angle = -90
+    _attr_tilt_end_angle = 90
 
     def __init__(self, mqtt_output: QbusMqttOutput) -> None:
         """Initialize cover entity."""
