@@ -1416,7 +1416,30 @@ async def test_list_group_address_usage(
         hass,
         hass_admin_user,
         "list_group_address_usage",
-        {"group_addresses": ["1/2/10", "9/7/9"], "usage": "unused"},
+        {"group_addresses": ["9/7/9", "1/2/10"], "limit": 1},
+    )
+    assert result["total_count"] == 2
+    assert result["next_offset"] == 1
+    assert result["group_addresses"] == [
+        {
+            "address": "1/2/10",
+            "name": None,
+            "entities": [
+                {
+                    "entity_id": "switch.b",
+                    "platform": "switch",
+                    "ui": True,
+                    "disabled": True,
+                }
+            ],
+        }
+    ]
+
+    result = await _call_api(
+        hass,
+        hass_admin_user,
+        "list_group_address_usage",
+        {"group_addresses": ["9/7/9"]},
     )
     assert result["group_addresses"] == [
         {"address": "9/7/9", "name": None, "entities": []}
@@ -1424,44 +1447,19 @@ async def test_list_group_address_usage(
 
 
 @pytest.mark.usefixtures("load_knxproj")
-async def test_list_group_address_usage_of_project(
+async def test_list_group_address_usage_names_project_addresses(
     hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser
 ) -> None:
-    """With a project its unused addresses are listed too, by name."""
+    """With a project loaded, addresses carry their name from the project."""
     await knx.setup_integration()
     await _create_switch(hass, hass_admin_user, "A", "0/0/1")
     await _create_switch(hass, hass_admin_user, "B", "9/7/9")
 
-    result = await _call_api(
-        hass, hass_admin_user, "list_group_address_usage", {"usage": "unused"}
-    )
-    assert result["total_count"] == 6
-    assert "0/0/1" not in [ga["address"] for ga in result["group_addresses"]]
-    assert all(ga["entities"] == [] for ga in result["group_addresses"])
-
-    result = await _call_api(
-        hass, hass_admin_user, "list_group_address_usage", {"usage": "all", "limit": 1}
-    )
-    assert result["total_count"] == 8
-    assert result["next_offset"] == 1
-    assert result["group_addresses"][0]["address"] == "0/0/1"
-    assert result["group_addresses"][0]["name"] == "Binary"
+    result = await _call_api(hass, hass_admin_user, "list_group_address_usage", {})
     assert [
-        entity["entity_id"] for entity in result["group_addresses"][0]["entities"]
-    ] == ["switch.a"]
-
-
-async def test_list_unused_group_addresses_requires_a_project(
-    hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser
-) -> None:
-    """Without a project there is nothing to compare the used addresses with."""
-    await knx.setup_integration()
-
-    with pytest.raises(HomeAssistantError) as err:
-        await _call_api(
-            hass, hass_admin_user, "list_group_address_usage", {"usage": "unused"}
-        )
-    assert err.value.translation_key == "llm_no_project_loaded"
+        (ga["address"], ga["name"], [entity["entity_id"] for entity in ga["entities"]])
+        for ga in result["group_addresses"]
+    ] == [("0/0/1", "Binary", ["switch.a"]), ("9/7/9", None, ["switch.b"])]
 
 
 def _addressed_channel_project() -> dict[str, Any]:

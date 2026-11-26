@@ -62,9 +62,6 @@ API_PROMPT = (
 )
 
 
-_USAGE_USED = "used"
-_USAGE_UNUSED = "unused"
-_USAGE_ALL = "all"
 _GA_OPTION_KEYS = frozenset({"write", "state", "passive"})
 # A central address is linked to far more objects than say anything about the
 # entity; its links are cut off and left out of the channel overview.
@@ -644,19 +641,11 @@ async def _list_group_address_usage(knx: KNXModule, args: Mapping[str, Any]) -> 
         )
         for address, users in knx.get_group_address_entities().items()
     }
-    usage: str = args["usage"]
-    addresses: set[str]
-    if args["group_addresses"] is not None:
-        addresses = {_normalized_address(ga) for ga in args["group_addresses"]}
-    elif usage == _USAGE_USED:
-        addresses = set(used)
-    else:
-        if not knx.project.loaded:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="llm_no_project_loaded",
-            )
-        addresses = {*knx.project.group_addresses, *used}
+    addresses = (
+        set(used)
+        if args["group_addresses"] is None
+        else {_normalized_address(ga) for ga in args["group_addresses"]}
+    )
     result = [
         {
             "address": address,
@@ -666,7 +655,6 @@ async def _list_group_address_usage(knx: KNXModule, args: Mapping[str, Any]) -> 
             "entities": used.get(address, []),
         }
         for address in sorted(addresses, key=_address_order)
-        if usage == _USAGE_ALL or (address in used) == (usage == _USAGE_USED)
     ]
     return _paginate(result, args, "group_addresses")
 
@@ -1157,28 +1145,20 @@ def _tool_specs() -> list[_ToolSpec]:
             "list_group_address_usage",
             "List group address usage",
             "Group addresses with the Home Assistant entities using them, "
-            "entities configured in YAML included. Tells whether an address "
-            "is covered by an entity already, and - with a project loaded - "
-            "which addresses of the project no entity uses yet.",
+            "entities configured in YAML included. Tells which entity a "
+            "telegram to or from an address belongs to, and whether an address "
+            "is covered by an entity already.",
             probatio.Schema(
                 {
                     probatio.Optional(
                         "group_addresses",
                         description=(
-                            'Only these group addresses, e.g. ["1/2/3"]. By '
-                            "default the addresses in use, and for `unused` or "
-                            "`all` those of the project too."
+                            'Only these group addresses, e.g. ["1/2/3"]; one '
+                            "no entity uses is returned without entities. By "
+                            "default every address in use."
                         ),
                         default=None,
                     ): probatio.Any(None, [str]),
-                    probatio.Optional(
-                        "usage",
-                        description=(
-                            "`used` for addresses at least one entity uses, "
-                            "`unused` for those no entity uses, `all` for both."
-                        ),
-                        default=_USAGE_USED,
-                    ): probatio.In([_USAGE_USED, _USAGE_UNUSED, _USAGE_ALL]),
                     **_PAGINATION_MARKERS,
                 }
             ),
