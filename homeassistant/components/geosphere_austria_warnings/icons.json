@@ -14,5 +14,10 @@
         "default": "mdi:alert-circle-outline"
       }
     }
+  },
+  "services": {
+    "get_warnings": {
+      "service": "mdi:alert-circle-outline"
+    }
   }
 }

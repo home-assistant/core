@@ -26,11 +26,15 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 import respx
 
-from homeassistant.components.mcp.const import CONF_SLUG, DOMAIN
-from homeassistant.components.mcp.coordinator import create_mcp_httpx_client
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_URL
+from homeassistant.components.mcp.const import CONF_SERVER_NAME, CONF_SLUG, DOMAIN
+from homeassistant.components.mcp.coordinator import (
+    META_USER_ID,
+    create_mcp_httpx_client,
+)
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_USER, ConfigEntryState
+from homeassistant.const import CONF_API_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
@@ -42,8 +46,9 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 from homeassistant.helpers.httpx_client import SERVER_SOFTWARE
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from .conftest import MCP_SERVER_URL, TEST_API_NAME
+from .conftest import API_TOKEN, MCP_SERVER_URL, TEST_API_NAME, TEST_SERVER_NAME
 
 SEARCH_MEMORY_TOOL = Tool(
     name="search_memory",
@@ -121,6 +126,7 @@ class FakeMcpServer:
         self.sse_error: httpx2.Response | Exception | ErrorData | None = None
         self.list_tools_error: httpx2.Response | Exception | ErrorData | None = None
         self.call_tool_error: httpx2.Response | Exception | ErrorData | None = None
+        self.call_tool_params: dict[str, Any] | None = None
         self._sse_queue: asyncio.Queue[bytes] = asyncio.Queue()
 
     def handle_request(self, request: httpx2.Request) -> httpx2.Response:
@@ -164,7 +170,9 @@ class FakeMcpServer:
             result = InitializeResult(
                 protocolVersion="2025-03-26",
                 capabilities=ServerCapabilities(tools=ToolsCapability()),
-                serverInfo=Implementation(name=TEST_API_NAME, version="1.0.0"),
+                serverInfo=Implementation(
+                    name=TEST_SERVER_NAME, title=TEST_API_NAME, version="1.0.0"
+                ),
             )
             return self._jsonrpc_result(request_id, result)
 
@@ -177,6 +185,7 @@ class FakeMcpServer:
             return self._jsonrpc_result(request_id, ListToolsResult(tools=self.tools))
 
         if method == "tools/call":
+            self.call_tool_params = body["params"]
             if self.call_tool_error is not None:
                 return self._resolve_error(request, self.call_tool_error)
             return self._jsonrpc_result(request_id, self.call_tool_result)
@@ -404,6 +413,109 @@ async def test_mcp_server_authentication_failure(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
+@pytest.mark.usefixtures("fake_mcp_server")
+async def test_api_token(
+    hass: HomeAssistant, config_entry_with_api_token: MockConfigEntry
+) -> None:
+    """Test the token provided by the app discovery is sent on every request."""
+    await hass.config_entries.async_setup(config_entry_with_api_token.entry_id)
+    assert config_entry_with_api_token.state is ConfigEntryState.LOADED
+
+    api = next(
+        iter(api for api in llm.async_get_apis(hass) if api.name == TEST_API_NAME)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    await api_instance.tools[0].async_call(
+        hass,
+        llm.ToolInput(tool_name="search_memory", tool_args={"query": "frogs"}),
+        create_llm_context(),
+    )
+
+    assert {call.request.headers.get("Authorization") for call in respx.calls} == {
+        f"Bearer {API_TOKEN}"
+    }
+
+
+@pytest.mark.usefixtures("fake_mcp_server")
+async def test_api_token_changed(
+    hass: HomeAssistant, config_entry_with_api_token: MockConfigEntry
+) -> None:
+    """Test tools held by an ongoing conversation use a new app token."""
+    await hass.config_entries.async_setup(config_entry_with_api_token.entry_id)
+    assert config_entry_with_api_token.state is ConfigEntryState.LOADED
+
+    api = next(
+        iter(api for api in llm.async_get_apis(hass) if api.name == TEST_API_NAME)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    hass.config_entries.async_update_entry(
+        config_entry_with_api_token,
+        data={**config_entry_with_api_token.data, CONF_API_TOKEN: "new-api-token"},
+    )
+    await api_instance.tools[0].async_call(
+        hass,
+        llm.ToolInput(tool_name="search_memory", tool_args={"query": "frogs"}),
+        create_llm_context(),
+    )
+
+    assert respx.calls.last.request.headers["Authorization"] == "Bearer new-api-token"
+
+
+@pytest.mark.usefixtures("credential", "fake_mcp_server")
+async def test_oauth_preferred_over_api_token(
+    hass: HomeAssistant, config_entry_with_auth: MockConfigEntry
+) -> None:
+    """Test OAuth is used when the entry also has a token from the app discovery."""
+    hass.config_entries.async_update_entry(
+        config_entry_with_auth,
+        data={**config_entry_with_auth.data, CONF_API_TOKEN: API_TOKEN},
+    )
+
+    await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
+    assert config_entry_with_auth.state is ConfigEntryState.LOADED
+
+    assert {call.request.headers.get("Authorization") for call in respx.calls} == {
+        "Bearer test-access-token"
+    }
+
+
+async def test_api_token_rejected(
+    hass: HomeAssistant,
+    fake_mcp_server: FakeMcpServer,
+    config_entry_with_api_token: MockConfigEntry,
+) -> None:
+    """Test a rejected app token starts reauth until the app announces a new one."""
+    fake_mcp_server.streamable_http_error = httpx2.Response(401)
+
+    await hass.config_entries.async_setup(config_entry_with_api_token.entry_id)
+    assert config_entry_with_api_token.state is ConfigEntryState.SETUP_ERROR
+    assert respx.calls.last.request.headers["Authorization"] == f"Bearer {API_TOKEN}"
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+    fake_mcp_server.streamable_http_error = None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config={CONF_URL: MCP_SERVER_URL, CONF_TOKEN: "new-api-token"},
+            name="Example MCP Server",
+            slug="example_mcp_server",
+            uuid="1234",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry_with_api_token.state is ConfigEntryState.LOADED
+    assert config_entry_with_api_token.data[CONF_API_TOKEN] == "new-api-token"
+    assert respx.calls.last.request.headers["Authorization"] == "Bearer new-api-token"
+    # The reload aborts the reauth flow
+    assert not hass.config_entries.flow.async_progress()
+
+
 @pytest.mark.parametrize(
     "error",
     [
@@ -426,6 +538,82 @@ async def test_list_tools_failure(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_llm_api_tool_prefix_for_servers_with_same_name(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fake_mcp_server: FakeMcpServer,
+) -> None:
+    """Test servers that share a name get distinct tool prefixes."""
+    other_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_URL: MCP_SERVER_URL}, title=TEST_API_NAME
+    )
+    other_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert other_entry.state is ConfigEntryState.LOADED
+
+    prefixes = set()
+    for api in llm.async_get_apis(hass):
+        if api.name != TEST_API_NAME:
+            continue
+        api_instance = await api.async_get_api_instance(create_llm_context())
+        prefixes.add(api_instance.tools[0].name.partition("__")[0])
+
+    assert len(prefixes) == 2
+    assert all(prefix.startswith(f"{TEST_SERVER_NAME}-") for prefix in prefixes)
+
+    # The prefix does not change when the other server is unloaded
+    await hass.config_entries.async_unload(other_entry.entry_id)
+    api = next(
+        api
+        for api in llm.async_get_apis(hass)
+        if api.id.endswith(config_entry.entry_id)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    assert api_instance.tools[0].name.partition("__")[0] in prefixes
+
+
+async def test_server_name_is_stored(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fake_mcp_server: FakeMcpServer,
+) -> None:
+    """Test the name the server reports is stored on the entry."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.data[CONF_SERVER_NAME] == TEST_SERVER_NAME
+
+
+async def test_llm_api_long_tool_names(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fake_mcp_server: FakeMcpServer,
+) -> None:
+    """Test long tool names are cut, stay unique, and call the original tool."""
+    long_name = "a" * 60
+    fake_mcp_server.tools = [
+        Tool(name=f"{long_name}_one", inputSchema={"type": "object"}),
+        Tool(name=f"{long_name}_two", inputSchema={"type": "object"}),
+        SEARCH_MEMORY_TOOL,
+    ]
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    api = next(
+        api
+        for api in llm.async_get_apis(hass)
+        if api.id.endswith(config_entry.entry_id)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    names = [tool.name for tool in api_instance.tools]
+
+    assert len(set(names)) == 3
+    assert all(len(name) <= 64 for name in names)
+    assert names[2] == f"{TEST_SERVER_NAME}__search_memory"
+    assert all(name.startswith(f"{TEST_SERVER_NAME}__aaa") for name in names[:2])
+    assert api_instance.tools[0].tool.name == f"{long_name}_one"
+
+
 async def test_llm_get_api_tools(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -444,7 +632,7 @@ async def test_llm_get_api_tools(
     api_instance = await api.async_get_api_instance(create_llm_context())
     assert len(api_instance.tools) == 2
     tool = api_instance.tools[0]
-    assert tool.name == "search_memory"
+    assert tool.name == f"{TEST_SERVER_NAME}__search_memory"
     assert tool.description == "Search memory for relevant context based on a query."
     with pytest.raises(
         probatio.Invalid, match=re.escape("required key not provided at 'query'")
@@ -453,7 +641,7 @@ async def test_llm_get_api_tools(
     assert tool.parameters({"query": "frogs"}) == {"query": "frogs"}
 
     tool = api_instance.tools[1]
-    assert tool.name == "save_memory"
+    assert tool.name == f"{TEST_SERVER_NAME}__save_memory"
     assert tool.description == "Save a memory context."
     with pytest.raises(
         probatio.Invalid, match=re.escape("required key not provided at 'context'")
@@ -561,7 +749,7 @@ async def test_call_tool(
     api_instance = await api.async_get_api_instance(create_llm_context())
     assert len(api_instance.tools) == 1
     tool = api_instance.tools[0]
-    assert tool.name == "search_memory"
+    assert tool.name == f"{TEST_SERVER_NAME}__search_memory"
 
     fake_mcp_server.call_tool_result = call_tool_result
     result = await tool.async_call(
@@ -572,6 +760,60 @@ async def test_call_tool(
         create_llm_context(),
     )
     assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    ("source", "context", "expected_meta"),
+    [
+        pytest.param(
+            SOURCE_HASSIO,
+            Context(user_id="test-user-id"),
+            {META_USER_ID: "test-user-id"},
+            id="app_user",
+        ),
+        pytest.param(SOURCE_HASSIO, Context(), None, id="app_no_user"),
+        pytest.param(SOURCE_HASSIO, None, None, id="app_no_context"),
+        pytest.param(
+            SOURCE_USER, Context(user_id="test-user-id"), None, id="remote_server"
+        ),
+    ],
+)
+async def test_call_tool_user_meta(
+    hass: HomeAssistant,
+    fake_mcp_server: FakeMcpServer,
+    source: str,
+    context: Context | None,
+    expected_meta: dict[str, str] | None,
+) -> None:
+    """Test the Home Assistant user is only passed to MCP servers from apps."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=source,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    api = next(
+        iter(api for api in llm.async_get_apis(hass) if api.name == TEST_API_NAME)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    await api_instance.tools[0].async_call(
+        hass,
+        llm.ToolInput(tool_name="search_memory", tool_args={"query": "frogs"}),
+        llm.LLMContext(
+            platform="test_platform",
+            context=context,
+            language="*",
+            assistant="conversation",
+            device_id=None,
+        ),
+    )
+
+    assert fake_mcp_server.call_tool_params is not None
+    assert fake_mcp_server.call_tool_params.get("_meta") == expected_meta
 
 
 @pytest.mark.parametrize(
@@ -607,7 +849,7 @@ async def test_call_tool_fails(
     api_instance = await api.async_get_api_instance(create_llm_context())
     assert len(api_instance.tools) == 1
     tool = api_instance.tools[0]
-    assert tool.name == "search_memory"
+    assert tool.name == f"{TEST_SERVER_NAME}__search_memory"
 
     fake_mcp_server.call_tool_error = error
     with pytest.raises(HomeAssistantError, match=expected_message):
@@ -956,6 +1198,7 @@ async def test_streamable_http_client_closed(
     assert len(created_clients) == 1
     http_client = created_clients[0]
     assert http_client.headers["User-Agent"] == SERVER_SOFTWARE
+    assert http_client.timeout.read == 300
     assert http_client.is_closed
 
 

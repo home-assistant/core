@@ -72,6 +72,25 @@ class BitcoinConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=_currency_schema(currencies)
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a change of currency."""
+        if (currencies := await _async_get_currencies(self.hass)) is None:
+            return self.async_abort(reason="cannot_connect")
+
+        if user_input is not None:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data_updates=user_input
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                _currency_schema(currencies), self._get_reconfigure_entry().data
+            ),
+        )
+
     async def async_step_import(self, import_data: ConfigType) -> ConfigFlowResult:
         """Handle the import of a YAML sensor platform configuration."""
         if (currencies := await _async_get_currencies(self.hass)) is None:

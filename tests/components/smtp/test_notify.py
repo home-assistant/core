@@ -17,25 +17,21 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import media_source
 from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TARGET,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
+    NotifyServiceArgument,
 )
 from homeassistant.components.smtp.const import (
-    ATTR_ATTACHMENTS,
-    ATTR_CONTENT_ID,
-    ATTR_FILENAME,
-    ATTR_HTML,
-    ATTR_MEDIA_SOURCE,
-    ATTR_PRIORITY,
+    ATTR_IMAGES,
     CONF_ENTRY,
     DOMAIN,
+    SMTPService,
+    SMTPServiceArgument,
+    SMTPServiceAttachment,
 )
 from homeassistant.components.smtp.notify import MailNotificationService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_RECIPIENT, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, CONF_RECIPIENT, STATE_UNKNOWN, TargetKey
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -127,7 +123,7 @@ def test_send_message(
     [
         (
             "Test msg",
-            {"images": ["tests/testing_config/notify/test.jpg"]},
+            {ATTR_IMAGES: ["tests/testing_config/notify/test.jpg"]},
             "Content-Type: multipart/mixed",
         ),
     ],
@@ -274,10 +270,10 @@ async def test_notify_send_message(
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: "notify.home_assistant_recipient",
-            ATTR_MESSAGE: "Hello World",
+            TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
+            NotifyServiceArgument.MESSAGE: "Hello World",
         },
         blocking=True,
     )
@@ -320,10 +316,10 @@ async def test_notify_send_message_exceptions(
     with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
-                ATTR_MESSAGE: "Hello World",
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
+                NotifyServiceArgument.MESSAGE: "Hello World",
             },
             blocking=True,
         )
@@ -353,10 +349,10 @@ async def test_notify_send_message_reauth_flow(
     with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
-                ATTR_MESSAGE: "Hello World",
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
+                NotifyServiceArgument.MESSAGE: "Hello World",
             },
             blocking=True,
         )
@@ -397,8 +393,8 @@ async def test_legacy_notify_exception(
             NOTIFY_DOMAIN,
             "home_assistant",
             {
-                ATTR_TARGET: ["recipient@example.com"],
-                ATTR_MESSAGE: "Hello World",
+                NotifyServiceArgument.TARGET: ["recipient@example.com"],
+                NotifyServiceArgument.MESSAGE: "Hello World",
             },
             blocking=True,
         )
@@ -429,12 +425,12 @@ async def test_smtp_send_message(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        SMTPService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: "notify.home_assistant_recipient",
-            ATTR_MESSAGE: "Hello World",
-            ATTR_HTML: """<html><body><img src="https://example.com/avatar.png"></body></html>""",
-            ATTR_PRIORITY: "highest",
+            TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
+            SMTPServiceArgument.MESSAGE: "Hello World",
+            SMTPServiceArgument.HTML: """<html><body><img src="https://example.com/avatar.png"></body></html>""",
+            SMTPServiceArgument.PRIORITY: "highest",
         },
         blocking=True,
     )
@@ -465,19 +461,19 @@ async def test_smtp_send_message_local_media_source(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        SMTPService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: "notify.home_assistant_recipient",
-            ATTR_MESSAGE: "Hello World",
-            ATTR_ATTACHMENTS: [
+            TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
+            SMTPServiceArgument.MESSAGE: "Hello World",
+            SMTPServiceArgument.ATTACHMENTS: [
                 {
-                    ATTR_MEDIA_SOURCE: {
+                    SMTPServiceAttachment.MEDIA_SOURCE: {
                         "media_content_id": (
                             "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
                         ),
                         "media_content_type": "video/mp4",
                     },
-                    ATTR_FILENAME: "epic.mp4",
+                    SMTPServiceAttachment.FILENAME: "epic.mp4",
                 }
             ],
         },
@@ -511,19 +507,19 @@ async def test_smtp_send_message_camera_source(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            SMTPService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
-                ATTR_MESSAGE: "Hello World",
-                ATTR_HTML: """<html><body><img src="cid:1312"></body></html>""",
-                ATTR_ATTACHMENTS: [
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
+                SMTPServiceArgument.MESSAGE: "Hello World",
+                SMTPServiceArgument.HTML: """<html><body><img src="cid:1312"></body></html>""",
+                SMTPServiceArgument.ATTACHMENTS: [
                     {
-                        ATTR_MEDIA_SOURCE: {
+                        SMTPServiceAttachment.MEDIA_SOURCE: {
                             "media_content_id": "media-source://camera/camera.demo_camera",
                             "media_content_type": "image/jpeg",
                         },
-                        ATTR_FILENAME: "Epic Sax Guy 10 Hours.jpg",
-                        ATTR_CONTENT_ID: "1312",
+                        SMTPServiceAttachment.FILENAME: "Epic Sax Guy 10 Hours.jpg",
+                        SMTPServiceAttachment.CONTENT_ID: "1312",
                     }
                 ],
             },
@@ -557,26 +553,26 @@ async def test_smtp_send_message_image_source(
     ) as mock_get_image:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            SMTPService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
-                ATTR_MESSAGE: "Hello World",
-                ATTR_HTML: """<html><body><img src="cid:1312"></body></html>""",
-                ATTR_ATTACHMENTS: [
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
+                SMTPServiceArgument.MESSAGE: "Hello World",
+                SMTPServiceArgument.HTML: """<html><body><img src="cid:1312"></body></html>""",
+                SMTPServiceArgument.ATTACHMENTS: [
                     {
-                        ATTR_MEDIA_SOURCE: {
+                        SMTPServiceAttachment.MEDIA_SOURCE: {
                             "media_content_id": "media-source://image/image.test",
                             "media_content_type": "image/png",
                         },
-                        ATTR_FILENAME: "test.png",
-                        ATTR_CONTENT_ID: "1312",
+                        SMTPServiceAttachment.FILENAME: "test.png",
+                        SMTPServiceAttachment.CONTENT_ID: "1312",
                     },
                     {
-                        ATTR_MEDIA_SOURCE: {
+                        SMTPServiceAttachment.MEDIA_SOURCE: {
                             "media_content_id": "media-source://image/image.test",
                             "media_content_type": "image/png",
                         },
-                        ATTR_FILENAME: "attachment.png",
+                        SMTPServiceAttachment.FILENAME: "attachment.png",
                     },
                 ],
             },
@@ -608,18 +604,18 @@ async def test_smtp_send_message_tts_source(
     ) as mock_get_media_source_audio:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            SMTPService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
-                ATTR_MESSAGE: "Hello World",
-                ATTR_HTML: """<html><body>Hello World</body></html>""",
-                ATTR_ATTACHMENTS: [
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
+                SMTPServiceArgument.MESSAGE: "Hello World",
+                SMTPServiceArgument.HTML: """<html><body>Hello World</body></html>""",
+                SMTPServiceArgument.ATTACHMENTS: [
                     {
-                        ATTR_MEDIA_SOURCE: {
+                        SMTPServiceAttachment.MEDIA_SOURCE: {
                             "media_content_id": "media-source://tts/demo?message=Hello+World%21&language=en",
                             "media_content_type": "audio/mp3",
                         },
-                        ATTR_FILENAME: "helloworld.mp3",
+                        SMTPServiceAttachment.FILENAME: "helloworld.mp3",
                     }
                 ],
             },
@@ -661,13 +657,13 @@ async def test_smtp_send_message_media_source_not_supported(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            SMTPService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
-                ATTR_MESSAGE: "Hello World",
-                ATTR_ATTACHMENTS: [
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
+                SMTPServiceArgument.MESSAGE: "Hello World",
+                SMTPServiceArgument.ATTACHMENTS: [
                     {
-                        ATTR_MEDIA_SOURCE: {
+                        SMTPServiceAttachment.MEDIA_SOURCE: {
                             "media_content_id": "media-source://xbox/123456789/",
                             "media_content_type": "video",
                         },
@@ -704,19 +700,19 @@ async def test_smtp_send_message_os_read_errors(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            SMTPService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
-                ATTR_MESSAGE: "Hello World",
-                ATTR_ATTACHMENTS: [
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
+                SMTPServiceArgument.MESSAGE: "Hello World",
+                SMTPServiceArgument.ATTACHMENTS: [
                     {
-                        ATTR_MEDIA_SOURCE: {
+                        SMTPServiceAttachment.MEDIA_SOURCE: {
                             "media_content_id": (
                                 "media-source://media_source/local/screenshot.jpg"
                             ),
                             "media_content_type": "image/jpeg",
                         },
-                        ATTR_FILENAME: "screenshot.jpg",
+                        SMTPServiceAttachment.FILENAME: "screenshot.jpg",
                     }
                 ],
             },
@@ -753,13 +749,13 @@ async def test_smtp_send_message_media_source_missing_filename(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            SMTPService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
-                ATTR_MESSAGE: "Hello World",
-                ATTR_ATTACHMENTS: [
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
+                SMTPServiceArgument.MESSAGE: "Hello World",
+                SMTPServiceArgument.ATTACHMENTS: [
                     {
-                        ATTR_MEDIA_SOURCE: {
+                        SMTPServiceAttachment.MEDIA_SOURCE: {
                             "media_content_id": "media-source://image/image.test",
                             "media_content_type": "image/png",
                         }
@@ -793,8 +789,8 @@ async def test_deprecated_legacy_notify_action(
         NOTIFY_DOMAIN,
         "home_assistant",
         {
-            ATTR_TARGET: ["recipient@example.com"],
-            ATTR_MESSAGE: "Hello World",
+            NotifyServiceArgument.TARGET: ["recipient@example.com"],
+            NotifyServiceArgument.MESSAGE: "Hello World",
         },
         blocking=True,
     )
@@ -859,8 +855,8 @@ async def test_legacy_notify_image_attachment(
         NOTIFY_DOMAIN,
         "home_assistant",
         {
-            ATTR_MESSAGE: "Test msg",
-            ATTR_DATA: {"images": [str(image_file)]},
+            NotifyServiceArgument.MESSAGE: "Test msg",
+            NotifyServiceArgument.DATA: {ATTR_IMAGES: [str(image_file)]},
         },
         blocking=True,
     )

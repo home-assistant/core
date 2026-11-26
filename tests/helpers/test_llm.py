@@ -16,6 +16,7 @@ from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.script import ScriptConfig
+from homeassistant.components.timer_list import DOMAIN as TIMER_LIST_DOMAIN
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
@@ -518,6 +519,7 @@ async def test_assist_api(
         language="*",
         assistant="conversation",
         device_id=None,
+        agent_id="conversation.test_agent",
     )
     schema = {
         probatio.Optional("area"): cv.string,
@@ -584,6 +586,7 @@ async def test_assist_api(
         language="*",
         assistant="conversation",
         device_id=None,
+        conversation_agent_id="conversation.test_agent",
     )
     assert response.data == {
         "data": {
@@ -642,6 +645,7 @@ async def test_assist_api(
         language="*",
         assistant="conversation",
         device_id=device.id,
+        conversation_agent_id="conversation.test_agent",
     )
     assert response.data == {
         "data": {
@@ -707,6 +711,7 @@ async def test_assist_api_prompt(
     floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test prompt for the assist API."""
+    assert await async_setup_component(hass, TIMER_LIST_DOMAIN, {})
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
     context = Context()
@@ -1875,3 +1880,36 @@ async def test_deprecated_async_render_no_api_prompt(
         "The deprecated function async_render_no_api_prompt was called. It will be "
         "removed in HA Core 2027.2. Use an empty string instead"
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("pairs", "expected"),
+    [
+        pytest.param([], {}, id="empty"),
+        pytest.param(
+            [("hue", "01aa1234"), ("zha", "01bb5678")],
+            {"01aa1234": "hue:1234", "01bb5678": "zha:5678"},
+            id="unique_suffixes",
+        ),
+        pytest.param(
+            [("hue", "01aa1234"), ("hue", "01bb1234")],
+            {"01aa1234": "hue:a1234", "01bb1234": "hue:b1234"},
+            id="shared_suffix_expands",
+        ),
+        pytest.param(
+            [("hue", "01aa1234"), ("zha", "01bb1234")],
+            {"01aa1234": "hue:1234", "01bb1234": "zha:1234"},
+            id="shared_suffix_other_prefix",
+        ),
+        pytest.param(
+            [("hue", "01aa1234"), ("hue", "01aa1234"), ("hue", "01bb5678")],
+            {"01aa1234": "hue:1234", "01bb5678": "hue:5678"},
+            id="duplicate_id",
+        ),
+    ],
+)
+def test_format_short_ids(
+    pairs: list[tuple[str, str]], expected: dict[str, str]
+) -> None:
+    """Test full IDs get the shortest suffix that is unique for their prefix."""
+    assert llm.format_short_ids(pairs) == expected

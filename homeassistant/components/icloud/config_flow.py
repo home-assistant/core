@@ -11,6 +11,7 @@ from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
     PyiCloud2FARequiredException,
     PyiCloudAcceptTermsException,
+    PyiCloudAccountLockedException,
     PyiCloudAPIResponseException,
     PyiCloudAuthRequiredException,
     PyiCloudConnectionException,
@@ -23,7 +24,6 @@ from pyicloud.exceptions import (
 
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -32,7 +32,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.storage import Store
 
-from .account import code_can_be_delivered, is_2fa_status, is_auth_error
+from .account import (
+    IcloudConfigEntry,
+    code_can_be_delivered,
+    is_2fa_status,
+    is_auth_error,
+)
 from .const import (
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_INCLUDE_COMPLETED,
@@ -153,6 +158,12 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             self.api, challenged = await self.hass.async_add_executor_job(
                 self._login_without_stored_session, storage_path
+            )
+        except PyiCloudAccountLockedException as retry_error:
+            _LOGGER.error("Apple Account is locked: %s", retry_error)
+            self.api = None
+            return self._show_setup_form(
+                user_input, {CONF_PASSWORD: "account_locked"}, step_id
             )
         except PyiCloudFailedLoginException as retry_error:
             _LOGGER.error("Error logging into iCloud service: %s", retry_error)
@@ -334,6 +345,11 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             except PyiCloudAcceptTermsException as error:
                 return await self._async_terms_required(error)
+            except PyiCloudAccountLockedException as error:
+                _LOGGER.error("Apple Account is locked: %s", error)
+                self.api = None
+                errors = {CONF_PASSWORD: "account_locked"}
+                return self._show_setup_form(user_input, errors, step_id)
             except PyiCloudFailedLoginException as error:
                 _LOGGER.error("Error logging into iCloud service: %s", error)
                 self.api = None
@@ -677,7 +693,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: IcloudConfigEntry,
     ) -> IcloudOptionsFlowHandler:
         """Get the options flow for this handler."""
         return IcloudOptionsFlowHandler()

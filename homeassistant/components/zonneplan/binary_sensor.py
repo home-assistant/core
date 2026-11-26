@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 from typing import override
 
 from pyzonneplan import Battery, ChargePoint
@@ -13,9 +12,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_track_time_change
 from homeassistant.util import dt as dt_util
 
 from .const import ZONNEPLAN_TIMEZONE
@@ -156,21 +154,6 @@ class ZonneplanBinarySensor(ZonneplanEntity, BinarySensorEntity):
     """Representation of a Zonneplan binary sensor."""
 
     entity_description: ZonneplanBinarySensorEntityDescription
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Re-evaluate at every hour, as price blocks start and end on the hour."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            async_track_time_change(
-                self.hass, self._async_hour_changed, minute=0, second=0
-            )
-        )
-
-    @callback
-    def _async_hour_changed(self, now: datetime) -> None:
-        """Write the state when a new hour starts."""
-        self.async_write_ha_state()
 
     @property
     @override

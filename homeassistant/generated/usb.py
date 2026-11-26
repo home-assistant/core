@@ -9,6 +9,7 @@ SERIAL_PORT_SELECTOR_INTEGRATIONS = [
     "dsmr",
     "edl21",
     "flexit",
+    "intesis_modbus",
     "kaco_rs485",
     "landisgyr_heat_meter",
     "lg_tv_rs232",
@@ -19,6 +20,7 @@ SERIAL_PORT_SELECTOR_INTEGRATIONS = [
     "samsung_exlink",
     "sofar",
     "solaredge_modbus",
+    "sony_tv_rs232",
     "tonewinner",
     "upb",
     "velbus",
@@ -189,6 +191,12 @@ USB = [
         "domain": "zha",
         "pid": "EA60",
         "vid": "10C4",
+    },
+    {
+        "description": "*sonoff*max*cc2674p10*",
+        "domain": "zha",
+        "pid": "4001",
+        "vid": "303A",
     },
     {
         "domain": "zwave_js",

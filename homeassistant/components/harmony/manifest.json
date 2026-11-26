@@ -4,6 +4,7 @@
   "categories": ["buttons_remotes"],
   "codeowners": ["@ehendrix23", "@bdraco", "@mkeesey", "@Aohzan"],
   "config_flow": true,
+  "connectivity": ["bluetooth", "infrared"],
   "dependencies": ["remote"],
   "documentation": "https://www.home-assistant.io/integrations/harmony",
   "integration_type": "device",

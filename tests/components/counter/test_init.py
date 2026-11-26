@@ -22,7 +22,7 @@ from homeassistant.components.counter import (
     CounterService,
     CounterServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EntityStateAttribute
+from homeassistant.const import ATTR_ENTITY_ID, EntityStateAttribute, TargetKey
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -167,7 +167,7 @@ async def test_methods(hass: HomeAssistant) -> None:
         DOMAIN,
         CounterService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             CounterServiceArgument.VALUE: 5,
         },
         blocking=True,
@@ -219,7 +219,7 @@ async def test_methods_with_config(hass: HomeAssistant) -> None:
         DOMAIN,
         CounterService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             CounterServiceArgument.VALUE: 5,
         },
         blocking=True,
@@ -234,7 +234,7 @@ async def test_methods_with_config(hass: HomeAssistant) -> None:
             DOMAIN,
             CounterService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 CounterServiceArgument.VALUE: 25,
             },
             blocking=True,
@@ -250,7 +250,7 @@ async def test_methods_with_config(hass: HomeAssistant) -> None:
             DOMAIN,
             CounterService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 CounterServiceArgument.VALUE: 0,
             },
             blocking=True,
@@ -267,7 +267,7 @@ async def test_methods_with_config(hass: HomeAssistant) -> None:
             DOMAIN,
             CounterService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 CounterServiceArgument.VALUE: 6,
             },
             blocking=True,
@@ -308,7 +308,7 @@ async def test_negative_with_config(hass: HomeAssistant) -> None:
         DOMAIN,
         CounterService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             CounterServiceArgument.VALUE: -4,
         },
         blocking=True,

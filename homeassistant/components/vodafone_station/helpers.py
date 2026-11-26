@@ -1,17 +1,19 @@
 """Vodafone Station helpers."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import LOGGER
 
+if TYPE_CHECKING:
+    from .coordinator import VodafoneConfigEntry
+
 
 async def cleanup_device_tracker(
-    hass: HomeAssistant, config_entry: ConfigEntry, devices: dict[str, Any]
+    hass: HomeAssistant, config_entry: VodafoneConfigEntry, devices: dict[str, Any]
 ) -> None:
     """Cleanup stale device tracker."""
     entity_reg: er.EntityRegistry = er.async_get(hass)
@@ -66,7 +68,9 @@ async def cleanup_device_tracker(
 
 
 def _async_remove_empty_devices(
-    hass: HomeAssistant, entity_reg: er.EntityRegistry, config_entry: ConfigEntry
+    hass: HomeAssistant,
+    entity_reg: er.EntityRegistry,
+    config_entry: VodafoneConfigEntry,
 ) -> None:
     """Remove devices with no entities."""
 

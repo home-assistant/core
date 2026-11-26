@@ -23,6 +23,8 @@ PLATFORMS = [
     Platform.WEATHER,
 ]
 
+MODE_AWAY = "away"
+MODE_HOME = "home"
 SIGNAL_ARMING_BLOCKED = f"{DOMAIN}_arming_blocked_{{}}"
 
 CONF_ACCESSPOINT = "accesspoint"
@@ -32,6 +34,7 @@ HMIPC_NAME = "name"
 HMIPC_HAPID = "hapid"
 HMIPC_AUTHTOKEN = "authtoken"
 HMIPC_PIN = "pin"
+HMIPC_CLIENT_ID = "client_id"
 
 SWITCH_CHANNEL_TYPES = (
     FunctionalChannelType.SWITCH_CHANNEL,

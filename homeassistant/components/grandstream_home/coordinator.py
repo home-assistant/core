@@ -17,7 +17,7 @@ from .const import COORDINATOR_UPDATE_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type GrandstreamConfigEntry = ConfigEntry["GrandstreamRuntimeData"]
+type GrandstreamConfigEntry = ConfigEntry[GrandstreamRuntimeData]
 
 
 @dataclass

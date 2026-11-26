@@ -15,6 +15,7 @@ from pyenphase import (
     EnvoyTokenAuth,
 )
 from pyenphase.auth import EnvoyLegacyAuth
+from pyenphase.const import EnvoyOptions
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -26,6 +27,7 @@ import respx
 
 from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import (
+    CONF_NO_SOLAR,
     OPERATIONAL_RETRY_TIMEOUT,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DISABLE_KEEP_ALIVE,
@@ -56,7 +58,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import TOKEN_SIGNING_KEY, setup_integration
+from . import TOKEN_SIGNING_KEY, envoy_token, setup_integration
 
 
 async def test_with_pre_v7_firmware(
@@ -167,7 +169,6 @@ async def test_not_expired_token_with_manual_token(
         token=config_entry.data[CONF_TOKEN],
         envoy_serial="1234",
     )
-    caplog.set_level(logging.DEBUG)
 
     await setup_integration(hass, config_entry)
 
@@ -193,7 +194,6 @@ async def test_almost_expired_token_with_manual_token(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test coordinator with token within warning time in config and manual token option on."""
-    caplog.set_level(logging.DEBUG)
     events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
 
     # Make sure to mock pyenphase.auth.EnvoyTokenAuth._obtain_token
@@ -527,6 +527,73 @@ async def test_dry_contact_relay_via_device(
     assert relay_device.via_device_id == enpower_device.id
 
 
+@pytest.mark.parametrize(
+    (
+        "mock_envoy",
+        "has_generator",
+        "remove_config",
+        "remove_schedule",
+        "remove_mode",
+    ),
+    [
+        ("envoy_metered_batt_relay", True, False, False, False),
+        ("envoy_metered_batt_relay", True, True, False, False),
+        ("envoy_metered_batt_relay", True, False, True, False),
+        ("envoy_metered_batt_relay", True, False, False, True),
+        ("envoy_metered_batt_relay", True, True, True, True),
+        ("envoy", False, False, False, False),
+    ],
+    indirect=["mock_envoy"],
+    ids=[
+        "generator",
+        "generator_no_config",
+        "generator_no_schedule",
+        "generator_no_mode",
+        "generator_only",
+        "no_generator",
+    ],
+)
+async def test_generator_device(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    has_generator: bool,
+    remove_config: bool,
+    remove_schedule: bool,
+    remove_mode: bool,
+) -> None:
+    """Test the standby generator device is created and can not be removed."""
+    if remove_config:
+        mock_envoy.data.generator_config = None
+    if remove_schedule:
+        mock_envoy.data.generator_schedule = None
+    if remove_mode:
+        mock_envoy.data.generator_mode = None
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, config_entry)
+
+    envoy_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234"), config_entry.entry_id
+    )
+    assert envoy_device is not None
+    generator_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234_generator"), config_entry.entry_id
+    )
+    if has_generator:
+        assert generator_device is not None
+        assert generator_device.via_device_id == envoy_device.id
+        assert generator_device.manufacturer == (None if remove_config else "Generac")
+    else:
+        assert generator_device is None
+
+    if has_generator:
+        hass_client = await hass_ws_client(hass)
+        response = await hass_client.remove_device(generator_device.id)
+        assert not response["success"]
+
+
 @pytest.mark.parametrize("mock_envoy", ["envoy_acb_batt"], indirect=["mock_envoy"])
 async def test_remove_config_entry_device_acb(
     hass: HomeAssistant,
@@ -657,7 +724,6 @@ async def test_coordinator_interface_information(
     """Test coordinator interface mac verification."""
     await setup_integration(hass, config_entry)
 
-    caplog.set_level(logging.DEBUG)
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
     )
@@ -705,7 +771,6 @@ async def test_coordinator_interface_information_no_device(
     """Test coordinator interface mac verification full code cov."""
     await setup_integration(hass, config_entry)
 
-    caplog.set_level(logging.DEBUG)
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
     )
@@ -741,7 +806,6 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
     """Test coordinator interface mac verification with other device."""
     await setup_integration(hass, config_entry)
 
-    caplog.set_level(logging.DEBUG)
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
     )
@@ -831,7 +895,6 @@ async def test_background_task_cancel_at_unload(
 ) -> None:
     """Test coordinator background tasks cancel at unload."""
     await setup_integration(hass, config_entry)
-    caplog.set_level(logging.DEBUG)
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
     )
@@ -959,7 +1022,6 @@ async def test_coordinator_background_tasks_session_is_closed(
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
     )
-    caplog.set_level(logging.DEBUG)
 
     def raise_error() -> None:
         raise exc
@@ -1014,7 +1076,6 @@ async def test_coordinator_background_tasks_session_is_closed_not_loaded(
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
     )
-    caplog.set_level(logging.DEBUG)
 
     def raise_error() -> None:
         raise exc
@@ -1051,7 +1112,6 @@ async def test_coordinator_background_task_start(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator startup sequence and background task starting."""
-    caplog.set_level(logging.DEBUG)
     await setup_integration(hass, config_entry)
 
     # verify regular start sequence with resulting background task starting on loaded event
@@ -1149,3 +1209,72 @@ async def test_coordinator_background_task_start(
     assert "Config entry loaded, starting background task timers" not in caplog.text
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == "116"
+
+
+@respx.mock
+@patch("homeassistant.components.enphase_envoy.Envoy", autospec=True)
+async def test_init_no_solar(
+    mocked_envoy: Envoy,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test envoy options are passed to class at load."""
+
+    token = envoy_token()
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id="1234",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: token,
+            CONF_NO_SOLAR: True,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # load will fail as mock is incomplete
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    # verify class instantiation was called with expected parameters
+    args, kwargs = mocked_envoy.call_args
+    assert args[0] == "1.1.1.1"
+    assert kwargs["envoy_options"] == EnvoyOptions.NO_SOLAR | EnvoyOptions.V2_ACB_MODE
+    assert (
+        f"Using options: {EnvoyOptions.V2_ACB_MODE.name} {EnvoyOptions.NO_SOLAR.name} for Envoy Envoy 1234"
+        in caplog.text
+    )
+
+    caplog.clear()
+    mocked_envoy.reset_mock()
+
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: token,
+            CONF_NO_SOLAR: False,
+        },
+    )
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # load will fail as mock is incomplete
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    # verify class instantiation was called with expected parameters
+    args, kwargs = mocked_envoy.call_args
+    assert args[0] == "1.1.1.1"
+    assert kwargs["envoy_options"] == EnvoyOptions.V2_ACB_MODE
+    assert (
+        f"Using options: {EnvoyOptions.V2_ACB_MODE.name} for Envoy Envoy 1234"
+        in caplog.text
+    )

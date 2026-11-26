@@ -9,17 +9,16 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.eq3btsmart.const import (
     DOMAIN,
     SIGNAL_THERMOSTAT_CONNECTED,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_MAC, Platform
+from homeassistant.const import ATTR_TEMPERATURE, CONF_MAC, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
@@ -70,8 +69,8 @@ async def test_set_temperature_failed(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22.0},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 22.0},
             blocking=True,
         )
 
@@ -89,8 +88,11 @@ async def test_set_hvac_mode_failed(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.AUTO},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+            },
             blocking=True,
         )
 

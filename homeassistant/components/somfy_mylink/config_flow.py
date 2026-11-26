@@ -25,7 +25,6 @@ from .const import (
     CONF_REVERSED_TARGET_IDS,
     CONF_SYSTEM_ID,
     CONF_TARGET_ID,
-    CONF_TARGET_NAME,
     DEFAULT_PORT,
     DOMAIN,
 )
@@ -194,7 +193,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 }
             ),
             description_placeholders={
-                CONF_TARGET_NAME: self._async_get_target_name(target_id),
+                "target_name": self._async_get_target_name(target_id),
             },
             errors={},
         )

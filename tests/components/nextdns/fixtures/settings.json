@@ -85,5 +85,7 @@
   "block_piracy": true,
   "block_porn": true,
   "block_social_networks": true,
-  "block_video_streaming": true
+  "block_video_streaming": true,
+  "block_rotating_ad_domains": true,
+  "block_algorithmically_generated_domains": true
 }

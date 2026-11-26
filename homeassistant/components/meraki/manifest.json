@@ -5,9 +5,13 @@
     "presence_location.network_presence",
     "computers_network.routers_network"
   ],
-  "codeowners": [],
+  "codeowners": ["@felixblang"],
+  "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/meraki",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "quality_scale": "legacy"
+  "loggers": ["meraki"],
+  "quality_scale": "legacy",
+  "requirements": ["meraki==4.7.0"]
 }

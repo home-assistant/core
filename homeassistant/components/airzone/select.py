@@ -32,7 +32,6 @@ from aioairzone.const import (
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -276,7 +275,7 @@ class AirzoneSystemSelect(AirzoneSystemEntity, AirzoneBaseSelect):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: AirzoneSelectDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
         system_id: str,
         system_data: dict[str, Any],
     ) -> None:
@@ -309,7 +308,7 @@ class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneBaseSelect):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: AirzoneSelectDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
         system_zone_id: str,
         zone_data: dict[str, Any],
     ) -> None:
