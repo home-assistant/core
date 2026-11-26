@@ -206,75 +206,107 @@ async def test_service_cover_update(hass: HomeAssistant, mock_modbus_ha) -> None
     assert hass.states.get(ENTITY_ID).state == CoverState.OPEN
 
 
+STATUS_REGISTER_COVER_CONFIG = {
+    CONF_COVERS: [
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_INPUT_TYPE: CALL_TYPE_COIL,
+            CONF_ADDRESS: 1234,
+            CONF_STATE_OPEN: 1,
+            CONF_STATE_CLOSED: 0,
+            CONF_STATE_OPENING: 2,
+            CONF_STATE_CLOSING: 3,
+            CONF_STATUS_REGISTER: 1234,
+            CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            CONF_SCAN_INTERVAL: 0,
+        }
+    ]
+}
+COIL_COVER_CONFIG = {
+    CONF_COVERS: [
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_INPUT_TYPE: CALL_TYPE_COIL,
+            CONF_ADDRESS: 1234,
+            CONF_SCAN_INTERVAL: 0,
+        }
+    ]
+}
+
+
 @pytest.mark.parametrize(
-    ("mock_test_state", "expected"),
+    ("do_config", "mock_test_state", "expected"),
     [
-        ((State(ENTITY_ID, CoverState.CLOSED),), CoverState.CLOSED),
-        ((State(ENTITY_ID, CoverState.CLOSING),), CoverState.CLOSING),
-        ((State(ENTITY_ID, CoverState.OPENING),), CoverState.OPENING),
-        ((State(ENTITY_ID, CoverState.OPEN),), CoverState.OPEN),
-        ((State(ENTITY_ID, STATE_UNAVAILABLE),), STATE_UNKNOWN),
-        ((State(ENTITY_ID, STATE_UNKNOWN),), STATE_UNKNOWN),
+        pytest.param(
+            STATUS_REGISTER_COVER_CONFIG,
+            (State(ENTITY_ID, CoverState.CLOSED),),
+            CoverState.CLOSED,
+            id="status-register-closed",
+        ),
+        pytest.param(
+            STATUS_REGISTER_COVER_CONFIG,
+            (State(ENTITY_ID, CoverState.CLOSING),),
+            CoverState.CLOSING,
+            id="status-register-closing",
+        ),
+        pytest.param(
+            STATUS_REGISTER_COVER_CONFIG,
+            (State(ENTITY_ID, CoverState.OPENING),),
+            CoverState.OPENING,
+            id="status-register-opening",
+        ),
+        pytest.param(
+            STATUS_REGISTER_COVER_CONFIG,
+            (State(ENTITY_ID, CoverState.OPEN),),
+            CoverState.OPEN,
+            id="status-register-open",
+        ),
+        pytest.param(
+            STATUS_REGISTER_COVER_CONFIG,
+            (State(ENTITY_ID, STATE_UNAVAILABLE),),
+            STATE_UNKNOWN,
+            id="status-register-unavailable",
+        ),
+        pytest.param(
+            STATUS_REGISTER_COVER_CONFIG,
+            (State(ENTITY_ID, STATE_UNKNOWN),),
+            STATE_UNKNOWN,
+            id="status-register-unknown",
+        ),
+        pytest.param(
+            COIL_COVER_CONFIG,
+            (State(ENTITY_ID, CoverState.CLOSED),),
+            CoverState.CLOSED,
+            id="coil-closed",
+        ),
+        pytest.param(
+            COIL_COVER_CONFIG,
+            (State(ENTITY_ID, CoverState.OPEN),),
+            CoverState.OPEN,
+            id="coil-open",
+        ),
+        pytest.param(
+            COIL_COVER_CONFIG,
+            (State(ENTITY_ID, STATE_UNAVAILABLE),),
+            STATE_UNKNOWN,
+            id="coil-unavailable",
+        ),
+        pytest.param(
+            COIL_COVER_CONFIG,
+            (State(ENTITY_ID, STATE_UNKNOWN),),
+            STATE_UNKNOWN,
+            id="coil-unknown",
+        ),
     ],
     indirect=["mock_test_state"],
-)
-@pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            CONF_COVERS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_INPUT_TYPE: CALL_TYPE_COIL,
-                    CONF_ADDRESS: 1234,
-                    CONF_STATE_OPEN: 1,
-                    CONF_STATE_CLOSED: 0,
-                    CONF_STATE_OPENING: 2,
-                    CONF_STATE_CLOSING: 3,
-                    CONF_STATUS_REGISTER: 1234,
-                    CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                    CONF_SCAN_INTERVAL: 0,
-                }
-            ]
-        },
-    ],
 )
 async def test_restore_state_cover(
     hass: HomeAssistant, mock_test_state, expected, mock_modbus_to_test_errors_config
 ) -> None:
-    """Run test for cover restore state, before the first read."""
-    assert hass.states.get(ENTITY_ID).state == expected
+    """Run test for cover restore state, before the first read.
 
-
-@pytest.mark.parametrize(
-    ("mock_test_state", "expected"),
-    [
-        ((State(ENTITY_ID, CoverState.CLOSED),), CoverState.CLOSED),
-        ((State(ENTITY_ID, CoverState.OPEN),), CoverState.OPEN),
-        ((State(ENTITY_ID, STATE_UNAVAILABLE),), STATE_UNKNOWN),
-        ((State(ENTITY_ID, STATE_UNKNOWN),), STATE_UNKNOWN),
-    ],
-    indirect=["mock_test_state"],
-)
-@pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            CONF_COVERS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_INPUT_TYPE: CALL_TYPE_COIL,
-                    CONF_ADDRESS: 1234,
-                    CONF_SCAN_INTERVAL: 0,
-                }
-            ]
-        },
-    ],
-)
-async def test_restore_state_coil_cover(
-    hass: HomeAssistant, mock_test_state, expected, mock_modbus_to_test_errors_config
-) -> None:
-    """Run test for coil cover restore state, without opening/closing states."""
+    A coil cover without status register has no opening/closing states.
+    """
     assert hass.states.get(ENTITY_ID).state == expected
 
 
