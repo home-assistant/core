@@ -5,7 +5,7 @@ from typing import Any, override
 from yolink.client_request import ClientRequest
 from yolink.const import ATTR_DEVICE_DIMMER
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -68,7 +68,7 @@ class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS)
         await self.toggle_light_state("open", brightness)
 
     @override

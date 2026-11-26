@@ -6,14 +6,13 @@ from yolink.const import ATTR_DEVICE_THERMOSTAT
 from yolink.thermostat_request_builder import ThermostatRequestBuilder, ThermostatState
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
     PRESET_ECO,
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -133,8 +132,8 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set temperature."""
-        target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        target_temp_low = kwargs.get(ClimateServiceArgument.TARGET_TEMP_LOW)
+        target_temp_high = kwargs.get(ClimateServiceArgument.TARGET_TEMP_HIGH)
         if target_temp_low is not None:
             await self.call_device(
                 ThermostatRequestBuilder.set_state_request(
