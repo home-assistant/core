@@ -141,8 +141,8 @@ async def test_media_player_playing(
     assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "1 (Remastered)"
     assert state.attributes[ATTR_MEDIA_TITLE] == "Hey Jude - Remastered 2015"
     assert state.attributes[ATTR_ENTITY_PICTURE] is not None
-    assert state.attributes[ATTR_MEDIA_DURATION] == 425653
-    assert state.attributes[ATTR_MEDIA_POSITION] == 123102
+    assert state.attributes[ATTR_MEDIA_DURATION] == 425.653
+    assert state.attributes[ATTR_MEDIA_POSITION] == 123.102
     assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] is not None
     assert state.attributes[ATTR_SUPPORTED_FEATURES] is not None
     assert state.attributes[ATTR_INPUT_SOURCE] is not None

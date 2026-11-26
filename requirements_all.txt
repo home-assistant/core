@@ -897,7 +897,7 @@ denon-rs232==4.3.1
 denonavr==1.3.3
 
 # homeassistant.components.devialet
-devialet==1.5.9
+devialet==1.6.0
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.19.1
