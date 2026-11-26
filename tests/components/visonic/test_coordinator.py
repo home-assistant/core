@@ -278,7 +278,7 @@ async def test_cloud_polling_follows_enabled_alarm(
 async def test_cloud_command_authentication_failure(
     hass: HomeAssistant, service: str, disable_polling: bool
 ) -> None:
-    """Failed actions request reauthentication even without scheduled polling."""
+    """Rejected action credentials make the alarm unavailable even without polling."""
     entry = create_mock_config_entry(data={CONF_TYPE: DeviceType.CLOUD})
     entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(entry, pref_disable_polling=disable_polling)
@@ -310,7 +310,7 @@ async def test_cloud_command_authentication_failure(
         await hass.async_block_till_done()
 
         send.assert_awaited_once()
-        reauth.assert_called_once_with(hass)
+        reauth.assert_not_called()
         state = hass.states.get(state.entity_id)
         assert state is not None
         assert state.state == STATE_UNAVAILABLE
@@ -423,7 +423,7 @@ async def test_stop_waits_for_running_refresh(
         pytest.param(start_pushed_refresh, id="pushed"),
     ],
 )
-async def test_stop_prevents_reauthentication_from_pending_request(
+async def test_stop_prevents_session_renewal_from_pending_request(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     refresh: Callable[[VisonicCoordinator, HomeAssistant, FrozenDateTimeFactory], None],
@@ -605,8 +605,8 @@ async def test_command_preserves_non_transport_errors(
     assert raised.value is error
 
 
-async def test_command_authentication_failure_requests_reauth(
-    hass: HomeAssistant, command_coordinator: VisonicCoordinator
+async def test_command_authentication_failure_marks_update_failed(
+    command_coordinator: VisonicCoordinator,
 ) -> None:
     """Publish failed command authentication without discarding the last snapshot."""
     snapshot = VisonicCoordinatorData(connected=True, mode="cloud")
@@ -630,7 +630,7 @@ async def test_command_authentication_failure_requests_reauth(
     assert str(command_coordinator.last_exception) == "Credentials rejected"
     assert command_coordinator.data is snapshot
     listener.assert_called_once_with()
-    reauth.assert_called_once_with(hass)
+    reauth.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -734,10 +734,10 @@ def test_successful_command_result(coordinator: VisonicCoordinator) -> None:
     coordinator.process_command_result(CommandResult(AlarmCommandStatus.SUCCESS))
 
 
-async def test_pushed_authentication_failure_requests_reauth(
+async def test_pushed_authentication_failure_recovers(
     hass: HomeAssistant, command_coordinator: VisonicCoordinator
 ) -> None:
-    """Make a failed pushed update unavailable, request reauth and allow recovery."""
+    """Report failed pushed authentication and allow a later update to recover."""
     coordinator = command_coordinator
     coordinator.async_add_listener(MagicMock())
     snapshot = VisonicCoordinatorData(connected=True, mode="cloud")
@@ -764,7 +764,7 @@ async def test_pushed_authentication_failure_requests_reauth(
         assert str(coordinator.last_exception) == "Credentials rejected"
         assert coordinator.data is snapshot
         listener.assert_called_once_with()
-        reauth.assert_called_once_with(hass)
+        reauth.assert_not_called()
 
         coordinator.state_changed_callback(0)
         await hass.async_block_till_done()
@@ -772,7 +772,7 @@ async def test_pushed_authentication_failure_requests_reauth(
         assert coordinator.last_update_success
         assert coordinator.data is snapshot
         assert listener.call_count == 2
-        reauth.assert_called_once_with(hass)
+        reauth.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -1418,10 +1418,10 @@ async def test_my_update_data_wraps_failure(coordinator: DummyCoordinator) -> No
         await coordinator.my_update_data()
 
 
-async def test_expired_credentials_request_reauth(
+async def test_expired_credentials_raise_auth_failed(
     coordinator: DummyCoordinator,
 ) -> None:
-    """Propagate rejected cloud credentials into Home Assistant reauthentication."""
+    """Report rejected cloud credentials as an authentication failure."""
     with (
         patch.object(
             coordinator,
@@ -1597,7 +1597,7 @@ async def test_stop_rejects_queued_entity_command(
 async def test_stop_suppresses_authentication_failure_from_running_command(
     hass: HomeAssistant,
 ) -> None:
-    """An accepted command can fail during shutdown without requesting reauth."""
+    """A late command failure must not replace the stopped coordinator state."""
     entry = create_config_entry_example(data={CONF_TYPE: DeviceType.CLOUD})
     coordinator = VisonicCoordinator(hass, entry, 1)
     coordinator.async_set_updated_data(

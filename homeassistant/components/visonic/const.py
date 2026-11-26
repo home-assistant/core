@@ -40,8 +40,6 @@ CONFIG_CANNOT_CONNECT: Final = "cannot_connect"
 CONFIG_CONNECTION_TIMEOUT: Final = "cannot_connect_timeout"
 CONFIG_CONNECTION_REFUSED: Final = "cannot_connect_refused"
 CONFIG_SETTINGS_INVALID: Final = "settings_invalid"
-CONFIG_PANEL_NOT_REGISTERED: Final = "panel_not_registered"
-CONFIG_PANEL_MISMATCH: Final = "panel_mismatch"
 CONFIG_PANEL_NUMBER_IN_USE: Final = "panel_number_in_use"
 CONFIG_CLOUD_ERROR: Final = "cloud_error"
 CONFIG_NO_CLOUD_PANELS: Final = "no_panels"
@@ -72,7 +70,6 @@ CONF_ENABLE_REMOTE_DISARM: Final = "allow_remote_disarm"
 CONF_EPROM_ATTRIBUTES: Final = "show_eeprom_attributes"  # leave as eeprom as this will change the config params in HA
 CONF_INSTANT_ARM_AWAY: Final = "arm_away_instant"
 CONF_INSTANT_ARM_HOME: Final = "arm_home_instant"
-CONF_RETRY_CONNECTION_COUNT: Final = "retry_connection_count"
 CONF_RETRY_CONNECTION_DELAY: Final = "retry_connection_delay"
 
 # The baud rate for serial connections is managed internally and not set by the user
@@ -101,11 +98,9 @@ MAX_CLIENT_LOG_ENTRIES: Final = 1000
 # The main configuration forms
 #   These need to be in the language translation file
 FORM_DEVICE: Final = "device"
-FORM_DEVICE_NO_PANEL: Final = "device_no_panel"
 FORM_ETHERNET: Final = "form_ethernet"
 FORM_SERIAL: Final = "form_serial"
 FORM_CLOUD: Final = "form_cloud"
 FORM_POWERLINK: Final = "form_powerlink"
-FORM_CONNECTION: Final = "parameters_connection"
-FORM_PANEL_ARMING: Final = "parameters_panel_arming"
+FORM_PANEL_OPTIONS: Final = "panel_options"
 FORM_SELECT_PANEL: Final = "select_panel"

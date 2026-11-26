@@ -24,11 +24,7 @@ from homeassistant.components.visonic.const import (
     CONF_INSTANT_ARM_AWAY,
     CONF_INSTANT_ARM_HOME,
     CONF_PANEL_NUMBER,
-    CONF_PANEL_SERIAL,
     DOMAIN,
-    FORM_CLOUD,
-    FORM_DEVICE_NO_PANEL,
-    FORM_SELECT_PANEL,
     TRANSLATE_EXCEPTION_DISARM_CODE_NOT_ENTERED,
     Platform,
 )
@@ -47,15 +43,7 @@ from homeassistant.components.visonic.visonic_types import (
     DeviceType,
     PanelStateData,
 )
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_EMAIL,
-    CONF_EXTERNAL_URL,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_CODE, CONF_TYPE
 from homeassistant.core import HomeAssistant, HomeAssistantError
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import (
@@ -395,96 +383,6 @@ async def test_cloud_service_reuses_configured_code(
         )
         cloud_alarm.get_user_code.assert_called()
         cloud_command.assert_awaited_once_with()
-        assert await hass.config_entries.async_unload(entry.entry_id)
-
-
-@pytest.mark.usefixtures(
-    "mock_connection_test", "mock_panel_connect", "mock_async_zeroconf"
-)
-@pytest.mark.parametrize("command", ["arm_home", "arm_away"])
-async def test_cloud_reconfigure_uses_normal_arming(
-    hass: HomeAssistant, command: str
-) -> None:
-    """A loaded local panel loses hidden instant settings after switching to cloud."""
-    shared_options = {
-        CONF_ENABLE_REMOTE_ARM: True,
-        CONF_ENABLE_REMOTE_DISARM: False,
-        CONF_ARM_HOME_ENABLED: True,
-    }
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_TYPE: DeviceType.ETHERNET,
-            CONF_PANEL_NUMBER: 3,
-            CONF_HOST: "192.0.2.1",
-            CONF_PORT: "30000",
-        },
-        options=shared_options
-        | {
-            CONF_ARM_CODE_AUTO: True,
-            CONF_INSTANT_ARM_HOME: True,
-            CONF_INSTANT_ARM_AWAY: True,
-        },
-    )
-    entry.add_to_hass(hass)
-    snapshot = VisonicCoordinatorData(connected=True, achieved_powerlink=True)
-    with (
-        patch(
-            "homeassistant.components.visonic.direct.VisonicDirectConnection.create_state_snapshot",
-            return_value=snapshot,
-        ),
-        patch.object(
-            VisonicCloudConnection, "create_state_snapshot", return_value=snapshot
-        ),
-        patch.object(
-            VisonicCloudConnection,
-            "wait_for_process_status",
-            return_value=AlarmCommandStatus.SUCCESS,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        result = await entry.start_reconfigure_flow(hass)
-        assert result["step_id"] == FORM_DEVICE_NO_PANEL
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TYPE: DeviceType.CLOUD.title()}
-        )
-        assert result["step_id"] == FORM_CLOUD
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_EXTERNAL_URL: "cloud.example.com",
-                CONF_EMAIL: "user@example.com",
-                CONF_PASSWORD: "password",
-            },
-        )
-        assert result["step_id"] == FORM_SELECT_PANEL
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PANEL_SERIAL: "ABCDEF", CONF_CODE: "1234"}
-        )
-        assert result["reason"] == "reconfigure_successful"
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert entry.data[CONF_TYPE] == DeviceType.CLOUD
-        assert entry.options == shared_options
-        cloud = cast(VisonicCloudConnection, entry.runtime_data.coordinator.connection)
-        cloud_alarm = MagicMock(spec=AlarmSystem)
-        cloud_alarm.get_user_code.return_value = "1234"
-        cloud.cloud_alarm = cloud_alarm
-        cloud.login_success = True
-        cloud_command = getattr(cloud_alarm, command)
-        cloud_command.return_value = "process-token"
-        state = hass.states.get("alarm_control_panel.visonic_alarm_p3")
-        assert state is not None
-        assert state.attributes["code_arm_required"] is False
-        await hass.services.async_call(
-            "alarm_control_panel",
-            f"alarm_{command}",
-            {"entity_id": state.entity_id},
-            blocking=True,
-        )
-        cloud_command.assert_awaited_once_with()
-        cloud_alarm.arm_home_instant.assert_not_awaited()
-        cloud_alarm.arm_away_instant.assert_not_awaited()
         assert await hass.config_entries.async_unload(entry.entry_id)
 
 

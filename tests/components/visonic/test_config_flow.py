@@ -1,31 +1,23 @@
 """Tests for the config flow handlers."""
 
 from collections.abc import Generator
-from datetime import timedelta
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, call, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    start_reauth_flow,
-)
+from pytest_homeassistant.common import MockConfigEntry
 from pyvisonicalarm.exceptions import Error, NotFoundError, UndefinedBadRequestError
 
-from homeassistant.components.visonic.config_flow import FORM_DEVICE_NO_PANEL
 from homeassistant.components.visonic.const import (
     CONF_ARM_CODE_AUTO,
     CONF_ARM_HOME_ENABLED,
     CONF_CLOUD_APP_ID,
     CONF_DOWNLOAD_CODE,
-    CONF_ENABLE_REMOTE_ARM,
-    CONF_ENABLE_REMOTE_DISARM,
     CONF_INSTANT_ARM_AWAY,
     CONF_INSTANT_ARM_HOME,
     CONF_PANEL_NUMBER,
     CONF_PANEL_SERIAL,
+    CONF_RETRY_CONNECTION_DELAY,
     CONF_USER_CODE_SLOT,
     CONFIG_CONNECTION_REFUSED,
     CONFIG_EMAIL_INVALID,
@@ -33,27 +25,17 @@ from homeassistant.components.visonic.const import (
     CONFIG_SETTINGS_MISSING,
     DOMAIN,
     FORM_CLOUD,
-    FORM_CONNECTION,
     FORM_DEVICE,
     FORM_ETHERNET,
-    FORM_PANEL_ARMING,
+    FORM_PANEL_OPTIONS,
     FORM_POWERLINK,
     FORM_SELECT_PANEL,
     FORM_SERIAL,
     VISONIC_UNIQUE_NAME,
 )
-from homeassistant.components.visonic.exceptions import (
-    VisonicAuthException,
-    VisonicException,
-)
+from homeassistant.components.visonic.exceptions import VisonicException
 from homeassistant.components.visonic.visonic_types import DeviceType
-from homeassistant.config_entries import (
-    SOURCE_IMPORT,
-    SOURCE_REAUTH,
-    SOURCE_RECONFIGURE,
-    SOURCE_USER,
-    ConfigEntryState,
-)
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_CODE,
     CONF_DEVICE,
@@ -67,10 +49,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.util import dt as dt_util
-
-from .helpers import SetupIntegration
+from homeassistant.exceptions import ConfigEntryNotReady
 
 pytestmark = pytest.mark.usefixtures("mock_async_zeroconf")
 
@@ -142,8 +121,7 @@ async def test_user_flow_direct(
     credentials = {CONF_DOWNLOAD_CODE: "1234", CONF_USER_CODE_SLOT: 2}
     submissions = {
         FORM_POWERLINK: credentials,
-        FORM_CONNECTION: {},
-        FORM_PANEL_ARMING: {CONF_ARM_HOME_ENABLED: False},
+        FORM_PANEL_OPTIONS: {CONF_ARM_HOME_ENABLED: False},
     }
     for step in (FORM_POWERLINK,):
         assert result["type"] is FlowResultType.FORM
@@ -343,272 +321,34 @@ async def test_cloud_rejects_invalid_server(
     assert result["result"].data[CONF_EXTERNAL_URL] == CLOUD_INPUT[CONF_EXTERNAL_URL]
 
 
-@pytest.mark.usefixtures("mock_connection_test")
-async def test_reauth_flow(hass: HomeAssistant) -> None:
-    """Reauthenticate through both forms without changing panel identity."""
-    data = (
-        CLOUD_INPUT
-        | PANEL_INPUT
-        | {
-            CONF_TYPE: DeviceType.CLOUD,
-            CONF_PANEL_NUMBER: 2,
-            CONF_CLOUD_APP_ID: "existing-app-id",
-            CONF_SCAN_INTERVAL: 90,
-        }
-    )
-    entry = MockConfigEntry(
-        domain=DOMAIN, data=data, options={CONF_ARM_HOME_ENABLED: False}
-    )
-    entry.add_to_hass(hass)
-    result = await entry.start_reauth_flow(hass)
-    assert result["step_id"] == FORM_CLOUD
-    with patch.object(hass.config_entries, "async_reload", return_value=True) as reload:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CLOUD_INPUT | {CONF_PASSWORD: "new-password"}
-        )
-        assert result["step_id"] == FORM_SELECT_PANEL
-        assert entry.data == data
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], PANEL_INPUT
-        )
-    assert result["reason"] == "reauth_successful"
-    expected_data = dict(data)
-    expected_data.pop(CONF_SCAN_INTERVAL)
-    assert entry.data == expected_data | {CONF_PASSWORD: "new-password"}
-    assert entry.options == {CONF_ARM_HOME_ENABLED: False}
-    reload.assert_awaited_once_with(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_loaded_cloud_reauth_with_unchanged_credentials(
-    hass: HomeAssistant,
-    setup_integration: SetupIntegration,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Reload after successful unchanged reauth when an auth failure stopped polling."""
-    _, entry = await setup_integration(
-        data=CLOUD_INPUT
-        | PANEL_INPUT
-        | {CONF_TYPE: DeviceType.CLOUD, CONF_CLOUD_APP_ID: "existing-app-id"}
-    )
-    coordinator = entry.runtime_data.coordinator
-    entry.async_on_unload(coordinator.async_add_listener(MagicMock()))
-    with (
-        patch.object(
-            coordinator,
-            "create_state_snapshot",
-            side_effect=VisonicAuthException("Rejected credentials"),
-        ),
-        patch.object(entry, "async_start_reauth_if_available") as reauth,
-    ):
-        freezer.tick(timedelta(seconds=30))
-        async_fire_time_changed(hass, dt_util.utcnow())
-        await hass.async_block_till_done()
-
-    assert not coordinator.last_update_success
-    assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed)
-    assert coordinator._unsub_refresh is None
-    reauth.assert_called_once_with(hass)
-    original_data = dict(entry.data)
-    result = await start_reauth_flow(hass, entry)
-    with patch.object(hass.config_entries, "async_reload", return_value=True) as reload:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CLOUD_INPUT
-        )
-        assert result["step_id"] == FORM_SELECT_PANEL
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], PANEL_INPUT
-        )
-        await hass.async_block_till_done()
-
-    assert result["reason"] == "reauth_successful"
-    assert entry.data == original_data
-    reload.assert_awaited_once_with(entry.entry_id)
-
-
 @pytest.mark.parametrize(
-    ("source", "initial_steps", "reason"),
-    [
-        pytest.param(SOURCE_REAUTH, [], "reauth_successful", id="reauth"),
-        pytest.param(
-            SOURCE_RECONFIGURE,
-            [(FORM_DEVICE_NO_PANEL, {CONF_TYPE: DeviceType.CLOUD.title()})],
-            "reconfigure_successful",
-            id="reconfigure",
-        ),
-    ],
-)
-@pytest.mark.parametrize(
-    "server",
-    [
-        pytest.param("cloud.example.com", id="hostname"),
-        pytest.param("https://cloud.example.com/", id="https-url"),
-        pytest.param(" HTTPS://Cloud.Example.COM/ ", id="case-and-whitespace"),
-    ],
-)
-async def test_loaded_cloud_entry_updates(
-    hass: HomeAssistant,
-    setup_integration: SetupIntegration,
-    source: str,
-    initial_steps: list[tuple[str, dict[str, str]]],
-    reason: str,
-    server: str,
-) -> None:
-    """Use the loaded entry listener to reload changed cloud credentials once."""
-    _, entry = await setup_integration(
-        data=CLOUD_INPUT | PANEL_INPUT | {CONF_TYPE: DeviceType.CLOUD}
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": source, "entry_id": entry.entry_id}, data=entry.data
-    )
-    with patch.object(hass.config_entries, "async_reload", return_value=True) as reload:
-        for step, data in (
-            *initial_steps,
-            (
-                FORM_CLOUD,
-                CLOUD_INPUT
-                | {CONF_PASSWORD: "new-password", CONF_EXTERNAL_URL: server},
-            ),
-            (FORM_SELECT_PANEL, PANEL_INPUT),
-        ):
-            assert result["step_id"] == step
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], data
-            )
-        await hass.async_block_till_done()
-    assert result["reason"] == reason
-    assert entry.data[CONF_PASSWORD] == "new-password"
-    assert entry.data[CONF_EXTERNAL_URL] == CLOUD_INPUT[CONF_EXTERNAL_URL]
-    reload.assert_awaited_once_with(entry.entry_id)
-
-
-@pytest.mark.parametrize(
-    ("device_type", "connection_data", "step", "expected_connections", "panel_steps"),
+    ("device_type", "direct_options", "updated_options"),
     [
         pytest.param(
             DeviceType.ETHERNET,
-            {
-                CONF_HOST: "192.0.2.1",
-                CONF_PORT: "30000",
-            },
-            FORM_ETHERNET,
-            0,
-            [(FORM_POWERLINK, {CONF_USER_CODE_SLOT: 1})],
-            id="unchanged",
-        ),
-        pytest.param(
-            DeviceType.ETHERNET,
-            {
-                CONF_HOST: "192.0.2.2",
-                CONF_PORT: "30000",
-            },
-            FORM_ETHERNET,
-            1,
-            [(FORM_POWERLINK, {CONF_USER_CODE_SLOT: 1})],
-            id="changed-host",
-        ),
-        pytest.param(
-            DeviceType.SERIAL,
-            {CONF_DEVICE: "/dev/ttyUSB0"},
-            FORM_SERIAL,
-            1,
-            [(FORM_POWERLINK, {CONF_USER_CODE_SLOT: 1})],
-            id="changed-type",
-        ),
-        pytest.param(
-            DeviceType.SERIAL,
-            {CONF_DEVICE: "esphome-hass://esphome/entry-id?port_name=uart"},
-            FORM_SERIAL,
-            1,
-            [(FORM_POWERLINK, {CONF_USER_CODE_SLOT: 1})],
-            id="esphome-serial-proxy",
-        ),
-        pytest.param(
-            DeviceType.CLOUD,
-            {
-                CONF_EXTERNAL_URL: "cloud.example.com",
-                CONF_EMAIL: "user@example.com",
-                CONF_PASSWORD: "password",
-            },
-            FORM_CLOUD,
-            2,
-            [(FORM_SELECT_PANEL, PANEL_INPUT)],
-            id="cloud",
-        ),
-    ],
-)
-async def test_reconfigure_flow(
-    hass: HomeAssistant,
-    mock_connection_test: AsyncMock,
-    device_type: DeviceType,
-    connection_data: dict[str, str],
-    step: str,
-    expected_connections: int,
-    panel_steps: list[tuple[str, dict[str, str | int]]],
-) -> None:
-    """Reconfigure connections while preserving panel identity and options."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="visonic_security_system_panel_2",
-        data={
-            CONF_TYPE: DeviceType.ETHERNET,
-            CONF_PANEL_NUMBER: 2,
-            CONF_HOST: "192.0.2.1",
-            CONF_PORT: "30000",
-        },
-        options={CONF_ARM_HOME_ENABLED: False},
-    )
-    entry.add_to_hass(hass)
-    result = await entry.start_reconfigure_flow(hass)
-    assert result["step_id"] == FORM_DEVICE_NO_PANEL
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TYPE: device_type.title()}
-    )
-    assert result["step_id"] == step
-    with patch.object(hass.config_entries, "async_reload", return_value=True) as reload:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            connection_data,
-        )
-        for panel_step, panel_data in panel_steps:
-            assert result["step_id"] == panel_step
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], panel_data
-            )
-        await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert (
-        entry.data.items()
-        >= (connection_data | {CONF_TYPE: device_type, CONF_PANEL_NUMBER: 2}).items()
-    )
-    assert entry.unique_id == "visonic_security_system_panel_2"
-    assert entry.options == {CONF_ARM_HOME_ENABLED: False}
-    assert mock_connection_test.await_count == expected_connections
-    reload.assert_awaited_once_with(entry.entry_id)
-    assert hass.config_entries.async_entries(DOMAIN) == [entry]
-
-
-@pytest.mark.parametrize(
-    ("device_type", "steps", "arm_code_option"),
-    [
-        pytest.param(
-            DeviceType.ETHERNET,
-            [FORM_CONNECTION, FORM_PANEL_ARMING],
             True,
+            {CONF_ARM_HOME_ENABLED: False, CONF_RETRY_CONNECTION_DELAY: 120},
             id="ethernet",
         ),
         pytest.param(
-            DeviceType.SERIAL, [FORM_CONNECTION, FORM_PANEL_ARMING], True, id="serial"
+            DeviceType.SERIAL,
+            True,
+            {CONF_ARM_HOME_ENABLED: False, CONF_RETRY_CONNECTION_DELAY: 120},
+            id="serial",
         ),
-        pytest.param(DeviceType.CLOUD, [FORM_PANEL_ARMING], False, id="cloud"),
+        pytest.param(
+            DeviceType.CLOUD,
+            False,
+            {CONF_ARM_HOME_ENABLED: False},
+            id="cloud",
+        ),
     ],
 )
 async def test_options_flow(
     hass: HomeAssistant,
     device_type: DeviceType,
-    steps: list[str],
-    arm_code_option: bool,
+    direct_options: bool,
+    updated_options: dict[str, bool | int],
 ) -> None:
     """Edit behavioral settings without changing connection data or unrelated options."""
     entry = MockConfigEntry(
@@ -618,35 +358,34 @@ async def test_options_flow(
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    for step in steps:
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == step
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], {}
-        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == FORM_PANEL_OPTIONS
+    assert (
+        CONF_RETRY_CONNECTION_DELAY
+        in {key.schema for key in result["data_schema"].schema}
+    ) is direct_options
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_ARM_HOME_ENABLED] is True
     assert entry.options["unrelated_option"] == "preserved"
     assert entry.data == {CONF_TYPE: device_type, CONF_PANEL_NUMBER: 2}
     assert not entry.data.keys() & entry.options.keys()
-    assert (CONF_ARM_CODE_AUTO in entry.options) is arm_code_option
-    assert (CONF_INSTANT_ARM_AWAY in entry.options) is arm_code_option
-    assert (CONF_INSTANT_ARM_HOME in entry.options) is arm_code_option
+    assert (CONF_ARM_CODE_AUTO in entry.options) is direct_options
+    assert (CONF_INSTANT_ARM_AWAY in entry.options) is direct_options
+    assert (CONF_INSTANT_ARM_HOME in entry.options) is direct_options
+    assert (CONF_RETRY_CONNECTION_DELAY in entry.options) is direct_options
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    for _step in steps[:-1]:
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], {}
-        )
+    assert result["step_id"] == FORM_PANEL_OPTIONS
     assert (
         CONF_ARM_CODE_AUTO in {key.schema for key in result["data_schema"].schema}
-    ) is arm_code_option
+    ) is direct_options
     assert (
         CONF_INSTANT_ARM_AWAY in {key.schema for key in result["data_schema"].schema}
-    ) is arm_code_option
+    ) is direct_options
     assert (
         CONF_INSTANT_ARM_HOME in {key.schema for key in result["data_schema"].schema}
-    ) is arm_code_option
+    ) is direct_options
     field = next(
         key
         for key in result["data_schema"].schema
@@ -654,10 +393,11 @@ async def test_options_flow(
     )
     assert field.description["suggested_value"] is True
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {CONF_ARM_HOME_ENABLED: False}
+        result["flow_id"], updated_options
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_ARM_HOME_ENABLED] is False
+    assert entry.options.items() >= updated_options.items()
 
 
 @pytest.mark.parametrize(
@@ -710,138 +450,6 @@ async def test_connection_error_retry(
     assert result["result"].data.items() >= data.items()
 
 
-async def test_reauth_error(
-    hass: HomeAssistant, mock_connection_test: AsyncMock
-) -> None:
-    """Keep stored data on credential failure and recover through both forms."""
-    data = (
-        CLOUD_INPUT
-        | PANEL_INPUT
-        | {
-            CONF_TYPE: DeviceType.CLOUD,
-            CONF_PANEL_NUMBER: 2,
-            CONF_CLOUD_APP_ID: "existing-app-id",
-        }
-    )
-    entry = MockConfigEntry(
-        domain=DOMAIN, data=data, options={CONF_ARM_HOME_ENABLED: False}
-    )
-    entry.add_to_hass(hass)
-    result = await entry.start_reauth_flow(hass)
-    mock_connection_test.return_value = CONFIG_CONNECTION_REFUSED
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], CLOUD_INPUT | {CONF_PASSWORD: "new-password"}
-    )
-    assert result["errors"] == {"base": CONFIG_CONNECTION_REFUSED}
-    assert entry.data == data
-    mock_connection_test.return_value = None
-    with patch.object(hass.config_entries, "async_reload", return_value=True) as reload:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CLOUD_INPUT | {CONF_PASSWORD: "new-password"}
-        )
-        assert result["step_id"] == FORM_SELECT_PANEL
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], PANEL_INPUT
-        )
-    assert result["reason"] == "reauth_successful"
-    assert entry.data == data | {CONF_PASSWORD: "new-password"}
-    assert entry.options == {CONF_ARM_HOME_ENABLED: False}
-    reload.assert_awaited_once_with(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize(
-    ("device_type", "connection_data", "step", "panel_steps"),
-    [
-        pytest.param(
-            DeviceType.ETHERNET,
-            {
-                CONF_HOST: "192.0.2.2",
-                CONF_PORT: "30000",
-            },
-            FORM_ETHERNET,
-            [(FORM_POWERLINK, {CONF_USER_CODE_SLOT: 1})],
-            id="ethernet",
-        ),
-        pytest.param(
-            DeviceType.SERIAL,
-            {CONF_DEVICE: "/dev/ttyUSB1"},
-            FORM_SERIAL,
-            [(FORM_POWERLINK, {CONF_USER_CODE_SLOT: 1})],
-            id="serial",
-        ),
-        pytest.param(
-            DeviceType.CLOUD,
-            CLOUD_INPUT,
-            FORM_CLOUD,
-            [(FORM_SELECT_PANEL, PANEL_INPUT)],
-            id="cloud",
-        ),
-    ],
-)
-async def test_reconfigure_error_recovery(
-    hass: HomeAssistant,
-    mock_connection_test: AsyncMock,
-    device_type: DeviceType,
-    connection_data: dict[str, str],
-    step: str,
-    panel_steps: list[tuple[str, dict[str, str | int]]],
-) -> None:
-    """Retry a failed endpoint change without losing identity or existing settings."""
-    data = {
-        CONF_TYPE: DeviceType.ETHERNET,
-        CONF_PANEL_NUMBER: 2,
-        CONF_HOST: "192.0.2.1",
-        CONF_PORT: "30000",
-    }
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="visonic_security_system_panel_2",
-        data=data,
-        options={CONF_ARM_HOME_ENABLED: False},
-    )
-    entry.add_to_hass(hass)
-    result = await entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TYPE: device_type.title()}
-    )
-    outcomes = iter([CONFIG_CONNECTION_REFUSED, None, None])
-
-    async def validate(device_type: DeviceType, data: dict[str, str]) -> str | None:
-        return next(outcomes)
-
-    mock_connection_test.side_effect = validate
-    with patch.object(hass.config_entries, "async_reload", return_value=True) as reload:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], connection_data
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == step
-        assert result["errors"] == {"base": CONFIG_CONNECTION_REFUSED}
-        assert entry.data == data
-        assert entry.options == {CONF_ARM_HOME_ENABLED: False}
-        reload.assert_not_awaited()
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], connection_data
-        )
-        for panel_step, panel_data in panel_steps:
-            assert result["step_id"] == panel_step
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], panel_data
-            )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert entry.data.items() >= (connection_data | {CONF_TYPE: device_type}).items()
-    assert entry.unique_id == "visonic_security_system_panel_2"
-    assert entry.options == {CONF_ARM_HOME_ENABLED: False}
-    assert hass.config_entries.async_entries(DOMAIN) == [entry]
-    assert mock_connection_test.await_count == 2 + (device_type == DeviceType.CLOUD)
-    reload.assert_awaited_once_with(entry.entry_id)
-
-
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     "interval",
@@ -878,45 +486,6 @@ async def test_cloud_polling_interval_not_configurable(
     assert CONF_PANEL_NUMBER not in result["result"].options
     assert mock_connection_test.await_count == 2
     await hass.async_block_till_done()
-
-
-@pytest.mark.usefixtures("mock_connection_test")
-async def test_reconfigure_clears_optional_credentials(hass: HomeAssistant) -> None:
-    """Clearing a suggested download code removes its saved value."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_TYPE: DeviceType.SERIAL,
-            CONF_PANEL_NUMBER: 2,
-            CONF_DEVICE: "/dev/ttyUSB0",
-            CONF_DOWNLOAD_CODE: "1234",
-            CONF_USER_CODE_SLOT: 2,
-        },
-        options={CONF_ARM_HOME_ENABLED: False},
-    )
-    entry.add_to_hass(hass)
-    result = await entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TYPE: DeviceType.SERIAL.title()}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_DEVICE: "/dev/ttyUSB0"},
-    )
-    assert result["step_id"] == FORM_POWERLINK
-    field = next(
-        key for key in result["data_schema"].schema if key.schema == CONF_DOWNLOAD_CODE
-    )
-    assert field.description["suggested_value"] == "1234"
-    with patch.object(hass.config_entries, "async_reload", return_value=True):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USER_CODE_SLOT: 2}
-        )
-        await hass.async_block_till_done()
-    assert result["reason"] == "reconfigure_successful"
-    assert CONF_DOWNLOAD_CODE not in entry.data
-    assert entry.data[CONF_USER_CODE_SLOT] == 2
-    assert entry.options == {CONF_ARM_HOME_ENABLED: False}
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -1051,27 +620,6 @@ async def test_valid_baud_selector(
     mock_connection_test.assert_awaited_once_with(DeviceType.ETHERNET, data)
 
 
-@pytest.mark.parametrize(
-    "device_type",
-    [
-        pytest.param(DeviceType.ETHERNET, id="ethernet"),
-        pytest.param(DeviceType.SERIAL, id="serial"),
-    ],
-)
-async def test_reauth_direct_connection(
-    hass: HomeAssistant, mock_connection_test: AsyncMock, device_type: DeviceType
-) -> None:
-    """Reauthentication is limited to cloud entries."""
-    data = {CONF_TYPE: device_type, CONF_PANEL_NUMBER: 2}
-    entry = MockConfigEntry(domain=DOMAIN, data=data)
-    entry.add_to_hass(hass)
-    result = await entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "device_error"
-    assert entry.data == data
-    mock_connection_test.assert_not_awaited()
-
-
 async def test_yaml_import_unsupported(hass: HomeAssistant) -> None:
     """YAML import remains explicitly unsupported."""
     with pytest.raises(VisonicException, match="Import not supported") as err:
@@ -1197,45 +745,6 @@ async def test_duplicate_before_completion(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["reason"] == "already_configured"
     assert mock_connection_test.await_count == 1
-
-
-async def test_reconfigure_duplicate_endpoint(
-    hass: HomeAssistant, mock_connection_test: AsyncMock
-) -> None:
-    """Reconfiguration excludes its own entry and rejects another panel's endpoint."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_TYPE: DeviceType.ETHERNET,
-            CONF_HOST: "192.0.2.1",
-            CONF_PORT: "30000",
-        },
-    )
-    other = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_TYPE: DeviceType.ETHERNET,
-            CONF_HOST: "192.0.2.2",
-            CONF_PORT: "30000",
-        },
-    )
-    entry.add_to_hass(hass)
-    other.add_to_hass(hass)
-    saved = dict(entry.data)
-    result = await entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TYPE: DeviceType.ETHERNET.title()}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.0.2.2",
-            CONF_PORT: "30000",
-        },
-    )
-    assert result["reason"] == "already_configured"
-    assert entry.data == saved
-    mock_connection_test.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -1373,221 +882,7 @@ async def test_distinct_direct_connection(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("mock_connection_test")
-async def test_reconfigure_preserves_panel_number(hass: HomeAssistant) -> None:
-    """Changing connection type retains the configured panel number."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_TYPE: DeviceType.ETHERNET,
-            CONF_PANEL_NUMBER: 2,
-            CONF_HOST: "192.0.2.1",
-            CONF_PORT: "30000",
-        },
-    )
-    entry.add_to_hass(hass)
-    entry_id = entry.entry_id
-    result = await entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TYPE: DeviceType.SERIAL.title()}
-    )
-    with patch.object(hass.config_entries, "async_reload", return_value=True):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_DEVICE: "/dev/ttyUSB0"},
-        )
-        assert result["step_id"] == FORM_POWERLINK
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USER_CODE_SLOT: 1}
-        )
-    assert result["reason"] == "reconfigure_successful"
-    assert entry.entry_id == entry_id
-    assert entry.unique_id is None
-    assert entry.data[CONF_PANEL_NUMBER] == 2
-    await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize(
-    ("saved_serial", "unique_id", "saved_type"),
-    [
-        pytest.param("ABCDEF", "ABCDEF", DeviceType.CLOUD, id="hardware-unique-id"),
-        pytest.param(
-            "abcdef",
-            "visonic_security_system_panel_2",
-            DeviceType.CLOUD,
-            id="legacy-unique-id",
-        ),
-        pytest.param(
-            "ABCDEF",
-            "visonic_security_system_panel_2",
-            DeviceType.ETHERNET,
-            id="direct-to-cloud",
-        ),
-    ],
-)
-async def test_cloud_reconfigure_preserves_panel_identity(
-    hass: HomeAssistant,
-    saved_serial: str,
-    unique_id: str,
-    saved_type: DeviceType,
-) -> None:
-    """Reject another panel before login, then allow corrected same-panel settings."""
-    saved_data = (
-        CLOUD_INPUT
-        | PANEL_INPUT
-        | {
-            CONF_TYPE: saved_type,
-            CONF_PANEL_NUMBER: 2,
-            CONF_PANEL_SERIAL: saved_serial,
-            CONF_CLOUD_APP_ID: "saved-app-id",
-            CONF_SCAN_INTERVAL: 90,
-        }
-    )
-    saved_options = {
-        CONF_ARM_HOME_ENABLED: False,
-        CONF_ENABLE_REMOTE_ARM: True,
-        CONF_ENABLE_REMOTE_DISARM: False,
-        CONF_ARM_CODE_AUTO: True,
-        CONF_INSTANT_ARM_HOME: True,
-        CONF_INSTANT_ARM_AWAY: True,
-    }
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=unique_id,
-        data=saved_data,
-        options=saved_options,
-        title="Original panel",
-    )
-    entry.add_to_hass(hass)
-    entry_id = entry.entry_id
-    changed_credentials = CLOUD_INPUT | {
-        CONF_EXTERNAL_URL: "new-cloud.example.com",
-        CONF_EMAIL: "new-user@example.com",
-        CONF_PASSWORD: "new-password",
-    }
-    with patch(
-        "homeassistant.components.visonic.connection_test.API", autospec=True
-    ) as factory:
-        api = factory.return_value
-        api.authenticate_user.return_value = True
-        api.panel_login.return_value = True
-        api.get_panels.return_value = [
-            {CONF_PANEL_SERIAL: "ABCDEF", "alias": "Home"},
-            {CONF_PANEL_SERIAL: "123456", "alias": "Office"},
-        ]
-        result = await entry.start_reconfigure_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TYPE: DeviceType.CLOUD.title()}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], changed_credentials
-        )
-        assert result["step_id"] == FORM_SELECT_PANEL
-        with patch.object(
-            hass.config_entries, "async_reload", return_value=True
-        ) as reload:
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], PANEL_INPUT | {CONF_PANEL_SERIAL: "123456"}
-            )
-            assert result["type"] is FlowResultType.FORM
-            assert result["step_id"] == FORM_SELECT_PANEL
-            assert result["errors"] == {"base": "panel_mismatch"}
-            assert entry.data == saved_data
-            assert entry.unique_id == unique_id
-            assert entry.title == "Original panel"
-            assert entry.options == saved_options
-            api.panel_login.assert_not_awaited()
-            reload.assert_not_awaited()
-
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], PANEL_INPUT
-            )
-            await hass.async_block_till_done()
-
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reconfigure_successful"
-        assert entry.data.items() >= (changed_credentials | PANEL_INPUT).items()
-        assert CONF_SCAN_INTERVAL not in entry.data
-        assert entry.unique_id == unique_id
-        assert entry.entry_id == entry_id
-        assert entry.options == {
-            CONF_ARM_HOME_ENABLED: False,
-            CONF_ENABLE_REMOTE_ARM: True,
-            CONF_ENABLE_REMOTE_DISARM: False,
-        }
-        api.panel_login.assert_awaited_once_with("ABCDEF", "1234")
-        api.panel_logout.assert_awaited_once_with()
-        reload.assert_awaited_once_with(entry_id)
-        assert hass.config_entries.async_entries(DOMAIN) == [entry]
-
-
-@pytest.mark.usefixtures("mock_connection_test")
-async def test_cancelled_cloud_reconfigure_preserves_options(
-    hass: HomeAssistant,
-) -> None:
-    """Do not remove local arming settings before cloud setup is completed."""
-    saved_data = {
-        CONF_TYPE: DeviceType.ETHERNET,
-        CONF_PANEL_NUMBER: 2,
-        CONF_HOST: "192.0.2.1",
-        CONF_PORT: "30000",
-    }
-    saved_options = {
-        CONF_ENABLE_REMOTE_ARM: False,
-        CONF_ENABLE_REMOTE_DISARM: True,
-        CONF_ARM_CODE_AUTO: True,
-        CONF_INSTANT_ARM_HOME: True,
-        CONF_INSTANT_ARM_AWAY: True,
-    }
-    entry = MockConfigEntry(domain=DOMAIN, data=saved_data, options=saved_options)
-    entry.add_to_hass(hass)
-    result = await entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TYPE: DeviceType.CLOUD.title()}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], CLOUD_INPUT
-    )
-    assert result["step_id"] == FORM_SELECT_PANEL
-    hass.config_entries.flow.async_abort(result["flow_id"])
-    assert entry.data == saved_data
-    assert entry.options == saved_options
-
-
 # The saved panel is absent from the account, so this flow cannot finish.
-async def test_cloud_reconfigure_missing_saved_panel(hass: HomeAssistant) -> None:
-    """An account missing the original serial cannot replace it with another panel."""
-    # pylint: disable=home-assistant-tests-config-flow-error-recovery
-    saved_data = CLOUD_INPUT | PANEL_INPUT | {CONF_TYPE: DeviceType.CLOUD}
-    entry = MockConfigEntry(domain=DOMAIN, unique_id="ABCDEF", data=saved_data)
-    entry.add_to_hass(hass)
-    with (
-        patch(
-            "homeassistant.components.visonic.connection_test.API", autospec=True
-        ) as factory,
-        patch.object(hass.config_entries, "async_reload", return_value=True) as reload,
-    ):
-        api = factory.return_value
-        api.authenticate_user.return_value = True
-        api.get_panels.return_value = [{CONF_PANEL_SERIAL: "123456", "alias": "Other"}]
-        result = await entry.start_reconfigure_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TYPE: DeviceType.CLOUD.title()}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CLOUD_INPUT
-        )
-        assert result["step_id"] == FORM_SELECT_PANEL
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], PANEL_INPUT | {CONF_PANEL_SERIAL: "123456"}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "panel_mismatch"}
-        api.panel_login.assert_not_awaited()
-        reload.assert_not_awaited()
-    assert entry.data == saved_data
-    assert entry.unique_id == "ABCDEF"
-    await hass.async_block_till_done()
 
 
 async def test_cloud_registered_duplicate(hass: HomeAssistant) -> None:
@@ -1935,42 +1230,6 @@ async def test_concurrent_panel_number_reservation(
     assert second["result"].unique_id is None
     assert second["result"].data[CONF_PANEL_NUMBER] == 2
     await hass.async_block_till_done()
-
-
-async def test_reauth_unregistered_panel(hass: HomeAssistant) -> None:
-    """Reauthentication cannot silently select a replacement physical panel."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CLOUD_INPUT
-        | PANEL_INPUT
-        | {CONF_TYPE: DeviceType.CLOUD, CONF_PANEL_NUMBER: 0},
-    )
-    entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.visonic.connection_test.API", autospec=True
-    ) as factory:
-        api = factory.return_value
-        api.authenticate_user.return_value = True
-        api.get_panels.return_value = [{CONF_PANEL_SERIAL: "123456", "alias": "Other"}]
-        result = await entry.start_reauth_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CLOUD_INPUT
-        )
-        assert result["step_id"] == FORM_CLOUD
-        assert result["errors"] == {"base": "panel_not_registered"}
-        api.panel_login.assert_not_awaited()
-        api.get_panels.return_value = [{CONF_PANEL_SERIAL: "ABCDEF", "alias": "Home"}]
-        api.panel_login.return_value = True
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CLOUD_INPUT
-        )
-        with patch.object(hass.config_entries, "async_reload", return_value=True):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], PANEL_INPUT
-            )
-            await hass.async_block_till_done()
-        assert result["reason"] == "reauth_successful"
-    assert entry.data[CONF_PANEL_SERIAL] == "ABCDEF"
 
 
 async def test_panel_number_collision_before_completion(

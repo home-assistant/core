@@ -19,7 +19,6 @@ from homeassistant.components.visonic.const import (
     CONF_INSTANT_ARM_HOME,
     CONF_PANEL_NUMBER,
     CONF_PANEL_SERIAL,
-    CONF_RETRY_CONNECTION_COUNT,
     CONF_RETRY_CONNECTION_DELAY,
     CONF_USER_CODE_SLOT,
     DOMAIN,
@@ -135,7 +134,6 @@ def create_config_entry_example(
         CONF_ENABLE_REMOTE_DISARM: False,
         CONF_INSTANT_ARM_HOME: True,
         CONF_INSTANT_ARM_AWAY: False,
-        CONF_RETRY_CONNECTION_COUNT: 0,
         CONF_DOWNLOAD_CODE: "",
         CONF_ARM_CODE_AUTO: False,
     }

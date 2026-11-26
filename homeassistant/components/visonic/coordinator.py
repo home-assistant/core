@@ -57,7 +57,6 @@ from .const import (
     CONF_ENABLE_REMOTE_DISARM,
     CONF_EPROM_ATTRIBUTES,
     CONF_PANEL_SERIAL,
-    CONF_RETRY_CONNECTION_COUNT,
     CONF_RETRY_CONNECTION_DELAY,
     CONF_USER_CODE_SLOT,
     DEFAULT_CLOUD_SCAN_INTERVAL,
@@ -203,7 +202,6 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
                 force_standard_mode=False,
                 download_code=entry.data.get(CONF_DOWNLOAD_CODE, ""),
                 user_code_slot=int(entry.data.get(CONF_USER_CODE_SLOT, 1)) - 1,
-                retry_count=options.retry_count,
                 retry_delay=options.retry_delay,
                 panel_id=panel_id if isinstance(panel_id, int) else 0,
             )
@@ -220,7 +218,6 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
             arm_home_enabled=to_bool(entry.options.get(CONF_ARM_HOME_ENABLED, True)),
             arm_without_usercode=to_bool(entry.options.get(CONF_ARM_CODE_AUTO, False)),
             eprom_attributes=to_bool(entry.options.get(CONF_EPROM_ATTRIBUTES, False)),
-            retry_count=int(entry.options.get(CONF_RETRY_CONNECTION_COUNT, 1)),
             retry_delay=float(entry.options.get(CONF_RETRY_CONNECTION_DELAY, 90)),
         )
 
@@ -403,8 +400,8 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
             self._refresh_tasks.discard(task)
 
     @callback
-    def _async_handle_authentication_failure(self, err: VisonicAuthException) -> None:
-        """Publish lost authentication and request updated credentials."""
+    def _async_report_authentication_failure(self, err: VisonicAuthException) -> None:
+        """Publish lost authentication unless the coordinator is stopping."""
         if self._stopping:
             return
         if TYPE_CHECKING:
@@ -416,7 +413,6 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
                 )
             )
         )
-        self.config_entry.async_start_reauth_if_available(self.hass)
 
     async def async_state_changed_callback(self) -> None:
         """Publish pushed state and report availability transitions."""
@@ -424,7 +420,7 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
             try:
                 data = await self.create_state_snapshot()
             except VisonicAuthException as err:
-                self._async_handle_authentication_failure(err)
+                self._async_report_authentication_failure(err)
                 return
             except UpdateFailed as err:
                 if self.data is not None:
@@ -546,7 +542,7 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
             try:
                 return await self.connection.send_command(command, code)
             except VisonicAuthException as err:
-                self._async_handle_authentication_failure(err)
+                self._async_report_authentication_failure(err)
                 raise
             except TimeoutError, OSError, aiohttp.ClientError:
                 raise HomeAssistantError(

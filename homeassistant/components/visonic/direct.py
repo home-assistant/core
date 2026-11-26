@@ -69,7 +69,6 @@ class VisonicDirectConnection(VisonicConnection):
     def update_options(self, options: VisonicConnectionOptions) -> None:
         """Apply options to the standalone client."""
         super().update_options(options)
-        self._client.settings.retry_count = options.retry_count
         self._client.settings.retry_delay = options.retry_delay
 
     def _handle_panel_change(

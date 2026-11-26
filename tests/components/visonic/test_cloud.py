@@ -9,6 +9,7 @@ import logging
 from types import SimpleNamespace
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import UUID
 
 import pytest
 from pyvisonicalarm.alarm import AlarmSystem
@@ -151,7 +152,7 @@ def connected_cloud_alarm() -> MagicMock:
     return alarm
 
 
-async def test_snapshot_finishes_before_overlapping_reauthentication(
+async def test_snapshot_finishes_before_overlapping_session_renewal(
     hass: HomeAssistant, cloud: VisonicCloudConnection
 ) -> None:
     """A pending valid response finishes on its original session before reconnect."""
@@ -190,7 +191,7 @@ async def test_snapshot_finishes_before_overlapping_reauthentication(
     login.assert_awaited_once_with()
 
 
-async def test_overlapping_snapshots_share_reauthenticated_session(
+async def test_overlapping_snapshots_share_renewed_session(
     hass: HomeAssistant, cloud: VisonicCloudConnection
 ) -> None:
     """A queued refresh uses the replacement session instead of logging in again."""
@@ -490,7 +491,7 @@ async def test_command_shares_renewal_limit_between_submission_and_confirmation(
 async def test_command_session_renewal_rejects_credentials(
     cloud: VisonicCloudConnection, error: Error
 ) -> None:
-    """Only rejected credentials during renewal request credential reauthentication."""
+    """Rejected credentials during renewal propagate an authentication failure."""
     original = connected_cloud_alarm()
     cloud.cloud_alarm = original
     original.arm_away.side_effect = UnauthorizedError()
@@ -1057,7 +1058,7 @@ async def test_snapshot_stays_disconnected_after_reconnect(
 @pytest.mark.parametrize(
     "method", ["get_status", "get_panel_info", "get_devices", "get_alarms"]
 )
-async def test_snapshot_reauthenticates_after_expired_session(
+async def test_snapshot_renews_expired_session(
     cloud: VisonicCloudConnection,
     error: Error,
     method: str,
@@ -1817,15 +1818,29 @@ async def test_send_commands_success(
     coordinator.wait_for_process_status.assert_awaited_once_with("token")
 
 
-@pytest.mark.asyncio
-async def test_authenticate(setup_cloud_integration: SetupIntegration) -> None:
+@pytest.mark.parametrize(
+    ("app_id", "expected_app_id"),
+    [
+        pytest.param("appid", "appid", id="saved-app-id"),
+        pytest.param(
+            None,
+            "12345678-1234-5678-1234-567812345678",
+            id="generate-app-id",
+        ),
+    ],
+)
+async def test_authenticate(
+    setup_cloud_integration: SetupIntegration,
+    app_id: str | None,
+    expected_app_id: str,
+) -> None:
     """Test API authentication."""
 
     data = {
         CONF_EXTERNAL_URL: "https://example.com",
         CONF_EMAIL: "user@example.com",
         CONF_PASSWORD: "password",
-        CONF_CLOUD_APP_ID: "appid",
+        CONF_CLOUD_APP_ID: app_id,
     }
 
     ok, entry = await setup_cloud_integration(data=data)
@@ -1836,19 +1851,65 @@ async def test_authenticate(setup_cloud_integration: SetupIntegration) -> None:
     api.set_rest_version = AsyncMock()
     api.authenticate_user = AsyncMock(return_value=True)
 
-    with patch(
-        "homeassistant.components.visonic.cloud.API",
-        return_value=api,
-    ) as api_class:
+    with (
+        patch(
+            "homeassistant.components.visonic.cloud.API",
+            return_value=api,
+        ) as api_class,
+        patch(
+            "homeassistant.components.visonic.cloud.uuid.uuid4",
+            return_value=UUID("12345678-1234-5678-1234-567812345678"),
+        ),
+    ):
         result = await coordinator.authenticate()
 
     assert result is api
-    api_class.assert_called_once()
+    api_class.assert_called_once_with(
+        session=coordinator.session,
+        hostname="https://example.com",
+        app_id=expected_app_id,
+    )
     api.set_rest_version.assert_awaited_once()
     api.authenticate_user.assert_awaited_once_with(
         "user@example.com",
         "password",
     )
+
+
+@pytest.mark.parametrize(
+    ("authenticated", "panel_login", "expected_login_calls"),
+    [
+        pytest.param(False, True, 0, id="account-rejected"),
+        pytest.param(True, False, 1, id="panel-code-rejected"),
+    ],
+)
+async def test_cloud_login_rejected_without_exception(
+    cloud: VisonicCloudConnection,
+    authenticated: bool,
+    panel_login: bool,
+    expected_login_calls: int,
+) -> None:
+    """False API results reject the session without saving login credentials."""
+    api = MagicMock(spec=API)
+    api.authenticate_user.return_value = authenticated
+    api.panel_login.return_value = panel_login
+    api.get_panels.return_value = [
+        {"panel_serial": "ABCDEF", "panel_model": "PowerMaster"}
+    ]
+
+    with (
+        patch("homeassistant.components.visonic.cloud.API", return_value=api),
+        pytest.raises(VisonicAuthException, match="credentials or panel user code"),
+    ):
+        await cloud.async_panel_connect()
+
+    assert cloud.login_success is False
+    api.authenticate_user.assert_awaited_once_with(
+        cloud.settings.email, cloud.settings.password
+    )
+    assert api.panel_login.await_count == expected_login_calls
+    cloud.callbacks.app_id_changed.assert_not_called()
+    api.get_status.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -2009,6 +2070,45 @@ async def test_panel_battery_from_library_devices(
     devices = await AlarmSystem(api).get_devices()
     state = cloud.process_devices(devices)
     assert state.battery_level == expected_level
+
+
+async def test_snapshot_ignores_sensor_faults_in_panel_flags(
+    cloud: VisonicCloudConnection,
+) -> None:
+    """Sensor faults on either side of the panel cannot replace its flags."""
+    api = MagicMock(spec=API)
+    api.get_status.return_value = STATUS_DATA
+    api.get_panel_info.return_value = {"partitions": [{"id": 1}]}
+    api.get_alarms.return_value = []
+    api.get_devices.return_value = [
+        {
+            "id": 1,
+            "device_type": "ZONE",
+            "subtype": "CONTACT",
+            "warnings": [{"type": "LOW_BATTERY", "severity": "TROUBLE"}],
+        },
+        {
+            "id": 2,
+            "device_type": "CONTROL_PANEL",
+            "subtype": "VISONIC_PANEL",
+            "warnings": [],
+        },
+        {
+            "id": 3,
+            "device_type": "ZONE",
+            "subtype": "CONTACT",
+            "warnings": [{"type": "TAMPER", "severity": "TAMPER"}],
+        },
+    ]
+    cloud.cloud_alarm = AlarmSystem(api)
+
+    snapshot = await cloud.create_state_snapshot()
+
+    assert snapshot.connected
+    assert snapshot.panelstate.battery_level == 100
+    assert snapshot.panelstate.tamper is False
+    assert snapshot.panelstate.trouble == "None"
+    api.get_devices.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize(

@@ -18,7 +18,7 @@ rules:
     comment: Coordinator, backend and shared entity logic use separate modules.
   config-flow-test-coverage:
     status: done
-    comment: Config flows have 100 percent statement and 98.81 percent branch coverage.
+    comment: Config flows have 100 percent statement and branch coverage.
   config-flow:
     status: done
     comment: UI setup and options support Ethernet, serial and cloud.
@@ -113,16 +113,14 @@ rules:
     status: done
     comment: alarm_control_panel.py sets PARALLEL_UPDATES = 1.
   reauthentication-flow:
-    status: done
-    comment: >
-      Cloud authentication errors trigger reauthentication, preserving the
-      selected panel while validating credentials and its user code.
+    status: todo
+    comment: Add cloud reauthentication in a follow-up PR.
   test-coverage:
     status: done
     comment: >
-      All 547 tests pass with 98.19 percent combined statement and branch
-      coverage. Config-flow statement coverage is 100 percent and branch
-      coverage is 98.81 percent.
+      All 708 tests pass with 98.69 percent combined coverage, 99.30 percent
+      statement coverage, and 96.04 percent branch coverage. Config flows and
+      the direct backend have 100 percent statement and branch coverage.
 
   # Gold
   devices:
@@ -187,13 +185,11 @@ rules:
     status: exempt
     comment: Alarm entities use standard platform icons.
   reconfiguration-flow:
-    status: done
-    comment: >
-      Validates changed connections, rejects duplicates and preserves
-      identities. Cloud selection must match the saved panel serial.
+    status: todo
+    comment: Add connection reconfiguration in a follow-up PR.
   repair-issues:
     status: todo
-    comment: Assess repair cases such as exhausted direct retries.
+    comment: Assess repair cases such as terminal direct connection recovery failures.
   stale-devices:
     status: exempt
     comment: The sole panel device shares the config entry lifecycle.

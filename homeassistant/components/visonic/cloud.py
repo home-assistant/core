@@ -154,7 +154,7 @@ class VisonicCloudConnection(VisonicConnection):
         if not panel_serial and len(panels) == 1:
             panel_serial = str(panels[0][CONF_PANEL_SERIAL])
         if not panel_serial:
-            raise VisonicException("Select a registered cloud panel in reconfiguration")
+            raise VisonicException("No registered cloud panel is selected")
         if len(panel_serial) == 6:
             # 6 alphanumeric characters
             for panel in panels:
@@ -361,7 +361,7 @@ class VisonicCloudConnection(VisonicConnection):
 
     @override
     async def create_state_snapshot(self) -> VisonicCoordinatorData:
-        """Fetch data from Visonic API with auto-reauth."""
+        """Fetch data from Visonic API with automatic session renewal."""
         async with self._session_lock:
             return await self._async_create_state_snapshot()
 

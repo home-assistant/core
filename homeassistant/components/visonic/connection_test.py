@@ -74,7 +74,6 @@ class ConnectionTest:
                 path=data.get(CONF_DEVICE, "/dev/ttyUSB0"),
                 baud=int(data.get(CONF_DEVICE_BAUD, 9600)),
                 force_standard_mode=True,
-                retry_count=0,
             )
         )
         if (baud := await client.async_test_connection()) is None:

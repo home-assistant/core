@@ -17,7 +17,6 @@ class VisonicConnectionOptions:
     arm_home_enabled: bool = True
     arm_without_usercode: bool = False
     eprom_attributes: bool = False
-    retry_count: int = 1
     retry_delay: float = 90
 
 

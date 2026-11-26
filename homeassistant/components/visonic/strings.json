@@ -19,8 +19,6 @@
       "email_invalid": "[%key:component::visonic::config::abort::email_invalid%]",
       "invalid_auth": "Cloud login credentials or panel user code are invalid",
       "no_panels": "No panels are registered to this cloud account",
-      "panel_mismatch": "Select the panel already configured for this integration. To use a different panel, add a new integration entry.",
-      "panel_not_registered": "The configured panel is no longer registered to this account. Check the account's access to this panel. To use a different panel, add a new integration entry.",
       "panel_number_in_use": "This panel number is already in use. Choose another number.",
       "settings_invalid": "[%key:component::visonic::config::abort::settings_invalid%]",
       "settings_missing": "[%key:component::visonic::config::abort::settings_missing%]"
@@ -36,15 +34,6 @@
           "type": "Select the connection type for your configuration and available hardware"
         },
         "description": "Connection type and unique panel number"
-      },
-      "device_no_panel": {
-        "data": {
-          "type": "Ethernet, Cloud or Serial"
-        },
-        "data_description": {
-          "type": "Select the connection type"
-        },
-        "description": "Select the connection type"
       },
       "form_cloud": {
         "data": {
@@ -328,25 +317,15 @@
       "settings_missing": "[%key:component::visonic::config::abort::settings_missing%]"
     },
     "step": {
-      "parameters_connection": {
-        "data": {
-          "retry_connection_count": "Try this number of times to attempt a reload",
-          "retry_connection_delay": "Time delay (seconds) between reload attempts"
-        },
-        "data_description": {
-          "retry_connection_count": "If disconnections occur, then try this number of times to attempt a reload",
-          "retry_connection_delay": "If disconnections occur, then wait this delay time (seconds) between reload attempts"
-        },
-        "description": ""
-      },
-      "parameters_panel_arming": {
+      "panel_options": {
         "data": {
           "allow_remote_arm": "Enable Panel Arm",
           "allow_remote_disarm": "Enable Panel DisArm",
           "arm_away_instant": "Arm Away performs an Arm Away Instant",
           "arm_home_enabled": "Arm Home Enabled",
           "arm_home_instant": "Arm Home performs an Arm Home Instant",
-          "arm_without_usercode": "Arm Normal Alarm without User Code"
+          "arm_without_usercode": "Arm Normal Alarm without User Code",
+          "retry_connection_delay": "Reconnection delay (seconds)"
         },
         "data_description": {
           "allow_remote_arm": "Allow Panel Arm from Home Assistant",
@@ -354,9 +333,11 @@
           "arm_away_instant": "Arm Away performs an Arm Away Instant",
           "arm_home_enabled": "Arm Home Enabled in addition to Arm Away",
           "arm_home_instant": "Arm Home performs an Arm Home Instant",
-          "arm_without_usercode": "Arm 'Normal' Alarm without User Code (not supported by all panels)"
+          "arm_without_usercode": "Arm 'Normal' Alarm without User Code (not supported by all panels)",
+          "retry_connection_delay": "Time between connection attempts when the panel is disconnected."
         },
-        "description": ""
+        "description": "",
+        "title": "Panel options"
       }
     }
   }

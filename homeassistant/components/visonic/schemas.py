@@ -25,7 +25,6 @@ from .const import (
     CONF_INSTANT_ARM_HOME,
     CONF_PANEL_NUMBER,
     CONF_PANEL_SERIAL,
-    CONF_RETRY_CONNECTION_COUNT,
     CONF_RETRY_CONNECTION_DELAY,
     CONF_USER_CODE_SLOT,
     DEFAULT_DEVICE_HOST,
@@ -152,25 +151,6 @@ CONNECTION_SCHEMA = probatio.TaggedUnion(
     },
 )
 
-CONNECTION_OPTIONS_SCHEMA = probatio.Schema(
-    {
-        probatio.Optional(
-            CONF_RETRY_CONNECTION_COUNT, default=1
-        ): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0, max=1000000, mode=selector.NumberSelectorMode.BOX
-            )
-        ),
-        probatio.Optional(
-            CONF_RETRY_CONNECTION_DELAY, default=90
-        ): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=5, max=1000, mode=selector.NumberSelectorMode.BOX
-            )
-        ),
-    }
-)
-
 ALARM_OPTIONS_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_ARM_CODE_AUTO, default=False): bool,
@@ -188,5 +168,18 @@ CLOUD_ALARM_OPTIONS_SCHEMA = probatio.Schema(
         for marker, validator in ALARM_OPTIONS_SCHEMA.schema.items()
         if marker.schema
         not in {CONF_ARM_CODE_AUTO, CONF_INSTANT_ARM_AWAY, CONF_INSTANT_ARM_HOME}
+    }
+)
+
+
+PANEL_OPTIONS_SCHEMA = ALARM_OPTIONS_SCHEMA.extend(
+    {
+        probatio.Optional(
+            CONF_RETRY_CONNECTION_DELAY, default=90
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=5, max=1000, mode=selector.NumberSelectorMode.BOX
+            )
+        ),
     }
 )

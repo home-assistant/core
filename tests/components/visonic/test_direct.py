@@ -25,7 +25,6 @@ from homeassistant.components.visonic.const import (
     CONF_ENABLE_REMOTE_ARM,
     CONF_ENABLE_REMOTE_DISARM,
     CONF_PANEL_SERIAL,
-    CONF_RETRY_CONNECTION_COUNT,
     CONF_RETRY_CONNECTION_DELAY,
     DOMAIN,
     TEXT_PANEL_MODEL,
@@ -107,6 +106,20 @@ def test_client_startup_announces_panel(direct: VisonicDirectConnection) -> None
     with patch.object(direct.callbacks, "panel_ready") as ready:
         direct._handle_panel_change(AlCondition.STARTUP_SUCCESS, None)
     ready.assert_called_once_with()
+
+
+def test_client_panel_update_does_not_announce_startup(
+    direct: VisonicDirectConnection,
+) -> None:
+    """An ordinary panel update cannot announce startup or replace metadata."""
+    with (
+        patch.object(direct.callbacks, "panel_ready") as ready,
+        patch.object(direct.callbacks, "panel_metadata_changed") as metadata,
+    ):
+        direct._handle_panel_change(AlCondition.PANEL_UPDATE, None)
+
+    ready.assert_not_called()
+    metadata.assert_not_called()
 
 
 @pytest_asyncio.fixture
@@ -657,19 +670,14 @@ async def test_options_update_plain_client_settings(
     hass: HomeAssistant,
     setup_integration: SetupIntegration,
 ) -> None:
-    """Keep retry settings current without passing a config entry to the client."""
+    """Apply reconnection delay updates to the plain client settings."""
     _, entry = await setup_integration()
     coordinator = entry.runtime_data.coordinator.connection
     hass.config_entries.async_update_entry(
         entry,
-        options=dict(entry.options)
-        | {
-            CONF_RETRY_CONNECTION_COUNT: 4,
-            CONF_RETRY_CONNECTION_DELAY: 120,
-        },
+        options=dict(entry.options) | {CONF_RETRY_CONNECTION_DELAY: 120},
     )
     await hass.async_block_till_done()
-    assert coordinator._client.settings.retry_count == 4
     assert coordinator._client.settings.retry_delay == 120
 
 
@@ -724,6 +732,26 @@ async def test_recovery_failure_stops_and_notifies(
         notify.call_args.kwargs["title"]
         == f"Visonic panel {direct_parent.panel_id}: recovery failed"
     )
+
+
+async def test_disconnect_does_not_report_flood_recovery_failure(
+    hass: HomeAssistant,
+    direct_parent: VisonicCoordinator,
+    direct: VisonicDirectConnection,
+) -> None:
+    """A normal disconnect must leave recovery and reconnection to the client."""
+    with (
+        patch.object(direct_parent, "async_panel_stop", new=AsyncMock()) as stop,
+        patch(
+            "homeassistant.components.visonic.coordinator.persistent_notification.async_create"
+        ) as notify,
+    ):
+        direct._handle_panel_problem(AlTerminationType.NO_DATA_FROM_PANEL_DISCONNECTED)
+        await hass.async_block_till_done()
+
+    stop.assert_not_awaited()
+    direct._client.async_panel_stop.assert_not_awaited()
+    notify.assert_not_called()
 
 
 async def test_recovery_failure_actually_stops_coordinator_and_client(
