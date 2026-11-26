@@ -9,6 +9,6 @@
   "iot_class": "cloud_polling",
   "loggers": ["aioprecioscarburantes"],
   "quality_scale": "bronze",
-  "requirements": ["aioprecioscarburantes==0.6.1"],
+  "requirements": ["aioprecioscarburantes==0.7.0"],
   "single_config_entry": true
 }
