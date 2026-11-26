@@ -353,7 +353,7 @@ aiokef==0.2.16
 aiokem==1.0.1
 
 # homeassistant.components.librenms
-aiolibrenms==0.0.4
+aiolibrenms==0.0.5
 
 # homeassistant.components.libresync
 aiolibresync==0.5.3
@@ -461,7 +461,7 @@ aiosaj==0.2.2
 aioseafile==0.1.3
 
 # homeassistant.components.shelly
-aioshelly==14.6.0
+aioshelly==14.6.1
 
 # homeassistant.components.skybell
 aioskybell==23.12.0
@@ -868,7 +868,7 @@ datadog==0.52.1
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==5.0.22
+dbus-fast==5.2.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.22
@@ -1301,7 +1301,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.8
 
 # homeassistant.components.bluetooth
-habluetooth==7.1.2
+habluetooth==7.2.0
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1360,7 +1360,7 @@ hole==0.9.2
 holidays==0.109
 
 # homeassistant.components.frontend
-home-assistant-frontend==20261125.0
+home-assistant-frontend==20261125.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.11.25
@@ -1381,13 +1381,13 @@ homevolt==0.7.0
 horimote==0.4.1
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.11.0
+huawei-lte-api==3.0.0
 
 # homeassistant.components.huum
 huum==0.8.4
 
 # homeassistant.components.hydroquebec_peak
-hydropeak-opendata==0.3.0
+hydropeak-opendata==0.4.1
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.6
@@ -1694,7 +1694,7 @@ micloud==0.5
 microBeesPy==0.3.5
 
 # homeassistant.components.midea
-midea-local==15.2.1
+midea-local==15.3.0
 
 # homeassistant.components.mill
 mill-local==0.5.0
@@ -2085,7 +2085,7 @@ py-schluter==0.1.7
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.12.0
+py-synologydsm-api==2.12.2
 
 # homeassistant.components.unifi_access
 py-unifi-access==1.6.2
@@ -2540,7 +2540,7 @@ pynina==1.0.4
 pynintendoauth==1.0.3
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==2.6.2
+pynintendoparental==2.7.1
 
 # homeassistant.components.nobo_hub
 pynobo==1.9.0
@@ -3655,7 +3655,7 @@ zeversolar==0.3.2
 zha-quirks==2.5.0
 
 # homeassistant.components.zha
-zha==2.5.0
+zha==2.5.1
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.21

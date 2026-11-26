@@ -51,15 +51,25 @@ async def test_setup_applies_configured_failsafe(
     setup_keba.set_failsafe.assert_awaited_once_with(60, 10, 1)
 
 
-@pytest.mark.parametrize(
-    "keba_config",
-    [{DOMAIN: {CONF_HOST: HOST, "failsafe": True, "failsafe_timeout": 5}}],
-)
-async def test_setup_failsafe_out_of_range_currently_unchecked(
-    hass: HomeAssistant, setup_keba: MagicMock
+async def test_setup_failsafe_rejected(
+    hass: HomeAssistant,
+    mock_keba: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test an out-of-range failsafe timeout reaches the library unchecked."""
-    setup_keba.set_failsafe.assert_awaited_once_with(5, 6, 0)
+    """Test a failsafe the library rejects is logged, and setup still succeeds."""
+    mock_keba.set_failsafe.side_effect = ValueError("timeout out of range")
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {CONF_HOST: HOST, "failsafe": True, "failsafe_timeout": 5}},
+    )
+    await async_settle(hass)
+
+    mock_keba.set_failsafe.assert_awaited_once_with(5, 6, 0)
+    assert "Could not set failsafe mode timeout out of range" in caplog.text
+    assert hass.services.has_service(DOMAIN, KebaService.REQUEST_DATA)
+    assert hass.states.get("sensor.keba_p30_charging_power") is not None
 
 
 async def test_setup_unreachable_station_currently_raises(

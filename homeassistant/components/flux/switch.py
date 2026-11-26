@@ -10,27 +10,24 @@ from typing import Any, override
 import probatio
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_RGB_COLOR,
-    ATTR_TRANSITION,
-    ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     VALID_TRANSITION,
+    LightService,
+    LightServiceArgument,
     is_on,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_BRIGHTNESS,
     CONF_LIGHTS,
     CONF_MODE,
     CONF_NAME,
     CONF_PLATFORM,
-    SERVICE_TURN_ON,
+    CONF_UNIQUE_ID,
     STATE_ON,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, event
@@ -47,7 +44,6 @@ from homeassistant.util.dt import as_local, utcnow as dt_utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_UNIQUE_ID = "unique_id"
 
 CONF_START_TIME = "start_time"
 CONF_STOP_TIME = "stop_time"
@@ -56,6 +52,7 @@ CONF_SUNSET_CT = "sunset_colortemp"
 CONF_STOP_CT = "stop_colortemp"
 CONF_DISABLE_BRIGHTNESS_ADJUST = "disable_brightness_adjust"
 CONF_INTERVAL = "interval"
+CONF_TRANSITION = "transition"
 
 MODE_XY = "xy"
 MODE_MIRED = "mired"
@@ -86,8 +83,8 @@ PLATFORM_SCHEMA = probatio.Schema(
             MODE_XY, MODE_MIRED, MODE_RGB
         ),
         probatio.Optional(CONF_INTERVAL, default=30): cv.positive_int,
-        probatio.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION,
-        probatio.Optional(ATTR_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_TRANSITION, default=30): VALID_TRANSITION,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -96,40 +93,46 @@ async def async_set_lights_xy(hass, lights, x_val, y_val, brightness, transition
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
-            service_data = {ATTR_ENTITY_ID: light}
+            service_data = {TargetKey.ENTITY_ID: light}
             if x_val is not None and y_val is not None:
-                service_data[ATTR_XY_COLOR] = [x_val, y_val]
+                service_data[LightServiceArgument.XY_COLOR] = [x_val, y_val]
             if brightness is not None:
-                service_data[ATTR_BRIGHTNESS] = brightness
+                service_data[LightServiceArgument.BRIGHTNESS] = brightness
             if transition is not None:
-                service_data[ATTR_TRANSITION] = transition
-            await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
+                service_data[LightServiceArgument.TRANSITION] = transition
+            await hass.services.async_call(
+                LIGHT_DOMAIN, LightService.TURN_ON, service_data
+            )
 
 
 async def async_set_lights_temp(hass, lights, kelvin, brightness, transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
-            service_data = {ATTR_ENTITY_ID: light}
+            service_data = {TargetKey.ENTITY_ID: light}
             if kelvin is not None:
-                service_data[ATTR_COLOR_TEMP_KELVIN] = kelvin
+                service_data[LightServiceArgument.COLOR_TEMP_KELVIN] = kelvin
             if brightness is not None:
-                service_data[ATTR_BRIGHTNESS] = brightness
+                service_data[LightServiceArgument.BRIGHTNESS] = brightness
             if transition is not None:
-                service_data[ATTR_TRANSITION] = transition
-            await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
+                service_data[LightServiceArgument.TRANSITION] = transition
+            await hass.services.async_call(
+                LIGHT_DOMAIN, LightService.TURN_ON, service_data
+            )
 
 
 async def async_set_lights_rgb(hass, lights, rgb, transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
-            service_data = {ATTR_ENTITY_ID: light}
+            service_data = {TargetKey.ENTITY_ID: light}
             if rgb is not None:
-                service_data[ATTR_RGB_COLOR] = rgb
+                service_data[LightServiceArgument.RGB_COLOR] = rgb
             if transition is not None:
-                service_data[ATTR_TRANSITION] = transition
-            await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
+                service_data[LightServiceArgument.TRANSITION] = transition
+            await hass.services.async_call(
+                LIGHT_DOMAIN, LightService.TURN_ON, service_data
+            )
 
 
 async def async_setup_platform(
@@ -150,8 +153,8 @@ async def async_setup_platform(
     disable_brightness_adjust = config.get(CONF_DISABLE_BRIGHTNESS_ADJUST)
     mode = config.get(CONF_MODE)
     interval = config.get(CONF_INTERVAL)
-    transition = config.get(ATTR_TRANSITION)
-    unique_id = config.get(ATTR_UNIQUE_ID)
+    transition = config.get(CONF_TRANSITION)
+    unique_id = config.get(CONF_UNIQUE_ID)
     flux = FluxSwitch(
         name,
         hass,

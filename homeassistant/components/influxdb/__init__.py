@@ -37,6 +37,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -558,6 +559,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> 
     await hass.async_add_executor_job(influx_thread.start)
 
     entry.runtime_data = influx_thread
+
+    # Config entries are not unloaded when Home Assistant stops
+    async def _async_shutdown(event: Event) -> None:
+        await hass.async_add_executor_job(influx_thread.shutdown)
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> None:

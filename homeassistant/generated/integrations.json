@@ -3032,7 +3032,7 @@
         "network"
       ],
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "device_sun_light_trigger": {
       "name": "Presence-based lights",
@@ -15594,7 +15594,7 @@
         "cloud"
       ],
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_polling"
     },
     "tibber": {
       "name": "Tibber",

@@ -187,6 +187,12 @@ def _move_todo(
     return items, [todo.resource for todo in reversed(spread)]
 
 
+def _save_todos(todos: list[CalendarObjectResource]) -> None:
+    """Save todos in order, stopping at the first that fails."""
+    for todo in todos:
+        todo.save(increase_seqno=False, only_this_recurrence=False)
+
+
 def _todo_item(resource: CalendarObjectResource) -> TodoItem | None:
     """Convert a caldav Todo into a TodoItem."""
     if (
@@ -439,12 +445,8 @@ class WebDavTodoListEntity(TodoListEntity):
             if items != self._attr_todo_items:
                 self._writes += 1
             try:
-                for todo in todos:
-                    await self.hass.async_add_executor_job(
-                        partial(
-                            todo.save, increase_seqno=False, only_this_recurrence=False
-                        )
-                    )
+                await self.hass.async_add_executor_job(_save_todos, todos)
+                if todos:
                     self._writes += 1
             except (
                 caldav_requests.exceptions.ConnectionError,

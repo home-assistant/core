@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 import functools
 import inspect
 import logging
-from typing import Any, Literal, Protocol, TypedDict, cast
+from typing import Any, Protocol, TypedDict, cast
 
 import probatio
 
@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_VARIABLES,
     CONF_ZONE,
+    TargetKey,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -797,10 +798,10 @@ def async_extract_devices(trigger_conf: dict) -> list[str]:
         if device_ids := options.get(CONF_DEVICE_ID):
             return [
                 *([device_ids] if isinstance(device_ids, str) else device_ids),
-                *async_extract_targets(trigger_conf, CONF_DEVICE_ID),
+                *async_extract_targets(trigger_conf, TargetKey.DEVICE_ID),
             ]
 
-    if target_devices := async_extract_targets(trigger_conf, CONF_DEVICE_ID):
+    if target_devices := async_extract_targets(trigger_conf, TargetKey.DEVICE_ID):
         return target_devices
 
     return []
@@ -841,7 +842,7 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
 
     if trigger_conf[CONF_PLATFORM] in ("zone.entered", "zone.left"):
         return [
-            *async_extract_targets(trigger_conf, CONF_ENTITY_ID),
+            *async_extract_targets(trigger_conf, TargetKey.ENTITY_ID),
             trigger_conf[CONF_OPTIONS][CONF_ZONE],
         ]
 
@@ -849,7 +850,7 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
         if entity_ids := options.get(CONF_ENTITY_ID):
             return [
                 *([entity_ids] if isinstance(entity_ids, str) else entity_ids),
-                *async_extract_targets(trigger_conf, CONF_ENTITY_ID),
+                *async_extract_targets(trigger_conf, TargetKey.ENTITY_ID),
             ]
 
     if trigger_conf[CONF_PLATFORM] == "geo_location":
@@ -867,7 +868,7 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
     ):
         return [trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID]]
 
-    if target_entities := async_extract_targets(trigger_conf, CONF_ENTITY_ID):
+    if target_entities := async_extract_targets(trigger_conf, TargetKey.ENTITY_ID):
         return target_entities
 
     return []
@@ -876,7 +877,7 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
 @callback
 def async_extract_targets(
     config: dict,
-    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+    target: TargetKey,
 ) -> list[str]:
     """Extract targets from a target config, including the exclude block."""
     if not (target_conf := config.get(CONF_TARGET)):

@@ -21,7 +21,6 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import ThreemaConfigEntry
 from .client import (
     ThreemaAPIClient,
     ThreemaAuthError,
@@ -36,6 +35,7 @@ from .const import (
     DOMAIN,
     SUBENTRY_TYPE_RECIPIENT,
 )
+from .coordinator import ThreemaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

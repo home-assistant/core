@@ -10,7 +10,7 @@
   "documentation": "https://www.home-assistant.io/integrations/loqed",
   "integration_type": "device",
   "iot_class": "local_push",
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["loqedAPI==2.1.18"],
   "zeroconf": [
     {

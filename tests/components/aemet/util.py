@@ -1,5 +1,8 @@
 """Tests for the AEMET OpenData integration."""
 
+import base64
+from datetime import datetime
+import json
 from typing import Any
 from unittest.mock import patch
 
@@ -64,6 +67,17 @@ def mock_api_call(cmd: str, fetch_data: bool = False) -> dict[str, Any]:
         return RADAR_DATA_MOCK
 
     return {}
+
+
+def create_api_key(expiration: datetime) -> str:
+    """Create a fake API key JWT with an expiration claim."""
+    header = base64.urlsafe_b64encode(b'{"alg":"none"}').rstrip(b"=").decode()
+    payload = (
+        base64.urlsafe_b64encode(json.dumps({"exp": expiration.timestamp()}).encode())
+        .rstrip(b"=")
+        .decode()
+    )
+    return f"{header}.{payload}.signature"
 
 
 async def async_init_integration(

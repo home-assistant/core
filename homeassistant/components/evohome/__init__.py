@@ -64,9 +64,25 @@ class EvoData:
     """Dataclass for storing evohome data."""
 
     account: EvoAccountCoordinator
-    coordinator: EvoLocationCoordinator
-    loc_idx: int
-    tcs: ec2.ControlSystem
+    locations: list[EvoLocationCoordinator]
+
+
+async def _async_first_refresh(
+    coordinator: EvoAccountCoordinator | EvoLocationCoordinator,
+) -> bool:
+    """Refresh a coordinator for the first time, and return True if it succeeded."""
+
+    await coordinator.async_register_shutdown()
+    await coordinator.async_first_refresh()
+
+    if not coordinator.last_update_success:
+        # translations aren't available until setup completes, so log the cause
+        err = coordinator.last_exception
+        if isinstance(err, HomeAssistantError) and err.translation_key:
+            err = err.__cause__ or err
+        _LOGGER.error("Failed to fetch initial data: %s", err)
+        return False
+    return True
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -96,46 +112,41 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
         client_v1=ec1.EvohomeClient(token_manager),
     )
+    if not await _async_first_refresh(account_coord):
+        return False
+
+    locations = account_coord.client.locations
+    loc_idx = config[DOMAIN][CONF_LOCATION_IDX]
+
+    if loc_idx >= len(locations):
+        _LOGGER.error(
+            "Config error: 'location_idx' = %s, but the valid range is 0-%s. "
+            "Unable to continue. Fix any configuration errors and restart HA",
+            loc_idx,
+            len(locations) - 1,
+        )
+        return False
+
+    location = locations[loc_idx]
+    if location.tcs is None:
+        _LOGGER.error("Config error: location %s has no TCS", location.id)
+        return False
+
     location_coord = EvoLocationCoordinator(
         hass,
         _LOGGER,
         account_coord,
-        name=f"{DOMAIN}_location_coordinator",
+        location,
+        name=f"{DOMAIN}_location_coordinator_{location.id}",
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
-        location_idx=config[DOMAIN][CONF_LOCATION_IDX],
     )
+    if not await _async_first_refresh(location_coord):
+        return False
 
-    for c in (account_coord, location_coord):
-        await c.async_register_shutdown()
-        await c.async_first_refresh()
+    hass.data[EVOHOME_DATA] = EvoData(account=account_coord, locations=[location_coord])
 
-        if not c.last_update_success:
-            # translations aren't available until setup completes, so log the cause
-            err = c.last_exception
-            if isinstance(err, HomeAssistantError) and err.translation_key:
-                err = err.__cause__ or err
-            _LOGGER.error("Failed to fetch initial data: %s", err)
-            return False
-
-    assert location_coord.tcs is not None  # mypy
-
-    hass.data[EVOHOME_DATA] = EvoData(
-        account=account_coord,
-        coordinator=location_coord,
-        loc_idx=location_coord.loc_idx,
-        tcs=location_coord.tcs,
-    )
-
-    hass.async_create_task(
-        async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
-    )
-    hass.async_create_task(
-        async_load_platform(hass, Platform.BUTTON, DOMAIN, {}, config)
-    )
-    if location_coord.tcs.hotwater:
-        hass.async_create_task(
-            async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
-        )
+    for platform in (Platform.CLIMATE, Platform.BUTTON, Platform.WATER_HEATER):
+        hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
     async_setup_services(hass)
 
