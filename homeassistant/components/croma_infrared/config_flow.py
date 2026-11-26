@@ -2,12 +2,12 @@
 
 from typing import Any, override
 
-from homeassistant.components.infrared import InfraredConsumerReconfigureConfigFlow
+from homeassistant.components.infrared import InfraredConsumerConfigFlow
 
 from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN
 
 
-class CromaIrConfigFlow(InfraredConsumerReconfigureConfigFlow, domain=DOMAIN):
+class CromaIrConfigFlow(InfraredConsumerConfigFlow, domain=DOMAIN):
     """Handle config flow for Croma IR."""
 
     VERSION = 1
