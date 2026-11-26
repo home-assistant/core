@@ -78,6 +78,12 @@
       "ptc_status": {
         "name": "Auxiliary heat status"
       },
+      "tank_filed": {
+        "name": "Water tank"
+      },
+      "water_shortage_fault": {
+        "name": "Water shortage fault"
+      },
       "water_tank_detached": {
         "name": "Water tank"
       }
@@ -317,6 +323,9 @@
       },
       "led": {
         "name": "LED"
+      },
+      "led_light": {
+        "name": "LED light"
       },
       "ptc": {
         "name": "Auxiliary heat"
