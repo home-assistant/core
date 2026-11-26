@@ -176,6 +176,27 @@ def _project_addresses(knx_config: dict[str, Any]) -> list[str]:
     )
 
 
+def _is_configured(
+    platform: str,
+    knx_config: dict[str, Any],
+    template: dict[str, Any],
+    platforms_by_address: dict[str, set[str]],
+) -> bool:
+    """Check whether an entity of the platform already uses a suggested channel.
+
+    Passive addresses don't count - a central address listed there is used by
+    the entity of that central function, not by one of this channel.
+    """
+    shared = set(_project_addresses(template))
+    return any(
+        platform in platforms_by_address.get(address, ())
+        for _, ga_config in _iter_ga_configs(knx_config)
+        for slot in _SLOTS
+        if (address := _project_address(ga_config.get(slot))) is not None
+        and address not in shared
+    )
+
+
 def _matched_group_addresses(
     project: KNXProject, knx_config: dict[str, Any], template: dict[str, Any]
 ) -> list[SuggestedGroupAddress]:
@@ -229,8 +250,13 @@ def _build_suggestions(
     project: KNXProject,
     entities: KNXEntityStoreModel,
     entity_registry: er.EntityRegistry,
+    platforms_by_address: dict[str, set[str]],
 ) -> list[ProviderSuggestion]:
-    """Build suggestions for the channels wired like a configured entity."""
+    """Build suggestions for the channels wired like a configured entity.
+
+    A channel that already has an entity of the platform is not suggested - the
+    configuration would only repeat that entity.
+    """
     index = build_project_index(project)
     # the best suggestion of each channel and platform with its coverage - eg.
     # a dimmable light describes a dimmer channel better than a switched one
@@ -249,6 +275,8 @@ def _build_suggestions(
                 if key in best and best[key][0] >= coverage:
                     continue
                 knx_config = _apply(template, mapping)
+                if _is_configured(platform, knx_config, template, platforms_by_address):
+                    continue
                 # the schema decides what a complete configuration needs
                 if not _validates(Platform(platform), knx_config):
                     continue
@@ -302,7 +330,13 @@ class ExistingConfigSuggestionProvider(SuggestionProvider):
                 suggestions=[],
                 hints=ExistingConfigHints(state=ExistingConfigState.NO_UI_ENTITIES),
             )
+        platforms_by_address = {
+            address: {entity["platform"] for entity in address_entities}
+            for address, address_entities in knx.get_group_address_entities().items()
+        }
         return ProviderResult(
-            suggestions=_build_suggestions(project, entities, er.async_get(hass)),
+            suggestions=_build_suggestions(
+                project, entities, er.async_get(hass), platforms_by_address
+            ),
             hints=ExistingConfigHints(state=ExistingConfigState.OK),
         )
