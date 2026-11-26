@@ -14,7 +14,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.energyid.const import CONF_ENABLE_DIRECTIVES, DOMAIN
 from homeassistant.components.energyid.services import EnergyIDService
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -83,7 +83,7 @@ async def test_get_directive_schedule(
         DOMAIN,
         EnergyIDService.GET_DIRECTIVE_SCHEDULE,
         {},
-        target={ATTR_ENTITY_ID: registry_entry.entity_id},
+        target={TargetKey.ENTITY_ID: registry_entry.entity_id},
         blocking=True,
         return_response=True,
     )
@@ -164,7 +164,7 @@ async def test_get_directive_schedule_skips_unavailable_directive(
         DOMAIN,
         EnergyIDService.GET_DIRECTIVE_SCHEDULE,
         {},
-        target={ATTR_ENTITY_ID: list(entity_ids.values())},
+        target={TargetKey.ENTITY_ID: list(entity_ids.values())},
         blocking=True,
         return_response=True,
     )
