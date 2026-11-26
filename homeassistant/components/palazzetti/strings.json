@@ -48,6 +48,11 @@
         }
       }
     },
+    "cover": {
+      "door": {
+        "name": "[%key:component::cover::entity_component::door::name%]"
+      }
+    },
     "number": {
       "combustion_power": {
         "name": "Combustion power"
