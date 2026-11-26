@@ -85,10 +85,12 @@ from .const import (
     CHARGE_ON_SOLAR_LOWER_LIMIT_KEY,
     CHARGE_ON_SOLAR_SWITCH_KEY,
     CLIENT_ID,
+    CONF_LEGACY_GATEWAY,
     CONF_VIN,
     DOMAIN,
     ISSUE_ENERGY_SITE_NOT_PAIRED,
     ISSUE_GATEWAY_NOT_FOUND,
+    ISSUE_LOCAL_CONTROL_FAILED,
     ISSUE_STREAMING_ALLOWANCE,
     LABS_CHARGE_ON_SOLAR_FEATURE,
     LOGGER,
@@ -553,7 +555,9 @@ async def _async_resolve_local_control(
     if not battery:
         return False, None, cloud_energy_site
     subentry_id = _find_energy_subentry_id(entry, site_id)
+    failed_issue_id = f"{ISSUE_LOCAL_CONTROL_FAILED}_{entry.entry_id}_{site_id}"
     if subentry_id is None:
+        ir.async_delete_issue(hass, DOMAIN, failed_issue_id)
         return True, None, cloud_energy_site
     # A local-gateway failure for one site must not tear down the integration.
     try:
@@ -567,9 +571,24 @@ async def _async_resolve_local_control(
             site_id,
             exc_info=True,
         )
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            failed_issue_id,
+            is_fixable=False,
+            config_entry_id=entry.entry_id,
+            config_subentry_id=subentry_id,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_LOCAL_CONTROL_FAILED,
+            translation_placeholders={
+                "site": entry.subentries[subentry_id].title,
+                "key_file": POWERWALL_KEY_FILE,
+            },
+        )
         # Whether the gateway is found is unknown
         ir.async_keep_issue(hass, DOMAIN, gateway_issue_id(entry.entry_id, site_id))
         return True, subentry_id, cloud_energy_site
+    ir.async_delete_issue(hass, DOMAIN, failed_issue_id)
     return True, subentry_id, api
 
 
@@ -587,7 +606,13 @@ async def _async_resolve_energy_site_api(
         return cloud_energy_site
 
     key_pem = await _async_get_rsa_key_pem(hass)
-    powerwall_client = create_powerwall_client(hass, host, password, key_pem)
+    powerwall_client = create_powerwall_client(
+        hass,
+        host,
+        password,
+        key_pem,
+        legacy_gateway=subentry.data.get(CONF_LEGACY_GATEWAY, False),
+    )
     try:
         await powerwall_client.connect()
     except PowerwallRateLimitError as err:
@@ -630,7 +655,7 @@ async def _async_rediscover_gateway(
     issue_id = gateway_issue_id(entry.entry_id, site_id)
     try:
         host = await cloud_energy_site.find_gateway_address()
-    except (ClientError, TeslaFleetError) as err:
+    except (ClientError, TeslaFleetError, TimeoutError) as err:
         LOGGER.debug(
             "Gateway address lookup failed for energy site %s: %s", site_id, err
         )
@@ -647,7 +672,11 @@ async def _async_rediscover_gateway(
         return stale_client
     if host and host != stale_client.host:
         client = create_powerwall_client(
-            hass, host, subentry.data[CONF_PASSWORD], key_pem
+            hass,
+            host,
+            subentry.data[CONF_PASSWORD],
+            key_pem,
+            legacy_gateway=subentry.data.get(CONF_LEGACY_GATEWAY, False),
         )
         try:
             await client.connect()

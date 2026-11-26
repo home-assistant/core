@@ -1,5 +1,192 @@
 # serializer version: 1
-# name: test_threshold_sensors[sensor.nightscout_target_range_bottom-entry]
+# name: test_all_sensors[sensor.nightscout_glucose_change-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('nightscout', 'https://some.url:1234')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nightscout_glucose_change',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Glucose change',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: 'blood_glucose_concentration'>,
+    'original_icon': None,
+    'original_name': 'Glucose change',
+    'platform': 'nightscout',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'glucose_change',
+    'unique_id': '01K8B5CMV2N6WJXQ3T4R7Y9Z0A_delta',
+    'unit_of_measurement': <UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 'mg/dL'>,
+  })
+# ---
+# name: test_all_sensors[sensor.nightscout_glucose_change-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blood_glucose_concentration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'nightscout Glucose change',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 'mg/dL'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nightscout_glucose_change',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-5.257',
+  })
+# ---
+# name: test_all_sensors[sensor.nightscout_glucose_reading_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('nightscout', 'https://some.url:1234')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nightscout_glucose_reading_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Glucose reading time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Glucose reading time',
+    'platform': 'nightscout',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'glucose_reading_time',
+    'unique_id': '01K8B5CMV2N6WJXQ3T4R7Y9Z0A_last_reading',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_sensors[sensor.nightscout_glucose_reading_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'nightscout Glucose reading time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nightscout_glucose_reading_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-08-05T19:01:06+00:00',
+  })
+# ---
+# name: test_all_sensors[sensor.nightscout_glucose_trend-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'rising_very_quickly',
+        'rising_quickly',
+        'rising',
+        'rising_slightly',
+        'steady',
+        'falling_slightly',
+        'falling',
+        'falling_quickly',
+        'falling_very_quickly',
+        'not_computable',
+        'rate_out_of_range',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('nightscout', 'https://some.url:1234')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nightscout_glucose_trend',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Glucose trend',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Glucose trend',
+    'platform': 'nightscout',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'glucose_trend',
+    'unique_id': '01K8B5CMV2N6WJXQ3T4R7Y9Z0A_trend',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_sensors[sensor.nightscout_glucose_trend-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'nightscout Glucose trend',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'rising_very_quickly',
+        'rising_quickly',
+        'rising',
+        'rising_slightly',
+        'steady',
+        'falling_slightly',
+        'falling',
+        'falling_quickly',
+        'falling_very_quickly',
+        'not_computable',
+        'rate_out_of_range',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nightscout_glucose_trend',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'falling_slightly',
+  })
+# ---
+# name: test_all_sensors[sensor.nightscout_target_range_bottom-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -39,7 +226,7 @@
     'unit_of_measurement': <UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 'mg/dL'>,
   })
 # ---
-# name: test_threshold_sensors[sensor.nightscout_target_range_bottom-state]
+# name: test_all_sensors[sensor.nightscout_target_range_bottom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blood_glucose_concentration',
@@ -54,7 +241,7 @@
     'state': '80',
   })
 # ---
-# name: test_threshold_sensors[sensor.nightscout_target_range_top-entry]
+# name: test_all_sensors[sensor.nightscout_target_range_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -94,7 +281,7 @@
     'unit_of_measurement': <UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 'mg/dL'>,
   })
 # ---
-# name: test_threshold_sensors[sensor.nightscout_target_range_top-state]
+# name: test_all_sensors[sensor.nightscout_target_range_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blood_glucose_concentration',
@@ -109,7 +296,7 @@
     'state': '180',
   })
 # ---
-# name: test_threshold_sensors[sensor.nightscout_urgent_high_threshold-entry]
+# name: test_all_sensors[sensor.nightscout_urgent_high_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -149,7 +336,7 @@
     'unit_of_measurement': <UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 'mg/dL'>,
   })
 # ---
-# name: test_threshold_sensors[sensor.nightscout_urgent_high_threshold-state]
+# name: test_all_sensors[sensor.nightscout_urgent_high_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blood_glucose_concentration',
@@ -164,7 +351,7 @@
     'state': '260',
   })
 # ---
-# name: test_threshold_sensors[sensor.nightscout_urgent_low_threshold-entry]
+# name: test_all_sensors[sensor.nightscout_urgent_low_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -204,7 +391,7 @@
     'unit_of_measurement': <UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 'mg/dL'>,
   })
 # ---
-# name: test_threshold_sensors[sensor.nightscout_urgent_low_threshold-state]
+# name: test_all_sensors[sensor.nightscout_urgent_low_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blood_glucose_concentration',

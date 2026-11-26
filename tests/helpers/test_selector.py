@@ -50,6 +50,7 @@ def test_invalid_base_schema(schema) -> None:
     [
         pytest.param(selector.Selector, id="base"),
         pytest.param(selector.AttributeSelector, id="attribute"),
+        pytest.param(selector.DeviceClassSelector, id="device_class"),
         pytest.param(selector.MediaSelector, id="media"),
         pytest.param(selector.StateSelector, id="state"),
         pytest.param(selector.UnitOfMeasurementSelector, id="unit_of_measurement"),
@@ -67,6 +68,7 @@ def test_allowed_context_keys_read_only(
     "selector_class",
     [
         pytest.param(selector.AttributeSelector, id="attribute"),
+        pytest.param(selector.DeviceClassSelector, id="device_class"),
         pytest.param(selector.MediaSelector, id="media"),
         pytest.param(selector.StateSelector, id="state"),
         pytest.param(selector.UnitOfMeasurementSelector, id="unit_of_measurement"),
@@ -1755,6 +1757,15 @@ def test_select_selector_schema_error(schema) -> None:
             (["temperature"], ["temperature", "humidity"], []),
             ("battery", "beer", 0, None, "temperature", ["dog"]),
         ),
+        pytest.param(
+            {
+                "domain": "sensor",
+                "context": {"filter_unit_of_measurement": "unit_of_measurement"},
+            },
+            ("battery", "humidity", "temperature"),
+            ("cat", 0, None, ["temperature"]),
+            id="context_does_not_limit_selection",
+        ),
     ],
 )
 def test_device_class_selector_schema(
@@ -1762,6 +1773,76 @@ def test_device_class_selector_schema(
 ) -> None:
     """Test device class selector."""
     _test_selector("device_class", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "raises"),
+    [
+        pytest.param({"domain": "sensor"}, does_not_raise(), id="no_context"),
+        pytest.param(
+            {"domain": "sensor", "context": {}}, does_not_raise(), id="empty_context"
+        ),
+        pytest.param(
+            {
+                "domain": "sensor",
+                "context": {"filter_unit_of_measurement": "unit_of_measurement"},
+            },
+            does_not_raise(),
+            id="unit_of_measurement_context",
+        ),
+        pytest.param(
+            {"domain": "sensor", "context": {"filter_entity": "entity_id"}},
+            pytest.raises(probatio.Invalid),
+            id="unknown_context_key",
+        ),
+        pytest.param(
+            {"domain": "sensor", "context": {"filter_unit_of_measurement": 1}},
+            pytest.raises(probatio.Invalid),
+            id="context_value_not_a_string",
+        ),
+        pytest.param(
+            {"domain": "sensor", "context": "unit_of_measurement"},
+            pytest.raises(probatio.Invalid),
+            id="context_not_a_dict",
+        ),
+    ],
+)
+def test_device_class_selector_validate_schema(
+    schema: dict[str, Any], raises: AbstractContextManager
+) -> None:
+    """Test device class selector schemas."""
+    with raises:
+        selector.validate_selector({"device_class": schema})
+
+
+def test_device_class_selector_context_in_config() -> None:
+    """Test the device class selector context is kept in the selector config."""
+    context = {"filter_unit_of_measurement": "unit_of_measurement"}
+    device_class_selector = selector.selector(
+        {"device_class": {"domain": "sensor", "context": context}}
+    )
+
+    assert device_class_selector.serialize() == {
+        "selector": {
+            "device_class": {"domain": "sensor", "multiple": False, "context": context}
+        }
+    }
+    assert device_class_selector == selector.DeviceClassSelector(
+        selector.DeviceClassSelectorConfig(domain="sensor", context=context)
+    )
+    assert device_class_selector != selector.DeviceClassSelector(
+        selector.DeviceClassSelectorConfig(domain="sensor")
+    )
+
+
+def test_device_class_selector_allowed_context_keys() -> None:
+    """Test device class selector allows unit of measurement context."""
+    # The module uses a string literal for it, so compare with the real selector type
+    assert selector.DeviceClassSelector.allowed_context_keys == {
+        "filter_unit_of_measurement": {
+            selector.UnitOfMeasurementSelector.selector_type
+        },
+    }
 
 
 @pytest.mark.parametrize(
