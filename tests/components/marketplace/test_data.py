@@ -142,6 +142,42 @@ async def test_restore(
     assert "Loading base repository information" not in caplog.text
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_restore_names_the_repository_of_an_invalid_manifest_value(
+    marketplace: MarketplaceManager,
+    config_dir: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a stored hacs.json value that is left out names its repository.
+
+    Every repository in the catalog is stored, so the warning can be for one
+    that is not installed.
+    """
+    create_install_folders(config_dir, RESTORED_REPOSITORIES)
+    data = MarketplaceData(marketplace)
+    stored = {
+        entry: dict(repo_data) for entry, repo_data in RESTORED_REPOSITORIES.items()
+    }
+    assert stored["1296267"].get("installed", False) is False
+    stored["1296267"]["manifest"] = {"zip_release": "yes"}
+
+    async def mocked_load(hass: HomeAssistant, storage_key: str) -> Any:
+        """Return the stored repositories."""
+        return stored if storage_key == "repositories" else {}
+
+    with patch(
+        "homeassistant.components.marketplace.utils.data.async_load_from_storage",
+        side_effect=mocked_load,
+    ):
+        assert await data.restore()
+
+    full_name = stored["1296267"]["full_name"]
+    assert (
+        f"Ignoring zip_release in hacs.json of {full_name}, 'yes' is not valid"
+        in caplog.text
+    )
+
+
 @pytest.mark.parametrize(
     ("stored_categories", "expected"),
     [

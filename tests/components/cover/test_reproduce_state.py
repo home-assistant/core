@@ -654,26 +654,48 @@ OPEN_AT_0 = {
         "current_tilt",
         "tilt_attributes",
         "target_state",
+        "target_attributes",
         "expected_tilt_positions",
     ),
     [
         pytest.param(
-            CoverState.CLOSED, 0, OPEN_AT_50, CoverState.OPEN, [50], id="open_at_50"
+            CoverState.CLOSED, 0, OPEN_AT_50, CoverState.OPEN, {}, [50], id="open_at_50"
         ),
         pytest.param(
-            CoverState.OPEN, 30, OPEN_AT_50, CoverState.CLOSED, [0], id="close_from_30"
+            CoverState.OPEN,
+            30,
+            OPEN_AT_50,
+            CoverState.CLOSED,
+            {},
+            [0],
+            id="close_from_30",
         ),
         pytest.param(
-            CoverState.CLOSED, 100, OPEN_AT_0, CoverState.OPEN, [0], id="open_at_0"
+            CoverState.CLOSED, 100, OPEN_AT_0, CoverState.OPEN, {}, [0], id="open_at_0"
         ),
         pytest.param(
-            CoverState.OPEN, 0, OPEN_AT_0, CoverState.CLOSED, [100], id="close_at_100"
+            CoverState.OPEN,
+            0,
+            OPEN_AT_0,
+            CoverState.CLOSED,
+            {},
+            [100],
+            id="close_at_100",
         ),
         pytest.param(
-            CoverState.CLOSED, 0, {}, CoverState.OPEN, [100], id="default_open"
+            CoverState.CLOSED, 0, {}, CoverState.OPEN, {}, [100], id="default_open"
         ),
         pytest.param(
-            CoverState.OPEN, 50, {}, CoverState.CLOSED, [0], id="default_close"
+            CoverState.OPEN, 50, {}, CoverState.CLOSED, {}, [0], id="default_close"
+        ),
+        pytest.param(
+            CoverState.CLOSED,
+            0,
+            OPEN_AT_50,
+            CoverState.CLOSED,
+            {CoverEntityStateAttribute.CURRENT_TILT_POSITION: 100},
+            [100],
+            id="closed_with_stored_tilt",
         ),
     ],
 )
@@ -683,9 +705,10 @@ async def test_reproducing_state_with_tilt_positions(
     current_tilt: int,
     tilt_attributes: dict[str, Any],
     target_state: CoverState,
+    target_attributes: dict[str, Any],
     expected_tilt_positions: list[int],
 ) -> None:
-    """Test a state without tilt uses the open and closed tilt positions."""
+    """Test reproducing tilt with the open and closed tilt positions."""
     hass.states.async_set(
         "cover.entity",
         current_state,
@@ -697,7 +720,9 @@ async def test_reproducing_state_with_tilt_positions(
     )
     calls = async_mock_service(hass, DOMAIN, CoverService.SET_TILT_POSITION)
 
-    await async_reproduce_state(hass, [State("cover.entity", target_state)])
+    await async_reproduce_state(
+        hass, [State("cover.entity", target_state, target_attributes)]
+    )
 
     assert [
         call.data[CoverServiceArgument.TILT_POSITION] for call in calls

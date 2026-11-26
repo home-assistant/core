@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "error": {
+        "default": "mdi:alert-circle",
+        "state": {
+          "none": "mdi:check-circle"
+        }
+      },
+      "error_code": {
+        "default": "mdi:alert-circle-outline"
+      }
+    }
+  }
+}

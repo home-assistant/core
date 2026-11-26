@@ -33,7 +33,7 @@ type EnergyIDConfigEntry = ConfigEntry[EnergyIDRuntimeData]
 
 
 @callback
-def async_directives_enabled(entry: ConfigEntry) -> bool:
+def async_directives_enabled(entry: EnergyIDConfigEntry) -> bool:
     """Return whether the user opted in to directives; an absent option means no."""
     return bool(entry.options.get(CONF_ENABLE_DIRECTIVES, False))
 
