@@ -99,7 +99,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_buttons_snapshot[button.inmbsmhi001r000_reset_gateway-entry]
+# name: test_all_buttons_snapshot[button.inmbsmhi001r000_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -113,7 +113,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.inmbsmhi001r000_reset_gateway',
+    'entity_id': 'button.inmbsmhi001r000_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -121,29 +121,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reset gateway',
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
-    'original_name': 'Reset gateway',
+    'original_name': 'Restart',
     'platform': 'intesis_modbus',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'reset_gateway',
-    'unique_id': '01JTESTINTESISSINGLE000000_reset_gateway',
+    'translation_key': None,
+    'unique_id': '01JTESTINTESISSINGLE000000_restart_gateway',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_buttons_snapshot[button.inmbsmhi001r000_reset_gateway-state]
+# name: test_all_buttons_snapshot[button.inmbsmhi001r000_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INMBSMHI001R000 Reset gateway',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INMBSMHI001R000 Restart',
     }),
     'context': <ANY>,
-    'entity_id': 'button.inmbsmhi001r000_reset_gateway',
+    'entity_id': 'button.inmbsmhi001r000_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

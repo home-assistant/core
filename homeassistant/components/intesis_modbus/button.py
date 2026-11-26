@@ -30,8 +30,7 @@ class IntesisButtonEntityDescription(ButtonEntityDescription):
 
 GATEWAY_BUTTONS: Final[tuple[IntesisButtonEntityDescription, ...]] = (
     IntesisButtonEntityDescription(
-        key="reset_gateway",
-        translation_key="reset_gateway",
+        key="restart_gateway",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
