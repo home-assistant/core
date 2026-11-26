@@ -1,9 +1,10 @@
 """Test Music Assistant number entities."""
 
+from dataclasses import replace
 from unittest.mock import MagicMock, call, patch
 
 from music_assistant_models.enums import EventType
-from music_assistant_models.media_items import Audiobook
+from music_assistant_models.media_items import Audiobook, Track
 from music_assistant_models.queue_item import QueueItem
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -181,12 +182,41 @@ async def test_name_translation_availability(
         )
 
 
+@pytest.mark.parametrize(
+    ("current_item", "expected_state"),
+    [
+        pytest.param(
+            replace(AUDIOBOOK_QUEUE_ITEM, extra_attributes={"playback_speed": 1.5}),
+            "1.5",
+            id="item_speed",
+        ),
+        pytest.param(AUDIOBOOK_QUEUE_ITEM, "1.0", id="default_speed"),
+        pytest.param(
+            QueueItem(
+                queue_id="00:00:00:00:00:01",
+                queue_item_id="queue_item_2",
+                name="Track 1",
+                duration=180,
+                media_item=Track(
+                    item_id="track_1",
+                    provider="library",
+                    name="Track 1",
+                    provider_mappings=set(),
+                ),
+            ),
+            STATE_UNAVAILABLE,
+            id="music_track",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_queue_playback_speed(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
+    current_item: QueueItem,
+    expected_state: str,
 ) -> None:
-    """Test the playback speed number sets the speed of the player's own queue."""
+    """Test the playback speed number shows the speed of the current item."""
     music_assistant_client.server_info.schema_version = 101
     await setup_integration_from_fixtures(hass, music_assistant_client)
     entity_id = "number.test_player_1_playback_speed"
@@ -196,13 +226,43 @@ async def test_queue_playback_speed(
     assert state.state == STATE_UNAVAILABLE
 
     queue = music_assistant_client.player_queues._queues["00:00:00:00:00:01"]
-    queue.current_item = AUDIOBOOK_QUEUE_ITEM
+    queue.current_item = current_item
     await trigger_subscription_callback(
         hass, music_assistant_client, EventType.QUEUE_UPDATED, "00:00:00:00:00:01"
     )
     state = hass.states.get(entity_id)
     assert state
-    assert float(state.state) == 1.0
+    assert state.state == expected_state
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_queue_playback_speed_follows_active_queue(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test the playback speed number uses the queue the player plays from."""
+    music_assistant_client.server_info.schema_version = 101
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "number.test_player_1_playback_speed"
+    queues = music_assistant_client.player_queues._queues
+    # its own queue still holds an older audiobook
+    queues["00:00:00:00:00:01"].current_item = replace(
+        AUDIOBOOK_QUEUE_ITEM, extra_attributes={"playback_speed": 2.0}
+    )
+    queues["test_group_player_1"].current_item = replace(
+        AUDIOBOOK_QUEUE_ITEM,
+        queue_id="test_group_player_1",
+        extra_attributes={"playback_speed": 1.25},
+    )
+    music_assistant_client.players._players[
+        "00:00:00:00:00:01"
+    ].active_source = "test_group_player_1"
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.PLAYER_UPDATED, "00:00:00:00:00:01"
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "1.25"
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
@@ -212,11 +272,22 @@ async def test_queue_playback_speed(
     )
     assert music_assistant_client.send_command.call_args == call(
         "player_queues/set_playback_speed",
-        queue_id="00:00:00:00:00:01",
+        queue_id="test_group_player_1",
         speed=1.5,
         queue_item_id=None,
         require_schema=101,
     )
+
+
+async def test_queue_playback_speed_older_server(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test a server below schema 101 gets no playback speed number."""
+    music_assistant_client.server_info.schema_version = 100
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    assert entity_registry.async_get("number.test_player_1_playback_speed") is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

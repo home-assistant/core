@@ -7,7 +7,7 @@
     },
     "number": {
       "queue_playback_speed": {
-        "default": "mdi:speedometer"
+        "default": "mdi:play-speed"
       }
     },
     "switch": {

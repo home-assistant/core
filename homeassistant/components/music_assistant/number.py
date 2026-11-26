@@ -6,6 +6,7 @@ from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.enums import EventType, MediaType
 from music_assistant_models.event import MassEvent
 from music_assistant_models.player import PlayerOption, PlayerOptionType
+from music_assistant_models.player_queue import PlayerQueue
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import EntityCategory, Platform
@@ -52,7 +53,7 @@ async def async_setup_entry(
             return
         if TYPE_CHECKING:
             assert mass.server_info is not None
-        # older servers lack the command, so their players keep only the option numbers;
+        # the client refuses the command on older servers
         # the queue itself may still be missing, the server adds it after the player
         if mass.server_info.schema_version >= PLAYER_SETTINGS_SCHEMA_VERSION:
             async_add_entities([MusicAssistantQueuePlaybackSpeed(mass, player_id)])
@@ -157,7 +158,7 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
 
 
 class MusicAssistantQueuePlaybackSpeed(MusicAssistantEntity, NumberEntity):
-    """Playback speed of the item playing in the player's own queue."""
+    """Playback speed of the item playing in the player's active queue."""
 
     entity_description = NumberEntityDescription(
         key="queue_playback_speed",
@@ -183,16 +184,21 @@ class MusicAssistantQueuePlaybackSpeed(MusicAssistantEntity, NumberEntity):
         self.async_write_ha_state()
 
     @property
+    def _queue(self) -> PlayerQueue | None:
+        # a player playing along with another one plays from that player's queue
+        return self.mass.player_queues.get(self.player.active_source or self.player_id)
+
+    @property
     @override
     def available(self) -> bool:
         """Return if the current item is one whose speed can change."""
         if not super().available:
             return False
-        queue = self.mass.player_queues.get(self.player_id)
-        current_item = queue.current_item if queue else None
-        media_item = current_item.media_item if current_item else None
+        queue = self._queue
+        if queue is None or (current_item := queue.current_item) is None:
+            return False
         # the server only changes the speed of audiobooks and podcast episodes
-        return media_item is not None and media_item.media_type in (
+        return current_item.media_type in (
             MediaType.AUDIOBOOK,
             MediaType.PODCAST_EPISODE,
         )
@@ -200,13 +206,17 @@ class MusicAssistantQueuePlaybackSpeed(MusicAssistantEntity, NumberEntity):
     @property
     @override
     def native_value(self) -> float | None:
-        """Return the playback speed of the queue."""
-        if (queue := self.mass.player_queues.get(self.player_id)) is None:
+        """Return the playback speed of the current item."""
+        queue = self._queue
+        if queue is None or (current_item := queue.current_item) is None:
             return None
-        return queue.playback_speed
+        # the item holds its speed, the queue only updates its copy while it plays
+        return float(current_item.extra_attributes.get("playback_speed") or 1.0)
 
     @catch_musicassistant_error
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the playback speed of the playing item."""
-        await self.mass.player_queues.set_playback_speed(self.player_id, value)
+        if (queue := self._queue) is None:
+            return
+        await self.mass.player_queues.set_playback_speed(queue.queue_id, value)
