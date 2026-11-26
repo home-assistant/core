@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.threema.client import ThreemaConnectionError
@@ -51,6 +53,7 @@ async def test_credits_sensor_update(
     mock_config_entry: MockConfigEntry,
     mock_credentials: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the credits sensor follows the gateway and its availability."""
     mock_config_entry.add_to_hass(hass)
@@ -68,6 +71,11 @@ async def test_credits_sensor_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert [
+        record.levelno
+        for record in caplog.records
+        if "is unavailable" in record.message
+    ] == [logging.INFO]
 
     mock_credentials.side_effect = None
     freezer.tick(SCAN_INTERVAL)

@@ -15594,7 +15594,7 @@
         "cloud"
       ],
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_polling"
     },
     "tibber": {
       "name": "Tibber",

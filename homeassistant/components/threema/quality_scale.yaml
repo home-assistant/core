@@ -50,7 +50,7 @@ rules:
   discovery-update-info:
     status: exempt
     comment: Cloud service, not discoverable on the network.
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices:

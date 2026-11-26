@@ -7,7 +7,10 @@ from typing import override
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailedUnreachable,
+)
 
 from .client import ThreemaAPIClient, ThreemaAuthError, ThreemaConnectionError
 from .const import DOMAIN
@@ -51,7 +54,7 @@ class ThreemaCreditsCoordinator(DataUpdateCoordinator[int]):
                 translation_key="invalid_auth",
             ) from err
         except ThreemaConnectionError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
