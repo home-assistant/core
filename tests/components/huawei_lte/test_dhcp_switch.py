@@ -202,8 +202,8 @@ def test_unconfirmed_state() -> None:
     """Do not report success when the router keeps the previous state."""
     switch, router = make_switch()
     router.client.dhcp.settings.side_effect = [
-        SETTINGS,
-        SETTINGS,
+        replace(SETTINGS),
+        replace(SETTINGS),
     ]
 
     with pytest.raises(HomeAssistantError) as err:
