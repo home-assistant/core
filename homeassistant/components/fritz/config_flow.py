@@ -58,6 +58,8 @@ from .const import (
 )
 from .coordinator import FritzConfigEntry
 
+CREDENTIAL_DOCS_URL = "https://www.home-assistant.io/integrations/fritz#credentials"
+
 
 class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a FRITZ!Box Tools config flow."""
@@ -363,7 +365,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-            description_placeholders={"host": self._host},
+            description_placeholders={
+                "host": self._host,
+                "credential_docs_url": CREDENTIAL_DOCS_URL,
+            },
             errors=errors or {},
         )
 

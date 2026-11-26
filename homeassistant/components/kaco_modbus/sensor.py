@@ -2,10 +2,10 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from kaco_modbus import KacoInverter
-from kaco_modbus.models import InverterThreePhase
+from kaco_modbus.models import InverterThreePhase, MpptModule
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,10 +25,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import KacoConfigEntry
+from .const import DOMAIN
+from .coordinator import KacoConfigEntry, KacoDataUpdateCoordinator
 from .entity import KacoEntity, KacoEntityDescription
 
 PARALLEL_UPDATES = 0
@@ -260,16 +262,62 @@ SENSOR_DESCRIPTIONS: tuple[KacoSensorDescription, ...] = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class KacoMpptSensorDescription(SensorEntityDescription, KacoEntityDescription):
+    """A sensor of one MPPT, and where to read its value off that MPPT."""
+
+    component: str = "mppt"
+    value_fn: Callable[[MpptModule], StateType]
+
+
+MPPT_SENSOR_DESCRIPTIONS: tuple[KacoMpptSensorDescription, ...] = (
+    KacoMpptSensorDescription(
+        key="dc_power",
+        translation_key="dc_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda mppt: mppt.dcw,
+    ),
+    KacoMpptSensorDescription(
+        key="dc_voltage",
+        translation_key="dc_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+        value_fn=lambda mppt: mppt.dcv,
+    ),
+    KacoMpptSensorDescription(
+        key="dc_current",
+        translation_key="dc_current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda mppt: mppt.dca,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: KacoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the KACO Modbus sensor platform."""
-    async_add_entities(
-        KacoSensor(entry.runtime_data, description)
-        for description in SENSOR_DESCRIPTIONS
+    coordinator = entry.runtime_data
+    entities: list[SensorEntity] = [
+        KacoSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
+    ]
+    # The MPPT count is fixed by the hardware, so it is settled at setup.
+    entities.extend(
+        KacoMpptSensor(coordinator, description, index)
+        for index in range(len(coordinator.device.strings))
+        for description in MPPT_SENSOR_DESCRIPTIONS
     )
+    async_add_entities(entities)
 
 
 class KacoSensor(KacoEntity, SensorEntity):
@@ -282,3 +330,39 @@ class KacoSensor(KacoEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the value this sensor reads from the device."""
         return self.entity_description.value_fn(self.coordinator.device)
+
+
+class KacoMpptSensor(KacoEntity, SensorEntity):
+    """A reading of one MPPT, on that MPPT's child device."""
+
+    entity_description: KacoMpptSensorDescription
+
+    def __init__(
+        self,
+        coordinator: KacoDataUpdateCoordinator,
+        entity_description: KacoMpptSensorDescription,
+        index: int,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, entity_description)
+        self._index = index
+        number = index + 1
+        info = coordinator.device.info
+        if TYPE_CHECKING:
+            assert info is not None
+        mppt_id = f"{info.serial_number}_mppt_{number}"
+        self._attr_unique_id = f"{mppt_id}_{entity_description.key}"
+        self._attr_device_info = ChildDeviceInfo(
+            identifiers={(DOMAIN, mppt_id)},
+            parent_device_id=coordinator.inverter_device_id,
+            translation_key="mppt",
+            translation_placeholders={"number": str(number)},
+        )
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the value this sensor reads from its MPPT."""
+        return self.entity_description.value_fn(
+            self.coordinator.device.strings[self._index]
+        )

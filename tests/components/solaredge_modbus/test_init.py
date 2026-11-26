@@ -16,9 +16,9 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from solaredged import SolarEdge, SolarEdgeConnectionError
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.solaredge_modbus.const import (
     ATTACHMENT_SCAN_INTERVAL,
@@ -28,14 +28,9 @@ from homeassistant.components.solaredge_modbus.const import (
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -509,6 +504,7 @@ async def test_dead_link_fails_the_refresh(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_config_entry.runtime_data.readings.last_update_success is False
+    assert not mock_modbus_unit.connected
 
     state = hass.states.get(POWER_ENTITY)
     assert state is not None
@@ -530,6 +526,7 @@ async def test_dead_link_fails_the_refresh(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert attempts == 1
+    assert not mock_modbus_unit.connected
 
 
 async def test_another_inverter_on_the_address_fails_the_refresh(
@@ -596,9 +593,10 @@ async def test_settings_failure_does_not_block_setup(
     with patch(
         "homeassistant.components.solaredge_modbus.SolarEdge.async_update_settings",
         side_effect=SolarEdgeConnectionError("timed out"),
-    ):
+    ) as update_settings:
         await _setup(hass, mock_config_entry)
 
+    assert update_settings.call_count == 1
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(POWER_ENTITY) is not None
 
@@ -634,17 +632,17 @@ async def test_concurrent_control_writes_keep_both_changes(
     await asyncio.gather(
         hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: EXPORT_LIMITATION_ENTITY,
-                ATTR_OPTION: "production_control",
+                TargetKey.ENTITY_ID: EXPORT_LIMITATION_ENTITY,
+                SelectServiceArgument.OPTION: "production_control",
             },
             blocking=True,
         ),
         hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: EXTERNAL_PRODUCTION_ENTITY},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: EXTERNAL_PRODUCTION_ENTITY},
             blocking=True,
         ),
     )
@@ -1302,16 +1300,16 @@ async def test_only_a_block_a_check_reloads_for_is_kept(
     assert mock_config_entry.data[CONF_SILENT_BLOCKS] == ["power_control"]
 
 
-async def test_reads_wait_longer_than_the_probe(
+async def test_timeout_is_set_before_probing(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
 ) -> None:
-    """Polls get a longer timeout, the probe keeps the link's default.
+    """The read timeout is set before probing opens the connection.
 
-    Over Wi-Fi some answers come late, and one late answer fails a whole poll.
-    The probe waits out a full timeout for every block the inverter never
-    answers, so raising it there would only make setting up slower.
+    Raising the timeout after probing tears down and reopens the underlying
+    socket, and SolarEdge inverters refuse or ignore a TCP reconnect that
+    follows immediately after closing the previous connection.
     """
     during_probe: list[float | None] = []
     probe = SolarEdge.async_probe
@@ -1325,5 +1323,71 @@ async def test_reads_wait_longer_than_the_probe(
     with patch.object(SolarEdge, "async_probe", recording_probe):
         await _setup(hass, mock_config_entry)
 
-    assert during_probe == [None]
+    assert during_probe == [READ_TIMEOUT]
     assert mock_modbus_unit.required_timeout == READ_TIMEOUT
+
+
+async def test_attachment_check_skipped_when_polling_disabled(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_modbus_unit: MockModbusUnit,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Periodic attachment probing does not run when polling is disabled."""
+    mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, ModbusTimeoutError("timed out"))
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="SolarEdge SE10000H",
+        unique_id=SERIAL_NUMBER,
+        data=tcp_data(),
+        pref_disable_polling=True,
+    )
+    await _setup(hass, entry)
+
+    assert (
+        "SolarEdge SE10000H did not answer for power_control while probing,"
+        " so the entities those would carry are missing" in caplog.text
+    )
+    assert "looked at again" not in caplog.text
+
+    with patch.object(SolarEdge, "async_probe") as mock_probe:
+        await _tick_attachment_check(hass, freezer)
+
+    mock_probe.assert_not_called()
+
+
+async def test_batteries_settled_when_storage_control_is_silent(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Batteries are settled alongside storage control when both stay silent."""
+    mock_modbus_unit.fail_read(SITE_CONTROL_REGISTER, ModbusTimeoutError("timed out"))
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, ModbusTimeoutError("timed out"))
+    await _setup(hass, mock_config_entry)
+
+    asked: list[frozenset[str]] = []
+    probe = SolarEdge.async_probe
+
+    async def recording_probe(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
+        asked.append(assume_absent)
+        return await probe(unit, assume_absent=assume_absent)
+
+    with patch.object(SolarEdge, "async_probe", recording_probe):
+        await _tick_attachment_check(hass, freezer)
+        await _tick_attachment_check(hass, freezer)
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert asked == [
+        frozenset(),
+        frozenset({"batteries", "storage_control"}),
+        frozenset({"batteries", "storage_control"}),
+    ]
+    assert mock_config_entry.data[CONF_SILENT_BLOCKS] == [
+        "batteries",
+        "storage_control",
+    ]

@@ -80,19 +80,21 @@ class ShellyInfraredReceiver(ShellyRpcAttributeEntity, InfraredReceiverEntity):
         self._handle_received_signal(InfraredReceivedSignal(timings=timings))
 
 
-RPC_INFRARED_ENTITIES: Final = {
-    "infrared_emitter": RpcInfraredEmitterEntityDescription(
-        key="ir",
+RPC_INFRARED_ENTITIES: Final = (
+    RpcInfraredEmitterEntityDescription(
+        key="infrared_emitter",
+        components=("ir",),
         translation_key="infrared_emitter",
         entity_class=ShellyInfraredEmitter,
     ),
-    "infrared_receiver": RpcInfraredReceiverEntityDescription(
-        key="ir",
+    RpcInfraredReceiverEntityDescription(
+        key="infrared_receiver",
+        components=("ir",),
         translation_key="infrared_receiver",
         entity_class=ShellyInfraredReceiver,
         removal_condition=lambda config, _, key: not config[key].get("raw_receive"),
     ),
-}
+)
 
 
 async def async_setup_entry(

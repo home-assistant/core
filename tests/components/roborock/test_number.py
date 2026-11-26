@@ -4,7 +4,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from roborock.exceptions import RoborockTimeout
 
-from homeassistant.components.number import ATTR_VALUE, SERVICE_SET_VALUE
+from homeassistant.components.number import NumberService, NumberServiceArgument
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -33,8 +33,8 @@ async def test_update_sound_volume(
 
     await hass.services.async_call(
         "number",
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 3.0},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: 3.0},
         blocking=True,
         target={"entity_id": "number.roborock_s7_maxv_volume"},
     )
@@ -63,8 +63,8 @@ async def test_q10_update_sound_volume(
 
     await hass.services.async_call(
         "number",
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 30.0},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: 30.0},
         blocking=True,
         target={"entity_id": entity_id},
     )
@@ -108,8 +108,8 @@ async def test_q10_volume_update_failed(
     with pytest.raises(HomeAssistantError, match="Failed to update Roborock options"):
         await hass.services.async_call(
             "number",
-            SERVICE_SET_VALUE,
-            service_data={ATTR_VALUE: 30.0},
+            NumberService.SET_VALUE,
+            service_data={NumberServiceArgument.VALUE: 30.0},
             blocking=True,
             target={"entity_id": "number.roborock_q10_s5_volume"},
         )
@@ -148,8 +148,8 @@ async def test_volume_update_failed(
     with pytest.raises(HomeAssistantError, match="Failed to update Roborock options"):
         await hass.services.async_call(
             "number",
-            SERVICE_SET_VALUE,
-            service_data={ATTR_VALUE: 3.0},
+            NumberService.SET_VALUE,
+            service_data={NumberServiceArgument.VALUE: 3.0},
             blocking=True,
             target={"entity_id": "number.roborock_s7_maxv_volume"},
         )

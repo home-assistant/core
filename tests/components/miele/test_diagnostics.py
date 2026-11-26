@@ -68,3 +68,29 @@ async def test_diagnostics_device(
             "miele_test.entry_id",
         )
     )
+
+
+async def test_diagnostics_without_filling_levels(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: DeviceRegistry,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test diagnostics when filling levels could not be fetched at setup."""
+    mock_miele_client.get_filling_levels.side_effect = TimeoutError
+    await setup_integration(hass, mock_config_entry)
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "Dummy_Appliance_1"), mock_config_entry.entry_id
+    )
+    assert device_entry is not None
+
+    entry_result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+    device_result = await get_diagnostics_for_device(
+        hass, hass_client, mock_config_entry, device_entry
+    )
+
+    assert entry_result["miele_data"]["filling_levels"] == {}
+    assert device_result["miele_data"]["filling_levels"] == {}

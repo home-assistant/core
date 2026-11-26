@@ -1,3 +1,21 @@
+command:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: shelly
+    command:
+      required: true
+      example: Switch.Set
+      selector:
+        text:
+    params:
+      required: false
+      example: '{"id": 0, "on": true}'
+      selector:
+        object:
+
 get_kvs_value:
   fields:
     device_id:

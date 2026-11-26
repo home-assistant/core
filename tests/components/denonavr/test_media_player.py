@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_MODEL,
     STATE_UNAVAILABLE,
     CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -140,7 +141,7 @@ async def test_update_audyssey(hass: HomeAssistant, client: MagicMock) -> None:
         DOMAIN,
         DenonAvrService.UPDATE_AUDYSSEY,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
         },
     )
     await hass.async_block_till_done()
@@ -174,6 +175,49 @@ async def test_setup_retry_on_request_error(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "attribute", ["manufacturer", "name", "model_name", "receiver_type"]
+)
+@pytest.mark.parametrize(
+    ("use_telnet", "disconnects"),
+    [
+        pytest.param(True, 1, id="telnet"),
+        pytest.param(False, 0, id="no_telnet"),
+    ],
+)
+async def test_setup_retry_on_missing_receiver_info(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    attribute: str,
+    use_telnet: bool,
+    disconnects: int,
+) -> None:
+    """Test that a receiver missing identification retries the config entry."""
+    setattr(client, attribute, None)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_MODEL: TEST_MODEL,
+            CONF_TYPE: TEST_RECEIVER_TYPE,
+            CONF_MANUFACTURER: TEST_MANUFACTURER,
+            CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
+        },
+        options={CONF_USE_TELNET: use_telnet},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert not er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert client.async_telnet_disconnect.await_count == disconnects
 
 
 @pytest.mark.parametrize(

@@ -21,7 +21,12 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
-from homeassistant.helpers import config_validation as cv, recorder, restore_state
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    recorder,
+    restore_state,
+)
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
@@ -32,6 +37,7 @@ from homeassistant.helpers.target import (
     async_extract_referenced_entity_ids,
 )
 from homeassistant.helpers.template import async_load_custom_templates
+from homeassistant.helpers.trace import trace_id_get
 
 from .const import (
     DATA_STOP_HANDLER,
@@ -239,6 +245,23 @@ async def _async_handle_reload_templates(call: ServiceCall) -> None:
     await async_load_custom_templates(hass)
 
 
+async def _async_get_caller(call: ServiceCall) -> str:
+    """Return the automation, script or user that runs the current action."""
+    hass = call.hass
+    if (trace_id := trace_id_get()) is not None:
+        # The trace key is the domain and the unique ID of the automation or script
+        domain, _, unique_id = trace_id[0].partition(".")
+        entity_registry = er.async_get(hass)
+        if entity_id := entity_registry.async_get_entity_id(domain, domain, unique_id):
+            return f"from {entity_id}"
+        return "from an automation or script without an ID"
+    if (user_id := call.context.user_id) and (
+        user := await hass.auth.async_get_user(user_id)
+    ):
+        return f"by user {user.name} outside of automations and scripts"
+    return "from an action outside of automations and scripts"
+
+
 async def _async_handle_reload_config_entry(call: ServiceCall) -> None:
     """Service handler for reloading a config entry."""
     hass = call.hass
@@ -249,7 +272,10 @@ async def _async_handle_reload_config_entry(call: ServiceCall) -> None:
         _LOGGER.warning(
             "Reloading a config entry by target is deprecated and will stop "
             "working in Home Assistant 2027.4, please specify the config entry "
-            "to reload in the 'entry_id' parameter instead"
+            "to reload in the 'entry_id' parameter instead. Called %s with "
+            "target %s",
+            await _async_get_caller(call),
+            {key: value for key, value in call.data.items() if key in cv.TARGET_FIELDS},
         )
     reload_entries.update(await async_extract_config_entry_ids(call))
     if not reload_entries:

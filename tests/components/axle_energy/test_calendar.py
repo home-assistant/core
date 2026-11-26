@@ -20,16 +20,15 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
-    SERVICE_GET_EVENTS,
+    CalendarService,
+    CalendarServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers import entity_registry as er
@@ -58,11 +57,11 @@ async def get_events(
     """Read the calendar through its public action."""
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            EVENT_START_DATETIME: start,
-            EVENT_END_DATETIME: end,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            CalendarServiceArgument.START_DATE_TIME: start,
+            CalendarServiceArgument.END_DATE_TIME: end,
         },
         blocking=True,
         return_response=True,

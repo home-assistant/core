@@ -4,13 +4,17 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from pyipp import IPP, IPPError, Printer as IPPPrinter
+from pyipp import IPP, IPPConnectionError, IPPError, Printer as IPPPrinter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import CONF_BASE_PATH, DOMAIN, REQUEST_TIMEOUT
 
@@ -52,6 +56,14 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
         """Fetch data from IPP."""
         try:
             return await self.ipp.printer()
+        except IPPConnectionError as error:
+            # The printer could not be reached, e.g. because it is switched
+            # off or in standby. This is expected often enough on a home
+            # network that it is only logged at info level.
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from error
         except IPPError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

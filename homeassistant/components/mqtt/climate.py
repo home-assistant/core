@@ -281,7 +281,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
                 HVACMode.DRY,
                 HVACMode.FAN_ONLY,
             ],
-        ): probatio.EnsureList(),
+        ): probatio.All(probatio.EnsureList(), [probatio.Coerce(HVACMode)]),
         probatio.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
         probatio.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
         probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
@@ -530,8 +530,14 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             self._attr_swing_horizontal_mode = SWING_OFF
         if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None or self._optimistic:
             self._attr_swing_mode = SWING_OFF
-        if self._topic[CONF_MODE_STATE_TOPIC] is None or self._optimistic:
-            self._attr_hvac_mode = HVACMode.OFF
+        if (
+            (self._topic[CONF_MODE_STATE_TOPIC] is None or self._optimistic)
+            and self.hvac_modes
+            and not self.hvac_mode
+        ):
+            self._attr_hvac_mode = (
+                HVACMode.OFF if HVACMode.OFF in self.hvac_modes else self.hvac_modes[0]
+            )
         self._feature_preset_mode = CONF_PRESET_MODE_COMMAND_TOPIC in config
         if self._feature_preset_mode:
             presets = []

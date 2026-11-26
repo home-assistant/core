@@ -39,18 +39,24 @@ SWITCHES = [
         name=None,
         device_class=SwitchDeviceClass.OUTLET,
         create_fn=lambda x: x.device.supports_state(),
-        available_fn=lambda x: x.state is not None and not x.state.switch_lock,
-        is_on_fn=lambda x: x.state.power_on if x.state else None,
-        set_fn=lambda api, active: api.state(power_on=active),
+        available_fn=lambda x: (
+            x.system is not None
+            and x.system.power_on is not None
+            and not x.system.switch_lock
+        ),
+        is_on_fn=lambda x: x.system.power_on if x.system else None,
+        set_fn=lambda api, active: api.system(power_on=active),
     ),
     HomeWizardSwitchEntityDescription(
         key="switch_lock",
         translation_key="switch_lock",
         entity_category=EntityCategory.CONFIG,
         create_fn=lambda x: x.device.supports_state(),
-        available_fn=lambda x: x.state is not None,
-        is_on_fn=lambda x: x.state.switch_lock if x.state else None,
-        set_fn=lambda api, active: api.state(switch_lock=active),
+        available_fn=lambda x: (
+            x.system is not None and x.system.switch_lock is not None
+        ),
+        is_on_fn=lambda x: x.system.switch_lock if x.system else None,
+        set_fn=lambda api, active: api.system(switch_lock=active),
     ),
     HomeWizardSwitchEntityDescription(
         key="cloud_connection",

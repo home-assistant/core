@@ -28,6 +28,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_KEY, CONF_SN, CONF_SUBTYPE, DOMAIN, LOGGER
 from .entity import MideaConfigEntry
+from .utils import async_remove_unsupported_entities
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -135,6 +136,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> Non
 
     device.register_update(_log_availability)
     entry.async_on_unload(partial(device.unregister_update, _log_availability))
+
+    async_remove_unsupported_entities(hass, device)
 
     await device.open()
     entry.runtime_data = device

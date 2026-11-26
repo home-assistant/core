@@ -15,10 +15,10 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.const import (
     ATTR_CODE,
-    ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
 )
 from homeassistant.core import State, callback
 
@@ -154,7 +154,7 @@ class SecuritySystem(HomeAccessory):
         """Move security state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set security state to %d", self.entity_id, value)
         service = HK_TO_SERVICE[value]
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         if self._alarm_code:
             params[AlarmControlPanelServiceArgument.CODE] = self._alarm_code
         self.async_call_service(ALARM_CONTROL_PANEL_DOMAIN, service, params)
