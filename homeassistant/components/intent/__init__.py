@@ -10,8 +10,8 @@ import probatio
 from homeassistant.components import http, sensor
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
-    SERVICE_PRESS as SERVICE_PRESS_BUTTON,
     ButtonDeviceClass,
+    ButtonService,
 )
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import (
@@ -22,7 +22,10 @@ from homeassistant.components.cover import (
 )
 from homeassistant.components.homeassistant import HomeAssistantService
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
+from homeassistant.components.input_button import (
+    DOMAIN as INPUT_BUTTON_DOMAIN,
+    InputButtonService,
+)
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.switch import SwitchDeviceClass
@@ -183,7 +186,9 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                 hass.async_create_task(
                     hass.services.async_call(
                         state.domain,
-                        SERVICE_PRESS_BUTTON,
+                        ButtonService.PRESS
+                        if state.domain == BUTTON_DOMAIN
+                        else InputButtonService.PRESS,
                         {TargetKey.ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
