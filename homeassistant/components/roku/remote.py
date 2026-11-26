@@ -3,7 +3,7 @@
 from collections.abc import Iterable
 from typing import Any, override
 
-from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
+from homeassistant.components.remote import RemoteEntity, RemoteServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -59,7 +59,7 @@ class RokuRemote(RokuEntity, RemoteEntity):
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
-        num_repeats = kwargs[ATTR_NUM_REPEATS]
+        num_repeats = kwargs[RemoteServiceArgument.NUM_REPEATS]
 
         for _ in range(num_repeats):
             for single_command in command:

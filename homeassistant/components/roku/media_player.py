@@ -10,11 +10,11 @@ import yarl
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_EXTRA,
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
     MediaType,
     async_process_play_media_url,
@@ -367,7 +367,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media from a URL or file, launch an app, or tune to a channel."""
-        extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
+        extra: dict[str, Any] = kwargs.get(MediaPlayerServiceArgument.EXTRA) or {}
         original_media_type: str = media_type
         original_media_id: str = media_id
         mime_type: str | None = None
