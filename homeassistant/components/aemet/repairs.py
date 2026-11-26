@@ -3,10 +3,9 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from functools import partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
@@ -16,17 +15,20 @@ from homeassistant.util import dt as dt_util
 from .const import API_KEY_EXPIRATION_WARNING_DAYS, API_KEY_URL, DOMAIN
 from .util import API_KEY_SCHEMA, async_validate_api_key, get_api_key_expiration
 
+if TYPE_CHECKING:
+    from .coordinator import AemetConfigEntry
+
 ISSUE_API_KEY_EXPIRING = "api_key_expiring"
 
 
-def _issue_id(entry: ConfigEntry) -> str:
+def _issue_id(entry: AemetConfigEntry) -> str:
     """Return the repair issue ID for an entry."""
     return f"{ISSUE_API_KEY_EXPIRING}_{entry.entry_id}"
 
 
 @callback
 def async_delete_api_key_expiration_issue(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: AemetConfigEntry
 ) -> None:
     """Delete the API key expiration repair issue for an entry."""
     ir.async_delete_issue(hass, DOMAIN, _issue_id(entry))
@@ -35,7 +37,7 @@ def async_delete_api_key_expiration_issue(
 @callback
 def _async_create_api_key_expiration_issue(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AemetConfigEntry,
     expiration: datetime,
     _now: datetime | None = None,
 ) -> None:
@@ -59,7 +61,7 @@ def _async_create_api_key_expiration_issue(
 
 @callback
 def async_schedule_api_key_expiration_issue(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: AemetConfigEntry
 ) -> Callable[[], None] | None:
     """Schedule the API key expiration repair issue.
 

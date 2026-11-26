@@ -2,20 +2,25 @@
 
 from collections.abc import Generator
 import time
+from typing import Any
 
+from habluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    DiscoveredDeviceAdvertisementData,
+    discovered_device_advertisement_data_to_dict,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 from pytest_homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     FakeScanner,
-    _get_manager,
     generate_advertisement_data,
     generate_ble_device,
     inject_advertisement_with_time_and_source_connectable,
     inject_bluetooth_service_info,
 )
 
-from homeassistant.components.bluetooth import async_register_scanner
+from homeassistant.components.bluetooth import async_register_scanner, storage
 from homeassistant.components.bthome.const import (
     BTHOME_BLE_EVENT,
     CONF_SLEEPY_DEVICE,
@@ -193,24 +198,6 @@ def proxies(hass: HomeAssistant) -> Generator[None]:
         cancel()
 
 
-def _button_service_info(
-    payload: bytes, source: str, rssi: int, adv_time: float
-) -> BluetoothServiceInfoBleak:
-    """Return a button advertisement heard by one proxy."""
-    return BluetoothServiceInfoBleak.from_device_and_advertisement_data(
-        generate_ble_device(BUTTON_ADDRESS, "Test Device"),
-        generate_advertisement_data(
-            local_name="Test Device",
-            service_data={BTHOME_UUID: payload},
-            service_uuids=[BTHOME_UUID],
-            rssi=rssi,
-        ),
-        source,
-        adv_time,
-        False,
-    )
-
-
 def _inject_button_payload(
     hass: HomeAssistant, payload: bytes, source: str, rssi: int, adv_time: float
 ) -> None:
@@ -336,24 +323,85 @@ async def test_reload_keeps_taking_packets_from_any_proxy(
     assert hass.states.get(WINDOW_ENTITY_ID).state == STATE_OFF
 
 
-@pytest.mark.usefixtures("proxies")
-async def test_setup_replays_newest_stored_packet(hass: HomeAssistant) -> None:
-    """Test setup after a restart replays the newest stored packet."""
+def _stored_packets(
+    packets: dict[str, tuple[bytes, int, float]], now: float
+) -> dict[str, Any]:
+    """Return stored button advertisements as Bluetooth storage data."""
+    return discovered_device_advertisement_data_to_dict(
+        DiscoveredDeviceAdvertisementData(
+            connectable=False,
+            expire_seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+            discovered_device_advertisement_datas={
+                address: (
+                    generate_ble_device(address, "Test Device"),
+                    generate_advertisement_data(
+                        local_name="Test Device",
+                        service_data={BTHOME_UUID: payload},
+                        service_uuids=[BTHOME_UUID],
+                        rssi=rssi,
+                    ),
+                )
+                for address, (payload, rssi, _) in packets.items()
+            },
+            discovered_device_timestamps={
+                address: now - age for address, (_, _, age) in packets.items()
+            },
+        )
+    )
+
+
+@pytest.fixture
+def mock_bluetooth_storage(
+    hass_storage: dict[str, Any], request: pytest.FixtureRequest
+) -> None:
+    """Store packets per proxy and the accepted ones, aged in seconds."""
+    proxies, accepted = getattr(request, "param", ({}, {}))
     now = time.monotonic()
-    manager = _get_manager()
-    # As loaded at startup: the history holds the strongest stored packet, an
-    # open window, while the weak proxy stored the newer close
-    manager._all_history[BUTTON_ADDRESS] = _button_service_info(
-        b"\x44\x00\x01\x2d\x01", STRONG_PROXY, -60, now - 60
-    )
-    manager._newest_stored_history[BUTTON_ADDRESS] = _button_service_info(
-        b"\x44\x00\x02\x2d\x00", WEAK_PROXY, -90, now - 10
-    )
+    hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = {
+        "version": storage.REMOTE_SCANNER_STORAGE_VERSION,
+        "minor_version": 1,
+        "key": storage.REMOTE_SCANNER_STORAGE_KEY,
+        "data": {
+            proxy: _stored_packets(packets, now) for proxy, packets in proxies.items()
+        },
+    }
+    hass_storage[storage.EVENT_DRIVEN_STORAGE_KEY] = {
+        "version": storage.EVENT_DRIVEN_STORAGE_VERSION,
+        "minor_version": 1,
+        "key": storage.EVENT_DRIVEN_STORAGE_KEY,
+        "data": {
+            "sources": {
+                address: {"source": source, "connectable": False}
+                for address, (source, _) in accepted.items()
+            },
+            "advertisements": _stored_packets(
+                {address: packet for address, (_, packet) in accepted.items()}, now
+            ),
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    "mock_bluetooth_storage",
+    [
+        (
+            {
+                STRONG_PROXY: {BUTTON_ADDRESS: (b"\x44\x00\x01\x2d\x01", -60, 60)},
+                WEAK_PROXY: {BUTTON_ADDRESS: (b"\x44\x00\x02\x2d\x00", -90, 10)},
+            },
+            {BUTTON_ADDRESS: (WEAK_PROXY, (b"\x44\x00\x02\x2d\x00", -90, 10))},
+        )
+    ],
+    indirect=True,
+)
+async def test_setup_replays_accepted_packet(hass: HomeAssistant) -> None:
+    """Test setup after a restart replays the packet accepted before it."""
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=BUTTON_ADDRESS, data={CONF_SLEEPY_DEVICE: True}
     )
     entry.add_to_hass(hass)
 
+    # Startup kept the strong proxy's older open, the weak proxy's close came later
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
