@@ -1,10 +1,18 @@
 """Fully Kiosk Browser update platform."""
 
-import asyncio
 from typing import Any, cast, override
 
 from aiohttp import ClientError
 from fullykiosk.exceptions import FullyKioskError
+from fullykiosk.releases import (
+    EDITION_PLAY,
+    Release,
+    canInstallApkSilently,
+    getApp,
+    getEdition,
+    getRelease,
+    versionKey,
+)
 
 from homeassistant.components.update import (
     UpdateEntity,
@@ -20,7 +28,6 @@ from .const import DOMAIN
 from .coordinator import (
     FullyKioskConfigEntry,
     FullyKioskDataUpdateCoordinator,
-    FullyKioskRelease,
     FullyKioskReleasesDataUpdateCoordinator,
     async_get_releases_coordinator,
 )
@@ -28,51 +35,7 @@ from .entity import FullyKioskEntity
 
 PARALLEL_UPDATES = 1
 
-POLL_INTERVAL = 2
-POLL_TIMEOUT = 10
-INSTALL_TIMEOUT = 300
-
 VERSION_HISTORY_URL = "https://www.fully-kiosk.com/docs/en/features/version-history"
-
-# The current releases no longer support Android 5
-MIN_ANDROID_SDK = 23
-
-BROWSER_APP = "Fully-Kiosk-Browser"
-EMM_PACKAGE = "com.fullykiosk.emm"
-APP_BY_PACKAGE = {
-    EMM_PACKAGE: BROWSER_APP,
-    "com.fullykiosk.singleapp": "Fully-Single-App-Kiosk",
-    "com.fullykiosk.videokiosk": "Fully-Video-Kiosk",
-    "de.ozerov.fully": BROWSER_APP,
-}
-
-
-def _get_package(device_info: dict[str, Any]) -> str | None:
-    """Return the package name of the app, not reported by all versions."""
-    return device_info.get("packageName") or device_info.get("appPackageName")
-
-
-def _get_app(device_info: dict[str, Any]) -> str | None:
-    """Return the app in the release feed, or None if it is not supported."""
-    if (package := _get_package(device_info)) is None:
-        return BROWSER_APP
-    return APP_BY_PACKAGE.get(package)
-
-
-def _is_emm_edition(device_info: dict[str, Any]) -> bool:
-    """Return True if the device is running the EMM edition."""
-    return (
-        device_info["appVersionName"].endswith("-emm")
-        or _get_package(device_info) == EMM_PACKAGE
-    )
-
-
-def _is_play_edition(device_info: dict[str, Any]) -> bool:
-    """Return True if the device is running the Google Play edition."""
-    return (
-        device_info["appVersionName"].endswith("-play")
-        or device_info.get("installerSource") == "com.android.vending"
-    )
 
 
 async def async_setup_entry(
@@ -82,9 +45,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fully Kiosk Browser update entities."""
     coordinator = entry.runtime_data
-    if (app := _get_app(coordinator.data)) is None or coordinator.data.get(
-        "androidSdk", MIN_ANDROID_SDK
-    ) < MIN_ANDROID_SDK:
+    if (app := getApp(coordinator.data)) is None:
         return
     async_add_entities(
         [FullyKioskUpdateEntity(coordinator, async_get_releases_coordinator(hass), app)]
@@ -106,7 +67,6 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
         """Initialize the Fully Kiosk Browser update entity."""
         super().__init__(coordinator)
         self.releases_coordinator = releases_coordinator
-        self._app = app
         self._attr_title = app.replace("-", " ")
         self._attr_unique_id = coordinator.data["deviceID"]
 
@@ -145,7 +105,7 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
         """Return latest available version."""
         if (release := self._get_release()) is None:
             return None
-        return self._installed_name(release)
+        return cast(str, release.versionName)
 
     @property
     @override
@@ -153,14 +113,8 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
         """Explain how the latest release is installed."""
         if (release := self._get_release()) is None:
             return ()
-        placeholders = {
-            "version": self._installed_name(release),
-            "apk_url": release.url,
-        }
-        # Android only installs silently for device owners or with root
-        if self.coordinator.data.get("isDeviceOwner") or self.coordinator.data.get(
-            "isRooted"
-        ):
+        placeholders = {"version": release.versionName, "apk_url": release.url}
+        if canInstallApkSilently(self.coordinator.data):
             return (
                 UpdateReleaseNotesMessage(
                     translation_domain=DOMAIN,
@@ -186,7 +140,7 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
     @override
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
-        if _is_play_edition(self.coordinator.data):
+        if getEdition(self.coordinator.data) == EDITION_PLAY:
             return UpdateEntityFeature(0)
         return (
             UpdateEntityFeature.INSTALL
@@ -198,22 +152,12 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
     @override
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
         """Return True if latest_version is newer than installed_version."""
-        return super().version_is_newer(
-            latest_version, installed_version.removesuffix("-play")
-        )
+        return cast(bool, versionKey(latest_version) > versionKey(installed_version))
 
-    def _get_release(self, version: str | None = None) -> FullyKioskRelease | None:
+    def _get_release(self, version: str | None = None) -> Release | None:
         """Get the requested or latest release for the device."""
-        return self.releases_coordinator.data.get_release(
-            self._app, _is_emm_edition(self.coordinator.data), version
-        )
-
-    def _installed_name(self, release: FullyKioskRelease) -> str:
-        """Return the version the device reports once the release is installed."""
-        return (
-            f"{release.version}-{release.variant}"
-            if release.variant
-            else release.version
+        return getRelease(
+            self.releases_coordinator.data, self.coordinator.data, version
         )
 
     @override
@@ -230,62 +174,16 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
 
         self._attr_in_progress = True
         self.async_write_ha_state()
-
-        reinstall = self._installed_name(release) == self.installed_version
         try:
-            await self.coordinator.fully.loadApkFile(
-                release.url, force_install=reinstall
-            )
-        except (ClientError, TimeoutError, FullyKioskError) as err:
+            await self.coordinator.fully.installRelease(release)
+        except TimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="install_timed_out",
+            ) from err
+        except (ClientError, FullyKioskError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="install_failed",
             ) from err
-
-        await self._async_wait_installed(release, reinstall=reinstall)
-
-    async def _async_wait_installed(
-        self, release: FullyKioskRelease, *, reinstall: bool
-    ) -> None:
-        """Wait until the device runs the release."""
-        target_version = self._installed_name(release)
-        started = False
-        # Not a timeout context, cancelling a refresh would mark the device unavailable
-        deadline = self.hass.loop.time() + INSTALL_TIMEOUT
-
-        while reinstall or self.installed_version != target_version:
-            if self.hass.loop.time() > deadline:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="install_timed_out",
-                )
-            await asyncio.sleep(POLL_INTERVAL)
-
-            try:
-                async with asyncio.timeout(POLL_TIMEOUT):
-                    state = await self.coordinator.fully.getInstallApkState()
-            except ClientError, TimeoutError, FullyKioskError:
-                # The app is restarting
-                continue
-
-            if state.get("url", release.url) != release.url:
-                continue
-
-            status = state.get("status")
-            if status == "failed":
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="install_failed",
-                )
-            if status in ("downloading", "installing"):
-                started = True
-                continue
-
-            started = started or status == "success"
-            if not started:
-                continue
-
-            await self.coordinator.async_refresh()
-            # The version does not tell when a reinstallation is done
-            if reinstall and self.coordinator.last_update_success:
-                return
+        await self.coordinator.async_refresh()

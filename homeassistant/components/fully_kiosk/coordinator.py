@@ -1,16 +1,13 @@
 """Provides the Fully Kiosk Browser DataUpdateCoordinator."""
 
 import asyncio
-from dataclasses import dataclass
 from datetime import timedelta
-import re
 from typing import Any, cast, override
 
 import aiohttp
-from awesomeversion import AwesomeVersion
-import defusedxml.ElementTree as ET
 from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
+from fullykiosk.releases import Release, getReleases
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL
@@ -28,59 +25,18 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import DEFAULT_PORT, DOMAIN, LOGGER, UPDATE_INTERVAL
 
-UPDATE_FEED_URL = "https://www.fully-kiosk.com/feed/media"
 UPDATE_FEED_INTERVAL = timedelta(hours=12)
 UPDATE_FEED_RETRY_INTERVAL = timedelta(minutes=15)
 
 type FullyKioskConfigEntry = ConfigEntry[FullyKioskDataUpdateCoordinator]
-
-APK_FILENAME_REGEX = re.compile(
-    r"^(?P<app>[\w-]+)-v(?P<version>\d+(?:\.\d+)+)(?:-(?P<variant>[\w-]+))?\.apk$"
-)
 
 RELEASES_KEY: HassKey[FullyKioskReleasesDataUpdateCoordinator] = HassKey(
     f"{DOMAIN}_releases"
 )
 
 
-@dataclass(frozen=True)
-class FullyKioskRelease:
-    """Represents a Fully Kiosk release."""
-
-    app: str
-    version: str
-    variant: str | None
-    url: str
-
-
-@dataclass(frozen=True)
-class FullyKioskReleaseInfo:
-    """Release information for Fully Kiosk."""
-
-    releases: list[FullyKioskRelease]
-
-    def get_release(
-        self, app: str, is_emm: bool, version: str | None = None
-    ) -> FullyKioskRelease | None:
-        """Get the requested or latest release of the app and edition."""
-        variant = "emm" if is_emm else None
-        if version is not None:
-            version = version.removesuffix("-emm")
-        return max(
-            (
-                release
-                for release in self.releases
-                if release.app == app
-                and release.variant == variant
-                and version in (None, release.version)
-            ),
-            key=lambda release: AwesomeVersion(release.version),
-            default=None,
-        )
-
-
 class FullyKioskReleasesDataUpdateCoordinator(
-    TimestampDataUpdateCoordinator[FullyKioskReleaseInfo]
+    TimestampDataUpdateCoordinator[list[Release]]
 ):
     """Class to manage fetching Fully Kiosk APK releases from RSS feed."""
 
@@ -112,46 +68,23 @@ class FullyKioskReleasesDataUpdateCoordinator(
         )
 
     @override
-    async def _async_update_data(self) -> FullyKioskReleaseInfo:
+    async def _async_update_data(self) -> list[Release]:
         """Fetch APK releases from the RSS feed."""
         try:
             async with asyncio.timeout(15):
-                response = await self.session.get(UPDATE_FEED_URL)
-                response.raise_for_status()
-                content = await response.read()
+                return cast(list[Release], await getReleases(self.session))
         except (TimeoutError, aiohttp.ClientError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_feed_communication_error",
                 retry_after=UPDATE_FEED_RETRY_INTERVAL.total_seconds(),
             ) from err
-
-        try:
-            root = ET.fromstring(content)
-        except ET.ParseError as err:
+        except FullyKioskError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_feed_parse_error",
                 retry_after=UPDATE_FEED_RETRY_INTERVAL.total_seconds(),
             ) from err
-
-        releases: list[FullyKioskRelease] = []
-        for item in root.findall(".//item"):
-            title = item.findtext("title")
-            link = item.findtext("link")
-            if not title or not link:
-                continue
-            if match := APK_FILENAME_REGEX.match(title.strip()):
-                releases.append(
-                    FullyKioskRelease(
-                        app=match.group("app"),
-                        version=match.group("version"),
-                        variant=match.group("variant"),
-                        url=link.strip(),
-                    )
-                )
-
-        return FullyKioskReleaseInfo(releases=releases)
 
 
 @callback

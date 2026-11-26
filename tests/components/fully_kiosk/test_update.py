@@ -1,14 +1,15 @@
 """Test Fully Kiosk Browser update platform."""
 
 import asyncio
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from fullykiosk.exceptions import FullyKioskError
+from fullykiosk.releases import RELEASES_URL, Release
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -27,7 +28,6 @@ from homeassistant.components.fully_kiosk.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.components.fully_kiosk.coordinator import (
     UPDATE_FEED_INTERVAL,
     UPDATE_FEED_RETRY_INTERVAL,
-    UPDATE_FEED_URL,
 )
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -72,13 +72,6 @@ def device_info(
     }
     mock_fully_kiosk.getDeviceInfo.return_value = info
     return info
-
-
-@pytest.fixture(autouse=True)
-def mock_poll_interval() -> Generator[None]:
-    """Do not wait between polls."""
-    with patch("homeassistant.components.fully_kiosk.update.POLL_INTERVAL", 0):
-        yield
 
 
 @pytest.fixture
@@ -191,17 +184,17 @@ async def test_install_latest(
         | UpdateEntityFeature.RELEASE_NOTES
     )
 
-    async def load_apk(url: str, force_install: bool) -> None:
+    async def install_release(release: Release) -> None:
         assert hass.states.get(ENTITY_ID).attributes[ATTR_IN_PROGRESS] is True
         device_info["appVersionName"] = latest_version
 
-    mock_fully_kiosk.loadApkFile.side_effect = load_apk
-    mock_fully_kiosk.getInstallApkState.return_value = {"status": "success"}
+    mock_fully_kiosk.installRelease.side_effect = install_release
 
     await install(hass)
 
-    mock_fully_kiosk.loadApkFile.assert_called_once_with(
-        f"{FILES_URL}/10/{apk}", force_install=False
+    mock_fully_kiosk.installRelease.assert_called_once()
+    assert mock_fully_kiosk.installRelease.call_args.args[0].url == (
+        f"{FILES_URL}/10/{apk}"
     )
     entity_state = hass.states.get(ENTITY_ID)
     assert entity_state.state == STATE_OFF
@@ -275,22 +268,16 @@ async def test_install_specific_version(
     hass: HomeAssistant,
     mock_fully_kiosk: MagicMock,
     setup_integration: Callable[[], Awaitable[None]],
-    device_info: dict[str, Any],
     version: str,
     apk: str,
 ) -> None:
     """Test installing a specific version."""
     await setup_integration()
 
-    async def load_apk(url: str, force_install: bool) -> None:
-        device_info["appVersionName"] = apk.removesuffix(".apk").rpartition("-v")[2]
-
-    mock_fully_kiosk.loadApkFile.side_effect = load_apk
-    mock_fully_kiosk.getInstallApkState.return_value = {"status": "success"}
-
     await install(hass, version)
-    mock_fully_kiosk.loadApkFile.assert_called_once_with(
-        f"{FILES_URL}/09/{apk}", force_install=False
+    mock_fully_kiosk.installRelease.assert_called_once()
+    assert mock_fully_kiosk.installRelease.call_args.args[0].url == (
+        f"{FILES_URL}/09/{apk}"
     )
 
 
@@ -306,36 +293,7 @@ async def test_install_unknown_version(
         await install(hass, "9.9.9")
     assert excinfo.value.translation_key == "version_not_found"
     assert excinfo.value.translation_placeholders == {"version": "9.9.9"}
-    mock_fully_kiosk.loadApkFile.assert_not_called()
-
-
-@pytest.mark.parametrize(
-    "device_info",
-    [{"appVersionName": "1.61.4"}],
-    indirect=True,
-)
-@pytest.mark.parametrize("final_status", ["success", "idle"])
-async def test_reinstall(
-    hass: HomeAssistant,
-    mock_fully_kiosk: MagicMock,
-    setup_integration: Callable[[], Awaitable[None]],
-    final_status: str,
-) -> None:
-    """Test a reinstallation is done when the device reports it."""
-    await setup_integration()
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
-
-    mock_fully_kiosk.getInstallApkState.side_effect = [
-        {"url": APK_URL, "status": "idle"},
-        {"url": APK_URL, "status": "downloading"},
-        {"url": APK_URL, "status": "installing"},
-        {"url": APK_URL, "status": final_status},
-    ]
-    await install(hass, "1.61.4")
-
-    mock_fully_kiosk.loadApkFile.assert_called_once_with(APK_URL, force_install=True)
-    assert mock_fully_kiosk.getInstallApkState.call_count == 4
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_IN_PROGRESS] is False
+    mock_fully_kiosk.installRelease.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -423,98 +381,70 @@ async def test_google_play_edition(
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    ("side_effect", "translation_key"),
     [
-        pytest.param(FullyKioskError("Error", "Install failed"), id="api_error"),
-        pytest.param(ClientError("Connection refused"), id="connection_error"),
-        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(
+            FullyKioskError("failed", "Cancelled by user"),
+            "install_failed",
+            id="failed",
+        ),
+        pytest.param(
+            ClientError("Connection refused"), "install_failed", id="connection_error"
+        ),
+        pytest.param(TimeoutError(), "install_timed_out", id="timeout"),
     ],
 )
-async def test_install_request_error(
+async def test_install_error(
     hass: HomeAssistant,
     mock_fully_kiosk: MagicMock,
     setup_integration: Callable[[], Awaitable[None]],
     side_effect: Exception,
+    translation_key: str,
 ) -> None:
-    """Test the installation cannot be requested."""
+    """Test the installation fails or does not finish in time."""
     await setup_integration()
-    mock_fully_kiosk.loadApkFile.side_effect = side_effect
+    mock_fully_kiosk.installRelease.side_effect = side_effect
 
     with pytest.raises(HomeAssistantError) as excinfo:
         await install(hass)
-    assert excinfo.value.translation_key == "install_failed"
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_IN_PROGRESS] is False
-
-
-async def test_install_failed(
-    hass: HomeAssistant,
-    mock_fully_kiosk: MagicMock,
-    setup_integration: Callable[[], Awaitable[None]],
-) -> None:
-    """Test the device reports a failed installation."""
-    await setup_integration()
-    mock_fully_kiosk.getInstallApkState.side_effect = [
-        {"url": "https://example.com/other.apk", "status": "failed"},
-        {"url": APK_URL, "status": "downloading"},
-        {"url": APK_URL, "status": "failed", "statustext": "Cancelled by user"},
-    ]
-
-    with pytest.raises(HomeAssistantError) as excinfo:
-        await install(hass)
-    assert excinfo.value.translation_key == "install_failed"
-    assert mock_fully_kiosk.getInstallApkState.call_count == 3
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_IN_PROGRESS] is False
-
-
-@pytest.mark.parametrize("status", ["idle", "downloading", "success"])
-async def test_install_timeout(
-    hass: HomeAssistant,
-    mock_fully_kiosk: MagicMock,
-    setup_integration: Callable[[], Awaitable[None]],
-    status: str,
-) -> None:
-    """Test the new version never shows up, whatever the device reports."""
-    await setup_integration()
-    mock_fully_kiosk.getInstallApkState.return_value = {"status": status}
-
-    with (
-        patch("homeassistant.components.fully_kiosk.update.INSTALL_TIMEOUT", 0.05),
-        pytest.raises(HomeAssistantError) as excinfo,
-    ):
-        await install(hass)
-    assert excinfo.value.translation_key == "install_timed_out"
+    assert excinfo.value.translation_key == translation_key
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_IN_PROGRESS] is False
 
 
-async def test_install_slow_restart(
+async def test_install_restart(
     hass: HomeAssistant,
     mock_fully_kiosk: MagicMock,
+    mock_config_entry: MockConfigEntry,
     setup_integration: Callable[[], Awaitable[None]],
     device_info: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the entity stays available until the restarted app is back."""
+    """Test the entity stays available while the app restarts."""
     await setup_integration()
-    states: list[tuple[str, bool]] = []
+    refreshed = asyncio.Event()
+    mock_config_entry.runtime_data.async_add_listener(refreshed.set)
 
-    async def get_device_info() -> dict[str, Any]:
+    async def install_release(release: Release) -> None:
+        mock_fully_kiosk.getDeviceInfo.side_effect = ClientError("Connection refused")
+        freezer.tick(UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await refreshed.wait()
         state = hass.states.get(ENTITY_ID)
-        states.append((state.state, state.attributes[ATTR_IN_PROGRESS]))
-        if len(states) <= 8:
-            raise ClientError("Connection refused")
-        return {**device_info, "appVersionName": "1.61.4"}
+        assert state.state == STATE_ON
+        assert state.attributes[ATTR_IN_PROGRESS] is True
+        mock_fully_kiosk.getDeviceInfo.side_effect = None
+        mock_fully_kiosk.getDeviceInfo.return_value = {
+            **device_info,
+            "appVersionName": "1.61.4",
+        }
 
-    mock_fully_kiosk.getDeviceInfo.side_effect = get_device_info
-    mock_fully_kiosk.getInstallApkState.side_effect = [
-        {"status": "success"},
-        *[{"status": "idle"}, ClientError("Connection refused")] * 8,
-    ]
+    mock_fully_kiosk.installRelease.side_effect = install_release
 
     await install(hass)
 
-    assert states == [(STATE_ON, True)] * 9
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_IN_PROGRESS] is False
@@ -556,13 +486,13 @@ async def test_feed_error(
 ) -> None:
     """Test a failed feed fetch is retried without waiting for the next poll."""
     aioclient_mock.clear_requests()
-    aioclient_mock.get(UPDATE_FEED_URL, **response)
+    aioclient_mock.get(RELEASES_URL, **response)
     await setup_integration()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
     aioclient_mock.clear_requests()
     aioclient_mock.get(
-        UPDATE_FEED_URL, text=await async_load_fixture(hass, "feed_media.xml", DOMAIN)
+        RELEASES_URL, text=await async_load_fixture(hass, "feed_media.xml", DOMAIN)
     )
     freezer.tick(UPDATE_FEED_RETRY_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
@@ -579,7 +509,7 @@ async def test_feed_error_keeps_releases(
     """Test known releases stay usable when the feed cannot be refreshed."""
     await setup_integration()
     aioclient_mock.clear_requests()
-    aioclient_mock.get(UPDATE_FEED_URL, exc=ClientError)
+    aioclient_mock.get(RELEASES_URL, exc=ClientError)
 
     freezer.tick(UPDATE_FEED_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
@@ -596,7 +526,7 @@ async def test_feed_without_matching_release(
     """Test there is no release for the app in the feed."""
     aioclient_mock.clear_requests()
     aioclient_mock.get(
-        UPDATE_FEED_URL, text="<rss><item><title>Empty</title></item></rss>"
+        RELEASES_URL, text="<rss><item><title>Empty</title></item></rss>"
     )
     await setup_integration()
     assert hass.states.get(ENTITY_ID).attributes[ATTR_LATEST_VERSION] is None
@@ -651,13 +581,13 @@ async def test_feed_failure_retried_on_reload(
 ) -> None:
     """Test a failed fetch is retried when the entry is set up again."""
     aioclient_mock.clear_requests()
-    aioclient_mock.get(UPDATE_FEED_URL, exc=ClientError)
+    aioclient_mock.get(RELEASES_URL, exc=ClientError)
     await setup_integration()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
     aioclient_mock.clear_requests()
     aioclient_mock.get(
-        UPDATE_FEED_URL, text=await async_load_fixture(hass, "feed_media.xml", DOMAIN)
+        RELEASES_URL, text=await async_load_fixture(hass, "feed_media.xml", DOMAIN)
     )
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -680,7 +610,7 @@ async def test_feed_does_not_block_and_is_shared(
         return AiohttpClientMockResponse(method, url, text=feed)
 
     aioclient_mock.clear_requests()
-    aioclient_mock.get(UPDATE_FEED_URL, side_effect=slow_response)
+    aioclient_mock.get(RELEASES_URL, side_effect=slow_response)
 
     second_entry = MockConfigEntry(
         domain=DOMAIN, data=dict(mock_config_entry.data), unique_id="second"
