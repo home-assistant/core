@@ -811,6 +811,17 @@ async def test_thermostat_with_null_local_temperature(
 
 
 @pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
+@pytest.mark.parametrize("attributes", [{"1/513/0": 0, "1/513/17": 0}])
+@pytest.mark.usefixtures("matter_node")
+async def test_thermostat_with_zero_temperatures(hass: HomeAssistant) -> None:
+    """Test a temperature of 0 °C is not treated as unknown."""
+    state = hass.states.get(THERMOSTAT_ENTITY_ID)
+    assert state
+    assert state.attributes["current_temperature"] == 0
+    assert state.attributes["temperature"] == 0
+
+
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
 @pytest.mark.parametrize(
     ("system_mode", "hvac_mode"),
     [
