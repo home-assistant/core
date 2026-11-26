@@ -923,6 +923,45 @@ async def test_tcp_duplicate_aborts_whatever_the_case_of_the_host(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_tcp_host_keeps_the_case_of_an_ipv6_zone(hass: HomeAssistant) -> None:
+    """Only the address is folded to lower case, not the interface it names."""
+    with _patch_temporary_unit(
+        _seeded(), expected=ModbusTcpParams(host="fe80::ab%ETH0", port=502)
+    ):
+        result = await _submit_link(
+            hass, "tcp", {**MOCK_TCP_INPUT, CONF_HOST: "FE80::AB%ETH0"}
+        )
+    result = await _finish_features(hass, result)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == "fe80::ab%ETH0"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_of_an_entry_from_before_the_connection_type(
+    hass: HomeAssistant,
+) -> None:
+    """A disabled entry was never migrated: it is still offered as a serial one."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={k: v for k, v in MOCK_ENTRY_DATA.items() if k != CONF_TYPE},
+        options=MOCK_ENTRY_OPTIONS,
+    )
+    entry.add_to_hass(hass)
+    result = await _start_reconfigure(hass, entry)
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_DEVICE)
+        == "/dev/ttyUSB0"
+    )
+    with _patch_temporary_unit(_seeded(), "/dev/ttyUSB1"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOVED_INPUT
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {**MOCK_ENTRY_DATA, CONF_DEVICE: "/dev/ttyUSB1"}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_moves_the_gateway_behind_a_tcp_bridge(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

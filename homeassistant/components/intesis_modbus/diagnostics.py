@@ -4,10 +4,14 @@ from typing import Any
 
 from modbus_connection import ModbusError
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from .coordinator import IntesisConfigEntry
+
+TO_REDACT = {CONF_HOST}
 
 
 async def async_get_config_entry_diagnostics(
@@ -20,7 +24,7 @@ async def async_get_config_entry_diagnostics(
     the hardware.
     """
     diagnostics: dict[str, Any] = {
-        "entry": dict(entry.data),
+        "entry": async_redact_data(entry.data, TO_REDACT),
         "options": dict(entry.options),
         "state": entry.state.value,
         "updated": None,

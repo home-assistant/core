@@ -10,9 +10,13 @@ from pytest_homeassistant.components.diagnostics import get_diagnostics_for_conf
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.intesis_modbus.const import DOMAIN
 from homeassistant.components.intesis_modbus.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+
+from . import MOCK_ENTRY_OPTIONS, MOCK_TCP_ENTRY_DATA
 
 
 async def test_diagnostics(
@@ -109,3 +113,24 @@ async def test_diagnostics_after_a_poll_the_gateway_did_not_answer(
     assert result["updated"] is None
     assert result["failed"] is None
     assert result["read_error"] == "ModbusTimeoutError"
+
+
+async def test_diagnostics_do_not_tell_where_the_bridge_is(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_get_unit: MagicMock,
+) -> None:
+    """The host of a Modbus TCP bridge is left out of a shared download."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_TCP_ENTRY_DATA,
+        options=MOCK_ENTRY_OPTIONS,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+    assert result["entry"][CONF_HOST] == "**REDACTED**"
+    assert result["entry"][CONF_PORT] == 502
+    assert result["registers"] is not None

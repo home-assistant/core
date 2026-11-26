@@ -95,7 +95,9 @@ def _link_data(connection_type: str, user_input: dict[str, Any]) -> dict[str, An
     """The link settings as they are stored, with a host that compares equal."""
     data = {CONF_TYPE: connection_type, **user_input}
     if CONF_HOST in data:
-        data[CONF_HOST] = data[CONF_HOST].strip().lower()
+        # The zone of an IPv6 link-local address names an interface: its case counts
+        host, zone, interface = data[CONF_HOST].strip().partition("%")
+        data[CONF_HOST] = f"{host.lower()}{zone}{interface}"
     return data
 
 
@@ -207,7 +209,8 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema, kept = LINK_SCHEMAS[connection_type]
         data = reconfigure_entry.data
-        if data[CONF_TYPE] == connection_type:
+        # A disabled entry was never set up, so it may predate the connection type
+        if data.get(CONF_TYPE, TYPE_SERIAL) == connection_type:
             # A field left out keeps what the entry has, not the factory default
             suggested: Mapping[str, Any] = data
         else:

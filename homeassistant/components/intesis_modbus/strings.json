@@ -7,7 +7,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "device_in_use": "The serial port is already in use with other link settings. This gateway always uses 8 data bits, no parity and 2 stop bits, so the other devices on this line must use the same framing and baud rate.",
+      "device_in_use": "This connection is already in use with other link settings. All devices on one line must use the same framing and link settings. On a serial port, this gateway always uses 8 data bits, no parity and 2 stop bits.",
       "gateway_starting": "The gateway is still starting up and does not report its values yet. Wait a few minutes and try again.",
       "unsupported_device": "The device at this unit ID did not identify itself as a supported Intesis gateway. Check the Modbus unit ID."
     },
@@ -30,27 +30,27 @@
       },
       "reconfigure_serial": {
         "data": {
-          "baudrate": "[%key:component::intesis_modbus::config::step::serial::data::baudrate%]",
-          "device": "[%key:component::intesis_modbus::config::step::serial::data::device%]",
+          "baudrate": "[%key:component::modbus::common::baud_rate%]",
+          "device": "[%key:component::modbus::common::serial_port%]",
           "unit_id": "[%key:component::intesis_modbus::config::step::serial::data::unit_id%]"
         },
         "data_description": {
           "baudrate": "[%key:component::intesis_modbus::config::step::serial::data_description::baudrate%]",
-          "device": "[%key:component::intesis_modbus::config::step::serial::data_description::device%]",
+          "device": "[%key:component::modbus::common::serial_port_description%]",
           "unit_id": "[%key:component::intesis_modbus::config::step::serial::data_description::unit_id%]"
         },
         "description": "Reach this gateway over a serial port wired to its RS-485 terminals."
       },
       "reconfigure_tcp": {
         "data": {
-          "host": "[%key:component::intesis_modbus::config::step::tcp::data::host%]",
-          "port": "[%key:component::intesis_modbus::config::step::tcp::data::port%]",
-          "unit_id": "[%key:component::intesis_modbus::config::step::tcp::data::unit_id%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "[%key:component::intesis_modbus::config::step::serial::data::unit_id%]"
         },
         "data_description": {
           "host": "[%key:component::intesis_modbus::config::step::tcp::data_description::host%]",
-          "port": "[%key:component::intesis_modbus::config::step::tcp::data_description::port%]",
-          "unit_id": "[%key:component::intesis_modbus::config::step::tcp::data_description::unit_id%]"
+          "port": "[%key:component::modbus::common::tcp_port_description%]",
+          "unit_id": "[%key:component::intesis_modbus::config::step::serial::data_description::unit_id%]"
         },
         "description": "Reach this gateway through a Modbus TCP bridge."
       },
