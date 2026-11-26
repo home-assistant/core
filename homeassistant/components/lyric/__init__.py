@@ -24,7 +24,13 @@ from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -68,9 +74,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LyricConfigEntry) -> Non
     device_registry = dr.async_get(hass)
     for location in coordinator.data.locations:
         for device in location.devices:
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_from_info(
                 config_entry_id=entry.entry_id,
-                **create_thermostat_device_info(device),
+                device_info=create_thermostat_device_info(device),
             )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

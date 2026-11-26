@@ -6,7 +6,7 @@ import probatio
 
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import EntityStateAttribute, TargetKey
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.llm import (
@@ -25,7 +25,6 @@ from .browse_media import SearchMedia
 from .const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_SEARCH_QUERY,
     DOMAIN,
     INTENT_MEDIA_NEXT,
     INTENT_MEDIA_PAUSE,
@@ -35,9 +34,9 @@ from .const import (
     INTENT_PLAYER_UNMUTE,
     INTENT_SET_VOLUME,
     INTENT_SET_VOLUME_RELATIVE,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SEARCH_MEDIA,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 
 # Intents owned by this integration that are exposed as LLM tools.
@@ -139,7 +138,7 @@ class MediaSearchTool(Tool):
     parameters = probatio.Schema(
         {
             probatio.Required(
-                ATTR_MEDIA_SEARCH_QUERY,
+                MediaPlayerServiceArgument.SEARCH_QUERY,
                 description="What to search for, such as a song, artist or album",
             ): cv.string,
             probatio.Optional(
@@ -171,17 +170,19 @@ class MediaSearchTool(Tool):
         entity_id = _async_match_player(hass, llm_context, args).entity_id
 
         service_data: dict[str, Any] = {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MEDIA_SEARCH_QUERY: args[ATTR_MEDIA_SEARCH_QUERY],
+            TargetKey.ENTITY_ID: entity_id,
+            MediaPlayerServiceArgument.SEARCH_QUERY: args[
+                MediaPlayerServiceArgument.SEARCH_QUERY
+            ],
         }
         if within_id := args.get("within_media_content_id"):
-            service_data[ATTR_MEDIA_CONTENT_ID] = within_id
+            service_data[MediaPlayerServiceArgument.MEDIA_CONTENT_ID] = within_id
         if within_type := args.get("within_media_content_type"):
-            service_data[ATTR_MEDIA_CONTENT_TYPE] = within_type
+            service_data[MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE] = within_type
 
         service_result = await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEARCH_MEDIA,
+            MediaPlayerService.SEARCH_MEDIA,
             service_data,
             context=llm_context.context,
             blocking=True,
@@ -230,11 +231,11 @@ class MediaPlayTool(Tool):
     parameters = probatio.Schema(
         {
             probatio.Required(
-                ATTR_MEDIA_CONTENT_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID,
                 description="The media_content_id of the search result, or a URL",
             ): cv.string,
             probatio.Required(
-                ATTR_MEDIA_CONTENT_TYPE,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE,
                 description=(
                     "The media_content_type of the search result. "
                     "Use music to play an audio URL."
@@ -255,11 +256,15 @@ class MediaPlayTool(Tool):
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_MEDIA_CONTENT_ID: args[ATTR_MEDIA_CONTENT_ID],
-                ATTR_MEDIA_CONTENT_TYPE: args[ATTR_MEDIA_CONTENT_TYPE],
+                TargetKey.ENTITY_ID: entity_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: args[
+                    MediaPlayerServiceArgument.MEDIA_CONTENT_ID
+                ],
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: args[
+                    MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE
+                ],
             },
             context=llm_context.context,
             blocking=True,
@@ -298,7 +303,8 @@ def async_get_tools(
         if handler.intent_type in LLM_INTENTS
     ]
     if any(
-        state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & SEARCH_PLAY_FEATURES
+        state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
+        & SEARCH_PLAY_FEATURES
         == SEARCH_PLAY_FEATURES
         for state in exposed
     ):

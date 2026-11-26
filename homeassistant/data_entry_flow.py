@@ -3,49 +3,27 @@
 import abc
 import asyncio
 from collections import defaultdict
-from collections.abc import (
-    Callable,
-    Container,
-    Coroutine,
-    Generator,
-    Hashable,
-    Iterable,
-    Mapping,
-)
-from contextlib import contextmanager, suppress
-from contextvars import ContextVar
+from collections.abc import Callable, Container, Hashable, Iterable, Mapping
+from contextlib import suppress
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
-from functools import wraps
 import logging
 from types import MappingProxyType
 import typing
-from typing import (
-    Any,
-    Concatenate,
-    Generic,
-    Literal,
-    NotRequired,
-    TypedDict,
-    TypeVar,
-    cast,
-)
+from typing import Any, Generic, TypedDict, TypeVar, cast
 
 import probatio
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers.deprecation import deprecated_function
+from .helpers.field_visibility import VISIBLE_SCHEMA, FieldCondition, get_hidden_fields
 from .helpers.frame import ReportBehavior, report_usage
 from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
 
 _LOGGER = logging.getLogger(__name__)
-
-_current_step: ContextVar[tuple[FlowHandler[Any, Any, Any], str] | None] = ContextVar(
-    "current_step", default=None
-)
 
 
 class FlowResultType(StrEnum):
@@ -83,131 +61,6 @@ STEP_ID_OPTIONAL_STEPS = {
 }
 
 
-ConditionOperator = Literal["eq", "not_eq", "in", "not_in", "exists", "not_exists"]
-
-
-class FieldCondition(TypedDict):
-    """Condition matching a sibling field's value in the same step."""
-
-    field: str
-    operator: NotRequired[ConditionOperator]
-    value: NotRequired[Any]
-
-
-class AndCondition(TypedDict):
-    """Condition that matches when all sub-conditions match."""
-
-    condition: Literal["and"]
-    conditions: list[Condition]
-
-
-class OrCondition(TypedDict):
-    """Condition that matches when any sub-condition matches."""
-
-    condition: Literal["or"]
-    conditions: list[Condition]
-
-
-class NotCondition(TypedDict):
-    """Condition that matches when no sub-condition matches."""
-
-    condition: Literal["not"]
-    conditions: list[Condition]
-
-
-type Condition = FieldCondition | AndCondition | OrCondition | NotCondition
-
-
-# Sentinel distinguishing an absent field from an explicit ``None`` value.
-_MISSING = object()
-
-
-def _condition_value_is_empty(value: Any) -> bool:
-    return value is _MISSING or value is None or value == ""
-
-
-def _strict_equal(actual: Any, value: Any) -> bool:
-    """Compare by value and type, so a boolean never equals a number.
-
-    A missing field and an omitted condition value are both undefined, so they
-    equal each other but nothing else, and containers never compare equal,
-    matching a renderer where a missing value is distinct from ``None`` and
-    separately parsed lists or dicts are distinct references.
-    """
-    if actual is _MISSING or value is _MISSING:
-        return actual is value
-    if isinstance(actual, (list, tuple, dict)) or isinstance(
-        value, (list, tuple, dict)
-    ):
-        return False
-    if isinstance(actual, bool) != isinstance(value, bool):
-        return False
-    return bool(actual == value)
-
-
-def _evaluate_field_condition(
-    condition: Mapping[str, Any], data: Mapping[str, Any]
-) -> bool:
-    actual = data.get(condition["field"], _MISSING)
-    value = condition.get("value", _MISSING)
-    match condition.get("operator", "eq"):
-        case "eq":
-            return _strict_equal(actual, value)
-        case "not_eq":
-            return not _strict_equal(actual, value)
-        case "in":
-            return isinstance(value, (list, tuple)) and any(
-                _strict_equal(actual, item) for item in value
-            )
-        case "not_in":
-            return isinstance(value, (list, tuple)) and not any(
-                _strict_equal(actual, item) for item in value
-            )
-        case "exists":
-            return not _condition_value_is_empty(actual)
-        case "not_exists":
-            return _condition_value_is_empty(actual)
-        case _:
-            return False
-
-
-def evaluate_condition(condition: Mapping[str, Any], data: Mapping[str, Any]) -> bool:
-    """Evaluate a field condition against submitted step data."""
-    if (combinator := condition.get("condition")) is not None:
-        conditions: list[Mapping[str, Any]] = condition.get("conditions", [])
-        match combinator:
-            case "and":
-                return all(evaluate_condition(sub, data) for sub in conditions)
-            case "or":
-                return any(evaluate_condition(sub, data) for sub in conditions)
-            case "not":
-                return not any(evaluate_condition(sub, data) for sub in conditions)
-            case _:
-                return False
-    return _evaluate_field_condition(condition, data)
-
-
-def is_field_visible(
-    visible_condition: bool | Mapping[str, Any] | list[Mapping[str, Any]],
-    data: Mapping[str, Any],
-) -> bool:
-    """Return True when a field's visible condition matches the submitted data.
-
-    A list of conditions is combined with AND.
-    """
-    if visible_condition is True:
-        return True
-    if visible_condition is False:
-        return False
-    # An empty list has no condition to fail, so the field is visible.
-    conditions = (
-        visible_condition
-        if isinstance(visible_condition, list)
-        else [visible_condition]
-    )
-    return all(evaluate_condition(condition, data) for condition in conditions)
-
-
 class Required(probatio.Required):
     """Required schema marker that can be conditionally shown.
 
@@ -219,12 +72,12 @@ class Required(probatio.Required):
     def __init__(
         self,
         *args: Any,
-        visible: bool | Condition | list[Condition] | None = None,
+        visible: bool | FieldCondition | list[FieldCondition] | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize a required marker."""
         super().__init__(*args, **kwargs)
-        self.visible = visible
+        self.visible = None if visible is None else VISIBLE_SCHEMA(visible)
 
 
 class Optional(probatio.Optional):
@@ -238,12 +91,12 @@ class Optional(probatio.Optional):
     def __init__(
         self,
         *args: Any,
-        visible: bool | Condition | list[Condition] | None = None,
+        visible: bool | FieldCondition | list[FieldCondition] | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize an optional marker."""
         super().__init__(*args, **kwargs)
-        self.visible = visible
+        self.visible = None if visible is None else VISIBLE_SCHEMA(visible)
 
 
 _FlowContextT = TypeVar("_FlowContextT", bound="FlowContext", default="FlowContext")
@@ -494,16 +347,20 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if context is None:
             context = cast(_FlowContextT, {})
         flow = await self.async_create_flow(handler, context=context, data=data)
-        if not flow:
-            raise UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
-        flow.flow_id = uuid_util.random_uuid_hex()
+        flow.flow_id = uuid_util.secure_uuid_hex()
         flow.context = context
         flow.init_data = data
         self._async_add_flow_progress(flow)
 
-        return await self._async_handle_step(flow, flow.init_step, data)
+        try:
+            return await self._async_handle_step(flow, flow.init_step, data)
+        except BaseException:
+            # The caller never gets the flow id of a flow that fails to start.
+            if flow.flow_id in self._progress:
+                self._async_remove_flow_progress(flow.flow_id)
+            raise
 
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
@@ -695,26 +552,26 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         except AbortFlow as err:
             result = self._abort_flow_result(flow, err)
 
+        # Reject before the result is used, a plain string type would bypass the
+        # handling and filtering of results that compare the type by identity
+        if not isinstance(result["type"], FlowResultType):
+            if flow.flow_id in self._progress:  # type: ignore[unreachable]
+                self._async_remove_flow_progress(flow.flow_id)
+            raise TypeError(
+                f"Flow step {step_id} of {flow.handler} returned result type "
+                f"{result['type']!r}, which is not a FlowResultType"
+            )
+
         if flow.flow_id not in self._progress:
             # The flow was removed during the step, raise UnknownFlow unless
-            # the result is an abort. Compares against the string value
-            # because this runs before the legacy-string normalization
-            # below, and out-of-tree flow handlers may still return raw "abort".
-            if result["type"] != FlowResultType.ABORT.value:
+            # the result is an abort.
+            if result["type"] is not FlowResultType.ABORT:
                 raise UnknownFlow
             return result
 
         # Setup the flow handler's preview if needed
         if result.get("preview") is not None:
             await self._async_setup_preview(flow)
-
-        if not isinstance(result["type"], FlowResultType):
-            result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
-            report_usage(
-                "does not use FlowResultType enum for data entry flow result type",
-                core_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2025.1",
-            )
 
         if (
             result["type"] is FlowResultType.SHOW_PROGRESS
@@ -807,20 +664,13 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         ]
 
 
-def flow_step[_FlowHandlerT: FlowHandler[Any, Any, Any], **_P, _R](
-    func: Callable[Concatenate[_FlowHandlerT, _P], Coroutine[Any, Any, _R]], /
-) -> Callable[Concatenate[_FlowHandlerT, _P], Coroutine[Any, Any, _R]]:
-    """Mark a step method so results built inside it default to its step id."""
-    if not func.__name__.startswith("async_step_"):
-        raise TypeError(f"{func.__qualname__} is not an async_step_ method")
-    step_id = func.__name__.removeprefix("async_step_")
-
-    @wraps(func)
-    async def wrapper(self: _FlowHandlerT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
-        with self._as_step(step_id):
-            return await func(self, *args, **kwargs)
-
-    return wrapper
+def _report_missing_step_id(method: str) -> None:
+    """Report a flow result built without a step id."""
+    report_usage(
+        f"calls {method} without passing a step_id",
+        core_integration_behavior=ReportBehavior.ERROR,
+        breaks_in_ha_version="2027.5.0",
+    )
 
 
 class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
@@ -908,22 +758,6 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             schema[new_key] = val
         return probatio.Schema(schema)
 
-    @contextmanager
-    def _as_step(self, step_id: str) -> Generator[None]:
-        """Default the step id of results built inside the block."""
-        token = _current_step.set((self, step_id))
-        try:
-            yield
-        finally:
-            _current_step.reset(token)
-
-    def _inferred_step_id(self) -> str | None:
-        """Return the id of the step running on this handler, if any."""
-        current = _current_step.get()
-        if current is None or current[0] is not self:
-            return None
-        return current[1]
-
     @callback
     def async_show_form(
         self,
@@ -946,10 +780,10 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             last_step=last_step,  # Display next or submit button in frontend
             preview=preview,  # Display preview component in frontend
         )
-        if step_id is None:
-            step_id = self._inferred_step_id()
         if step_id is not None:
             flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_show_form")
         return flow_result
 
     @callback
@@ -1015,10 +849,10 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             url=url,
             description_placeholders=description_placeholders,
         )
-        if step_id is None:
-            step_id = self._inferred_step_id()
         if step_id is not None:
             flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_external_step")
         return flow_result
 
     @callback
@@ -1067,10 +901,10 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             description_placeholders=description_placeholders,
             progress_task=progress_task,
         )
-        if step_id is None:
-            step_id = self._inferred_step_id()
         if step_id is not None:
             flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_show_progress")
         return flow_result
 
     @callback
@@ -1125,10 +959,10 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         )
         if sort:
             flow_result["sort"] = sort
-        if step_id is None:
-            step_id = self._inferred_step_id()
         if step_id is not None:
             flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_show_menu")
         return flow_result
 
     @callback
@@ -1230,17 +1064,7 @@ def _strip_hidden_fields[_T: Mapping[str, Any]](
         if (visible_condition := getattr(key, "visible", None)) is not None:
             conditions[name] = visible_condition
 
-    # Match the frontend: hide fields in schema order, dropping each value before
-    # the next field's condition is evaluated.
-    hidden_names: set[Any] = set()
-    changed = True
-    while changed:
-        changed = False
-        for name, condition in conditions.items():
-            if name not in hidden_names and not is_field_visible(condition, eval_data):
-                hidden_names.add(name)
-                eval_data.pop(name, None)
-                changed = True
+    hidden_names = get_hidden_fields(conditions, eval_data)
 
     new_schema: dict[Any, Any] = {}
     new_input: dict[str, Any] | None = None

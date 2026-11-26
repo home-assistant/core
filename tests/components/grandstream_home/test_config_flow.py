@@ -6,10 +6,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.grandstream_home.const import DOMAIN
+from homeassistant.components.grandstream_home.const import CONF_SW_VERSION, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF, ConfigFlowResult
 from homeassistant.const import (
-    ATTR_SW_VERSION,
     CONF_HOST,
     CONF_MODEL,
     CONF_PASSWORD,
@@ -38,7 +37,7 @@ def _assert_created_entry(hass: HomeAssistant, result: ConfigFlowResult) -> None
         CONF_VERIFY_SSL: False,
         CONF_TYPE: "GDS",
         CONF_MODEL: None,
-        ATTR_SW_VERSION: None,
+        CONF_SW_VERSION: None,
     }
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.unique_id == format_mac("00:0B:82:12:34:56")
@@ -195,7 +194,7 @@ async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
         CONF_VERIFY_SSL: False,
         CONF_TYPE: "GDS",
         CONF_MODEL: None,
-        ATTR_SW_VERSION: "1.0.1.13",
+        CONF_SW_VERSION: "1.0.1.13",
     }
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.unique_id == format_mac("EC74D79753C5")
@@ -347,7 +346,7 @@ async def test_zeroconf_gsc_device(hass: HomeAssistant) -> None:
         CONF_VERIFY_SSL: False,
         CONF_TYPE: "GSC",
         CONF_MODEL: None,
-        ATTR_SW_VERSION: "1.0.1.13",
+        CONF_SW_VERSION: "1.0.1.13",
     }
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.unique_id == format_mac("EC74D79753C5")
@@ -430,7 +429,7 @@ async def test_zeroconf_edge_cases(
         CONF_VERIFY_SSL: False,
         CONF_TYPE: "GDS",
         CONF_MODEL: model,
-        ATTR_SW_VERSION: None,
+        CONF_SW_VERSION: None,
     }
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.unique_id == unique_id

@@ -1,5 +1,6 @@
 """Test Matter sensors."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from chip.clusters import Objects as clusters
@@ -23,6 +24,12 @@ from .common import (
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
+
+
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.SENSOR
 
 
 @pytest.mark.freeze_time("2025-01-01T14:00:00+00:00")
@@ -77,6 +84,45 @@ async def test_flow_sensor_discovered_with_null_value_at_startup(
     state = hass.states.get("sensor.mock_flow_sensor_flow")
     assert state
     assert state.state == "2.0"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_battery_storage"])
+@pytest.mark.parametrize("attributes", [{"1/47/13": None, "1/47/27": None}])
+async def test_battery_time_sensors_discovered_with_null_value_at_startup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test battery time sensors are still discovered when their value is null at startup.
+
+    BatTimeRemaining and BatTimeToFullCharge are nullable per the Matter spec
+    (e.g. BatTimeToFullCharge is null while the battery is fully charged). This
+    test helps prevent regressions if allow_none_value=True is removed from
+    their discovery schemas.
+    """
+    remaining_state = hass.states.get("sensor.mock_battery_storage_time_remaining")
+    assert remaining_state
+    assert remaining_state.state == "unknown"
+
+    full_charge_state = hass.states.get(
+        "sensor.mock_battery_storage_time_to_full_charge"
+    )
+    assert full_charge_state
+    assert full_charge_state.state == "unknown"
+
+    set_node_attribute(matter_node, 1, 47, 13, 7200)
+    set_node_attribute(matter_node, 1, 47, 27, 1800)
+    await trigger_subscription_callback(hass, matter_client)
+
+    remaining_state = hass.states.get("sensor.mock_battery_storage_time_remaining")
+    assert remaining_state
+    assert remaining_state.state == "120.0"
+
+    full_charge_state = hass.states.get(
+        "sensor.mock_battery_storage_time_to_full_charge"
+    )
+    assert full_charge_state
+    assert full_charge_state.state == "30.0"
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_flow_sensor"])
@@ -972,6 +1018,109 @@ async def test_aqara_thermostat_w500_entity_exists_and_unknown(
     assert state.state == "unknown"
 
 
+@pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500_presets"])
+async def test_aqara_thermostat_w500_setpoint_change_source_options(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Aqara Thermostat W500 SetpointChangeSource sensor options."""
+    state = hass.states.get("sensor.floor_heating_thermostat_setpoint_change_source")
+    assert state
+    assert state.attributes["options"] == ["manual", "schedule", "external"]
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500_presets"])
+@pytest.mark.parametrize(
+    ("entity_id", "attribute_id", "initial_state", "updates"),
+    [
+        pytest.param(
+            "sensor.floor_heating_thermostat_setpoint_change_source",
+            48,
+            "manual",
+            [(1, "schedule"), (2, "external")],
+            id="setpoint_change_source",
+        ),
+        pytest.param(
+            "sensor.floor_heating_thermostat_last_setpoint_change",
+            50,
+            "2026-10-11T22:28:52+00:00",
+            [(757382400, "2024-01-01T00:00:00+00:00"), (0, "unknown")],
+            id="setpoint_change_source_timestamp",
+        ),
+        pytest.param(
+            "sensor.floor_heating_thermostat_setpoint_change_amount",
+            49,
+            "-0.5",
+            [(200, "2.0"), (-50, "-0.5")],
+            id="setpoint_change_amount",
+        ),
+    ],
+)
+async def test_aqara_thermostat_w500_setpoint_change(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    attribute_id: int,
+    initial_state: str,
+    updates: list[tuple[int, str]],
+) -> None:
+    """Test Aqara Thermostat W500 setpoint change sensors."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == initial_state
+
+    for value, expected_state in updates:
+        set_node_attribute(matter_node, 1, 513, attribute_id, value)
+        await trigger_subscription_callback(hass, matter_client)
+
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected_state
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500_presets"])
+@pytest.mark.parametrize("attributes", [{"1/513/49": None}])
+async def test_aqara_thermostat_w500_setpoint_change_amount_null_at_startup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test SetpointChangeAmount sensor is discovered when its value is null at startup.
+
+    This test helps prevent regressions if allow_none_value=True is removed
+    from the ThermostatSetpointChangeAmount discovery schema.
+    """
+    state = hass.states.get("sensor.floor_heating_thermostat_setpoint_change_amount")
+    assert state
+    assert state.state == "unknown"
+
+    set_node_attribute(matter_node, 1, 513, 49, 200)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.floor_heating_thermostat_setpoint_change_amount")
+    assert state
+    assert state.state == "2.0"
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_eve_thermo_v5_setpoint_change_not_discovered(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the setpoint change sensors are not discovered when never recorded.
+
+    The Eve Thermo v5 fixture reports SetpointChangeSourceTimestamp as 0
+    (never recorded), so the sensors should not be created until the
+    device actually reports a setpoint change.
+    """
+    assert hass.states.get("sensor.eve_thermo_20ecd1701_setpoint_change_source") is None
+    assert hass.states.get("sensor.eve_thermo_20ecd1701_last_setpoint_change") is None
+    assert hass.states.get("sensor.eve_thermo_20ecd1701_setpoint_change_amount") is None
+
+
 @pytest.mark.parametrize("node_fixture", ["atios_knx_bridge"])
 async def test_bridged_device_reachable_updates_availability(
     hass: HomeAssistant,
@@ -1205,3 +1354,136 @@ async def test_general_diagnostics_sensors_disabled_by_default(
         entry = entity_registry.async_get(entity_id)
         assert entry, f"Expected {entity_id} to be registered"
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_electrical_utility_meter"])
+async def test_commodity_price_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Commodity Price sensor."""
+
+    entity_id = "sensor.mock_commodity_price_current_price"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.25"
+    assert state.attributes["unit_of_measurement"] == "EUR/kWh"
+
+    # Update CurrentPrice
+    set_node_attribute(
+        matter_node,
+        3,
+        149,
+        2,
+        {
+            0: 784976400,
+            1: 784980000,
+            2: 32,
+        },
+    )
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.32"
+    assert state.attributes["unit_of_measurement"] == "EUR/kWh"
+
+    # Open-ended period: periodEnd is None
+    set_node_attribute(
+        matter_node,
+        3,
+        149,
+        2,
+        {
+            0: 784976400,
+            1: None,
+            2: 25,
+        },
+    )
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.25"
+    assert state.attributes["unit_of_measurement"] == "EUR/kWh"
+
+    # Null CurrentPrice: the price is unknown
+    set_node_attribute(matter_node, 3, 149, 2, None)
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["unit_of_measurement"] == "EUR/kWh"
+
+    # CurrentPrice without Price: the price is unknown
+    set_node_attribute(
+        matter_node,
+        3,
+        149,
+        2,
+        {
+            0: 784976400,
+            1: 784980000,
+        },
+    )
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_electrical_utility_meter"])
+@pytest.mark.parametrize(
+    ("attribute_id", "value", "expected_state", "expected_unit"),
+    [
+        pytest.param(0, 1, "0.25", "EUR/kVAh", id="kvah"),
+        pytest.param(1, {0: 752, 1: 2}, "0.25", "SEK/kWh", id="known_currency"),
+        pytest.param(1, {0: 999, 1: 2}, "0.25", None, id="unknown_currency"),
+        pytest.param(1, None, "unknown", None, id="null_currency"),
+    ],
+)
+async def test_commodity_price_sensor_currency_and_tariff(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    attribute_id: int,
+    value: Any,
+    expected_state: str,
+    expected_unit: str | None,
+) -> None:
+    """Test Commodity Price unit when currency or tariff unit changes."""
+    entity_id = "sensor.mock_commodity_price_current_price"
+
+    set_node_attribute(matter_node, 3, 149, attribute_id, value)
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected_state
+    assert state.attributes.get("unit_of_measurement") == expected_unit
+
+
+@pytest.mark.parametrize("node_fixture", ["lixee_zlinky_tic"])
+async def test_commodity_price_sensor_real_device(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Commodity Price sensor against a real LiXee ZLinky_TIC device.
+
+    This fixture reports a Currency.decimalPoints of 4 (instead of 2), to
+    guard against regressions in the price scaling.
+    """
+    state = hass.states.get("sensor.zlinky_current_price")
+    assert state
+    assert state.state == "0.1807"
+    assert state.attributes["unit_of_measurement"] == "EUR/kWh"

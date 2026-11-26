@@ -1,6 +1,7 @@
 """Fixtures for IntelliClima integration tests."""
 
 from collections.abc import Generator
+from dataclasses import asdict
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -9,6 +10,7 @@ from pyintelliclima import (
     FanSpeed,
     IntelliClimaDevices,
     IntelliClimaECO2,
+    IntelliClimaECO3,
     IntelliClimaFilterStatus,
 )
 from pyintelliclima.intelliclima_types import (
@@ -26,7 +28,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.intelliclima.async_setup_entry", return_value=True
+        "homeassistant.components.intelliclima.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -122,6 +124,48 @@ def single_eco_device() -> IntelliClimaDevices:
 
 
 @pytest.fixture
+def single_eco3_device(single_eco_device: IntelliClimaDevices) -> IntelliClimaDevices:
+    """Create a discovered ECOCOMFORT 3 main unit."""
+    values = asdict(single_eco_device.ecocomfort2_devices["56789"])
+    values.update(
+        id="33333",
+        crono_sn="AABBCCDD",
+        name="Test VMC 3",
+        model=IntelliClimaModelType(modello="ECO3", tipo="wifi"),
+        fw="0.9.6",
+        mac="00:11:22:33:44:66",
+        macwifi="00:11:22:33:44:67",
+        mode_set=FanMode.sensor,
+        speed_set=FanSpeed.auto,
+        mode_state="132",
+        speed_state="18",
+        voc_thrs=None,
+        voc_state="1800",
+        co2="3427",
+        co2_thrs="0",
+        aqi="3",
+        dev_state="0",
+    )
+    device = IntelliClimaECO3(**values)
+    return IntelliClimaDevices(
+        ecocomfort2_devices={}, c800_devices={}, ecocomfort3_devices={device.id: device}
+    )
+
+
+@pytest.fixture
+def mixed_eco_devices(
+    single_eco_device: IntelliClimaDevices,
+    single_eco3_device: IntelliClimaDevices,
+) -> IntelliClimaDevices:
+    """Create an account containing both supported ECOCOMFORT families."""
+    return IntelliClimaDevices(
+        ecocomfort2_devices=single_eco_device.ecocomfort2_devices,
+        ecocomfort3_devices=single_eco3_device.ecocomfort3_devices,
+        c800_devices={},
+    )
+
+
+@pytest.fixture
 def two_eco_devices() -> IntelliClimaDevices:
     """Create IntelliClimaDevices with two ECOCOMFORT 2.0 devices and no C800."""
     first = create_eco_device("56789", "11223344", "Test VMC")
@@ -176,6 +220,12 @@ def mock_cloud_interface(
                     change_filter=True,
                 )
             ),
+        )
+        mock_client.ecocomfort3 = SimpleNamespace(
+            turn_off=AsyncMock(return_value=True),
+            set_mode_speed=AsyncMock(return_value=True),
+            set_mode_speed_auto=AsyncMock(return_value=True),
+            get_filter_status=AsyncMock(),
         )
 
         mock_client.auth_token = "fake-token"

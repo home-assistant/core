@@ -60,7 +60,7 @@
 # name: test_v1_diagnostics
   dict({
     'config': dict({
-      'altitude_unit': None,
+      'altitude_unit': 'm',
       'back_led_brightness': 2,
       'buzzer_enabled': True,
       'cloud_connection': True,

@@ -6,7 +6,7 @@ import json
 import logging
 from typing import Any, override
 
-from aiohttp import ClientSession, ClientTimeout, StreamReader
+from aiohttp import ClientSession, ClientTimeout
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from google_drive_api.api import AbstractAuth, GoogleDriveApi
 
@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.util.async_iterator import ResourceChunkIterator
 
 from .const import DOMAIN
 
@@ -283,9 +284,9 @@ class DriveClient:
         """Delete file."""
         await self._api.delete_file(file_id)
 
-    async def async_download(self, file_id: str) -> StreamReader:
+    async def async_download(self, file_id: str) -> ResourceChunkIterator:
         """Download a file."""
         resp = await self._api.get_file_content(
             file_id, timeout=ClientTimeout(total=_UPLOAD_AND_DOWNLOAD_TIMEOUT)
         )
-        return resp.content
+        return ResourceChunkIterator(resp.content.readany, close=resp.close)

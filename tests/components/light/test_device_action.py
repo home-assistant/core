@@ -12,11 +12,11 @@ from pytest_unordered import unordered
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.light import (
-    ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN,
     FLASH_LONG,
     FLASH_SHORT,
     ColorMode,
+    LightEntityCapabilityAttribute,
     LightEntityFeature,
 )
 from homeassistant.const import EntityCategory
@@ -181,7 +181,11 @@ async def test_get_action_capabilities(
             },
             0,
             0,
-            {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS]},
+            {
+                LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                    ColorMode.BRIGHTNESS
+                ]
+            },
             {},
             {
                 "turn_on": [
@@ -208,7 +212,11 @@ async def test_get_action_capabilities(
             0,
             0,
             None,
-            {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS]},
+            {
+                LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                    ColorMode.BRIGHTNESS
+                ]
+            },
             {
                 "turn_on": [
                     {
@@ -332,7 +340,11 @@ async def test_get_action_capabilities_features(
             },
             0,
             0,
-            {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS]},
+            {
+                LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                    ColorMode.BRIGHTNESS
+                ]
+            },
             {},
             {
                 "turn_on": [
@@ -359,7 +371,11 @@ async def test_get_action_capabilities_features(
             0,
             0,
             None,
-            {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS]},
+            {
+                LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                    ColorMode.BRIGHTNESS
+                ]
+            },
             {
                 "turn_on": [
                     {

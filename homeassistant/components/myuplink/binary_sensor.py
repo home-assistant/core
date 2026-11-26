@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import F_SERIES
 from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity, MyUplinkSystemEntity
-from .helpers import find_matching_platform, transform_model_series
+from .helpers import find_matching_platform, skip_entity, transform_model_series
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, BinarySensorEntityDescription]] = {
     F_SERIES: {
@@ -69,6 +69,8 @@ async def async_setup_entry(
     # Setup device point bound sensors
     for device_id, point_data in coordinator.data.points.items():
         for point_id, device_point in point_data.items():
+            if skip_entity(device_point.category, device_point):
+                continue
             if find_matching_platform(device_point) == Platform.BINARY_SENSOR:
                 description = get_description(device_point)
 
@@ -137,9 +139,11 @@ class MyUplinkDevicePointBinarySensor(MyUplinkEntity, BinarySensorEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Binary sensor state value."""
-        device_point = self.coordinator.data.points[self.device_id][self.point_id]
+        device_point = self.coordinator.data.points[self.device_id].get(self.point_id)
+        if device_point is None:
+            return None
         return int(device_point.value) != 0
 
     @property

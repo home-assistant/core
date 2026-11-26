@@ -26,6 +26,16 @@ from homeassistant.util.json import JsonArrayType
 from .const import FAKE_BRIDGE, FAKE_BRIDGE_DEVICE
 
 
+@pytest.fixture
+def mock_create_app_key() -> Generator[AsyncMock]:
+    """Mock creating an app key on the Hue bridge."""
+    with patch(
+        "homeassistant.components.hue.config_flow.create_app_key",
+        return_value="123456789",
+    ) as mock_create_app_key:
+        yield mock_create_app_key
+
+
 @pytest.fixture(autouse=True)
 def no_request_delay() -> Generator[None]:
     """Make the request refresh delay 0 for instant tests."""
@@ -246,7 +256,7 @@ def create_config_entry(
 
 async def setup_component(hass: HomeAssistant) -> None:
     """Mock setup Hue component."""
-    with patch.object(hue, "async_setup_entry", return_value=True):
+    with patch.object(hue, "async_setup_entry", return_value=None):
         assert (
             await async_setup_component(
                 hass,

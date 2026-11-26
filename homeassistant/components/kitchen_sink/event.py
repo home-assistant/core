@@ -4,7 +4,7 @@ from typing import override
 
 from infrared_protocols.commands.nec import NECCommand
 
-from homeassistant.components.event import EventEntity
+from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.components.infrared import (
     InfraredReceivedSignal,
     InfraredReceiverConsumerEntity,
@@ -35,6 +35,12 @@ COMMAND_EVENTS = {
     INFRARED_CMD_SPEED_HIGH: "speed_high",
 }
 
+INFRARED_EVENT = EventEntityDescription(
+    key="received_ir_event",
+    name="Received IR Event",
+    event_types=list(COMMAND_EVENTS.values()),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -64,9 +70,8 @@ async def async_setup_entry(
 class DemoInfraredEvent(InfraredReceiverConsumerEntity, EventEntity):
     """Representation of a demo infrared event entity."""
 
+    entity_description = INFRARED_EVENT
     _attr_has_entity_name = True
-    _attr_name = "Received IR Event"
-    _attr_event_types = list(COMMAND_EVENTS.values())
 
     def __init__(
         self, subentry_id: str, device_name: str, infrared_receiver_entity_id: str

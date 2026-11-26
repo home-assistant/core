@@ -29,7 +29,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator:
     """Override async_setup_entry."""
-    with patch("homeassistant.components.smarla.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.smarla.async_setup_entry", return_value=None):
         yield
 
 

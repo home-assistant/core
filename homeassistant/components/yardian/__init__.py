@@ -1,9 +1,10 @@
 """The Yardian integration."""
 
-from pyyardian import AsyncYardianClient
+from pyyardian import AsyncYardianClient, NetworkException, NotAuthorizedException
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -35,11 +36,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: YardianConfigEntry) -> N
     host = entry.data[CONF_HOST]
     access_token = entry.data[CONF_ACCESS_TOKEN]
 
-    # Change this line to use .create()
-    # This ensures the coordinator's controller knows if it is YP or YC
-    controller = await AsyncYardianClient.create(
-        async_get_clientsession(hass), host, token=access_token
-    )
+    try:
+        controller = await AsyncYardianClient.create(
+            async_get_clientsession(hass), host, token=access_token
+        )
+    except NotAuthorizedException as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
+        ) from err
+    except (NetworkException, TimeoutError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="cannot_connect"
+        ) from err
 
     coordinator = YardianUpdateCoordinator(hass, entry, controller)
     await coordinator.async_config_entry_first_refresh()
@@ -48,9 +56,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: YardianConfigEntry) -> N
 
     # Register the main device so zone child devices can resolve it as their
     # via_device regardless of platform setup order.
-    dr.async_get(hass).async_get_or_create(
+    dr.async_get(hass).async_get_or_create_from_info(
         config_entry_id=entry.entry_id,
-        **coordinator.device_info,
+        device_info=coordinator.device_info,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

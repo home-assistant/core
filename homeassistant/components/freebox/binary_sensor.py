@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import FreeboxHomeCategory
 from .entity import FreeboxHomeEntity
-from .router import FreeboxConfigEntry, FreeboxRouter
+from .router import FreeboxConfigEntry, FreeboxRouter, lan_port_translation
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +45,9 @@ async def async_setup_entry(
         for raid in router.raids.values()
         for description in RAID_SENSORS
     ]
+    binary_entities.extend(
+        FreeboxLanPortLinkSensor(router, port_id) for port_id in router.lan_ports
+    )
 
     for node in router.home_devices.values():
         if node["category"] == FreeboxHomeCategory.PIR:
@@ -190,5 +193,41 @@ class FreeboxRaidDegradedSensor(BinarySensorEntity):
                 self.hass,
                 self._router.signal_sensor_update,
                 self.async_on_demand_update,
+            )
+        )
+
+
+class FreeboxLanPortLinkSensor(BinarySensorEntity):
+    """Representation of a Freebox LAN port link."""
+
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, router: FreeboxRouter, port_id: int) -> None:
+        """Initialize a Freebox LAN port link sensor."""
+        self._router = router
+        self._port_id = port_id
+        self._attr_device_info = router.device_info
+        self._attr_translation_key, self._attr_translation_placeholders = (
+            lan_port_translation(router.lan_ports[port_id], "port_link")
+        )
+        self._attr_unique_id = f"{router.mac} lan_port {port_id} link"
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true if something is plugged in the port."""
+        return self._router.lan_ports[self._port_id]["link"] == "up"
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register state update callback."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._router.signal_sensor_update,
+                self.async_write_ha_state,
             )
         )

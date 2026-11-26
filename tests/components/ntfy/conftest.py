@@ -24,7 +24,7 @@ from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME, CONF_VERIFY
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.ntfy.async_setup_entry", return_value=True
+        "homeassistant.components.ntfy.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -118,11 +118,11 @@ def mock_update_checker() -> Generator[AsyncMock]:
 
 @pytest.fixture(autouse=True)
 def mock_random() -> Generator[MagicMock]:
-    """Mock random."""
+    """Mock the random character choice."""
 
     with patch(
-        "homeassistant.components.ntfy.config_flow.random.choices",
-        return_value=["randomtopic"],
+        "homeassistant.components.ntfy.config_flow.secrets.choice",
+        return_value="a",
     ) as mock_client:
         yield mock_client
 

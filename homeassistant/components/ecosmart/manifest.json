@@ -4,6 +4,7 @@
   "categories": ["energy.energy_prices"],
   "codeowners": ["@Daryn-L"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/ecosmart",
   "integration_type": "service",
   "iot_class": "cloud_polling",

@@ -49,12 +49,6 @@
     "file_decoding": {
       "message": "Cannot read file {filename} as {encoding}."
     },
-    "file_not_found": {
-      "message": "File {filename} not found."
-    },
-    "file_read_error": {
-      "message": "Error reading {filename}."
-    },
     "no_access_to_path": {
       "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
     },

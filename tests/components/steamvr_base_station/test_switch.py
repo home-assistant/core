@@ -16,7 +16,7 @@ from pytest_homeassistant.components.bluetooth import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -24,6 +24,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -32,6 +34,12 @@ from homeassistant.helpers import entity_registry as er
 from . import TEST_NAME, make_service_info, payload
 
 SWITCH = "switch.lhb_747a9bc5"
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Only set up the switch platform."""
+    return [Platform.SWITCH]
 
 
 async def test_switch_entity(
@@ -94,7 +102,10 @@ async def test_command_updates_state(
 
     mock_set_power.side_effect = apply
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: SWITCH}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: SWITCH},
+        blocking=True,
     )
     assert hass.states.get(SWITCH).state == STATE_OFF
 
@@ -105,7 +116,10 @@ async def test_command_error(hass: HomeAssistant, mock_set_power: AsyncMock) -> 
     mock_set_power.side_effect = LighthouseConnectionError("gone")
     with pytest.raises(HomeAssistantError) as raised:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: SWITCH}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: SWITCH},
+            blocking=True,
         )
     assert raised.value.translation_key == "cannot_connect"
     assert hass.states.get(SWITCH).state == STATE_ON

@@ -15,7 +15,12 @@ only once the pending reboot is gone and Supervisor raises a new one.
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HomeAssistant,
+    callback,
+    verify_event_loop_thread,
+)
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType
 
@@ -76,16 +81,13 @@ def _async_update(hass: HomeAssistant, system_state: SystemState) -> None:
 
 
 @callback
+@verify_event_loop_thread("system_state.async_set_home_assistant_restart_required")
 def async_set_home_assistant_restart_required(hass: HomeAssistant, domain: str) -> None:
     """Flag that Home Assistant needs a restart to apply a change.
 
     The domain is the integration that asks for the restart. It is listed
     to the user, so they can see what is waiting for the restart.
     """
-    hass.verify_event_loop_thread(
-        "system_state.async_set_home_assistant_restart_required"
-    )
-
     system_state = async_get(hass)
     if domain in system_state.home_assistant_restart_sources:
         return
@@ -110,14 +112,13 @@ def async_subscribe(
 
 
 @callback
+@verify_event_loop_thread("system_state.async_set_host_reboot_required")
 def async_set_host_reboot_required(hass: HomeAssistant, required: bool) -> None:
     """Mirror whether Supervisor reports the host needs a reboot.
 
     Only meant for the hassio integration. Supervisor owns this state, so
     unlike the restart flag it is not latched here.
     """
-    hass.verify_event_loop_thread("system_state.async_set_host_reboot_required")
-
     system_state = async_get(hass)
     if system_state.host_reboot_required is required:
         return
@@ -134,10 +135,9 @@ def async_set_host_reboot_required(hass: HomeAssistant, required: bool) -> None:
 
 
 @callback
+@verify_event_loop_thread("system_state.async_dismiss")
 def async_dismiss(hass: HomeAssistant) -> None:
     """Put off what is pending right now, until something new asks."""
-    hass.verify_event_loop_thread("system_state.async_dismiss")
-
     system_state = async_get(hass)
     dismissed = replace(
         system_state,

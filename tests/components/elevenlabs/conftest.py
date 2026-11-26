@@ -27,7 +27,7 @@ from .const import MOCK_MODELS, MOCK_VOICES
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.elevenlabs.async_setup_entry", return_value=True
+        "homeassistant.components.elevenlabs.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -81,6 +81,52 @@ def mock_async_client_api_error() -> Generator[AsyncMock]:
             new=mock_async_client,
         ),
     ):
+        yield mock_async_client
+
+
+@pytest.fixture
+def mock_async_client_api_key_id_error() -> Generator[AsyncMock]:
+    """Override async ElevenLabs client with an API key ID used as API key."""
+    client_mock = _client_mock()
+    api_error = ApiError()
+    api_error.body = {
+        "detail": {
+            "type": "authentication_error",
+            "code": "invalid_api_key",
+            "status": "api_key_id_used_as_api_key",
+            "message": "API key ID used as API key",
+        }
+    }
+    client_mock.models.list.side_effect = api_error
+    client_mock.voices.get_all.side_effect = api_error
+
+    with patch(
+        "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
+        return_value=client_mock,
+    ) as mock_async_client:
+        yield mock_async_client
+
+
+@pytest.fixture
+def mock_async_client_invalid_key_code_error() -> Generator[AsyncMock]:
+    """Override async ElevenLabs client with an invalid key reported only by code."""
+    client_mock = _client_mock()
+    api_error = ApiError()
+    api_error.body = {
+        "detail": {
+            "type": "authentication_error",
+            "code": "invalid_api_key",
+            "status": "api_key_revoked",
+            "message": "API key has been revoked",
+        }
+    }
+    client_mock.models.list.side_effect = api_error
+    client_mock.voices.get_all.side_effect = api_error
+
+    with patch(
+        "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
+        return_value=client_mock,
+    ) as mock_async_client:
         yield mock_async_client
 
 

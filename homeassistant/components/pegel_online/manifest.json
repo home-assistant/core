@@ -4,6 +4,7 @@
   "categories": ["weather_alerts"],
   "codeowners": ["@mib1185"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/pegel_online",
   "integration_type": "service",
   "iot_class": "cloud_polling",

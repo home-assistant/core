@@ -70,7 +70,18 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
 
     _attr_event_types = [EVENT_TYPE]
     coordinator: AmazonDevicesCoordinator
-    _last_seen_timestamp: int = 0  #  January 1, 1970 at 12:00:00 AM
+
+    def __init__(
+        self,
+        coordinator: AmazonDevicesCoordinator,
+        serial_num: str,
+        description: EventEntityDescription,
+    ) -> None:
+        """Initialize the voice event entity."""
+        super().__init__(coordinator, serial_num, description)
+        # The record already loaded predates this entity, so it must not fire
+        vocal_record = coordinator.vocal_records.get(serial_num)
+        self._last_seen_timestamp = vocal_record.timestamp if vocal_record else 0
 
     @callback
     @override

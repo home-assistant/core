@@ -489,7 +489,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement: UnitOfVolumeFlowRate
     - SI / metric: `m³/h`, `m³/min`, `m³/s`, `L/h`, `L/min`, `L/s`, `mL/s`
-    - USCS / imperial: `ft³/min`, `gal/min`, `gal/d`
+    - USCS / imperial: `ft³/h`, `ft³/min`, `gal/h`, `gal/min`, `gal/d`
     """
 
     WATER = "water"
@@ -710,3 +710,15 @@ AMBIGUOUS_UNITS: dict[str | None, str] = {
     "VArh": UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
     "kVArh": UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
 }
+
+
+class NumberService(StrEnum):
+    """Store keys for number services."""
+
+    SET_VALUE = "set_value"
+
+
+class NumberServiceArgument(StrEnum):
+    """Store keys for number service arguments."""
+
+    VALUE = "value"

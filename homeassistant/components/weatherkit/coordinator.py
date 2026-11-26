@@ -2,14 +2,19 @@
 
 from datetime import timedelta
 import time
-from typing import override
+from typing import Any, override
 
 from apple_weatherkit import DataSetType
-from apple_weatherkit.client import WeatherKitApiClient, WeatherKitApiClientError
+from apple_weatherkit.client import (
+    WeatherKitApiClient,
+    WeatherKitApiClientAuthenticationError,
+    WeatherKitApiClientError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -28,7 +33,7 @@ HOURLY_FORECAST_DURATION = timedelta(days=7)
 type WeatherKitConfigEntry = ConfigEntry[WeatherKitDataUpdateCoordinator]
 
 
-class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
+class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the API."""
 
     config_entry: WeatherKitConfigEntry
@@ -67,7 +72,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
         LOGGER.debug("Supported data sets: %s", self.supported_data_sets)
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update the current weather and forecasts."""
         try:
             if not self.supported_data_sets:
@@ -81,6 +86,11 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
                 hourly_start=dt_now,
                 hourly_end=dt_now + HOURLY_FORECAST_DURATION,
             )
+        except WeatherKitApiClientAuthenticationError as exception:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+            ) from exception
         except WeatherKitApiClientError as exception:
             if self.data is None or (
                 self.last_updated_at is not None

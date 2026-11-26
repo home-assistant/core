@@ -1,0 +1,20 @@
+blueprint:
+  name: Test light with mireds
+  description: Creates a light with a color temperature in mireds
+  domain: template
+  input:
+    sensor:
+      name: Sensor Entity
+      description: The sensor entity
+      selector:
+        entity:
+          domain: sensor
+variables:
+  sensor: !input sensor
+light:
+  state: "{{ is_state(sensor, 'on') }}"
+  turn_on: []
+  turn_off: []
+  set_temperature: []
+  temperature: "{{ 300 }}"
+  max_mireds: "{{ 500 }}"

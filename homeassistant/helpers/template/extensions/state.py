@@ -4,6 +4,8 @@ from collections.abc import Iterable
 import logging
 from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Sentinel as sentinel
+
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_PERSONS,
@@ -30,7 +32,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 
 class StateExtension(BaseTemplateExtension):
@@ -39,8 +41,8 @@ class StateExtension(BaseTemplateExtension):
     def __init__(self, environment: TemplateEnvironment) -> None:
         """Initialize the state extension."""
         # Build the class-based instance functions only when hass is available.
-        # These use pass_context=False because they are callable class instances
-        # that should not be wrapped by _pass_context.
+        # The globals use pass_context=False because they are callable class
+        # instances that should not be wrapped by _pass_context.
         class_functions: list[TemplateFunction] = []
         if (hass := environment.hass) is not None:
             class_functions = [
@@ -48,28 +50,46 @@ class StateExtension(BaseTemplateExtension):
                     "state_attr_translated",
                     StateAttrTranslated(hass),
                     as_global=True,
+                    requires_hass=True,
+                    limited_ok=False,
+                    pass_context=False,
+                ),
+                TemplateFunction(
+                    "state_attr_translated",
+                    StateAttrTranslated(hass).__call__,
                     as_filter=True,
+                    requires_hass=True,
+                    limited_ok=False,
+                ),
+                TemplateFunction(
+                    "state_translated",
+                    StateTranslated(hass),
+                    as_global=True,
                     requires_hass=True,
                     limited_ok=False,
                     pass_context=False,
                 ),
                 TemplateFunction(
                     "state_translated",
-                    StateTranslated(hass),
-                    as_global=True,
+                    StateTranslated(hass).__call__,
                     as_filter=True,
+                    requires_hass=True,
+                    limited_ok=False,
+                ),
+                TemplateFunction(
+                    "states",
+                    AllStates(hass),
+                    as_global=True,
                     requires_hass=True,
                     limited_ok=False,
                     pass_context=False,
                 ),
                 TemplateFunction(
                     "states",
-                    AllStates(hass),
-                    as_global=True,
+                    AllStates(hass).__call__,
                     as_filter=True,
                     requires_hass=True,
                     limited_ok=False,
-                    pass_context=False,
                 ),
             ]
 

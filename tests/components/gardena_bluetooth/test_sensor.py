@@ -14,6 +14,7 @@ from gardena_bluetooth.const import (
     Sensor,
     Spray,
     Valve,
+    ValveActivationReason,
 )
 from gardena_bluetooth.parse import ActivationReason, ErrorData, SkipReason
 from habluetooth import BluetoothServiceInfo
@@ -90,7 +91,7 @@ async def test_setup(
                     10
                 ),
                 Valve.activation_reason.unique_id: Valve.activation_reason.encode(
-                    ActivationReason.SCHEDULE
+                    ValveActivationReason.SCHEDULE
                 ),
             },
             id="timer",

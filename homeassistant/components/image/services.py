@@ -13,17 +13,19 @@ from homeassistant.helpers.os_error import os_write_error
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    ATTR_FILENAME,
     DATA_COMPONENT,
     DOMAIN,
     IMAGE_TIMEOUT,
-    SERVICE_SNAPSHOT,
+    ImageService,
+    ImageServiceArgument,
 )
 
 if TYPE_CHECKING:
     from .entity import ImageEntity
 
-IMAGE_SERVICE_SNAPSHOT: VolDictType = {probatio.Required(ATTR_FILENAME): cv.string}
+IMAGE_SERVICE_SNAPSHOT: VolDictType = {
+    probatio.Required(ImageServiceArgument.FILENAME): cv.string
+}
 
 
 async def _async_handle_snapshot_service(
@@ -31,7 +33,7 @@ async def _async_handle_snapshot_service(
 ) -> None:
     """Handle snapshot services calls."""
     hass = image.hass
-    snapshot_file: str = service_call.data[ATTR_FILENAME]
+    snapshot_file: str = service_call.data[ImageServiceArgument.FILENAME]
 
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
@@ -63,5 +65,5 @@ async def _async_handle_snapshot_service(
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the image services."""
     hass.data[DATA_COMPONENT].async_register_entity_service(
-        SERVICE_SNAPSHOT, IMAGE_SERVICE_SNAPSHOT, _async_handle_snapshot_service
+        ImageService.SNAPSHOT, IMAGE_SERVICE_SNAPSHOT, _async_handle_snapshot_service
     )

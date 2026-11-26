@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, cast
 
 from elvia import Elvia, error as ElviaError
 
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
     StatisticData,
     StatisticMeanType,
@@ -15,7 +16,6 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     statistics_during_period,
 )
-from homeassistant.components.recorder.util import get_instance
 from homeassistant.const import UnitOfEnergy
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
@@ -81,6 +81,8 @@ class ElviaImporter:
                         since=until - timedelta(days=365 * year),
                         until=until - timedelta(days=365 * (year - 1)),
                     )
+                except ElviaError.AuthError:
+                    raise
                 except ElviaError.ElviaException:
                     # This will raise if the contract have no data for the
                     # year, we can safely ignore this
@@ -100,6 +102,8 @@ class ElviaImporter:
                     ),
                     until=dt_util.utcnow(),
                 )
+            except ElviaError.AuthError:
+                raise
             except ElviaError.ElviaException as err:
                 LOGGER.error("Error fetching data: %s", err)
                 return

@@ -1,5 +1,6 @@
 """Tests for the OpenRGB config flow."""
 
+import errno
 import socket
 
 from openrgb.utils import OpenRGBDisconnected, SDKVersionError
@@ -8,7 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openrgb.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -28,16 +29,14 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_NAME: "Test Computer",
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 6742,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Computer"
+    assert result["title"] == "OpenRGB (127.0.0.1)"
     assert result["data"] == {
-        CONF_NAME: "Test Computer",
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6742,
     }
@@ -50,6 +49,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         (OpenRGBDisconnected, "cannot_connect"),
         (TimeoutError, "cannot_connect"),
         (socket.gaierror, "cannot_connect"),
+        (OSError(errno.EHOSTUNREACH, "Host is unreachable"), "cannot_connect"),
         (SDKVersionError, "cannot_connect"),
         (RuntimeError("Test error"), "unknown"),
     ],
@@ -68,7 +68,7 @@ async def test_user_flow_errors(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_NAME: "Test Server", CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -80,13 +80,12 @@ async def test_user_flow_errors(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_NAME: "Test Server", CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Server"
+    assert result["title"] == "OpenRGB (127.0.0.1)"
     assert result["data"] == {
-        CONF_NAME: "Test Server",
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6742,
     }
@@ -106,7 +105,7 @@ async def test_user_flow_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_NAME: "Test Server", CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -125,7 +124,6 @@ async def test_user_flow_duplicate_entry(
         domain=DOMAIN,
         title="Other Computer",
         data={
-            CONF_NAME: "Other Computer",
             CONF_HOST: "192.168.1.200",
             CONF_PORT: 6743,
         },
@@ -142,7 +140,6 @@ async def test_user_flow_duplicate_entry(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_NAME: "Yet Another Computer",
             CONF_HOST: "192.168.1.200",
             CONF_PORT: 6743,
         },
@@ -152,12 +149,25 @@ async def test_user_flow_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("title", "expected_title"),
+    [
+        pytest.param(
+            "OpenRGB (127.0.0.1)", "OpenRGB (192.168.1.100)", id="default_title"
+        ),
+        pytest.param("Test Computer", "Test Computer", id="custom_title"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
 async def test_reconfigure_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    title: str,
+    expected_title: str,
 ) -> None:
     """Test the reconfiguration flow."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, title=title)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
@@ -176,6 +186,7 @@ async def test_reconfigure_flow(
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.100"
     assert mock_config_entry.data[CONF_PORT] == 6743
+    assert mock_config_entry.title == expected_title
 
 
 @pytest.mark.parametrize(
@@ -185,6 +196,7 @@ async def test_reconfigure_flow(
         (OpenRGBDisconnected, "cannot_connect"),
         (TimeoutError, "cannot_connect"),
         (socket.gaierror, "cannot_connect"),
+        (OSError(errno.EHOSTUNREACH, "Host is unreachable"), "cannot_connect"),
         (SDKVersionError, "cannot_connect"),
         (RuntimeError("Test error"), "unknown"),
     ],
@@ -239,7 +251,6 @@ async def test_reconfigure_flow_duplicate_entry(
         domain=DOMAIN,
         title="Other Computer",
         data={
-            CONF_NAME: "Other Computer",
             CONF_HOST: "192.168.1.200",
             CONF_PORT: 6743,
         },

@@ -1,10 +1,5 @@
 """Last motion and last ring image entities for a DoorBird device."""
 
-# These replace the same-named camera entities, which exposed stills through the
-# camera UI even though no live video is involved. The legacy camera entities are
-# kept to avoid breaking existing dashboards and automations; a follow-up should
-# deprecate them via a repair issue once users have had time to migrate.
-
 from dataclasses import dataclass
 from typing import override
 
@@ -22,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_EVENT_TYPES, DOMAIN
+from .const import DOMAIN
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
 
@@ -83,23 +78,9 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
             else "motionsensor"
         )
         self._image_url = self._door_station.device.history_image_url(1, history_type)
-        # Models without the schedule API have no descriptions, so fall back to
-        # the type a default event name implies.
-        described = {
-            event.event: event.event_type
-            for event in self._door_station.event_descriptions
-        }
-        default_types = dict(DEFAULT_EVENT_TYPES)
-        self._matching_event_names = [
-            event_name
-            for event, event_name in zip(
-                self._door_station.events,
-                self._door_station.door_station_events,
-                strict=True,
-            )
-            if (described.get(event_name) or default_types.get(event))
-            == description.doorbird_event_type
-        ]
+        self._matching_event_names = self._door_station.event_names_of_type(
+            description.doorbird_event_type
+        )
 
     @override
     async def async_image(self) -> bytes | None:
@@ -126,6 +107,7 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         """Subscribe to the underlying DoorBird events."""
         await super().async_added_to_hass()
         for event_name in self._matching_event_names:
+            self._door_bird_data.event_entity_ids[event_name] = self.entity_id
             self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
@@ -133,6 +115,21 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
                     self._async_handle_event,
                 )
             )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Report the new entity_id in the events this image refreshes on."""
+        super().async_entity_id_changed(old_entity_id)
+        for event_name in self._matching_event_names:
+            self._door_bird_data.event_entity_ids[event_name] = self.entity_id
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop reporting this image in events."""
+        for event_name in self._matching_event_names:
+            self._door_bird_data.event_entity_ids.pop(event_name, None)
+        await super().async_will_remove_from_hass()
 
     @callback
     def _async_handle_event(self) -> None:

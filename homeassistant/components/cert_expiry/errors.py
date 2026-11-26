@@ -29,3 +29,7 @@ class ConnectionRefused(TemporaryFailure):
 
 class ConnectionReset(TemporaryFailure):
     """Network connection reset."""
+
+
+class ConnectionFailed(TemporaryFailure):
+    """Network connection failed."""

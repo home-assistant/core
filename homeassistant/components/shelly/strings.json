@@ -31,14 +31,6 @@
     },
     "step": {
       "bluetooth_confirm": {
-        "data": {
-          "disable_ap": "Disable Wi-Fi access point after provisioning",
-          "disable_ble_rpc": "Disable Bluetooth RPC after provisioning"
-        },
-        "data_description": {
-          "disable_ap": "For improved security, disable the Wi-Fi access point after successfully connecting to your network.",
-          "disable_ble_rpc": "For improved security, disable Bluetooth RPC access after Wi-Fi is configured. Bluetooth will remain enabled for BLE sensors and buttons."
-        },
         "description": "The Shelly device {name} has been discovered via Bluetooth but is not connected to Wi-Fi.\n\nDo you want to provision Wi-Fi credentials to this device?",
         "title": "Provision Wi-Fi via Bluetooth"
       },
@@ -83,7 +75,7 @@
       },
       "user": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         },
         "data_description": {
           "device": "Select a discovered device or enter an address manually."
@@ -255,6 +247,9 @@
       "mute_alarm": {
         "name": "Mute alarm"
       },
+      "next_effect": {
+        "name": "Next effect"
+      },
       "open": {
         "name": "Open"
       },
@@ -310,6 +305,18 @@
         }
       }
     },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
+      }
+    },
     "infrared": {
       "infrared_emitter": {
         "name": "Infrared emitter"
@@ -331,6 +338,7 @@
               "fade": "Fade",
               "freqwave": "FreqWave",
               "glitterwaves": "Glitter waves",
+              "lightning": "Lightning",
               "meteors": "Meteors",
               "pixeldance": "Pixel dance",
               "rainbow": "Rainbow",
@@ -340,11 +348,17 @@
             }
           }
         }
+      },
+      "ledstrip_background": {
+        "name": "Effect background"
       }
     },
     "number": {
       "current_limit": {
         "name": "Current limit"
+      },
+      "display_brightness": {
+        "name": "Display brightness"
       },
       "effect_intensity": {
         "name": "Effect intensity"
@@ -357,6 +371,9 @@
       },
       "left_slot_intensity": {
         "name": "Left slot intensity"
+      },
+      "min_auto_display_brightness": {
+        "name": "Minimum auto display brightness"
       },
       "right_slot_intensity": {
         "name": "Right slot intensity"
@@ -382,6 +399,28 @@
           "none": "None",
           "reception": "Reception",
           "workplace": "Workplace"
+        }
+      },
+      "effect_palette": {
+        "name": "Effect palette",
+        "state": {
+          "complementary": "Complementary",
+          "contrast": "Contrast",
+          "fire": "Fire",
+          "forest": "Forest",
+          "harmony": "Harmony",
+          "monochrome": "Monochrome",
+          "ocean": "Ocean",
+          "pastel": "Pastel",
+          "rainbow": "Rainbow"
+        }
+      },
+      "led_mode": {
+        "name": "LED mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "power": "Power consumption",
+          "switch": "Switch state"
         }
       }
     },
@@ -477,6 +516,24 @@
           }
         }
       },
+      "humidity_level": {
+        "name": "Humidity level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "very_high": "[%key:common::state::very_high%]"
+        }
+      },
+      "humidity_level_with_channel_name": {
+        "name": "{channel_name} humidity level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "very_high": "[%key:common::state::very_high%]"
+        }
+      },
       "humidity_with_channel_name": {
         "name": "{channel_name} humidity"
       },
@@ -486,6 +543,14 @@
           "bright": "Bright",
           "dark": "Dark",
           "twilight": "Twilight"
+        }
+      },
+      "illuminance_level_with_channel_name": {
+        "name": "{channel_name} illuminance level",
+        "state": {
+          "bright": "[%key:component::shelly::entity::sensor::illuminance_level::state::bright%]",
+          "dark": "[%key:component::shelly::entity::sensor::illuminance_level::state::dark%]",
+          "twilight": "[%key:component::shelly::entity::sensor::illuminance_level::state::twilight%]"
         }
       },
       "lamp_life": {
@@ -653,6 +718,12 @@
       "right_slot_vial": {
         "name": "Right slot vial"
       },
+      "runtime_above_power_threshold": {
+        "name": "Runtime above power threshold"
+      },
+      "runtime_above_power_threshold_with_channel_name": {
+        "name": "{channel_name} runtime above power threshold"
+      },
       "self_test": {
         "name": "Self-test",
         "state": {
@@ -681,11 +752,23 @@
       "storage_free_space": {
         "name": "Free storage space"
       },
+      "switching_cycles": {
+        "name": "Switching cycles"
+      },
+      "switching_cycles_with_channel_name": {
+        "name": "{channel_name} switching cycles"
+      },
       "temperature_with_channel_name": {
         "name": "{channel_name} temperature"
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "total_runtime": {
+        "name": "Total runtime"
+      },
+      "total_runtime_with_channel_name": {
+        "name": "{channel_name} total runtime"
       },
       "valve_position": {
         "name": "Valve position"
@@ -733,6 +816,12 @@
       }
     },
     "switch": {
+      "auto_brightness": {
+        "name": "Auto display brightness"
+      },
+      "boost": {
+        "name": "Boost"
+      },
       "camera_privacy": {
         "name": "Privacy"
       },
@@ -750,6 +839,12 @@
       },
       "frost_protection": {
         "name": "[%key:component::shelly::entity::climate::thermostat::state_attributes::preset_mode::state::frost_protection%]"
+      },
+      "input_lock": {
+        "name": "Input lock"
+      },
+      "input_lock_with_channel_name": {
+        "name": "{channel_name} input lock"
       },
       "left_slot": {
         "name": "Left slot"
@@ -782,6 +877,9 @@
       },
       "lora_firmware": {
         "name": "LoRa add-on firmware"
+      },
+      "release_notes_messages": {
+        "multi_step_update": "This update reorganizes the device memory and can run in two steps. The device installs the update and restarts, and may come back still reporting the previous firmware version. About a minute and a half later, it downloads the update again and restarts once more on the new version. Do not restart, remove power from, or otherwise interrupt the device until it reports the new firmware version. If the device comes back on the previous version and the second step does not start within a few minutes, start the update again."
       }
     },
     "valve": {
@@ -796,6 +894,21 @@
     },
     "circuit_breaker_remote_disabled": {
       "message": "Circuit breaker for {entity} of {device} is tripped and cannot be turned on remotely"
+    },
+    "command_http_error": {
+      "message": "Command {command} failed for {device} with HTTP status {status}"
+    },
+    "command_invalid_params": {
+      "message": "Command parameters for {device} must be text, number or boolean values"
+    },
+    "command_not_allowed": {
+      "message": "Command {command} is not allowed for {device}"
+    },
+    "command_rpc_error": {
+      "message": "Command {command} failed for {device} with error {code}: {message}"
+    },
+    "command_sleeping_device": {
+      "message": "{device} is a sleeping device and does not support commands"
     },
     "custom_integration_entry": {
       "message": "The config entry {title} probably comes from a custom integration, please remove it if you want to use core Shelly integration"
@@ -812,9 +925,6 @@
     "device_not_initialized": {
       "message": "{device} not initialized"
     },
-    "firmware_unsupported": {
-      "message": "{device} is running an unsupported firmware, please update the firmware"
-    },
     "http_call_error": {
       "message": "HTTP call error occurred for {device}"
     },
@@ -823,6 +933,9 @@
     },
     "kvs_not_supported": {
       "message": "{device} does not support KVS"
+    },
+    "ledstrip_effect_no_color": {
+      "message": "Cannot set a color for {entity} because the {effect} effect does not use one"
     },
     "ota_update_connection_error": {
       "message": "Device communication error occurred while triggering OTA update for {device}"
@@ -836,6 +949,12 @@
     "rpc_call_error": {
       "message": "RPC call error occurred for {device}"
     },
+    "storage_unavailable": {
+      "message": "Storage unavailable for {device}"
+    },
+    "unexpected_identifier": {
+      "message": "Unexpected identifier: {identifier}"
+    },
     "unsupported_media_content_type": {
       "message": "Unsupported media content type for Shelly device: {media_content_type}"
     },
@@ -848,14 +967,20 @@
     "update_error": {
       "message": "An error occurred while retrieving data from {device}"
     },
-    "update_error_device_disconnected": {
-      "message": "An error occurred while retrieving data from {device} because it is disconnected"
+    "update_error_disconnected": {
+      "message": "The device is disconnected"
     },
-    "update_error_reconnect_error": {
-      "message": "An error occurred while reconnecting to {device}"
+    "update_error_mac_mismatch": {
+      "message": "A different device responded at {host}"
+    },
+    "update_error_reconnect": {
+      "message": "The device could not be reconnected"
     },
     "update_error_sleeping_device": {
       "message": "Sleeping device {device} did not update within {period} seconds interval"
+    },
+    "update_error_unreachable": {
+      "message": "The device cannot be reached"
     }
   },
   "issues": {
@@ -991,6 +1116,21 @@
     "unsupported_firmware": {
       "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Please update the firmware.\n\nIf the device does not offer an update, check internet connectivity (gateway, DNS, time) and restart the device.",
       "title": "Unsupported firmware for device {device_name}"
+    },
+    "unsupported_firmware_fixable": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "update_not_available": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::fix_flow::abort::update_not_available%]"
+        },
+        "step": {
+          "confirm": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Until the firmware is updated, only the firmware update entity is available for this device.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version.",
+            "title": "[%key:component::shelly::issues::unsupported_firmware::title%]"
+          }
+        }
+      },
+      "title": "[%key:component::shelly::issues::unsupported_firmware::title%]"
     }
   },
   "options": {
@@ -1027,6 +1167,24 @@
     }
   },
   "services": {
+    "command": {
+      "description": "Sends a command to a Shelly device and returns the device response.",
+      "fields": {
+        "command": {
+          "description": "The RPC method for generation 2 and newer devices, for example `Switch.Set`, or the HTTP endpoint for generation 1 devices, for example `relay/0`.",
+          "name": "Command"
+        },
+        "device_id": {
+          "description": "The ID of the Shelly device to send the command to.",
+          "name": "Device"
+        },
+        "params": {
+          "description": "Optional parameters of the command in the format of key value pairs.",
+          "name": "Parameters"
+        }
+      },
+      "name": "Send command"
+    },
     "get_kvs_value": {
       "description": "Gets a value from a Shelly device's Key-Value Storage.",
       "fields": {

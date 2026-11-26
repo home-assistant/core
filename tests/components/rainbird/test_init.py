@@ -375,7 +375,6 @@ async def test_fix_entity_unique_ids(
     device_entry = device_registry.async_get_or_create(
         identifiers={(DOMAIN, device_identifier)},
         config_entry_id=config_entry.entry_id,
-        serial_number=config_entry.data["serial_number"],
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -478,14 +477,12 @@ async def test_fix_duplicate_device_ids(
     entry1 = device_registry.async_get_or_create(
         identifiers={(DOMAIN, str(SERIAL_NUMBER))},
         config_entry_id=config_entry.entry_id,
-        serial_number=config_entry.data["serial_number"],
     )
     device_registry.async_update_device(entry1.id, **entry1_updates)
 
     entry2 = device_registry.async_get_or_create(
         identifiers={(DOMAIN, MAC_ADDRESS_UNIQUE_ID)},
         config_entry_id=config_entry.entry_id,
-        serial_number=config_entry.data["serial_number"],
     )
     device_registry.async_update_device(entry2.id, **entry2_updates)
 
@@ -608,7 +605,7 @@ async def test_options_listener(
     # Changing options triggers reload
     with patch(
         "homeassistant.components.rainbird.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         hass.config_entries.async_update_entry(config_entry, options={"duration": 5})
         await hass.async_block_till_done()

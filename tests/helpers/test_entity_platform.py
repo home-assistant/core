@@ -581,6 +581,43 @@ async def test_parallel_updates_sync_platform_updates_in_sequence(
     assert peak_update_count == 1
 
 
+async def test_updates_in_sequence_skip_removed_entity(hass: HomeAssistant) -> None:
+    """Test an entity removed during a sequential update is not updated."""
+    platform = MockPlatform()
+
+    mock_platform(hass, "platform.test_domain", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component._platforms = {}
+
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
+
+    handle = list(component._platforms.values())[-1]
+    updated: list[str] = []
+
+    class SyncEntity(MockEntity):
+        """Mock entity that has update."""
+
+        def update(self) -> None:
+            pass
+
+        async def async_update_ha_state(self, *args: Any, **kwargs: Any) -> None:
+            updated.append(self.entity_id)
+            if self is entity1:
+                await entity2.async_remove()
+
+    entity1 = SyncEntity(name="first")
+    entity2 = SyncEntity(name="second")
+    entity3 = SyncEntity(name="third")
+
+    await handle.async_add_entities([entity1, entity2, entity3])
+    assert handle._update_in_sequence is True
+
+    await handle._async_update_entity_states()
+    assert updated == [entity1.entity_id, entity3.entity_id]
+
+
 async def test_raise_error_on_update(hass: HomeAssistant) -> None:
     """Test the add entity if they raise an error on update."""
     updates = []
@@ -1183,7 +1220,7 @@ async def test_setup_entry_platform_not_ready(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
@@ -1204,7 +1241,7 @@ async def test_setup_entry_platform_not_ready_with_message(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
@@ -1231,7 +1268,7 @@ async def test_setup_entry_platform_not_ready_from_exception(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
@@ -1252,7 +1289,7 @@ async def test_reset_cancels_retry_setup(hass: HomeAssistant) -> None:
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     assert len(mock_call_later.mock_calls) == 1
     assert len(mock_call_later.return_value.mock_calls) == 0
@@ -1276,7 +1313,7 @@ async def test_reset_cancels_retry_setup_when_not_started(hass: HomeAssistant) -
         hass, platform_name=config_entry.domain, platform=platform
     )
 
-    assert not await ent_platform.async_setup_entry(config_entry)
+    assert await ent_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
     assert (
         hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 1
@@ -1301,7 +1338,7 @@ async def test_stop_shutdown_cancels_retry_setup_and_interval_listener(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     assert len(mock_call_later.mock_calls) == 1
     assert len(mock_call_later.return_value.mock_calls) == 0
@@ -3102,10 +3139,18 @@ async def test_add_entity_unknown_subentry(
     ) in caplog.text
 
 
+@pytest.mark.parametrize(
+    "device_info_type",
+    [
+        pytest.param(dict, id="dict"),
+        pytest.param(dr.ChildDeviceInfo, id="child_device_info"),
+    ],
+)
 async def test_device_info_child_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    device_info_type: Callable[..., dr.ChildDeviceInfo | dict[str, Any]],
 ) -> None:
     """Test a child device info creates a child device and binds the entity."""
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -3128,11 +3173,11 @@ async def test_device_info_child_device(
                     unique_id="power",
                     has_entity_name=True,
                     name="Power",
-                    device_info={
-                        "identifiers": {(config_entry.domain, "strip_outlet_1")},
-                        "name": "Outlet 1",
-                        "parent_device_id": parent.id,
-                    },
+                    device_info=device_info_type(
+                        identifiers={(config_entry.domain, "strip_outlet_1")},
+                        name="Outlet 1",
+                        parent_device_id=parent.id,
+                    ),
                 ),
             ]
         )
@@ -3167,10 +3212,18 @@ async def test_device_info_child_device(
     assert state.name == "Outlet 1 Power"
 
 
+@pytest.mark.parametrize(
+    "device_info_type",
+    [
+        pytest.param(dict, id="dict"),
+        pytest.param(dr.ChildDeviceInfo, id="child_device_info"),
+    ],
+)
 async def test_device_info_child_device_invalid(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
+    device_info_type: Callable[..., dr.ChildDeviceInfo | dict[str, Any]],
 ) -> None:
     """Test an entity with an invalid child device info is not added."""
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -3186,11 +3239,11 @@ async def test_device_info_child_device_invalid(
             [
                 MockEntity(
                     unique_id="power",
-                    device_info={
-                        "identifiers": {(config_entry.domain, "strip_outlet_1")},
-                        "name": "Outlet 1",
-                        "parent_device_id": "nonexistent-device-id",
-                    },
+                    device_info=device_info_type(
+                        identifiers={(config_entry.domain, "strip_outlet_1")},
+                        name="Outlet 1",
+                        parent_device_id="nonexistent-device-id",
+                    ),
                 ),
             ]
         )
@@ -3304,3 +3357,21 @@ async def test_device_info_parent_device_id_routing(
         )
         is None
     )
+
+
+async def test_reset_cancels_polling_timer_without_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test reset stops polling when every entity was removed beforehand."""
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(name="test", should_poll=True)
+    await platform.async_add_entities([entity])
+    assert platform._async_polling_timer is not None
+
+    await entity.async_remove()
+    assert not platform.entities
+    assert platform._async_polling_timer is not None
+
+    await platform.async_reset()
+
+    assert platform._async_polling_timer is None

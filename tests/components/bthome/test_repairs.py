@@ -78,7 +78,75 @@ async def test_encryption_downgrade_creates_issue(
     assert issue is not None
     assert issue.data is not None
     assert issue.data["entry_id"] == entry.entry_id
+    assert issue.config_entry_id == entry.entry_id
     assert issue.is_fixable is True
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_encryption_downgrade_links_existing_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a persisted issue not yet linked to the entry gets linked."""
+    entry, callback = await _setup_entry(hass)
+    issue_id = get_encryption_issue_id(entry.entry_id)
+    callback(TEMP_HUMI_ENCRYPTED_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="encryption_removed",
+        translation_placeholders={"name": entry.title},
+        data={"entry_id": entry.entry_id},
+    )
+    issue_registry.async_ignore(DOMAIN, issue_id, True)
+
+    caplog.clear()
+    callback(PRST_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.dismissed_version is not None
+    # The issue already existed, so the user was warned before
+    assert not any(
+        record.levelno == logging.WARNING and "unencrypted" in record.message
+        for record in caplog.records
+    )
+
+
+async def test_unlinked_issue_removed_with_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a persisted issue not yet linked to the entry is removed with it."""
+    entry, _ = await _setup_entry(hass)
+    issue_id = get_encryption_issue_id(entry.entry_id)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="encryption_removed",
+        translation_placeholders={"name": entry.title},
+        data={"entry_id": entry.entry_id},
+    )
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_encryption_downgrade_warning_only_logged_once(

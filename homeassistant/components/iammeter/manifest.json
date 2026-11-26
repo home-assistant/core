@@ -3,9 +3,10 @@
   "name": "IamMeter",
   "categories": ["energy.meters_monitoring"],
   "codeowners": ["@lewei50", "@IAMMETER", "@miwyf"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/iammeter",
   "iot_class": "local_polling",
   "loggers": ["iammeter"],
   "quality_scale": "legacy",
-  "requirements": ["iammeter==0.2.1"]
+  "requirements": ["iammeter==0.3.0"]
 }

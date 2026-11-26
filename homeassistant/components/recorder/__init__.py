@@ -4,6 +4,8 @@ import logging
 from typing import Any
 
 import probatio
+from sqlalchemy import URL, make_url
+from sqlalchemy.exc import ArgumentError
 
 from homeassistant.const import CONF_EXCLUDE, EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant, callback
@@ -16,7 +18,7 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
-from homeassistant.helpers.recorder import DATA_INSTANCE
+from homeassistant.helpers.recorder import DATA_INSTANCE, get_instance
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.event_type import EventType
 
@@ -25,6 +27,7 @@ from homeassistant.util.event_type import EventType
 # startup
 from . import (
     backup,  # noqa: F401
+    database_usage,
     entity_options,
     entity_registry,
     websocket_api,
@@ -33,19 +36,17 @@ from .const import (
     CONF_DB_INTEGRITY_CHECK,
     DOMAIN,
     INTEGRATION_PLATFORM_METHODS,
-    SQLITE_URL_PREFIX,
     SupportedDialect,
 )
 from .core import Recorder
 from .entity_options import is_entity_recorded
 from .services import async_setup_services
 from .tasks import AddRecorderPlatformTask
-from .util import get_instance
+from .util import get_engine_db_url, is_file_sqlite_url
 
 _LOGGER = logging.getLogger(__name__)
 
 
-DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
 DEFAULT_DB_INTEGRITY_CHECK = True
 DEFAULT_DB_MAX_RETRIES = 10
@@ -81,10 +82,10 @@ ALLOW_IN_MEMORY_DB = False
 __all__ = [
     "CONF_DB_URL",
     "DEFAULT_DB_FILE",
-    "DEFAULT_URL",
     "DOMAIN",
     "Recorder",
     "SupportedDialect",
+    "get_engine_db_url",
     "get_instance",
     "is_entity_recorded",
 ]
@@ -92,11 +93,27 @@ __all__ = [
 
 def validate_db_url(db_url: str) -> Any:
     """Validate database URL."""
+    # An empty URL falls back to the default database in async_setup
+    if not db_url:
+        return db_url
+    try:
+        url = make_url(db_url)
+    except (ArgumentError, ValueError) as err:
+        raise probatio.Invalid("Invalid database URL") from err
+    # SQLAlchemy only rejects these when creating the engine, after the
+    # recorder may already have moved away the file named in the URL
+    if (
+        url.get_backend_name() == "sqlite"
+        and url.get_driver_name() == "pysqlite"
+        and (url.username or url.password or url.host or url.port)
+    ):
+        raise probatio.Invalid("Invalid database URL")
     # Don't allow on-memory sqlite databases
     if (
-        db_url == SQLITE_URL_PREFIX
-        or (db_url.startswith(SQLITE_URL_PREFIX) and ":memory:" in db_url)
-    ) and not ALLOW_IN_MEMORY_DB:
+        url.get_backend_name() == "sqlite"
+        and not is_file_sqlite_url(url)
+        and not ALLOW_IN_MEMORY_DB
+    ):
         raise probatio.Invalid("In-memory SQLite database is not supported")
 
     return db_url
@@ -171,6 +188,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     get_instance.cache_clear()
     entity_registry.async_setup(hass)
+    database_usage.async_setup(hass)
     entity_options.async_setup(hass)
     instance.async_initialize()
     instance.async_register()
@@ -203,4 +221,6 @@ async def _async_setup_integration_platform(
 
 def get_default_url(hass: HomeAssistant) -> str:
     """Return the default URL."""
-    return DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
+    return URL.create(
+        "sqlite", database=hass.config.path(DEFAULT_DB_FILE)
+    ).render_as_string()

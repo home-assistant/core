@@ -44,6 +44,7 @@
   "categories": ["vehicles_transport.bikes_scooters"],
   "codeowners": ["@JamieMagee"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/specialized_turbo",
   "integration_type": "device",

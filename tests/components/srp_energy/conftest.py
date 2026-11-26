@@ -122,6 +122,6 @@ async def init_integration(
 def mock_setup_entry() -> Generator[MagicMock]:
     """Mock async_setup_entry."""
     with patch(
-        "homeassistant.components.srp_energy.async_setup_entry", return_value=True
+        "homeassistant.components.srp_energy.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

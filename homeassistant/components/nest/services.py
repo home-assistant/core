@@ -1,5 +1,7 @@
 """Define services for the Nest integration."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.climate import (
@@ -11,7 +13,17 @@ from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 
-SERVICE_SET_FAN_TIMER = "set_fan_timer"
+
+class NestService(StrEnum):
+    """Store keys for Nest services."""
+
+    SET_FAN_TIMER = "set_fan_timer"
+
+
+class NestServiceArgument(StrEnum):
+    """Store keys for Nest service arguments."""
+
+    DURATION = "duration"
 
 
 @callback
@@ -20,10 +32,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_FAN_TIMER,
+        NestService.SET_FAN_TIMER,
         entity_domain=CLIMATE_DOMAIN,
         schema={
-            probatio.Required("duration"): cv.time_period,
+            probatio.Required(NestServiceArgument.DURATION): cv.time_period,
         },
         func="async_set_fan_timer",
         required_features=[ClimateEntityFeature.FAN_MODE],

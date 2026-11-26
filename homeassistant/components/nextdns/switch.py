@@ -85,10 +85,22 @@ SWITCHES = (
         state=lambda data: data.block_disguised_trackers,
     ),
     NextDnsSwitchEntityDescription(
+        key="block_rotating_ad_domains",
+        translation_key="block_rotating_ad_domains",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_rotating_ad_domains,
+    ),
+    NextDnsSwitchEntityDescription(
         key="ai_threat_detection",
         translation_key="ai_threat_detection",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.ai_threat_detection,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_algorithmically_generated_domains",
+        translation_key="block_algorithmically_generated_domains",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_algorithmically_generated_domains,
     ),
     NextDnsSwitchEntityDescription(
         key="block_csam",
@@ -127,10 +139,28 @@ SWITCHES = (
         state=lambda data: data.block_decentralized_web_gateways,
     ),
     NextDnsSwitchEntityDescription(
+        key="block_fast_flux_networks",
+        translation_key="block_fast_flux_networks",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_fast_flux_networks,
+    ),
+    NextDnsSwitchEntityDescription(
         key="block_free_hosting_domains",
         translation_key="block_free_hosting_domains",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.block_free_hosting_domains,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_high_risk_tlds",
+        translation_key="block_high_risk_tlds",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_high_risk_tlds,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="block_newly_active_domains",
+        translation_key="block_newly_active_domains",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_newly_active_domains,
     ),
     NextDnsSwitchEntityDescription(
         key="block_residential_hosting",
@@ -145,6 +175,12 @@ SWITCHES = (
         state=lambda data: data.block_tunneling_endpoints,
     ),
     NextDnsSwitchEntityDescription(
+        key="block_untrusted_certificates",
+        translation_key="block_untrusted_certificates",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_untrusted_certificates,
+    ),
+    NextDnsSwitchEntityDescription(
         key="cryptojacking_protection",
         translation_key="cryptojacking_protection",
         entity_category=EntityCategory.CONFIG,
@@ -155,6 +191,18 @@ SWITCHES = (
         translation_key="dga_protection",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.dga_protection,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="dns_data_exfiltration_protection",
+        translation_key="dns_data_exfiltration_protection",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.dns_data_exfiltration_protection,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="dns_payload_delivery_protection",
+        translation_key="dns_payload_delivery_protection",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.dns_payload_delivery_protection,
     ),
     NextDnsSwitchEntityDescription(
         key="dns_rebinding_protection",

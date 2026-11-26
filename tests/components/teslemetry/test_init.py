@@ -1,7 +1,7 @@
 """Test the Teslemetry init."""
 
 import asyncio
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable, Generator
 from contextlib import asynccontextmanager
 from copy import deepcopy
 from datetime import timedelta
@@ -9,22 +9,19 @@ import logging
 import time
 from types import MappingProxyType
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aiohttp import ClientConnectionError, ClientError, ClientResponseError
-from aiopowerwall import (
-    PowerwallAuthenticationError,
-    PowerwallConnectionError,
-    PowerwallError,
-    PowerwallProtocolError,
-    PowerwallRateLimitError,
-)
 from bleak.exc import BleakError
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode
 from tesla_fleet_api.exceptions import (
@@ -42,6 +39,13 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 from tesla_fleet_api.tesla import EnergySiteRouter, VehicleRouter
+from tesla_fleet_api.tesla.powerwall import (
+    PowerwallAuthenticationError,
+    PowerwallConnectionError,
+    PowerwallError,
+    PowerwallProtocolError,
+    PowerwallRateLimitError,
+)
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.tesla.vehicle.stream_glue import BleBroadcastStreamGlue
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
@@ -53,11 +57,14 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.lock import LockState
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -75,6 +82,8 @@ from homeassistant.components.teslemetry.const import (
     CONF_SITE_ID,
     CONF_VIN,
     DOMAIN,
+    LABS_CHARGE_ON_SOLAR_FEATURE,
+    STREAM_DISCONNECT_GRACE,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
 )
@@ -83,6 +92,7 @@ from homeassistant.components.teslemetry.const import (
 from homeassistant.components.teslemetry.coordinator import (
     ENERGY_CONFIG_INTERVAL,
     ENERGY_LIVE_INTERVAL,
+    ENERGY_LIVE_STREAM_TIMEOUT,
     INSUFFICIENT_CREDITS_RETRY_AFTER,
     METADATA_INTERVAL,
     VEHICLE_INTERVAL,
@@ -107,8 +117,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -143,6 +154,7 @@ from .const import (
 )
 
 LIVE_STATUS_ENTITY_ID = "sensor.energy_site_battery_power"
+STREAMING_ALLOWANCE_ISSUE_ID = f"streaming_allowance_{VIN}"
 
 
 async def _async_update_live_status(hass: HomeAssistant) -> None:
@@ -173,6 +185,7 @@ CONNECTION_ERRORS = [
 VEHICLE_ERRORS = [
     *ERRORS,
     (InsufficientCredits, ConfigEntryState.SETUP_RETRY),
+    (Forbidden, ConfigEntryState.SETUP_RETRY),
 ]
 
 
@@ -803,6 +816,106 @@ async def test_missing_token_data(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
+@pytest.fixture
+def config_refused_listeners() -> Generator[list[Callable[[str, str | None], None]]]:
+    """Capture the registered streaming config refused listeners."""
+    listeners: list[Callable[[str, str | None], None]] = []
+
+    def listen(callback: Callable[[str, str | None], None]) -> Callable[[], None]:
+        listeners.append(callback)
+        return lambda: listeners.remove(callback)
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_config_refused",
+        side_effect=listen,
+    ):
+        yield listeners
+
+
+@pytest.mark.parametrize(
+    ("display_name", "vehicle_name"),
+    [
+        pytest.param("Test", "Test", id="named"),
+        pytest.param(None, VIN, id="unnamed"),
+    ],
+)
+async def test_streaming_allowance_repair(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_products: AsyncMock,
+    config_refused_listeners: list[Callable[[str, str | None], None]],
+    display_name: str | None,
+    vehicle_name: str,
+) -> None:
+    """Test a refusal over the streaming allowance raises a repair for the vehicle."""
+    products = deepcopy(PRODUCTS)
+    products["response"][0]["display_name"] = display_name
+    mock_products.return_value = products
+    await setup_platform(hass)
+
+    assert issue_registry.async_get_issue(DOMAIN, STREAMING_ALLOWANCE_ISSUE_ID) is None
+
+    config_refused_listeners[0](
+        "streaming_allowance_exceeded",
+        "This streaming configuration uses 120.5% of the base plan's streaming allowance.",
+    )
+
+    issue = issue_registry.async_get_issue(DOMAIN, STREAMING_ALLOWANCE_ISSUE_ID)
+    assert issue is not None
+    assert issue.translation_key == "streaming_allowance"
+    assert issue.translation_placeholders == {"vehicle": vehicle_name}
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert not issue.is_fixable
+    assert not issue.is_persistent
+    assert (
+        issue.learn_more_url == f"https://teslemetry.com/console/vehicle/{VIN}/fields"
+    )
+
+
+async def test_config_refused_other_error_no_repair(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config_refused_listeners: list[Callable[[str, str | None], None]],
+) -> None:
+    """Test a refusal for another reason raises no repair."""
+    await setup_platform(hass)
+
+    config_refused_listeners[0]("invalid_field", None)
+
+    assert issue_registry.async_get_issue(DOMAIN, STREAMING_ALLOWANCE_ISSUE_ID) is None
+
+
+async def test_streaming_allowance_repair_cleared_on_reload(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config_refused_listeners: list[Callable[[str, str | None], None]],
+) -> None:
+    """Test setup clears the repair, including one for a vehicle no longer set up."""
+    entry = await setup_platform(hass)
+    config_refused_listeners[0]("streaming_allowance_exceeded", None)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "streaming_allowance_LRW3F7EK4NC799999",
+        config_entry_id=entry.entry_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="streaming_allowance",
+        translation_placeholders={"vehicle": "Gone"},
+    )
+
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, STREAMING_ALLOWANCE_ISSUE_ID) is None
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "streaming_allowance_LRW3F7EK4NC799999")
+        is None
+    )
+    # The unload removed the first listener, so only the reloaded one remains.
+    assert len(config_refused_listeners) == 1
+
+
 async def test_vehicle_streaming_version_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -1249,6 +1362,39 @@ async def test_insufficient_credits_backs_off_polling(
     assert coordinator.last_exception.retry_after == INSUFFICIENT_CREDITS_RETRY_AFTER
 
 
+async def test_vehicle_data_missing_scopes_repair(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Missing scopes raise a repair that clears once vehicle data is readable."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    issue_id = f"missing_scopes_{entry.entry_id}"
+
+    mock_vehicle_data.side_effect = Forbidden
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.test_battery_level").state == STATE_UNAVAILABLE
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert (
+        issue.learn_more_url == "https://teslemetry.com/login?prompt_missing_scopes=1"
+    )
+
+    mock_vehicle_data.side_effect = None
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
 def _oauth_session(hass: HomeAssistant, entry: MockConfigEntry) -> OAuth2Session:
     """Build an OAuth2Session for directly exercising _get_access_token."""
     return OAuth2Session(hass, entry, TeslemetryImplementation(hass, DOMAIN, CLIENT_ID))
@@ -1373,9 +1519,10 @@ SITE_ID = 123456
 HOST = "192.168.91.1"
 NEW_HOST = "192.168.91.2"
 PASSWORD = "abcde"
-GATEWAY_ISSUE_ID = f"gateway_not_found_{SITE_ID}"
+ENTRY_ID = "01JTESLEMETRYENTRY00000000"
+GATEWAY_ISSUE_ID = f"gateway_not_found_{ENTRY_ID}_{SITE_ID}"
 
-# aiopowerwall's PowerwallClient parses the PEM at construction time, so tests
+# PowerwallClient parses the PEM at construction time, so tests
 # that build one need a real (if undersized, for speed) RSA key rather than
 # arbitrary bytes.
 _TEST_RSA_KEY_PEM = rsa.generate_private_key(
@@ -1387,14 +1534,17 @@ _TEST_RSA_KEY_PEM = rsa.generate_private_key(
 )
 
 
-def _entry_with_powerwall() -> MockConfigEntry:
+def _entry_with_powerwall(
+    entry_id: str = ENTRY_ID, unique_id: str = UNIQUE_ID
+) -> MockConfigEntry:
     """Return a config entry whose energy site subentry is already paired."""
     entry = mock_config_entry()
     return MockConfigEntry(
         domain=entry.domain,
+        entry_id=entry_id,
         version=entry.version,
         minor_version=entry.minor_version,
-        unique_id=entry.unique_id,
+        unique_id=unique_id,
         data=dict(entry.data),
         subentries_data=[
             ConfigSubentryData(
@@ -1629,7 +1779,10 @@ async def test_get_rsa_key_pem_generates_and_caches(hass: HomeAssistant) -> None
     [
         pytest.param(None, {"routed": "local"}, 0, id="local_success"),
         pytest.param(
-            PowerwallError("boom"), {"routed": "cloud"}, 1, id="cloud_fallback"
+            PowerwallConnectionError("unreachable"),
+            {"routed": "cloud"},
+            1,
+            id="cloud_fallback",
         ),
     ],
 )
@@ -1659,7 +1812,10 @@ async def test_energy_site_router_command_routing(
     local = AsyncMock(side_effect=local_error, return_value={"routed": "local"})
     cloud = AsyncMock(return_value={"routed": "cloud"})
     with (
-        patch("aiopowerwall.energysite.PowerwallEnergySite.backup", new=local),
+        patch(
+            "tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.backup",
+            new=local,
+        ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.backup",
             new=cloud,
@@ -1670,6 +1826,45 @@ async def test_energy_site_router_command_routing(
     assert result == expected
     local.assert_awaited_once_with(50)
     assert cloud.await_count == cloud_awaits
+
+
+async def test_energy_site_router_command_rejected_locally(
+    hass: HomeAssistant,
+) -> None:
+    """A command the Powerwall rejects is not retried on the cloud."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    router = entry.runtime_data.energysites[0].api
+    assert isinstance(router, EnergySiteRouter)
+
+    local = AsyncMock(side_effect=PowerwallError("rejected"))
+    cloud = AsyncMock(return_value={"routed": "cloud"})
+    with (
+        patch(
+            "tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.backup",
+            new=local,
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.backup",
+            new=cloud,
+        ),
+        pytest.raises(PowerwallError, match="rejected"),
+    ):
+        await router.backup(50)
+
+    local.assert_awaited_once_with(50)
+    cloud.assert_not_awaited()
 
 
 async def _setup_entry_with_powerwall(
@@ -1797,10 +1992,112 @@ async def test_local_gateway_not_found_raises_repair(
     assert issue.is_fixable
     assert issue.translation_key == "gateway_not_found"
     assert issue.translation_placeholders == {"site": "Energy Site"}
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.config_subentry_id == subentry.subentry_id
     assert issue.data == {
         "entry_id": entry.entry_id,
         "subentry_id": subentry.subentry_id,
     }
+
+
+async def test_gateway_repair_deleted_with_subentry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """Removing the energy site subentry deletes its gateway repair."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = PowerwallConnectionError("unreachable")
+    await _setup_entry_with_powerwall(hass, entry, AsyncMock(return_value=None))
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is not None
+    subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0]
+
+    with patch.object(hass.config_entries, "async_schedule_reload"):
+        assert hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
+
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+
+
+async def test_gateway_repair_not_linked_to_subentry_removed_during_setup(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """A subentry removed during the gateway lookup isn't linked to the repair."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0]
+    mock_powerwall_connect.side_effect = PowerwallConnectionError("unreachable")
+
+    async def _remove_subentry_and_find_nothing() -> None:
+        hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
+
+    with patch.object(hass.config_entries, "async_schedule_reload"):
+        await _setup_entry_with_powerwall(
+            hass, entry, AsyncMock(side_effect=_remove_subentry_and_find_nothing)
+        )
+
+    assert entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.config_subentry_id is None
+
+
+async def test_gateway_repairs_per_entry_for_shared_site(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """Two accounts sharing an energy site keep separate gateway repairs."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = PowerwallConnectionError("unreachable")
+    await _setup_entry_with_powerwall(hass, entry, AsyncMock(return_value=None))
+    ir.async_ignore_issue(hass, DOMAIN, GATEWAY_ISSUE_ID, True)
+
+    other_entry = _entry_with_powerwall("01JTESLEMETRYOTHER00000000", "other-account")
+    other_entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = None
+    await _setup_entry_with_powerwall(hass, other_entry, AsyncMock(return_value=None))
+
+    issue = issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.dismissed_version is not None
+
+    await hass.config_entries.async_remove(other_entry.entry_id)
+
+    issue = issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+
+
+async def test_gateway_repair_cleared_on_first_local_poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+    mock_powerwall_live_status: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A repair raised by a failed setup connect clears once a local poll succeeds."""
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = PowerwallConnectionError("timed out")
+
+    await _setup_entry_with_powerwall(hass, entry, AsyncMock(return_value=None))
+
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is not None
+
+    await _tick_local_live(hass, freezer, 1)
+
+    assert mock_powerwall_live_status.await_count == 1
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+    assert "could not be found" in caplog.text
+    assert "timed out" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1925,19 +2222,150 @@ async def test_local_gateway_repair_cleared_without_subentry(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """The gateway repair clears once the site is no longer set up for local control."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    issue_id = _create_gateway_issue(hass, SITE_ID, entry.entry_id, entry.entry_id)
+
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+def _create_gateway_issue(
+    hass: HomeAssistant,
+    site_id: int,
+    entry_id: str,
+    config_entry_id: str | None,
+    issue_id: str | None = None,
+) -> str:
+    """Create a gateway repair issue owned by the given config entry."""
+    issue_id = issue_id or f"gateway_not_found_{entry_id}_{site_id}"
     ir.async_create_issue(
         hass,
         DOMAIN,
-        GATEWAY_ISSUE_ID,
+        issue_id,
+        config_entry_id=config_entry_id,
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key="gateway_not_found",
         translation_placeholders={"site": "Energy Site"},
+        data={"entry_id": entry_id, "subentry_id": "subentry_id"},
     )
+    return issue_id
 
-    await _setup_account_no_subentry(hass)
 
-    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+@pytest.mark.parametrize(
+    ("key_error", "connect_error"),
+    [
+        pytest.param(None, PowerwallConnectionError("unreachable"), id="not_found"),
+        pytest.param(
+            PrivateKeyError("malformed", "Not a valid PEM private key"),
+            None,
+            id="key_load_failure",
+        ),
+    ],
+)
+async def test_ignored_gateway_repair_kept_on_setup(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+    key_error: Exception | None,
+    connect_error: Exception | None,
+) -> None:
+    """An ignored gateway repair is kept when it's still valid or can't be checked."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    _create_gateway_issue(hass, SITE_ID, entry.entry_id, entry.entry_id)
+    ir.async_ignore_issue(hass, DOMAIN, GATEWAY_ISSUE_ID, True)
+    issue = issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID)
+    assert issue is not None
+    dismissed_version = issue.dismissed_version
+    assert dismissed_version is not None
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+    mock_powerwall_connect.side_effect = connect_error
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+            side_effect=key_error,
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address",
+            return_value=None,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID)
+    assert issue is not None
+    assert issue.dismissed_version == dismissed_version
+    assert not [event for event in events if event.data["action"] == "remove"]
+
+
+async def test_stale_gateway_repairs_deleted_on_setup(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Gateway repairs of the entry's sites which aren't set up are deleted.
+
+    Gateway repairs owned by another config entry, or created before issues were
+    linked to their config entry, are left alone. Linked repairs keyed by site
+    only, from before repairs were keyed by config entry, are deleted.
+    """
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain=DOMAIN)
+    other_entry.add_to_hass(hass)
+    # Site 98765 is in the products but without access, 111 is gone
+    stale_issue_ids = [
+        *(
+            _create_gateway_issue(hass, site_id, entry.entry_id, entry.entry_id)
+            for site_id in (98765, 111)
+        ),
+        _create_gateway_issue(
+            hass,
+            SITE_ID,
+            entry.entry_id,
+            entry.entry_id,
+            issue_id=f"gateway_not_found_{SITE_ID}",
+        ),
+    ]
+    kept_issue_ids = [
+        _create_gateway_issue(hass, 222, other_entry.entry_id, other_entry.entry_id),
+        _create_gateway_issue(hass, 333, entry.entry_id, None),
+    ]
+
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    for issue_id in stale_issue_ids:
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    for issue_id in kept_issue_ids:
+        assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_gateway_repairs_refresh_cancelled_on_setup_failure(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, mock_live_status: AsyncMock
+) -> None:
+    """A failed setup leaves the gateway repairs alone."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    issue_id = _create_gateway_issue(hass, 111, entry.entry_id, entry.entry_id)
+    mock_live_status.side_effect = TeslaFleetError
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 async def test_stale_cleanup_preserves_foreign_subentry(hass: HomeAssistant) -> None:
@@ -2112,6 +2540,7 @@ def test_stream_topic_allowlist() -> None:
         "site_info",
         "tariff_content_v2",
         "energy_totals",
+        "wall_connector_totals",
     ]
 
 
@@ -2214,6 +2643,7 @@ async def test_energy_stream_stop_does_not_fail_coordinators(
 
 async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_add_connection_listener: MagicMock,
     mock_energy_live_stream: MagicMock,
     mock_energy_info_stream: MagicMock,
@@ -2225,9 +2655,10 @@ async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
     assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
     assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
 
-    # A stream disconnect fails the live and info/tariff coordinators.
+    # A stream that stays down past the grace fails the live and info/tariff
+    # coordinators.
     mock_add_connection_listener.send(False)
-    await hass.async_block_till_done()
+    await _tick(hass, freezer, STREAM_GRACE)
 
     assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
     assert hass.states.get("calendar.energy_site_buy_tariff").state == STATE_UNAVAILABLE
@@ -2254,6 +2685,205 @@ async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
         for flow in hass.config_entries.flow.async_progress()
         if flow["handler"] == DOMAIN
     ]
+
+
+LIVE_STATUS_TIMEOUT_MESSAGE = "No live status received from the Teslemetry stream"
+
+
+async def test_energy_live_stream_timeout_marks_unavailable_and_recovers(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_live_stream: MagicMock,
+) -> None:
+    """A connected stream without live_status fails the live coordinator."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    await _tick(
+        hass,
+        freezer,
+        ENERGY_LIVE_STREAM_TIMEOUT - timedelta(seconds=1),
+        wait_background_tasks=True,
+    )
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+
+    await _tick(hass, freezer, timedelta(seconds=1), wait_background_tasks=True)
+    assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
+
+    # Continued silence does not log again.
+    await _tick(hass, freezer, ENERGY_LIVE_STREAM_TIMEOUT, wait_background_tasks=True)
+    assert [
+        record.levelno
+        for record in caplog.records
+        if LIVE_STATUS_TIMEOUT_MESSAGE in record.getMessage()
+    ] == [logging.ERROR]
+
+    live_status = deepcopy(LIVE_STATUS["response"])
+    live_status["solar_power"] = 456
+    mock_energy_live_stream.send(live_status)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_site_solar_power").state == "0.456"
+
+    # The document restarted the timeout.
+    await _tick(
+        hass,
+        freezer,
+        ENERGY_LIVE_STREAM_TIMEOUT - timedelta(seconds=1),
+        wait_background_tasks=True,
+    )
+    assert hass.states.get("sensor.energy_site_solar_power").state == "0.456"
+
+
+async def test_energy_stream_quick_reconnect_stays_available(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    mock_add_connection_listener: MagicMock,
+) -> None:
+    """A drop that reconnects within the grace keeps energy entities available."""
+    await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+
+    mock_add_connection_listener.send(False)
+    await _tick(hass, freezer, STREAM_GRACE - timedelta(seconds=1))
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+
+    mock_add_connection_listener.send(True)
+    # The reconnect cancelled the grace timer, so passing its deadline fails nothing.
+    await _tick(hass, freezer, STREAM_GRACE)
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+    assert "Disconnected from the Teslemetry stream" not in caplog.text
+
+
+async def test_energy_stream_failed_reconnects_mark_unavailable(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    mock_add_connection_listener: MagicMock,
+) -> None:
+    """Reconnects that keep failing past the grace fail the energy coordinators."""
+    await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+
+    mock_add_connection_listener.send(False)
+    await _tick(hass, freezer, STREAM_GRACE - timedelta(seconds=1))
+    # A failed reconnect attempt reports another disconnect; it must not
+    # restart the grace.
+    mock_add_connection_listener.send(False)
+    await _tick(hass, freezer, timedelta(seconds=1))
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
+    assert hass.states.get("calendar.energy_site_buy_tariff").state == STATE_UNAVAILABLE
+    assert [
+        record
+        for record in caplog.records
+        if record.levelno == logging.ERROR
+        and "Disconnected from the Teslemetry stream" in record.getMessage()
+    ]
+
+
+async def test_energy_stream_grace_cancelled_on_unload(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    mock_add_connection_listener: MagicMock,
+) -> None:
+    """Unloading during the grace cancels the pending coordinator failure."""
+    entry = await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+
+    mock_add_connection_listener.send(False)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await _tick(hass, freezer, STREAM_GRACE)
+
+    assert "Disconnected from the Teslemetry stream" not in caplog.text
+
+
+async def test_energy_stream_grace_expiring_while_stopping(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    mock_add_connection_listener: MagicMock,
+) -> None:
+    """A grace that expires while Home Assistant stops fails nothing."""
+    await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+
+    mock_add_connection_listener.send(False)
+    hass.set_state(CoreState.stopping)
+    await _tick(hass, freezer, STREAM_GRACE)
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+    assert "Disconnected from the Teslemetry stream" not in caplog.text
+
+
+async def test_energy_live_stream_timeout_keeps_disconnect_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    mock_add_connection_listener: MagicMock,
+    mock_energy_live_stream: MagicMock,
+) -> None:
+    """A dropped stream reports its disconnect, not a live_status timeout."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    with patch(
+        "teslemetry_stream.TeslemetryStream.connected",
+        new_callable=PropertyMock,
+        return_value=False,
+    ):
+        mock_add_connection_listener.send(False)
+        await _tick(
+            hass, freezer, ENERGY_LIVE_STREAM_TIMEOUT, wait_background_tasks=True
+        )
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
+    assert "Disconnected from the Teslemetry stream" in caplog.text
+    assert LIVE_STATUS_TIMEOUT_MESSAGE not in caplog.text
+
+    mock_add_connection_listener.send(True)
+    mock_energy_live_stream.send(deepcopy(LIVE_STATUS["response"]))
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+
+
+async def test_energy_live_stream_timeout_rechecks_after_reconnect(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A timeout during a drop waits for the reconnected stream to stay silent."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    with patch(
+        "teslemetry_stream.TeslemetryStream.connected",
+        new_callable=PropertyMock,
+        return_value=False,
+    ):
+        await _tick(
+            hass, freezer, ENERGY_LIVE_STREAM_TIMEOUT, wait_background_tasks=True
+        )
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert LIVE_STATUS_TIMEOUT_MESSAGE not in caplog.text
+
+    await _tick(hass, freezer, ENERGY_LIVE_STREAM_TIMEOUT, wait_background_tasks=True)
+    assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
+    assert LIVE_STATUS_TIMEOUT_MESSAGE in caplog.text
+
+
+async def test_energy_live_stream_timeout_cancelled_on_unload(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Unloading cancels the pending energy live stream timeout."""
+    entry = await setup_platform(hass, [Platform.SENSOR])
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await _tick(hass, freezer, ENERGY_LIVE_STREAM_TIMEOUT, wait_background_tasks=True)
+
+    assert LIVE_STATUS_TIMEOUT_MESSAGE not in caplog.text
 
 
 CLOUD_RESULT = {"response": {"result": True, "reason": "cloud"}}
@@ -2464,8 +3094,7 @@ async def test_vehicle_bluetooth_out_of_range(
         ):
             assert isinstance(router, VehicleRouter)
 
-            with caplog.at_level(logging.DEBUG):
-                assert await router.flash_lights() == CLOUD_RESULT
+            assert await router.flash_lights() == CLOUD_RESULT
 
             cloud.assert_awaited_once()
             bluetooth_vehicle.flash_lights.assert_not_called()
@@ -3019,6 +3648,55 @@ async def test_user_subentry_persists_across_reload(hass: HomeAssistant) -> None
     assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
 
 
+async def test_labs_charge_on_solar_toggle_triggers_reload(
+    hass: HomeAssistant,
+) -> None:
+    """Test labs charge-on-solar feature toggle schedules an integration reload."""
+    assert await async_setup_component(hass, "labs", {})
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        await async_update_preview_feature(
+            hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, True
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+
+async def test_charge_on_solar_settings_removed_with_entry(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the charge-on-solar settings are stored per entry and removed with it."""
+    assert await async_setup_component(hass, "labs", {})
+    await async_update_preview_feature(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, True)
+    entry = await setup_platform(hass, [Platform.NUMBER])
+    storage_key = f"{DOMAIN}.charge_on_solar.{entry.entry_id}"
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NumberService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+            NumberServiceArgument.VALUE: 35,
+        },
+        blocking=True,
+    )
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass_storage[storage_key]["data"] == {
+        VIN: {"enabled": None, "lower_limit": 35, "charge_limit_soc": None}
+    }
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert storage_key not in hass_storage
+
+
 # A paired site's local live_status reading.
 _LOCAL_LIVE_STATUS = {
     "response": {
@@ -3079,13 +3757,20 @@ async def _setup_energy_site_entry(
         await hass.async_block_till_done()
 
 
+STREAM_GRACE = timedelta(seconds=STREAM_DISCONNECT_GRACE)
+
+
 async def _tick(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, interval: timedelta
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    interval: timedelta,
+    *,
+    wait_background_tasks: bool = False,
 ) -> None:
     """Advance time by one interval and let the timers run."""
     freezer.tick(interval)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=wait_background_tasks)
 
 
 async def _tick_local_live(
@@ -3147,6 +3832,33 @@ async def test_paired_site_local_gap_keeps_cloud_value(
     assert hass.states.get("sensor.energy_site_battery_power").state == "3.0"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("local_load_power", "expected"),
+    [
+        pytest.param(-1500, "0.0", id="negative_clamped_to_zero"),
+        pytest.param(4000, "4.0", id="positive_unchanged"),
+    ],
+)
+async def test_paired_site_local_load_power_clamped_at_zero(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_powerwall_live_status: AsyncMock,
+    local_load_power: int,
+    expected: str,
+) -> None:
+    """A negative local load_power is clamped at 0 and a positive one is kept."""
+    local = deepcopy(_LOCAL_LIVE_STATUS)
+    local["response"]["load_power"] = local_load_power
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(local)
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
+
+    await _tick_local_live(hass, freezer, 1)
+
+    assert hass.states.get("sensor.energy_site_load_power").state == expected
+    assert hass.states.get("sensor.energy_site_battery_power").state == "3.0"
+
+
 async def test_paired_site_config_reads_merge_over_cloud(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -3194,13 +3906,16 @@ async def test_local_command_survives_site_info_push_before_next_poll(
     assert hass.states.get("number.energy_site_backup_reserve").state == "20.0"
 
     with patch(
-        "aiopowerwall.energysite.PowerwallEnergySite.backup",
+        "tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.backup",
         return_value=COMMAND_OK,
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.energy_site_backup_reserve",
+                NumberServiceArgument.VALUE: 80,
+            },
             blocking=True,
         )
     assert hass.states.get("number.energy_site_backup_reserve").state == "80"
@@ -3235,13 +3950,16 @@ async def test_local_command_survives_poll_started_before_it(
     assert mock_powerwall_local_config.call_count == 1
 
     with patch(
-        "aiopowerwall.energysite.PowerwallEnergySite.backup",
+        "tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.backup",
         return_value=COMMAND_OK,
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.energy_site_backup_reserve",
+                NumberServiceArgument.VALUE: 80,
+            },
             blocking=True,
         )
     assert hass.states.get("number.energy_site_backup_reserve").state == "80"
@@ -3308,7 +4026,7 @@ async def test_local_command_survives_failed_poll(
     await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
 
     with patch(
-        f"aiopowerwall.energysite.PowerwallEnergySite.{command}",
+        f"tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.{command}",
         return_value=COMMAND_OK,
     ):
         await hass.services.async_call(*service_call, blocking=True)
@@ -3443,7 +4161,7 @@ async def test_local_command_released_by_reporting_poll(
     assert hass.states.get(entity_id).state == baseline
 
     with patch(
-        f"aiopowerwall.energysite.PowerwallEnergySite.{command}",
+        f"tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.{command}",
         return_value=COMMAND_OK,
     ):
         await hass.services.async_call(*service_call, blocking=True)
@@ -3563,6 +4281,7 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     freezer: FrozenDateTimeFactory,
     mock_site_info: AsyncMock,
     mock_energy_info_stream: MagicMock,
+    mock_energy_tariff_stream: MagicMock,
     entry_factory: Callable[[], MockConfigEntry],
     release: Callable[[HomeAssistant, MagicMock, str], Awaitable[None]],
     platform: Platform,
@@ -3572,7 +4291,7 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     commanded: str,
     confirmed: str,
 ) -> None:
-    """A cloud-owned command value holds through LAN polls until the next cloud site_info."""
+    """A cloud-owned command value holds through other updates until the next cloud site_info."""
     site_info = deepcopy(SITE_INFO)
     site_info["response"]["off_grid_vehicle_charging_reserve_percent"] = 20
     mock_site_info.side_effect = lambda: deepcopy(site_info)
@@ -3581,7 +4300,7 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
 
     with (
         patch(
-            f"aiopowerwall.energysite.PowerwallEnergySite.{command}",
+            f"tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.{command}",
             return_value=COMMAND_OK,
         ),
         patch(
@@ -3593,6 +4312,11 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     assert hass.states.get(entity_id).state == commanded
 
     await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert hass.states.get(entity_id).state == commanded
+
+    # A tariff push republishes the coordinator view without a new site_info.
+    mock_energy_tariff_stream.send(None)
+    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == commanded
 
     # The cloud has not taken the command, and the off-grid reserve moved.
@@ -3777,7 +4501,6 @@ async def test_paired_site_live_read_failure_logging(
             if record.getMessage().startswith("Local live poll")
         ]
 
-    caplog.set_level(logging.DEBUG)
     await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
 
     await _tick_local_live(hass, freezer, 1)
@@ -3930,6 +4653,7 @@ async def test_overlapping_local_live_poll_skips_second_tick(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_paired_stream_push_restores_availability_after_disconnect(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_add_connection_listener: MagicMock,
     mock_energy_live_stream: MagicMock,
 ) -> None:
@@ -3938,7 +4662,7 @@ async def test_paired_stream_push_restores_availability_after_disconnect(
     assert hass.states.get("sensor.energy_site_grid_services_power").state == "0.0"
 
     mock_add_connection_listener.send(False)
-    await hass.async_block_till_done()
+    await _tick(hass, freezer, STREAM_GRACE)
     assert (
         hass.states.get("sensor.energy_site_grid_services_power").state
         == STATE_UNAVAILABLE
@@ -3966,7 +4690,7 @@ async def test_local_config_poll_does_not_clear_stream_error(
     await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SELECT])
 
     mock_add_connection_listener.send(False)
-    await hass.async_block_till_done()
+    await _tick(hass, freezer, STREAM_GRACE)
     assert (
         hass.states.get("select.energy_site_operation_mode").state == STATE_UNAVAILABLE
     )

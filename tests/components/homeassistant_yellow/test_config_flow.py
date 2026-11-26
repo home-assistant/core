@@ -69,7 +69,7 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
         "homeassistant.components.homeassistant_yellow.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -82,7 +82,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.homeassistant_yellow.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
@@ -129,7 +129,7 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.homeassistant_yellow.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "system"}
@@ -394,7 +394,9 @@ async def test_firmware_options_flow_zigbee(hass: HomeAssistant) -> None:
                 ),
             ],
         ),
-        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
+        ),
     ):
         pick_result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -404,9 +406,19 @@ async def test_firmware_options_flow_zigbee(hass: HomeAssistant) -> None:
         assert pick_result["type"] is FlowResultType.MENU
         assert pick_result["step_id"] == "zigbee_installation_type"
 
-        create_result = await hass.config_entries.options.async_configure(
+        progress_result = await hass.config_entries.options.async_configure(
             pick_result["flow_id"],
             user_input={"next_step_id": "zigbee_intent_recommended"},
+        )
+
+        assert progress_result["type"] is FlowResultType.SHOW_PROGRESS
+        assert progress_result["step_id"] == "install_zigbee_firmware"
+
+        # Make sure the flow continues when the progress task is done.
+        await hass.async_block_till_done()
+
+        create_result = await hass.config_entries.options.async_configure(
+            progress_result["flow_id"]
         )
 
     assert create_result["type"] is FlowResultType.CREATE_ENTRY

@@ -27,7 +27,7 @@ CLIENT_ID = "1"
 def mock_setup_entry() -> Generator[Mock]:
     """Patch setup entry."""
     with patch(
-        "homeassistant.components.yale.async_setup_entry", return_value=True
+        "homeassistant.components.yale.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -19,6 +19,31 @@
         'model_name': '5849414f20454e3034284e524635323834302900000000000000000000000000',
         'serial_number': '**REDACTED**',
       }),
+      'display_calibrations': list([
+      ]),
+      'display_luts': list([
+      ]),
+      'display_modes': list([
+        dict({
+          'color_scheme': 1,
+          'instance_number': 0,
+          'lut_slots': list([
+            0,
+          ]),
+          'mode_index': 0,
+          'name': 'full',
+          'passes': 1,
+          'sequence': '011200',
+          'temp_max_c': 50,
+          'temp_min_c': 0,
+          'temp_policy': 0,
+          'vsn1': list([
+            0,
+          ]),
+        }),
+      ]),
+      'display_panels': list([
+      ]),
       'displays': list([
         dict({
           'active_height_mm': 29,
@@ -44,10 +69,12 @@
           'transmission_modes': 1,
         }),
       ]),
+      'findmy_config_raw': '**REDACTED**',
       'flash_configs': list([
       ]),
       'leds': list([
       ]),
+      'length_prefixed_packets': '**REDACTED**',
       'loaded': False,
       'manufacturer': dict({
         'board_revision': 0,

@@ -27,7 +27,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Automatically patch history stats setup."""
     with patch(
         "homeassistant.components.history_stats.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

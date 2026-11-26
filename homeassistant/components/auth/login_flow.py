@@ -80,15 +80,15 @@ from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManagerFlowManager
 from homeassistant.auth.models import AuthFlowContext, AuthFlowResult
 from homeassistant.components import onboarding
-from homeassistant.components.http import KEY_HASS
-from homeassistant.components.http.auth import async_user_not_allowed_do_auth
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import (
     log_invalid_auth,
     process_success_login,
     process_wrong_login,
 )
+from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.network import (
     NoURLAvailableError,
@@ -166,9 +166,12 @@ class WellKnownProtectedResourceView(HomeAssistantView):
     requires_auth = False
     cors_allowed = True
     url = "/.well-known/oauth-protected-resource"
+    extra_urls = ["/.well-known/oauth-protected-resource/{resource_path:.+}"]
     name = "well-known/oauth-protected-resource"
 
-    async def get(self, request: web.Request) -> web.Response:
+    async def get(
+        self, request: web.Request, resource_path: str | None = None
+    ) -> web.Response:
         """Return the protected resource metadata."""
         hass = request.app[KEY_HASS]
         try:
@@ -176,9 +179,19 @@ class WellKnownProtectedResourceView(HomeAssistantView):
         except NoURLAvailableError:
             return self.json_message("No URL available", HTTPStatus.NOT_FOUND)
 
+        raw_suffix = (
+            request.rel_url.raw_path.removeprefix(self.url)
+            if resource_path is not None
+            else ""
+        )
+        if raw_suffix and not await hass.http.async_path_requires_auth(
+            request, raw_suffix
+        ):
+            return self.json_message("Resource not found", HTTPStatus.NOT_FOUND)
+
         return self.json(
             {
-                "resource": url_prefix,
+                "resource": f"{url_prefix}{raw_suffix}",
                 "authorization_servers": [url_prefix],
                 "resource_documentation": (
                     "https://contributors.home-assistant.io/core/internals/auth-api/"
@@ -259,6 +272,7 @@ class LoginFlowBaseView(HomeAssistantView):
     """Base class for the login views."""
 
     requires_auth = False
+    max_body_size = MAX_UNAUTHENTICATED_BODY_SIZE
 
     def __init__(
         self,

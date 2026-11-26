@@ -152,7 +152,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.rejseplanen.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -242,7 +242,7 @@ async def mock_setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api: Mock,
-) -> AsyncGenerator[Any, Any]:
+) -> AsyncGenerator[Any]:
     """Fixture to set up the integration."""
     mock_config_entry.add_to_hass(hass)
     with patch(

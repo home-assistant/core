@@ -14,16 +14,13 @@ from pytest_homeassistant.common import (
 
 from homeassistant import core
 from homeassistant.components import light
-from homeassistant.components.light import DOMAIN
+from homeassistant.components.light import DOMAIN, LightService, LightServiceArgument
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_PLATFORM,
     ENTITY_MATCH_ALL,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
@@ -45,19 +42,19 @@ async def test_methods(hass: HomeAssistant) -> None:
     assert not light.is_on(hass, "light.test")
 
     # Test turn_on
-    turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
+    turn_on_calls = async_mock_service(hass, light.DOMAIN, LightService.TURN_ON)
 
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "entity_id_val",
-            light.ATTR_TRANSITION: "transition_val",
-            light.ATTR_BRIGHTNESS: "brightness_val",
-            light.ATTR_RGB_COLOR: "rgb_color_val",
-            light.ATTR_XY_COLOR: "xy_color_val",
-            light.ATTR_PROFILE: "profile_val",
-            light.ATTR_COLOR_NAME: "color_name_val",
+            TargetKey.ENTITY_ID: "entity_id_val",
+            LightServiceArgument.TRANSITION: "transition_val",
+            LightServiceArgument.BRIGHTNESS: "brightness_val",
+            LightServiceArgument.RGB_COLOR: "rgb_color_val",
+            LightServiceArgument.XY_COLOR: "xy_color_val",
+            LightServiceArgument.PROFILE: "profile_val",
+            LightServiceArgument.COLOR_NAME: "color_name_val",
         },
         blocking=True,
     )
@@ -66,24 +63,24 @@ async def test_methods(hass: HomeAssistant) -> None:
     call = turn_on_calls[-1]
 
     assert call.domain == light.DOMAIN
-    assert call.service == SERVICE_TURN_ON
-    assert call.data.get(ATTR_ENTITY_ID) == "entity_id_val"
-    assert call.data.get(light.ATTR_TRANSITION) == "transition_val"
-    assert call.data.get(light.ATTR_BRIGHTNESS) == "brightness_val"
-    assert call.data.get(light.ATTR_RGB_COLOR) == "rgb_color_val"
-    assert call.data.get(light.ATTR_XY_COLOR) == "xy_color_val"
-    assert call.data.get(light.ATTR_PROFILE) == "profile_val"
-    assert call.data.get(light.ATTR_COLOR_NAME) == "color_name_val"
+    assert call.service == LightService.TURN_ON
+    assert call.data.get(TargetKey.ENTITY_ID) == "entity_id_val"
+    assert call.data.get(LightServiceArgument.TRANSITION) == "transition_val"
+    assert call.data.get(LightServiceArgument.BRIGHTNESS) == "brightness_val"
+    assert call.data.get(LightServiceArgument.RGB_COLOR) == "rgb_color_val"
+    assert call.data.get(LightServiceArgument.XY_COLOR) == "xy_color_val"
+    assert call.data.get(LightServiceArgument.PROFILE) == "profile_val"
+    assert call.data.get(LightServiceArgument.COLOR_NAME) == "color_name_val"
 
     # Test turn_off
-    turn_off_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_OFF)
+    turn_off_calls = async_mock_service(hass, light.DOMAIN, LightService.TURN_OFF)
 
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: "entity_id_val",
-            light.ATTR_TRANSITION: "transition_val",
+            TargetKey.ENTITY_ID: "entity_id_val",
+            LightServiceArgument.TRANSITION: "transition_val",
         },
         blocking=True,
     )
@@ -92,17 +89,20 @@ async def test_methods(hass: HomeAssistant) -> None:
     call = turn_off_calls[-1]
 
     assert call.domain == light.DOMAIN
-    assert call.service == SERVICE_TURN_OFF
-    assert call.data[ATTR_ENTITY_ID] == "entity_id_val"
-    assert call.data[light.ATTR_TRANSITION] == "transition_val"
+    assert call.service == LightService.TURN_OFF
+    assert call.data[TargetKey.ENTITY_ID] == "entity_id_val"
+    assert call.data[LightServiceArgument.TRANSITION] == "transition_val"
 
     # Test toggle
-    toggle_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TOGGLE)
+    toggle_calls = async_mock_service(hass, light.DOMAIN, LightService.TOGGLE)
 
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "entity_id_val", light.ATTR_TRANSITION: "transition_val"},
+        LightService.TOGGLE,
+        {
+            TargetKey.ENTITY_ID: "entity_id_val",
+            LightServiceArgument.TRANSITION: "transition_val",
+        },
         blocking=True,
     )
 
@@ -110,9 +110,9 @@ async def test_methods(hass: HomeAssistant) -> None:
     call = toggle_calls[-1]
 
     assert call.domain == light.DOMAIN
-    assert call.service == SERVICE_TOGGLE
-    assert call.data[ATTR_ENTITY_ID] == "entity_id_val"
-    assert call.data[light.ATTR_TRANSITION] == "transition_val"
+    assert call.service == LightService.TOGGLE
+    assert call.data[TargetKey.ENTITY_ID] == "entity_id_val"
+    assert call.data[LightServiceArgument.TRANSITION] == "transition_val"
 
 
 async def test_services(
@@ -150,10 +150,16 @@ async def test_services(
 
     # Test basic turn_on, turn_off, toggle services
     await hass.services.async_call(
-        light.DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ent1.entity_id}, blocking=True
+        light.DOMAIN,
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ent1.entity_id},
+        blocking=True,
     )
     await hass.services.async_call(
-        light.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ent2.entity_id}, blocking=True
+        light.DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ent2.entity_id},
+        blocking=True,
     )
 
     assert not light.is_on(hass, ent1.entity_id)
@@ -161,7 +167,10 @@ async def test_services(
 
     # turn on all lights
     await hass.services.async_call(
-        light.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_MATCH_ALL}, blocking=True
+        light.DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
     )
 
     assert light.is_on(hass, ent1.entity_id)
@@ -171,8 +180,8 @@ async def test_services(
     # turn off all lights
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_MATCH_ALL},
         blocking=True,
     )
 
@@ -182,12 +191,15 @@ async def test_services(
 
     # turn off all lights by setting brightness to 0
     await hass.services.async_call(
-        light.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_MATCH_ALL}, blocking=True
+        light.DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
     )
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL, light.ATTR_BRIGHTNESS: 0},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_MATCH_ALL, LightServiceArgument.BRIGHTNESS: 0},
         blocking=True,
     )
 
@@ -197,7 +209,10 @@ async def test_services(
 
     # toggle all lights
     await hass.services.async_call(
-        light.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_MATCH_ALL}, blocking=True
+        light.DOMAIN,
+        LightService.TOGGLE,
+        {TargetKey.ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
     )
 
     assert light.is_on(hass, ent1.entity_id)
@@ -206,7 +221,10 @@ async def test_services(
 
     # toggle all lights
     await hass.services.async_call(
-        light.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_MATCH_ALL}, blocking=True
+        light.DOMAIN,
+        LightService.TOGGLE,
+        {TargetKey.ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
     )
 
     assert not light.is_on(hass, ent1.entity_id)
@@ -216,81 +234,84 @@ async def test_services(
     # Ensure all attributes process correctly
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_TRANSITION: 10,
-            light.ATTR_BRIGHTNESS: 20,
-            light.ATTR_COLOR_NAME: "blue",
+            TargetKey.ENTITY_ID: ent1.entity_id,
+            LightServiceArgument.TRANSITION: 10,
+            LightServiceArgument.BRIGHTNESS: 20,
+            LightServiceArgument.COLOR_NAME: "blue",
         },
         blocking=True,
     )
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent2.entity_id,
-            light.ATTR_EFFECT: "fun_effect",
-            light.ATTR_RGB_COLOR: (255, 255, 255),
+            TargetKey.ENTITY_ID: ent2.entity_id,
+            LightServiceArgument.EFFECT: "fun_effect",
+            LightServiceArgument.RGB_COLOR: (255, 255, 255),
         },
         blocking=True,
     )
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent3.entity_id,
-            light.ATTR_FLASH: "short",
-            light.ATTR_XY_COLOR: (0.4, 0.6),
+            TargetKey.ENTITY_ID: ent3.entity_id,
+            LightServiceArgument.FLASH: "short",
+            LightServiceArgument.XY_COLOR: (0.4, 0.6),
         },
         blocking=True,
     )
 
     _, data = ent1.last_call("turn_on")
     assert data == {
-        light.ATTR_TRANSITION: 10,
-        light.ATTR_BRIGHTNESS: 20,
-        light.ATTR_HS_COLOR: (240, 100),
+        LightServiceArgument.TRANSITION: 10,
+        LightServiceArgument.BRIGHTNESS: 20,
+        LightServiceArgument.HS_COLOR: (240, 100),
     }
 
     _, data = ent2.last_call("turn_on")
     assert data == {
-        light.ATTR_EFFECT: "fun_effect",
-        light.ATTR_HS_COLOR: (0, 0),
+        LightServiceArgument.EFFECT: "fun_effect",
+        LightServiceArgument.HS_COLOR: (0, 0),
     }
 
     _, data = ent3.last_call("turn_on")
-    assert data == {light.ATTR_FLASH: "short", light.ATTR_HS_COLOR: (71.059, 100)}
+    assert data == {
+        LightServiceArgument.FLASH: "short",
+        LightServiceArgument.HS_COLOR: (71.059, 100),
+    }
 
     # Ensure attributes are filtered when light is turned off
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_TRANSITION: 10,
-            light.ATTR_BRIGHTNESS: 0,
-            light.ATTR_COLOR_NAME: "blue",
+            TargetKey.ENTITY_ID: ent1.entity_id,
+            LightServiceArgument.TRANSITION: 10,
+            LightServiceArgument.BRIGHTNESS: 0,
+            LightServiceArgument.COLOR_NAME: "blue",
         },
         blocking=True,
     )
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent2.entity_id,
-            light.ATTR_BRIGHTNESS: 0,
-            light.ATTR_RGB_COLOR: (255, 255, 255),
+            TargetKey.ENTITY_ID: ent2.entity_id,
+            LightServiceArgument.BRIGHTNESS: 0,
+            LightServiceArgument.RGB_COLOR: (255, 255, 255),
         },
         blocking=True,
     )
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent3.entity_id,
-            light.ATTR_BRIGHTNESS: 0,
-            light.ATTR_XY_COLOR: (0.4, 0.6),
+            TargetKey.ENTITY_ID: ent3.entity_id,
+            LightServiceArgument.BRIGHTNESS: 0,
+            LightServiceArgument.XY_COLOR: (0.4, 0.6),
         },
         blocking=True,
     )
@@ -300,7 +321,7 @@ async def test_services(
     assert not light.is_on(hass, ent3.entity_id)
 
     _, data = ent1.last_call("turn_off")
-    assert data == {light.ATTR_TRANSITION: 10}
+    assert data == {LightServiceArgument.TRANSITION: 10}
 
     _, data = ent2.last_call("turn_off")
     assert data == {}
@@ -315,93 +336,105 @@ async def test_services(
     # Test light profiles
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ent1.entity_id, light.ATTR_PROFILE: profile.name},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ent1.entity_id,
+            LightServiceArgument.PROFILE: profile.name,
+        },
         blocking=True,
     )
     # Specify a profile and a brightness attribute to overwrite it
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent2.entity_id,
-            light.ATTR_PROFILE: profile.name,
-            light.ATTR_BRIGHTNESS: 100,
-            light.ATTR_TRANSITION: 1,
+            TargetKey.ENTITY_ID: ent2.entity_id,
+            LightServiceArgument.PROFILE: profile.name,
+            LightServiceArgument.BRIGHTNESS: 100,
+            LightServiceArgument.TRANSITION: 1,
         },
         blocking=True,
     )
 
     _, data = ent1.last_call("turn_on")
     assert data == {
-        light.ATTR_BRIGHTNESS: profile.brightness,
-        light.ATTR_HS_COLOR: profile.hs_color,
-        light.ATTR_TRANSITION: profile.transition,
+        LightServiceArgument.BRIGHTNESS: profile.brightness,
+        LightServiceArgument.HS_COLOR: profile.hs_color,
+        LightServiceArgument.TRANSITION: profile.transition,
     }
 
     _, data = ent2.last_call("turn_on")
     assert data == {
-        light.ATTR_BRIGHTNESS: 100,
-        light.ATTR_HS_COLOR: profile.hs_color,
-        light.ATTR_TRANSITION: 1,
+        LightServiceArgument.BRIGHTNESS: 100,
+        LightServiceArgument.HS_COLOR: profile.hs_color,
+        LightServiceArgument.TRANSITION: 1,
     }
 
     # Test toggle with parameters
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TOGGLE,
+        LightService.TOGGLE,
         {
-            ATTR_ENTITY_ID: ent3.entity_id,
-            light.ATTR_PROFILE: profile.name,
-            light.ATTR_BRIGHTNESS_PCT: 100,
+            TargetKey.ENTITY_ID: ent3.entity_id,
+            LightServiceArgument.PROFILE: profile.name,
+            LightServiceArgument.BRIGHTNESS_PCT: 100,
         },
         blocking=True,
     )
 
     _, data = ent3.last_call("turn_on")
     assert data == {
-        light.ATTR_BRIGHTNESS: 255,
-        light.ATTR_HS_COLOR: profile.hs_color,
-        light.ATTR_TRANSITION: profile.transition,
+        LightServiceArgument.BRIGHTNESS: 255,
+        LightServiceArgument.HS_COLOR: profile.hs_color,
+        LightServiceArgument.TRANSITION: profile.transition,
     }
 
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TOGGLE,
+        LightService.TOGGLE,
         {
-            ATTR_ENTITY_ID: ent3.entity_id,
-            light.ATTR_TRANSITION: 4,
+            TargetKey.ENTITY_ID: ent3.entity_id,
+            LightServiceArgument.TRANSITION: 4,
         },
         blocking=True,
     )
 
     _, data = ent3.last_call("turn_off")
     assert data == {
-        light.ATTR_TRANSITION: 4,
+        LightServiceArgument.TRANSITION: 4,
     }
 
     # Test bad data
     await hass.services.async_call(
-        light.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_MATCH_ALL}, blocking=True
+        light.DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
     )
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ent1.entity_id, light.ATTR_PROFILE: -1},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ent1.entity_id, LightServiceArgument.PROFILE: -1},
         blocking=True,
     )
     with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             light.DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ent2.entity_id, light.ATTR_XY_COLOR: ["bla-di-bla", 5]},
+            LightService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: ent2.entity_id,
+                LightServiceArgument.XY_COLOR: ["bla-di-bla", 5],
+            },
             blocking=True,
         )
     with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             light.DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ent3.entity_id, light.ATTR_RGB_COLOR: [255, None, 2]},
+            LightService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: ent3.entity_id,
+                LightServiceArgument.RGB_COLOR: [255, None, 2],
+            },
             blocking=True,
         )
 
@@ -418,21 +451,21 @@ async def test_services(
     with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             light.DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: ent1.entity_id,
-                light.ATTR_PROFILE: profile.name,
-                light.ATTR_BRIGHTNESS: "bright",
+                TargetKey.ENTITY_ID: ent1.entity_id,
+                LightServiceArgument.PROFILE: profile.name,
+                LightServiceArgument.BRIGHTNESS: "bright",
             },
             blocking=True,
         )
     with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             light.DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: ent1.entity_id,
-                light.ATTR_RGB_COLOR: "yellowish",
+                TargetKey.ENTITY_ID: ent1.entity_id,
+                LightServiceArgument.RGB_COLOR: "yellowish",
             },
             blocking=True,
         )
@@ -451,62 +484,62 @@ async def test_services(
             "test",
             "turn_on",
             {
-                light.ATTR_HS_COLOR: (71.059, 100),
-                light.ATTR_BRIGHTNESS: 100,
-                light.ATTR_TRANSITION: 0,
+                LightServiceArgument.HS_COLOR: (71.059, 100),
+                LightServiceArgument.BRIGHTNESS: 100,
+                LightServiceArgument.TRANSITION: 0,
             },
         ),
         (
             "color_no_brightness_no_transition",
             "turn_on",
             {
-                light.ATTR_HS_COLOR: (71.059, 100),
+                LightServiceArgument.HS_COLOR: (71.059, 100),
             },
         ),
         (
             "no color",
             "turn_on",
             {
-                light.ATTR_BRIGHTNESS: 110,
-                light.ATTR_TRANSITION: 0,
+                LightServiceArgument.BRIGHTNESS: 110,
+                LightServiceArgument.TRANSITION: 0,
             },
         ),
         (
             "test_off",
             "turn_off",
             {
-                light.ATTR_TRANSITION: 0,
+                LightServiceArgument.TRANSITION: 0,
             },
         ),
         (
             "no brightness",
             "turn_on",
             {
-                light.ATTR_HS_COLOR: (71.059, 100),
+                LightServiceArgument.HS_COLOR: (71.059, 100),
             },
         ),
         (
             "color_and_brightness",
             "turn_on",
             {
-                light.ATTR_HS_COLOR: (71.059, 100),
-                light.ATTR_BRIGHTNESS: 120,
+                LightServiceArgument.HS_COLOR: (71.059, 100),
+                LightServiceArgument.BRIGHTNESS: 120,
             },
         ),
         (
             "color_and_transition",
             "turn_on",
             {
-                light.ATTR_HS_COLOR: (71.059, 100),
-                light.ATTR_TRANSITION: 4.2,
+                LightServiceArgument.HS_COLOR: (71.059, 100),
+                LightServiceArgument.TRANSITION: 4.2,
             },
         ),
         (
             "brightness_and_transition",
             "turn_on",
             {
-                light.ATTR_BRIGHTNESS: 130,
-                light.ATTR_TRANSITION: 5.3,
+                LightServiceArgument.BRIGHTNESS: 130,
+                LightServiceArgument.TRANSITION: 5.3,
             },
         ),
     ],
@@ -547,10 +580,10 @@ async def test_light_profiles(
 
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_PROFILE: profile_name,
+            TargetKey.ENTITY_ID: ent1.entity_id,
+            LightServiceArgument.PROFILE: profile_name,
         },
         blocking=True,
     )
@@ -583,14 +616,17 @@ async def test_default_profiles_group(
     ent.supported_color_modes = [light.ColorMode.HS]
     ent.supported_features = light.LightEntityFeature.TRANSITION
     await hass.services.async_call(
-        light.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ent.entity_id}, blocking=True
+        light.DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ent.entity_id},
+        blocking=True,
     )
 
     _, data = ent.last_call("turn_on")
     assert data == {
-        light.ATTR_HS_COLOR: (71.059, 100),
-        light.ATTR_BRIGHTNESS: 99,
-        light.ATTR_TRANSITION: 2,
+        LightServiceArgument.HS_COLOR: (71.059, 100),
+        LightServiceArgument.BRIGHTNESS: 99,
+        LightServiceArgument.TRANSITION: 2,
     }
 
 
@@ -605,160 +641,160 @@ async def test_default_profiles_group(
             # No turn on params, should apply profile
             {},
             {
-                light.ATTR_HS_COLOR: (50.353, 100),
-                light.ATTR_BRIGHTNESS: 100,
-                light.ATTR_TRANSITION: 3,
+                LightServiceArgument.HS_COLOR: (50.353, 100),
+                LightServiceArgument.BRIGHTNESS: 100,
+                LightServiceArgument.TRANSITION: 3,
             },
             {
-                light.ATTR_HS_COLOR: (50.353, 100),
-                light.ATTR_BRIGHTNESS: 100,
-                light.ATTR_TRANSITION: 3,
+                LightServiceArgument.HS_COLOR: (50.353, 100),
+                LightServiceArgument.BRIGHTNESS: 100,
+                LightServiceArgument.TRANSITION: 3,
             },
         ),
         (
             # Brightness in turn on params, brightness from profile ignored
-            {light.ATTR_BRIGHTNESS: 22},
+            {LightServiceArgument.BRIGHTNESS: 22},
             {
-                light.ATTR_HS_COLOR: (50.353, 100),
-                light.ATTR_BRIGHTNESS: 22,
-                light.ATTR_TRANSITION: 3,
+                LightServiceArgument.HS_COLOR: (50.353, 100),
+                LightServiceArgument.BRIGHTNESS: 22,
+                LightServiceArgument.TRANSITION: 3,
             },
             {
-                light.ATTR_BRIGHTNESS: 22,
-                light.ATTR_TRANSITION: 3,
+                LightServiceArgument.BRIGHTNESS: 22,
+                LightServiceArgument.TRANSITION: 3,
             },
         ),
         (
             # Transition in turn on params, transition from profile ignored
-            {light.ATTR_TRANSITION: 22},
+            {LightServiceArgument.TRANSITION: 22},
             {
-                light.ATTR_HS_COLOR: (50.353, 100),
-                light.ATTR_BRIGHTNESS: 100,
-                light.ATTR_TRANSITION: 22,
+                LightServiceArgument.HS_COLOR: (50.353, 100),
+                LightServiceArgument.BRIGHTNESS: 100,
+                LightServiceArgument.TRANSITION: 22,
             },
             {
-                light.ATTR_TRANSITION: 22,
+                LightServiceArgument.TRANSITION: 22,
             },
         ),
         (
             # Color temp in turn on params, color from profile ignored
             {
-                light.ATTR_COLOR_TEMP_KELVIN: 6500,
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.COLOR_TEMP_KELVIN: 6500,
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
             {
-                light.ATTR_COLOR_TEMP_KELVIN: 6500,
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.COLOR_TEMP_KELVIN: 6500,
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
             {
-                light.ATTR_COLOR_TEMP_KELVIN: 6500,
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.COLOR_TEMP_KELVIN: 6500,
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
         ),
         (
             # HS-color in turn on params, color from profile ignored
             {
-                light.ATTR_HS_COLOR: [70, 80],
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.HS_COLOR: [70, 80],
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
             {
-                light.ATTR_HS_COLOR: (70, 80),
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.HS_COLOR: (70, 80),
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
             {
-                light.ATTR_HS_COLOR: (70, 80),
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.HS_COLOR: (70, 80),
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
         ),
         (
             # RGB-color in turn on params, color from profile ignored
             {
-                light.ATTR_RGB_COLOR: [1, 2, 3],
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.RGB_COLOR: [1, 2, 3],
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
             {
-                light.ATTR_RGB_COLOR: (1, 2, 3),
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.RGB_COLOR: (1, 2, 3),
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
             {
-                light.ATTR_RGB_COLOR: (1, 2, 3),
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.RGB_COLOR: (1, 2, 3),
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
         ),
         (
             # RGBW-color in turn on params, color from profile ignored
             {
-                light.ATTR_RGBW_COLOR: [1, 2, 3, 4],
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.RGBW_COLOR: [1, 2, 3, 4],
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
             {
-                light.ATTR_RGBW_COLOR: (1, 2, 3, 4),
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.RGBW_COLOR: (1, 2, 3, 4),
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
             {
-                light.ATTR_RGBW_COLOR: (1, 2, 3, 4),
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.RGBW_COLOR: (1, 2, 3, 4),
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
         ),
         (
             # RGBWW-color in turn on params, color from profile ignored
             {
-                light.ATTR_RGBWW_COLOR: [1, 2, 3, 4, 5],
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.RGBWW_COLOR: [1, 2, 3, 4, 5],
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
             {
-                light.ATTR_RGBWW_COLOR: (1, 2, 3, 4, 5),
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.RGBWW_COLOR: (1, 2, 3, 4, 5),
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
             {
-                light.ATTR_RGBWW_COLOR: (1, 2, 3, 4, 5),
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.RGBWW_COLOR: (1, 2, 3, 4, 5),
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
         ),
         (
             # XY-color in turn on params, color from profile ignored
             {
-                light.ATTR_XY_COLOR: [0.4448, 0.4066],
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.XY_COLOR: [0.4448, 0.4066],
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
             {
-                light.ATTR_XY_COLOR: (0.4448, 0.4066),
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.XY_COLOR: (0.4448, 0.4066),
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
             {
-                light.ATTR_XY_COLOR: (0.4448, 0.4066),
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.XY_COLOR: (0.4448, 0.4066),
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
         ),
         (
             # Brightness + transition in turn on params
-            {light.ATTR_BRIGHTNESS: 11, light.ATTR_TRANSITION: 1},
+            {LightServiceArgument.BRIGHTNESS: 11, LightServiceArgument.TRANSITION: 1},
             {
-                light.ATTR_HS_COLOR: (50.353, 100),
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.HS_COLOR: (50.353, 100),
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
             {
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
+                LightServiceArgument.BRIGHTNESS: 11,
+                LightServiceArgument.TRANSITION: 1,
             },
         ),
     ],
@@ -796,9 +832,9 @@ async def test_default_profiles_light(
     dev.supported_features = light.LightEntityFeature.TRANSITION
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: dev.entity_id,
+            TargetKey.ENTITY_ID: dev.entity_id,
             **extra_call_params,
         },
         blocking=True,
@@ -809,9 +845,9 @@ async def test_default_profiles_light(
 
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: dev.entity_id,
+            TargetKey.ENTITY_ID: dev.entity_id,
             **extra_call_params,
         },
         blocking=True,
@@ -822,16 +858,16 @@ async def test_default_profiles_light(
 
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: dev.entity_id,
+            TargetKey.ENTITY_ID: dev.entity_id,
         },
         blocking=True,
     )
 
     _, data = dev.last_call("turn_off")
     assert data == {
-        light.ATTR_TRANSITION: 3,
+        LightServiceArgument.TRANSITION: 3,
     }
 
 
@@ -1403,7 +1439,7 @@ async def test_light_service_call_color_conversion(hass: HomeAssistant) -> None:
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 255, 0, 0)}
     _, data = entity6.last_call("turn_on")
-    assert data == {"brightness": 255, "color_temp_kelvin": 1739}
+    assert data == {"brightness": 255, "color_temp_kelvin": 2000}
 
     await hass.services.async_call(
         "light",
@@ -1537,7 +1573,7 @@ async def test_light_service_call_color_conversion(hass: HomeAssistant) -> None:
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 128, "rgbww_color": (0, 255, 22, 0, 0)}
     _, data = entity6.last_call("turn_on")
-    assert data == {"brightness": 128, "color_temp_kelvin": 8645}
+    assert data == {"brightness": 128, "color_temp_kelvin": 6535}
 
     await hass.services.async_call(
         "light",
@@ -2018,6 +2054,58 @@ async def test_light_service_call_color_temp_conversion_rgbww_only(
     assert data == expected
 
 
+@pytest.mark.parametrize(
+    ("service_data", "expected"),
+    [
+        pytest.param(
+            {"xy_color": (0.4, 0.1858)},
+            {"color_temp_kelvin": 6535},
+            id="xy_at_pole",
+        ),
+        pytest.param(
+            {"xy_color": (0.4, 0.185)},
+            {"color_temp_kelvin": 6535},
+            id="xy_colder_than_max",
+        ),
+        pytest.param(
+            {"xy_color": (0.4, 0.19)},
+            {"color_temp_kelvin": 2000},
+            id="xy_warmer_than_min",
+        ),
+        pytest.param(
+            {"rgb_color": (255, 0, 200)},
+            {"color_temp_kelvin": 2000},
+            id="rgb_warmer_than_min",
+        ),
+        pytest.param(
+            {"hs_color": (320, 100)},
+            {"color_temp_kelvin": 2000},
+            id="hs_warmer_than_min",
+        ),
+    ],
+)
+async def test_light_service_call_color_temp_conversion_out_of_range(
+    hass: HomeAssistant, service_data: dict[str, Any], expected: dict[str, Any]
+) -> None:
+    """Test colors far from white are converted to the light's color temp range."""
+    entity = MockLight("Test_temperature", STATE_ON)
+    entity.supported_color_modes = {light.ColorMode.COLOR_TEMP}
+    entity.color_mode = light.ColorMode.COLOR_TEMP
+    setup_test_component_platform(hass, light.DOMAIN, [entity])
+
+    assert await async_setup_component(hass, DOMAIN, {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, **service_data},
+        blocking=True,
+    )
+    _, data = entity.last_call("turn_on")
+    assert data == expected
+
+
 async def test_light_service_call_white_mode(hass: HomeAssistant) -> None:
     """Test color_mode white in service calls."""
     entity0 = MockLight("Test_white", STATE_ON)
@@ -2188,12 +2276,15 @@ async def test_services_filter_parameters(
     # turn off the light by setting brightness to 0, this should work even if the light
     # doesn't support brightness
     await hass.services.async_call(
-        light.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_MATCH_ALL}, blocking=True
+        light.DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
     )
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL, light.ATTR_BRIGHTNESS: 0},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_MATCH_ALL, LightServiceArgument.BRIGHTNESS: 0},
         blocking=True,
     )
 
@@ -2202,13 +2293,13 @@ async def test_services_filter_parameters(
     # Ensure all unsupported attributes are filtered when light is turned on
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_BRIGHTNESS: 0,
-            light.ATTR_EFFECT: "fun_effect",
-            light.ATTR_FLASH: "short",
-            light.ATTR_TRANSITION: 10,
+            TargetKey.ENTITY_ID: ent1.entity_id,
+            LightServiceArgument.BRIGHTNESS: 0,
+            LightServiceArgument.EFFECT: "fun_effect",
+            LightServiceArgument.FLASH: "short",
+            LightServiceArgument.TRANSITION: 10,
         },
         blocking=True,
     )
@@ -2217,10 +2308,10 @@ async def test_services_filter_parameters(
 
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_COLOR_TEMP_KELVIN: 6535,
+            TargetKey.ENTITY_ID: ent1.entity_id,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 6535,
         },
         blocking=True,
     )
@@ -2229,10 +2320,10 @@ async def test_services_filter_parameters(
 
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_HS_COLOR: (0, 0),
+            TargetKey.ENTITY_ID: ent1.entity_id,
+            LightServiceArgument.HS_COLOR: (0, 0),
         },
         blocking=True,
     )
@@ -2241,10 +2332,10 @@ async def test_services_filter_parameters(
 
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_RGB_COLOR: (0, 0, 0),
+            TargetKey.ENTITY_ID: ent1.entity_id,
+            LightServiceArgument.RGB_COLOR: (0, 0, 0),
         },
         blocking=True,
     )
@@ -2253,10 +2344,10 @@ async def test_services_filter_parameters(
 
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_RGBW_COLOR: (0, 0, 0, 0),
+            TargetKey.ENTITY_ID: ent1.entity_id,
+            LightServiceArgument.RGBW_COLOR: (0, 0, 0, 0),
         },
         blocking=True,
     )
@@ -2265,10 +2356,10 @@ async def test_services_filter_parameters(
 
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_RGBWW_COLOR: (0, 0, 0, 0, 0),
+            TargetKey.ENTITY_ID: ent1.entity_id,
+            LightServiceArgument.RGBWW_COLOR: (0, 0, 0, 0, 0),
         },
         blocking=True,
     )
@@ -2277,10 +2368,10 @@ async def test_services_filter_parameters(
 
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_XY_COLOR: (0, 0),
+            TargetKey.ENTITY_ID: ent1.entity_id,
+            LightServiceArgument.XY_COLOR: (0, 0),
         },
         blocking=True,
     )
@@ -2290,13 +2381,13 @@ async def test_services_filter_parameters(
     # Ensure all unsupported attributes are filtered when light is turned off
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_BRIGHTNESS: 0,
-            light.ATTR_EFFECT: "fun_effect",
-            light.ATTR_FLASH: "short",
-            light.ATTR_TRANSITION: 10,
+            TargetKey.ENTITY_ID: ent1.entity_id,
+            LightServiceArgument.BRIGHTNESS: 0,
+            LightServiceArgument.EFFECT: "fun_effect",
+            LightServiceArgument.FLASH: "short",
+            LightServiceArgument.TRANSITION: 10,
         },
         blocking=True,
     )
@@ -2308,11 +2399,11 @@ async def test_services_filter_parameters(
 
     await hass.services.async_call(
         light.DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_FLASH: "short",
-            light.ATTR_TRANSITION: 10,
+            TargetKey.ENTITY_ID: ent1.entity_id,
+            LightServiceArgument.FLASH: "short",
+            LightServiceArgument.TRANSITION: 10,
         },
         blocking=True,
     )
@@ -2579,63 +2670,3 @@ def test_report_invalid_color_modes(
         raised_error = str(err)
     expected_error = "sets invalid supported color modes"
     assert (expected_error in raised_error) is error_expected
-
-
-@pytest.mark.parametrize(
-    ("attributes", "expected_warnings", "expected_values"),
-    [
-        (
-            {
-                "_attr_min_color_temp_kelvin": 3000,
-                "_attr_max_color_temp_kelvin": 5000,
-            },
-            {"min": False, "max": False},
-            # Just highlighting that the attributes match the
-            # kelvin values
-            (3000, 5000),
-        ),
-        (
-            {
-                "_attr_min_color_temp_kelvin": None,
-                "_attr_max_color_temp_kelvin": None,
-            },
-            {"min": True, "max": True},
-            (2000, 6535),
-        ),
-        (
-            {},
-            {"min": False, "max": False},
-            (2000, 6535),
-        ),
-    ],
-    ids=["explicit_kelvin", "explicit_none", "default_kelvin"],
-)
-def test_missing_kelvin_property_warnings(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    attributes: dict[str, int | None],
-    expected_warnings: dict[str, bool],
-    expected_values: tuple[int, int | None, int],
-) -> None:
-    """Test missing kelvin properties."""
-
-    class MockLightEntityEntity(light.LightEntity):
-        _attr_color_mode = light.ColorMode.COLOR_TEMP
-        _attr_is_on = True
-        _attr_supported_features = light.LightEntityFeature.EFFECT
-        _attr_supported_color_modes = {light.ColorMode.COLOR_TEMP}
-        platform = MockEntityPlatform(hass, platform_name="test")
-
-    entity = MockLightEntityEntity()
-    for k, v in attributes.items():
-        setattr(entity, k, v)
-
-    state = entity._async_calculate_state()
-    for warning, expected in expected_warnings.items():
-        assert (
-            f"is explicitly setting `_attr_{warning}_color_temp_kelvin` to `None`"
-            in caplog.text
-        ) is expected, f"Expected {expected} for '{warning}'"
-
-    assert state.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN] == expected_values[0]
-    assert state.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN] == expected_values[1]

@@ -9,7 +9,7 @@ from pyfibaro.fibaro_client import FibaroAuthenticationFailed, FibaroConnectFail
 from slugify import slugify
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import connect_fibaro_client
@@ -120,7 +120,7 @@ class FibaroConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
-                CONF_NAME: reauth_entry.title,
+                "username": reauth_entry.data[CONF_USERNAME],
+                "name": reauth_entry.title,
             },
         )

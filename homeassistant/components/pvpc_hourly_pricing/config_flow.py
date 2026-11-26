@@ -8,7 +8,6 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -29,6 +28,7 @@ from .const import (
     VALID_POWER,
     VALID_TARIFF,
 )
+from .coordinator import PVPCConfigEntry
 
 _MAIL_TO_LINK = (
     "[consultasios@ree.es]"
@@ -52,7 +52,7 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: PVPCConfigEntry,
     ) -> PVPCOptionsFlowHandler:
         """Get the options flow for this handler."""
         return PVPCOptionsFlowHandler()

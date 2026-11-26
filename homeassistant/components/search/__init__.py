@@ -103,6 +103,8 @@ class Searcher:
         self._entity_sources = entity_sources
         self._include_disabled_entities = include_disabled_entities
         self.results: defaultdict[ItemType, set[str]] = defaultdict(set)
+        # Scripts already searched, as scripts can reference each other in a cycle
+        self._searched_scripts: set[str] = set()
 
     @callback
     def async_search(self, item_type: ItemType, item_id: str) -> dict[str, set[str]]:
@@ -557,6 +559,10 @@ class Searcher:
         self, script_entity_id: str, *, entry_point: bool = True
     ) -> None:
         """Find results for a script."""
+        if script_entity_id in self._searched_scripts:
+            return
+        self._searched_scripts.add(script_entity_id)
+
         # Up resolve the script entity itself
         entity_entry = self._async_resolve_up_entity(script_entity_id)
 
