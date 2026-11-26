@@ -113,6 +113,11 @@ async def async_sync_bus_state(
     data = entry.runtime_data
 
     if found_addresses is not None:
+        found_addresses = set(found_addresses)
+        for module in data.controller.get_modules().values():
+            addresses = set(module.get_addresses())
+            if addresses.intersection(found_addresses):
+                found_addresses.update(addresses)
         data.scanned_module_addresses = set(found_addresses)
 
     upsert_addresses: set[int] | None
