@@ -5155,6 +5155,52 @@ async def test_automation_tools_not_loaded(
     assert len(hass_config_store["automations.yaml"]) == 1
 
 
+async def test_automation_tools_blueprint(
+    automation_api: llm.APIInstance,
+    hass_config_store: dict[str, Any],
+) -> None:
+    """Test a loaded blueprint automation is reported as loaded."""
+    hass_config_store["automations.yaml"] = []
+    config = {
+        "alias": "From blueprint",
+        "use_blueprint": {
+            "path": "test_event_service.yaml",
+            "input": {
+                "trigger_event": "test_event",
+                "service_to_call": "test.automation",
+                "a_number": 5,
+            },
+        },
+    }
+
+    result = await automation_api.async_call_tool(
+        llm.ToolInput("config__set_automation_config", {"config": config})
+    )
+
+    assert result.data["result"]["loaded"] is True
+
+
+async def test_automation_tools_integration_not_loaded(
+    hass: HomeAssistant,
+    llm_api: llm.APIInstance,
+    hass_config_store: dict[str, Any],
+) -> None:
+    """Test nothing is stored when automations cannot be reloaded."""
+    hass_config_store["automations.yaml"] = []
+    assert not hass.services.has_service("automation", "reload")
+
+    with pytest.raises(
+        HomeAssistantError, match="automation integration is not loaded"
+    ):
+        await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__set_automation_config", {"config": AUTOMATION_CONFIG}
+            )
+        )
+
+    assert hass_config_store["automations.yaml"] == []
+
+
 async def test_automation_tools_id_like_entity_id(
     automation_api: llm.APIInstance,
     hass_config_store: dict[str, Any],

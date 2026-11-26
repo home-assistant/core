@@ -2265,6 +2265,11 @@ class SetAutomationConfigTool(Tool):
             raise HomeAssistantError(
                 f"Invalid automation configuration: {err}"
             ) from err
+        if not hass.services.has_service("automation", "reload"):
+            raise HomeAssistantError(
+                "The automation integration is not loaded, enable it before "
+                "editing automations."
+            )
         previous = await view.async_write_value(
             hass, automation_id, config, wait_for_hook=True
         )

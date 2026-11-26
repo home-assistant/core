@@ -72,7 +72,11 @@ def async_is_loaded(
     if (component := hass.data.get(DATA_COMPONENT)) is None:
         return False
     entity = component.get_entity(entity_id)
-    return entity is not None and entity.raw_config == config
+    # For a blueprint automation raw_config is the config generated from it
+    return (
+        entity is not None
+        and (entity.raw_blueprint_inputs or entity.raw_config) == config
+    )
 
 
 class EditAutomationConfigView(EditIdBasedConfigView):
