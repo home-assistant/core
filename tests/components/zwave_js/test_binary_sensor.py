@@ -233,9 +233,38 @@ def _add_water_alarm_notification_values(node_state: NodeDataType) -> NodeDataTy
             },
         ),
         (
+            "Water pressure alarm status",
+            {
+                "0": "idle",
+                "1": "No data",
+                "2": "Below low threshold",
+                "3": "Above high threshold",
+                "4": "Max",
+            },
+        ),
+        (
+            "Water temperature alarm status",
+            {
+                "0": "idle",
+                "1": "No data",
+                "2": "Below low threshold",
+                "3": "Above high threshold",
+            },
+        ),
+        (
+            "Water level alarm status",
+            {
+                "0": "idle",
+                "1": "No data",
+                "2": "Below low threshold",
+                "3": "Above high threshold",
+            },
+        ),
+        (
             "Pump status",
             {"0": "idle", "10": "Sump pump active", "11": "Sump pump failure"},
         ),
+        ("Custom water status", {"0": "idle", "12": "Custom water state"}),
     ):
         value_data = copy.deepcopy(sensor_status_value)
         value_data["propertyKey"] = value_data["propertyKeyName"] = property_key
@@ -1865,14 +1894,38 @@ def zooz_zac36_water_alarm_fixture(
             id="water_leak_detected",
         ),
         pytest.param(
+            "binary_sensor.titan_water_valve_actuator_no_data",
+            BinarySensorDeviceClass.PROBLEM,
+            None,
+            id="water_flow_alarm_no_data",
+        ),
+        pytest.param(
             "binary_sensor.titan_water_valve_actuator_below_low_threshold",
-            BinarySensorDeviceClass.MOISTURE,
+            BinarySensorDeviceClass.PROBLEM,
             None,
             id="water_flow_alarm_below_low_threshold",
         ),
         pytest.param(
+            "binary_sensor.titan_water_valve_actuator_max_2",
+            BinarySensorDeviceClass.PROBLEM,
+            None,
+            id="water_pressure_alarm_max",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_above_high_threshold_3",
+            BinarySensorDeviceClass.PROBLEM,
+            None,
+            id="water_temperature_alarm_above_high_threshold",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_below_low_threshold_4",
+            BinarySensorDeviceClass.PROBLEM,
+            None,
+            id="water_level_alarm_below_low_threshold",
+        ),
+        pytest.param(
             "binary_sensor.titan_water_valve_actuator_sump_pump_active",
-            BinarySensorDeviceClass.MOISTURE,
+            BinarySensorDeviceClass.RUNNING,
             None,
             id="sump_pump_active",
         ),
@@ -1887,6 +1940,12 @@ def zooz_zac36_water_alarm_fixture(
             None,
             EntityCategory.DIAGNOSTIC,
             id="replace_water_filter",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_custom_water_state",
+            None,
+            EntityCategory.DIAGNOSTIC,
+            id="unknown_variable",
         ),
     ],
 )
@@ -1924,7 +1983,7 @@ async def test_water_alarm_notification_sensors_count(
                 and "-113-0-Water Alarm-" in entry.unique_id
             ]
         )
-        == 8
+        == 19
     )
 
 
@@ -1936,6 +1995,12 @@ async def test_water_alarm_notification_sensors_count(
             2,
             "binary_sensor.titan_water_valve_actuator_water_leak_detected",
             id="water_leak_detected",
+        ),
+        pytest.param(
+            "Water pressure alarm status",
+            1,
+            "binary_sensor.titan_water_valve_actuator_no_data_2",
+            id="water_pressure_alarm_no_data",
         ),
         pytest.param(
             "Pump status",
