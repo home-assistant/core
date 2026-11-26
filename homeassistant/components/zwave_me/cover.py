@@ -3,9 +3,9 @@
 from typing import Any, override
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -59,7 +59,7 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
     @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Update the current value."""
-        value = kwargs[ATTR_POSITION]
+        value = kwargs[CoverServiceArgument.POSITION]
         self.controller.zwave_api.send_command(
             self.device.id, f"exact?level={min(value, 99)!s}"
         )

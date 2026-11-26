@@ -5,12 +5,10 @@ from typing import Any, override
 from zwave_me_ws import ZWaveMeData
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_RGB_COLOR,
-    ATTR_TRANSITION,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -80,7 +78,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         command = "off"
-        transition = kwargs.get(ATTR_TRANSITION)
+        transition = kwargs.get(LightServiceArgument.TRANSITION)
         if transition is not None:
             command = f"exactSmooth?level=0&duration={self._transition_to_duration(transition)}"
         self.controller.zwave_api.send_command(self.device.id, command)
@@ -88,9 +86,9 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        color: tuple[int, int, int] | None = kwargs.get(ATTR_RGB_COLOR)
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        transition: float | None = kwargs.get(ATTR_TRANSITION)
+        color: tuple[int, int, int] | None = kwargs.get(LightServiceArgument.RGB_COLOR)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS)
+        transition: float | None = kwargs.get(LightServiceArgument.TRANSITION)
 
         command_id = "exact"
         command_args: dict[str, str] = {}
