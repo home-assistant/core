@@ -1,10 +1,13 @@
 """Test the Devialet init."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 from devialet import DevialetApi
 from devialet.const import UrlSuffix
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import WebSocketGenerator
 from yarl import URL
@@ -452,3 +455,71 @@ async def test_browse_media(
     }
     assert "audio/mpeg" in content_types
     assert not any(ct.startswith("video/") for ct in content_types)
+
+
+async def test_push_update(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_listen: AsyncMock,
+) -> None:
+    """Test a push notification updates the state without polling."""
+    await setup_integration(hass, aioclient_mock)
+    _, on_update, _ = mock_listen.call_args.args
+    calls = aioclient_mock.call_count
+
+    with patch.object(
+        DevialetApi, "volume_level", new_callable=PropertyMock, return_value=0.5
+    ):
+        on_update()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.5
+    assert aioclient_mock.call_count == calls
+
+
+async def test_poll_less_while_connected(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    mock_listen: AsyncMock,
+) -> None:
+    """Test polling slows down, but keeps going, while push notifications are received."""
+    await setup_integration(hass, aioclient_mock)
+    _, on_update, on_connection_change = mock_listen.call_args.args
+
+    on_connection_change(True)
+    # The poll that was already scheduled schedules the next one at the slow interval
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    calls = aioclient_mock.call_count
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    on_update()
+    assert aioclient_mock.call_count == calls
+
+    # Push notifications must not postpone the poll
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert aioclient_mock.call_count > calls
+
+
+async def test_disconnect_polls_immediately(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_listen: AsyncMock,
+) -> None:
+    """Test losing push notifications checks the device right away."""
+    await setup_integration(hass, aioclient_mock)
+    _, on_update, on_connection_change = mock_listen.call_args.args
+    on_connection_change(True)
+    on_update()
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(f"http://{HOST}{UrlSuffix.GET_CURRENT_SOURCE}", exc=TimeoutError)
+    on_connection_change(False)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE

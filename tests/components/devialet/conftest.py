@@ -1,10 +1,28 @@
 """Fixtures for the Devialet integration tests."""
 
-from collections.abc import Generator
+import asyncio
+from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 from devialet import DevialetApi
 import pytest
+
+
+@pytest.fixture(autouse=True)
+def mock_listen() -> Generator[AsyncMock]:
+    """Mock the push notification connection, the callbacks are in the call args."""
+
+    async def listen(
+        self: DevialetApi,
+        on_update: Callable[[], None],
+        on_connection_change: Callable[[bool], None],
+    ) -> None:
+        await asyncio.Event().wait()
+
+    with patch.object(
+        DevialetApi, "async_listen", autospec=True, side_effect=listen
+    ) as mock:
+        yield mock
 
 
 @pytest.fixture(autouse=True)
