@@ -33,7 +33,6 @@ from aiohasupervisor.models import (
     NewBackup,
     PartialBackupOptions,
     PartialRestoreOptions,
-    SupervisorOptions,
 )
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
@@ -727,8 +726,9 @@ async def test_setup_migrates_legacy_options_over_default_entry_options(
 async def test_setup_core_push_config(
     hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
-    """Test setup with API push default data."""
+    """Test that setup and config changes push the installation language."""
     hass.config.time_zone = "testzone"
+    hass.config.language = "de"
 
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, DOMAIN, {"hassio": {}})
@@ -736,16 +736,34 @@ async def test_setup_core_push_config(
 
     assert result
     assert len(supervisor_client.mock_calls) == 17
-    supervisor_client.supervisor.set_options.assert_called_once_with(
-        SupervisorOptions(timezone="testzone")
-    )
+    set_options = supervisor_client.supervisor.set_options
+    set_options.assert_awaited_once()
+    assert set_options.call_args.args[0].to_dict() == {
+        "timezone": "testzone",
+        "language": "de",
+    }
 
     with patch("homeassistant.util.dt.set_default_time_zone"):
         await hass.config.async_update(time_zone="America/New_York", country="US")
     await hass.async_block_till_done()
-    supervisor_client.supervisor.set_options.assert_called_with(
-        SupervisorOptions(timezone="America/New_York", country="US")
-    )
+    assert set_options.call_args.args[0].to_dict() == {
+        "timezone": "America/New_York",
+        "country": "US",
+        "language": "de",
+    }
+
+    await hass.config.async_update(language="pt-BR")
+    await hass.async_block_till_done()
+    assert set_options.call_args.args[0].to_dict() == {
+        "timezone": "America/New_York",
+        "country": "US",
+        "language": "pt-BR",
+    }
+
+    set_options.reset_mock()
+    await hass.config.async_update(language="pt-BR")
+    await hass.async_block_till_done()
+    set_options.assert_not_awaited()
 
 
 async def test_setup_core_push_config_error(

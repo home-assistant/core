@@ -578,22 +578,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     last_timezone = None
     last_country = None
+    last_language = None
 
     async def push_config(_: Event | None) -> None:
         """Push core config to Hass.io."""
         nonlocal last_timezone
         nonlocal last_country
+        nonlocal last_language
 
         new_timezone = hass.config.time_zone
         new_country = hass.config.country
+        new_language = hass.config.language
 
-        if new_timezone != last_timezone or new_country != last_country:
+        if (
+            new_timezone != last_timezone
+            or new_country != last_country
+            or new_language != last_language
+        ):
             last_timezone = new_timezone
             last_country = new_country
+            last_language = new_language
 
             try:
                 await supervisor_client.supervisor.set_options(
-                    SupervisorOptions(timezone=new_timezone, country=new_country)
+                    SupervisorOptions(
+                        timezone=new_timezone,
+                        country=new_country,
+                        language=new_language,
+                    )
                 )
             except SupervisorError as err:
                 _LOGGER.warning("Failed to update Supervisor options: %s", err)
