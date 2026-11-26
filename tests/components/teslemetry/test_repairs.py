@@ -775,9 +775,7 @@ async def test_ble_key_rejected_repair_clears_on_bluetooth_success(
         pytest.param(BluetoothTimeout(), id="timeout"),
         pytest.param(BluetoothTransportError(), id="transport"),
         pytest.param(BluetoothCommandFailed(), id="command_failed"),
-        pytest.param(TeslaFleetMessageFaultKeychainIsFull(), id="keychain_full"),
         pytest.param(BleakError("no route"), id="bleak"),
-        pytest.param(ValueError("unexpected"), id="unexpected"),
     ],
 )
 async def test_ble_non_key_failure_raises_no_repair(
@@ -793,6 +791,40 @@ async def test_ble_non_key_failure_raises_no_repair(
         await _press_flash_lights(hass, MagicMock())
 
     cloud.assert_awaited_once()
+    assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is None
+
+
+@pytest.mark.parametrize(
+    ("ble_error", "raised"),
+    [
+        pytest.param(
+            TeslaFleetMessageFaultKeychainIsFull(),
+            HomeAssistantError,
+            id="keychain_full",
+        ),
+        pytest.param(TeslaFleetMessageFaultBusy(), HomeAssistantError, id="busy"),
+        pytest.param(ValueError("unexpected"), ValueError, id="unexpected"),
+    ],
+)
+async def test_ble_failover_unsafe_failure_skips_cloud(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    ble_error: Exception,
+    raised: type[Exception],
+) -> None:
+    """A Bluetooth failure the library marks unsafe to retry is not sent to the cloud."""
+    bluetooth_vehicles = await _setup_ble_vehicles(hass, _entry_with_ble_vehicles())
+    bluetooth_vehicles[VEHICLE_VIN].flash_lights.side_effect = ble_error
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.flash_lights", return_value=COMMAND_OK
+        ) as cloud,
+        pytest.raises(raised),
+    ):
+        await _press_flash_lights(hass, MagicMock())
+
+    cloud.assert_not_awaited()
     assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is None
 
 

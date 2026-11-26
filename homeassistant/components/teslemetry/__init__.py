@@ -20,7 +20,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
     is_key_rejected,
 )
-from tesla_fleet_api.router import VehicleRouter
+from tesla_fleet_api.router import VehicleRouter, is_failover_safe
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.powerwall import (
     PowerwallClient,
@@ -490,8 +490,7 @@ async def _async_resolve_vehicle_api(
                         "subentry_id": subentry.subentry_id,
                     },
                 )
-        # Always fail over: the cloud signs with its own key, so it can still succeed.
-        return True
+        return err is None or is_failover_safe(err)
 
     return (
         VehicleRouter(

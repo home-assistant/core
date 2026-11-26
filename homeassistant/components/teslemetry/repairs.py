@@ -39,7 +39,6 @@ from homeassistant.helpers import issue_registry as ir
 from . import _async_get_rsa_key_pem
 from .const import (
     BLE_DISCONNECT_TIMEOUT,
-    BLE_HANDSHAKE_TIMEOUT,
     CONF_LEGACY_GATEWAY,
     CONF_VIN,
     ISSUE_ENERGY_SITE_NOT_PAIRED,
@@ -55,6 +54,8 @@ from .helpers import (
     cloud_energy_site,
 )
 from .models import TeslemetryConfigEntry
+
+BLE_HANDSHAKE_TIMEOUT = 60
 
 
 class VehicleMetadataRepairFlow(RepairsFlow):
