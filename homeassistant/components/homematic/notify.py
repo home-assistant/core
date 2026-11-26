@@ -5,9 +5,9 @@ from typing import Any, override
 import probatio
 
 from homeassistant.components.notify import (
-    ATTR_DATA,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
+    NotifyServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template as template_helper
@@ -64,7 +64,7 @@ class HomematicNotificationService(BaseNotificationService):
     @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a notification to the device."""
-        data = {**self.data, **kwargs.get(ATTR_DATA, {})}
+        data = {**self.data, **kwargs.get(NotifyServiceArgument.DATA, {})}
 
         if data.get(HomematicServiceArgument.VALUE) is not None:
             templ = template_helper.Template(

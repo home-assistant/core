@@ -3,10 +3,9 @@
 from typing import Any, override
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -53,8 +52,8 @@ class HMCover(HMDevice, CoverEntity):
     @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        if ATTR_POSITION in kwargs:
-            position = float(kwargs[ATTR_POSITION])
+        if CoverServiceArgument.POSITION in kwargs:
+            position = float(kwargs[CoverServiceArgument.POSITION])
             position = min(100, max(0, position))
             level = position / 100.0
             self._hmdevice.set_level(level, self._channel)
@@ -104,8 +103,8 @@ class HMCover(HMDevice, CoverEntity):
     @override
     def set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        if "LEVEL_2" in self._data and ATTR_TILT_POSITION in kwargs:
-            position = float(kwargs[ATTR_TILT_POSITION])
+        if "LEVEL_2" in self._data and CoverServiceArgument.TILT_POSITION in kwargs:
+            position = float(kwargs[CoverServiceArgument.TILT_POSITION])
             position = min(100, max(0, position))
             level = position / 100.0
             self._hmdevice.set_cover_tilt_position(level, self._channel)
