@@ -24,6 +24,7 @@ from homeassistant.components.climate import (
     HVACMode,
     RestoreClimate,
 )
+from homeassistant.components.homeassistant import HomeAssistantService
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
@@ -32,8 +33,6 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -695,7 +694,10 @@ class GenericThermostat(RestoreClimate):
         new_context = Context(parent_id=current_context.id if current_context else None)
         self._last_context_id = new_context.id
         await self.hass.services.async_call(
-            HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data, context=new_context
+            HOMEASSISTANT_DOMAIN,
+            HomeAssistantService.TURN_ON,
+            data,
+            context=new_context,
         )
         if not keepalive:
             # Update timestamp on turn on
@@ -724,7 +726,10 @@ class GenericThermostat(RestoreClimate):
         new_context = Context(parent_id=current_context.id if current_context else None)
         self._last_context_id = new_context.id
         await self.hass.services.async_call(
-            HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data, context=new_context
+            HOMEASSISTANT_DOMAIN,
+            HomeAssistantService.TURN_OFF,
+            data,
+            context=new_context,
         )
         if not keepalive:
             # Update timestamp on turn off
