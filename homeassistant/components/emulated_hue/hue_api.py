@@ -40,6 +40,7 @@ from homeassistant.components.fan import (
     FanEntityStateAttribute,
     FanServiceArgument,
 )
+from homeassistant.components.homeassistant import HomeAssistantService
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import (
     HumidifierEntityStateAttribute,
@@ -607,7 +608,7 @@ class HueOneLightChangeView(HomeAssistantView):
         if turn_on_needed:
             await hass.services.async_call(
                 core.DOMAIN,
-                SERVICE_TURN_ON,
+                HomeAssistantService.TURN_ON,
                 {TargetKey.ENTITY_ID: entity_id},
                 blocking=False,
             )
