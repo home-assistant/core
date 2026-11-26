@@ -81,7 +81,7 @@ async def test_zone_state_updates(
     ]
     freezer.tick(SCAN_INTERVAL + dt.timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get("binary_sensor.front_door").state == STATE_ON
 

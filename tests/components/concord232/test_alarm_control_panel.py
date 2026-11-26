@@ -63,7 +63,7 @@ async def test_state_updates_on_poll(
     mock_concord232_client.list_partitions.return_value = [{"arming_level": "Away"}]
     freezer.tick(SCAN_INTERVAL + dt.timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.ARMED_AWAY
 
@@ -84,7 +84,7 @@ async def test_connection_error_keeps_last_state(
     )
     freezer.tick(SCAN_INTERVAL + dt.timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
     assert "Unable to connect to" in caplog.text
