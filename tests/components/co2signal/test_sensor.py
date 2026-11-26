@@ -46,6 +46,7 @@ async def test_sensor(
         ElectricityMapsConnectionTimeoutError,
         ElectricityMapsConnectionError,
         ElectricityMapsError,
+        ElectricityMapsInvalidTokenError,
         Exception,
     ],
 )
@@ -89,13 +90,23 @@ async def test_sensor_reauth_triggered(
     freezer: FrozenDateTimeFactory,
     electricity_maps: AsyncMock,
 ) -> None:
-    """Test if reauth flow is triggered."""
+    """Test if reauth flow is triggered after four retries."""
     assert (state := hass.states.get("sensor.electricity_maps_co2_intensity"))
     assert state.state == "45.9862319009581"
 
     electricity_maps.carbon_intensity_for_home_assistant.side_effect = (
         ElectricityMapsInvalidTokenError
     )
+
+    for _ in range(4):
+        freezer.tick(timedelta(minutes=20))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.electricity_maps_co2_intensity"))
+    assert state.state == "unavailable"
+    assert not hass.config_entries.flow.async_progress()
+    assert len(electricity_maps.mock_calls) == 5
 
     freezer.tick(timedelta(minutes=20))
     async_fire_time_changed(hass)
