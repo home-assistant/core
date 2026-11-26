@@ -552,7 +552,7 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
     def get_panel_state(self) -> PanelStateData:
         """Return the whole-panel state for the alarm entity."""
         data = self.data
-        if not data or not data.connected:
+        if data is None or not data.connected:
             return PanelStateData()
         alarm_state: AlarmControlPanelState | None
         if data.siren_active:

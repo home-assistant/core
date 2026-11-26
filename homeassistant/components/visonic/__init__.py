@@ -143,7 +143,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: VisonicConfigEntry) -> 
 
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
     vcd = entry.runtime_data
-    if not vcd:
+    if vcd is None:
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="panel_coordinator_missing"
         )

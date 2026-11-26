@@ -109,22 +109,6 @@ async def test_coordinator_update(
     alarm.async_write_ha_state.assert_called_once_with()
 
 
-async def test_panel_state_without_coordinator(
-    setup_integration: Callable[..., Awaitable[tuple[bool, ConfigEntry]]],
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Use an empty state and warn if an update arrives without a coordinator."""
-    result, entry = await setup_integration()
-    assert result
-    alarm = TestAlarm(entry)
-    alarm.coordinator = None
-
-    alarm._update_panel_state()
-
-    assert alarm.panel_state_data == PanelStateData()
-    assert "Coordinator not ready for alarm panel" in caplog.text
-
-
 async def test_available(
     setup_integration: Callable[..., Awaitable[tuple[bool, ConfigEntry]]],
 ) -> None:

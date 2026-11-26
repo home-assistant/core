@@ -94,7 +94,7 @@ class VisonicCloudConnection(VisonicConnection):
 
     def save_connection_entry(self) -> None:
         """Save a changed application ID after successful panel login."""
-        if self.cloud_alarm and self.cloud_alarm.api:
+        if self.cloud_alarm is not None:
             app_id = self.cloud_alarm.api.app_id
             if self.settings.app_id != app_id:
                 self.settings.app_id = app_id

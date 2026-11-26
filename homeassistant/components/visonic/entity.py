@@ -13,7 +13,6 @@ from .const import (
     CONF_INSTANT_ARM_AWAY,
     CONF_INSTANT_ARM_HOME,
     DOMAIN,
-    LOGGER,
     MANUFACTURER,
     VISONIC_TRANSLATION_KEY,
 )
@@ -21,7 +20,6 @@ from .coordinator import VisonicCoordinator
 from .exceptions import VisonicException
 from .utils import to_bool
 from .visonic_data_types import VisonicConfigEntry, VisonicPanelData
-from .visonic_types import PanelStateData
 
 
 class AlarmBaseLogic(CoordinatorEntity[VisonicCoordinator]):
@@ -50,13 +48,6 @@ class AlarmBaseLogic(CoordinatorEntity[VisonicCoordinator]):
         self.coordinator.ive_been_created()
 
     def _update_panel_state(self) -> None:
-        if not self.coordinator:
-            LOGGER.warning(
-                "Coordinator not ready for alarm panel %s yet it should be by now",
-                self._name,
-            )
-            self.panel_state_data = PanelStateData()
-            return
         self.panel_state_data = self.coordinator.get_panel_state()
 
     @abstractmethod

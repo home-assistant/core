@@ -10,9 +10,7 @@ rules:
       pushed, with snapshots refreshed at least every 60 seconds.
   brands:
     status: done
-    comment: >
-      Assets submitted in https://github.com/home-assistant/brands/pull/11323,
-      awaiting merge.
+    comment: Icon and logo assets exist in the brands repository.
   common-modules:
     status: done
     comment: Coordinator, backend and shared entity logic use separate modules.
@@ -118,8 +116,8 @@ rules:
   test-coverage:
     status: done
     comment: >
-      All 708 tests pass with 98.69 percent combined coverage, 99.30 percent
-      statement coverage, and 96.04 percent branch coverage. Config flows and
+      All 707 tests pass with 98.69 percent combined coverage, 99.30 percent
+      statement coverage, and 96.01 percent branch coverage. Config flows and
       the direct backend have 100 percent statement and branch coverage.
 
   # Gold
