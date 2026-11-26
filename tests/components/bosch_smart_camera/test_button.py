@@ -33,7 +33,10 @@ ENTITY_ID = "button.garden_restart"
 async def _press(hass: HomeAssistant) -> None:
     """Press the restart button."""
     await hass.services.async_call(
-        BUTTON_DOMAIN, ButtonService.PRESS, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
 
