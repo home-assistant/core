@@ -38,7 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SchlageConfigEntry) -> N
     try:
         auth = await hass.async_add_executor_job(pyschlage.Auth, username, password)
     except WarrantException as ex:
-        raise ConfigEntryAuthFailed from ex
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="schlage_auth_failed"
+        ) from ex
 
     coordinator = SchlageDataUpdateCoordinator(
         hass, entry, username, pyschlage.Schlage(auth)

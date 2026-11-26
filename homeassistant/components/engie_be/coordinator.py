@@ -1,9 +1,9 @@
 """DataUpdateCoordinator for the ENGIE Belgium integration."""
 
 import asyncio
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from itertools import pairwise
 from typing import TYPE_CHECKING, override
@@ -17,7 +17,6 @@ from aioengiebelgium import (
     EpexSlot,
     MonthlyPeaks,
     Peak,
-    PricePeriod,
     PriceSlot,
     ServicePoint,
     bare_ean,
@@ -42,7 +41,6 @@ from .const import (
 if TYPE_CHECKING:
     from . import EngieBeConfigEntry
 
-_DIRECTIONS = ("offtake", "injection")
 _DIRECTION_PREFIXES = ("OFFTAKE_", "INJECTION_")
 _BLENDED_SLOT_CODE = "EN"
 _SERVICE_POINT_REFRESH_INTERVAL = timedelta(days=1)
@@ -76,6 +74,11 @@ def _raise_update_errors() -> Iterator[None]:
         raise _cannot_connect() from err
 
 
+def _brussels_day(slot: EpexSlot) -> date:
+    """Return the Brussels calendar day an EPEX slot starts on."""
+    return slot.start.astimezone(BRUSSELS_TIME_ZONE).date()
+
+
 def normalize_slot_code(raw_code: str) -> str:
     """Strip a redundant direction prefix from a raw time-of-use slot code."""
     for prefix in _DIRECTION_PREFIXES:
@@ -83,16 +86,6 @@ def normalize_slot_code(raw_code: str) -> str:
         if idx != -1:
             return raw_code[idx + len(prefix) :]
     return raw_code
-
-
-def _current_period(
-    periods: tuple[PricePeriod, ...], today: date
-) -> PricePeriod | None:
-    """Return the price period covering today, if any."""
-    for period in periods:
-        if period.contains(today):
-            return period
-    return None
 
 
 def _gas_conversion_coefficient(service_point: ServicePoint) -> float | None:
@@ -108,13 +101,13 @@ def _gas_conversion_coefficient(service_point: ServicePoint) -> float | None:
     return coefficient
 
 
-@dataclass
+@dataclass(frozen=True)
 class EngieBePricesData:
     """Pre-processed price lookup for one business agreement."""
 
     slots: dict[tuple[str, str, str], PriceSlot]
     eans: tuple[str, ...]
-    gas_conversion_coefficients: dict[str, float] = field(default_factory=dict)
+    gas_conversion_coefficients: dict[str, float]
 
 
 class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreement]]):
@@ -178,7 +171,7 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         self.client = client
         self.ban = ban
         self.ean_energy_types: dict[str, str | None] = {}
-        self.gas_conversion_coefficients: dict[str, float] = {}
+        self._gas_conversion_coefficients: dict[str, float] = {}
         self._service_points_refreshed_at: dict[str, datetime] = {}
         address = (
             agreement.consumption_address.format()
@@ -240,21 +233,24 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                 if (
                     coefficient := _gas_conversion_coefficient(service_point_result)
                 ) is None:
-                    self.gas_conversion_coefficients.pop(bare, None)
+                    self._gas_conversion_coefficients.pop(bare, None)
                 else:
-                    self.gas_conversion_coefficients[bare] = coefficient
+                    self._gas_conversion_coefficients[bare] = coefficient
                 self._service_points_refreshed_at[bare] = now
 
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
         slots: dict[tuple[str, str, str], PriceSlot] = {}
         for ean_prices in prices.items:
-            period = _current_period(ean_prices.periods, today)
+            period = next(
+                (period for period in ean_prices.periods if period.contains(today)),
+                None,
+            )
             if period is None:
                 continue
-            for direction in _DIRECTIONS:
-                direction_slots = (
-                    period.offtake if direction == "offtake" else period.injection
-                )
+            for direction, direction_slots in (
+                ("offtake", period.offtake),
+                ("injection", period.injection),
+            ):
                 for slot in direction_slots:
                     normalized = normalize_slot_code(slot.time_of_use_slot_code)
                     if normalized == _BLENDED_SLOT_CODE:
@@ -264,7 +260,7 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         return EngieBePricesData(
             slots=slots,
             eans=tuple(ean_prices.ean for ean_prices in prices.items),
-            gas_conversion_coefficients=dict(self.gas_conversion_coefficients),
+            gas_conversion_coefficients=dict(self._gas_conversion_coefficients),
         )
 
 
@@ -272,24 +268,16 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
 class EngieBeEpexData:
     """Merged EPEX day-ahead price slots covering today and tomorrow."""
 
-    hourly: tuple[EpexSlot, ...]
-    quarter_hourly: tuple[EpexSlot, ...]
+    by_granularity: Mapping[EpexGranularity, tuple[EpexSlot, ...]]
 
     def slots(self, granularity: EpexGranularity) -> tuple[EpexSlot, ...]:
         """Return the merged slots for one granularity."""
-        return {
-            EpexGranularity.HOURLY: self.hourly,
-            EpexGranularity.QUARTER_HOURLY: self.quarter_hourly,
-        }[granularity]
+        return self.by_granularity[granularity]
 
 
 def epex_slots_for_day(slots: Iterable[EpexSlot], day: date) -> tuple[EpexSlot, ...]:
     """Return the EPEX slots that start on the given Brussels calendar day."""
-    return tuple(
-        slot
-        for slot in slots
-        if slot.start.astimezone(BRUSSELS_TIME_ZONE).date() == day
-    )
+    return tuple(slot for slot in slots if _brussels_day(slot) == day)
 
 
 def epex_slot_covering(slots: Iterable[EpexSlot], moment: datetime) -> EpexSlot | None:
@@ -424,7 +412,7 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
             update_interval=EPEX_SCAN_INTERVAL,
         )
         self.client = client
-        self.data = EngieBeEpexData(hourly=(), quarter_hourly=())
+        self.data = EngieBeEpexData(by_granularity=dict.fromkeys(EpexGranularity, ()))
         self._listener_unsub: Callable[[], None] | None = None
 
     @callback
@@ -459,7 +447,7 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
             granularity: [
                 slot
                 for slot in self.data.slots(granularity)
-                if slot.start.astimezone(BRUSSELS_TIME_ZONE).date() >= today
+                if _brussels_day(slot) >= today
             ]
             for granularity in EpexGranularity
         }
@@ -479,18 +467,13 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
                     LOGGER.debug("Fetching EPEX prices for %s failed: %s", day, err)
                     continue
                 slots[granularity] = [
-                    slot
-                    for slot in slots[granularity]
-                    if slot.start.astimezone(BRUSSELS_TIME_ZONE).date() != day
+                    slot for slot in slots[granularity] if _brussels_day(slot) != day
                 ] + list(payload.slots)
         return EngieBeEpexData(
-            hourly=tuple(
-                sorted(slots[EpexGranularity.HOURLY], key=lambda slot: slot.start)
-            ),
-            quarter_hourly=tuple(
-                sorted(
-                    slots[EpexGranularity.QUARTER_HOURLY],
-                    key=lambda slot: slot.start,
+            by_granularity={
+                granularity: tuple(
+                    sorted(granularity_slots, key=lambda slot: slot.start)
                 )
-            ),
+                for granularity, granularity_slots in slots.items()
+            }
         )

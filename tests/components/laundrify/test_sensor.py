@@ -2,7 +2,6 @@
 
 from collections.abc import AsyncGenerator
 from datetime import timedelta
-import logging
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -90,7 +89,6 @@ async def test_laundrify_sensor_update_failure(
     laundrify_config_entry: MockConfigEntry,
 ) -> None:
     """Test that update failures are logged."""
-    caplog.set_level(logging.DEBUG)
 
     # test get_power() to raise a LaundrifyDeviceException
     with patch(

@@ -16,12 +16,7 @@ from homeassistant.components.fan import (
     FanService,
     FanServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    EntityStateAttribute,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, EntityStateAttribute, TargetKey
 from homeassistant.core import State, callback
 
 from .accessories import TYPES, HomeAccessory
@@ -197,7 +192,7 @@ class Fan(HomeAccessory):
 
     def set_single_preset_mode(self, value: int) -> None:
         """Set auto call came from HomeKit."""
-        params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         if value:
             assert self.preset_modes
             _LOGGER.debug(
@@ -218,7 +213,7 @@ class Fan(HomeAccessory):
         _LOGGER.debug(
             "%s: Set preset_mode %s to %d", self.entity_id, preset_mode, value
         )
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         if value:
             params[FanServiceArgument.PRESET_MODE] = preset_mode
             self.async_call_service(FAN_DOMAIN, FanService.SET_PRESET_MODE, params)
@@ -229,15 +224,15 @@ class Fan(HomeAccessory):
         """Set state if call came from HomeKit."""
         _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
         service = FanService.TURN_ON if value == 1 else FanService.TURN_OFF
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         self.async_call_service(FAN_DOMAIN, service, params)
 
     def set_direction(self, value: int) -> None:
         """Set state if call came from HomeKit."""
         _LOGGER.debug("%s: Set direction to %d", self.entity_id, value)
         direction = DIRECTION_REVERSE if value == 1 else DIRECTION_FORWARD
-        params = {
-            ATTR_ENTITY_ID: self.entity_id,
+        params: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self.entity_id,
             FanServiceArgument.DIRECTION: direction,
         }
         self.async_call_service(FAN_DOMAIN, FanService.SET_DIRECTION, params, direction)
@@ -246,8 +241,8 @@ class Fan(HomeAccessory):
         """Set state if call came from HomeKit."""
         _LOGGER.debug("%s: Set oscillating to %d", self.entity_id, value)
         oscillating = value == 1
-        params = {
-            ATTR_ENTITY_ID: self.entity_id,
+        params: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self.entity_id,
             FanServiceArgument.OSCILLATING: oscillating,
         }
         self.async_call_service(FAN_DOMAIN, FanService.OSCILLATE, params, oscillating)
@@ -255,7 +250,10 @@ class Fan(HomeAccessory):
     def set_percentage(self, value: float) -> None:
         """Set state if call came from HomeKit."""
         _LOGGER.debug("%s: Set speed to %d", self.entity_id, value)
-        params = {ATTR_ENTITY_ID: self.entity_id, FanServiceArgument.PERCENTAGE: value}
+        params: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self.entity_id,
+            FanServiceArgument.PERCENTAGE: value,
+        }
         self.async_call_service(FAN_DOMAIN, FanService.SET_PERCENTAGE, params, value)
 
     @callback

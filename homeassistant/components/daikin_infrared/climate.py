@@ -3,7 +3,7 @@
 from calendar import Day
 from dataclasses import dataclass, replace
 from datetime import datetime, time
-from typing import Any, NamedTuple, Self, cast, override
+from typing import Any, NamedTuple, Self, override
 
 from infrared_protocols.commands.daikin_ac import (
     MAX_TEMP,
@@ -298,8 +298,7 @@ class DaikinAcClimate(InfraredEmitterConsumerEntity, ClimateEntity, RestoreEntit
     @override
     def native_target_temperature(self) -> float | None:
         """Return the setpoint of the current mode."""
-        # infrared_protocols has no py.typed marker
-        return cast(float | None, self._ac_state.temperature)
+        return self._ac_state.temperature
 
     @property
     @override

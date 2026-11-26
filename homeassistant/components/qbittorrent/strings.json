@@ -34,6 +34,10 @@
       "alltime_upload": {
         "name": "All-time upload"
       },
+      "completed_torrents": {
+        "name": "Completed torrents",
+        "unit_of_measurement": "[%key:component::qbittorrent::entity::sensor::active_torrents::unit_of_measurement%]"
+      },
       "connection_status": {
         "name": "Connection status",
         "state": {

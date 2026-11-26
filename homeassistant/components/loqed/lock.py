@@ -12,6 +12,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import LoqedConfigEntry, LoqedDataCoordinator
 from .entity import LoqedEntity
 
+PARALLEL_UPDATES = 0
+
 WEBHOOK_API_ENDPOINT = "/api/loqed/webhook"
 
 

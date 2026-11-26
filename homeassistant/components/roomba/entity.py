@@ -78,6 +78,11 @@ class IRobotEntity(Entity):
         return self.vacuum_state.get("bbchg3", {})
 
     @property
+    def battery_info(self):
+        """Return the battery info."""
+        return self.vacuum_state.get("batInfo", {})
+
+    @property
     def tank_level(self) -> int | None:
         """Return the tank level."""
         return self.vacuum_state.get("tankLvl")

@@ -1,0 +1,389 @@
+{
+  "applianceInfo": {
+    "serialNumber": "99010299",
+    "pnc": "999008105",
+    "brand": "AEG",
+    "deviceType": "CEILING HOODS",
+    "model": "DDC8271W",
+    "variant": "SLIMWHGLASS8000",
+    "colour": "WHITE"
+  },
+  "capabilities": {
+    "alerts": {
+      "access": "read",
+      "type": "alert",
+      "values": {
+        "ABNORMAL_TEMPERATURE_FAIL_H253": {},
+        "BRUSHLESS_MOTOR_CONTROL_BOARD_ALARMS_H103": {},
+        "CHUI_BOARD_NTC_OUT_OF_RANGE_ALARM_H210": {},
+        "COMM_ALARM_CHC_CHUI_H125": {},
+        "COMM_ALARM_CHPE_CHUI_H348": {},
+        "COMM_ALARM_CHUI_CHC_H201": {},
+        "COMM_ALARM_CHUI_CPE_H202": {},
+        "COMM_FAIL_CHC_HOOD_MOTOR_CONTROL_H101": {},
+        "COOLING_DOWN_WARNING_H252": {},
+        "HUMIDITY_TEMPERATURE_SENSOR_OUT_OF_RANGE_ALARM_H351": {},
+        "MISSING_CONFIGURATION_ALARM_CHPE_H354": {},
+        "MISSING_CONFIG_ALARM_H135": {},
+        "STUCK_KEY_ALARM_H218": {},
+        "SW_COMPAT_ALARM_H127": {},
+        "TVOC_ALARM_H346": {},
+        "TVOC_HUMIDITY_TEMPERATURE_I2C_ALARM_H350": {},
+        "TVOC_R_MOX_OUT_OF_RANGE_ALARM_H349": {},
+        "WRONG_CONFIG_CHECKSUM_PHE_ALARM_H341": {},
+        "WRONG_CONFIG_CRC_ALARM_H133": {},
+        "WRONG_CRC_ON_CONFIG_ALARM_CHPE_H347": {},
+        "WRONG_CRC_ON_CONFIG_ALARM_CHUI_H204": {},
+        "WRONG_SW_COMPAT_ALARM_CHUI_H205": {}
+      }
+    },
+    "applianceLocalTimeOffset": {
+      "access": "read",
+      "type": "number"
+    },
+    "applianceMode": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "DEMO": {},
+        "DIAGNOSTIC": {},
+        "NORMAL": {}
+      }
+    },
+    "applianceState": {
+      "access": "read",
+      "triggers": [
+        {
+          "action": {
+            "hoodFilterCharcEnable": {
+              "access": "readwrite"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "OFF",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "IDLE",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "hoodFilterCharcEnable": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "RUNNING",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "humanCentricLightEventSettings": {
+              "access": "readwrite"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "OFF",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "IDLE",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "humanCentricLightEventSettings": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "RUNNING",
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "IDLE": {},
+        "OFF": {},
+        "RUNNING": {}
+      }
+    },
+    "autosenseEnabledDisable": {
+      "access": "readwrite",
+      "type": "boolean"
+    },
+    "charcoalFilterReminderThreshold": {
+      "access": "constant",
+      "default": 9600,
+      "type": "int"
+    },
+    "greaseFilterReminderThreshold": {
+      "access": "constant",
+      "default": 2400,
+      "type": "int"
+    },
+    "hoodAutoSwitchOffEvent": {
+      "access": "read",
+      "type": "boolean"
+    },
+    "hoodAutosenseControl": {
+      "access": "readwrite",
+      "type": "boolean"
+    },
+    "hoodCharcFilterTimer": {
+      "access": "read",
+      "type": "number"
+    },
+    "hoodFanLevel": {
+      "access": "readwrite",
+      "triggers": [
+        {
+          "action": {
+            "targetDuration": {
+              "access": "readwrite"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "BREEZE",
+              "operator": "ge"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "STEP_3",
+              "operator": "le"
+            },
+            "operator": "and"
+          }
+        },
+        {
+          "action": {
+            "targetDuration": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "BREEZE",
+              "operator": "lt"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "STEP_3",
+              "operator": "gt"
+            },
+            "operator": "or"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "BOOST": {},
+        "BREEZE": {},
+        "OFF": {},
+        "STEP_1": {},
+        "STEP_2": {},
+        "STEP_3": {}
+      }
+    },
+    "hoodFilterCharcEnable": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    },
+    "hoodFilterCharcIndication": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {
+        "FALSE": {},
+        "TRUE": {}
+      }
+    },
+    "hoodFilterGreaseIndication": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "FALSE": {},
+        "TRUE": {}
+      }
+    },
+    "hoodGreaseFilterTimer": {
+      "access": "read",
+      "type": "number"
+    },
+    "humanCentricLightEventSettings": {
+      "access": "readwrite",
+      "type": "humanCentLightEnableSettings"
+    },
+    "humanCentricLightEventSettings/event": {
+      "access": "readwrite",
+      "type": "complex",
+      "values": {}
+    },
+    "humanCentricLightEventSettings/number": {
+      "access": "read",
+      "type": "int",
+      "values": {}
+    },
+    "lightColorTemperature": {
+      "access": "readwrite",
+      "max": 100,
+      "min": 0,
+      "step": 1,
+      "type": "number",
+      "values": {
+        "NOT_AVAILABLE": {}
+      }
+    },
+    "lightIntensity": {
+      "access": "readwrite",
+      "max": 100,
+      "min": 0,
+      "step": 1,
+      "type": "number",
+      "values": {
+        "NOT_AVAILABLE": {}
+      }
+    },
+    "localTimeAutomaticMode": {
+      "access": "read",
+      "default": "AUTOMATIC",
+      "type": "string",
+      "values": {
+        "AUTOMATIC": {}
+      }
+    },
+    "maxTimerDuration": {
+      "access": "constant",
+      "default": 60,
+      "type": "number"
+    },
+    "networkInterface": {
+      "autoLocalTimeOffset": {
+        "access": "read",
+        "max": 50400,
+        "min": -43200,
+        "step": 60,
+        "type": "number"
+      },
+      "command": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "ABORT": {},
+          "APPLIANCE_AUTHORIZE": {},
+          "DOWNLOAD": {},
+          "START": {},
+          "USER_AUTHORIZE": {},
+          "USER_NOT_AUTHORIZE": {}
+        }
+      },
+      "linkQualityIndicator": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "EXCELLENT": {},
+          "GOOD": {},
+          "POOR": {},
+          "UNDEFINED": {},
+          "VERY_GOOD": {},
+          "VERY_POOR": {}
+        }
+      },
+      "niuSwUpdateCurrentDescription": {
+        "access": "read",
+        "type": "string"
+      },
+      "otaState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "DESCRIPTION_AVAILABLE": {},
+          "DESCRIPTION_DOWNLOADING": {},
+          "DESCRIPTION_READY": {},
+          "FW_DOWNLOADING": {},
+          "FW_DOWNLOAD_START": {},
+          "FW_SIGNATURE_CHECK": {},
+          "FW_UPDATE_IN_PROGRESS": {},
+          "IDLE": {},
+          "READY_TO_UPDATE": {},
+          "UPDATE_ABORT": {},
+          "UPDATE_CHECK": {},
+          "UPDATE_ERROR": {},
+          "UPDATE_OK": {},
+          "WAITINGFORAUTHORIZATION": {}
+        }
+      },
+      "startUpCommand": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "UNINSTALL": {}
+        }
+      },
+      "swAncAndRevision": {
+        "access": "read",
+        "type": "string"
+      },
+      "swVersion": {
+        "access": "read",
+        "type": "string"
+      },
+      "timeZoneDatabaseName": {
+        "access": "readwrite",
+        "type": "string"
+      }
+    },
+    "remoteControl": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "DISABLED": {},
+        "ENABLED": {},
+        "NOT_SAFETY_RELEVANT_ENABLED": {},
+        "TEMPORARY_LOCKED": {}
+      }
+    },
+    "soundVolume": {
+      "access": "readwrite",
+      "type": "number",
+      "values": {
+        "0": {},
+        "1": {}
+      }
+    },
+    "targetDuration": {
+      "access": "readwrite",
+      "max": 36000,
+      "min": 0,
+      "step": 60,
+      "type": "number"
+    },
+    "timeToEnd": {
+      "access": "read",
+      "type": "number"
+    }
+  }
+}
