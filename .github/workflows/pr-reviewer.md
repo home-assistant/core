@@ -163,7 +163,8 @@ steps:
         ! -name ha-pr-reviewer ! -name ha-review ! -name ha-pr-comment-audit ! -name ha-integration-knowledge \
         -exec rm -rf {} +
       # The base branch's head, for `git show dev:<path>`.
-      git branch -f dev "${BASE_SHA}"
+      git fetch --depth=1 origin refs/heads/dev
+      git branch -f dev FETCH_HEAD
 timeout-minutes: 40
 ---
 
