@@ -2,8 +2,6 @@
 
 from typing import override
 
-from pyschlage.lock import AUTO_LOCK_TIMES
-
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -19,7 +17,6 @@ _DESCRIPTIONS = (
         key="auto_lock_time",
         translation_key="auto_lock_time",
         entity_category=EntityCategory.CONFIG,
-        options=[str(n) for n in AUTO_LOCK_TIMES],
     ),
 )
 
@@ -60,6 +57,7 @@ class SchlageSelect(SchlageEntity, SelectEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = description
         self._attr_unique_id = f"{device_id}_{self.entity_description.key}"
+        self._attr_options = [str(n) for n in self._lock.auto_lock_times()]
 
     @property
     @override

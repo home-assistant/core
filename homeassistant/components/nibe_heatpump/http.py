@@ -9,7 +9,7 @@ from nibe.exceptions import CoilNotFoundException
 from nibe.log_set import format_log_set
 
 from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 
 from .const import CONF_CONNECTION_TYPE, CONF_CONNECTION_TYPE_NIBEGW, DOMAIN
 from .coordinator import CoilCoordinator, NibeHeatpumpConfigEntry
@@ -17,7 +17,7 @@ from .coordinator import CoilCoordinator, NibeHeatpumpConfigEntry
 LOG_SET_URL = "/api/nibe_heatpump/{entry_id}/log_set"
 
 
-def supports_log_set(config_entry: ConfigEntry) -> bool:
+def supports_log_set(config_entry: NibeHeatpumpConfigEntry) -> bool:
     """Return if the pump of the entry reads LOG.SET to select broadcast coils."""
     return config_entry.data[CONF_CONNECTION_TYPE] == CONF_CONNECTION_TYPE_NIBEGW
 

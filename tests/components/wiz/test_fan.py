@@ -20,7 +20,7 @@ from homeassistant.components.fan import (
     FanServiceArgument,
 )
 from homeassistant.components.wiz.fan import PRESET_MODE_BREEZE
-from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -29,6 +29,7 @@ from . import (
     FAKE_DIMMABLE_FAN,
     FAKE_DIMMABLE_FAN_2,
     FAKE_MAC,
+    _mocked_wizlight,
     async_push_update,
     async_setup_integration,
 )
@@ -263,3 +264,12 @@ async def test_fan_set_direction(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_DIRECTION] == DIRECTION_FORWARD
+
+
+async def test_fan_without_state(hass: HomeAssistant) -> None:
+    """Test a fan that has not reported its state yet."""
+    bulb = _mocked_wizlight(None, None, FAKE_DIMMABLE_FAN)
+    bulb.state = []
+    await async_setup_integration(hass, wizlight=bulb, bulb_type=FAKE_DIMMABLE_FAN)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN

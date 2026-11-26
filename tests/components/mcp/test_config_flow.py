@@ -106,6 +106,28 @@ def encode_state(hass: HomeAssistant, flow_id: str) -> str:
     )
 
 
+async def test_form_uses_server_title(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
+) -> None:
+    """Test the entry title is the display title the server reports."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    response = Mock()
+    response.server_info.name = "memory"
+    response.server_info.title = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: MCP_SERVER_URL}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_API_NAME
+    assert result["result"].unique_id is None
+
+
 async def test_form(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
 ) -> None:
@@ -118,6 +140,7 @@ async def test_form(
 
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -167,6 +190,7 @@ async def test_form_mcp_client_initialization_timeout(
     mock_mcp_client.return_value.initialize.side_effect = None
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -218,6 +242,7 @@ async def test_form_mcp_client_error(
     mock_mcp_client.side_effect = None
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -262,6 +287,7 @@ async def test_input_form_validation_error(
     # Reset the error and make sure the config flow can resume successfully.
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -297,6 +323,7 @@ async def test_unique_url(hass: HomeAssistant, mock_mcp_client: Mock) -> None:
 
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -320,6 +347,7 @@ async def test_server_missing_capbilities(
     )
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     response.capabilities.tools = None
     mock_mcp_client.return_value.initialize.return_value = response
 
@@ -503,6 +531,7 @@ async def test_authentication_flow(
     mock_mcp_client.side_effect = None
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -624,6 +653,7 @@ async def test_authentication_discovery_via_header(
     mock_mcp_client.side_effect = None
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -907,6 +937,7 @@ async def test_authentication_flow_server_missing_tool_capabilities(
 
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     response.capabilities.tools = None
     mock_mcp_client.return_value.initialize.return_value = response
 
@@ -944,6 +975,7 @@ async def test_reauth_flow(
     # Verify we can connect to the server
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -1035,6 +1067,7 @@ async def test_reauth_flow_upgrade_to_oauth(
     # Verify we can connect to the server now with the token
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     # Return success for validation in async_oauth_create_entry
     mock_mcp_client.return_value.initialize.return_value = response
 
@@ -1158,6 +1191,7 @@ async def test_reauth_flow_missing_implementation(
 
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -1214,6 +1248,7 @@ async def test_hassio_discovery_flow(
 
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -1504,6 +1539,7 @@ async def test_hassio_discovery_missing_capabilities(
     )
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     response.capabilities.tools = None
     mock_mcp_client.return_value.initialize.return_value = response
 
@@ -1598,6 +1634,7 @@ async def test_hassio_discovery_authentication_flow(
     mock_mcp_client.side_effect = None
     response = Mock()
     response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])

@@ -20,8 +20,10 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.validation_errors import (
+    MAX_HUMANIZED_ERRORS,
     ValidationErrorInfo,
     ValidationErrors,
+    humanize_validation_errors,
     iter_validation_errors,
     validation_errors_as_dicts,
 )
@@ -865,3 +867,144 @@ def test_no_reference_cycles(validate: Callable[[], None]) -> None:
         gc.enable()
 
     assert unreachable == 0
+
+
+@pytest.mark.parametrize(
+    ("data", "err", "expected"),
+    [
+        pytest.param(
+            {"actions": [{"delay": 1}, {"bogus": 2}]},
+            lambda: _invalid("not a valid option", ["actions", 1, "bogus"]),
+            "not a valid option at 'actions[1].bogus'. Got 2",
+            id="invalid",
+        ),
+        pytest.param(
+            {"actions": {"delay": 1}},
+            lambda: _invalid("required key not provided", ["triggers"]),
+            "required key not provided at 'triggers'. Got None",
+            id="invalid_path_not_in_data",
+        ),
+        pytest.param(
+            {"actions": {"delay": 1}},
+            lambda: _invalid("bad", ["actions", 0, "delay"]),
+            "bad at 'actions[0].delay'. Got None",
+            id="invalid_path_not_a_list_in_data",
+        ),
+        pytest.param(
+            None,
+            lambda: _invalid("expected a dictionary"),
+            "expected a dictionary. Got None",
+            id="invalid_without_path",
+        ),
+        pytest.param(
+            {"repeat": {"count": 1, "while": []}},
+            lambda: _invalid("bad", ["repeat", VirtualPathComponent("repeat")]),
+            "bad at 'repeat.<repeat>'. Got {'count': 1, 'while': []}",
+            id="invalid_group_segment",
+        ),
+        pytest.param(
+            {"text": "a" * 600},
+            lambda: _invalid("bad", ["text"]),
+            f"bad at 'text'. Got 'aaa{'a' * 493}...",
+            id="invalid_long_value",
+        ),
+        pytest.param(
+            {"password": _SECRET},
+            _secret_multiple_invalid,
+            "invalid value at 'password'. Got <redacted>",
+            id="secret",
+        ),
+        pytest.param(
+            {"actions": [{"device_id": "abc"}]},
+            lambda: _validation_errors(
+                (HomeAssistantError("Unknown device 'abc'"), ("actions", 0))
+            ),
+            "Unknown device 'abc' at 'actions[0]'. Got {'device_id': 'abc'}",
+            id="homeassistant_error",
+        ),
+        pytest.param(
+            {"use_blueprint": {"path": "test.yaml"}},
+            lambda: HomeAssistantError("Missing input a_number"),
+            "Missing input a_number",
+            id="homeassistant_error_without_path",
+        ),
+        pytest.param(
+            {"triggers": [{"trigger": "test.missing"}]},
+            lambda: _validation_errors((_translated_error(), ("triggers", 0))),
+            "Action test.missing not found at 'triggers[0]'."
+            " Got {'trigger': 'test.missing'}",
+            id="translated_homeassistant_error",
+        ),
+        pytest.param(
+            {"triggers": {"trigger": "bad"}, "actions": [{}, {"delay": "bad"}]},
+            lambda: _validation_errors(
+                (_invalid("first"), ("triggers",)),
+                (HomeAssistantError("second"), ("actions", 1)),
+                (_invalid("third"), ("actions", 0)),
+                (HomeAssistantError("fourth"), ()),
+            ),
+            "first at 'triggers'. Got {'trigger': 'bad'}\n"
+            "second at 'actions[1]'. Got {'delay': 'bad'}\n"
+            "third at 'actions[0]'. Got {}\n"
+            "fourth",
+            id="errors_in_their_order",
+        ),
+        pytest.param(
+            {"b": 2, "a": 1},
+            lambda: _multiple_invalid(
+                _invalid("not sorted", ["b"]), _invalid("by message", ["a"])
+            ),
+            "not sorted at 'b'. Got 2\nby message at 'a'. Got 1",
+            id="multiple_invalid_in_its_order",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hass")
+def test_humanize_validation_errors(
+    data: Any, err: Callable[[], probatio.Invalid | HomeAssistantError], expected: str
+) -> None:
+    """Test the text of errors has the path and the value of each error."""
+    assert humanize_validation_errors(data, err()) == expected
+
+
+@pytest.mark.parametrize(
+    ("count", "expected_last_line"),
+    [
+        pytest.param(
+            MAX_HUMANIZED_ERRORS, "bad at '[9]'. Got 'value 9'", id="all_included"
+        ),
+        pytest.param(MAX_HUMANIZED_ERRORS + 1, "… and 1 more error", id="one_left_out"),
+        pytest.param(
+            MAX_HUMANIZED_ERRORS + 15, "… and 15 more errors", id="many_left_out"
+        ),
+    ],
+)
+def test_humanize_validation_errors_cap(count: int, expected_last_line: str) -> None:
+    """Test the text of errors has at most MAX_HUMANIZED_ERRORS errors."""
+    data = [f"value {index}" for index in range(count)]
+    err = _multiple_invalid(*(_invalid("bad", [index]) for index in range(count)))
+
+    assert MAX_HUMANIZED_ERRORS == 10
+    assert humanize_validation_errors(data, err).split("\n") == [
+        *(f"bad at '[{index}]'. Got 'value {index}'" for index in range(10)),
+        *([expected_last_line] if count > 10 else []),
+    ]
+
+
+def test_humanize_validation_errors_secret() -> None:
+    """Test the text of errors does not have the value of a secret error."""
+    schema = probatio.Schema(
+        {
+            "name": str,
+            "outer": {probatio.Secret("password"): cv.matches_regex("^a+$")},
+        }
+    )
+    data = {"name": 1, "outer": {"password": _SECRET}}
+    with pytest.raises(probatio.Invalid) as exc_info:
+        schema(data)
+    assert _SECRET in str(exc_info.value.errors[1])
+
+    assert humanize_validation_errors(data, exc_info.value) == (
+        "expected str at 'name'. Got 1\n"
+        "invalid value at 'outer.password'. Got <redacted>"
+    )

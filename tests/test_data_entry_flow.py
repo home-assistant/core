@@ -1104,6 +1104,24 @@ async def test_move_to_unknown_step_raises_and_removes_from_in_progress(
     assert manager.async_progress() == []
 
 
+async def test_first_step_exception_removes_flow_from_in_progress(
+    manager: MockFlowManager,
+) -> None:
+    """Test an exception in the first step removes the flow from in progress."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+
+        async def async_step_init(self, user_input=None):
+            raise ValueError("Boom")
+
+    with pytest.raises(ValueError, match="Boom"):
+        await manager.async_init("test")
+
+    assert manager.async_progress(include_uninitialized=True) == []
+
+
 @pytest.mark.parametrize(
     ("result_type", "params"),
     [

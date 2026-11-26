@@ -163,7 +163,10 @@ def as_utc(dattim: dt.datetime) -> dt.datetime:
 
 
 def as_timestamp(dt_value: dt.datetime | str) -> float:
-    """Convert a date/time into a unix time (seconds since 1970)."""
+    """Convert a date/time into a unix time (seconds since 1970).
+
+    Assumes datetime without tzinfo to be in the DEFAULT_TIME_ZONE.
+    """
     parsed_dt: dt.datetime | None
     if isinstance(dt_value, dt.datetime):
         parsed_dt = dt_value
@@ -171,6 +174,8 @@ def as_timestamp(dt_value: dt.datetime | str) -> float:
         parsed_dt = parse_datetime(str(dt_value))
     if parsed_dt is None:
         raise ValueError("not a valid date/time.")
+    if parsed_dt.tzinfo is None:
+        parsed_dt = parsed_dt.replace(tzinfo=DEFAULT_TIME_ZONE)
     return parsed_dt.timestamp()
 
 
