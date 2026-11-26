@@ -1,20 +1,12 @@
 """Music Assistant sensor platform."""
 
-from collections.abc import Callable
-from dataclasses import dataclass
-from datetime import datetime
-from typing import Final, override
+from typing import override
 
-from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.enums import EventType, SleepTimerMode
 from music_assistant_models.event import MassEvent
 from music_assistant_models.player import Player
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,52 +15,7 @@ from homeassistant.util.dt import utc_from_timestamp
 from . import MusicAssistantConfigEntry, PlatformHandlers
 from .entity import MusicAssistantEntity
 
-
-@dataclass(frozen=True, kw_only=True)
-class MusicAssistantSensorDescription(SensorEntityDescription):
-    """Describes a sensor for a state of a player."""
-
-    value_fn: Callable[[Player], datetime | str | None]
-
-
-def _sleep_timer_mode(player: Player) -> str | None:
-    if (mode := player.sleep_timer_mode) is None:
-        # servers before schema 105 only report when a duration timer ends
-        return (
-            SleepTimerMode.DURATION
-            if player.sleep_timer_expires_at is not None
-            else "off"
-        )
-    # a mode of a newer server
-    return None if mode is SleepTimerMode.UNKNOWN else mode
-
-
-SENSORS: Final = (
-    MusicAssistantSensorDescription(
-        key="sleep_timer_end",
-        translation_key="sleep_timer_end",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=False,
-        value_fn=lambda player: (
-            utc_from_timestamp(player.sleep_timer_expires_at)
-            if player.sleep_timer_expires_at is not None
-            else None
-        ),
-    ),
-    MusicAssistantSensorDescription(
-        key="sleep_timer_mode",
-        translation_key="sleep_timer_mode",
-        device_class=SensorDeviceClass.ENUM,
-        options=[
-            "off",
-            SleepTimerMode.DURATION,
-            SleepTimerMode.END_OF_ITEM,
-            SleepTimerMode.END_OF_CHAPTER,
-        ],
-        entity_registry_enabled_default=False,
-        value_fn=_sleep_timer_mode,
-    ),
-)
+ATTR_MODE = "mode"
 
 
 async def async_setup_entry(
@@ -81,30 +28,19 @@ async def async_setup_entry(
 
     def add_player(player_id: str) -> None:
         """Handle add player."""
-        async_add_entities(
-            MusicAssistantSensor(mass, player_id, description)
-            for description in SENSORS
-        )
+        async_add_entities([MusicAssistantSleepTimerSensor(mass, player_id)])
 
     entry.runtime_data.platform_handlers.setdefault(
         Platform.SENSOR, PlatformHandlers(add_player=add_player)
     )
 
 
-class MusicAssistantSensor(MusicAssistantEntity, SensorEntity):
-    """Sensor for a state of a player."""
+class MusicAssistantSleepTimerSensor(MusicAssistantEntity, SensorEntity):
+    """When the sleep timer of a player stops playback, and in which mode."""
 
-    entity_description: MusicAssistantSensorDescription
-
-    def __init__(
-        self,
-        mass: MusicAssistantClient,
-        player_id: str,
-        entity_description: MusicAssistantSensorDescription,
-    ) -> None:
-        """Initialize MusicAssistantSensor."""
-        super().__init__(mass, player_id)
-        self.entity_description = entity_description
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "sleep_timer"
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -134,4 +70,16 @@ class MusicAssistantSensor(MusicAssistantEntity, SensorEntity):
     @override
     async def async_on_update(self) -> None:
         """Handle player updates."""
-        self._attr_native_value = self.entity_description.value_fn(self._timer_player)
+        player = self._timer_player
+        expires_at = player.sleep_timer_expires_at
+        self._attr_native_value = (
+            utc_from_timestamp(expires_at) if expires_at is not None else None
+        )
+        mode: str | None = player.sleep_timer_mode
+        if mode is None:
+            # servers before schema 105 only report when a duration timer ends
+            mode = SleepTimerMode.DURATION if expires_at is not None else "off"
+        elif mode is SleepTimerMode.UNKNOWN:
+            # a mode of a newer server
+            mode = None
+        self._attr_extra_state_attributes = {ATTR_MODE: mode}

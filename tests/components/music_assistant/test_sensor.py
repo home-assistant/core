@@ -16,8 +16,7 @@ from .common import (
     trigger_subscription_callback,
 )
 
-END_ENTITY_ID = "sensor.test_player_1_sleep_timer_end"
-MODE_ENTITY_ID = "sensor.test_player_1_sleep_timer_mode"
+ENTITY_ID = "sensor.test_player_1_sleep_timer"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -33,7 +32,7 @@ async def test_sensor_entities(
 
 
 @pytest.mark.parametrize(
-    ("expires_at", "mode", "expected_end", "expected_mode"),
+    ("expires_at", "mode", "expected_state", "expected_mode"),
     [
         pytest.param(None, None, STATE_UNKNOWN, "off", id="no_timer"),
         pytest.param(
@@ -61,21 +60,21 @@ async def test_sensor_entities(
             1767225600.0,
             SleepTimerMode.UNKNOWN,
             "2026-01-01T00:00:00+00:00",
-            STATE_UNKNOWN,
+            None,
             id="newer_mode",
         ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sleep_timer_sensors(
+async def test_sleep_timer_sensor(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
     expires_at: float | None,
     mode: SleepTimerMode | None,
-    expected_end: str,
-    expected_mode: str,
+    expected_state: str,
+    expected_mode: str | None,
 ) -> None:
-    """Test the sleep timer sensors show the end and mode of the player's timer."""
+    """Test the sleep timer sensor shows the end and mode of the player's timer."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
     player = music_assistant_client.players._players["00:00:00:00:00:01"]
     player.sleep_timer_expires_at = expires_at
@@ -83,12 +82,14 @@ async def test_sleep_timer_sensors(
     await trigger_subscription_callback(
         hass, music_assistant_client, EventType.PLAYER_UPDATED, "00:00:00:00:00:01"
     )
-    assert hass.states.get(END_ENTITY_ID).state == expected_end
-    assert hass.states.get(MODE_ENTITY_ID).state == expected_mode
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == expected_state
+    assert state.attributes["mode"] == expected_mode
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sleep_timer_sensors_follow_active_source(
+async def test_sleep_timer_sensor_follows_active_source(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
 ) -> None:
@@ -99,7 +100,9 @@ async def test_sleep_timer_sensors_follow_active_source(
     await trigger_subscription_callback(
         hass, music_assistant_client, EventType.PLAYER_UPDATED, "00:00:00:00:00:01"
     )
-    assert hass.states.get(MODE_ENTITY_ID).state == "off"
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes["mode"] == "off"
 
     # the timer is set on the player that owns the playback
     group_player = players["test_group_player_1"]
@@ -111,18 +114,19 @@ async def test_sleep_timer_sensors_follow_active_source(
         EventType.PLAYER_SLEEP_TIMER_UPDATED,
         "test_group_player_1",
     )
-    assert hass.states.get(END_ENTITY_ID).state == "2026-01-01T00:00:00+00:00"
-    assert hass.states.get(MODE_ENTITY_ID).state == "duration"
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == "2026-01-01T00:00:00+00:00"
+    assert state.attributes["mode"] == "duration"
 
 
-async def test_sleep_timer_sensors_disabled_by_default(
+async def test_sleep_timer_sensor_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     music_assistant_client: MagicMock,
 ) -> None:
-    """Test the sleep timer sensors are added disabled."""
+    """Test the sleep timer sensor is added disabled."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
-    for entity_id in (END_ENTITY_ID, MODE_ENTITY_ID):
-        entry = entity_registry.async_get(entity_id)
-        assert entry
-        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    entry = entity_registry.async_get(ENTITY_ID)
+    assert entry
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_entities[sensor.my_super_test_player_2_sleep_timer_end-entry]
+# name: test_sensor_entities[sensor.my_super_test_player_2_sleep_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_super_test_player_2_sleep_timer_end',
+    'entity_id': 'sensor.my_super_test_player_2_sleep_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,100 +21,37 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sleep timer end',
+    'object_id_base': 'Sleep timer',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Sleep timer end',
+    'original_name': 'Sleep timer',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'sleep_timer_end',
-    'unique_id': '00:00:00:00:00:02_sleep_timer_end',
+    'translation_key': 'sleep_timer',
+    'unique_id': '00:00:00:00:00:02',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities[sensor.my_super_test_player_2_sleep_timer_end-state]
+# name: test_sensor_entities[sensor.my_super_test_player_2_sleep_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Super Test Player 2 Sleep timer end',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Super Test Player 2 Sleep timer',
+      'mode': 'off',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_super_test_player_2_sleep_timer_end',
+    'entity_id': 'sensor.my_super_test_player_2_sleep_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities[sensor.my_super_test_player_2_sleep_timer_mode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'off',
-        <SleepTimerMode.DURATION: 'duration'>,
-        <SleepTimerMode.END_OF_ITEM: 'end_of_item'>,
-        <SleepTimerMode.END_OF_CHAPTER: 'end_of_chapter'>,
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('music_assistant', '00:00:00:00:00:02')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.my_super_test_player_2_sleep_timer_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sleep timer mode',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Sleep timer mode',
-    'platform': 'music_assistant',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sleep_timer_mode',
-    'unique_id': '00:00:00:00:00:02_sleep_timer_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_entities[sensor.my_super_test_player_2_sleep_timer_mode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Super Test Player 2 Sleep timer mode',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'off',
-        <SleepTimerMode.DURATION: 'duration'>,
-        <SleepTimerMode.END_OF_ITEM: 'end_of_item'>,
-        <SleepTimerMode.END_OF_CHAPTER: 'end_of_chapter'>,
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.my_super_test_player_2_sleep_timer_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_sensor_entities[sensor.test_group_player_1_sleep_timer_end-entry]
+# name: test_sensor_entities[sensor.test_group_player_1_sleep_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -128,7 +65,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_group_player_1_sleep_timer_end',
+    'entity_id': 'sensor.test_group_player_1_sleep_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -136,100 +73,37 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sleep timer end',
+    'object_id_base': 'Sleep timer',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Sleep timer end',
+    'original_name': 'Sleep timer',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'sleep_timer_end',
-    'unique_id': 'test_group_player_1_sleep_timer_end',
+    'translation_key': 'sleep_timer',
+    'unique_id': 'test_group_player_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities[sensor.test_group_player_1_sleep_timer_end-state]
+# name: test_sensor_entities[sensor.test_group_player_1_sleep_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Group Player 1 Sleep timer end',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Group Player 1 Sleep timer',
+      'mode': 'off',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_group_player_1_sleep_timer_end',
+    'entity_id': 'sensor.test_group_player_1_sleep_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities[sensor.test_group_player_1_sleep_timer_mode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'off',
-        <SleepTimerMode.DURATION: 'duration'>,
-        <SleepTimerMode.END_OF_ITEM: 'end_of_item'>,
-        <SleepTimerMode.END_OF_CHAPTER: 'end_of_chapter'>,
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('music_assistant', 'test_group_player_1')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_group_player_1_sleep_timer_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sleep timer mode',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Sleep timer mode',
-    'platform': 'music_assistant',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sleep_timer_mode',
-    'unique_id': 'test_group_player_1_sleep_timer_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_entities[sensor.test_group_player_1_sleep_timer_mode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Group Player 1 Sleep timer mode',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'off',
-        <SleepTimerMode.DURATION: 'duration'>,
-        <SleepTimerMode.END_OF_ITEM: 'end_of_item'>,
-        <SleepTimerMode.END_OF_CHAPTER: 'end_of_chapter'>,
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_group_player_1_sleep_timer_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_sensor_entities[sensor.test_player_1_sleep_timer_end-entry]
+# name: test_sensor_entities[sensor.test_player_1_sleep_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -243,7 +117,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_player_1_sleep_timer_end',
+    'entity_id': 'sensor.test_player_1_sleep_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -251,96 +125,33 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sleep timer end',
+    'object_id_base': 'Sleep timer',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Sleep timer end',
+    'original_name': 'Sleep timer',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'sleep_timer_end',
-    'unique_id': '00:00:00:00:00:01_sleep_timer_end',
+    'translation_key': 'sleep_timer',
+    'unique_id': '00:00:00:00:00:01',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities[sensor.test_player_1_sleep_timer_end-state]
+# name: test_sensor_entities[sensor.test_player_1_sleep_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Sleep timer end',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Sleep timer',
+      'mode': 'off',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_player_1_sleep_timer_end',
+    'entity_id': 'sensor.test_player_1_sleep_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
-  })
-# ---
-# name: test_sensor_entities[sensor.test_player_1_sleep_timer_mode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'off',
-        <SleepTimerMode.DURATION: 'duration'>,
-        <SleepTimerMode.END_OF_ITEM: 'end_of_item'>,
-        <SleepTimerMode.END_OF_CHAPTER: 'end_of_chapter'>,
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('music_assistant', '00:00:00:00:00:01')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_player_1_sleep_timer_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sleep timer mode',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Sleep timer mode',
-    'platform': 'music_assistant',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sleep_timer_mode',
-    'unique_id': '00:00:00:00:00:01_sleep_timer_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_entities[sensor.test_player_1_sleep_timer_mode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Sleep timer mode',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'off',
-        <SleepTimerMode.DURATION: 'duration'>,
-        <SleepTimerMode.END_OF_ITEM: 'end_of_item'>,
-        <SleepTimerMode.END_OF_CHAPTER: 'end_of_chapter'>,
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_player_1_sleep_timer_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
   })
 # ---
