@@ -386,6 +386,7 @@ class HomeAssistantHTTP:
         use_x_forwarded_for: bool,
         login_threshold: int,
         is_ban_enabled: bool,
+        ban_duration: int | None,
         use_x_frame_options: bool,
     ) -> None:
         """Initialize the server."""
@@ -401,7 +402,7 @@ class HomeAssistantHTTP:
         setup_request_context(self.app, current_request)
 
         if is_ban_enabled:
-            setup_bans(self.hass, self.app, login_threshold)
+            setup_bans(self.hass, self.app, login_threshold, ban_duration)
 
         await async_setup_auth(self.hass, self.app)
 

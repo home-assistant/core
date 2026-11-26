@@ -4,10 +4,11 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
-from datetime import datetime
+from datetime import datetime, timedelta
 from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
+import re
 from socket import gethostbyaddr
 from typing import Any, Concatenate, Final
 
@@ -29,6 +30,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
 from homeassistant.helpers.http import KEY_HASS, HomeAssistantView
 from homeassistant.util import dt as dt_util, yaml as yaml_util
+from homeassistant.util.file import write_utf8_file_atomic
 
 from .const import is_supervisor_unix_socket_request
 
@@ -54,12 +56,19 @@ SCHEMA_IP_BAN_ENTRY: Final = probatio.Schema(
 
 
 @callback
-def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> None:
+def setup_bans(
+    hass: HomeAssistant,
+    app: Application,
+    login_threshold: int,
+    ban_duration: int | None = None,
+) -> None:
     """Create IP Ban middleware for the app."""
     app.middlewares.append(ban_middleware)
     app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict[IPv4Address | IPv6Address, int](int)
     app[KEY_LOGIN_THRESHOLD] = login_threshold
-    app[KEY_BAN_MANAGER] = IpBanManager(hass)
+    app[KEY_BAN_MANAGER] = IpBanManager(
+        hass, timedelta(minutes=ban_duration) if ban_duration else None
+    )
 
     async def ban_startup(app: Application) -> None:
         """Initialize bans when app starts up."""
@@ -84,8 +93,11 @@ async def ban_middleware(
     if ip_bans_lookup := ban_manager.ip_bans_lookup:
         # Verify if IP is not banned
         ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
-        if ip_address_ in ip_bans_lookup:
-            raise HTTPForbidden
+        if (ip_ban := ip_bans_lookup.get(ip_address_)) is not None:
+            if not ban_manager.is_expired(ip_ban):
+                raise HTTPForbidden
+            ban_manager.async_expire_ban(ip_address_)
+            request.app[KEY_FAILED_LOGIN_ATTEMPTS].pop(ip_address_, None)
 
     try:
         return await handler(request)
@@ -215,17 +227,36 @@ class IpBan:
     ) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
-        self.banned_at = banned_at or dt_util.utcnow()
+        self.banned_at = dt_util.as_utc(banned_at) if banned_at else dt_util.utcnow()
 
 
 class IpBanManager:
     """Manage IP bans."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self, hass: HomeAssistant, ban_duration: timedelta | None = None
+    ) -> None:
         """Init the ban manager."""
         self.hass = hass
         self.path = hass.config.path(IP_BANS_FILE)
+        self.ban_duration = ban_duration
         self.ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
+        # Expired bans keep their entry in the file, a new ban updates it
+        self._expired_bans: set[IPv4Address | IPv6Address] = set()
+
+    def is_expired(self, ip_ban: IpBan) -> bool:
+        """Return if the ban is older than the ban duration."""
+        return (
+            self.ban_duration is not None
+            and dt_util.utcnow() - ip_ban.banned_at >= self.ban_duration
+        )
+
+    @callback
+    def async_expire_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
+        """Lift an expired ban."""
+        del self.ip_bans_lookup[remote_addr]
+        self._expired_bans.add(remote_addr)
+        _LOGGER.info("Ban of %s expired", remote_addr)
 
     async def async_load(self) -> None:
         """Load the existing IP bans."""
@@ -263,12 +294,35 @@ class IpBanManager:
             # Write in a single write call to avoid interleaved writes
             out.write("\n" + yaml_util.dump(ip_))
 
+    def _update_ban(self, ip_ban: IpBan) -> None:
+        """Update banned_at of an existing entry, leaving the rest of the file as is."""
+        with open(self.path, encoding="utf8") as file:
+            content = file.read()
+        pattern = re.compile(
+            rf"^(['\"]?{re.escape(str(ip_ban.ip_address))}['\"]?:[ \t]*\n"
+            rf"(?:[ \t]+.*\n)*?[ \t]+{ATTR_BANNED_AT}:[ \t]*)"
+            r"(?:'[^'\n]*'|\"[^\"\n]*\"|[^\s#]+)",
+            re.MULTILINE,
+        )
+        content, count = pattern.subn(
+            lambda match: f"{match[1]}'{ip_ban.banned_at.isoformat()}'", content
+        )
+        if not count:
+            self._add_ban(ip_ban)
+            return
+        write_utf8_file_atomic(self.path, content)
+
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""
         if remote_addr not in self.ip_bans_lookup:
             new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
+            if remote_addr in self._expired_bans:
+                self._expired_bans.discard(remote_addr)
+                save = self._update_ban
+            else:
+                save = self._add_ban
             try:
-                await self.hass.async_add_executor_job(self._add_ban, new_ban)
+                await self.hass.async_add_executor_job(save, new_ban)
             except OSError as err:
                 # The ban still applies until Home Assistant restarts.
                 _LOGGER.error("Unable to save the ban of %s: %s", remote_addr, err)

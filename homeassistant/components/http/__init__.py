@@ -37,6 +37,7 @@ from .config import (
 from .const import (
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
+    CONF_IP_BAN_DURATION,
     CONF_IP_BAN_ENABLED,
     CONF_LOGIN_ATTEMPTS_THRESHOLD,
     CONF_SERVER_HOST,
@@ -254,6 +255,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         use_x_forwarded_for=conf.get(CONF_USE_X_FORWARDED_FOR, False),
         login_threshold=conf[CONF_LOGIN_ATTEMPTS_THRESHOLD],
         is_ban_enabled=conf[CONF_IP_BAN_ENABLED],
+        ban_duration=conf.get(CONF_IP_BAN_DURATION),
         use_x_frame_options=conf[CONF_USE_X_FRAME_OPTIONS],
     )
 
