@@ -100,6 +100,7 @@ class AbrpTelemetryCoordinator(DataUpdateCoordinator[dict[int, Telemetry]]):
         self.data = {}
         self.last_connection_event: ConnectionEvent | None = None
         self.stream_auth_failed: bool = False
+        self._stream_unavailable = False
 
     @callback
     def on_update(self, vehicle_id: int, telemetry: Telemetry) -> None:
@@ -119,9 +120,14 @@ class AbrpTelemetryCoordinator(DataUpdateCoordinator[dict[int, Telemetry]]):
 
         Availability is value-based and deliberately ignores connection state:
         ABRP closes idle streams (~200 s) as steady state, so a disconnect only
-        logs and never marks entities unavailable. ``AUTH_FAILED`` is the one
-        exception: the library stops the stream for good, so entities stop
-        claiming values nothing will refresh and reauth starts. Clearing that
+        logs and never marks entities unavailable. A single ``DISCONNECTED``
+        is that idle close and logs at debug; a second one with no
+        ``CONNECTED`` between means the reconnect failed, which logs once at
+        info, as does the ``CONNECTED`` that ends the outage.
+
+        ``AUTH_FAILED`` is the one exception: the library stops the stream for
+        good, so entities stop claiming values nothing will refresh and reauth
+        starts. Clearing that
         flag on a reconnect rather than on any later event is defensive: aioabrp
         returns from its run loop once it has dispatched ``AUTH_FAILED``, so
         today nothing follows it at all.
@@ -130,21 +136,23 @@ class AbrpTelemetryCoordinator(DataUpdateCoordinator[dict[int, Telemetry]]):
         changed = previous is None or previous.state is not event.state
         self.last_connection_event = event
 
-        if changed:
-            if event.state is ConnectionState.CONNECTED:
-                _LOGGER.info("ABRP telemetry stream connected")
-            elif event.state is ConnectionState.DISCONNECTED:
-                _LOGGER.info(
-                    "ABRP telemetry stream disconnected (%s)",
-                    event.reason or "no reason given",
-                )
-            elif event.state is ConnectionState.AUTH_FAILED:
-                _LOGGER.warning(
-                    "ABRP telemetry stream auth failed (%s)",
-                    event.reason or "no reason given",
-                )
+        reason = event.reason or "no reason given"
+        if event.state is ConnectionState.CONNECTED:
+            if self._stream_unavailable:
+                self._stream_unavailable = False
+                _LOGGER.info("ABRP telemetry stream is available again")
+            else:
+                _LOGGER.debug("ABRP telemetry stream connected")
+        elif event.state is ConnectionState.DISCONNECTED:
+            if changed or self._stream_unavailable:
+                _LOGGER.debug("ABRP telemetry stream disconnected (%s)", reason)
+            else:
+                self._stream_unavailable = True
+                _LOGGER.info("ABRP telemetry stream is unavailable (%s)", reason)
 
+        if changed:
             if event.state is ConnectionState.AUTH_FAILED:
+                _LOGGER.warning("ABRP telemetry stream auth failed (%s)", reason)
                 self.stream_auth_failed = True
                 self.async_update_listeners()
                 self.config_entry.async_start_reauth(self.hass)

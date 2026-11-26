@@ -2,6 +2,7 @@
 
 from dataclasses import replace
 from http import HTTPStatus
+import logging
 import time
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
@@ -409,24 +410,27 @@ async def test_display_missing_on_poll_keeps_device_metadata(
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
-async def test_connection_logged_once_per_transition(
+async def test_connection_logged_once_per_outage(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     mock_telemetry_stream: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Repeated identical connection states log only on the transition."""
+    """Idle closes log at debug; a failed reconnect logs once out and once back."""
     await setup_integration(hass, config_entry_with_vehicles)
+    caplog.clear()
 
-    for reason in ("first", "second"):
-        fire_connection(
-            mock_telemetry_stream,
-            ConnectionEvent(ConnectionState.DISCONNECTED, reason),
-        )
-    fire_connection(mock_telemetry_stream, ConnectionEvent(ConnectionState.CONNECTED))
+    for state in (
+        *(ConnectionState.DISCONNECTED, ConnectionState.CONNECTED) * 2,
+        *(ConnectionState.DISCONNECTED,) * 3,
+        ConnectionState.CONNECTED,
+    ):
+        fire_connection(mock_telemetry_stream, ConnectionEvent(state, "closed"))
 
-    assert caplog.text.count("stream disconnected") == 1
-    assert caplog.text.count("stream connected") == 1
+    assert [r.getMessage() for r in caplog.records if r.levelno >= logging.INFO] == [
+        "ABRP telemetry stream is unavailable (closed)",
+        "ABRP telemetry stream is available again",
+    ]
 
 
 @pytest.mark.parametrize(
