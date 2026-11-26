@@ -195,3 +195,36 @@ async def test_added_meanwhile(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(empty_entry.subentries) == 1
+
+
+@pytest.mark.parametrize(
+    ("brand", "municipality", "title"),
+    [
+        ("REPSOL", "Roda de Andalucía (La)", "Repsol La Roda de Andalucía"),
+        ("BP", "Palmas de Gran Canaria (Las)", "BP Las Palmas de Gran Canaria"),
+        ("CEPSA", "Hospitalet de Llobregat (L')", "Cepsa L'Hospitalet de Llobregat"),
+        ("GAFISUR ANTEQUERA", "Antequera", "Gafisur Antequera"),
+    ],
+)
+async def test_station_title(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    empty_entry: MockConfigEntry,
+    brand: str,
+    municipality: str,
+    title: str,
+) -> None:
+    """Test the readable station name: brand, then the town with its article."""
+    stations = mock_client.get_stations_by_municipality.return_value
+    mock_client.get_stations_by_municipality.return_value = replace(
+        stations,
+        stations=[
+            replace(stations.stations[0], brand=brand, municipality=municipality)
+        ],
+    )
+    result = await _start(hass, empty_entry)
+    result = await _configure(hass, result, {CONF_PROVINCE_ID: "41"})
+    result = await _configure(hass, result, {CONF_MUNICIPALITY_ID: "6139"})
+    result = await _configure(hass, result, {CONF_STATION_ID: "7370"})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert next(iter(empty_entry.subentries.values())).title == title
