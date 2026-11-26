@@ -220,6 +220,8 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     async def _async_post_write_refresh(self, _now: datetime) -> None:
         """Refresh after the successful write cooldown expires."""
         self._unsub_post_write_refresh = None
+        if self.config_entry.pref_disable_polling:
+            return
         await self.async_refresh()
 
     @callback

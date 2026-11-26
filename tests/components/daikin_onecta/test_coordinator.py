@@ -764,6 +764,30 @@ class TestOnectaDataUpdateCoordinator:
         await hass.async_block_till_done(wait_background_tasks=True)
         coordinator.client.get_gateway_devices.assert_awaited_once_with()
 
+    async def test_post_write_refresh_respects_disabled_polling(
+        self,
+        hass: HomeAssistant,
+        freezer: FrozenDateTimeFactory,
+        coordinator: OnectaDataUpdateCoordinator,
+    ) -> None:
+        """Do not fetch automatically if polling is disabled before the timer fires."""
+        coordinator._polling_backoff_until = (
+            coordinator_module.dt_util.utcnow() + timedelta(minutes=5)
+        )
+        coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
+
+        command = AsyncMock()
+        assert await coordinator.async_execute_command(lambda _client: command())
+
+        hass.config_entries.async_update_entry(
+            coordinator.config_entry, pref_disable_polling=True
+        )
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        coordinator.client.get_gateway_devices.assert_not_awaited()
+
     async def test_api_error_uses_update_failed_with_http_status(self, coordinator):
         """Turn a Daikin HTTP error into a translatable polling failure."""
         coordinator._last_patch_call = None
