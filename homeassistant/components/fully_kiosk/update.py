@@ -3,6 +3,12 @@
 from typing import Any, cast, override
 
 from aiohttp import ClientError
+from fullykiosk import (
+    INSTALL_STATUS_AWAITING_CONFIRMATION,
+    INSTALL_STATUS_DOWNLOADING,
+    INSTALL_STATUS_INSTALLING,
+    INSTALL_STATUS_RESTARTING,
+)
 from fullykiosk.exceptions import FullyKioskError
 from fullykiosk.releases import (
     EDITION_PLAY,
@@ -15,12 +21,14 @@ from fullykiosk.releases import (
 )
 
 from homeassistant.components.update import (
+    MANUAL_ACTION_CONFIRM_ON_DEVICE,
     UpdateEntity,
     UpdateEntityFeature,
+    UpdateInstallPhase,
     UpdateReleaseNotesMessage,
     UpdateReleaseNotesMessageSeverity,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -36,6 +44,13 @@ from .entity import FullyKioskEntity
 PARALLEL_UPDATES = 1
 
 VERSION_HISTORY_URL = "https://www.fully-kiosk.com/docs/en/features/version-history"
+
+INSTALL_PHASES = {
+    INSTALL_STATUS_DOWNLOADING: UpdateInstallPhase.DOWNLOADING,
+    INSTALL_STATUS_INSTALLING: UpdateInstallPhase.INSTALLING,
+    INSTALL_STATUS_AWAITING_CONFIRMATION: UpdateInstallPhase.INSTALLING,
+    INSTALL_STATUS_RESTARTING: UpdateInstallPhase.RESTARTING,
+}
 
 
 async def async_setup_entry(
@@ -181,7 +196,9 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
         self._attr_in_progress = True
         self.async_write_ha_state()
         try:
-            await self.coordinator.fully.installRelease(release)
+            await self.coordinator.fully.installRelease(
+                release, onStatus=self._async_install_status
+            )
         except TimeoutError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -192,4 +209,17 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
                 translation_domain=DOMAIN,
                 translation_key="install_failed",
             ) from err
+        finally:
+            self._attr_manual_action = None
         await self.coordinator.async_refresh()
+
+    @callback
+    def _async_install_status(self, status: str) -> None:
+        """Show the install status reported by the device."""
+        self._attr_install_phase = INSTALL_PHASES[status]
+        self._attr_manual_action = (
+            MANUAL_ACTION_CONFIRM_ON_DEVICE
+            if status == INSTALL_STATUS_AWAITING_CONFIRMATION
+            else None
+        )
+        self.async_write_ha_state()

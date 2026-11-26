@@ -8,6 +8,11 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
+from fullykiosk import (
+    INSTALL_STATUS_AWAITING_CONFIRMATION,
+    INSTALL_STATUS_DOWNLOADING,
+    INSTALL_STATUS_RESTARTING,
+)
 from fullykiosk.exceptions import FullyKioskError
 from fullykiosk.releases import RELEASES_URL, Release
 import pytest
@@ -42,6 +47,7 @@ from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -184,7 +190,7 @@ async def test_install_latest(
         | UpdateEntityFeature.RELEASE_NOTES
     )
 
-    async def install_release(release: Release) -> None:
+    async def install_release(release: Release, **kwargs: Any) -> None:
         assert hass.states.get(ENTITY_ID).attributes[ATTR_IN_PROGRESS] is True
         device_info["appVersionName"] = latest_version
 
@@ -420,7 +426,12 @@ async def test_install_error(
 ) -> None:
     """Test the installation fails or does not finish in time."""
     await setup_integration()
-    mock_fully_kiosk.installRelease.side_effect = side_effect
+
+    async def install_release(release: Release, **kwargs: Any) -> None:
+        kwargs["onStatus"](INSTALL_STATUS_AWAITING_CONFIRMATION)
+        raise side_effect
+
+    mock_fully_kiosk.installRelease.side_effect = install_release
 
     with pytest.raises(HomeAssistantError) as excinfo:
         await install(hass)
@@ -428,6 +439,54 @@ async def test_install_error(
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[UpdateEntityStateAttribute.MANUAL_ACTION] is None
+
+
+async def test_install_status(
+    hass: HomeAssistant,
+    mock_fully_kiosk: MagicMock,
+    setup_integration: Callable[[], Awaitable[None]],
+    device_info: dict[str, Any],
+) -> None:
+    """Test the install phases and the confirmation the device asks for."""
+    await setup_integration()
+    reported: list[tuple[str | None, dict[str, Any] | None]] = []
+
+    async def install_release(release: Release, **kwargs: Any) -> None:
+        for status in (
+            INSTALL_STATUS_DOWNLOADING,
+            INSTALL_STATUS_AWAITING_CONFIRMATION,
+            INSTALL_STATUS_RESTARTING,
+        ):
+            kwargs["onStatus"](status)
+            attributes = hass.states.get(ENTITY_ID).attributes
+            reported.append(
+                (
+                    attributes[UpdateEntityStateAttribute.INSTALL_PHASE],
+                    attributes[UpdateEntityStateAttribute.MANUAL_ACTION],
+                )
+            )
+        device_info["appVersionName"] = "1.61.4"
+
+    mock_fully_kiosk.installRelease.side_effect = install_release
+
+    await install(hass)
+
+    assert reported == [
+        ("downloading", None),
+        (
+            "installing",
+            {
+                "translation_domain": "update",
+                "translation_key": "confirm_on_device",
+                "translation_placeholders": {},
+            },
+        ),
+        ("restarting", None),
+    ]
+    attributes = hass.states.get(ENTITY_ID).attributes
+    assert attributes[UpdateEntityStateAttribute.INSTALL_PHASE] is None
+    assert attributes[UpdateEntityStateAttribute.MANUAL_ACTION] is None
 
 
 async def test_install_restart(
@@ -444,7 +503,7 @@ async def test_install_restart(
     refreshed = asyncio.Event()
     mock_config_entry.runtime_data.async_add_listener(refreshed.set)
 
-    async def install_release(release: Release) -> None:
+    async def install_release(release: Release, **kwargs: Any) -> None:
         mock_fully_kiosk.getDeviceInfo.side_effect = ClientError("Connection refused")
         freezer.tick(UPDATE_INTERVAL)
         async_fire_time_changed(hass)
