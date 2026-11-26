@@ -50,8 +50,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if DOMAIN in config:
         hass.async_create_task(_async_import(hass, config[DOMAIN]))
+    else:
+        _async_signal_if_nothing_to_set_up(hass)
 
     return True
+
+
+@callback
+def _async_signal_if_nothing_to_set_up(hass: HomeAssistant) -> None:
+    """Stop YAML platforms waiting for an entry that will not be set up."""
+    if not any(
+        entry.disabled_by is None for entry in hass.config_entries.async_entries(DOMAIN)
+    ):
+        hass.data[DATA_SETUP_DONE].set()
 
 
 async def _async_import(hass: HomeAssistant, conf: ConfigType) -> None:
@@ -85,10 +96,15 @@ async def _async_import(hass: HomeAssistant, conf: ConfigType) -> None:
         translation_key=issue_id,
         translation_placeholders={"domain": DOMAIN, "integration_title": "ADS"},
     )
+    # A created entry was set up by now; an aborted import leaves none.
+    _async_signal_if_nothing_to_set_up(hass)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> None:
     """Set up ADS from a config entry."""
+    # A platform retrying while this attempt runs waits for it, instead of
+    # seeing the previous attempt as done.
+    hass.data[DATA_SETUP_DONE].clear()
     try:
         try:
             hub = await hass.async_add_executor_job(

@@ -68,6 +68,9 @@ class AdsSelect(AdsEntity, SelectEntity):
     @override
     async def async_subscribe(self) -> None:
         """Subscribe to the PLC variables of this entity."""
+        # After a reconfigure the first value comes from another PLC, and one
+        # out of range would leave the option of the previous one.
+        self._attr_current_option = None
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_INT)
         await self.async_add_notification(
             self._ads_var, pyads.PLCTYPE_INT, self._handle_ads_value

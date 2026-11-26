@@ -1,14 +1,15 @@
 """Test the ADS config flow."""
 
 from collections.abc import Callable
-from unittest.mock import MagicMock
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pyads
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ads.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -17,11 +18,6 @@ from . import ADS_CONFIG
 from .const import AMS_NET_ID, IP_ADDRESS, PORT
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
-
-
-@pytest.fixture
-def mock_validate_connection() -> None:
-    """Run the real connection probe, against the mocked pyads Connection."""
 
 
 CONNECT_ERRORS = [
@@ -312,3 +308,49 @@ async def test_reconfigure_flow_clears_optional_fields(
     assert mock_config_entry.data == {CONF_DEVICE: AMS_NET_ID, CONF_PORT: PORT}
     # A blank address would be used as is instead of derived from the NetID.
     mock_pyads_connection.assert_called_once_with(AMS_NET_ID, PORT, None)
+
+
+@pytest.mark.parametrize(
+    ("change", "probed"),
+    [
+        pytest.param({CONF_IP_ADDRESS: "192.168.1.30"}, False, id="new_address"),
+        pytest.param({CONF_PORT: 852}, True, id="new_port"),
+    ],
+)
+async def test_reconfigure_loaded_entry(
+    hass: HomeAssistant,
+    mock_pyads_connection: MagicMock,
+    mock_create_connection: MagicMock,
+    change: dict[str, Any],
+    probed: bool,
+) -> None:
+    """Test a new address for the running NetID is only checked for reachability.
+
+    The AMS router keeps one route per NetID, so on Linux it refuses a second
+    connection to the same NetID at another address while the hub holds the
+    first. The reload connects to the new address instead.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=AMS_NET_ID,
+        data=ADS_CONFIG,
+        state=ConfigEntryState.LOADED,
+    )
+    entry.add_to_hass(hass)
+    new_config = {**ADS_CONFIG, **change}
+
+    result = await entry.start_reconfigure_flow(hass)
+    with patch("homeassistant.components.ads.async_unload_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], new_config
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == new_config
+    assert mock_create_connection.call_args.args[0] == (
+        new_config[CONF_IP_ADDRESS],
+        48898,
+    )
+    assert mock_pyads_connection.called is probed

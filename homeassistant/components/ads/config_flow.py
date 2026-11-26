@@ -1,5 +1,7 @@
 """Config flow for the ADS integration."""
 
+from collections.abc import Mapping
+from functools import partial
 import logging
 from typing import Any, override
 
@@ -8,6 +10,7 @@ import pyads
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -48,9 +51,19 @@ def _is_valid_net_id(net_id: str) -> bool:
     )
 
 
-def _validate_connection(data: dict[str, Any]) -> None:
-    """Open a connection and read the device state."""
+def _host(data: Mapping[str, Any]) -> str:
+    """Return the address pyads connects to, derived the same way pyads does."""
+    return data.get(CONF_IP_ADDRESS) or ".".join(data[CONF_DEVICE].split(".")[:4])
+
+
+def _validate_connection(data: dict[str, Any], *, reachable_only: bool) -> None:
+    """Open a connection and read the device state.
+
+    With reachable_only, only check the device accepts a TCP connection.
+    """
     check_reachable(data[CONF_DEVICE], data.get(CONF_IP_ADDRESS))
+    if reachable_only:
+        return
     client = pyads.Connection(
         data[CONF_DEVICE], data[CONF_PORT], data.get(CONF_IP_ADDRESS)
     )
@@ -68,10 +81,32 @@ class AdsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def _route_in_use(self, data: dict[str, Any]) -> bool:
+        """Return whether the loaded hub holds a route to the NetID elsewhere.
+
+        The AMS router keeps one route per NetID, so on Linux a second
+        connection to it at another address is refused while the hub runs.
+        The reload connects to the new address anyway.
+        """
+        if self.source != SOURCE_RECONFIGURE:
+            return False
+        entry = self._get_reconfigure_entry()
+        return (
+            entry.state is ConfigEntryState.LOADED
+            and entry.data[CONF_DEVICE] == data[CONF_DEVICE]
+            and _host(entry.data) != _host(data)
+        )
+
     async def _async_validate(self, data: dict[str, Any]) -> str | None:
         """Validate the connection and return an error key on failure."""
         try:
-            await self.hass.async_add_executor_job(_validate_connection, data)
+            await self.hass.async_add_executor_job(
+                partial(
+                    _validate_connection,
+                    data,
+                    reachable_only=self._route_in_use(data),
+                )
+            )
         except pyads.ADSError, OSError, RuntimeError:
             # A device that does not answer raises OSError and the AMS router
             # refusing to open a port raises RuntimeError; setup treats both as

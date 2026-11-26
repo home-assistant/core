@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "invalid_net_id": "[%key:component::ads::config::error::invalid_net_id%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "invalid_net_id": "[%key:component::ads::config::error::invalid_net_id%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
