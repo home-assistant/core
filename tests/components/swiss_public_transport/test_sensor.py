@@ -19,6 +19,8 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.swiss_public_transport.const import (
     CONF_DESTINATION,
     CONF_START,
+    CONF_STATIONS,
+    CONF_STOPS_AT,
     CONF_TIME_FIXED,
     CONF_TIME_STATION,
     DEFAULT_UPDATE_TIME,
@@ -290,3 +292,98 @@ async def test_departed_connection_replaced_by_spare(
         hass.states.get("sensor.zurich_bern_departure_2").state
         == "2024-01-06T17:06:00+00:00"
     )
+
+
+@pytest.mark.usefixtures("mock_stationboard_client")
+async def test_all_stationboard_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_stationboard_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all stationboard entities."""
+    await setup_integration(hass, mock_stationboard_config_entry)
+
+    assert mock_stationboard_config_entry.state is ConfigEntryState.LOADED
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_stationboard_config_entry.entry_id
+    )
+
+
+async def test_stationboard_fetching_data(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_stationboard_client: AsyncMock,
+    mock_stationboard_config_entry: MockConfigEntry,
+) -> None:
+    """Test updating the stationboard data."""
+    await setup_integration(hass, mock_stationboard_config_entry)
+
+    assert (
+        hass.states.get("sensor.zurich_hb_departure_2").state
+        == "2024-01-06T17:05:00+00:00"
+    )
+
+    # Fewer departures than departure sensors
+    mock_stationboard_client.journeys = mock_stationboard_client.journeys[3:5]
+    freezer.tick(DEFAULT_UPDATE_TIME)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("sensor.zurich_hb_departure").state
+        == "2024-01-06T17:06:00+00:00"
+    )
+    assert hass.states.get("sensor.zurich_hb_departure_2").state == "unknown"
+
+    mock_stationboard_client.async_get_data.side_effect = OpendataTransportError
+    freezer.tick(DEFAULT_UPDATE_TIME)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.zurich_hb_departure").state == "unavailable"
+
+
+async def test_stationboard_stops_at(
+    hass: HomeAssistant, mock_stationboard_client: AsyncMock
+) -> None:
+    """Test only the departures stopping at the requested stations are shown."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_STATIONS: ["Zürich HB"], CONF_STOPS_AT: ["Zug", "Bern"]},
+        title="Zürich HB stops at Zug, Bern",
+        unique_id="stationboard Zürich HB stops at Zug, Bern",
+        version=3,
+    )
+    await setup_integration(hass, config_entry)
+
+    # More departures are requested to find the ones which match
+    assert mock_stationboard_client.limit == 40
+    assert (
+        hass.states.get("sensor.zurich_hb_stops_at_zug_bern_departure").state
+        == "2024-01-06T17:03:00+00:00"
+    )
+    assert (
+        hass.states.get("sensor.zurich_hb_stops_at_zug_bern_departure_1").state
+        == "2024-01-06T17:07:00+00:00"
+    )
+    assert (
+        hass.states.get("sensor.zurich_hb_stops_at_zug_bern_departure_2").state
+        == "2024-01-06T17:08:00+00:00"
+    )
+    assert (
+        hass.states.get("sensor.zurich_hb_stops_at_zug_bern_destination").state == "Zug"
+    )
+
+
+async def test_stationboard_setup_retry(
+    hass: HomeAssistant,
+    mock_stationboard_client: AsyncMock,
+    mock_stationboard_config_entry: MockConfigEntry,
+) -> None:
+    """Test the stationboard setup is retried when fetching fails."""
+    mock_stationboard_client.async_get_data.side_effect = (
+        OpendataTransportConnectionError
+    )
+    await setup_integration(hass, mock_stationboard_config_entry)
+
+    assert mock_stationboard_config_entry.state is ConfigEntryState.SETUP_RETRY

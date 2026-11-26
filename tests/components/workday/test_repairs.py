@@ -562,3 +562,37 @@ async def test_bad_country_province_issue_deleted_when_fixed(
     await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(DOMAIN, f"{issue_prefix}-1") is None
+
+
+async def test_bad_named_holiday_with_language_fallback(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the fix validates holiday names in the language used at setup."""
+    assert await async_setup_component(hass, "repairs", {})
+    entry = await init_integration(
+        hass,
+        {
+            "country": "DE",
+            "excludes": ["sat", "sun", "holiday"],
+            "days_offset": 0,
+            "workdays": ["mon", "tue", "wed", "thu", "fri"],
+            "custom_holidays": {
+                "add_holidays": [],
+                "remove_holidays": ["Not a Holiday"],
+            },
+            # Germany has no plain English, so setup falls back to en_US
+            "country_settings": {"language": "en"},
+        },
+    )
+    client = await hass_client()
+
+    data = await start_repair_fix_flow(
+        client, DOMAIN, "bad_named_holiday-1-not_a_holiday"
+    )
+    data = await process_repair_fix_flow(
+        client, data["flow_id"], json={"remove_holidays": ["New Year's Day"]}
+    )
+
+    assert data["type"] == "create_entry"
+    assert entry.options["custom_holidays"]["remove_holidays"] == ["New Year's Day"]

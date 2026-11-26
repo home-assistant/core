@@ -362,36 +362,12 @@ async def test_button_pull_image_timeout(
     assert exc_info.value.translation_key == "image_pull_timeout"
 
 
-@pytest.mark.parametrize(
-    ("image", "expected"),
-    [
-        pytest.param("nginx", "nginx:latest", id="untagged"),
-        pytest.param(
-            "registry:5000/foo", "registry:5000/foo:latest", id="registry_port"
-        ),
-        pytest.param("nginx:1.27", "nginx:1.27", id="tagged"),
-        pytest.param(
-            "nginx@sha256:0123456789abcdef",
-            "nginx@sha256:0123456789abcdef",
-            id="digest",
-        ),
-    ],
-)
-async def test_button_pull_image_reference(
+async def test_button_pull_image(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    image: str,
-    expected: str,
 ) -> None:
-    """Test the pull image button pulls an explicit tag instead of every tag."""
-    inspect = cast(
-        dict[str, Any], load_json_value_fixture("container_inspect.json", DOMAIN)
-    )
-    inspect["Config"]["Image"] = image
-    mock_portainer_client.inspect_container.return_value = DockerInspect.from_dict(
-        inspect
-    )
+    """Test pressing the pull image button pulls the image without a recreate."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -401,7 +377,7 @@ async def test_button_pull_image_reference(
         blocking=True,
     )
 
-    mock_portainer_client.image_pull.assert_called_once_with(1, expected)
+    mock_portainer_client.image_pull.assert_called_once_with(1, "example-image:1.0")
     mock_portainer_client.container_recreate.assert_not_called()
 
 

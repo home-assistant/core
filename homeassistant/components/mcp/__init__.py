@@ -1,15 +1,25 @@
 """The Model Context Protocol integration."""
 
 from dataclasses import dataclass
+import hashlib
 from typing import cast, override
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, llm
+from homeassistant.util import slugify
 
 from .application_credentials import authorization_server_context
-from .const import CONF_AUTHORIZATION_URL, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
+from .const import (
+    CONF_AUTHORIZATION_URL,
+    CONF_SERVER_NAME,
+    CONF_SLUG,
+    CONF_TOKEN_URL,
+    DOMAIN,
+    MAX_NAMESPACE_LENGTH,
+    MAX_TOOL_NAME_LENGTH,
+)
 from .coordinator import (
     ModelContextProtocolConfigEntry,
     ModelContextProtocolCoordinator,
@@ -89,6 +99,14 @@ async def async_setup_entry(
     coordinator = ModelContextProtocolCoordinator(hass, entry, token_manager)
     await coordinator.async_config_entry_first_refresh()
 
+    # Stored so the tool prefix does not depend on which other servers are loaded
+    assert coordinator.server_info is not None
+    server_name = coordinator.server_info.server_info.name
+    if entry.data.get(CONF_SERVER_NAME) != server_name:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_SERVER_NAME: server_name}
+        )
+
     api_id = f"{DOMAIN}-{entry.data.get(CONF_SLUG, entry.entry_id)}"
     unsub = llm.async_register_api(
         hass,
@@ -121,9 +139,47 @@ class ModelContextProtocolAPI(llm.API):
         self, llm_context: llm.LLMContext
     ) -> llm.APIInstance:
         """Return the instance of the API."""
+        namespace = self._namespace()
         return llm.APIInstance(
             self,
             API_PROMPT.format(name=self.name),
             llm_context,
-            tools=self.coordinator.data,
+            tools=[_namespaced_tool(namespace, tool) for tool in self.coordinator.data],
         )
+
+    def _namespace(self) -> str:
+        """Return the prefix that groups the tools of this server.
+
+        Remote tool names are not unique across servers. Every server that
+        shares its name with another entry gets the end of its entry ID added,
+        whether or not the other entry is loaded.
+        """
+        entry = self.coordinator.config_entry
+        namespace = _server_prefix(entry.data[CONF_SERVER_NAME])
+        if any(
+            other.entry_id != entry.entry_id
+            and _server_prefix(other.data.get(CONF_SERVER_NAME)) == namespace
+            for other in self.hass.config_entries.async_entries(DOMAIN)
+        ):
+            suffix = f"-{entry.entry_id[-4:].lower()}"
+            return namespace[: MAX_NAMESPACE_LENGTH - len(suffix)] + suffix
+        return namespace
+
+
+def _server_prefix(server_name: str | None) -> str:
+    """Return the prefix for a server name, shortened to a fixed length."""
+    return slugify(server_name, separator="-")[:MAX_NAMESPACE_LENGTH]
+
+
+def _namespaced_tool(namespace: str, tool: llm.Tool) -> llm.Tool:
+    """Prefix a tool name and keep the result within the provider limit.
+
+    A long name is cut and gets a hash of the original, so cut names stay
+    unique. The wrapper still calls the server with the original name.
+    """
+    namespaced = llm.NamespacedTool(namespace, tool)
+    if len(namespaced.name) > MAX_TOOL_NAME_LENGTH:
+        digest = hashlib.sha256(tool.name.encode()).hexdigest()[:8]
+        keep = MAX_TOOL_NAME_LENGTH - len(namespace) - len("__") - len(digest) - 1
+        namespaced.name = f"{namespace}__{tool.name[:keep]}_{digest}"
+    return namespaced

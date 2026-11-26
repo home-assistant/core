@@ -10,15 +10,6 @@ from typing import TYPE_CHECKING, Any, Self, override
 import probatio
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
-    ATTR_HS_COLOR,
-    ATTR_RGB_COLOR,
-    ATTR_RGBW_COLOR,
-    ATTR_RGBWW_COLOR,
-    ATTR_TRANSITION,
-    ATTR_XY_COLOR,
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
@@ -28,6 +19,7 @@ from homeassistant.components.light import (
     LightEntityCapabilityAttribute,
     LightEntityFeature,
     LightEntityStateAttribute,
+    LightServiceArgument,
     filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -48,7 +40,7 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, Undefined
 from homeassistant.util import color as color_util
 
 from . import validators as tcv
@@ -529,7 +521,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             self._temperature_option = CONF_TEMPERATURE
             self._temperature_validator = self._validate_temperature
         # The raw result is cached to revalidate it when the min/max range changes
-        self._rendered_temperature: Any = UNDEFINED
+        self._rendered_temperature: Any = Undefined
         self.setup_template(
             self._temperature_option,
             "_attr_color_temp_kelvin",
@@ -657,10 +649,13 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         off_script = self._action_scripts[CONF_OFF_ACTION]
-        if ATTR_TRANSITION in kwargs and self._supports_transition is True:
+        if (
+            LightServiceArgument.TRANSITION in kwargs
+            and self._supports_transition is True
+        ):
             await self.async_run_script(
                 off_script,
-                run_variables={"transition": kwargs[ATTR_TRANSITION]},
+                run_variables={"transition": kwargs[LightServiceArgument.TRANSITION]},
                 context=self._context,
             )
         else:
@@ -679,15 +674,15 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             self._attr_is_on = True
             optimistic_set = True
 
-        if ATTR_BRIGHTNESS in kwargs and self.update_assumed_attribute(
-            CONF_LEVEL, kwargs[ATTR_BRIGHTNESS]
+        if LightServiceArgument.BRIGHTNESS in kwargs and self.update_assumed_attribute(
+            CONF_LEVEL, kwargs[LightServiceArgument.BRIGHTNESS]
         ):
             optimistic_set = True
 
         for option, attr, color_mode, validator in (
             (
                 self._temperature_option,
-                ATTR_COLOR_TEMP_KELVIN,
+                LightServiceArgument.COLOR_TEMP_KELVIN,
                 ColorMode.COLOR_TEMP,
                 None,
             ),
@@ -697,11 +692,11 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
                 ColorMode.COLOR_TEMP,
                 color_util.color_temperature_mired_to_kelvin,
             ),
-            (CONF_HS, ATTR_HS_COLOR, ColorMode.HS, None),
-            (CONF_RGB, ATTR_RGB_COLOR, ColorMode.RGB, None),
-            (CONF_RGBW, ATTR_RGBW_COLOR, ColorMode.RGBW, None),
-            (CONF_RGBWW, ATTR_RGBWW_COLOR, ColorMode.RGBWW, None),
-            (CONF_XY, ATTR_XY_COLOR, ColorMode.XY, None),
+            (CONF_HS, LightServiceArgument.HS_COLOR, ColorMode.HS, None),
+            (CONF_RGB, LightServiceArgument.RGB_COLOR, ColorMode.RGB, None),
+            (CONF_RGBW, LightServiceArgument.RGBW_COLOR, ColorMode.RGBW, None),
+            (CONF_RGBWW, LightServiceArgument.RGBWW_COLOR, ColorMode.RGBWW, None),
+            (CONF_XY, LightServiceArgument.XY_COLOR, ColorMode.XY, None),
         ):
             if attr in kwargs and self._update_assumed_color(
                 option,
@@ -711,9 +706,10 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
                 optimistic_set = True
 
         if (
-            ATTR_EFFECT in kwargs
+            LightServiceArgument.EFFECT in kwargs
             and self._attr_effect_list is not None
-            and (effect := kwargs[ATTR_EFFECT]) in self._attr_effect_list
+            and (effect := kwargs[LightServiceArgument.EFFECT])
+            in self._attr_effect_list
             and self.update_assumed_attribute(CONF_EFFECT, effect)
         ):
             optimistic_set = True
@@ -751,20 +747,23 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         """Get registered script for turn_on."""
         common_params = {}
 
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            brightness = kwargs[LightServiceArgument.BRIGHTNESS]
             common_params["brightness"] = brightness
             common_params["brightness_pct"] = round(brightness / 255 * 100)
 
-        if ATTR_TRANSITION in kwargs and self._supports_transition is True:
-            common_params["transition"] = kwargs[ATTR_TRANSITION]
+        if (
+            LightServiceArgument.TRANSITION in kwargs
+            and self._supports_transition is True
+        ):
+            common_params["transition"] = kwargs[LightServiceArgument.TRANSITION]
 
         if (
-            ATTR_COLOR_TEMP_KELVIN in kwargs
+            LightServiceArgument.COLOR_TEMP_KELVIN in kwargs
             and (script := CONF_TEMPERATURE_ACTION) in self._action_scripts
         ):
-            kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
-            common_params[ATTR_COLOR_TEMP_KELVIN] = kelvin
+            kelvin = kwargs[LightServiceArgument.COLOR_TEMP_KELVIN]
+            common_params[LightServiceArgument.COLOR_TEMP_KELVIN] = kelvin
             common_params[ATTR_COLOR_TEMP] = (
                 color_util.color_temperature_kelvin_to_mired(kelvin)
             )
@@ -772,11 +771,11 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             return (script, common_params)
 
         if (
-            ATTR_EFFECT in kwargs
+            LightServiceArgument.EFFECT in kwargs
             and (script := CONF_EFFECT_ACTION) in self._action_scripts
         ):
             assert self._attr_effect_list is not None
-            effect = kwargs[ATTR_EFFECT]
+            effect = kwargs[LightServiceArgument.EFFECT]
             if (
                 self._attr_effect_list is not None
                 and effect not in self._attr_effect_list
@@ -793,10 +792,10 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             return (script, common_params)
 
         if (
-            ATTR_HS_COLOR in kwargs
+            LightServiceArgument.HS_COLOR in kwargs
             and (script := CONF_HS_ACTION) in self._action_scripts
         ):
-            hs_value = kwargs[ATTR_HS_COLOR]
+            hs_value = kwargs[LightServiceArgument.HS_COLOR]
             common_params["hs"] = hs_value
             common_params["h"] = int(hs_value[0])
             common_params["s"] = int(hs_value[1])
@@ -804,10 +803,10 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             return (script, common_params)
 
         if (
-            ATTR_RGBWW_COLOR in kwargs
+            LightServiceArgument.RGBWW_COLOR in kwargs
             and (script := CONF_RGBWW_ACTION) in self._action_scripts
         ):
-            rgbww_value = kwargs[ATTR_RGBWW_COLOR]
+            rgbww_value = kwargs[LightServiceArgument.RGBWW_COLOR]
             common_params["rgbww"] = rgbww_value
             common_params["rgb"] = (
                 int(rgbww_value[0]),
@@ -823,10 +822,10 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             return (script, common_params)
 
         if (
-            ATTR_RGBW_COLOR in kwargs
+            LightServiceArgument.RGBW_COLOR in kwargs
             and (script := CONF_RGBW_ACTION) in self._action_scripts
         ):
-            rgbw_value = kwargs[ATTR_RGBW_COLOR]
+            rgbw_value = kwargs[LightServiceArgument.RGBW_COLOR]
             common_params["rgbw"] = rgbw_value
             common_params["rgb"] = (
                 int(rgbw_value[0]),
@@ -841,10 +840,10 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             return (script, common_params)
 
         if (
-            ATTR_RGB_COLOR in kwargs
+            LightServiceArgument.RGB_COLOR in kwargs
             and (script := CONF_RGB_ACTION) in self._action_scripts
         ):
-            rgb_value = kwargs[ATTR_RGB_COLOR]
+            rgb_value = kwargs[LightServiceArgument.RGB_COLOR]
             common_params["rgb"] = rgb_value
             common_params["r"] = int(rgb_value[0])
             common_params["g"] = int(rgb_value[1])
@@ -853,10 +852,10 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             return (script, common_params)
 
         if (
-            ATTR_XY_COLOR in kwargs
+            LightServiceArgument.XY_COLOR in kwargs
             and (script := CONF_XY_ACTION) in self._action_scripts
         ):
-            xy_value = kwargs[ATTR_XY_COLOR]
+            xy_value = kwargs[LightServiceArgument.XY_COLOR]
             common_params["xy"] = xy_value
             common_params["x"] = float(xy_value[0])
             common_params["y"] = float(xy_value[1])
@@ -864,7 +863,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             return (script, common_params)
 
         if (
-            ATTR_BRIGHTNESS in kwargs
+            LightServiceArgument.BRIGHTNESS in kwargs
             and (script := CONF_LEVEL_ACTION) in self._action_scripts
         ):
             return (script, common_params)
@@ -899,7 +898,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
     @callback
     def _revalidate_temperature(self) -> None:
         """Revalidate the rendered temperature after the range changed."""
-        if self._rendered_temperature is UNDEFINED:
+        if self._rendered_temperature is Undefined:
             return
 
         self._attr_color_temp_kelvin = self._temperature_validator(

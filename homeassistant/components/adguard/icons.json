@@ -27,6 +27,9 @@
       }
     },
     "switch": {
+      "dhcp": {
+        "default": "mdi:ip-network"
+      },
       "filtering": {
         "default": "mdi:shield-check",
         "state": {

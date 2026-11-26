@@ -5,6 +5,7 @@ import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
+import evohomeasync2 as ec2
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -215,6 +216,38 @@ async def test_client_request_failure_v2(
     assert caplog.record_tuples == CLIENT_REQUEST_TESTS[exception]
 
 
+async def test_location_first_refresh_failure(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a translated error of a failed first refresh is logged by its cause."""
+
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request("default"),
+        ),
+        patch("_evohome.auth.AbstractAuth._make_request", mock_make_request("default")),
+        patch.object(
+            ec2.Location,
+            "get_status",
+            side_effect=ec2.ApiCallFailedError("API call failed"),
+        ),
+        caplog.at_level(logging.ERROR),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config}) is False
+
+    assert caplog.record_tuples == [
+        (
+            "homeassistant.components.evohome",
+            logging.ERROR,
+            "Failed to fetch initial data: API call failed",
+        ),
+        LOG_SETUP_FAILED,
+    ]
+
+
 @pytest.mark.parametrize("install", ["default"])
 @pytest.mark.usefixtures("evohome")
 async def test_setup(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
@@ -255,6 +288,7 @@ async def test_setup_non_default_location(
 _STALE_ISSUES = {  # issue_id: translation_key
     "deprecated_clear_zone_override_service": "deprecated_clear_zone_override_service",
     "deprecated_preset_reset": "deprecated_preset_reset",
+    "deprecated_refresh_system_service": "deprecated_refresh_system_service",
     "deprecated_reset_system_service": "deprecated_reset_system_service",
     "deprecated_set_system_mode_service": "deprecated_controller_service",
 }

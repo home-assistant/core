@@ -101,6 +101,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.data = {}
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
+        self.setup_device_urls = set(self.devices)
         self.executions: dict[str, set[OverkizDeviceCommand]] = {}
         # A gateway reports its devices' states from cache while it is
         # unreachable, so nothing in the device payload reveals the outage.
@@ -109,6 +110,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         }
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
+        self.reload_requested = False
 
         self.is_stateless = all(
             device.identifier.protocol in (Protocol.RTS, Protocol.INTERNAL)
@@ -170,11 +172,15 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
             return self.devices
 
+        self.reload_requested = False
         for event in events:
             LOGGER.debug(event)
 
             if event_handler := EVENT_HANDLERS.get(event.name):
                 await event_handler(self, event)
+
+        if self.reload_requested:
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
         # Restore the default update interval if no executions are pending
         if not self.executions:
@@ -264,14 +270,22 @@ async def on_device_unavailable_disabled(
 
 
 @EVENT_HANDLERS.register(EventName.DEVICE_CREATED)
-@EVENT_HANDLERS.register(EventName.DEVICE_UPDATED)
-async def on_device_created_updated(
+async def on_device_created(
     coordinator: OverkizDataUpdateCoordinator, event: DeviceEvent
 ) -> None:
-    """Handle device unavailable / disabled event."""
-    coordinator.hass.async_create_task(
-        coordinator.hass.config_entries.async_reload(coordinator.config_entry.entry_id)
-    )
+    """Handle device created event."""
+    # A rebooted gateway re-announces all its devices while it still reports
+    # incomplete devices and placeholder labels, so only reload for a new one.
+    if event.device_url not in coordinator.setup_device_urls:
+        coordinator.reload_requested = True
+
+
+@EVENT_HANDLERS.register(EventName.DEVICE_UPDATED)
+async def on_device_updated(
+    coordinator: OverkizDataUpdateCoordinator, event: DeviceEvent
+) -> None:
+    """Handle device updated event."""
+    coordinator.reload_requested = True
 
 
 @EVENT_HANDLERS.register(EventName.DEVICE_STATE_CHANGED)
@@ -298,6 +312,7 @@ async def on_device_removed(
     coordinator: OverkizDataUpdateCoordinator, event: DeviceRemovedEvent
 ) -> None:
     """Handle device removed event."""
+    coordinator.setup_device_urls.discard(event.device_url)
     base_device_url = event.device_url.split("#")[0]
     registry = dr.async_get(coordinator.hass)
 

@@ -1286,6 +1286,8 @@ async def test_iblinds_v3_cover(
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
     # The open slat value 50 of the 0-99 scale reads back as 51
     assert state.attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] == 51
+    assert state.attributes[CoverEntityCapabilityAttribute.TILT_START_ANGLE] == -90
+    assert state.attributes[CoverEntityCapabilityAttribute.TILT_END_ANGLE] == 90
     assert state.attributes[CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS] == [
         0,
         100,
@@ -1437,6 +1439,59 @@ async def test_nice_ibt4zwave_cover(
     assert args["value"] == 99
 
     client.async_send_command.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("slat_value", "sent_value"),
+    [
+        pytest.param(0, 50, id="closed_at_0"),
+        pytest.param(99, 50, id="closed_at_99"),
+        pytest.param(50, 0, id="open"),
+    ],
+)
+async def test_iblinds_v3_toggle_tilt(
+    hass: HomeAssistant,
+    client: MagicMock,
+    iblinds_v3: Node,
+    integration: MockConfigEntry,
+    slat_value: int,
+    sent_value: int,
+) -> None:
+    """Test toggling the slats opens them at both closed ends."""
+    entity_id = "cover.blind_west_bed_1_horizontal_slats_angle"
+    iblinds_v3.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": 131,
+                "args": {
+                    "commandClassName": "Window Covering",
+                    "commandClass": 106,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "propertyKey": 23,
+                    "newValue": slat_value,
+                    "prevValue": 0,
+                    "propertyName": "currentValue",
+                    "propertyKeyName": "Horizontal Slats Angle",
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.TOGGLE_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    args = client.async_send_command.call_args[0][0]
+    assert args["valueId"]["property"] == "targetValue"
+    assert args["value"] == sent_value
 
 
 async def test_window_covering_open_close(
