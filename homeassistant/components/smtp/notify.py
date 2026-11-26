@@ -12,20 +12,17 @@ from ssl import SSLContext
 from typing import TYPE_CHECKING, Any, override
 
 import aiosmtplib
-import probatio
 
 from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
     NotifyEntity,
     NotifyEntityFeature,
     NotifyServiceArgument,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import (
     APPLICATION_NAME,
-    CONF_DEBUG,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_RECIPIENT,
@@ -37,9 +34,8 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -56,13 +52,8 @@ from .const import (
     CONF_REPLY_TO_NAME,
     CONF_SENDER_NAME,
     CONF_SERVER,
-    DEFAULT_DEBUG,
-    DEFAULT_ENCRYPTION,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
     DEFAULT_TIMEOUT,
     DOMAIN,
-    ENCRYPTION_OPTIONS,
     SMTPServiceArgument,
     SMTPServiceAttachment,
 )
@@ -73,7 +64,7 @@ from .helpers import (
     _build_text_msg,
     _resolve_media,
 )
-from .issue import async_deprecate_yaml_issue, deprecated_notify_action_call
+from .issue import deprecated_notify_action_call
 
 PLATFORMS = [Platform.NOTIFY]
 
@@ -82,26 +73,6 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 RETRIES = 2
-
-PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {
-        probatio.Required(CONF_RECIPIENT): probatio.All(
-            probatio.EnsureList(), [probatio.Email()]
-        ),
-        probatio.Required(CONF_SENDER): probatio.Email(),
-        probatio.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
-        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        probatio.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): probatio.In(
-            ENCRYPTION_OPTIONS
-        ),
-        probatio.Optional(CONF_USERNAME): cv.string,
-        probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
-        probatio.Optional(CONF_SENDER_NAME): cv.string,
-        probatio.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
-        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-    }
-)
 
 MAP_X_PRIORITY = {
     "highest": "1 (Highest)",
@@ -118,19 +89,6 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MailNotificationService | None:
     """Get the mail notification service."""
-    if config:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-        if result.get("type") is FlowResultType.CREATE_ENTRY or (
-            result.get("type") is FlowResultType.ABORT
-            and result.get("reason") == "already_configured"
-        ):
-            async_deprecate_yaml_issue(hass, config)
-        else:
-            async_deprecate_yaml_issue(hass, config, import_success=False)
-        return None
-
     if discovery_info is None:
         return None
 

@@ -12,7 +12,6 @@ from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigFlow,
     ConfigFlowResult,
-    ConfigSubentryData,
     ConfigSubentryFlow,
     FlowType,
     OptionsFlow,
@@ -274,37 +273,6 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
-        """Import config from yaml."""
-
-        options = {CONF_TIMEOUT: import_info.pop(CONF_TIMEOUT, DEFAULT_TIMEOUT)}
-        self._async_abort_entries_match(import_info)
-
-        errors = await validate_input(self.hass, import_info, options)
-
-        if not errors:
-            title = (
-                import_info.get(CONF_NAME)
-                or import_info.get(CONF_SENDER_NAME)
-                or import_info[CONF_SENDER]
-            )
-            return self.async_create_entry(
-                title=title,
-                data=import_info,
-                options=options,
-                subentries=[
-                    ConfigSubentryData(
-                        subentry_type=SUBENTRY_TYPE_RECIPIENT,
-                        title=recipient,
-                        unique_id=recipient,
-                        data={},
-                    )
-                    for recipient in import_info[CONF_RECIPIENT]
-                ],
-            )
-
-        return self.async_abort(reason=errors["base"])
 
 
 async def validate_input(
