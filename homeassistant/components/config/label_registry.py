@@ -10,34 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, label_registry as lr
 from homeassistant.helpers.label_registry import LabelEntry
 
-SUPPORTED_LABEL_THEME_COLORS = {
-    "primary",
-    "accent",
-    "disabled",
-    "red",
-    "pink",
-    "purple",
-    "deep-purple",
-    "indigo",
-    "blue",
-    "light-blue",
-    "cyan",
-    "teal",
-    "green",
-    "light-green",
-    "lime",
-    "yellow",
-    "amber",
-    "orange",
-    "deep-orange",
-    "brown",
-    "light-grey",
-    "grey",
-    "dark-grey",
-    "blue-grey",
-    "black",
-    "white",
-}
+from .const import SUPPORTED_LABEL_THEME_COLORS
 
 
 @callback

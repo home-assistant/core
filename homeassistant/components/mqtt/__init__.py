@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from contextlib import suppress
 import logging
 from typing import Any, cast
 
@@ -97,6 +98,7 @@ from .models import (
     ReceiveMessage,
     convert_outgoing_mqtt_payload,
 )
+from .repairs import async_setup_client_certificate_check
 from .services import async_setup_services
 from .subscription import (
     EntitySubscription,
@@ -326,10 +328,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await async_create_certificate_temp_files(hass, new_entry_data)
         # Try the connection with protocol version 5
         # And update the protocol if successful
-        if await hass.async_add_executor_job(
-            try_connection,
-            {CONF_PORT: DEFAULT_PORT} | new_entry_data,
-        ):
+        migrated: bool | None = None
+        # When the certificates cannot be loaded, the client setup below fails
+        # and is retried, and the migration is tried again then
+        with suppress(OSError):
+            migrated = await hass.async_add_executor_job(
+                try_connection,
+                {CONF_PORT: DEFAULT_PORT} | new_entry_data,
+            )
+        if migrated:
             hass.config_entries.async_update_entry(
                 entry,
                 data=new_entry_data,
@@ -338,7 +345,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             _LOGGER.info(
                 "The MQTT protocol version was successfully updated to version 5"
             )
-        else:
+        elif migrated is not None:
             broker: str = entry.data[CONF_BROKER]
             async_create_issue(
                 hass,
@@ -370,6 +377,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         client = MQTT(hass, entry, conf)
         if DOMAIN in hass.data:
             mqtt_data = hass.data[DATA_MQTT]
+            # A client that failed to start is not unloaded, so keep its
+            # subscriptions to restore them on the new client
+            if not mqtt_data.client.client_initialized:
+                mqtt_data.subscriptions_to_restore |= mqtt_data.client.subscriptions
             mqtt_data.config = mqtt_yaml
             mqtt_data.client = client
         else:
@@ -423,6 +434,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await discovery.async_start(
             hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), entry
         )
+
+    await async_setup_client_certificate_check(
+        hass, entry, conf, mqtt_data.client_certificate
+    )
 
 
 @websocket_api.websocket_command(

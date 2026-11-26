@@ -1,6 +1,7 @@
 """The tests for the evohome coordinator."""
 
 from contextlib import AbstractContextManager
+import logging
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import evohomeasync as ec1
@@ -11,24 +12,26 @@ from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
 )
 from homeassistant.components.evohome.const import (
+    EVOHOME_DATA,
     SCAN_INTERVAL_DEFAULT,
     SCHEDULE_MAX_AGE,
 )
-from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    CONF_SCAN_INTERVAL,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
+from homeassistant.components.water_heater import (
+    DOMAIN as WATER_HEATER_DOMAIN,
+    WaterHeaterService,
 )
+from homeassistant.const import CONF_SCAN_INTERVAL, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import (
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .conftest import setup_evohome
 from .const import TEST_INSTALLS
@@ -269,7 +272,7 @@ async def test_schedules_fetched_only_when_stale(
     [
         pytest.param(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
+            ClimateService.TURN_OFF,
             {},
             "ctl_id",
             "evohomeasync2.control_system.ControlSystem.set_mode",
@@ -277,15 +280,15 @@ async def test_schedules_fetched_only_when_stale(
         ),
         pytest.param(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_TEMPERATURE: 19.1},
+            ClimateService.SET_TEMPERATURE,
+            {ClimateServiceArgument.TEMPERATURE: 19.1},
             "zone_id",
             "evohomeasync2.zone.Zone.set_temperature",
             id="zone",
         ),
         pytest.param(
             WATER_HEATER_DOMAIN,
-            SERVICE_TURN_ON,
+            WaterHeaterService.TURN_ON,
             {},
             "dhw_id",
             "evohomeasync2.hotwater.HotWater.set_on",
@@ -314,11 +317,143 @@ async def test_action_api_call_failed(
         await hass.services.async_call(
             domain,
             service,
-            {ATTR_ENTITY_ID: entity_id, **service_data},
+            {TargetKey.ENTITY_ID: entity_id, **service_data},
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "api_call_failed"
+    assert exc_info.value.translation_key == "api_request_failed"
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("reason", "translation_key"),
+    [
+        pytest.param(
+            evo_exc.ApiCallErrorReason.CALL_FAILED,
+            "api_request_failed",
+            id="call_failed",
+        ),
+        pytest.param(
+            evo_exc.ApiCallErrorReason.CONNECTION_FAILED,
+            "api_connection_failed",
+            id="connection_failed",
+        ),
+        pytest.param(
+            evo_exc.ApiCallErrorReason.CREDENTIALS_INVALID,
+            "api_credentials_invalid",
+            id="credentials_invalid",
+        ),
+        pytest.param(
+            evo_exc.ApiCallErrorReason.RATE_LIMITED,
+            "api_rate_limited",
+            id="rate_limited",
+        ),
+        pytest.param(
+            evo_exc.ApiCallErrorReason.REQUEST_REJECTED,
+            "api_request_rejected",
+            id="request_rejected",
+        ),
+        pytest.param(
+            evo_exc.ApiCallErrorReason.SERVER_ERROR,
+            "api_server_error",
+            id="server_error",
+        ),
+        pytest.param(
+            evo_exc.ApiCallErrorReason.RESPONSE_NOT_JSON,
+            "api_request_failed",
+            id="fallback",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_action_api_call_failed_reason(
+    hass: HomeAssistant,
+    zone_id: str,
+    reason: evo_exc.ApiCallErrorReason,
+    translation_key: str,
+) -> None:
+    """Test the translation key of a failed action depends on the error's reason."""
+
+    with (
+        patch(
+            "evohomeasync2.zone.Zone.set_temperature",
+            side_effect=evo_exc.ApiCallFailedError("API call failed", reason=reason),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: zone_id, ClimateServiceArgument.TEMPERATURE: 19.1},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == translation_key
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("exception", "error_type", "translation_key", "retry_after"),
+    [
+        pytest.param(
+            evo_exc.ApiConnectionFailedError("API call failed"),
+            UpdateFailedUnreachable,
+            "api_connection_failed",
+            None,
+            id="connection_failed",
+        ),
+        pytest.param(
+            evo_exc.ApiRateLimitExceededError("Rate limit exceeded", retry_after=900),
+            UpdateFailed,
+            "api_rate_limited",
+            900,
+            id="rate_limited",
+        ),
+        pytest.param(
+            evo_exc.ApiCallFailedError(
+                "API call failed",
+                reason=evo_exc.ApiCallErrorReason.SERVER_ERROR,
+            ),
+            UpdateFailed,
+            "api_server_error",
+            None,
+            id="server_error",
+        ),
+        pytest.param(
+            evo_exc.ApiCallFailedError(
+                "API call failed",
+                status=503,
+                reason=evo_exc.ApiCallErrorReason.SERVER_ERROR,
+                retry_after=120,
+            ),
+            UpdateFailed,
+            "api_server_error",
+            120,
+            id="server_error_retry_after",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_poll_api_call_failed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    exception: evo_exc.ApiCallFailedError,
+    error_type: type[UpdateFailed],
+    translation_key: str,
+    retry_after: float | None,
+) -> None:
+    """Test a failed poll of a location raises UpdateFailed, by the error's reason."""
+
+    coordinator = hass.data[EVOHOME_DATA].coordinator
+
+    with patch("evohomeasync2.location.Location.get_status", side_effect=exception):
+        freezer.tick(SCAN_INTERVAL_DEFAULT)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert type(coordinator.last_exception) is error_type
+    assert coordinator.last_exception.translation_key == translation_key
+    assert coordinator.last_exception.retry_after == retry_after
 
 
 async def test_no_schedule_fetch_at_setup(
@@ -341,27 +476,37 @@ async def test_no_schedule_fetch_at_setup(
 
 @pytest.mark.parametrize("install", ["default"])
 @pytest.mark.usefixtures("evohome")
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(evo_exc.ApiCallFailedError("API call failed"), id="call_failed"),
+        pytest.param(
+            evo_exc.BadUserCredentialsError("Authentication failed"),
+            id="authentication_failed",
+        ),
+    ],
+)
 async def test_failed_schedule_poll_keeps_entities_available(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     zone_id: str,
     caplog: pytest.LogCaptureFixture,
+    exception: evo_exc.ApiCallFailedError,
 ) -> None:
     """Test a failed background schedule GET is logged (and retried), not a failure."""
 
+    coordinator = hass.data[EVOHOME_DATA].coordinator
     update_interval = SCAN_INTERVAL_DEFAULT
 
-    with patch.object(
-        Zone,
-        "get_schedule",
-        side_effect=evo_exc.ApiCallFailedError("API call failed"),
-    ) as mock_fcn:
+    with patch.object(Zone, "get_schedule", side_effect=exception) as mock_fcn:
         freezer.tick(update_interval)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     mock_fcn.assert_awaited()  # the schedules were due to be fetched
     assert "Failed to update the schedule (keeping any previous one)" in caplog.text
+    assert "Unexpected error fetching" not in caplog.text
+    assert coordinator.last_update_success
 
     state = hass.states.get(zone_id)
     assert state is not None and state.state != STATE_UNAVAILABLE
@@ -373,3 +518,151 @@ async def test_failed_schedule_poll_keeps_entities_available(
         await hass.async_block_till_done()
 
     mock_fcn.assert_awaited()
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("exception", "translation_key", "placeholders"),
+    [
+        pytest.param(
+            evo_exc.InvalidSetModeError(
+                "Invalid mode",
+                reason=evo_exc.RequestErrorReason.MODE_UNSUPPORTED,
+                mode="heating_off",
+            ),
+            "mode_not_supported",
+            {"mode": "HeatingOff"},
+            id="mode_unsupported",
+        ),
+        pytest.param(
+            evo_exc.InvalidSetModeError(
+                "Invalid mode",
+                reason=evo_exc.RequestErrorReason.TIMESPAN_REQUIRED,
+                mode="away",
+                required_timing_mode="period",
+            ),
+            "mode_timespan_required",
+            {"mode": "Away"},
+            id="timespan_required",
+        ),
+        pytest.param(
+            evo_exc.InvalidSetModeError(
+                "Invalid mode",
+                reason=evo_exc.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE,
+                mode="auto_with_eco",
+                timing_mode="duration",
+            ),
+            "mode_timespan_not_in_future",
+            {"mode": "AutoWithEco"},
+            id="timespan_not_in_future",
+        ),
+        pytest.param(
+            evo_exc.InvalidSetModeError(
+                "Invalid mode",
+                reason=evo_exc.RequestErrorReason.TIMESPAN_UNSUPPORTED,
+                mode="away",
+                timing_mode="duration",
+                required_timing_mode="period",
+            ),
+            "mode_cant_have_duration",
+            {"mode": "Away"},
+            id="timespan_unsupported",
+        ),
+        pytest.param(
+            evo_exc.InvalidSetModeError(
+                "Invalid mode",
+                reason=evo_exc.RequestErrorReason.TIMESPAN_OUT_OF_RANGE,
+                mode="away",
+                timing_mode="period",
+            ),
+            "mode_request_invalid",
+            {"mode": "Away"},
+            id="fallback",
+        ),
+        pytest.param(
+            evo_exc.InvalidSetModeError(
+                "Invalid mode", reason=evo_exc.RequestErrorReason.TIMESPAN_CONFLICTING
+            ),
+            "request_invalid",
+            None,
+            id="no_mode",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_action_request_rejected_by_client(
+    hass: HomeAssistant,
+    ctl_id: str,
+    caplog: pytest.LogCaptureFixture,
+    exception: evo_exc.BadApiRequestError,
+    translation_key: str,
+    placeholders: dict[str, str] | None,
+) -> None:
+    """Test a request the client rejects raises a translated ServiceValidationError.
+
+    The client's error is chained to it, and logged (only) as debug.
+    """
+
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.evohome")
+
+    with (
+        patch(
+            "evohomeasync2.control_system.ControlSystem.set_mode",
+            side_effect=exception,
+        ),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            ClimateService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ctl_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == placeholders
+    assert exc_info.value.__cause__ is exception
+
+    records = [
+        r
+        for r in caplog.records
+        if r.name.startswith("homeassistant.components.evohome")
+    ]
+    assert any(f"reason={exception.reason}" in r.getMessage() for r in records)
+    assert all(r.levelno == logging.DEBUG for r in records)
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_invalid_schedule_poll_keeps_entities_available(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    zone_id: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an invalid schedule is logged, and not retried until it is stale."""
+
+    update_interval = SCAN_INTERVAL_DEFAULT
+
+    with patch.object(
+        Zone,
+        "get_schedule",
+        side_effect=evo_exc.InvalidGetScheduleError("Invalid schedule"),
+    ) as mock_fcn:
+        freezer.tick(update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_fcn.assert_awaited()  # the schedules were due to be fetched
+    assert "Failed to update the schedule (keeping any previous one)" in caplog.text
+
+    state = hass.states.get(zone_id)
+    assert state is not None and state.state != STATE_UNAVAILABLE
+
+    # unlike a failed GET, an invalid schedule is not retried at the next poll
+    with patch.object(Zone, "get_schedule") as mock_fcn:
+        freezer.tick(update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_fcn.assert_not_awaited()

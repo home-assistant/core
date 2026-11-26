@@ -57,13 +57,25 @@ SINGLE_UNIT_REGISTERS: dict[int, int] = {
     98: 0,  # slave
 }
 
-_IDENTITY = {48, 49, 50}
-
-# The same gateway during the two minutes after it powers up.
-INITIALISING_REGISTERS: dict[int, int] = {
-    address: value if address in _IDENTITY else INIT_VALUE
-    for address, value in SINGLE_UNIT_REGISTERS.items()
-} | {11: 65532}
+# The same gateway during the two minutes after it powers up, as read off an
+# INMBSMHI001R000: only the temperatures hold the initialisation value.
+INITIALISING_REGISTERS: dict[int, int] = SINGLE_UNIT_REGISTERS | {
+    0: 0,  # reads off
+    1: 0,  # reads auto
+    2: 0,  # reads auto
+    3: 0,
+    4: INIT_VALUE,
+    5: INIT_VALUE,
+    10: 1,  # reads as an alarm
+    11: 65532,  # initialising
+    22: INIT_VALUE,
+    23: INIT_VALUE,
+    25: 180,  # the limit of the mode it reads
+    46: 0,
+    60: INIT_VALUE,
+    65: INIT_VALUE,
+    66: INIT_VALUE,
+}
 
 
 def seed_single_unit(unit: MockModbusUnit) -> None:

@@ -44,7 +44,7 @@ rules:
   reauthentication-flow: done
   test-coverage: todo
   # Gold
-  devices: todo
+  devices: done
   diagnostics: done
   discovery: todo
   discovery-update-info: todo
@@ -70,4 +70,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done

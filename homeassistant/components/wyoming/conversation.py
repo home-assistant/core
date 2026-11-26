@@ -111,7 +111,7 @@ class WyomingConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-        conversation_id = user_input.conversation_id or ulid_util.ulid_now()
+        conversation_id = user_input.conversation_id or ulid_util.secure_ulid_now()
         intent_response = intent.IntentResponse(language=user_input.language)
 
         context = {"conversation_id": conversation_id}

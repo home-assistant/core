@@ -22,29 +22,22 @@ from zwave_js_server.model.node import Node
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    SERVICE_STOP_COVER_TILT,
     CoverDeviceClass,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.components.zwave_js.const import LOGGER
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 
@@ -107,8 +100,8 @@ async def test_window_cover(
     # Test setting position
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY, ATTR_POSITION: 50},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY, CoverServiceArgument.POSITION: 50},
         blocking=True,
     )
 
@@ -128,8 +121,8 @@ async def test_window_cover(
     # Test setting position
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY, ATTR_POSITION: 0},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY, CoverServiceArgument.POSITION: 0},
         blocking=True,
     )
 
@@ -149,8 +142,8 @@ async def test_window_cover(
     # Test opening
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
 
@@ -170,8 +163,8 @@ async def test_window_cover(
     # Test stop after opening
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
 
@@ -213,8 +206,8 @@ async def test_window_cover(
     # Test closing
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -233,8 +226,8 @@ async def test_window_cover(
     # Test stop after closing
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
 
@@ -291,8 +284,8 @@ async def test_fibaro_fgr222_shutter_cover(
     # Test opening tilts
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: FIBARO_FGR_222_SHUTTER_COVER_ENTITY},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: FIBARO_FGR_222_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
 
@@ -313,8 +306,8 @@ async def test_fibaro_fgr222_shutter_cover(
     # Test closing tilts
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: FIBARO_FGR_222_SHUTTER_COVER_ENTITY},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: FIBARO_FGR_222_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
 
@@ -335,8 +328,11 @@ async def test_fibaro_fgr222_shutter_cover(
     # Test setting tilt position
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: FIBARO_FGR_222_SHUTTER_COVER_ENTITY, ATTR_TILT_POSITION: 12},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: FIBARO_FGR_222_SHUTTER_COVER_ENTITY,
+            CoverServiceArgument.TILT_POSITION: 12,
+        },
         blocking=True,
     )
 
@@ -395,8 +391,8 @@ async def test_fibaro_fgr223_shutter_cover(
     # Test opening tilts
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: FIBARO_FGR_223_SHUTTER_COVER_ENTITY},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: FIBARO_FGR_223_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
 
@@ -415,8 +411,8 @@ async def test_fibaro_fgr223_shutter_cover(
     # Test closing tilts
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: FIBARO_FGR_223_SHUTTER_COVER_ENTITY},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: FIBARO_FGR_223_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
 
@@ -435,8 +431,11 @@ async def test_fibaro_fgr223_shutter_cover(
     # Test setting tilt position
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: FIBARO_FGR_223_SHUTTER_COVER_ENTITY, ATTR_TILT_POSITION: 12},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: FIBARO_FGR_223_SHUTTER_COVER_ENTITY,
+            CoverServiceArgument.TILT_POSITION: 12,
+        },
         blocking=True,
     )
 
@@ -495,8 +494,8 @@ async def test_shelly_wave_shutter_cover_with_tilt(
     # Test opening tilts
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: SHELLY_WAVE_SHUTTER_COVER_ENTITY},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: SHELLY_WAVE_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
 
@@ -516,8 +515,8 @@ async def test_shelly_wave_shutter_cover_with_tilt(
     # Test closing tilts
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: SHELLY_WAVE_SHUTTER_COVER_ENTITY},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: SHELLY_WAVE_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
 
@@ -537,8 +536,11 @@ async def test_shelly_wave_shutter_cover_with_tilt(
     # Test setting tilt position
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: SHELLY_WAVE_SHUTTER_COVER_ENTITY, ATTR_TILT_POSITION: 12},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: SHELLY_WAVE_SHUTTER_COVER_ENTITY,
+            CoverServiceArgument.TILT_POSITION: 12,
+        },
         blocking=True,
     )
 
@@ -596,8 +598,8 @@ async def test_aeotec_nano_shutter_cover(
     # Test opening
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
 
@@ -617,8 +619,8 @@ async def test_aeotec_nano_shutter_cover(
     # Test stop after opening
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
 
@@ -661,8 +663,8 @@ async def test_aeotec_nano_shutter_cover(
     # Test closing
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -681,8 +683,8 @@ async def test_aeotec_nano_shutter_cover(
     # Test stop after closing
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
 
@@ -742,8 +744,8 @@ async def test_motor_barrier_cover(
     # Test open
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: GDC_COVER_ENTITY},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: GDC_COVER_ENTITY},
         blocking=True,
     )
 
@@ -767,8 +769,8 @@ async def test_motor_barrier_cover(
     # Test close
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: GDC_COVER_ENTITY},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: GDC_COVER_ENTITY},
         blocking=True,
     )
 
@@ -1282,11 +1284,19 @@ async def test_iblinds_v3_cover(
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert ATTR_CURRENT_TILT_POSITION in state.attributes
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
+    # The open slat value 50 of the 0-99 scale reads back as 51
+    assert state.attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] == 51
+    assert state.attributes[CoverEntityCapabilityAttribute.TILT_START_ANGLE] == -90
+    assert state.attributes[CoverEntityCapabilityAttribute.TILT_END_ANGLE] == 90
+    assert state.attributes[CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS] == [
+        0,
+        100,
+    ]
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1306,8 +1316,8 @@ async def test_iblinds_v3_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1327,8 +1337,8 @@ async def test_iblinds_v3_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TILT_POSITION: 12},
+        CoverService.SET_TILT_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.TILT_POSITION: 12},
         blocking=True,
     )
 
@@ -1348,8 +1358,8 @@ async def test_iblinds_v3_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER_TILT,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1392,8 +1402,8 @@ async def test_nice_ibt4zwave_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1412,8 +1422,8 @@ async def test_nice_ibt4zwave_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1429,6 +1439,59 @@ async def test_nice_ibt4zwave_cover(
     assert args["value"] == 99
 
     client.async_send_command.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("slat_value", "sent_value"),
+    [
+        pytest.param(0, 50, id="closed_at_0"),
+        pytest.param(99, 50, id="closed_at_99"),
+        pytest.param(50, 0, id="open"),
+    ],
+)
+async def test_iblinds_v3_toggle_tilt(
+    hass: HomeAssistant,
+    client: MagicMock,
+    iblinds_v3: Node,
+    integration: MockConfigEntry,
+    slat_value: int,
+    sent_value: int,
+) -> None:
+    """Test toggling the slats opens them at both closed ends."""
+    entity_id = "cover.blind_west_bed_1_horizontal_slats_angle"
+    iblinds_v3.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": 131,
+                "args": {
+                    "commandClassName": "Window Covering",
+                    "commandClass": 106,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "propertyKey": 23,
+                    "newValue": slat_value,
+                    "prevValue": 0,
+                    "propertyName": "currentValue",
+                    "propertyKeyName": "Horizontal Slats Angle",
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.TOGGLE_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    args = client.async_send_command.call_args[0][0]
+    assert args["valueId"]["property"] == "targetValue"
+    assert args["value"] == sent_value
 
 
 async def test_window_covering_open_close(
@@ -1453,8 +1516,8 @@ async def test_window_covering_open_close(
     # Test opening
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -1474,8 +1537,8 @@ async def test_window_covering_open_close(
     # Test stop after opening
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1496,8 +1559,8 @@ async def test_window_covering_open_close(
     # Test closing
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -1517,8 +1580,8 @@ async def test_window_covering_open_close(
     # Test stop after closing
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1557,8 +1620,8 @@ async def test_multilevel_switch_cover_moving_state_working(
     # Open cover - should set OPENING state
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
 
@@ -1672,8 +1735,8 @@ async def test_multilevel_switch_cover_moving_state_closing(
     # Close cover - should set CLOSING state
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
 
@@ -1697,8 +1760,8 @@ async def test_multilevel_switch_cover_moving_state_success_no_moving(
     # Open cover - SUCCESS means device already at target, no moving state
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
 
@@ -1727,8 +1790,8 @@ async def test_multilevel_switch_cover_moving_state_unsupervised(
     # Open cover - should set OPENING state optimistically
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
 
@@ -1755,8 +1818,8 @@ async def test_multilevel_switch_cover_moving_state_stop_clears(
     # Open cover to set OPENING state
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
 
@@ -1771,8 +1834,8 @@ async def test_multilevel_switch_cover_moving_state_stop_clears(
     # Stop cover - should clear opening state
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
 
@@ -1818,8 +1881,8 @@ async def test_multilevel_switch_cover_moving_state_set_position(
     # Set position to 20 (closing direction)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY, ATTR_POSITION: 20},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY, CoverServiceArgument.POSITION: 20},
         blocking=True,
     )
 
@@ -1829,8 +1892,8 @@ async def test_multilevel_switch_cover_moving_state_set_position(
     # Set position to 80 (opening direction)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY, ATTR_POSITION: 80},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY, CoverServiceArgument.POSITION: 80},
         blocking=True,
     )
 
@@ -1856,8 +1919,8 @@ async def test_window_covering_cover_moving_state(
     # Open cover - should set OPENING state
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1869,8 +1932,8 @@ async def test_window_covering_cover_moving_state(
     # Stop cover - should clear moving state
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1882,8 +1945,8 @@ async def test_window_covering_cover_moving_state(
     # Close cover - should set CLOSING state
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1953,8 +2016,8 @@ async def test_multilevel_switch_cover_moving_state_none_result(
     # Open cover - should NOT set OPENING state since result is None
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
 
@@ -1997,8 +2060,8 @@ async def test_multilevel_switch_cover_v3_no_moving_state_supervised(
     }
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
     state = hass.states.get(WINDOW_COVER_ENTITY)
@@ -2030,8 +2093,8 @@ async def test_multilevel_switch_cover_v3_no_moving_state_supervised(
     # WORKING result must NOT optimistically set CLOSING
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
     state = hass.states.get(WINDOW_COVER_ENTITY)
@@ -2065,8 +2128,8 @@ async def test_multilevel_switch_cover_v3_no_moving_state_supervised(
     }
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
     state = hass.states.get(WINDOW_COVER_ENTITY)
@@ -2108,8 +2171,8 @@ async def test_multilevel_switch_cover_v3_no_moving_state_unsupervised(
     }
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
     state = hass.states.get(WINDOW_COVER_ENTITY)
@@ -2141,8 +2204,8 @@ async def test_multilevel_switch_cover_v3_no_moving_state_unsupervised(
     # SUCCESS_UNSUPERVISED must NOT set CLOSING
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
     state = hass.states.get(WINDOW_COVER_ENTITY)
@@ -2173,8 +2236,8 @@ async def test_multilevel_switch_cover_v3_no_moving_state_unsupervised(
     # SUCCESS_UNSUPERVISED set_position must NOT set OPENING
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY, ATTR_POSITION: 50},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: WINDOW_COVER_ENTITY, CoverServiceArgument.POSITION: 50},
         blocking=True,
     )
     state = hass.states.get(WINDOW_COVER_ENTITY)
@@ -2194,8 +2257,8 @@ async def test_window_covering_cover_moving_state_position_support(
     # Initial currentValue is 52 (mid-position). open_cover SHOULD set OPENING.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -2204,8 +2267,8 @@ async def test_window_covering_cover_moving_state_position_support(
     # Clear moving state before next scenario.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -2256,8 +2319,8 @@ async def test_window_covering_cover_moving_state_position_support(
     # Already fully open — open_cover must NOT set OPENING.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -2266,8 +2329,8 @@ async def test_window_covering_cover_moving_state_position_support(
     # Fully open but not fully closed — close_cover SHOULD set CLOSING.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -2276,8 +2339,8 @@ async def test_window_covering_cover_moving_state_position_support(
     # Clear moving state before next scenario.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -2328,8 +2391,8 @@ async def test_window_covering_cover_moving_state_position_support(
     # Already fully closed — close_cover must NOT set CLOSING.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -2338,8 +2401,8 @@ async def test_window_covering_cover_moving_state_position_support(
     # From fully closed, open_cover SHOULD set OPENING (not at fully open endpoint).
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -2393,8 +2456,8 @@ async def test_window_covering_cover_moving_state_position_support(
     # Reverse halfway: close_cover while mid-travel MUST set CLOSING (not at endpoint).
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -2448,8 +2511,8 @@ async def test_window_covering_cover_moving_state_position_support(
     # Reverse halfway: open_cover while mid-travel MUST set OPENING (not at endpoint).
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -2468,8 +2531,8 @@ async def test_window_covering_cover_moving_state_no_position(
     # No SET_POSITION feature — open_cover must NOT set OPENING.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -2478,8 +2541,8 @@ async def test_window_covering_cover_moving_state_no_position(
     # No SET_POSITION feature — close_cover must NOT set CLOSING.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)

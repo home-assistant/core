@@ -12,11 +12,12 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.components.lunatone.coordinator import (
@@ -24,13 +25,11 @@ from homeassistant.components.lunatone.coordinator import (
     DEFAULT_INFO_UPDATE_INTERVAL,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -203,8 +202,8 @@ async def test_turn_on_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -214,8 +213,8 @@ async def test_turn_on_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -247,8 +246,8 @@ async def test_turn_on_off_with_connection_error(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 128},
             blocking=True,
         )
 
@@ -260,8 +259,8 @@ async def test_turn_on_off_with_connection_error(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -292,8 +291,11 @@ async def test_turn_on_off_with_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: expected_brightness},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            LightServiceArgument.BRIGHTNESS: expected_brightness,
+        },
         blocking=True,
     )
 
@@ -304,8 +306,8 @@ async def test_turn_on_off_with_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -316,8 +318,8 @@ async def test_turn_on_off_with_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -354,8 +356,8 @@ async def test_turn_on_off_broadcast(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -368,8 +370,8 @@ async def test_turn_on_off_broadcast(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 128},
         blocking=True,
     )
 
@@ -378,8 +380,8 @@ async def test_turn_on_off_broadcast(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -428,8 +430,8 @@ async def test_turn_on_off_broadcast_last_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 204},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 204},
         blocking=True,
     )
 
@@ -445,8 +447,8 @@ async def test_turn_on_off_broadcast_last_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -459,8 +461,8 @@ async def test_turn_on_off_broadcast_last_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -473,8 +475,8 @@ async def test_turn_on_off_broadcast_last_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -490,8 +492,8 @@ async def test_turn_on_off_broadcast_last_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -528,8 +530,8 @@ async def test_turn_on_off_broadcast_with_connection_error(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 128},
             blocking=True,
         )
 
@@ -543,8 +545,8 @@ async def test_turn_on_off_broadcast_with_connection_error(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -622,10 +624,10 @@ async def test_turn_on_with_color_temperature(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_COLOR_TEMP_KELVIN: color_temp_kelvin,
+            TargetKey.ENTITY_ID: entity_id,
+            LightServiceArgument.COLOR_TEMP_KELVIN: color_temp_kelvin,
         },
         blocking=True,
     )
@@ -665,10 +667,10 @@ async def test_turn_on_with_rgb_color(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_RGB_COLOR: rgb_color,
+            TargetKey.ENTITY_ID: entity_id,
+            LightServiceArgument.RGB_COLOR: rgb_color,
         },
         blocking=True,
     )
@@ -709,10 +711,10 @@ async def test_turn_on_with_rgbw_color(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_RGBW_COLOR: rgbw_color,
+            TargetKey.ENTITY_ID: entity_id,
+            LightServiceArgument.RGBW_COLOR: rgbw_color,
         },
         blocking=True,
     )

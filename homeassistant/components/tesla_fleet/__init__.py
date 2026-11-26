@@ -12,6 +12,7 @@ from tesla_fleet_api.exceptions import (
     InvalidToken,
     LibraryError,
     LoginRequired,
+    NotAllowed,
     OAuthExpired,
     TeslaFleetError,
 )
@@ -194,6 +195,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 raise ConfigEntryNotReady(
                     f"Timed out waiting for vehicle {vin} to respond"
                 ) from err
+            except ConfigEntryNotReady as err:
+                if not isinstance(
+                    err.__cause__ and err.__cause__.__cause__, NotAllowed
+                ):
+                    raise
+                LOGGER.warning(
+                    "Skipping Tesla vehicle %s because the API answered not allowed",
+                    vin,
+                )
+                await coordinator.async_shutdown()
+                continue
 
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},

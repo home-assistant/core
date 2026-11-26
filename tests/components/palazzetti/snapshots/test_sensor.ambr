@@ -188,7 +188,7 @@
     'device_id': <DeviceEntry connections=[('mac', '11:22:33:44:55:66')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.stove_pellet_level',
     'has_entity_name': True,
     'hidden_by': None,

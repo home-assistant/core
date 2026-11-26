@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
-from aiohttp import ClientError
-from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
+from pajgps_api.models.auth import AuthResponse
+from pajgps_api.pajgps_api_error import (
+    AuthenticationError,
+    RequestError,
+    TokenRefreshError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -76,7 +80,7 @@ async def test_duplicate_email_aborts(
     [
         (AuthenticationError("bad creds"), "invalid_auth"),
         (TokenRefreshError("refresh failed"), "invalid_auth"),
-        (ClientError(), "cannot_connect"),
+        (RequestError("Service unavailable"), "cannot_connect"),
         (ConnectionError("timeout"), "unknown"),
     ],
 )
@@ -105,3 +109,95 @@ async def test_invalid_credentials_shows_form_error(
         user_input=VALID_USER_INPUT,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_paj_gps_api: AsyncMock,
+) -> None:
+    """Reauth must update the password and keep the email."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"][CONF_EMAIL] == "test@example.com"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "new_secret"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_EMAIL: "test@example.com",
+        CONF_PASSWORD: "new_secret",
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(
+            AuthenticationError("bad creds"), "invalid_auth", id="invalid_auth"
+        ),
+        pytest.param(
+            TokenRefreshError("refresh failed"), "invalid_auth", id="token_refresh"
+        ),
+        pytest.param(
+            RequestError("Service unavailable"), "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(ConnectionError("timeout"), "unknown", id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_paj_gps_api: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Reauth errors must re-show the form and allow recovery."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_paj_gps_api.login.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "new_secret"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+    mock_paj_gps_api.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "new_secret"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_secret"
+
+
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_paj_gps_api: AsyncMock,
+) -> None:
+    """Reauth with credentials of a different account must abort."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_paj_gps_api.login.return_value = AuthResponse(
+        userID=99, token="other_token", refresh_token="other_refresh"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "new_secret"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_PASSWORD] == "secret"

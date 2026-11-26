@@ -18,12 +18,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import (
-    PERCENTAGE,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import PERCENTAGE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -212,7 +207,7 @@ async def test_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: PUSH_TWIST_POSITION_ENTITY_ID,
+            TargetKey.ENTITY_ID: PUSH_TWIST_POSITION_ENTITY_ID,
             NumberServiceArgument.VALUE: 55,
         },
         blocking=True,
@@ -242,7 +237,7 @@ async def test_set_value_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: TWIST_POSITION_ENTITY_ID,
+                TargetKey.ENTITY_ID: TWIST_POSITION_ENTITY_ID,
                 NumberServiceArgument.VALUE: 55,
             },
             blocking=True,

@@ -13,27 +13,20 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.ccm15.const import DOMAIN
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_SWING_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_HIGH,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_ON,
     SWING_OFF,
     SWING_ON,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PORT,
-    SERVICE_TURN_OFF,
     STATE_UNAVAILABLE,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -73,8 +66,11 @@ async def test_climate_state(
     ) as mock_set_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: ["climate.midea_0"], ATTR_FAN_MODE: FAN_HIGH},
+            ClimateService.SET_FAN_MODE,
+            {
+                TargetKey.ENTITY_ID: ["climate.midea_0"],
+                ClimateServiceArgument.FAN_MODE: FAN_HIGH,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -85,8 +81,11 @@ async def test_climate_state(
     ) as mock_set_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ["climate.midea_0"], ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: ["climate.midea_0"],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -97,8 +96,11 @@ async def test_climate_state(
     ) as mock_set_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ["climate.midea_0"], ATTR_TEMPERATURE: 25},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: ["climate.midea_0"],
+                ClimateServiceArgument.TEMPERATURE: 25,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -109,8 +111,8 @@ async def test_climate_state(
     ) as mock_set_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ["climate.midea_0"]},
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: ["climate.midea_0"]},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -121,8 +123,8 @@ async def test_climate_state(
     ) as mock_set_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ["climate.midea_0"]},
+            ClimateService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ["climate.midea_0"]},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -247,8 +249,11 @@ async def test_climate_set_swing_mode(
     ) as mock_set_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_SWING_MODE,
-            {ATTR_ENTITY_ID: ["climate.midea_0"], ATTR_SWING_MODE: swing_mode},
+            ClimateService.SET_SWING_MODE,
+            {
+                TargetKey.ENTITY_ID: ["climate.midea_0"],
+                ClimateServiceArgument.SWING_MODE: swing_mode,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()

@@ -16,7 +16,10 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.indi_allsky.coordinator import IndiAllSkyData
-from homeassistant.components.indi_allsky.sensor import _parse_timestamp
+from homeassistant.components.indi_allsky.sensor import (
+    IndiAllSkyDynamicHardwareSensor,
+    _parse_timestamp,
+)
 from homeassistant.const import STATE_UNKNOWN, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -1070,3 +1073,82 @@ async def test_dynamic_sensor_edge_cases(
     ts = _parse_timestamp(ts_data)
     assert ts is not None
     assert ts.tzinfo == dt_util.UTC
+
+
+async def test_dynamic_sensor_registry_update_only_on_metadata_change(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test dynamic sensor refreshes registry only when metadata changes."""
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    initial_data = SensorData.from_dict(
+        {
+            "sensors": {
+                "custom_probe": {
+                    "name": "Custom Probe",
+                    "value": 10.0,
+                    "unit": "°C",
+                    "device_class": "temperature",
+                }
+            }
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(initial_data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_custom_probe")
+    assert state is not None
+    assert state.state == "10.0"
+
+    with patch.object(
+        IndiAllSkyDynamicHardwareSensor,
+        "async_registry_entry_updated",
+        autospec=True,
+        wraps=IndiAllSkyDynamicHardwareSensor.async_registry_entry_updated,
+    ) as mock_registry_updated:
+        value_only_update = SensorData.from_dict(
+            {
+                "sensors": {
+                    "custom_probe": {
+                        "name": "Custom Probe",
+                        "value": 12.5,
+                        "unit": "°C",
+                        "device_class": "temperature",
+                    }
+                }
+            }
+        )
+        for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+            callback(value_only_update)
+        await hass.async_block_till_done()
+
+        mock_registry_updated.assert_not_called()
+        state = hass.states.get("sensor.indi_allsky_custom_probe")
+        assert state is not None
+        assert state.state == "12.5"
+
+        metadata_update = SensorData.from_dict(
+            {
+                "sensors": {
+                    "custom_probe": {
+                        "name": "Custom Probe",
+                        "value": 55.0,
+                        "unit": "lx",
+                        "device_class": "illuminance",
+                    }
+                }
+            }
+        )
+        for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+            callback(metadata_update)
+        await hass.async_block_till_done()
+
+        assert mock_registry_updated.called
+        state = hass.states.get("sensor.indi_allsky_custom_probe")
+        assert state is not None
+        assert state.state == "55.0"
+        assert state.attributes.get("unit_of_measurement") == "lx"

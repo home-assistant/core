@@ -35,15 +35,13 @@ from homeassistant.components.calendar.trigger import (
     OFFSET_TYPE_BEFORE,
 )
 from homeassistant.const import (
-    ATTR_AREA_ID,
-    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
-    ATTR_LABEL_ID,
     CONF_OFFSET,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
     SERVICE_TURN_OFF,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -1392,49 +1390,49 @@ async def test_config_entry_unload(
     [
         ({}, [], [], [], []),
         (
-            {ATTR_ENTITY_ID: "calendar.calendar_2"},
+            {TargetKey.ENTITY_ID: "calendar.calendar_2"},
             [],
             [],
             TARGET_TEST_SECOND_START_CALL_DATA,
             TARGET_TEST_SECOND_END_CALL_DATA,
         ),
         (
-            {ATTR_ENTITY_ID: ["calendar.calendar_1", "calendar.calendar_2"]},
+            {TargetKey.ENTITY_ID: ["calendar.calendar_1", "calendar.calendar_2"]},
             TARGET_TEST_FIRST_START_CALL_DATA,
             TARGET_TEST_FIRST_END_CALL_DATA,
             TARGET_TEST_SECOND_START_CALL_DATA,
             TARGET_TEST_SECOND_END_CALL_DATA,
         ),
         (
-            {ATTR_AREA_ID: "area_both_calendars"},
+            {TargetKey.AREA_ID: "area_both_calendars"},
             TARGET_TEST_FIRST_START_CALL_DATA,
             TARGET_TEST_FIRST_END_CALL_DATA,
             TARGET_TEST_SECOND_START_CALL_DATA,
             TARGET_TEST_SECOND_END_CALL_DATA,
         ),
         (
-            {ATTR_LABEL_ID: "calendar_1_label"},
+            {TargetKey.LABEL_ID: "calendar_1_label"},
             TARGET_TEST_FIRST_START_CALL_DATA,
             TARGET_TEST_FIRST_END_CALL_DATA,
             [],
             [],
         ),
         (
-            {ATTR_DEVICE_ID: "device_calendar_1"},
+            {TargetKey.DEVICE_ID: "device_calendar_1"},
             TARGET_TEST_FIRST_START_CALL_DATA,
             TARGET_TEST_FIRST_END_CALL_DATA,
             [],
             [],
         ),
         (
-            {ATTR_DEVICE_ID: "device_calendar_2"},
+            {TargetKey.DEVICE_ID: "device_calendar_2"},
             [],
             [],
             TARGET_TEST_SECOND_START_CALL_DATA,
             TARGET_TEST_SECOND_END_CALL_DATA,
         ),
         (
-            {ATTR_LABEL_ID: "label_on_devices"},
+            {TargetKey.LABEL_ID: "label_on_devices"},
             TARGET_TEST_FIRST_START_CALL_DATA,
             TARGET_TEST_FIRST_END_CALL_DATA,
             TARGET_TEST_SECOND_START_CALL_DATA,

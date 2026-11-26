@@ -1,6 +1,5 @@
 """The GeoNet NZ Quakes integration."""
 
-from datetime import timedelta
 import logging
 
 from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
@@ -86,7 +85,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
     mmi = conf[CONF_MMI]
-    scan_interval = conf[CONF_SCAN_INTERVAL]
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -98,7 +96,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 CONF_RADIUS: conf[CONF_RADIUS],
                 CONF_MINIMUM_MAGNITUDE: conf[CONF_MINIMUM_MAGNITUDE],
                 CONF_MMI: mmi,
-                CONF_SCAN_INTERVAL: scan_interval,
             },
         )
     )
@@ -155,7 +152,6 @@ class GeonetnzQuakesFeedEntityManager:
             status_callback=self._status_update,
         )
         self._config_entry_id = config_entry.entry_id
-        self._scan_interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
         self._track_time_remove_callback = None
         self._status_info = None
         self.listeners = []
@@ -173,7 +169,7 @@ class GeonetnzQuakesFeedEntityManager:
 
         # Trigger updates at regular intervals.
         self._track_time_remove_callback = async_track_time_interval(
-            self._hass, update, self._scan_interval
+            self._hass, update, DEFAULT_SCAN_INTERVAL
         )
 
         _LOGGER.debug("Feed entity manager initialized")

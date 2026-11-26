@@ -72,7 +72,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:brightness-6',
+      'original_icon': None,
       'original_name': 'Night light level',
       'platform': 'vesync',
       'previous_unique_id': None,
@@ -88,7 +88,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 200s Night light level',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:brightness-6',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'dim',
@@ -184,7 +183,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:brightness-6',
+      'original_icon': None,
       'original_name': 'Night light level',
       'platform': 'vesync',
       'previous_unique_id': None,
@@ -259,7 +258,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Sprout Night light level',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:brightness-6',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'dim',
@@ -440,6 +438,101 @@
 # name: test_select_state[Humidifier 600S][entities]
   list([
   ])
+# ---
+# name: test_select_state[Humidifier Sprout][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'sprout-humidifier',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LEH-B381S-WUS',
+      'model_id': None,
+      'name': 'Humidifier Sprout',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_select_state[Humidifier Sprout][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+          'bright',
+          'dim',
+          'off',
+        ]),
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-humidifier')]>,
+      'disabled_by': None,
+      'domain': 'select',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'select.humidifier_sprout_night_light_level',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Night light level',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Night light level',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'night_light_level',
+      'unique_id': 'sprout-humidifier-night_light_level',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_select_state[Humidifier Sprout][select.humidifier_sprout_night_light_level]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Sprout Night light level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'bright',
+        'dim',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.humidifier_sprout_night_light_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'dim',
+  })
 # ---
 # name: test_select_state[Outlet][devices]
   list([

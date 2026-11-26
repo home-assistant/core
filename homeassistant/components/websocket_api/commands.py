@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from functools import lru_cache, partial
 import json
 import logging
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import probatio
 
@@ -14,10 +14,10 @@ from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
     CONF_EXTERNAL_URL,
-    CONF_TRIGGERS,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
+    TargetKey,
 )
 from homeassistant.core import (
     Context,
@@ -49,7 +49,6 @@ from homeassistant.helpers.condition import (
     async_get_all_descriptions as async_get_all_condition_descriptions,
     async_subscribe_platform_events as async_subscribe_condition_platform_events,
     async_validate_condition_config,
-    async_validate_conditions_config,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
@@ -77,6 +76,10 @@ from homeassistant.helpers.trigger import (
     async_initialize_triggers,
     async_subscribe_platform_events as async_subscribe_trigger_platform_events,
     async_validate_trigger_config,
+)
+from homeassistant.helpers.validation_errors import (
+    ValidationErrors,
+    validation_errors_as_dicts,
 )
 from homeassistant.loader import (
     IntegrationNotFound,
@@ -409,9 +412,24 @@ async def handle_call_service(
             translation_placeholders=err.translation_placeholders,
         )
     except HomeAssistantError as err:
-        connection.logger.error(
-            "Error during service call to %s.%s: %s", msg["domain"], msg["service"], err
-        )
+        call_data = {**msg.get("service_data", {}), **msg.get("target", {})}
+        if target := {
+            key: value for key, value in call_data.items() if key in TargetKey
+        }:
+            connection.logger.error(
+                "Error during service call to %s.%s with target %s: %s",
+                msg["domain"],
+                msg["service"],
+                target,
+                err,
+            )
+        else:
+            connection.logger.error(
+                "Error during service call to %s.%s: %s",
+                msg["domain"],
+                msg["service"],
+                err,
+            )
         connection.logger.debug("", exc_info=True)
         connection.send_error(
             msg["id"],
@@ -1403,23 +1421,6 @@ def handle_fire_event(
     connection.send_result(msg["id"], {"context": context})
 
 
-def _is_single_item(key: str, value: Any) -> bool:
-    """Return if a value of validate_config is a single item, not a list of items."""
-    if isinstance(value, list):
-        return False
-    # A dict with only a triggers key is a list of triggers
-    return key != CONF_TRIGGERS or value.keys() != {CONF_TRIGGERS}
-
-
-def _drop_list_index(err: probatio.Invalid) -> None:
-    """Drop the leading list index from the path of a validation error."""
-    if isinstance(err, probatio.MultipleInvalid):
-        for error in err.errors:
-            _drop_list_index(error)
-        return
-    del err.path[0]
-
-
 @decorators.websocket_command(
     {
         probatio.Required("type"): "validate_config",
@@ -1438,35 +1439,21 @@ async def handle_validate_config(
 
     result = {}
 
-    for key, schema, validator in (
-        ("triggers", cv.TRIGGER_SCHEMA, async_validate_trigger_config),
-        (
-            "conditions",
-            cv.CONDITIONS_SCHEMA,
-            async_validate_conditions_config,
-        ),
-        ("actions", cv.SCRIPT_SCHEMA, script.async_validate_actions_config),
-    ):
+    key: Literal["triggers", "conditions", "actions"]
+    for key in ("triggers", "conditions", "actions"):
         if key not in msg:
             continue
 
-        value = msg[key]
         try:
-            validated = schema(value)
-            try:
-                await validator(hass, validated)
-            except probatio.Invalid as err:
-                if _is_single_item(key, value):
-                    # The schema wrapped the item in a list
-                    _drop_list_index(err)
-                raise
-        except (
-            probatio.Invalid,
-            HomeAssistantError,
-        ) as err:
-            result[key] = {"valid": False, "error": str(err)}
+            await script.async_validate_block_collect_errors(hass, key, msg[key])
+        except ValidationErrors as err:
+            result[key] = {
+                "valid": False,
+                "error": str(err),
+                "errors": validation_errors_as_dicts(err),
+            }
         else:
-            result[key] = {"valid": True, "error": None}
+            result[key] = {"valid": True, "error": None, "errors": []}
 
     connection.send_result(msg["id"], result)
 

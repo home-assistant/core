@@ -1,0 +1,86 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'devices': list([
+      dict({
+        'last_update_success': True,
+        'model': 'YS5018-UC',
+        'net_type': 'A',
+        'online': True,
+        'paired': False,
+        'state': dict({
+          'alarm': dict({
+            'amountOverrun': False,
+            'durationOverrun': False,
+            'highTemp': False,
+            'leak': False,
+            'lowTemp': False,
+            'openReminder': False,
+            'reminder': False,
+          }),
+          'attributes': dict({
+            'alertInterval': 0,
+            'autoCloseValve': False,
+            'leakLimit': 38,
+            'leakPlan': 'on',
+            'meterStepFactor': 10,
+            'meterUnit': 3,
+            'openReminder': 0,
+            'overrunAmount': 0,
+            'overrunAmountACV': True,
+            'overrunDuration': 0,
+            'overrunDurationACV': True,
+            'screenMeterUnit': 0,
+            'tempLimit': dict({
+              'max': -873.9,
+              'min': -873.9,
+            }),
+          }),
+          'battery': 4,
+          'dailyUsage': 11098,
+          'deviceId': '**REDACTED**',
+          'loraInfo': dict({
+            'devNetType': 'A',
+            'gatewayId': '**REDACTED**',
+            'gateways': 1,
+            'netId': '**REDACTED**',
+            'signal': -62,
+          }),
+          'loraP2PHash': 0,
+          'meter_reading': 244.3649,
+          'powerSupply': 'battery',
+          'recentUsage': dict({
+            'amount': 168,
+            'duration': 1,
+          }),
+          'state': dict({
+            'meter': 2443649,
+            'meterVersion': '010073',
+            'pipeDiameter': 20,
+            'valve': 'open',
+            'waterFlowing': True,
+          }),
+          'temperature': 17.7,
+          'tz': '**REDACTED**',
+          'valveDelay': dict({
+            'ch': 1,
+            'off': 0,
+          }),
+          'valve_state': 'open',
+          'version': '180a',
+        }),
+        'type': 'WaterMeterController',
+      }),
+      dict({
+        'last_update_success': False,
+        'model': 'YS8003-UC',
+        'net_type': None,
+        'online': True,
+        'paired': False,
+        'state': dict({
+        }),
+        'type': 'THSensor',
+      }),
+    ]),
+  })
+# ---

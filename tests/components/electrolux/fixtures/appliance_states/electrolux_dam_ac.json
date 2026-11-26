@@ -1,0 +1,52 @@
+{
+  "applianceId": "1:950011600_00:44709990-C8F742FDB3E7",
+  "connectionState": "connected",
+  "status": "enabled",
+  "properties": {
+    "reported": {
+      "airConditioner": {
+        "applianceState": "off",
+        "louvers": {
+          "0": {
+            "mode": "off",
+            "orientation": "vertical"
+          }
+        },
+        "fanSpeed": 0,
+        "startTime": 0,
+        "stopTime": 1678,
+        "sleepMode": false,
+        "fanMode": "low",
+        "mode": "cool",
+        "targetTemperature": 19
+      },
+      "alerts": [],
+      "applianceInfo": {
+        "applianceType": "AC",
+        "model": "AZUL"
+      },
+      "upgradeState": "idle",
+      "temperatureUnit": "celsius",
+      "networkInterface": {
+        "ssid": "IOT",
+        "mac": "c8f742fdb3e7"
+      },
+      "swVersions": {
+        "niu": {
+          "ver": "VM232_A_05.30.25_AZUL"
+        },
+        "mainboard": {
+          "ver": "V1.1.6"
+        },
+        "userInterface": {
+          "ver": "V1.0.2"
+        }
+      },
+      "schedulerSession": false,
+      "uiLocked": false,
+      "connectivityState": "connected",
+      "dataModelVersion": "DAM-1.0.0",
+      "temperature": 25
+    }
+  }
+}

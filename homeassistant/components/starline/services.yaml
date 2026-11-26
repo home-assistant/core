@@ -2,6 +2,7 @@ update_state:
 set_scan_interval:
   fields:
     scan_interval:
+      required: true
       selector:
         number:
           min: 10
@@ -11,6 +12,7 @@ set_scan_interval:
 set_scan_obd_interval:
   fields:
     scan_interval:
+      required: true
       selector:
         number:
           min: 180
