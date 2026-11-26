@@ -183,6 +183,22 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
 
         try:
             await self.client.setup()  # only config for now
+
+        except ec2.ApiConnectionFailedError as err:
+            _log_api_call_failure(self.logger, err)
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="api_connection_failed",
+            ) from err
+
+        except ec2.ApiCallFailedError as err:
+            _log_api_call_failure(self.logger, err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key=_api_call_error_key(err),
+                retry_after=err.retry_after,
+            ) from err
+
         except ec2.EvohomeError as err:
             raise UpdateFailed(err) from err
 
@@ -361,7 +377,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             _log_api_call_failure(self.logger, err)
             raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
-                translation_key=_api_call_error_key(err),
+                translation_key="api_connection_failed",
             ) from err
 
         except ec2.ApiCallFailedError as err:
