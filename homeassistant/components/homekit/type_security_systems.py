@@ -201,15 +201,26 @@ class SecuritySystem(HomeAccessory):
 
     @callback
     @override
+    def async_update_state_callback(self, new_state: State | None) -> None:
+        """Update the armed states, including for unknown states."""
+        # Unavailable states carry the registry's features, which can be stale
+        if new_state is not None and new_state.state != STATE_UNAVAILABLE:
+            features = new_state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES)
+            if (
+                features is not None
+                and (armed := _armed_states(features)) != self._armed
+            ):
+                self._async_update_armed_states(armed)
+        super().async_update_state_callback(new_state)
+
+    @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update security state after state changed."""
         hass_state: str | AlarmControlPanelState = new_state.state
         if hass_state in {"None", STATE_UNKNOWN, STATE_UNAVAILABLE}:
             # Bail out early for no state, unknown or unavailable
             return
-        features = new_state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES)
-        if features is not None and (armed := _armed_states(features)) != self._armed:
-            self._async_update_armed_states(armed)
         hass_state = AlarmControlPanelState(hass_state)
         current_state = HASS_TO_HOMEKIT_CURRENT.get(hass_state)
         target_state = HASS_TO_HOMEKIT_TARGET.get(hass_state)

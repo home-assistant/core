@@ -13,7 +13,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.components.homekit.accessories import HomeDriver
-from homeassistant.components.homekit.const import ATTR_VALUE
+from homeassistant.components.homekit.const import ATTR_VALUE, PROP_VALID_VALUES
 from homeassistant.components.homekit.type_security_systems import SecuritySystem
 from homeassistant.const import (
     ATTR_CODE,
@@ -617,6 +617,43 @@ async def test_feature_change_updates_valid_values_in_place(
     mock_advertise.assert_called_once()
     assert acc.char_current_state.value == 0
     assert acc.char_target_state.value == 0
+
+
+@pytest.mark.parametrize(
+    "before_change",
+    [
+        pytest.param(lambda hass: None, id="while_available"),
+        # A config entry reload writes the registry's old features as unavailable
+        pytest.param(
+            lambda hass: hass.states.async_set(
+                PANEL_ENTITY_ID,
+                STATE_UNAVAILABLE,
+                {"supported_features": AlarmControlPanelEntityFeature.ARM_AWAY},
+            ),
+            id="across_unavailable",
+        ),
+    ],
+)
+async def test_feature_change_while_unknown_updates_valid_values(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    before_change: Callable[[HomeAssistant], object],
+) -> None:
+    """Test a new arm mode is advertised before a known state arrives."""
+    acc = await _async_setup_panel(
+        hass, hk_driver, AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+
+    with patch.object(hk_driver, "async_update_advertisement") as mock_advertise:
+        before_change(hass)
+        hass.states.async_set(
+            PANEL_ENTITY_ID, STATE_UNKNOWN, {"supported_features": HOME_AND_AWAY}
+        )
+        await hass.async_block_till_done()
+
+    mock_advertise.assert_called_once()
+    assert 0 in acc.char_current_state.properties[PROP_VALID_VALUES].values()
+    assert 0 in acc.char_target_state.properties[PROP_VALID_VALUES].values()
 
 
 async def test_feature_change_without_new_valid_values_changes_nothing(
