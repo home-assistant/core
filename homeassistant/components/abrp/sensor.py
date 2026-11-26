@@ -157,7 +157,6 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="calibrated_ref_cons",
-        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         translation_key="calibrated_ref_cons",
         device_class=SensorDeviceClass.ENERGY_DISTANCE,
@@ -237,7 +236,6 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="battery_temperature_min",
-        entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="battery_temperature_min",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -249,7 +247,6 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="battery_temperature_max",
-        entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="battery_temperature_max",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
