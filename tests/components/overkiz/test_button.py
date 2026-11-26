@@ -75,6 +75,17 @@ STEP_NEGATIVE = FixtureDevice(
     "button.palm_court_led_strip_brightness_down",
 )
 
+TILT_STEP_OPEN = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16730044",
+    "button.palm_court_jaloezie_open_tilt_one_step",
+)
+TILT_STEP_CLOSE = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json",
+    "rts://1234-1234-6362/16730044",
+    "button.palm_court_jaloezie_close_tilt_one_step",
+)
+
 SNAPSHOT_FIXTURES = [
     MY_POSITION,
     CHECK_EVENT_TRIGGER,
@@ -137,6 +148,8 @@ async def test_button_press(
     [
         pytest.param(STEP_POSITIVE, "stepPositive", [5], id="step_positive"),
         pytest.param(STEP_NEGATIVE, "stepNegative", [5], id="step_negative"),
+        pytest.param(TILT_STEP_OPEN, "tiltPositive", [5], id="tilt_step_open"),
+        pytest.param(TILT_STEP_CLOSE, "tiltNegative", [5], id="tilt_step_close"),
         pytest.param(VELUX_WINDOW, "goToAlias", ["55299"], id="alias_ventilation"),
         pytest.param(STUDIO_WINDOW, "goToAlias", ["1"], id="alias_favorite1"),
         pytest.param(GARAGE_DOOR, "goToAlias", ["55305"], id="alias_partial"),

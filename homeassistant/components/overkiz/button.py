@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import override
 
-from pyoverkiz.enums import OverkizCommand, OverkizCommandParam
+from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, UIWidget
 from pyoverkiz.models import SupportedAlias
 from pyoverkiz.types import StateType as OverkizStateType
 
@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OverkizDataConfigEntry
-from .const import IGNORED_OVERKIZ_DEVICES, LOGGER
+from .const import IGNORED_OVERKIZ_DEVICES, LOGGER, TILT_STEP_SIZE
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity, OverkizEntity
 
@@ -27,6 +27,8 @@ class OverkizButtonDescription(ButtonEntityDescription):
     """Class to describe an Overkiz button."""
 
     press_args: list[OverkizStateType] | None = None
+    # Only add the button for these widgets, None adds it for every device
+    widgets: frozenset[UIWidget] | None = None
 
 
 BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
@@ -93,6 +95,27 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         # step (0-127), execution duration (0-15, optional)
         press_args=[5],
     ),
+    # TiltOnlyVenetianBlind (rts:TiltOnlyVenetianBlindRTSComponent)
+    # Its cover opens and closes the tilt fully, so the tilt steps are buttons.
+    # tiltNegative turns the slats towards the end close turns them to, and
+    # tiltPositive the other way.
+    # The other RTS venetian blinds step the tilt with their cover entity.
+    OverkizButtonDescription(
+        key=OverkizCommand.TILT_POSITIVE,
+        name="Open tilt one step",
+        icon="mdi:arrow-top-right",
+        # position (1-127), execution duration (0-15, optional)
+        press_args=[TILT_STEP_SIZE],
+        widgets=frozenset({UIWidget.TILT_ONLY_VENETIAN_BLIND}),
+    ),
+    OverkizButtonDescription(
+        key=OverkizCommand.TILT_NEGATIVE,
+        name="Close tilt one step",
+        icon="mdi:arrow-bottom-left",
+        # position (1-127), execution duration (0-15, optional)
+        press_args=[TILT_STEP_SIZE],
+        widgets=frozenset({UIWidget.TILT_ONLY_VENETIAN_BLIND}),
+    ),
     # SmokeSensor
     OverkizButtonDescription(
         key=OverkizCommand.CHECK_EVENT_TRIGGER,
@@ -141,7 +164,9 @@ async def async_setup_entry(
                     OverkizAliasButton(device.device_url, data.coordinator, alias)
                     for alias in device.get_most_featured_aliases().values()
                 )
-            elif description := SUPPORTED_COMMANDS.get(command):
+            elif (description := SUPPORTED_COMMANDS.get(command)) and (
+                description.widgets is None or device.widget in description.widgets
+            ):
                 entities.append(
                     OverkizButton(device.device_url, data.coordinator, description)
                 )

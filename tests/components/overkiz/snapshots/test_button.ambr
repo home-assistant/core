@@ -1793,6 +1793,58 @@
     'state': 'unknown',
   })
 # ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_jaloezie_close_tilt_one_step-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'rts://1234-1234-6362/16730044')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.palm_court_jaloezie_close_tilt_one_step',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Close tilt one step',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:arrow-bottom-left',
+    'original_name': 'Close tilt one step',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16730044-tiltNegative',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_jaloezie_close_tilt_one_step-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jaloezie Close tilt one step',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:arrow-bottom-left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_jaloezie_close_tilt_one_step',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_jaloezie_my_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1839,6 +1891,58 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.palm_court_jaloezie_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_jaloezie_open_tilt_one_step-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'rts://1234-1234-6362/16730044')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.palm_court_jaloezie_open_tilt_one_step',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Open tilt one step',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:arrow-top-right',
+    'original_name': 'Open tilt one step',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16730044-tiltPositive',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][button.palm_court_jaloezie_open_tilt_one_step-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jaloezie Open tilt one step',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:arrow-top-right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.palm_court_jaloezie_open_tilt_one_step',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
