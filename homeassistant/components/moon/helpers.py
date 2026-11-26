@@ -1,6 +1,7 @@
 """Helpers for moon phases."""
 
 import asyncio
+import logging
 import os
 from typing import NamedTuple
 
@@ -18,6 +19,8 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 STATE_FIRST_QUARTER = "first_quarter"
 STATE_FULL_MOON = "full_moon"
@@ -92,6 +95,17 @@ async def _async_download_ephemeris(hass: HomeAssistant, path: str) -> None:
     await hass.async_add_executor_job(_write_ephemeris, path, content)
 
 
+async def _async_download_and_load(
+    hass: HomeAssistant, directory: str, path: str
+) -> MoonData:
+    """Download the ephemeris and load it, raising OSError if it is unreadable."""
+    await _async_download_ephemeris(hass, path)
+    try:
+        return await hass.async_add_executor_job(_load_moon_data, directory)
+    except Exception as err:
+        raise OSError(f"Unable to load {path}") from err
+
+
 @singleton(DATA_MOON, async_=True)
 async def async_get_moon_data(hass: HomeAssistant) -> MoonData:
     """Return the shared moon data, downloading and loading it on first use.
@@ -100,9 +114,15 @@ async def async_get_moon_data(hass: HomeAssistant) -> MoonData:
     """
     directory = hass.config.cache_path("skyfield")
     path = os.path.join(directory, EPHEMERIS_FILE)
-    if not await hass.async_add_executor_job(os.path.isfile, path):
-        await _async_download_ephemeris(hass, path)
-    moon_data = await hass.async_add_executor_job(_load_moon_data, directory)
+    if await hass.async_add_executor_job(os.path.isfile, path):
+        try:
+            moon_data = await hass.async_add_executor_job(_load_moon_data, directory)
+        except Exception:  # noqa: BLE001 - a corrupt file can raise any error type
+            _LOGGER.warning("Ephemeris %s is unreadable, downloading it again", path)
+            await hass.async_add_executor_job(os.remove, path)
+            moon_data = await _async_download_and_load(hass, directory, path)
+    else:
+        moon_data = await _async_download_and_load(hass, directory, path)
 
     @callback
     def _close_ephemeris(_event: Event) -> None:

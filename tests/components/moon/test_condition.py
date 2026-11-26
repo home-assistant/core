@@ -8,6 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from skyfield.units import Angle
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition
 from homeassistant.helpers.typing import ConfigType
 
@@ -82,3 +83,17 @@ async def test_is_phase_rejects_unknown_phase(hass: HomeAssistant) -> None:
         await condition.async_validate_condition_config(
             hass, {"condition": "moon.is_phase", "options": {"phase": "not_a_phase"}}
         )
+
+
+async def test_condition_setup_fails_when_ephemeris_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """Test a condition raises a translatable error when the ephemeris is missing."""
+    with (
+        patch(
+            "homeassistant.components.moon.condition.async_get_moon_data",
+            side_effect=OSError,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await _evaluate(hass, {"condition": "moon.is_waxing"}, 0.0)

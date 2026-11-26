@@ -6,6 +6,7 @@ import probatio
 
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.condition import (
     Condition,
     ConditionCheckParams,
@@ -36,7 +37,10 @@ class _MoonCondition(Condition):
     @override
     async def _async_setup(self) -> None:
         """Load the shared moon data."""
-        self._moon_data = await async_get_moon_data(self._hass)
+        try:
+            self._moon_data = await async_get_moon_data(self._hass)
+        except OSError as err:
+            raise HomeAssistantError("Unable to load the moon ephemeris") from err
 
 
 class _MoonStateCondition(_MoonCondition):

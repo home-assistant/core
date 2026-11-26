@@ -106,3 +106,16 @@ async def test_phase_changed_with_phase_filter(
         await hass.async_block_till_done()
 
     assert len(service_calls) == expected_calls
+
+
+async def test_trigger_attach_logs_error_when_ephemeris_unavailable(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the automation logs a translatable error when the ephemeris is missing."""
+    with patch(
+        "homeassistant.components.moon.trigger.async_get_moon_data",
+        side_effect=OSError,
+    ):
+        await _arm(hass)
+
+    assert "Unable to load the moon ephemeris" in caplog.text

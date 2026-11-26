@@ -7,6 +7,7 @@ import probatio
 
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.trigger import (
     Trigger,
@@ -59,7 +60,10 @@ class MoonPhaseChangedTrigger(Trigger):
         did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
-        moon_data = await async_get_moon_data(self._hass)
+        try:
+            moon_data = await async_get_moon_data(self._hass)
+        except OSError as err:
+            raise HomeAssistantError("Unable to load the moon ephemeris") from err
         last_phase = moon_phase(moon_data)
 
         @callback
