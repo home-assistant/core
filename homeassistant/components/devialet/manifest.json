@@ -1,7 +1,7 @@
 {
   "domain": "devialet",
   "name": "Devialet",
-  "after_dependencies": ["zeroconf"],
+  "after_dependencies": ["media_source", "zeroconf"],
   "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@fwestenberg"],
   "config_flow": true,

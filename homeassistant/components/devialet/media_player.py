@@ -1,16 +1,21 @@
 """Support for Devialet speakers."""
 
-from typing import override
+from typing import Any, override
 
 from devialet.const import NORMAL_INPUTS
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
+    async_process_play_media_url,
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -24,6 +29,10 @@ SUPPORT_DEVIALET = (
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+)
+
+SUPPORT_MEDIA = (
+    MediaPlayerEntityFeature.BROWSE_MEDIA | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
 DEVIALET_TO_HA_FEATURE_MAP = {
@@ -116,6 +125,12 @@ class DevialetMediaPlayerEntity(
         """Flag media player features that are supported."""
         features = SUPPORT_DEVIALET
 
+        if (
+            self.coordinator.client.is_system_leader
+            and self.coordinator.client.upnp_available
+        ):
+            features |= SUPPORT_MEDIA
+
         if self.coordinator.client.source_state is None:
             return features
 
@@ -152,6 +167,41 @@ class DevialetMediaPlayerEntity(
             if sound_mode == mode:
                 return pretty_name
         return None
+
+    @override
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the WebSocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )
+
+    @override
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Play a piece of media."""
+        if media_source.is_media_source_id(media_id):
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = sourced_media.url
+            media_type = sourced_media.mime_type
+
+        media_id = async_process_play_media_url(self.hass, media_id)
+
+        if not await self.coordinator.client.async_play_url_source(
+            media_id, media_type, "Home Assistant", True
+        ):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="play_media_failed",
+            )
 
     @override
     async def async_volume_up(self) -> None:
