@@ -12,7 +12,7 @@
     'device_id': <DeviceEntry identifiers=[('abrp', 'abrp-test-sub_123456789012')]>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.rivian_r2_2027_standard_long_range_battery_capacity',
     'has_entity_name': True,
     'hidden_by': None,

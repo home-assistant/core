@@ -170,7 +170,6 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="battery_capacity",
-        entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="battery_capacity",
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         # No ``state_class``: capacity is a fixed spec figure that only moves on
