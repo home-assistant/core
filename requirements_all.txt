@@ -200,7 +200,7 @@ aioamazondevices==18.0.0
 aioambient==2024.08.0
 
 # homeassistant.components.any_list
-aioanylist==1.0.2
+aioanylist==1.0.3
 
 # homeassistant.components.apcupsd
 aioapcaccess==1.0.0
