@@ -18,6 +18,7 @@ description: Everything you need to know to build, test and review Home Assistan
 - Integrations should not implement fixes or workarounds for limitations in libraries. Instead, the library should be updated to fix the issue.
 - Do not add entities for data that Home Assistant intentionally only exposes through an action, for example weather forecasts (`weather.get_forecasts`).
 - In config flows, map known failures to the matching standard error (for example `invalid_auth`, `cannot_connect`) without logging them. If unexpected exceptions are caught, log them with `_LOGGER.exception()` and map them to `unknown`. Do not mix translated and untranslated text in an error shown to the user.
+- Options flows get their config entry from the `config_entry` property, which the flow manager sets. `async_get_options_flow` creates the handler without arguments; do not suggest passing the config entry to the options flow or assigning `self.config_entry`, as that was removed in 2025.12. To type `runtime_data`, declare `config_entry: <Domain>ConfigEntry` on the options flow class.
 - Bump dependencies in a standalone PR that contains only the compatibility adjustments the bump requires. Features that need the new version go in a follow-up PR.
 
 The following platforms have extra guidelines:
