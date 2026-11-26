@@ -94,40 +94,36 @@ PREVIEW_MIN_BRIGHTNESS_DESCRIPTION = SHCButtonEntityDescription[SHCMicromoduleDi
     press_fn=_preview_min_brightness,
 )
 
-WALK_TEST_START_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
-    key="walk_test",
+def _function_test_start(device: SHCMotionDetector2) -> None:
+    if device.supports_walk_test:
+        device.set_walk_state_request(WalkTestService.WalkStateRequest.WALK_STATE_START)
+    else:
+        device.set_detection_state_request(
+            DetectionTestService.DetectionStateRequest.DETECTION_STATE_START
+        )
+
+
+def _function_test_stop(device: SHCMotionDetector2) -> None:
+    if device.supports_walk_test:
+        device.set_walk_state_request(WalkTestService.WalkStateRequest.WALK_STATE_STOP)
+    else:
+        device.set_detection_state_request(
+            DetectionTestService.DetectionStateRequest.DETECTION_STATE_STOP
+        )
+
+
+FUNCTION_TEST_START_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
+    key="function_test_start",
     translation_key="function_test_start",
     entity_category=EntityCategory.DIAGNOSTIC,
-    press_fn=lambda device: device.set_walk_state_request(
-        WalkTestService.WalkStateRequest.WALK_STATE_START
-    ),
+    press_fn=_function_test_start,
 )
 
-WALK_TEST_STOP_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
-    key="walk_test_stop",
+FUNCTION_TEST_STOP_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
+    key="function_test_stop",
     translation_key="function_test_stop",
     entity_category=EntityCategory.DIAGNOSTIC,
-    press_fn=lambda device: device.set_walk_state_request(
-        WalkTestService.WalkStateRequest.WALK_STATE_STOP
-    ),
-)
-
-DETECTION_TEST_START_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
-    key="detection_test",
-    translation_key="function_test_start",
-    entity_category=EntityCategory.DIAGNOSTIC,
-    press_fn=lambda device: device.set_detection_state_request(
-        DetectionTestService.DetectionStateRequest.DETECTION_STATE_START
-    ),
-)
-
-DETECTION_TEST_STOP_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
-    key="detection_test_stop",
-    translation_key="function_test_stop",
-    entity_category=EntityCategory.DIAGNOSTIC,
-    press_fn=lambda device: device.set_detection_state_request(
-        DetectionTestService.DetectionStateRequest.DETECTION_STATE_STOP
-    ),
+    press_fn=_function_test_stop,
 )
 
 
@@ -164,18 +160,10 @@ async def async_setup_entry(
         for device in session.device_helper.motion_detectors2
         if device.supports_tamper_reset
     )
-    # The function test is exposed either as a WalkTest or as a DetectionTest
-    # service; both get the same button names, so a device only gets one.
     for device in session.device_helper.motion_detectors2:
-        if device.supports_walk_test and device.walk_state is not None:
-            descriptions = (WALK_TEST_START_DESCRIPTION, WALK_TEST_STOP_DESCRIPTION)
-        elif device.supports_detection_test:
-            descriptions = (
-                DETECTION_TEST_START_DESCRIPTION,
-                DETECTION_TEST_STOP_DESCRIPTION,
-            )
-        else:
+        if not (device.supports_walk_test or device.supports_detection_test):
             continue
+        descriptions = (FUNCTION_TEST_START_DESCRIPTION, FUNCTION_TEST_STOP_DESCRIPTION)
         entities.extend(
             SHCButton(
                 hass=hass,

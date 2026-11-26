@@ -350,3 +350,30 @@ async def test_no_function_test_without_service(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("button.motion_detector_start_function_test") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {"motion_detectors2": [motion_detector2_device(supports_walk_test=True)]},
+        {"motion_detectors2": [motion_detector2_device(supports_detection_test=True)]},
+    ],
+    ids=["walk", "detection"],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_function_test_unique_ids_independent_of_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Unique IDs do not depend on which test service the device exposes."""
+    await setup_integration(hass, mock_config_entry)
+
+    for entity_id, suffix in (
+        ("button.motion_detector_start_function_test", "function_test_start"),
+        ("button.motion_detector_stop_function_test", "function_test_stop"),
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.unique_id.endswith(suffix)
