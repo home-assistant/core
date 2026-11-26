@@ -1,14 +1,8 @@
 """Checker for how a ``DataUpdateCoordinator`` handles its config entry.
 
-Most integrations define a typed config entry, such as
-``type MyConfigEntry = ConfigEntry[MyCoordinator]``. A coordinator should use
-that type for its config entry, so ``self.config_entry.runtime_data`` is typed
-too. A plain ``ConfigEntry`` loses that.
-
 ``DataUpdateCoordinator.__init__`` already stores the ``config_entry`` it is
 given, so assigning ``self.config_entry`` again in the subclass is redundant.
 
-``W7447`` (``home-assistant-coordinator-untyped-config-entry``)
 ``W7448`` (``home-assistant-coordinator-redundant-config-entry``)
 """
 
@@ -19,23 +13,10 @@ from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from pylint_home_assistant.helpers.ast_utils import extended_ancestors
-from pylint_home_assistant.helpers.config_entry import (
-    is_config_entry,
-    typed_config_entries,
-)
 from pylint_home_assistant.helpers.integration import get_integration_dir
 from pylint_home_assistant.helpers.module_info import is_integration_module
 
 _COORDINATOR_QNAME = "homeassistant.helpers.update_coordinator.DataUpdateCoordinator"
-
-
-def _is_plain_config_entry(node: nodes.NodeNG | None) -> bool:
-    """Return True for ``ConfigEntry`` without type arguments."""
-    match node:
-        # ConfigEntry | None
-        case nodes.BinOp(op="|", left=left, right=right):
-            return _is_plain_config_entry(left) or _is_plain_config_entry(right)
-    return is_config_entry(node)
 
 
 def _is_coordinator(class_node: nodes.ClassDef) -> bool:
@@ -66,16 +47,6 @@ class CoordinatorConfigEntryChecker(BaseChecker):
     name = "home_assistant_coordinator_config_entry"
     priority = -1
     msgs = {
-        "W7447": (
-            "Use the integration's typed config entry (%s) instead of `ConfigEntry`",
-            "home-assistant-coordinator-untyped-config-entry",
-            (
-                "Used when a DataUpdateCoordinator types its config entry as a "
-                "plain `ConfigEntry` while the integration defines a typed "
-                "config entry, such as `type MyConfigEntry = "
-                "ConfigEntry[MyCoordinator]`."
-            ),
-        ),
         "W7448": (
             (
                 "`self.config_entry` is already set by "
@@ -104,61 +75,10 @@ class CoordinatorConfigEntryChecker(BaseChecker):
         if self._integration_dir is None or not _is_coordinator(node):
             return
 
-        if typed_entries := typed_config_entries(self._integration_dir):
-            self._check_untyped(node, typed_entries)
-
         if isinstance(
             init := node.locals.get("__init__", [None])[0], nodes.FunctionDef
         ):
             self._check_redundant(init)
-
-    def _check_untyped(
-        self, node: nodes.ClassDef, typed_entries: tuple[str, ...]
-    ) -> None:
-        """Flag ``config_entry`` annotated as a plain ``ConfigEntry``."""
-        annotations: list[nodes.NodeNG] = [
-            item.annotation
-            for item in node.body
-            if isinstance(item, nodes.AnnAssign)
-            and isinstance(item.target, nodes.AssignName)
-            and item.target.name == "config_entry"
-        ]
-
-        init = node.locals.get("__init__", [None])[0]
-        if isinstance(init, nodes.FunctionDef):
-            # The argument may have another name, such as ``entry``, when it is
-            # passed on as ``config_entry=entry``
-            names = {"config_entry"}
-            match _config_entry_passed_to_super(init):
-                case nodes.Name(name=name):
-                    names.add(name)
-
-            arguments = init.args
-            annotations.extend(
-                annotation
-                for argument, annotation in zip(
-                    [
-                        *(arguments.posonlyargs or []),
-                        *(arguments.args or []),
-                        *arguments.kwonlyargs,
-                    ],
-                    [
-                        *arguments.posonlyargs_annotations,
-                        *arguments.annotations,
-                        *arguments.kwonlyargs_annotations,
-                    ],
-                    strict=True,
-                )
-                if argument.name in names
-            )
-
-        for annotation in annotations:
-            if _is_plain_config_entry(annotation):
-                self.add_message(
-                    "home-assistant-coordinator-untyped-config-entry",
-                    node=annotation,
-                    args=(", ".join(f"`{name}`" for name in typed_entries),),
-                )
 
     def _check_redundant(self, init: nodes.FunctionDef) -> None:
         """Flag ``self.config_entry = ...`` when ``super()`` already stores it."""
