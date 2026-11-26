@@ -880,6 +880,375 @@ async def test_set_tilt_position(
     )
 
 
+TILT_COVER_ACTIONS = {**COVER_ACTIONS, **SET_COVER_TILT_POSITION}
+TILT_POSITION_TEMPLATE = {
+    "tilt": "{{ states('sensor.test_tilt_position') | float(None) }}"
+}
+OPEN_AT_HALF = {
+    "open_tilt_position": "{{ 50 }}",
+    "closed_tilt_positions": "{{ [0, 100] }}",
+}
+TILT_CAPABILITIES_FROM_SOURCE = {
+    option: f"{{{{ state_attr('{TEST_STATE_ENTITY_ID}', '{option}') }}}}"
+    for option in (
+        "open_tilt_position",
+        "closed_tilt_positions",
+        "tilt_start_angle",
+        "tilt_end_angle",
+    )
+}
+DEFAULT_TILT_CAPABILITIES = {
+    CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 100,
+    CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: [0],
+}
+
+
+def assert_tilt_capabilities(
+    hass: HomeAssistant, expected: dict[CoverEntityCapabilityAttribute, Any]
+) -> None:
+    """Assert the tilt capability attributes of the test cover."""
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert {
+        attribute: state.attributes[attribute]
+        for attribute in (
+            CoverEntityCapabilityAttribute.OPEN_TILT_POSITION,
+            CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS,
+            CoverEntityCapabilityAttribute.TILT_START_ANGLE,
+            CoverEntityCapabilityAttribute.TILT_END_ANGLE,
+        )
+        if attribute in state.attributes
+    } == expected
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("config", "expected"),
+    [
+        pytest.param(TILT_COVER_ACTIONS, DEFAULT_TILT_CAPABILITIES, id="defaults"),
+        pytest.param(
+            {**TILT_COVER_ACTIONS, **OPEN_AT_HALF},
+            {
+                CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 50,
+                CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: [0, 100],
+            },
+            id="positions",
+        ),
+        pytest.param(
+            {
+                **TILT_COVER_ACTIONS,
+                "closed_tilt_positions": "{{ [100, 0] }}",
+                "open_tilt_position": "{{ '50' }}",
+            },
+            {
+                CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 50,
+                CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: [0, 100],
+            },
+            id="unsorted_positions_and_string_number",
+        ),
+        pytest.param(
+            {
+                **TILT_COVER_ACTIONS,
+                "tilt_start_angle": "{{ -90 }}",
+                "tilt_end_angle": "{{ 90 }}",
+            },
+            {
+                CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 50,
+                CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: [0, 100],
+                CoverEntityCapabilityAttribute.TILT_START_ANGLE: -90,
+                CoverEntityCapabilityAttribute.TILT_END_ANGLE: 90,
+            },
+            id="angles",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_cover")
+async def test_tilt_capabilities(
+    hass: HomeAssistant, expected: dict[CoverEntityCapabilityAttribute, Any]
+) -> None:
+    """Test the tilt capability attributes are rendered."""
+    # This forces a trigger for trigger based entities
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, None)
+
+    assert_tilt_capabilities(hass, expected)
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [(1, {**TILT_COVER_ACTIONS, **TILT_CAPABILITIES_FROM_SOURCE})],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_cover")
+async def test_tilt_capabilities_from_another_cover(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the tilt capabilities follow the attributes of another cover."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_UNAVAILABLE)
+    assert_tilt_capabilities(hass, DEFAULT_TILT_CAPABILITIES)
+
+    source_attributes = {
+        "open_tilt_position": 50,
+        "closed_tilt_positions": [0, 100],
+        "tilt_start_angle": -90,
+        "tilt_end_angle": 90,
+    }
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, CoverState.OPEN, source_attributes)
+    assert_tilt_capabilities(hass, source_attributes)
+    # The angles render one at a time, which is not logged as a conflict
+    assert "conflicting tilt options" not in caplog.text
+
+    # Only one angle renders
+    await async_trigger(
+        hass,
+        TEST_STATE_ENTITY_ID,
+        CoverState.OPEN,
+        {**source_attributes, "tilt_start_angle": None},
+    )
+    assert_tilt_capabilities(hass, DEFAULT_TILT_CAPABILITIES)
+    assert (
+        "Received conflicting tilt options for cover.test_template_cover:"
+        " open_tilt_position=50, closed_tilt_positions=[0, 100],"
+        " tilt_start_angle=None, tilt_end_angle=90" in caplog.text
+    )
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, CoverState.OPEN, source_attributes)
+    assert_tilt_capabilities(hass, source_attributes)
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                **TILT_COVER_ACTIONS,
+                "tilt_start_angle": "{{ states('sensor.test_state') | int }}",
+                "tilt_end_angle": "{{ 90 }}",
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_cover")
+async def test_tilt_capability_template_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a tilt capability template error falls back to the defaults."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "-90")
+    assert_tilt_capabilities(
+        hass,
+        {
+            CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 50,
+            CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: [0, 100],
+            CoverEntityCapabilityAttribute.TILT_START_ANGLE: -90,
+            CoverEntityCapabilityAttribute.TILT_END_ANGLE: 90,
+        },
+    )
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "not a number")
+    assert_tilt_capabilities(hass, DEFAULT_TILT_CAPABILITIES)
+    assert "tilt_start_angle=None, tilt_end_angle=90" in caplog.text
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("config", "error"),
+    [
+        pytest.param(
+            {**TILT_COVER_ACTIONS, "open_tilt_position": "{{ 150 }}"},
+            "Received invalid cover open_tilt_position: 150",
+            id="open_out_of_range",
+        ),
+        pytest.param(
+            {**TILT_COVER_ACTIONS, "closed_tilt_positions": "{{ [50] }}"},
+            "Received invalid cover closed_tilt_positions: [50]",
+            id="closed_not_an_end",
+        ),
+        pytest.param(
+            {**TILT_COVER_ACTIONS, "closed_tilt_positions": "{{ 0 }}"},
+            "Received invalid cover closed_tilt_positions: 0",
+            id="closed_not_a_list",
+        ),
+        pytest.param(
+            {**TILT_COVER_ACTIONS, "closed_tilt_positions": "{{ [] }}"},
+            "Received invalid cover closed_tilt_positions: []",
+            id="closed_empty",
+        ),
+        pytest.param(
+            {
+                **TILT_COVER_ACTIONS,
+                "tilt_start_angle": "{{ -91 }}",
+                "tilt_end_angle": "{{ 90 }}",
+            },
+            "Received invalid cover tilt_start_angle: -91",
+            id="angle_out_of_range",
+        ),
+        pytest.param(
+            {
+                **TILT_COVER_ACTIONS,
+                "open_tilt_position": "{{ 0 }}",
+                "closed_tilt_positions": "{{ [0] }}",
+            },
+            "Received conflicting tilt options for cover.test_template_cover:"
+            " open_tilt_position=0, closed_tilt_positions=[0],"
+            " tilt_start_angle=None, tilt_end_angle=None",
+            id="open_is_closed",
+        ),
+        pytest.param(
+            {
+                **TILT_COVER_ACTIONS,
+                "tilt_start_angle": "{{ 10 }}",
+                "tilt_end_angle": "{{ 10 }}",
+            },
+            "Received conflicting tilt options for cover.test_template_cover:"
+            " open_tilt_position=None, closed_tilt_positions=None,"
+            " tilt_start_angle=10, tilt_end_angle=10",
+            id="equal_angles",
+        ),
+    ],
+)
+async def test_invalid_tilt_capabilities(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    style: ConfigurationStyle,
+    count: int,
+    config: ConfigType,
+    error: str,
+) -> None:
+    """Test invalid tilt capabilities fall back to the defaults."""
+    await setup_entity(hass, TEST_COVER, style, count, config)
+    # This forces a trigger for trigger based entities
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, None)
+
+    assert error in caplog.text
+    assert_tilt_capabilities(hass, DEFAULT_TILT_CAPABILITIES)
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("config", "tilt", "service", "expected"),
+    [
+        pytest.param(
+            OPEN_AT_HALF, "0", SERVICE_OPEN_COVER_TILT, 50, id="open_to_open_position"
+        ),
+        pytest.param(
+            OPEN_AT_HALF, "30", SERVICE_CLOSE_COVER_TILT, 0, id="close_below_open"
+        ),
+        pytest.param(
+            OPEN_AT_HALF, "70", SERVICE_CLOSE_COVER_TILT, 100, id="close_above_open"
+        ),
+        pytest.param(
+            OPEN_AT_HALF, "100", SERVICE_CLOSE_COVER_TILT, 100, id="close_when_closed"
+        ),
+        pytest.param(
+            OPEN_AT_HALF,
+            STATE_UNKNOWN,
+            SERVICE_CLOSE_COVER_TILT,
+            0,
+            id="close_from_unknown",
+        ),
+        pytest.param(
+            {**OPEN_AT_HALF, "open_tilt_position": "{{ 60 }}"},
+            "55",
+            SERVICE_CLOSE_COVER_TILT,
+            0,
+            id="close_without_turning_through_open",
+        ),
+        pytest.param(
+            OPEN_AT_HALF, "100", SERVICE_TOGGLE_COVER_TILT, 50, id="toggle_from_closed"
+        ),
+        pytest.param(
+            OPEN_AT_HALF, "70", SERVICE_TOGGLE_COVER_TILT, 100, id="toggle_from_open"
+        ),
+        pytest.param(
+            {
+                "open_tilt_position": "{{ 0 }}",
+                "closed_tilt_positions": "{{ [100] }}",
+            },
+            "20",
+            SERVICE_CLOSE_COVER_TILT,
+            100,
+            id="close_inverted",
+        ),
+        pytest.param(
+            {"tilt_start_angle": "{{ -90 }}", "tilt_end_angle": "{{ 90 }}"},
+            "0",
+            SERVICE_OPEN_COVER_TILT,
+            50,
+            id="open_from_angles",
+        ),
+    ],
+)
+async def test_tilt_actions_with_tilt_capabilities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    count: int,
+    config: ConfigType,
+    tilt: str,
+    service: str,
+    expected: int,
+    calls: list[ServiceCall],
+) -> None:
+    """Test the tilt actions move to the configured tilt positions."""
+    await setup_entity(
+        hass,
+        TEST_COVER,
+        style,
+        count,
+        {**TILT_COVER_ACTIONS, **TILT_POSITION_TEMPLATE, **config},
+    )
+    await async_trigger(hass, TEST_TILT_POSITION_ENTITY_ID, tilt)
+
+    await hass.services.async_call(
+        COVER_DOMAIN, service, {ATTR_ENTITY_ID: TEST_COVER.entity_id}, blocking=True
+    )
+
+    assert_action(
+        TEST_COVER, calls, 1, "set_cover_tilt_position", tilt_position=expected
+    )
+
+
+@pytest.mark.parametrize("count", [0])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("config", "error"),
+    [
+        pytest.param(
+            {**COVER_ACTIONS, "open_tilt_position": "{{ 50 }}"},
+            "Required option: 'set_cover_tilt_position' is missing for option"
+            " 'open_tilt_position'",
+            id="without_tilt_action",
+        ),
+        pytest.param(
+            {**TILT_COVER_ACTIONS, "tilt_start_angle": "{{ -90 }}"},
+            "some but not all values in the same group of inclusion 'tilt_angles'",
+            id="one_angle",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_cover")
+async def test_invalid_tilt_capability_config(
+    hass: HomeAssistant, caplog_setup_text: str, error: str
+) -> None:
+    """Test invalid tilt capability configuration is rejected."""
+    assert hass.states.async_all("cover") == []
+    assert error in caplog_setup_text
+
+
 @pytest.mark.parametrize(("count", "config"), [(1, SET_COVER_POSITION)])
 @pytest.mark.parametrize(
     "style",
