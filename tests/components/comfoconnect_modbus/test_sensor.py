@@ -129,3 +129,30 @@ async def test_co2_zone_reading_zero_is_unknown(
         hass.states.get("sensor.comfoair_co2_zone_1_carbon_dioxide").state
         == STATE_UNKNOWN
     )
+
+
+async def test_co2_zone_device_survives_a_reload(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    mock_unit: MockModbusUnit,
+) -> None:
+    """Test that a CO₂ zone keeps its device and name across a reload."""
+    seed(mock_unit, input_registers={0x0013: 455})  # CO₂ zone 2
+    assert await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+    entity = entity_registry.async_get(CO2_ZONE_2)
+    assert entity
+    device_id = entity.device_id
+
+    assert await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    entity = entity_registry.async_get(CO2_ZONE_2)
+    assert entity
+    assert entity.device_id == device_id
+    zone = device_registry.async_get(device_id)
+    assert zone
+    assert zone.name == "CO₂ zone 2"
+    assert hass.states.get(CO2_ZONE_2).state == "455"
