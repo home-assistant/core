@@ -1,5 +1,6 @@
 """Custom actions (previously known as services) for the Music Assistant integration."""
 
+from datetime import timedelta
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
@@ -292,9 +293,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 ),
                 probatio.Coerce(SleepTimerMode),
             ),
-            probatio.Optional(
-                MusicAssistantServiceArgument.DURATION
-            ): cv.positive_time_period,
+            # the server counts whole seconds and needs at least one
+            probatio.Optional(MusicAssistantServiceArgument.DURATION): probatio.All(
+                cv.time_period, probatio.Range(min=timedelta(seconds=1))
+            ),
             probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
         },
         func="_async_handle_set_sleep_timer",

@@ -2248,6 +2248,33 @@ async def test_media_player_set_sleep_timer_action_invalid_duration(
     assert err.value.translation_key == expected_error
 
 
+@pytest.mark.parametrize(
+    "duration",
+    [
+        pytest.param("00:00:00", id="zero"),
+        pytest.param({"milliseconds": 500}, id="below_one_second"),
+    ],
+)
+async def test_media_player_set_sleep_timer_action_too_short(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    duration: str | dict[str, int],
+) -> None:
+    """Test set_sleep_timer rejects a duration below one second."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            MusicAssistantService.SET_SLEEP_TIMER,
+            {
+                TargetKey.ENTITY_ID: "media_player.test_player_1",
+                MusicAssistantServiceArgument.DURATION: duration,
+            },
+            blocking=True,
+        )
+    assert not music_assistant_client.send_command.called
+
+
 async def test_media_player_set_sleep_timer_action_older_server(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
