@@ -57,7 +57,7 @@ class _EntityFilter:
     domains: set[str]
     device_classes: set[str]
     supported_features: set[int]
-    capabilities: dict[str, list[frozenset[str]]]
+    capabilities: dict[str, list[list[str]]]
 
     def matches(
         self, hass: HomeAssistant, entity_id: str, domain: str, integration: str
@@ -89,7 +89,9 @@ class _EntityFilter:
                 return False
             if not isinstance(entity_values, (list, tuple, set, frozenset)):
                 entity_values = [entity_values]
-            if not any(all_of.issubset(entity_values) for all_of in any_of):
+            if not any(
+                all(value in entity_values for value in all_of) for all_of in any_of
+            ):
                 return False
 
         return True
@@ -118,12 +120,7 @@ class _AutomationComponentLookupData:
                 supported_features=set(
                     entity_filter_config.get("supported_features", [])
                 ),
-                capabilities={
-                    capability: [frozenset(all_of) for all_of in any_of]
-                    for capability, any_of in entity_filter_config.get(
-                        "capability", {}
-                    ).items()
-                },
+                capabilities=entity_filter_config.get("capability", {}),
             )
             filters.append(entity_filter)
 

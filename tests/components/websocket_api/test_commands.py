@@ -5568,6 +5568,16 @@ async def test_get_triggers_conditions_for_target(
         ),
         pytest.param({"mode": "other"}, ["component1.match_all"], id="other_scalar"),
         pytest.param(
+            {"mode": {"auto": "Auto"}},
+            ["component1.match_all"],
+            id="unhashable_scalar",
+        ),
+        pytest.param(
+            {"event_types": ["single_press", {"press_start": "Press start"}]},
+            ["component1.any_value", "component1.match_all"],
+            id="unhashable_in_list",
+        ),
+        pytest.param(
             {"event_types": ["single_press"], "mode": "auto"},
             [
                 "component1.any_value",
