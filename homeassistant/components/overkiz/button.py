@@ -102,16 +102,14 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
     # The other RTS venetian blinds step the tilt with their cover entity.
     OverkizButtonDescription(
         key=OverkizCommand.TILT_POSITIVE,
-        name="Open tilt one step",
-        icon="mdi:arrow-top-right",
+        translation_key="open_tilt_one_step",
         # position (1-127), execution duration (0-15, optional)
         press_args=[TILT_STEP_SIZE],
         widgets=frozenset({UIWidget.TILT_ONLY_VENETIAN_BLIND}),
     ),
     OverkizButtonDescription(
         key=OverkizCommand.TILT_NEGATIVE,
-        name="Close tilt one step",
-        icon="mdi:arrow-bottom-left",
+        translation_key="close_tilt_one_step",
         # position (1-127), execution duration (0-15, optional)
         press_args=[TILT_STEP_SIZE],
         widgets=frozenset({UIWidget.TILT_ONLY_VENETIAN_BLIND}),

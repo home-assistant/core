@@ -1819,13 +1819,13 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:arrow-bottom-left',
+    'original_icon': None,
     'original_name': 'Close tilt one step',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'close_tilt_one_step',
     'unique_id': 'rts://1234-1234-6362/16730044-tiltNegative',
     'unit_of_measurement': None,
   })
@@ -1835,7 +1835,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jaloezie Close tilt one step',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:arrow-bottom-left',
     }),
     'context': <ANY>,
     'entity_id': 'button.palm_court_jaloezie_close_tilt_one_step',
@@ -1923,13 +1922,13 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:arrow-top-right',
+    'original_icon': None,
     'original_name': 'Open tilt one step',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'open_tilt_one_step',
     'unique_id': 'rts://1234-1234-6362/16730044-tiltPositive',
     'unit_of_measurement': None,
   })
@@ -1939,7 +1938,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jaloezie Open tilt one step',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:arrow-top-right',
     }),
     'context': <ANY>,
     'entity_id': 'button.palm_court_jaloezie_open_tilt_one_step',

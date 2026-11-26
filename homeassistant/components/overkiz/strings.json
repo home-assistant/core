@@ -92,6 +92,9 @@
   },
   "entity": {
     "button": {
+      "close_tilt_one_step": {
+        "name": "Close tilt one step"
+      },
       "go_to_alias_favorite1": {
         "name": "My position"
       },
@@ -103,6 +106,9 @@
       },
       "go_to_alias_ventilation": {
         "name": "Ventilation position"
+      },
+      "open_tilt_one_step": {
+        "name": "Open tilt one step"
       }
     },
     "climate": {
