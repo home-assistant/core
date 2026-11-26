@@ -193,6 +193,7 @@ async def test_action(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
                         "type": "beeper_enable",
+                        "parameter": "30",
                     },
                 },
                 {
@@ -212,7 +213,7 @@ async def test_action(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -
 
     hass.bus.async_fire("test_some_event")
     await hass.async_block_till_done()
-    run_command.assert_called_with("someUps", "beeper.enable", None)
+    run_command.assert_called_with("someUps", "beeper.enable", "30")
 
     hass.bus.async_fire("test_another_event")
     await hass.async_block_till_done()
@@ -343,8 +344,8 @@ async def test_action_exception_device_invalid(
     ("action_extra", "expected_param"),
     [
         pytest.param({}, None, id="no_value"),
-        pytest.param({"value": "30"}, "30", id="string_value"),
-        pytest.param({"value": 30}, "30", id="numeric_value"),
+        pytest.param({"parameter": "30"}, "30", id="string_value"),
+        pytest.param({"parameter": 30}, "30", id="numeric_value"),
     ],
 )
 async def test_action_with_value(
@@ -405,6 +406,6 @@ async def test_get_action_capabilities(
 
     assert capabilities == {
         "extra_fields": [
-            {"name": "value", "required": False, "optional": True, "type": "string"}
+            {"name": "parameter", "required": False, "optional": True, "type": "string"}
         ]
     }
