@@ -62,7 +62,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         self,
         hass: HomeAssistant,
         config_entry: DaikinOnectaConfigEntry,
-        implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
+        implementation: config_entry_oauth2_flow.AbstractOAuth2BaseImplementation,
     ) -> None:
         """Initialize."""
         self.session = config_entry_oauth2_flow.OAuth2Session(
