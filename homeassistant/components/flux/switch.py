@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_PLATFORM,
+    CONF_UNIQUE_ID,
     STATE_ON,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
@@ -43,7 +44,6 @@ from homeassistant.util.dt import as_local, utcnow as dt_utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_UNIQUE_ID = "unique_id"
 
 CONF_START_TIME = "start_time"
 CONF_STOP_TIME = "stop_time"
@@ -84,7 +84,7 @@ PLATFORM_SCHEMA = probatio.Schema(
         ),
         probatio.Optional(CONF_INTERVAL, default=30): cv.positive_int,
         probatio.Optional(CONF_TRANSITION, default=30): VALID_TRANSITION,
-        probatio.Optional(ATTR_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -154,7 +154,7 @@ async def async_setup_platform(
     mode = config.get(CONF_MODE)
     interval = config.get(CONF_INTERVAL)
     transition = config.get(CONF_TRANSITION)
-    unique_id = config.get(ATTR_UNIQUE_ID)
+    unique_id = config.get(CONF_UNIQUE_ID)
     flux = FluxSwitch(
         name,
         hass,
