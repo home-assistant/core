@@ -31,12 +31,16 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     BloodPressureScale,
     CarbonDioxideLevelScale,
     CarbonMonoxideLevelScale,
+    CurrentScale,
     HumidityScale,
     IlluminanceScale,
     MultilevelSensorType,
+    PowerScale as MultilevelSensorPowerScale,
     PressureScale,
     TemperatureScale,
     UltravioletScale,
+    VoltageScale,
+    WaterOxidationReductionPotentialScale,
 )
 from zwave_js_server.exceptions import (
     BaseZwaveJSServerError,
@@ -98,7 +102,6 @@ from .const import (
     ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
     ENTITY_DESC_KEY_BATTERY_TEMPERATURE,
     ENTITY_DESC_KEY_CO,
-    ENTITY_DESC_KEY_CURRENT,
     ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
     ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
     ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY,
@@ -155,26 +158,11 @@ ENTITY_DESCRIPTION_KEY_UNIT_MAP: dict[tuple[str, str], SensorEntityDescription] 
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_registry_enabled_default=False,
     ),
-    (ENTITY_DESC_KEY_CURRENT, UnitOfElectricCurrent.AMPERE): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_CURRENT,
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-    ),
     (ENTITY_DESC_KEY_VOLTAGE, UnitOfElectricPotential.VOLT): SensorEntityDescription(
         key=ENTITY_DESC_KEY_VOLTAGE,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-    ),
-    (
-        ENTITY_DESC_KEY_VOLTAGE,
-        UnitOfElectricPotential.MILLIVOLT,
-    ): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_VOLTAGE,
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
     ),
     (
         ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
@@ -1365,6 +1353,102 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             device_class=SensorDeviceClass.PRESSURE,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPressure.MMHG,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.CURRENT),
+                (MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE, CurrentScale.AMPERE),
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="current_ampere",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.VOLTAGE),
+                (MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE, VoltageScale.VOLT),
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="voltage_volt",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.VOLTAGE),
+                (MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE, VoltageScale.MILLIVOLT),
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="voltage_millivolt",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (
+                    CC_SPECIFIC_SENSOR_TYPE,
+                    MultilevelSensorType.WATER_OXIDATION_REDUCTION_POTENTIAL,
+                ),
+                (
+                    MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE,
+                    WaterOxidationReductionPotentialScale.MILLIVOLT,
+                ),
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="water_oxidation_reduction_potential_millivolt",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.POWER),
+                (MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE, MultilevelSensorPowerScale.WATT),
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="power_watt",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.WATT,
         ),
     ),
     NewZWaveDiscoverySchema(
