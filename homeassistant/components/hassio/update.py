@@ -29,6 +29,7 @@ from .const import (
     ADDONS_COORDINATOR,
     ATTR_VERSION_LATEST,
     DATA_AUTO_UPDATE,
+    DOMAIN,
     JOBS_COORDINATOR,
     MAIN_COORDINATOR,
 )
@@ -377,7 +378,9 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
             self._attr_in_progress = False
             self.async_write_ha_state()
             raise HomeAssistantError(
-                f"Error updating Home Assistant Supervisor: {err}"
+                translation_domain=DOMAIN,
+                translation_key="supervisor_update_error",
+                translation_placeholders={"error": str(err)},
             ) from err
 
     @callback

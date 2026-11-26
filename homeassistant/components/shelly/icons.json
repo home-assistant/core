@@ -4,6 +4,9 @@
       "mute_alarm": {
         "default": "mdi:volume-mute"
       },
+      "next_effect": {
+        "default": "mdi:skip-next"
+      },
       "self_test": {
         "default": "mdi:progress-wrench"
       },

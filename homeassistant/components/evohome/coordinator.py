@@ -27,7 +27,7 @@ from evohomeasync2.typedefs import (
 )
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -36,6 +36,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SCHEDULE_MAX_AGE
+from .helpers import as_camel_case
 
 # any other reason gets "api_request_failed"
 _API_CALL_ERROR_TRANSLATION_KEYS: Final[dict[ec2.ApiCallErrorReason, str]] = {
@@ -50,6 +51,58 @@ _API_CALL_ERROR_TRANSLATION_KEYS: Final[dict[ec2.ApiCallErrorReason, str]] = {
 def _api_call_error_key(err: ec2.ApiCallFailedError) -> str:
     """Return the translation key of a failed API call, by its reason."""
     return _API_CALL_ERROR_TRANSLATION_KEYS.get(err.reason, "api_request_failed")
+
+
+# a request that the client rejected, before any API call (i.e. invalid arguments)
+_REQUEST_ERROR_TRANSLATION_KEYS: Final[dict[ec2.RequestErrorReason, str]] = {
+    ec2.RequestErrorReason.MODE_UNKNOWN: "mode_unknown",
+    ec2.RequestErrorReason.MODE_UNSUPPORTED: "mode_not_supported",
+    ec2.RequestErrorReason.TIMESPAN_NOT_ALLOWED: "mode_cant_be_temporary",
+    ec2.RequestErrorReason.TIMESPAN_REQUIRED: "mode_timespan_required",
+    ec2.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE: "mode_timespan_not_in_future",
+}
+_TIMESPAN_UNSUPPORTED_TRANSLATION_KEYS: Final[dict[str, str]] = {
+    ec2.TimingMode.DURATION: "mode_cant_have_duration",
+    ec2.TimingMode.PERIOD: "mode_cant_have_period",
+}
+
+
+def _bad_request_error(err: ec2.BadApiRequestError) -> ServiceValidationError:
+    """Return the translated error of a request that the client has rejected.
+
+    The reason picks the message, and the details supply its placeholders (only the
+    mode is used, spelt as the set_system_mode action expects it). A zone/DHW override
+    has its own messages, without a placeholder.
+    """
+
+    if (mode := err.details.get("mode")) is None:  # e.g. TIMESPAN_CONFLICTING
+        return ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="request_invalid"
+        )
+
+    # a zone/DHW override (DHW uses ZoneMode too); a system mode can't be unknown
+    if mode in ec2.ZoneMode and err.reason != ec2.RequestErrorReason.MODE_UNKNOWN:
+        return ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key=(
+                "override_not_in_future"
+                if err.reason == ec2.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE
+                else "override_request_invalid"
+            ),
+        )
+
+    if err.reason == ec2.RequestErrorReason.TIMESPAN_UNSUPPORTED:
+        key = _TIMESPAN_UNSUPPORTED_TRANSLATION_KEYS.get(
+            err.details.get("timing_mode", ""), "mode_request_invalid"
+        )
+    else:
+        key = _REQUEST_ERROR_TRANSLATION_KEYS.get(err.reason, "mode_request_invalid")
+
+    return ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key=key,
+        translation_placeholders={"mode": as_camel_case(mode)},
+    )
 
 
 def _log_api_call_failure(logger: logging.Logger, err: ec2.ApiCallFailedError) -> None:
@@ -86,9 +139,7 @@ class _EvoCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         if not await self._DataUpdateCoordinator__wrap_async_setup():  # type: ignore[attr-defined]
             return
 
-        await self._async_refresh(
-            log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
-        )
+        await self._async_refresh(log_failures=False)
 
 
 class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
@@ -271,8 +322,9 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
     ) -> _T:
         """Call a client API and update the Coordinator state if required.
 
-        If the call fails, raise HomeAssistantError. The client's error is chained to
-        it, and logged only as debug, as HA reports the error.
+        If the call fails, raise HomeAssistantError (ServiceValidationError, if the client
+        rejected the request before making it). The client's error is chained to it, and
+        logged as debug: it is not logged at a higher level, as HA reports the error.
         """
 
         try:
@@ -284,6 +336,15 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
                 translation_domain=DOMAIN,
                 translation_key=_api_call_error_key(err),
             ) from err
+
+        except ec2.BadApiRequestError as err:  # e.g. InvalidSetModeError
+            self.logger.debug(
+                "The request was rejected by the client: %s (reason=%s, details=%s)",
+                err,
+                err.reason,
+                err.details,
+            )
+            raise _bad_request_error(err) from err
 
         if request_refresh:  # wait a moment for system to quiesce before updating state
             await self.async_request_refresh()  # hass.async_create_task() won't help
@@ -362,7 +423,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
                 raise
             self.logger.warning(_ERR_SCHEDULE_UPDATE, child, err.__cause__ or err)
             return  # the GET failed, so retry it at the next poll
-        except ec2.InvalidScheduleError as err:
+        except ec2.InvalidGetScheduleError as err:
             self.logger.warning(_ERR_SCHEDULE_UPDATE, child, err)
         else:
             self.logger.debug("%s: Schedule = %s", child, schedule)

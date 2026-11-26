@@ -95,6 +95,7 @@ from .utils import (
     get_coap_context,
     get_device_entry_gen,
     get_device_from_manufacturer_data,
+    get_device_url,
     get_http_port,
     get_info_auth,
     get_info_gen,
@@ -1216,10 +1217,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {"name": discovery_info.name.split(".")[0]},
-                "configuration_url": (
-                    f"{'https' if self.port == DEFAULT_HTTPS_PORT else 'http'}://"
-                    f"{discovery_info.host}"
-                ),
+                "configuration_url": get_device_url({CONF_HOST: host, CONF_PORT: port}),
             }
         )
 

@@ -1,7 +1,6 @@
 """Binary sensor for MeteoAlarm.eu."""
 
-from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 import probatio
 
@@ -21,12 +20,13 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util, slugify
 
-from . import MeteoAlarmConfigEntry
 from .const import ATTRIBUTION, CONF_PROVINCE, DEFAULT_LANGUAGE, DEFAULT_NAME, DOMAIN
+from .coordinator import MeteoAlarmConfigEntry, MeteoAlarmCoordinator
 
-SCAN_INTERVAL = timedelta(minutes=5)
+PARALLEL_UPDATES = 0
 
 BREAKS_IN_HA_VERSION = "2027.6.0"
 
@@ -103,11 +103,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the MeteoAlarm binary sensor from a config entry."""
-    # The sensor starts from the alert fetched during setup.
-    async_add_entities([MeteoAlertBinarySensor(entry)])
+    async_add_entities([MeteoAlertBinarySensor(entry.runtime_data)])
 
 
-class MeteoAlertBinarySensor(BinarySensorEntity):
+class MeteoAlertBinarySensor(
+    CoordinatorEntity[MeteoAlarmCoordinator], BinarySensorEntity
+):
     """On while the region has a current alert, with its details as attributes."""
 
     _attr_attribution = ATTRIBUTION
@@ -115,9 +116,10 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, entry: MeteoAlarmConfigEntry) -> None:
+    def __init__(self, coordinator: MeteoAlarmCoordinator) -> None:
         """Initialize the MeteoAlarm binary sensor."""
-        self._api = entry.runtime_data.api
+        super().__init__(coordinator)
+        entry = coordinator.config_entry
         self._attr_unique_id = entry.entry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -126,30 +128,39 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             configuration_url="https://meteoalarm.org",
         )
-        self._set_alert(entry.runtime_data.alert)
 
-    def update(self) -> None:
-        """Fetch the region's most severe alert."""
-        self._set_alert(self._api.get_alert())
+    def _current_alert(self) -> dict[str, Any] | None:
+        """Return the alert if it hasn't expired yet.
 
-    def _set_alert(self, alert: dict[str, Any]) -> None:
-        """Show the alert while it hasn't expired."""
-        self._attr_extra_state_attributes = {}
-        self._attr_is_on = False
+        CAP makes expires optional: an alert without one has no known end, so
+        it stays current.
+        """
+        if not (alert := self.coordinator.data):
+            return None
+        if (raw_expires := alert.get("expires")) is None:
+            return alert
+        expires = dt_util.parse_datetime(raw_expires)
+        if expires is None or expires <= dt_util.utcnow():
+            return None
+        return alert
 
-        if alert:
-            # An alert without an expiration time stays active until the feed
-            # stops returning it.
-            if (expires := alert.get("expires")) is None or (
-                (expiration_date := dt_util.parse_datetime(expires)) is not None
-                and expiration_date > dt_util.utcnow()
-            ):
-                self._attr_extra_state_attributes = {
-                    key: (
-                        value.encode("utf-8", errors="replace").decode("utf-8")
-                        if isinstance(value, str)
-                        else value
-                    )
-                    for key, value in alert.items()
-                }
-                self._attr_is_on = True
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true while there is a current alert."""
+        return self._current_alert() is not None
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the current alert's details."""
+        if (alert := self._current_alert()) is None:
+            return {}
+        return {
+            key: (
+                value.encode("utf-8", errors="replace").decode("utf-8")
+                if isinstance(value, str)
+                else value
+            )
+            for key, value in alert.items()
+        }

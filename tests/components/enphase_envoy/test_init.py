@@ -1219,7 +1219,6 @@ async def test_init_no_solar(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test envoy options are passed to class at load."""
-    caplog.set_level(logging.DEBUG)
 
     token = envoy_token()
     entry = MockConfigEntry(

@@ -82,6 +82,7 @@ send_chat_action:
           multiple: true
           reorder: true
     chat_action:
+      required: true
       selector:
         select:
           options:

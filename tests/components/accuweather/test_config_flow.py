@@ -27,6 +27,11 @@ VALID_CONFIG = {
     },
 }
 
+UPDATE_API_KEY_FLOWS = [
+    ("start_reauth_flow", "reauth_confirm", "reauth_successful"),
+    ("start_reconfigure_flow", "reconfigure", "reconfigure_successful"),
+]
+
 
 async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
@@ -136,26 +141,37 @@ async def test_create_entry(
     assert result["result"].unique_id == "0123456"
 
 
-async def test_reauth_successful(
-    hass: HomeAssistant, mock_accuweather_client: AsyncMock
+@pytest.mark.parametrize(
+    ("start_flow", "step_id", "abort_reason"), UPDATE_API_KEY_FLOWS
+)
+@pytest.mark.usefixtures("mock_accuweather_client")
+async def test_update_api_key_successful(
+    hass: HomeAssistant, start_flow: str, step_id: str, abort_reason: str
 ) -> None:
-    """Test starting a reauthentication flow."""
+    """Test updating the API key with the reauth and reconfigure flows."""
     mock_config_entry = await init_integration(hass)
 
-    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await getattr(mock_config_entry, start_flow)(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == step_id
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_API_KEY: "new_api_key"},
+        result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+    assert result["reason"] == abort_reason
+    assert mock_config_entry.data == {
+        CONF_API_KEY: "new_api_key",
+        CONF_LATITUDE: 55.55,
+        CONF_LONGITUDE: 122.12,
+    }
+    assert mock_config_entry.unique_id == "0123456"
 
 
+@pytest.mark.parametrize(
+    ("start_flow", "step_id", "abort_reason"), UPDATE_API_KEY_FLOWS
+)
 @pytest.mark.parametrize(
     ("exc", "base_error"),
     [
@@ -165,33 +181,37 @@ async def test_reauth_successful(
         (RequestsExceededError("Requests Exceeded"), "requests_exceeded"),
     ],
 )
-async def test_reauth_errors(
+async def test_update_api_key_errors(
     hass: HomeAssistant,
+    mock_accuweather_client: AsyncMock,
+    start_flow: str,
+    step_id: str,
+    abort_reason: str,
     exc: Exception,
     base_error: str,
-    mock_accuweather_client: AsyncMock,
 ) -> None:
-    """Test reauthentication flow with errors."""
+    """Test the reauth and reconfigure flows recover from errors."""
     mock_config_entry = await init_integration(hass)
 
-    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await getattr(mock_config_entry, start_flow)(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == step_id
 
     mock_accuweather_client.async_get_location.side_effect = exc
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_API_KEY: "new_api_key"},
+        result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
     assert result["errors"] == {"base": base_error}
+    assert mock_config_entry.data[CONF_API_KEY] == "32-character-string-1234567890qw"
 
     mock_accuweather_client.async_get_location.side_effect = None
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_API_KEY: "new_api_key"},
+        result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
+    assert result["reason"] == abort_reason
     assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"

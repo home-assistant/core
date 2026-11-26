@@ -20,7 +20,7 @@
       },
       "user": {
         "data": {
-          "country_code": "Country",
+          "country_code": "[%key:common::config_flow::data::country%]",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },

@@ -1,10 +1,10 @@
 """Intents for the humidifier integration."""
 
-from typing import override
+from typing import Any, override
 
 import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
+from homeassistant.const import STATE_OFF, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
 
@@ -57,7 +57,7 @@ class HumidityHandler(intent.IntentHandler):
             )
 
         state = match_result.states[0]
-        service_data = {ATTR_ENTITY_ID: state.entity_id}
+        service_data: dict[str, Any] = {TargetKey.ENTITY_ID: state.entity_id}
 
         humidity = slots["humidity"]["value"]
 
@@ -115,7 +115,7 @@ class SetModeHandler(intent.IntentHandler):
             )
 
         state = match_result.states[0]
-        service_data = {ATTR_ENTITY_ID: state.entity_id}
+        service_data: dict[str, Any] = {TargetKey.ENTITY_ID: state.entity_id}
 
         intent.async_test_feature(state, HumidifierEntityFeature.MODES, "modes")
         mode = slots["mode"]["value"]

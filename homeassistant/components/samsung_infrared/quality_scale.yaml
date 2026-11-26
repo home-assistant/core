@@ -75,11 +75,11 @@ rules:
     status: exempt
     comment: |
       This integration does not fetch data from devices.
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
+  docs-supported-functions: done
+  docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices:
     status: exempt
@@ -97,7 +97,7 @@ rules:
     comment: |
       This integration does not raise exceptions.
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |

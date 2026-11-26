@@ -33,10 +33,10 @@ PLATFORM_SCHEMA = VALVE_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS valve device."""
@@ -48,7 +48,7 @@ def setup_platform(
 
     entity = AdsValve(ads_hub, ads_var, name, device_class)
 
-    add_entities([entity])
+    async_add_entities([entity])
 
 
 class AdsValve(AdsEntity, ValveEntity):

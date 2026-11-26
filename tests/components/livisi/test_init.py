@@ -33,7 +33,7 @@ from homeassistant.components.livisi.const import (
     ON_STATE,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -726,15 +726,19 @@ async def test_new_unreachable_event_wins_over_recovery(
 
 
 @pytest.mark.parametrize(
-    ("exception", "expected_state"),
+    ("exception", "expected_state", "expected_reauth_flows"),
     [
         pytest.param(
             WrongCredentialException(),
             ConfigEntryState.SETUP_ERROR,
+            1,
             id="wrong-credentials",
         ),
         pytest.param(
-            LivisiException(), ConfigEntryState.SETUP_RETRY, id="connection-error"
+            LivisiException(),
+            ConfigEntryState.SETUP_RETRY,
+            0,
+            id="connection-error",
         ),
     ],
 )
@@ -742,6 +746,7 @@ async def test_setup_error(
     hass: HomeAssistant,
     exception: LivisiException,
     expected_state: ConfigEntryState,
+    expected_reauth_flows: int,
 ) -> None:
     """Test setup errors."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
@@ -752,8 +757,13 @@ async def test_setup_error(
         side_effect=exception,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert config_entry.state is expected_state
+    assert (
+        len(list(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})))
+        == expected_reauth_flows
+    )
 
 
 async def test_unreachable_devices_ignore_cached_state(

@@ -116,3 +116,61 @@ async def test_user_flow_already_configured(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_api_client_class")
+async def test_reauth_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """A new client secret replaces the rejected one."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"]["client_id"] == NYMO_CLIENT_ID
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_NYMO_CLIENT_SECRET: "new-secret"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_NYMO_CLIENT_ID: NYMO_CLIENT_ID,
+        CONF_NYMO_CLIENT_SECRET: "new-secret",
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_key"),
+    [
+        pytest.param(SolyxEnergyAuthError(), "invalid_auth", id="auth_error"),
+        pytest.param(SolyxEnergyTokenError(), "cannot_connect", id="token_error"),
+        pytest.param(SolyxEnergyDataError(), "cannot_connect", id="data_error"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client_class: AsyncMock,
+    side_effect: Exception,
+    error_key: str,
+) -> None:
+    """A failed connection test keeps the reauth form open; fixing it finishes it."""
+    mock_config_entry.add_to_hass(hass)
+    mock_api_client_class.async_test_connection.side_effect = side_effect
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_NYMO_CLIENT_SECRET: "new-secret"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_key}
+
+    mock_api_client_class.async_test_connection.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_NYMO_CLIENT_SECRET: "new-secret"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_NYMO_CLIENT_SECRET] == "new-secret"

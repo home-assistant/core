@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import Undefined
 from homeassistant.util.async_ import create_eager_task
 
-from .const import X_HASS_SOURCE, X_INGRESS_PATH
+from .const import X_FORWARDED_PREFIX, X_HASS_SOURCE, X_INGRESS_PATH
 from .handler import SupervisorConnection, get_supervisor_connection
 from .http import should_compress
 
@@ -267,7 +267,9 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict:
     )
     # Ingress information
     headers[X_HASS_SOURCE] = "core.ingress"
-    headers[X_INGRESS_PATH] = f"/api/hassio_ingress/{token}"
+    ingress_path = f"/api/hassio_ingress/{token}"
+    headers[X_INGRESS_PATH] = ingress_path
+    headers[X_FORWARDED_PREFIX] = ingress_path
 
     # Set X-Forwarded-For
     forward_for = request.headers.get(hdrs.X_FORWARDED_FOR)

@@ -8,21 +8,10 @@ from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components import climate
-from homeassistant.components.climate import (
-    ATTR_FAN_MODES,
-    ATTR_HVAC_MODES,
-    ATTR_MAX_HUMIDITY,
-    ATTR_MAX_TEMP,
-    ATTR_MIN_HUMIDITY,
-    ATTR_MIN_TEMP,
-    ATTR_PRESET_MODES,
-    ATTR_SWING_MODES,
-    ATTR_TARGET_HUMIDITY_STEP,
-    ATTR_TARGET_TEMP_STEP,
-)
+from homeassistant.components.climate import ClimateEntityCapabilityAttribute
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
+from homeassistant.const import EntityStateAttribute, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -56,14 +45,20 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     assert len(states) > 1
     for entity_states in states.values():
         for state in entity_states:
-            assert ATTR_FAN_MODES not in state.attributes
-            assert ATTR_FRIENDLY_NAME in state.attributes
-            assert ATTR_HVAC_MODES not in state.attributes
-            assert ATTR_SWING_MODES not in state.attributes
-            assert ATTR_MAX_HUMIDITY not in state.attributes
-            assert ATTR_MAX_TEMP not in state.attributes
-            assert ATTR_MIN_HUMIDITY not in state.attributes
-            assert ATTR_MIN_TEMP not in state.attributes
-            assert ATTR_PRESET_MODES not in state.attributes
-            assert ATTR_TARGET_HUMIDITY_STEP not in state.attributes
-            assert ATTR_TARGET_TEMP_STEP not in state.attributes
+            assert ClimateEntityCapabilityAttribute.FAN_MODES not in state.attributes
+            assert EntityStateAttribute.FRIENDLY_NAME in state.attributes
+            assert ClimateEntityCapabilityAttribute.HVAC_MODES not in state.attributes
+            assert ClimateEntityCapabilityAttribute.SWING_MODES not in state.attributes
+            assert ClimateEntityCapabilityAttribute.MAX_HUMIDITY not in state.attributes
+            assert ClimateEntityCapabilityAttribute.MAX_TEMP not in state.attributes
+            assert ClimateEntityCapabilityAttribute.MIN_HUMIDITY not in state.attributes
+            assert ClimateEntityCapabilityAttribute.MIN_TEMP not in state.attributes
+            assert ClimateEntityCapabilityAttribute.PRESET_MODES not in state.attributes
+            assert (
+                ClimateEntityCapabilityAttribute.TARGET_HUMIDITY_STEP
+                not in state.attributes
+            )
+            assert (
+                ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP
+                not in state.attributes
+            )

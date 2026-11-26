@@ -21,7 +21,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EntityStateAttribute
+from homeassistant.const import EntityStateAttribute, TargetKey
 from homeassistant.core import State, callback
 from homeassistant.util.enum import try_parse_enum
 
@@ -394,7 +394,7 @@ class HeaterCooler(HomeKitClimateAccessory):
             if not await self.async_call_service_and_wait(
                 CLIMATE_DOMAIN,
                 call.service,
-                {ATTR_ENTITY_ID: self.entity_id, **call.data},
+                {TargetKey.ENTITY_ID: self.entity_id, **call.data},
             ):
                 return
             # A state callback during the blocking call is fresher than the
@@ -419,7 +419,7 @@ class HeaterCooler(HomeKitClimateAccessory):
     ) -> None:
         """Await one write under the accessory lock."""
         await self.async_call_service_and_wait(
-            CLIMATE_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id, **params}
+            CLIMATE_DOMAIN, service, {TargetKey.ENTITY_ID: self.entity_id, **params}
         )
 
     def _queue_fan_swing_changes(

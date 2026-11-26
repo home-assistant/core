@@ -16,7 +16,7 @@ workflows:
         - 'docker/login-action@v4.8.0'
         - 'docker/metadata-action@v6.2.0'
         - 'docker/setup-buildx-action@v4.4.1'
-        - 'home-assistant/actions@07f46fd2e19967768b5fd3000f91f857452b767c'
+        - 'home-assistant/actions@2026.11.0'
         - 'home-assistant/builder@2026.09.0'
         - 'pypa/gh-action-pypi-publish@v1.14.3'
         - 'sigstore/cosign-installer@v4.1.3'
@@ -25,17 +25,17 @@ workflows:
         - 'actions/setup-python@v7.1.0'
         - 'actions/upload-artifact@v7.0.2'
     '.github/workflows/check-requirements.lock.yml':
-        - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
         - 'actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333'
         - 'actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3'
+        - 'actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1'
         - 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9'
-        - 'github/gh-aw-actions@9271a1804551c0dc4fb0085a97979950aa2f8489'
+        - 'github/gh-aw-actions@b907753c079ddd7d6829a0d8c24e02e818b4b45f'
     '.github/workflows/ci.yaml':
         - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         - 'actions/cache@v6.1.0'
         - 'actions/checkout@v7.0.1'
-        - 'actions/dependency-review-action@v5.0.0'
+        - 'actions/dependency-review-action@v5.0.1'
         - 'actions/download-artifact@v8.0.2'
         - 'actions/upload-artifact@v7.0.2'
         - 'astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2'
@@ -44,7 +44,7 @@ workflows:
         - 'codspeedhq/action@v5.6.3'
         - 'dorny/paths-filter@v4.0.3'
         - 'hadolint/hadolint-action@v3.5.0'
-        - 'j178/prek-action@v3.1.0'
+        - 'j178/prek-action@v3.1.1'
     '.github/workflows/codeql.yml':
         - 'actions/checkout@v7.0.1'
         - 'github/codeql-action@v4.39.3'
@@ -63,13 +63,13 @@ workflows:
         - 'dessant/lock-threads@v6.0.2'
     '.github/workflows/quality-scale-reviewer-trigger.yml': []
     '.github/workflows/quality-scale-reviewer.lock.yml':
-        - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
         - 'actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333'
         - 'actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3'
+        - 'actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1'
         - 'actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0'
         - 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9'
-        - 'github/gh-aw-actions@9271a1804551c0dc4fb0085a97979950aa2f8489'
+        - 'github/gh-aw-actions@b907753c079ddd7d6829a0d8c24e02e818b4b45f'
     '.github/workflows/restrict-task-creation.yml':
         - 'actions/github-script@v9.0.0'
     '.github/workflows/stale.yml':
@@ -91,7 +91,7 @@ workflows:
         - 'astral-sh/setup-uv@v10.3.3'
         - 'dorny/paths-filter@v4.0.3'
         - 'github/codeql-action@v4.39.3'
-        - 'j178/prek-action@v3.1.0'
+        - 'j178/prek-action@v3.1.1'
 dependencies:
     'actions/ai-inference@v2.1.1':
         ref: 'v2.1.1'
@@ -133,9 +133,9 @@ dependencies:
         commit: 'sha1-64ab729a6294000f5aa4a4bc0b73d1f32bc45510'
         owner_id: 44036562
         repo_id: 642580244
-    'actions/dependency-review-action@v5.0.0':
-        ref: 'v5.0.0'
-        commit: 'sha1-a1d282b36b6f3519aa1f3fc636f609c47dddb294'
+    'actions/dependency-review-action@v5.0.1':
+        ref: 'v5.0.1'
+        commit: 'sha1-bbc44d14a204704ccc493733616cd1e93a0321ec'
         owner_id: 44036562
         repo_id: 476372928
     'actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333':
@@ -163,6 +163,11 @@ dependencies:
         commit: 'sha1-3a2844b7e9c422d3c10d287c895573f7108da1b3'
         owner_id: 44036562
         repo_id: 205262760
+    'actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1':
+        ref: 'v7.1.0'
+        commit: 'sha1-949feb2413d6458794dcd2491c4babbbce0c15c1'
+        owner_id: 44036562
+        repo_id: 189476904
     'actions/setup-node@v7.1.0':
         ref: 'v7.1.0'
         commit: 'sha1-949feb2413d6458794dcd2491c4babbbce0c15c1'
@@ -291,9 +296,9 @@ dependencies:
         commit: 'sha1-33d7b85da1a04171e211befe2c739303b9a4c066'
         owner_id: 9919
         repo_id: 259445878
-    'github/gh-aw-actions@9271a1804551c0dc4fb0085a97979950aa2f8489':
-        ref: 'v0.88.2'
-        commit: 'sha1-9271a1804551c0dc4fb0085a97979950aa2f8489'
+    'github/gh-aw-actions@b907753c079ddd7d6829a0d8c24e02e818b4b45f':
+        ref: 'v1.4.0'
+        commit: 'sha1-b907753c079ddd7d6829a0d8c24e02e818b4b45f'
         owner_id: 9919
         repo_id: 1156386970
     'hadolint/hadolint-action@v3.5.0':
@@ -301,7 +306,7 @@ dependencies:
         commit: 'sha1-06be81baf89a55ffd0e24b8f04a4185738dd3387'
         owner_id: 34047791
         repo_id: 212438777
-    'home-assistant/actions@07f46fd2e19967768b5fd3000f91f857452b767c':
+    'home-assistant/actions@2026.11.0':
         ref: '2026.11.0'
         commit: 'sha1-07f46fd2e19967768b5fd3000f91f857452b767c'
         owner_id: 13844975
@@ -327,9 +332,9 @@ dependencies:
         commit: 'sha1-a100f6a076013273baaaf94c908d647d91327364'
         owner_id: 13844975
         repo_id: 184234812
-    'j178/prek-action@v3.1.0':
-        ref: 'v3.1.0'
-        commit: 'sha1-44924fe9ef4a6f88253c4b6b1bf11c689d3ce53d'
+    'j178/prek-action@v3.1.1':
+        ref: 'v3.1.1'
+        commit: 'sha1-7b101f8338a08d2bd6fdb3625e4e7692428763a3'
         owner_id: 10510431
         repo_id: 1052387486
     'pnpm/action-setup@v6.1.1':

@@ -988,3 +988,41 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_store_migration_from_v1(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_calendars_list: ApiResult,
+    component_setup: ComponentSetup,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test v1 entity-scoped store data is discarded on migration to v2."""
+    storage_key = f"google.{config_entry.entry_id}"
+    hass_storage[storage_key] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": storage_key,
+        "data": {
+            f"{EMAIL_ADDRESS}-{CALENDAR_ID}": {
+                "event_sync": {
+                    CALENDAR_ID: {"items": {"old-event": {}}, "sync_token": "old"}
+                }
+            },
+            f"{EMAIL_ADDRESS}-{CALENDAR_ID}-birthdays": {
+                "event_sync": {
+                    CALENDAR_ID: {"items": {"old-event": {}}, "sync_token": "old"}
+                }
+            },
+        },
+    }
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+
+    store_data = await config_entry.runtime_data.store.async_load()
+    assert store_data is not None
+    assert list(store_data) == ["event_sync"]
+    assert list(store_data["event_sync"]) == [CALENDAR_ID]

@@ -81,6 +81,8 @@ class ElviaImporter:
                         since=until - timedelta(days=365 * year),
                         until=until - timedelta(days=365 * (year - 1)),
                     )
+                except ElviaError.AuthError:
+                    raise
                 except ElviaError.ElviaException:
                     # This will raise if the contract have no data for the
                     # year, we can safely ignore this
@@ -100,6 +102,8 @@ class ElviaImporter:
                     ),
                     until=dt_util.utcnow(),
                 )
+            except ElviaError.AuthError:
+                raise
             except ElviaError.ElviaException as err:
                 LOGGER.error("Error fetching data: %s", err)
                 return
