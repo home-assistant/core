@@ -15,14 +15,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityStateAttribute,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
-    State,
-    async_get_hass_or_none,
-    callback,
-)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import (
@@ -58,41 +51,6 @@ BEHAVIOR_ALL: Final = "all"
 BEHAVIOR_EACH: Final = "each"
 
 
-def _create_deprecated_behavior_issue(deprecated: str, replacement: str) -> None:
-    """Inform the user a renamed trigger behavior value is still in use."""
-    # Returns None when called from the wrong thread or before hass is set up
-    # (e.g. a `check_config` run), in which case there's nothing to report to.
-    if (hass := async_get_hass_or_none()) is None:
-        return
-
-    from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue  # noqa: PLC0415
-
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_trigger_behavior_{deprecated}",
-        breaks_in_ha_version="2027.1",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_trigger_behavior",
-        translation_placeholders={
-            "deprecated_behavior": deprecated,
-            "new_behavior": replacement,
-        },
-    )
-
-
-def _backwards_compatible_behavior(value: Any) -> Any:
-    """Convert legacy behavior values to new ones."""
-    if value == "any":
-        _create_deprecated_behavior_issue("any", BEHAVIOR_EACH)
-        return BEHAVIOR_EACH
-    if value == "last":
-        _create_deprecated_behavior_issue("last", BEHAVIOR_ALL)
-        return BEHAVIOR_ALL
-    return value
-
-
 ENTITY_STATE_TRIGGER_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_TARGET): cv.TARGET_FIELDS,
@@ -103,9 +61,8 @@ ENTITY_STATE_TRIGGER_SCHEMA = probatio.Schema(
 ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
         probatio.Required(CONF_OPTIONS, default={}): {
-            probatio.Required(ATTR_BEHAVIOR, default=BEHAVIOR_EACH): probatio.All(
-                _backwards_compatible_behavior,
-                probatio.In([BEHAVIOR_FIRST, BEHAVIOR_ALL, BEHAVIOR_EACH]),
+            probatio.Required(ATTR_BEHAVIOR, default=BEHAVIOR_EACH): probatio.In(
+                [BEHAVIOR_FIRST, BEHAVIOR_ALL, BEHAVIOR_EACH]
             ),
             probatio.Optional(CONF_FOR): cv.positive_time_period,
         },
