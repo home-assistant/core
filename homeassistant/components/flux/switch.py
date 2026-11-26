@@ -10,7 +10,6 @@ from typing import Any, override
 import probatio
 
 from homeassistant.components.light import (
-    ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
     VALID_TRANSITION,
     LightService,
@@ -53,6 +52,7 @@ CONF_SUNSET_CT = "sunset_colortemp"
 CONF_STOP_CT = "stop_colortemp"
 CONF_DISABLE_BRIGHTNESS_ADJUST = "disable_brightness_adjust"
 CONF_INTERVAL = "interval"
+CONF_TRANSITION = "transition"
 
 MODE_XY = "xy"
 MODE_MIRED = "mired"
@@ -83,7 +83,7 @@ PLATFORM_SCHEMA = probatio.Schema(
             MODE_XY, MODE_MIRED, MODE_RGB
         ),
         probatio.Optional(CONF_INTERVAL, default=30): cv.positive_int,
-        probatio.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION,
+        probatio.Optional(CONF_TRANSITION, default=30): VALID_TRANSITION,
         probatio.Optional(ATTR_UNIQUE_ID): cv.string,
     }
 )
@@ -153,7 +153,7 @@ async def async_setup_platform(
     disable_brightness_adjust = config.get(CONF_DISABLE_BRIGHTNESS_ADJUST)
     mode = config.get(CONF_MODE)
     interval = config.get(CONF_INTERVAL)
-    transition = config.get(ATTR_TRANSITION)
+    transition = config.get(CONF_TRANSITION)
     unique_id = config.get(ATTR_UNIQUE_ID)
     flux = FluxSwitch(
         name,
