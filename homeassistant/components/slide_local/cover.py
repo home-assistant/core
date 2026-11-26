@@ -86,14 +86,16 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        self.coordinator.data["state"] = STATE_OPENING
         await self.coordinator.slide.slide_open(self.coordinator.host)
+        self.coordinator.data["state"] = STATE_OPENING
+        self.async_write_ha_state()
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        self.coordinator.data["state"] = STATE_CLOSING
         await self.coordinator.slide.slide_close(self.coordinator.host)
+        self.coordinator.data["state"] = STATE_CLOSING
+        self.async_write_ha_state()
 
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -103,14 +105,18 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs[ATTR_POSITION] / 100
-        if not self.invert:
-            position = 1 - position
+        position = kwargs[ATTR_POSITION]
+        target = position / 100
+        device_position = target if self.invert else 1 - target
 
-        if self.coordinator.data["pos"] is not None:
-            if position > self.coordinator.data["pos"]:
+        await self.coordinator.slide.slide_set_position(
+            self.coordinator.host, device_position
+        )
+
+        current = self.coordinator.data["pos"]
+        if current is not None and position != self.current_cover_position:
+            if target < current:
                 self.coordinator.data["state"] = STATE_CLOSING
-            else:
+            elif target > current:
                 self.coordinator.data["state"] = STATE_OPENING
-
-        await self.coordinator.slide.slide_set_position(self.coordinator.host, position)
+        self.async_write_ha_state()

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, cast, override
 
-from gcal_sync.api import Range, SyncEventsRequest
+from gcal_sync.api import CalendarListRequest, Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
 from gcal_sync.model import (
     AccessRole,
@@ -195,8 +195,15 @@ async def async_setup_entry(
     """Set up the google calendar platform."""
     calendar_service = config_entry.runtime_data.service
     store = config_entry.runtime_data.store
+    calendar_items = []
+    request: CalendarListRequest | None = None
     try:
-        result = await calendar_service.async_list_calendars()
+        while True:
+            result = await calendar_service.async_list_calendars(request)
+            calendar_items.extend(result.items)
+            if not result.page_token:
+                break
+            request = CalendarListRequest(pageToken=result.page_token)
     except ApiException as err:
         raise PlatformNotReady(str(err)) from err
 
@@ -214,7 +221,7 @@ async def async_setup_entry(
     )
     new_calendars = []
     entities = []
-    for calendar_item in result.items:
+    for calendar_item in calendar_items:
         calendar_id = calendar_item.id
         if calendars and calendar_id in calendars:
             calendar_info = calendars[calendar_id]

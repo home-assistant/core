@@ -383,8 +383,10 @@ async def _async_collect_located_errors(
     # Keep the error if validating again does not give any
     errors = await _async_collect_errors(hass, config) or fail_fast_errors
     return [
-        ValidationErrorInfo(info.exception, (_RENAMED_KEYS[path[0]], *path[1:]))
-        if (path := info.path) and _RENAMED_KEYS.get(path[0]) in submitted_keys
+        ValidationErrorInfo(info.exception, (old_key, *path[1:]))
+        if (path := info.path)
+        and (old_key := _RENAMED_KEYS.get(path[0])) is not None
+        and old_key in submitted_keys
         else info
         for info in errors
     ]

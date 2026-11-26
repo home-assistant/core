@@ -17,6 +17,10 @@ from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import CONF_RADAR_UPDATES, CONF_STATION_UPDATES, DOMAIN, PLATFORMS
 from .coordinator import AemetConfigEntry, AemetData, WeatherUpdateCoordinator
+from .repairs import (
+    async_delete_api_key_expiration_issue,
+    async_schedule_api_key_expiration_issue,
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> None:
@@ -61,14 +65,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> Non
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    if expiration_unsub := async_schedule_api_key_expiration_issue(hass, entry):
+        weather_coordinator.api_key_expiration_unsub = expiration_unsub
+        entry.async_on_unload(expiration_unsub)
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    if (runtime_data := getattr(entry, "runtime_data", None)) is not None:
+        runtime_data.coordinator.async_cancel_api_key_expiration_repair()
+    async_delete_api_key_expiration_issue(hass, entry)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> None:
     """Remove a config entry."""
+    async_delete_api_key_expiration_issue(hass, entry)
     await hass.async_add_executor_job(
         shutil.rmtree,
         hass.config.path(STORAGE_DIR, f"{DOMAIN}-{entry.unique_id}"),
