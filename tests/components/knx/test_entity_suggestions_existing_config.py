@@ -662,6 +662,28 @@ def test_lone_match_without_folder_is_used() -> None:
     ]
 
 
+def test_folders_of_one_channel_only_are_not_compared() -> None:
+    """Test folders named after their channel don't rule a match out.
+
+    Names may be specific to a channel - eg. a module instance "ECG 4" or a text
+    entered for the channel - so they can't tell functions apart.
+    """
+    project = _folder_project(
+        [_dim_object(2, "CH-1", "6/0/2"), _dim_object(12, "CH-2", "6/1/2")],
+        [
+            _channel("CH-1", [_folder("Behaviour", [2])]),
+            _channel("CH-2", [_folder("ECG 4", [], [_folder("Behaviour", [12])])]),
+        ],
+    )
+    mappings = derive_channel_mappings(
+        build_project_index(project),
+        [SourceAddress("brightness", "6/0/2", "write")],
+    )
+    assert [mapping.addresses for mapping in mappings] == [
+        {"brightness": MappedAddress("6/1/2")}
+    ]
+
+
 def test_nested_folders_are_compared_as_path() -> None:
     """Test folders of the same name below different folders are told apart."""
     project = _folder_project(

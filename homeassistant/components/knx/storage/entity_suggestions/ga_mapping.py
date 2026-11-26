@@ -143,6 +143,17 @@ def _folders_of(
     return index.folders.get((com_object["device_address"], com_object["number"]), ())
 
 
+def _folder_paths(
+    index: ProjectIndex, com_objects: list[CommunicationObject]
+) -> frozenset[tuple[str, ...]]:
+    """Return the folders objects of a channel are placed in."""
+    return frozenset(
+        folders
+        for com_object in com_objects
+        if (folders := _folders_of(index, com_object))
+    )
+
+
 def _slot_allows(slot: GaSlot, com_object: CommunicationObject) -> bool:
     """Check a communication object can serve a source address in that role.
 
@@ -301,13 +312,14 @@ def _counterpart(
     source: CommunicationObject,
     candidates: list[CommunicationObject],
     same_channel_identity: bool,
+    shared_folders: frozenset[tuple[str, ...]],
 ) -> CommunicationObject | None:
     """Find the object of another channel taking the place of `source`.
 
     Only an unambiguous match is used - a channel that offers the same function
     twice would otherwise silently produce a wrong address. For the same reason
     an object matched by its function text only is not used if it is placed in
-    other folders than `source`.
+    other folders than `source`, where both channels use these folders.
     """
     candidates = [
         candidate for candidate in candidates if _same_type(source, candidate)
@@ -339,10 +351,14 @@ def _counterpart(
     if (match := _unambiguous(index, source, matches)) is None:
         return None
     # the text alone doesn't prove it is the same function: the object in the
-    # folders of `source` may just not be linked in this channel
+    # folders of `source` may just not be linked in this channel. Folders only
+    # one of the channels uses are not compared - their name may be specific
+    # to a channel, eg. "ECG 4" or a text entered for the channel.
     folders = _folders_of(index, source)
     match_folders = _folders_of(index, match)
-    if folders and match_folders and folders != match_folders:
+    if folders != match_folders and (
+        folders in shared_folders or match_folders in shared_folders
+    ):
         return None
     return match
 
@@ -361,9 +377,11 @@ def _map_channel(
     candidates: list[CommunicationObject],
     source_objects: dict[str, CommunicationObject],
     same_channel_identity: bool,
+    source_folders: frozenset[tuple[str, ...]],
 ) -> ChannelMapping:
     """Resolve the addresses one channel uses in place of the source addresses."""
     project = index.project
+    shared_folders = source_folders & _folder_paths(index, candidates)
     mapping = ChannelMapping(
         target=target,
         device_name=project["devices"][target.device]["name"],
@@ -371,7 +389,7 @@ def _map_channel(
     )
     for reference, source_object in source_objects.items():
         counterpart = _counterpart(
-            index, source_object, candidates, same_channel_identity
+            index, source_object, candidates, same_channel_identity, shared_folders
         )
         links = [
             link
@@ -406,6 +424,9 @@ def derive_channel_mappings(
             if application
             else [source_ref.device]
         )
+        source_folders = _folder_paths(
+            index, _channels_of(index, source_ref.device)[source_ref.channel]
+        )
         for device in devices:
             for channel, candidates in _channels_of(index, device).items():
                 target = ChannelRef(device, channel)
@@ -417,6 +438,7 @@ def derive_channel_mappings(
                     candidates,
                     source_objects,
                     same_channel_identity=channel == source_ref.channel,
+                    source_folders=source_folders,
                 )
                 if any(
                     mapped.address != source_addresses[reference]
