@@ -129,11 +129,20 @@ async def test_user_flow(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("source", "discovery_info"),
+    [
+        pytest.param(SOURCE_USER, None, id="user"),
+        pytest.param(SOURCE_DHCP, DHCP_DISCOVERY, id="dhcp"),
+    ],
+)
 @pytest.mark.parametrize(("failing", "exception", "error"), ERRORS)
 async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_login: AsyncMock,
     mock_fetch_profile: AsyncMock,
+    source: str,
+    discovery_info: DhcpServiceInfo | None,
     failing: str,
     exception: Exception,
     error: str,
@@ -143,7 +152,7 @@ async def test_user_flow_errors(
     mock.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": source}, data=discovery_info
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
