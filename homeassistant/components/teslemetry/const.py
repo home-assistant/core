@@ -36,7 +36,7 @@ ISSUE_GATEWAY_NOT_FOUND = "gateway_not_found"
 ISSUE_ENERGY_SITE_NOT_PAIRED = "energy_site_not_paired"
 ISSUE_STREAMING_ALLOWANCE = "streaming_allowance"
 STREAMING_ALLOWANCE_EXCEEDED = "streaming_allowance_exceeded"
-# Gateway 1 part number; early units log in with the full gateway password.
+# Gateway 1 part number; these units refuse the last-5-characters login.
 GATEWAY_1_PART_NUMBER = "1118431-"
 
 ENERGY_HISTORY_FIELDS = [
