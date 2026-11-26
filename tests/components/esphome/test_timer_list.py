@@ -34,16 +34,32 @@ CANCELLED = VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED
 FINISHED = VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED
 
 
+AUDIO_TRANSPORTS = pytest.mark.parametrize(
+    "timer_flags",
+    [
+        pytest.param(TIMER_FLAGS, id="udp"),
+        pytest.param(TIMER_FLAGS | VoiceAssistantFeature.API_AUDIO, id="api_audio"),
+    ],
+)
+
+
+@pytest.fixture
+def timer_flags() -> VoiceAssistantFeature:
+    """Return the voice assistant features of the satellite."""
+    return TIMER_FLAGS
+
+
 @pytest.fixture
 async def mock_device(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
+    timer_flags: VoiceAssistantFeature,
 ) -> MockESPHomeDevice:
     """Set up an ESPHome voice satellite that supports timers."""
     device = await mock_esphome_device(
         mock_client=mock_client,
-        device_info={"voice_assistant_feature_flags": TIMER_FLAGS},
+        device_info={"voice_assistant_feature_flags": timer_flags},
     )
     await hass.async_block_till_done()
     return device
@@ -269,6 +285,7 @@ async def test_timers_kept_while_disconnected(
     ]
 
 
+@AUDIO_TRANSPORTS
 async def test_timers_resent_on_reconnect(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -339,6 +356,7 @@ async def test_timers_resent_on_reconnect(
     ]
 
 
+@AUDIO_TRANSPORTS
 @pytest.mark.usefixtures("freezer")
 async def test_cancel_retried_after_failed_send(
     hass: HomeAssistant, mock_client: APIClient, mock_device: MockESPHomeDevice
@@ -372,6 +390,7 @@ async def test_cancel_retried_after_failed_send(
     )
 
 
+@AUDIO_TRANSPORTS
 @pytest.mark.usefixtures("freezer")
 async def test_resent_after_the_satellite_subscribes(
     hass: HomeAssistant, mock_client: APIClient, mock_device: MockESPHomeDevice
