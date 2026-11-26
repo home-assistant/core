@@ -28,8 +28,6 @@ from homeassistant.components.camera.const import (
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
     PREVIEW_FEATURE_TWO_WAY_AUDIO,
-    CameraService,
-    CameraServiceArgument,
     StreamType,
 )
 from homeassistant.components.camera.helper import get_camera_from_entity_id
@@ -767,6 +765,7 @@ async def test_record_service(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.usefixtures("mock_camera_webrtc")
 async def test_record_service_webrtc(
     hass: HomeAssistant,
 ) -> None:
@@ -779,7 +778,7 @@ async def test_record_service_webrtc(
             DOMAIN,
             CameraService.RECORD,
             {
-                ATTR_ENTITY_ID: "camera.demo_camera",
+                TargetKey.ENTITY_ID: "camera.demo_camera",
                 CameraServiceArgument.FILENAME: "/test/{{ 'clip' }}.mp4",
                 CameraServiceArgument.DURATION: 10,
             },
@@ -793,6 +792,7 @@ async def test_record_service_webrtc(
         )
 
 
+@pytest.mark.usefixtures("mock_camera_webrtc")
 async def test_record_service_webrtc_lookback(hass: HomeAssistant) -> None:
     """Test WebRTC recording rejects lookback and does not start a recording."""
     with patch(
@@ -806,7 +806,7 @@ async def test_record_service_webrtc_lookback(hass: HomeAssistant) -> None:
                 DOMAIN,
                 CameraService.RECORD,
                 {
-                    ATTR_ENTITY_ID: "camera.demo_camera",
+                    TargetKey.ENTITY_ID: "camera.demo_camera",
                     CameraServiceArgument.FILENAME: "/test/clip.mp4",
                     CameraServiceArgument.LOOKBACK: 1,
                 },

@@ -7,20 +7,17 @@ import contextlib
 import logging
 from pathlib import Path
 import threading
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING
 
 from aiortc import (
     MediaStreamTrack,
     RTCConfiguration,
     RTCIceServer,
     RTCPeerConnection,
-    RTCRtpSender,
     RTCSessionDescription,
 )
 from aiortc.contrib.media import MediaRecorder
-from aiortc.mediastreams import MediaStreamError
 from aiortc.sdp import candidate_from_sdp
-from av import VideoFrame
 import webrtc_models
 
 from homeassistant.exceptions import HomeAssistantError
@@ -38,10 +35,7 @@ from .webrtc import (
 )
 
 if TYPE_CHECKING:
-    from av.frame import Frame
-    from av.packet import Packet
-
-    from . import Camera, WebRTCRecordingConfiguration
+    from . import Camera
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,52 +44,6 @@ _CONNECT_TIMEOUT = 20
 DATA_ACTIVE_WEBRTC_RECORDING_ENTITIES: HassKey[set[str]] = HassKey(
     "camera_active_webrtc_recording_entities"
 )
-
-
-class _SignalingVideoTrack(MediaStreamTrack):
-    """A wrapper for a video track that sets an asyncio.Event after the first video frame has been received."""
-
-    kind = "video"
-
-    def __init__(self, source: MediaStreamTrack, video_started: asyncio.Event) -> None:
-        """Initialize a first frame video track."""
-        super().__init__()
-        self._source = source
-        self._video_started = video_started
-        self._started = False
-
-    @override
-    async def recv(self) -> VideoFrame:
-        """Receive the next video frame."""
-        next_frame = await self._source.recv()
-        if not isinstance(next_frame, VideoFrame):
-            raise MediaStreamError
-        if not self._started:
-            self._started = True
-            asyncio.get_running_loop().call_soon(self._video_started.set)
-        return next_frame
-
-
-class _GatedAudioTrack(MediaStreamTrack):
-    """A wrapper for an audio track that delays releasing its first frame until an asyncio.Event is set.
-
-    This exists to work around an issue with aiortc/PyAV where audio frames being written first
-    causes the written video dimensions to be incorrect: https://github.com/aiortc/aiortc/issues/1442
-    """
-
-    kind = "audio"
-
-    def __init__(self, source: MediaStreamTrack, video_started: asyncio.Event) -> None:
-        """Initialize a gated audio track."""
-        super().__init__()
-        self._source = source
-        self._video_started = video_started
-
-    @override
-    async def recv(self) -> Frame | Packet:
-        """Receive the next audio frame."""
-        await self._video_started.wait()
-        return await self._source.recv()
 
 
 async def _add_ice_candidate(pc: RTCPeerConnection, message: WebRTCCandidate) -> None:
@@ -114,7 +62,6 @@ async def _add_ice_candidate(pc: RTCPeerConnection, message: WebRTCCandidate) ->
 
 def _configure_connection(
     client_config: WebRTCClientConfiguration,
-    recording_config: WebRTCRecordingConfiguration,
 ) -> RTCPeerConnection:
     """Configure a RTCPeerConnection based on client configuration provided by the camera.
 
@@ -135,34 +82,8 @@ def _configure_connection(
         )
     )
 
-    audio = pc.addTransceiver("audio", direction="recvonly")
-    if recording_config.audio_codec:
-        preferred_audio = [
-            codec
-            for codec in RTCRtpSender.getCapabilities("audio").codecs
-            if codec.mimeType == recording_config.audio_codec
-        ]
-        if not preferred_audio:
-            raise HomeAssistantError(
-                f"WebRTC recorder cannot offer preferred audio codec {recording_config.audio_codec}"
-            )
-        audio.setCodecPreferences(preferred_audio)
-
-    video = pc.addTransceiver("video", direction="recvonly")
-    if recording_config.video_codec:
-        preferred_video = [
-            codec
-            for codec in RTCRtpSender.getCapabilities("video").codecs
-            if codec.mimeType == recording_config.video_codec
-            and recording_config.video_codec_parameters.items()
-            <= codec.parameters.items()
-        ]
-        if not preferred_video:
-            raise HomeAssistantError(
-                f"WebRTC recorder cannot offer preferred video codec {recording_config.video_codec}"
-            )
-        video.setCodecPreferences(preferred_video)
-
+    pc.addTransceiver("audio", direction="recvonly")
+    pc.addTransceiver("video", direction="recvonly")
     if client_config.data_channel:
         pc.createDataChannel(client_config.data_channel)
 
@@ -190,7 +111,6 @@ class _WebRTCRecorder:
         video_path: str,
         duration: float,
         client_config: WebRTCClientConfiguration,
-        recording_config: WebRTCRecordingConfiguration,
         handle_async_webrtc_offer_threadsafe: Callable[
             [str, WebRTCSendMessage], concurrent.futures.Future[None]
         ],
@@ -201,7 +121,6 @@ class _WebRTCRecorder:
         self._output = Path(video_path)
         self._duration = duration
         self._client_config = client_config
-        self._recording_config = recording_config
         self._session_id = ulid()
         self._handle_async_webrtc_offer_threadsafe = (
             handle_async_webrtc_offer_threadsafe
@@ -211,10 +130,7 @@ class _WebRTCRecorder:
         self._video_track: MediaStreamTrack | None = None
         self._audio_track: MediaStreamTrack | None = None
 
-        self._pc = _configure_connection(
-            self._client_config,
-            self._recording_config,
-        )
+        self._pc = _configure_connection(self._client_config)
         self._pc.on("connectionstatechange", self._on_connection_state_change)
         self._pc.on("track", self._on_track)
 
@@ -340,12 +256,9 @@ class _WebRTCRecorder:
             )
         self._recorder = MediaRecorder(str(self._output))
 
-        # Delay writing audio until the first video frame is processed, to avoid incorrect video
-        # dimensions (https://github.com/aiortc/aiortc/issues/1442)
-        video_started = asyncio.Event()
-        self._recorder.addTrack(_SignalingVideoTrack(self._video_track, video_started))
+        self._recorder.addTrack(self._video_track)
         if self._audio_track is not None:
-            self._recorder.addTrack(_GatedAudioTrack(self._audio_track, video_started))
+            self._recorder.addTrack(self._audio_track)
 
         await self._recorder.start()
 
@@ -427,7 +340,6 @@ class _WebRTCRecorderRunner:
         video_path: str,
         duration: float,
         client_config: WebRTCClientConfiguration,
-        recording_config: WebRTCRecordingConfiguration,
         handle_async_webrtc_offer_threadsafe: Callable[
             [str, WebRTCSendMessage], concurrent.futures.Future[None]
         ],
@@ -437,7 +349,6 @@ class _WebRTCRecorderRunner:
         self._video_path = video_path
         self._duration = duration
         self._client_config = client_config
-        self._recording_config = recording_config
         self._handle_async_webrtc_offer_threadsafe = (
             handle_async_webrtc_offer_threadsafe
         )
@@ -460,7 +371,6 @@ class _WebRTCRecorderRunner:
             video_path=self._video_path,
             duration=self._duration,
             client_config=self._client_config,
-            recording_config=self._recording_config,
             handle_async_webrtc_offer_threadsafe=self._handle_async_webrtc_offer_threadsafe,
             close_webrtc_session_threadsafe=self._close_webrtc_session_threadsafe,
         )
@@ -501,10 +411,7 @@ async def async_record_webrtc(camera: Camera, video_path: str, duration: float) 
         ) -> concurrent.futures.Future[None]:
             return asyncio.run_coroutine_threadsafe(
                 camera.async_handle_async_webrtc_offer(
-                    offer_sdp,
-                    session_id,
-                    send_message_threadsafe,
-                    aiortc_compatible=True,
+                    offer_sdp, session_id, send_message_threadsafe
                 ),
                 main_loop,
             )
@@ -515,13 +422,11 @@ async def async_record_webrtc(camera: Camera, video_path: str, duration: float) 
             )
 
         client_config = camera.async_get_webrtc_client_configuration()
-        recording_config = camera.get_webrtc_recording_configuration()
         runner = _WebRTCRecorderRunner(
             entity_id=entity_id,
             video_path=video_path,
             duration=duration,
             client_config=client_config,
-            recording_config=recording_config,
             handle_async_webrtc_offer_threadsafe=_handle_async_webrtc_offer_threadsafe,
             close_webrtc_session_threadsafe=_close_webrtc_session_threadsafe,
         )

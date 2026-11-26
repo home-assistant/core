@@ -113,20 +113,6 @@ class WebRTCClientConfiguration:
         return data
 
 
-@dataclass(kw_only=True)
-class WebRTCRecordingConfiguration:
-    """Parameters for WebRTC recording."""
-
-    audio_codec: str | None = None
-    """Preferred audio codec to advertise. Values should match those supported by aiortc."""
-
-    video_codec: str | None = None
-    """Preferred video codec to advertise. Values should match those supported by aiortc."""
-
-    video_codec_parameters: dict[str, str] = field(default_factory=dict)
-    """Parameters for the preferred video codec. Values should match those supported by aiortc."""
-
-
 class CameraWebRTCProvider(ABC):
     """WebRTC provider."""
 
@@ -147,8 +133,6 @@ class CameraWebRTCProvider(ABC):
         offer_sdp: str,
         session_id: str,
         send_message: WebRTCSendMessage,
-        *,
-        aiortc_compatible: bool = False,
     ) -> None:
         """Handle the WebRTC offer and return the answer via the provided callback."""
 

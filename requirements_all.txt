@@ -442,7 +442,7 @@ aiorecollect==2023.09.0
 aioridwell==2025.09.0
 
 # homeassistant.components.camera
-aiortc==1.16.0
+aiortc==1.17.0
 
 # homeassistant.components.remember_the_milk
 aiortm==0.20.1
@@ -1222,7 +1222,7 @@ google-genai==2.25.0
 google-health-api==1.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==9.2.1
+google-nest-sdm==9.2.3
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1

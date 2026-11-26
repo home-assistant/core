@@ -714,8 +714,6 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
             offer_sdp: str,
             session_id: str,
             send_message: WebRTCSendMessage,
-            *,
-            aiortc_compatible: bool = False,
         ) -> None:
             """Handle the WebRTC offer and return the answer via the provided callback.
 

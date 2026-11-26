@@ -17,7 +17,6 @@ from google_nest_sdm.camera_traits import (
 )
 from google_nest_sdm.device import Device
 from google_nest_sdm.exceptions import ApiException, FailedPreconditionException
-from google_nest_sdm.webrtc_util import _add_foundation_to_candidates
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
@@ -25,7 +24,6 @@ from homeassistant.components.camera import (
     CameraEntityFeature,
     WebRTCAnswer,
     WebRTCClientConfiguration,
-    WebRTCRecordingConfiguration,
     WebRTCSendMessage,
 )
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
@@ -303,12 +301,7 @@ class NestWebRTCEntity(NestCameraBaseEntity):
 
     @override
     async def async_handle_async_webrtc_offer(
-        self,
-        offer_sdp: str,
-        session_id: str,
-        send_message: WebRTCSendMessage,
-        *,
-        aiortc_compatible: bool = False,
+        self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
         """Return the source of the stream."""
         trait: CameraLiveStreamTrait = self._device.traits[CameraLiveStreamTrait.NAME]
@@ -320,10 +313,7 @@ class NestWebRTCEntity(NestCameraBaseEntity):
             "Started WebRTC session %s, %s", session_id, stream.media_session_id
         )
         self._webrtc_sessions[session_id] = stream
-        answer_sdp = stream.answer_sdp
-        if aiortc_compatible:
-            answer_sdp = _add_foundation_to_candidates(answer_sdp)
-        send_message(WebRTCAnswer(answer_sdp))
+        send_message(WebRTCAnswer(stream.answer_sdp))
         refresh = StreamRefresh(
             self.hass,
             stream.expires_at,
@@ -363,16 +353,6 @@ class NestWebRTCEntity(NestCameraBaseEntity):
     def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
         """Return the WebRTC client configuration adjustable per integration."""
         return WebRTCClientConfiguration(data_channel="dataSendChannel")
-
-    @override
-    def get_webrtc_recording_configuration(self) -> WebRTCRecordingConfiguration:
-        # Restrict offered video codecs to avoid bugs due to aiortc advertising multiple codecs and
-        # then receiving unparsable responses from Nest cameras. Without this, aiortc fails to parse
-        # any video frames from the Nest camera.
-        return WebRTCRecordingConfiguration(
-            video_codec="video/H264",
-            video_codec_parameters={"profile-level-id": "42e01f"},
-        )
 
     @override
     async def async_will_remove_from_hass(self) -> None:
