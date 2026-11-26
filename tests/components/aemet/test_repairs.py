@@ -1,14 +1,18 @@
 """Tests for AEMET OpenData repairs."""
 
-import base64
 from datetime import UTC, datetime, timedelta
-import json
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from aemet_opendata.exceptions import AemetTimeout, AuthError, TownNotFound
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.aemet.const import API_KEY_EXPIRATION_WARNING_DAYS, DOMAIN
 from homeassistant.components.aemet.repairs import (
@@ -17,22 +21,11 @@ from homeassistant.components.aemet.repairs import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .util import async_init_integration
-
-
-def _create_api_key(expiration: datetime) -> str:
-    """Create a fake API key JWT with an expiration claim."""
-    header = base64.urlsafe_b64encode(b'{"alg":"none"}').rstrip(b"=").decode()
-    payload = (
-        base64.urlsafe_b64encode(json.dumps({"exp": expiration.timestamp()}).encode())
-        .rstrip(b"=")
-        .decode()
-    )
-    return f"{header}.{payload}.signature"
+from .util import async_init_integration, create_api_key
 
 
 def _create_entry(hass: HomeAssistant, api_key: str) -> MockConfigEntry:
@@ -64,7 +57,7 @@ async def test_schedule_expiration_issue(
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2026-01-01 00:00:00+00:00")
     expiration = datetime(2026, 1, 20, tzinfo=UTC)
-    entry = _create_entry(hass, _create_api_key(expiration))
+    entry = _create_entry(hass, create_api_key(expiration))
 
     cancel = async_schedule_api_key_expiration_issue(hass, entry)
 
@@ -92,7 +85,7 @@ async def test_schedule_expiration_issue_immediately(
     """Test the expiration issue is created immediately inside the warning window."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2026-01-15 00:00:00+00:00")
-    entry = _create_entry(hass, _create_api_key(datetime(2026, 1, 20, tzinfo=UTC)))
+    entry = _create_entry(hass, create_api_key(datetime(2026, 1, 20, tzinfo=UTC)))
 
     assert async_schedule_api_key_expiration_issue(hass, entry) is None
     assert issue_registry.async_get_issue(DOMAIN, _issue_id(entry)) is not None
@@ -121,7 +114,7 @@ async def test_setup_schedules_and_unload_cancels_expiration_issue(
     entry = await async_init_integration(
         hass,
         data={
-            CONF_API_KEY: _create_api_key(expiration),
+            CONF_API_KEY: create_api_key(expiration),
         },
     )
 
@@ -160,72 +153,96 @@ async def test_schedule_expiration_issue_with_non_string_key(
 async def test_repair_flow_replaces_api_key(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    freezer: FrozenDateTimeFactory,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the repair flow replaces the API key."""
     await hass.config.async_set_time_zone("UTC")
-    freezer.move_to("2026-01-15 00:00:00+00:00")
-    entry = _create_entry(hass, _create_api_key(datetime(2026, 1, 20, tzinfo=UTC)))
-    async_schedule_api_key_expiration_issue(hass, entry)
+    expiration = dt_util.utcnow() + timedelta(days=3)
+    entry = await async_init_integration(
+        hass, data={CONF_API_KEY: create_api_key(expiration)}
+    )
     issue_id = _issue_id(entry)
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
-    flow = await async_create_fix_flow(hass, issue_id, {"entry_id": entry.entry_id})
-    flow.hass = hass
-    flow.flow_id = "test"
+    assert await async_setup_component(hass, "repairs", {})
+    http_client = await hass_client()
 
-    result = await flow.async_step_init({"issue_id": issue_id})
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
+    mocked_aemet = MagicMock()
+    mocked_aemet.select_coordinates = AsyncMock()
 
     with (
         patch(
-            "homeassistant.components.aemet.repairs.async_validate_api_key",
-            AsyncMock(return_value=None),
+            "homeassistant.components.aemet.util.AEMET",
+            return_value=mocked_aemet,
         ),
         patch.object(
             hass.config_entries, "async_schedule_reload"
         ) as async_schedule_reload,
     ):
-        result = await flow.async_step_init()
-        assert result["type"] is FlowResultType.FORM
+        result = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
+        assert result["type"] == "form"
         assert result["step_id"] == "init"
 
-        result = await flow.async_step_init({CONF_API_KEY: "new-key"})
+        result = await process_repair_fix_flow(
+            http_client,
+            result["flow_id"],
+            {CONF_API_KEY: "new-key"},
+        )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] == "create_entry"
     assert entry.data[CONF_API_KEY] == "new-key"
     async_schedule_reload.assert_called_once_with(entry.entry_id)
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    mocked_aemet.select_coordinates.assert_awaited_once_with(
+        entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE]
+    )
 
 
 @pytest.mark.parametrize(
-    "error", ["invalid_api_key", "cannot_connect", "town_not_found"]
+    ("exception", "error"),
+    [
+        (AuthError, "invalid_api_key"),
+        (AemetTimeout, "cannot_connect"),
+        (TownNotFound, "town_not_found"),
+    ],
 )
 async def test_repair_flow_error(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    freezer: FrozenDateTimeFactory,
+    hass_client: ClientSessionGenerator,
+    exception: Exception,
     error: str,
 ) -> None:
     """Test the repair flow keeps the issue on an API error."""
     await hass.config.async_set_time_zone("UTC")
-    freezer.move_to("2026-01-15 00:00:00+00:00")
-    entry = _create_entry(hass, _create_api_key(datetime(2026, 1, 20, tzinfo=UTC)))
-    async_schedule_api_key_expiration_issue(hass, entry)
+    expiration = dt_util.utcnow() + timedelta(days=3)
+    entry = await async_init_integration(
+        hass, data={CONF_API_KEY: create_api_key(expiration)}
+    )
     issue_id = _issue_id(entry)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
-    flow = await async_create_fix_flow(hass, issue_id, {"entry_id": entry.entry_id})
-    flow.hass = hass
-    flow.flow_id = "test"
+    assert await async_setup_component(hass, "repairs", {})
+    http_client = await hass_client()
+
+    mocked_aemet = MagicMock()
+    mocked_aemet.select_coordinates.side_effect = exception
 
     with patch(
-        "homeassistant.components.aemet.repairs.async_validate_api_key",
-        AsyncMock(return_value=error),
+        "homeassistant.components.aemet.util.AEMET",
+        return_value=mocked_aemet,
     ):
-        result = await flow.async_step_init({CONF_API_KEY: "invalid"})
+        result = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
+        assert result["type"] == "form"
+        assert result["step_id"] == "init"
 
-    assert result["type"] is FlowResultType.FORM
+        result = await process_repair_fix_flow(
+            http_client,
+            result["flow_id"],
+            {CONF_API_KEY: "invalid"},
+        )
+
+    assert result["type"] == "form"
     assert result["errors"] == {"base": error}
     assert entry.data[CONF_API_KEY] != "invalid"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
