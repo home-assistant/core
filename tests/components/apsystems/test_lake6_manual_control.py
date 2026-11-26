@@ -7,7 +7,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.apsystems.lake6.client import parse_control_panel
+from homeassistant.components.apsystems.lake6.client import (
+    Lake6ControlPanel,
+    parse_control_panel,
+)
 from homeassistant.components.apsystems.lake6.const import LAKE6_UPDATE_INTERVAL
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.number import (
@@ -321,3 +324,64 @@ async def test_finished_run_clears_staged_request(
     assert coordinator.manual_control.mode is None
     assert coordinator.manual_control.power is None
     assert coordinator.manual_control.duration is None
+
+
+async def test_edit_during_send_survives_run_end(
+    hass: HomeAssistant,
+    mock_lake6: MagicMock,
+    mock_lake6_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a value retyped while the send is in flight is not cleared."""
+    freezer.move_to("2026-11-25 10:00:00+00:00")
+    await setup_integration(hass, mock_lake6_config_entry)
+    coordinator = mock_lake6_config_entry.runtime_data.coordinator
+
+    async def _read_back_while_editing() -> Lake6ControlPanel:
+        # The user retypes the wattage before the send completes.
+        coordinator.manual_control.power = 999
+        return parse_control_panel(LAKE6_ACTIVE_PAYLOAD)
+
+    mock_lake6.async_get_control_panel.side_effect = _read_back_while_editing
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        service_data={ATTR_OPTION: "discharge"},
+        target={TargetKey.ENTITY_ID: MODE_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        service_data={ATTR_VALUE: 300},
+        target={TargetKey.ENTITY_ID: POWER_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        service_data={ATTR_VALUE: 5},
+        target={TargetKey.ENTITY_ID: DURATION_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        target={TargetKey.ENTITY_ID: APPLY_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert coordinator.manual_control.power == 999
+
+    mock_lake6.async_get_control_panel.side_effect = None
+    mock_lake6.async_get_control_panel.return_value = parse_control_panel(
+        LAKE6_IDLE_PAYLOAD
+    )
+    freezer.tick(LAKE6_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The run ended on its own, but the request typed during the send was
+    # never sent, so the cleanup must leave it alone.
+    assert coordinator.manual_control.power == 999

@@ -1,10 +1,14 @@
 """Test the APsystems Lake_6 writable entities."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.apsystems.lake6.client import Lake6ApiError
+from homeassistant.components.apsystems.lake6.const import LAKE6_UPDATE_INTERVAL
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -33,6 +37,7 @@ ECO_ENTITY_ID = "switch.mock_title_economy_mode"
 MODE_ENTITY_ID = "select.mock_title_device_operating_mode"
 PLAN_ENTITY_ID = "text.mock_title_time_of_use_plan"
 ISSUE_ID = "tou_power_dropped_LAKE6_SERIAL_NUMBER"
+SCAN_INTERVAL = timedelta(seconds=LAKE6_UPDATE_INTERVAL)
 
 
 @pytest.mark.usefixtures("mock_lake6")
@@ -204,3 +209,59 @@ async def test_text_reports_dropped_power(
     )
 
     assert issue_registry.async_get_issue("apsystems", ISSUE_ID) is None
+
+
+async def test_failed_write_refreshes_modes(
+    hass: HomeAssistant,
+    mock_lake6: MagicMock,
+    mock_lake6_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a rejected write makes the next poll skip the five minute cache."""
+    freezer.move_to("2026-11-25 10:00:00+00:00")
+    await setup_integration(hass, mock_lake6_config_entry)
+    assert mock_lake6.async_get_modes.await_count == 1
+
+    mock_lake6.async_set_modes.side_effect = Lake6ApiError("rejected")
+    with pytest.raises(Lake6ApiError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            target={TargetKey.ENTITY_ID: ECO_ENTITY_ID},
+            blocking=True,
+        )
+    mock_lake6.async_set_modes.side_effect = None
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_lake6.async_get_modes.await_count == 2
+
+
+async def test_write_keeps_the_poll_schedule(
+    hass: HomeAssistant,
+    mock_lake6: MagicMock,
+    mock_lake6_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a write does not postpone the energies and alarms polling."""
+    freezer.move_to("2026-11-25 10:00:00+00:00")
+    await setup_integration(hass, mock_lake6_config_entry)
+    assert mock_lake6.async_get_energies.await_count == 1
+
+    freezer.tick(SCAN_INTERVAL / 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        target={TargetKey.ENTITY_ID: ECO_ENTITY_ID},
+        blocking=True,
+    )
+
+    freezer.tick(SCAN_INTERVAL / 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_lake6.async_get_energies.await_count == 2

@@ -106,9 +106,9 @@ class Lake6ManualControl:
         self.duration = None
         self._sent = None
 
-    def mark_sent(self) -> None:
-        """Snapshot the staged values that started the running window."""
-        self._sent = (self.mode, self.power, self.duration)
+    def mark_sent(self, staged: tuple[str | None, int | None, int | None]) -> None:
+        """Record the staged values that started the running window."""
+        self._sent = staged
 
     def finish_run(self) -> None:
         """Drop the staged request after the window ended on its own.
@@ -228,6 +228,9 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
         self._control_panel: Lake6ControlPanel | None = None
         self._control_panel_updated_at: float | None = None
         self.manual_control = Lake6ManualControl()
+        # Apply, stop and the mode writes each put the device into a state that
+        # the other one reads back, so they must not overlap.
+        self._write_lock = asyncio.Lock()
 
     @override
     async def _async_setup(self) -> None:
@@ -264,21 +267,37 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
 
     async def async_set_modes(self, **changes: Any) -> None:
         """Write /modes and re-read only that endpoint."""
-        await self.client.async_set_modes(**changes)
-        # Re-read /modes only. A full async_refresh() would also pull /energies
-        # and /alarms, turning a few quick clicks into one POST plus three GETs
-        # and pushing the device into timeouts.
-        self._modes = await self.client.async_get_modes()
-        self._modes_updated_at = monotonic()
-        self._modes_dirty = False
-        self.async_set_updated_data(
-            Lake6Data(
-                energies=self.data.energies,
-                alarms=self.data.alarms,
-                modes=self._modes,
-                control_panel=self.data.control_panel,
+        async with self._write_lock:
+            # Mark the cache stale before the POST: a write the device accepted
+            # but whose read-back failed must not be served from the cache for
+            # the next five minutes.
+            self._modes_dirty = True
+            await self.client.async_set_modes(**changes)
+            # Re-read /modes only. A full async_refresh() would also pull
+            # /energies and /alarms, turning a few quick clicks into one POST
+            # plus three GETs and pushing the device into timeouts.
+            self._modes = await self.client.async_get_modes()
+            self._modes_updated_at = monotonic()
+            self._modes_dirty = False
+            self._async_publish(
+                Lake6Data(
+                    energies=self.data.energies,
+                    alarms=self.data.alarms,
+                    modes=self._modes,
+                    control_panel=self.data.control_panel,
+                )
             )
-        )
+
+    def _async_publish(self, data: Lake6Data) -> None:
+        """Publish a partial update without restarting the poll timer.
+
+        `async_set_updated_data` reschedules the coordinator refresh, so a
+        steady stream of writes would keep pushing `/energies` and `/alarms`
+        back and they would never be polled again.
+        """
+        self.data = data
+        self.last_update_success = True
+        self.async_update_listeners()
 
     async def async_set_manual_control(
         self,
@@ -311,17 +330,21 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
                 device answered the POST without entering the one-time run.
         """
         control = self.manual_control
+        # Snapshot the staging before the first await: an edit made while the
+        # request is in flight must not change what `mark_sent` records, or
+        # `finish_run` would later clear a request that was never sent.
+        staged = (control.mode, control.power, control.duration)
         signed_power = control.signed_power
         missing = [
             name
             for name, value in (
-                ("mode", control.mode),
+                ("mode", staged[0]),
                 ("power", signed_power),
-                ("duration", control.duration),
+                ("duration", staged[2]),
             )
             if value is None
         ]
-        if missing or signed_power is None or control.duration is None:
+        if missing or signed_power is None or staged[2] is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="manual_control_incomplete",
@@ -329,13 +352,19 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
             )
         try:
             await self._async_send_manual_control(
-                power=signed_power, duration=control.duration
+                power=signed_power, duration=staged[2], staged=staged
             )
         except Lake6ApiError as err:
             control.last_error = str(err)
             raise
 
-    async def _async_send_manual_control(self, *, power: int, duration: int) -> None:
+    async def _async_send_manual_control(
+        self,
+        *,
+        power: int,
+        duration: int,
+        staged: tuple[str | None, int | None, int | None],
+    ) -> None:
         """Post a window that already started and verify the device took it.
 
         A well-formed request is dropped in silence in two cases: the timestamp
@@ -343,54 +372,60 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
         device's own clock. The window therefore begins
         `LAKE6_CONTROL_PANEL_START_BACKDATES` seconds ago while still ending
         `duration` minutes from now, so the run keeps its full length.
+
+        The whole POST/settle/read-back transaction holds `_write_lock`, so an
+        interrupt cannot land between a retry and be undone by the next one.
         """
-        # The device reads MI1.time as UTC, so a local time window is dropped
-        # silently with code 200.
-        now = dt_util.now(UTC)
-        end = now + timedelta(minutes=duration)
-        panel = Lake6ControlPanel(active=False, windows=[])
-        for backdate in LAKE6_CONTROL_PANEL_START_BACKDATES:
-            start = now - timedelta(seconds=backdate)
-            for time_format in self._control_panel_time_formats():
-                await self.client.async_set_control_panel(
-                    {
-                        "mode": LAKE6_CONTROL_PANEL_MODE_ACTIVE,
-                        "MI1": {
-                            "time": [
-                                f"{start.strftime(time_format)}"
-                                f"{end.strftime(time_format)}"
-                            ],
-                            "power": [str(power)],
-                        },
-                    }
-                )
-                # A successful POST only means the payload was well formed;
-                # read back to confirm the device really entered a one-time run.
-                await asyncio.sleep(LAKE6_CONTROL_PANEL_SETTLE)
-                panel = await self.client.async_get_control_panel()
+        async with self._write_lock:
+            # The device reads MI1.time as UTC, so a local time window is
+            # dropped silently with code 200.
+            now = dt_util.now(UTC)
+            end = now + timedelta(minutes=duration)
+            panel = Lake6ControlPanel(active=False, windows=[])
+            for backdate in LAKE6_CONTROL_PANEL_START_BACKDATES:
+                start = now - timedelta(seconds=backdate)
+                for time_format in self._control_panel_time_formats():
+                    await self.client.async_set_control_panel(
+                        {
+                            "mode": LAKE6_CONTROL_PANEL_MODE_ACTIVE,
+                            "MI1": {
+                                "time": [
+                                    f"{start.strftime(time_format)}"
+                                    f"{end.strftime(time_format)}"
+                                ],
+                                "power": [str(power)],
+                            },
+                        }
+                    )
+                    # A successful POST only means the payload was well formed;
+                    # read back to confirm the device really entered a run.
+                    await asyncio.sleep(LAKE6_CONTROL_PANEL_SETTLE)
+                    panel = await self.client.async_get_control_panel()
+                    if panel.active:
+                        break
+                    LOGGER.debug(
+                        "Lake_6 ignored %s with a start %s s back, trying the next one",
+                        time_format,
+                        backdate,
+                    )
                 if panel.active:
                     break
-                LOGGER.debug(
-                    "Lake_6 ignored %s with a start %s s back, trying the next one",
-                    time_format,
-                    backdate,
-                )
+            self._control_panel = panel
+            self._control_panel_updated_at = monotonic()
             if panel.active:
-                break
-        self._control_panel = panel
-        self._control_panel_updated_at = monotonic()
-        if panel.active:
-            self.manual_control.mark_sent()
-        self.manual_control.last_sent_at = now
-        self.manual_control.last_error = None if panel.active else "device_not_running"
-        self.async_set_updated_data(
-            Lake6Data(
-                energies=self.data.energies,
-                alarms=self.data.alarms,
-                modes=self.data.modes,
-                control_panel=panel,
+                self.manual_control.mark_sent(staged)
+            self.manual_control.last_sent_at = now
+            self.manual_control.last_error = (
+                None if panel.active else "device_not_running"
             )
-        )
+            self._async_publish(
+                Lake6Data(
+                    energies=self.data.energies,
+                    alarms=self.data.alarms,
+                    modes=self.data.modes,
+                    control_panel=panel,
+                )
+            )
         if not panel.active:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -411,28 +446,30 @@ class Lake6Coordinator(DataUpdateCoordinator[Lake6Data]):
         Raises:
             ServiceValidationError: the device still reports a running window.
         """
-        await self.client.async_set_control_panel(
-            {"mode": LAKE6_CONTROL_PANEL_MODE_IDLE, "MI1": {}}
-        )
-        await asyncio.sleep(LAKE6_CONTROL_PANEL_SETTLE)
-        panel = await self.client.async_get_control_panel()
-        self._control_panel = panel
-        self._control_panel_updated_at = monotonic()
-        if not panel.active:
-            # An interrupt withdraws the request, so the three staged fields go
-            # as well; otherwise stale values would ride along with the next send.
-            self.manual_control.reset()
-        self.manual_control.last_error = (
-            None if not panel.active else "device_still_running"
-        )
-        self.async_set_updated_data(
-            Lake6Data(
-                energies=self.data.energies,
-                alarms=self.data.alarms,
-                modes=self.data.modes,
-                control_panel=panel,
+        async with self._write_lock:
+            await self.client.async_set_control_panel(
+                {"mode": LAKE6_CONTROL_PANEL_MODE_IDLE, "MI1": {}}
             )
-        )
+            await asyncio.sleep(LAKE6_CONTROL_PANEL_SETTLE)
+            panel = await self.client.async_get_control_panel()
+            self._control_panel = panel
+            self._control_panel_updated_at = monotonic()
+            if not panel.active:
+                # An interrupt withdraws the request, so the three staged
+                # fields go as well; otherwise stale values would ride along
+                # with the next send.
+                self.manual_control.reset()
+            self.manual_control.last_error = (
+                None if not panel.active else "device_still_running"
+            )
+            self._async_publish(
+                Lake6Data(
+                    energies=self.data.energies,
+                    alarms=self.data.alarms,
+                    modes=self.data.modes,
+                    control_panel=panel,
+                )
+            )
         if panel.active:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

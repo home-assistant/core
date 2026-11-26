@@ -298,9 +298,12 @@ def _apply_row(entry: dict[str, Any], row: Lake6TouPlanRow) -> None:
 
     slot: dict[str, Any] = {}
     raw_slots = entry.get("TM")
-    if isinstance(raw_slots, list) and raw_slots and isinstance(raw_slots[0], dict):
-        # Reuse the existing object so unparsed keys survive.
-        slot = raw_slots[0]
+    extra_slots: list[Any] = []
+    if isinstance(raw_slots, list) and raw_slots:
+        if isinstance(raw_slots[0], dict):
+            # Reuse the existing object so unparsed keys survive.
+            slot = raw_slots[0]
+        extra_slots = raw_slots[1:]
     slot["T"] = f"{row.start.replace(':', '')}{row.end.replace(':', '')}"
     slot["F"] = LAKE6_TOU_TEXT_FUNCTION_TO_CODE[row.function]
     if row.function == LAKE6_TOU_TEXT_FUNCTION_SELF:
@@ -321,6 +324,7 @@ def _apply_row(entry: dict[str, Any], row: Lake6TouPlanRow) -> None:
             else:
                 params.pop(key, None)
         slot["FI"] = params
-    # A rule always has exactly one slot; if the raw entry carried more, the
-    # rewritten one wins.
-    entry["TM"] = [slot]
+    # The device can hold several slots for one weekday set, but the text form
+    # only shows the first as a rule. Keep the rest so editing that rule does
+    # not wipe windows the integration never displayed.
+    entry["TM"] = [slot, *extra_slots]

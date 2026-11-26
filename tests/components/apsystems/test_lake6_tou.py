@@ -304,6 +304,29 @@ def test_build_payload_rebuilds_permits(
     assert payload[0]["TM"] == [{"T": "09000910", "F": code, "FI": expected_fi}]
 
 
+def test_build_payload_keeps_extra_slots() -> None:
+    """Test editing a rule keeps the slots the text form cannot show."""
+    extra = {"T": "18001900", "F": "3", "FI": {}}
+    raw = [
+        {
+            "E": "1",
+            "W": [1],
+            "TM": [
+                {"T": "09000910", "F": "2", "FI": {"P": "200", "GD": 1}},
+                extra,
+            ],
+        }
+    ]
+    rows = parse_plan("09:00-09:10|discharge|300|1|1")
+
+    payload = build_payload(raw, rows)
+
+    assert payload[0]["TM"] == [
+        {"T": "09000910", "F": "2", "FI": {"P": "300", "GD": 1}},
+        extra,
+    ]
+
+
 def test_build_payload_adds_new_rows() -> None:
     """Test a row without a raw counterpart starts from an empty object."""
     rows = parse_plan(PLAN)
