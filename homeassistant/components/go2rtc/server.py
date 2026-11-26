@@ -112,8 +112,20 @@ _LOG_LEVEL_MAP = {
 # v1.9.15 it masks the url userinfo (see AlexxIT/go2rtc#2051), but not query
 # parameters. Older go2rtc versions don't mask the userinfo.
 _URL_USERINFO = re.compile(r"://[^/?#\s@]+@")
+
+
+def _query_param_pattern(name: str) -> str:
+    """Return a pattern for a query parameter name, literal or percent-encoded."""
+    return "".join(f"(?:{re.escape(char)}|%{ord(char):02x})" for char in name)
+
+
 _URL_CREDENTIAL_QUERY = re.compile(
-    r"([?&](?:auth|user|password|client_secret|refresh_token)=)[^&\s]+",
+    r"([?&](?:"
+    + "|".join(
+        _query_param_pattern(name)
+        for name in ("auth", "user", "password", "client_secret", "refresh_token")
+    )
+    + r")=)[^&\s]+",
     re.IGNORECASE,
 )
 

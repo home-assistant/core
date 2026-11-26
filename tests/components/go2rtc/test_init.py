@@ -8,7 +8,7 @@ import logging
 from pathlib import Path
 import re
 from typing import NamedTuple
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 from aiohttp import ClientResponseError, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
@@ -1150,7 +1150,9 @@ async def test_async_get_image_go2rtc_error(
     ) as exc_info:
         await async_get_image(hass, init_test_integration.entity_id)
 
-    assert exc_info.value.__cause__ is snapshot_error
+    # Not chained, as the client error can contain the stream source
+    assert exc_info.value.__cause__ is None
+    assert exc_info.value.__suppress_context__ is True
 
     client = await hass_client()
     response = await client.get(f"/api/camera_proxy/{init_test_integration.entity_id}")
@@ -1185,7 +1187,8 @@ async def test_snapshot_service_go2rtc_error(
             blocking=True,
         )
 
-    assert exc_info.value.__cause__ is snapshot_error
+    assert exc_info.value.__cause__ is None
+    assert exc_info.value.__suppress_context__ is True
     assert not snapshot_file.exists()
     assert init_test_integration.stream is None
 
@@ -1425,32 +1428,60 @@ async def test_stream_orientation_with_generic_camera(
 
 
 @pytest.mark.usefixtures("init_integration", "ws_client")
-@pytest.mark.parametrize(
-    "test_fn",
-    [
-        _test_camera_orientation_webrtc,
-        _test_camera_orientation_get_image,
-    ],
-)
-async def test_stream_orientation_not_applied_to_nest_source(
+async def test_stream_orientation_nest_source_through_source_stream(
     hass: HomeAssistant,
     rest_client: AsyncMock,
     init_test_integration: MockCamera,
-    test_fn: Callable[
-        [HomeAssistant, MockCamera, Orientation, AsyncMock, str], Awaitable[None]
-    ],
 ) -> None:
-    """Test orientation is not applied to a nest source, which ffmpeg can't open."""
+    """Test orientation of a nest source is applied through a separate stream."""
     camera = init_test_integration
     camera.set_stream_source("nest:?device_id=test")
-
-    await test_fn(
+    await _setup_camera_prefs(
         hass,
-        camera,
-        Orientation.ROTATE_LEFT,
-        rest_client,
-        "nest:?device_id=test",
+        camera.entity_id,
+        DynamicStreamSettings(
+            orientation=Orientation.ROTATE_LEFT, preload_stream=False
+        ),
     )
+    # A camera identifier with a percent-escape, like those of Nest cameras
+    identifier = "nest_enterprises%2Fproject%2Fdevices%2Fdevice-camera"
+    # go2rtc's RTSP server looks a stream up by the decoded path, so the name
+    # ffmpeg reads from has no percent-escapes
+    source_identifier = "nest_enterprises_2Fproject_2Fdevices_2Fdevice-camera_source"
+    rotated_source = f"ffmpeg:{source_identifier}#video=h264#audio=copy#rotate=-90"
+    rest_client.streams.list.return_value = {}
+    rest_client.get_jpeg_snapshot.return_value = b"image_bytes"
+
+    with patch(
+        "homeassistant.components.go2rtc.get_camera_identifier",
+        return_value=identifier,
+    ):
+        assert await camera.webrtc_provider.async_get_image(camera) == b"image_bytes"
+
+    # ffmpeg can't open the nest source, so it reads it from its own stream
+    assert rest_client.streams.add.call_args_list == [
+        call(source_identifier, ["nest:?device_id=test"]),
+        call(
+            identifier,
+            [
+                rotated_source,
+                f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+            ],
+        ),
+    ]
+
+    # Neither stream is added again while go2rtc has them
+    rest_client.streams.add.reset_mock()
+    rest_client.streams.list.return_value = {
+        source_identifier: Stream([Producer("nest:?device_id=test")]),
+        identifier: Stream([Producer(rotated_source)]),
+    }
+    with patch(
+        "homeassistant.components.go2rtc.get_camera_identifier",
+        return_value=identifier,
+    ):
+        await camera.webrtc_provider.async_get_image(camera)
+    rest_client.streams.add.assert_not_called()
 
 
 @pytest.mark.usefixtures(

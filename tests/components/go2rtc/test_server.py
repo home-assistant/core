@@ -521,11 +521,15 @@ async def test_credentials_redacted_from_server_output(
                 '10:27:02.625 WRN producer.go:170 > error="nest: wrong query"'
                 " url=nest:?client_id=my-client&client_secret=my-secret"
                 "&refresh_token=my-refresh&device_id=cam",
+                '10:27:02.626 WRN producer.go:170 > error="nest: wrong query"'
+                " url=nest:?client%5Fsecret=my-secret&%72efresh_token=my-refresh",
             ],
             [
                 '10:27:02.625 WRN producer.go:170 > error="nest: wrong query"'
                 " url=nest:?client_id=my-client&client_secret=****"
                 "&refresh_token=****&device_id=cam",
+                '10:27:02.626 WRN producer.go:170 > error="nest: wrong query"'
+                " url=nest:?client%5Fsecret=****&%72efresh_token=****",
             ],
         )
     ],
