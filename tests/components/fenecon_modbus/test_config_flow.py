@@ -132,7 +132,7 @@ async def test_user_flow_already_configured_host(
 async def test_user_flow_already_configured_serial(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test a known FEMS at a new address updates the existing entry."""
+    """Test aborting without changes when a known FEMS has a new address."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -144,4 +144,4 @@ async def test_user_flow_already_configured_serial(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_HOST] == "192.168.0.21"
+    assert mock_config_entry.data[CONF_HOST] == HOST

@@ -76,12 +76,7 @@ class FeneconConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if serial := device_info.manufacturer_ems_serial_number:
                     await self.async_set_unique_id(serial)
-                    self._abort_if_unique_id_configured(
-                        updates={
-                            CONF_HOST: user_input[CONF_HOST],
-                            CONF_PORT: user_input[CONF_PORT],
-                        }
-                    )
+                    self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=device_info.manufacturer_model or "FEMS",
                     data=user_input,
