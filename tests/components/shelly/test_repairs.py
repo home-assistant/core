@@ -940,6 +940,89 @@ async def test_coiot_fix_flow_no_hass_url(
         assert len(issue_registry.issues) == 1
 
 
+MULTI_HOMED_SOURCE_IPS = {
+    "192.168.71.11": "192.168.71.11",
+    "10.10.10.11": "192.168.72.11",
+}
+
+
+async def _multi_homed_source_ip(hass: HomeAssistant, target_ip: str) -> str:
+    return MULTI_HOMED_SOURCE_IPS[target_ip]
+
+
+async def test_coiot_peer_on_device_interface_no_issue(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test no CoIoT issue when the peer is the address that reaches the device."""
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "coiot",
+        {"enabled": True, "update_period": 15, "peer": "192.168.72.11:5683"},
+    )
+    issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    with (
+        patch(
+            "homeassistant.components.shelly.utils.get_url",
+            return_value="http://192.168.71.11:8123",
+        ),
+        patch(
+            "homeassistant.components.shelly.utils.async_get_source_ip",
+            side_effect=_multi_homed_source_ip,
+        ),
+    ):
+        await hass.async_block_till_done()
+        await init_integration(hass, 1)
+        await mock_block_device_push_update_failure(hass, mock_block_device)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_coiot_fix_flow_sets_device_interface_peer(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_block_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the CoIoT fix flow sets the address that reaches the device."""
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "coiot",
+        {"enabled": True, "update_period": 15, "peer": "7.7.7.7:5683"},
+    )
+    issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    with (
+        patch(
+            "homeassistant.components.shelly.utils.get_url",
+            return_value="http://192.168.71.11:8123",
+        ),
+        patch(
+            "homeassistant.components.shelly.utils.async_get_source_ip",
+            side_effect=_multi_homed_source_ip,
+        ),
+    ):
+        await hass.async_block_till_done()
+        await init_integration(hass, 1)
+        await mock_block_device_push_update_failure(hass, mock_block_device)
+        assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+        client = await hass_client()
+        result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+        result = await process_repair_fix_flow(
+            client, result["flow_id"], {"next_step_id": "confirm"}
+        )
+
+    assert result["type"] == "create_entry"
+    mock_block_device.configure_coiot_protocol.assert_called_once_with(
+        "192.168.72.11", 5683
+    )
+
+
 async def test_coiot_issue_ignore(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

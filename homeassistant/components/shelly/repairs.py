@@ -376,7 +376,7 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
-        coiot_addr = await get_coiot_address(self.hass)
+        coiot_addr = await get_coiot_address(self.hass, self._device.ip_address)
         coiot_port = get_coiot_port(self.hass)
         if coiot_addr is None or coiot_port is None:
             return self.async_abort(reason="cannot_configure")
