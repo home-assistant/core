@@ -25,6 +25,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -106,6 +107,7 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="voltage",
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -115,6 +117,7 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="current",
+        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -154,6 +157,7 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="calibrated_ref_cons",
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         translation_key="calibrated_ref_cons",
         device_class=SensorDeviceClass.ENERGY_DISTANCE,
@@ -166,6 +170,7 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="battery_capacity",
+        entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="battery_capacity",
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         # No ``state_class``: capacity is a fixed spec figure that only moves on
@@ -180,6 +185,7 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="soh",
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         translation_key="soh",
         state_class=SensorStateClass.MEASUREMENT,
@@ -232,6 +238,7 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="battery_temperature_min",
+        entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="battery_temperature_min",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -243,6 +250,7 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="battery_temperature_max",
+        entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="battery_temperature_max",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
