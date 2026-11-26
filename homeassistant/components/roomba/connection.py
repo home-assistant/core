@@ -70,6 +70,7 @@ class RoombaConnection:
         self._unsub_message: CALLBACK_TYPE | None = None
         self._session_start = 0.0
         self._last_message: float | None = None
+        self._mission_received = False
         self._fresh = asyncio.Event()
         self._closed = False
         self._unreachable = False
@@ -97,6 +98,7 @@ class RoombaConnection:
             )
         # The state was just collected during setup.
         self._session_start = self._last_message = time.monotonic()
+        self._mission_received = True
         self._schedule_settle()
 
     async def async_stop(self) -> None:
@@ -105,14 +107,15 @@ class RoombaConnection:
         if self._unsub_interval:
             self._unsub_interval()
             self._unsub_interval = None
-        self._cancel_settle()
-        self._cancel_release()
-        if self._unsub_message:
-            self._unsub_message()
-            self._unsub_message = None
-        # Do not leave anyone waiting for state that will not come.
-        self._fresh.set()
+        # After an operation in flight, which may still schedule timers.
         async with self._lock:
+            self._cancel_settle()
+            self._cancel_release()
+            if self._unsub_message:
+                self._unsub_message()
+                self._unsub_message = None
+            # Do not leave anyone waiting for state that will not come.
+            self._fresh.set()
             await self._disconnect(self.hass, self.roomba)
 
     @callback
@@ -121,6 +124,8 @@ class RoombaConnection:
         reported = (message.get("state") or {}).get("reported") or {}
         if len(reported) > 1 or (reported and "signal" not in reported):
             self._last_message = time.monotonic()
+        if "cleanMissionStatus" in reported:
+            self._mission_received = True
 
     async def async_ensure_connected(self, *, wait: bool = False) -> None:
         """Open a session if needed before a command.
@@ -141,6 +146,10 @@ class RoombaConnection:
             self._schedule_release(COMMAND_HOLD_SECONDS)
         if wait:
             await self._async_wait_fresh()
+            if not self._mission_received:
+                raise HomeAssistantError(
+                    f"Roomba at {self.host} did not report its mission state"
+                )
 
     async def async_refresh(self, *, wait: bool = False) -> None:
         """Refresh the state with a short-lived session.
@@ -183,11 +192,14 @@ class RoombaConnection:
 
     async def _async_open(self) -> None:
         """Open a session; the caller holds the lock."""
+        # A settle timer from a dropped session must not mark this one fresh.
+        self._cancel_settle()
         # A dropped session may still be reconnecting in the background, and
         # the client refuses to connect again until it is torn down.
         await self._disconnect(self.hass, self.roomba)
         self._fresh.clear()
         self._last_message = None
+        self._mission_received = False
         await self._connect(self.hass, self.roomba)
         self._session_start = time.monotonic()
         self._schedule_settle()

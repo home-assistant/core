@@ -289,24 +289,26 @@ async def test_polling_disabled_refreshes_on_request(
     assert not periodic_roomba.connected
 
 
-async def test_refresh_does_not_cut_telemetry_short(
+async def test_refresh_joins_poll_in_progress(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     periodic_roomba: AsyncMock,
 ) -> None:
-    """Test a refresh joining one in progress waits for the same session."""
+    """Test update_entity during a poll waits for that poll's telemetry."""
     assert await async_setup_component(hass, HA_DOMAIN, {})
     await _setup(hass, mock_config_entry, continuous=False)
     await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+    assert periodic_roomba.connected
 
-    await _tick_until_done(
-        hass,
-        freezer,
-        _call(hass, HA_DOMAIN, SERVICE_UPDATE_ENTITY),
-        _call(hass, HA_DOMAIN, SERVICE_UPDATE_ENTITY),
-    )
+    task = _call(hass, HA_DOMAIN, SERVICE_UPDATE_ENTITY)
+    for _ in range(5):
+        await asyncio.sleep(0)
+    assert not task.done()
 
+    await _tick_until_done(hass, freezer, task)
+    # It joined the poll's session instead of opening another one.
     assert periodic_roomba.connect.await_count == 2
     assert not periodic_roomba.connected
 
@@ -705,3 +707,99 @@ async def test_start_uses_fresh_state(
     await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, SERVICE_START)
 
     periodic_roomba.send_command.assert_awaited_once_with("resume", None)
+
+
+async def test_stop_during_reconnect_releases_waiters(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test unloading while a refresh reconnects does not leave it waiting."""
+    assert await async_setup_component(hass, HA_DOMAIN, {})
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    torn_down = asyncio.Event()
+
+    async def _slow_disconnect() -> None:
+        await torn_down.wait()
+        periodic_roomba.connected = False
+
+    periodic_roomba.disconnect.side_effect = _slow_disconnect
+    refresh = _call(hass, HA_DOMAIN, SERVICE_UPDATE_ENTITY)
+    for _ in range(5):
+        await asyncio.sleep(0)
+    # The unload starts while the refresh tears down the previous session.
+    unload = hass.async_create_task(
+        hass.config_entries.async_unload(mock_config_entry.entry_id)
+    )
+    for _ in range(20):
+        await asyncio.sleep(0)
+    torn_down.set()
+    await unload
+    for _ in range(5):
+        await asyncio.sleep(0)
+
+    assert refresh.done()
+    assert not periodic_roomba.connected
+
+
+async def test_old_settle_timer_does_not_mark_reconnect_fresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test a dropped session's timer cannot let start skip the new state."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+
+    # A poll opens a session that drops while its telemetry is settling.
+    async def _silent_connect() -> None:
+        periodic_roomba.connected = True
+
+    periodic_roomba.connect.side_effect = _silent_connect
+    await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+    await _advance(hass, freezer, timedelta(seconds=20))
+    periodic_roomba.connected = False
+    accepted = asyncio.Event()
+
+    async def _slow_connect() -> None:
+        await accepted.wait()
+        periodic_roomba.connected = True
+        _publish(
+            periodic_roomba,
+            {"cleanMissionStatus": {"cycle": "none", "phase": "charge"}},
+        )
+
+    periodic_roomba.connect.side_effect = _slow_connect
+    task = _call(hass, VACUUM_DOMAIN, SERVICE_START)
+    # The reconnect outlasts the old session's 30 s deadline.
+    for _ in range(15):
+        await asyncio.sleep(0)
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
+    accepted.set()
+    for _ in range(5):
+        await asyncio.sleep(0)
+    periodic_roomba.send_command.assert_not_awaited()
+
+    await _tick_until_done(hass, freezer, task)
+    periodic_roomba.send_command.assert_awaited_once_with("start", None)
+
+
+async def test_start_requires_mission_state(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test start fails instead of guessing when the robot omits its mission state."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, SERVICE_START)
+
+    assert exc_info.value.translation_key == "not_connected"
+    periodic_roomba.send_command.assert_not_awaited()
