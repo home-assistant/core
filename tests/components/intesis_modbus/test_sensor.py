@@ -14,7 +14,7 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.intesis_modbus.coordinator import SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -55,12 +55,15 @@ async def test_undervoltage_time_is_disabled_by_default(
 @pytest.mark.parametrize("registers", [INITIALISING_REGISTERS])
 @pytest.mark.usefixtures("init_integration")
 async def test_initialising_gateway_reports_no_values(hass: HomeAssistant) -> None:
-    """A gateway that just powered up says so and has no temperatures yet."""
+    """A gateway that just powered up says so and reports no air conditioner yet."""
     assert hass.states.get(PREFIX + "error").state == "initialising"
-    assert hass.states.get(UNIT_PREFIX + "error_code").state == STATE_UNKNOWN
-    for key in ("outdoor_intake_temperature", "return_path_temperature"):
-        assert hass.states.get(UNIT_PREFIX + key).state == STATE_UNKNOWN
-    assert hass.states.get(UNIT_PREFIX + "operation_time").state == "1234"
+    for key in (
+        "error_code",
+        "operation_time",
+        "outdoor_intake_temperature",
+        "return_path_temperature",
+    ):
+        assert hass.states.get(UNIT_PREFIX + key).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("registers", [{11: 7}])

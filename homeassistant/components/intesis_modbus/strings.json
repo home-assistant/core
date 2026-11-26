@@ -108,6 +108,9 @@
     }
   },
   "exceptions": {
+    "gateway_initialising": {
+      "message": "The gateway is starting up."
+    },
     "gateway_unavailable": {
       "message": "The gateway does not answer."
     },
