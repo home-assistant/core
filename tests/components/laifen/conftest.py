@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from . import ADDRESS, NAME, setup_integration, wake_up
 
 FIRMWARE_VERSION = "V2.0.93.XXX.T01.B00.Y44.303"
-FIRMWARE_VERSION_RAW = bytes.fromhex("02000903585858540001420000590404030003")
 SESSION = BrushingSession(
     started_at=datetime(2026, 11, 26, 7, 30, tzinfo=UTC), duration=124
 )
@@ -95,7 +94,6 @@ def mock_toothbrush(
     toothbrush.connected = False
     toothbrush.state = None
     toothbrush.firmware_version = None
-    toothbrush.firmware_version_raw = None
     toothbrush.last_session = last_session
     callbacks: list[Callable[[], None]] = []
 
@@ -111,7 +109,6 @@ def mock_toothbrush(
         toothbrush.connected = True
         toothbrush.state = STATE
         toothbrush.firmware_version = FIRMWARE_VERSION
-        toothbrush.firmware_version_raw = FIRMWARE_VERSION_RAW
         notify()
 
     async def disconnect() -> None:

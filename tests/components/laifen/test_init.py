@@ -365,10 +365,10 @@ async def test_firmware_version_update(
     assert device.manufacturer == "Laifen"
     assert device.sw_version is None
 
-    mock_toothbrush.firmware_version = "V2.0.93.XXX.T01.B00.Y44.303"
+    mock_toothbrush.firmware_version = FIRMWARE_VERSION
     mock_toothbrush.notify()
     await hass.async_block_till_done()
 
     device = device_registry.async_get(device.id)
     assert device is not None
-    assert device.sw_version == "V2.0.93.XXX.T01.B00.Y44.303"
+    assert device.sw_version == FIRMWARE_VERSION
