@@ -2002,7 +2002,7 @@ async def test_calendar_list_pagination(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     test_api_calendar: dict[str, Any],
-    mock_events_list_items: Callable[[list[dict[str, Any]]], None],
+    mock_events_list: Callable[..., None],
     component_setup: ComponentSetup,
 ) -> None:
     """Test calendars on every page of the calendar list are added."""
@@ -2032,9 +2032,10 @@ async def test_calendar_list_pagination(
         )
 
     aioclient_mock.get(f"{API_BASE_URL}/users/me/calendarList", side_effect=first_page)
-    mock_events_list_items([])
+    mock_events_list({"items": []})
+    mock_events_list({"items": []}, calendar_id="second-page@group.calendar.google.com")
 
     assert await component_setup()
 
-    assert hass.states.get("calendar.second_page_calendar")
-    assert hass.states.get(TEST_ENTITY)
+    assert hass.states.is_state("calendar.second_page_calendar", STATE_OFF)
+    assert hass.states.is_state(TEST_ENTITY, STATE_OFF)
