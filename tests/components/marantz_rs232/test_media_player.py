@@ -170,10 +170,10 @@ async def test_disconnect_reloads(
     reconnect_allowed = asyncio.Event()
     connect = mock_receiver.connect.side_effect
 
-    async def reconnect() -> None:
+    async def reconnect(*, strict: bool = True) -> None:
         reconnect_started.set()
         await reconnect_allowed.wait()
-        await connect()
+        await connect(strict=strict)
 
     mock_receiver.connect.side_effect = reconnect
     receiver_update(None)
@@ -334,3 +334,35 @@ async def test_other_model_sources(
     mock_receiver.multi_room_a.input_source = V2007Source(code)
     receiver_update(V2007ReceiverState())
     assert hass.states.get(entity_id).attributes[ATTR_INPUT_SOURCE] == source
+
+
+@pytest.mark.parametrize(("power", "expected"), [(True, STATE_ON), (False, STATE_OFF)])
+async def test_startup_with_unknown_power(
+    hass: HomeAssistant,
+    mock_receiver: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    receiver_update: Callable[[V2007ReceiverState | None], None],
+    power: bool,
+    expected: str,
+) -> None:
+    """Allow power-on before the receiver reports its initial power state."""
+    mock_receiver.main.power = None
+    mock_receiver.multi_room_a.power = None
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(MAIN).state == STATE_UNKNOWN
+    mock_receiver.connect.assert_awaited_once_with(strict=False)
+    await hass.services.async_call(
+        MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: MAIN}, blocking=True
+    )
+    mock_receiver.main.power_on.assert_awaited_once()
+
+    mock_receiver.main.power = power
+    state = V2007ReceiverState()
+    state.main.power = power
+    receiver_update(state)
+    await hass.async_block_till_done()
+    assert hass.states.get(MAIN).state == expected

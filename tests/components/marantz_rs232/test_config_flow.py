@@ -47,7 +47,7 @@ async def test_user_form_creates_entry(
     assert result["title"] == "Marantz receiver"
     assert result["data"] == {CONF_DEVICE: MOCK_DEVICE}
     mock_setup_entry.assert_awaited_once()
-    mock_receiver.connect.assert_awaited_once()
+    mock_receiver.connect.assert_awaited_once_with()
     mock_receiver.disconnect.assert_awaited_once()
 
 

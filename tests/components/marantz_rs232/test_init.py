@@ -27,12 +27,12 @@ async def test_setup_and_unload(
 ) -> None:
     """Query both players and clean up subscriptions on unload."""
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_receiver.connect.assert_awaited_once()
+    mock_receiver.connect.assert_awaited_once_with(strict=False)
     mock_receiver.query_state.assert_awaited_once()
     mock_receiver.query_multi_room_a.assert_awaited_once()
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    mock_receiver.connect.assert_awaited_once()
+    mock_receiver.connect.assert_awaited_once_with(strict=False)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_receiver.disconnect.assert_awaited_once()
 
@@ -105,7 +105,7 @@ async def test_remove_entry(
     """Do not reload a removed entry when disconnecting."""
     await hass.config_entries.async_remove(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    mock_receiver.connect.assert_awaited_once()
+    mock_receiver.connect.assert_awaited_once_with(strict=False)
     mock_receiver.disconnect.assert_awaited_once()
 
 
