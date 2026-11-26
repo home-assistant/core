@@ -1,8 +1,36 @@
 {
+  "exceptions": {
+    "end_time_before_start_time": {
+      "message": "End time must be greater than or equal to start time"
+    },
+    "max_entities_exceeded": {
+      "message": "Cannot request history for more than {max_entities} entities."
+    },
+    "max_records_exceeded": {
+      "message": "More than {max_records} state changes were recorded for {entity_id} in the requested period. Use a shorter period or set allow truncation."
+    },
+    "start_time_in_future": {
+      "message": "Start time must be in the past"
+    }
+  },
   "issues": {
     "backup_failed_out_of_resources": {
       "description": "The database backup stated at {start_time} failed due to lack of resources. The backup cannot be trusted and must be restarted. This can happen if the database is too large or if the system is under heavy load. Consider upgrading the system hardware or reducing the size of the database by decreasing the number of history days to keep or creating a filter.",
       "title": "Database backup failed due to lack of resources"
+    },
+    "corrupt_database_files": {
+      "fix_flow": {
+        "abort": {
+          "delete_failed": "The corrupt database files could not be deleted. Check the log for details and delete them manually."
+        },
+        "step": {
+          "confirm": {
+            "description": "The recorder found a corrupt database and moved it aside to start a new one. Corrupt database files still kept in `{path}`: {count} ({size} MB).\n\nThey may still contain history that can be recovered with SQLite tools. If you don't need them, select **Submit** to delete them. To keep them, close this dialog and ignore this issue.",
+            "title": "[%key:component::recorder::issues::corrupt_database_files::title%]"
+          }
+        }
+      },
+      "title": "Corrupt database files are kept"
     },
     "database_engine_not_supported_lts": {
       "description": "Version {server_version} of {database_engine} is not a supported long-term support (LTS) release. Support for short-term releases and end-of-life LTS releases will be removed; please upgrade to one of the supported LTS versions ({lts_versions}) and restart Home Assistant to continue using the recorder.",
@@ -25,6 +53,28 @@
     "enable": {
       "description": "Starts the recording of events and state changes.",
       "name": "Enable Recorder"
+    },
+    "get_history": {
+      "description": "Retrieves history data for entities within a specific time period.",
+      "fields": {
+        "allow_truncation": {
+          "description": "Truncate the returned history instead of raising an error when an entity exceeds the limit of recorded state changes. The limit applies to recorded state changes, not returned segments.",
+          "name": "Allow truncation"
+        },
+        "end_time": {
+          "description": "The end time for the history query. If omitted, returns all history from start time onward.",
+          "name": "End time"
+        },
+        "entity_id": {
+          "description": "The entity IDs to return history for.",
+          "name": "Entities"
+        },
+        "start_time": {
+          "description": "The start time for the history query.",
+          "name": "Start time"
+        }
+      },
+      "name": "Get Recorder history"
     },
     "get_statistics": {
       "description": "Retrieves statistics data for entities within a specific time period.",

@@ -2,41 +2,66 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import timedelta
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from adguardhome import AdGuardHomeAuthenticationError
 import probatio
 
-from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_register_admin_service
 
-from .const import (
-    CONF_FORCE,
-    DOMAIN,
-    SERVICE_ADD_URL,
-    SERVICE_DISABLE_URL,
-    SERVICE_ENABLE_URL,
-    SERVICE_REFRESH,
-    SERVICE_REMOVE_URL,
-)
+from .const import DOMAIN
 from .helpers import adguard_exception_handler
 
 if TYPE_CHECKING:
-    from . import AdGuardConfigEntry
+    from .coordinator import AdGuardConfigEntry
+
+
+class AdGuardHomeService(StrEnum):
+    """Store keys for AdGuard Home services."""
+
+    ADD_URL = "add_url"
+    REMOVE_URL = "remove_url"
+    ENABLE_URL = "enable_url"
+    DISABLE_URL = "disable_url"
+    REFRESH = "refresh"
+    PAUSE_PROTECTION = "pause_protection"
+
+
+class AdGuardHomeServiceArgument(StrEnum):
+    """Store keys for AdGuard Home service arguments."""
+
+    NAME = "name"
+    URL = "url"
+    FORCE = "force"
+    DURATION = "duration"
+
 
 SERVICE_URL_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_URL): probatio.Any(cv.url, cv.path)}
+    {probatio.Required(AdGuardHomeServiceArgument.URL): probatio.Any(cv.url, cv.path)}
 )
 SERVICE_ADD_URL_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_NAME): cv.string,
-        probatio.Required(CONF_URL): probatio.Any(cv.url, cv.path),
+        probatio.Required(AdGuardHomeServiceArgument.NAME): cv.string,
+        probatio.Required(AdGuardHomeServiceArgument.URL): probatio.Any(
+            cv.url, cv.path
+        ),
     }
 )
 SERVICE_REFRESH_SCHEMA = probatio.Schema(
-    {probatio.Optional(CONF_FORCE, default=False): cv.boolean}
+    {probatio.Optional(AdGuardHomeServiceArgument.FORCE, default=False): cv.boolean}
+)
+
+SERVICE_PAUSE_PROTECTION_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(AdGuardHomeServiceArgument.DURATION): probatio.All(
+            cv.time_period, probatio.Range(min=timedelta(seconds=1))
+        )
+    }
 )
 
 
@@ -68,7 +93,8 @@ async def _add_url(call: ServiceCall) -> None:
     for entry in _get_adguard_entries(call.hass):
         async with _reauthenticate_on_rejection(call.hass, entry):
             await entry.runtime_data.client.filtering.blocklists.add(
-                call.data[CONF_URL], name=call.data[CONF_NAME]
+                call.data[AdGuardHomeServiceArgument.URL],
+                name=call.data[AdGuardHomeServiceArgument.NAME],
             )
 
 
@@ -78,7 +104,7 @@ async def _remove_url(call: ServiceCall) -> None:
     for entry in _get_adguard_entries(call.hass):
         async with _reauthenticate_on_rejection(call.hass, entry):
             await entry.runtime_data.client.filtering.blocklists.remove(
-                call.data[CONF_URL]
+                call.data[AdGuardHomeServiceArgument.URL]
             )
 
 
@@ -88,7 +114,7 @@ async def _enable_url(call: ServiceCall) -> None:
     for entry in _get_adguard_entries(call.hass):
         async with _reauthenticate_on_rejection(call.hass, entry):
             await entry.runtime_data.client.filtering.blocklists.enable(
-                call.data[CONF_URL]
+                call.data[AdGuardHomeServiceArgument.URL]
             )
 
 
@@ -98,7 +124,7 @@ async def _disable_url(call: ServiceCall) -> None:
     for entry in _get_adguard_entries(call.hass):
         async with _reauthenticate_on_rejection(call.hass, entry):
             await entry.runtime_data.client.filtering.blocklists.disable(
-                call.data[CONF_URL]
+                call.data[AdGuardHomeServiceArgument.URL]
             )
 
 
@@ -112,22 +138,40 @@ async def _refresh(call: ServiceCall) -> None:
             await entry.runtime_data.client.filtering.blocklists.refresh()
 
 
+@adguard_exception_handler
+async def _pause_protection(call: ServiceCall) -> None:
+    """Service call to pause protection in AdGuard Home for a duration."""
+    for entry in _get_adguard_entries(call.hass):
+        async with _reauthenticate_on_rejection(call.hass, entry):
+            await entry.runtime_data.client.disable_protection(
+                call.data[AdGuardHomeServiceArgument.DURATION]
+            )
+        await entry.runtime_data.state.async_request_refresh()
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the AdGuard Home integration."""
 
     hass.services.async_register(
-        DOMAIN, SERVICE_ADD_URL, _add_url, schema=SERVICE_ADD_URL_SCHEMA
+        DOMAIN, AdGuardHomeService.ADD_URL, _add_url, schema=SERVICE_ADD_URL_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_REMOVE_URL, _remove_url, schema=SERVICE_URL_SCHEMA
+        DOMAIN, AdGuardHomeService.REMOVE_URL, _remove_url, schema=SERVICE_URL_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_ENABLE_URL, _enable_url, schema=SERVICE_URL_SCHEMA
+        DOMAIN, AdGuardHomeService.ENABLE_URL, _enable_url, schema=SERVICE_URL_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_DISABLE_URL, _disable_url, schema=SERVICE_URL_SCHEMA
+        DOMAIN, AdGuardHomeService.DISABLE_URL, _disable_url, schema=SERVICE_URL_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_REFRESH, _refresh, schema=SERVICE_REFRESH_SCHEMA
+        DOMAIN, AdGuardHomeService.REFRESH, _refresh, schema=SERVICE_REFRESH_SCHEMA
+    )
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        AdGuardHomeService.PAUSE_PROTECTION,
+        _pause_protection,
+        schema=SERVICE_PAUSE_PROTECTION_SCHEMA,
     )

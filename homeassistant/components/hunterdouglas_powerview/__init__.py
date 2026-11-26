@@ -92,9 +92,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
             f"Connection error to PowerView hub {hub_address}: {err}"
         ) from err
 
-    if not device_info:
-        raise ConfigEntryNotReady(f"Unable to initialize PowerView hub: {hub_address}")
-
     if CONF_API_VERSION not in config:
         new_data = {**entry.data}
         new_data[CONF_API_VERSION] = hub.api_version
@@ -109,6 +106,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
     coordinator.async_set_updated_data(PowerviewShadeData())
     # populate raw shade data into the coordinator for diagnostics
     coordinator.data.store_group_data(shade_data)
+    # remove registry devices for shades no longer on the hub, without
+    # depending on the coordinator ever polling
+    coordinator.async_remove_stale_devices(
+        {str(shade_id) for shade_id in shade_data.processed}
+    )
 
     entry.runtime_data = PowerviewEntryData(
         api=pv_request,

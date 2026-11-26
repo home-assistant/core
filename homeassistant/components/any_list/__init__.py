@@ -17,7 +17,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [Platform.TODO]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AnyListConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AnyListConfigEntry) -> None:
     """Set up AnyList from a config entry."""
 
     @callback
@@ -54,9 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnyListConfigEntry) -> b
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AnyListConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AnyListConfigEntry) -> None:
     """Unload an AnyList config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

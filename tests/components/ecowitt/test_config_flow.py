@@ -21,7 +21,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.ecowitt.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

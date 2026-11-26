@@ -921,14 +921,40 @@ async def async_setup_entry(
     config_entry.async_on_unload(coordinator.async_add_listener(_async_add_devices))
     _async_add_devices()
 
-    async_add_entities(
-        MieleAuxSensor(aux_coordinator, device_id, definition.description)
-        for device_id in aux_coordinator.data.filling_levels
-        for definition in POLLED_SENSOR_TYPES
-        if _enabled_aux_sensor(
-            definition, aux_coordinator.data.filling_levels[device_id]
+    def _async_add_aux_sensors() -> None:
+        async_add_entities(
+            MieleAuxSensor(aux_coordinator, device_id, definition.description)
+            for device_id, level in aux_coordinator.data.filling_levels.items()
+            for definition in POLLED_SENSOR_TYPES
+            if _enabled_aux_sensor(definition, level)
         )
+
+    if aux_coordinator.data_or_none:
+        _async_add_aux_sensors()
+        return
+
+    # Fetching filling levels failed at setup. Add the sensors after the first
+    # successful poll, then stop listening, so that from then on the coordinator
+    # only polls while sensors use it, as after a successful setup.
+    remove_aux_listener: Callable[[], None] | None = None
+
+    @callback
+    def _async_add_aux_sensors_on_recovery() -> None:
+        nonlocal remove_aux_listener
+        if remove_aux_listener:
+            remove_aux_listener()
+            remove_aux_listener = None
+            _async_add_aux_sensors()
+
+    @callback
+    def _async_remove_aux_listener() -> None:
+        if remove_aux_listener:
+            remove_aux_listener()
+
+    remove_aux_listener = aux_coordinator.async_add_listener(
+        _async_add_aux_sensors_on_recovery
     )
+    config_entry.async_on_unload(_async_remove_aux_listener)
 
 
 APPLIANCE_ICONS = {

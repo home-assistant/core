@@ -107,7 +107,7 @@ def mock_get_mac_address() -> Generator[Mock]:
 def mock_setup_entry() -> Generator[Mock]:
     """Mock async_setup_entry."""
     with patch(
-        "homeassistant.components.dlna_dmr.async_setup_entry", return_value=True
+        "homeassistant.components.dlna_dmr.async_setup_entry", return_value=None
     ) as setup_entry_mock:
         yield setup_entry_mock
 

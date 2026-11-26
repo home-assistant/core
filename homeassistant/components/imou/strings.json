@@ -196,6 +196,9 @@
     "press_button_failed": {
       "message": "Imou rejected the button press"
     },
+    "quota_exceeded": {
+      "message": "The Imou monthly API quota is used up"
+    },
     "select_option_failed": {
       "message": "Imou rejected the new option"
     },

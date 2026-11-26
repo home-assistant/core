@@ -156,7 +156,7 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
 
         placeholders = {
             "name": self._discovered_device_info["deviceName"],
-            CONF_HOST: self.host,
+            "host": self.host,
         }
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(

@@ -24,6 +24,7 @@ async def load_int(
         domain=DOMAIN,
         source=SOURCE_USER,
         data=ENTRY_CONFIG,
+        entry_id="01JGPDZDY4K8M2R6T9VXB3N5QW",
     )
 
     config_entry.add_to_hass(hass)

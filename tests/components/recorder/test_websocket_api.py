@@ -9,7 +9,6 @@ import sys
 from typing import Any
 from unittest.mock import ANY, patch
 
-from _pytest.python_api import ApproxBase
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -702,7 +701,7 @@ def _circular_mean(values: Iterable[StatisticData]) -> dict[str, float]:
 
 def _circular_mean_approx(
     values: Iterable[StatisticData], tolerance: float | None = None
-) -> ApproxBase:
+) -> pytest.Approx:
     return pytest.approx(_circular_mean(values)["mean"], abs=tolerance)
 
 
@@ -1194,7 +1193,7 @@ async def test_statistic_during_period_hole(
         "max": max(stat["max"] for stat in imported_stats[1:4]),
         "mean": fmean(stat["mean"] for stat in imported_stats[1:4]),
         "min": min(stat["min"] for stat in imported_stats[1:4]),
-        "change": imported_stats[3]["sum"] - imported_stats[1]["sum"],
+        "change": imported_stats[3]["sum"] - imported_stats[0]["sum"],
     }
 
     # This should also include imported_stats[1:4]
@@ -1218,7 +1217,7 @@ async def test_statistic_during_period_hole(
         "max": max(stat["max"] for stat in imported_stats[1:4]),
         "mean": fmean(stat["mean"] for stat in imported_stats[1:4]),
         "min": min(stat["min"] for stat in imported_stats[1:4]),
-        "change": imported_stats[3]["sum"] - imported_stats[1]["sum"],
+        "change": imported_stats[3]["sum"] - imported_stats[0]["sum"],
     }
 
 
@@ -1371,6 +1370,70 @@ async def test_statistic_during_period_hole_circular_mean(
         "min": None,
         "change": None,
     }
+
+
+@pytest.mark.parametrize(
+    ("start_time", "end_time", "expected_change"),
+    [
+        pytest.param(
+            "2022-01-01T00:00:00+00:00",
+            "2022-01-04T00:00:00+00:00",
+            12 + 13 + 14,
+            id="data_before_period",
+        ),
+        pytest.param(
+            "2021-12-01T00:00:00+00:00",
+            "2021-12-31T00:00:00+00:00",
+            10,
+            id="no_data_before_period",
+        ),
+    ],
+)
+@pytest.mark.freeze_time(dt.datetime(2022, 1, 10, 12, tzinfo=dt.UTC))
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistic_during_period_daily_external_statistics(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    start_time: str,
+    end_time: str,
+    expected_change: float,
+) -> None:
+    """Test change includes the first row when the hour before start has no row."""
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+
+    first_day = dt.datetime(2021, 12, 30, tzinfo=dt.UTC)
+    changes = [10 + i for i in range(5)]
+    external_stats = [
+        {
+            "start": first_day + timedelta(days=i),
+            "sum": sum(changes[: i + 1]),
+        }
+        for i in range(len(changes))
+    ]
+    external_metadata = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+    async_add_external_statistics(hass, external_metadata, external_stats)
+    await async_wait_recording_done(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/statistic_during_period",
+            "statistic_id": "test:total_energy_import",
+            "fixed_period": {"start_time": start_time, "end_time": end_time},
+            "types": ["change"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"change": expected_change}
 
 
 @pytest.mark.parametrize(
@@ -3580,7 +3643,10 @@ async def test_recorder_info_bad_recorder_config(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test getting recorder status when recorder is not started."""
-    config = {recorder.CONF_DB_URL: "sqlite://no_file", recorder.CONF_DB_RETRY_WAIT: 0}
+    config = {
+        recorder.CONF_DB_URL: "sqlite:////no_dir/no_file.db",
+        recorder.CONF_DB_RETRY_WAIT: 0,
+    }
 
     client = await hass_ws_client()
 

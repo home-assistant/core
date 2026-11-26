@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import AsyncIterable
-import logging
 from typing import Final
 from unittest.mock import ANY, DEFAULT, Mock
 
@@ -629,8 +628,7 @@ async def test_repeated_connect(
     # time 2 SSDP messages carefully
     domain_data = get_domain_data(hass)
     device_source = domain_data.sources[MOCK_SOURCE_ID]
-    with caplog.at_level(logging.DEBUG):
-        await device_source.device_connect()
+    await device_source.device_connect()
 
     assert not upnp_factory_mock.async_create_device.await_count
     await assert_source_available(hass)

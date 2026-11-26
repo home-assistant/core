@@ -77,6 +77,7 @@ def _make_button_nodes(
     return nodes
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_event_entity_snapshot(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -90,18 +91,6 @@ async def test_event_entity_snapshot(
     mock_isy.nodes.__iter__.return_value = _make_button_nodes(mock_isy, mock_node)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert any(entry.disabled_by is not None for entry in entries)
-
-    for entry in entries:
-        if entry.disabled_by:
-            entity_registry.async_update_entity(entry.entity_id, disabled_by=None)
-
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -132,10 +121,10 @@ def test_sub_button_name_requires_separator(
 @pytest.mark.parametrize(
     ("control", "expected_event_type", "expected_direction", "expected_count"),
     [
-        (CMD_ON, "press_end", "up", None),
-        (CMD_OFF, "press_end", "down", None),
-        (CMD_ON_FAST, "multi_press_end", "up", 2),
-        (CMD_OFF_FAST, "multi_press_end", "down", 2),
+        (CMD_ON, "single_press", "up", None),
+        (CMD_OFF, "single_press", "down", None),
+        (CMD_ON_FAST, "multi_press", "up", 2),
+        (CMD_OFF_FAST, "multi_press", "down", 2),
         (CMD_FADE_UP, "long_press_start", "up", None),
         (CMD_FADE_DOWN, "long_press_start", "down", None),
     ],
@@ -168,7 +157,7 @@ async def test_control_event_triggers_entity(
     assert state is not None
     assert state.attributes["event_type"] == expected_event_type
     assert state.attributes.get("direction") == expected_direction
-    assert state.attributes.get("multi_press_count") == expected_count
+    assert state.attributes.get("press_count") == expected_count
 
 
 @pytest.mark.parametrize(

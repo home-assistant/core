@@ -10,6 +10,7 @@ from renault_api.kamereon.models import (
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -47,8 +48,9 @@ async def async_setup_entry(
             if description.coordinator in vehicle.coordinators
         )
 
-    for vehicle in config_entry.runtime_data.vehicles.values():
-        _async_add_vehicle(vehicle)
+    config_entry.async_on_unload(
+        config_entry.runtime_data.async_add_vehicle_listener(_async_add_vehicle)
+    )
 
 
 class RenaultSelectEntity[T: KamereonVehicleDataAttributes](
@@ -73,6 +75,7 @@ class RenaultSelectEntity[T: KamereonVehicleDataAttributes](
 SENSOR_TYPES: tuple[RenaultSelectEntityDescription, ...] = (
     RenaultSelectEntityDescription[KamereonVehicleChargeModeData](
         key="charge_mode",
+        entity_category=EntityCategory.CONFIG,
         coordinator="charge_mode",
         translation_key="charge_mode",
         options=["always", "always_charging", "schedule_mode", "scheduled"],

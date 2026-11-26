@@ -13,17 +13,18 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.providers.homeassistant import HassAuthProvider, InvalidUsername
 from homeassistant.components import person
 from homeassistant.components.auth import indieauth
-from homeassistant.components.http import KEY_HASS, KEY_HASS_REFRESH_TOKEN_ID
+from homeassistant.components.http import (
+    KEY_HASS,
+    KEY_HASS_REFRESH_TOKEN_ID,
+    HomeAssistantView,
+)
+from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar, integration_platform
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component, async_wait_component
-
-if TYPE_CHECKING:
-    from . import OnboardingData, OnboardingStorage, OnboardingStoreData
 
 from .const import (
     DEFAULT_AREAS,
@@ -34,6 +35,9 @@ from .const import (
     STEP_USER,
     STEPS,
 )
+
+if TYPE_CHECKING:
+    from . import OnboardingData, OnboardingStorage, OnboardingStoreData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -175,6 +179,7 @@ class UserOnboardingView(_BaseOnboardingStepView):
     url = "/api/onboarding/users"
     name = "api:onboarding:users"
     requires_auth = False
+    max_body_size = MAX_UNAUTHENTICATED_BODY_SIZE
     step = STEP_USER
 
     @RequestDataValidator(
@@ -351,6 +356,7 @@ class WaitIntegrationOnboardingView(NoAuthBaseOnboardingView):
 
     url = "/api/onboarding/integration/wait"
     name = "api:onboarding:integration:wait"
+    max_body_size = MAX_UNAUTHENTICATED_BODY_SIZE
 
     @RequestDataValidator(
         probatio.Schema(

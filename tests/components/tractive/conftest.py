@@ -44,6 +44,9 @@ def mock_tractive_client() -> Generator[AsyncMock]:
                 minutes_night_sleep=300,
                 minutes_rest=122,
                 weight=23700,
+                resting_heart_rate_status="elevated",
+                resting_respiratory_rate_status="normal",
+                scratch_status="infrequent",
             )
         },
     )
@@ -83,6 +86,7 @@ def mock_tractive_client() -> Generator[AsyncMock]:
                 tracker_id=TRACKER_ID,
                 pet_details=trackable_object,
                 tracker_details=tracker_details,
+                health_available=True,
             )
         ]
         client.async_fetch_status.return_value = status

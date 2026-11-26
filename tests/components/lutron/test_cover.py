@@ -6,16 +6,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    STATE_CLOSED,
-    STATE_OPEN,
-    Platform,
-)
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverService
+from homeassistant.const import STATE_CLOSED, STATE_OPEN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -65,8 +57,8 @@ async def test_cover_services(
     # Open cover
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert cover.level == 100
@@ -74,8 +66,8 @@ async def test_cover_services(
     # Close cover
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert cover.level == 0
@@ -83,8 +75,8 @@ async def test_cover_services(
     # Set cover position
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: entity_id, "position": 50},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, "position": 50},
         blocking=True,
     )
     assert cover.level == 50

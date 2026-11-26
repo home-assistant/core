@@ -126,7 +126,7 @@ async def test_config_flow_single_account(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "account_id_1"
+    assert result["title"] == "e***@test.com"
     assert result["data"][RenaultConfigurationKeys.USERNAME] == "email@test.com"
     assert result["data"][RenaultConfigurationKeys.PASSWORD] == "test"
     assert result["data"][RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
@@ -280,7 +280,7 @@ async def test_config_flow_multiple_accounts(
         user_input={RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID: "account_id_2"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "account_id_2"
+    assert result["title"] == "e***@test.com"
     assert result["data"][RenaultConfigurationKeys.USERNAME] == "email@test.com"
     assert result["data"][RenaultConfigurationKeys.PASSWORD] == "test"
     assert result["data"][RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
@@ -393,16 +393,46 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
     assert config_entry.data[RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
 
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (Exception(), "unknown"),
+        (aiohttp.ClientConnectionError(), "cannot_connect"),
+        (
+            InvalidCredentialsException(403042, "invalid loginID or password"),
+            "invalid_credentials",
+        ),
+    ],
+)
 async def test_reconfigure(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
 ) -> None:
-    """Test reconfigure works."""
+    """Test reconfigure works, after recovering from a login error."""
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
+
+    with patch(
+        "renault_api.renault_session.RenaultSession.login",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                RenaultConfigurationKeys.LOCALE: "fr_FR",
+                RenaultConfigurationKeys.USERNAME: "email@test.com",
+                RenaultConfigurationKeys.PASSWORD: "test",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": error}
 
     data_schema = result["data_schema"].schema
     assert (
@@ -635,7 +665,7 @@ async def test_config_flow_two_factor_auth(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "account_id_1"
+    assert result["title"] == "e***@test.com"
     assert result["result"].unique_id == "account_id_1"
     assert result["data"][RenaultConfigurationKeys.PASSWORD] == "test"
     assert result["data"][RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN

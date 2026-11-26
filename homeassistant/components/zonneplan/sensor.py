@@ -68,6 +68,26 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
         supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
     ),
     ZonneplanPriceSensorEntityDescription(
+        key="current_quarter_hour_electricity_price",
+        translation_key="current_quarter_hour_electricity_price",
+        native_unit_of_measurement=f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda coordinator: (
+            float(point.price_tax_included.euro)
+            if coordinator.data.electricity_quarter_prices is not None
+            and (
+                point := coordinator.data.electricity_quarter_prices.price_at(
+                    dt_util.utcnow()
+                )
+            )
+            else None
+        ),
+        supported_fn=lambda coordinator: bool(
+            coordinator.data.electricity_quarter_prices
+        ),
+    ),
+    ZonneplanPriceSensorEntityDescription(
         key="next_hour_electricity_price",
         translation_key="next_hour_electricity_price",
         native_unit_of_measurement=f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}",

@@ -19,10 +19,15 @@ from pytest_homeassistant.plugins import WebSocketGenerator
 
 from homeassistant.components import template
 from homeassistant.components.device_automation import toggle_entity
+from homeassistant.components.template.const import DeprecatedTemplateOptions
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
@@ -723,3 +728,36 @@ async def assert_attributes_template(
     assert error in caplog.text
     state = hass.states.get(platform_setup.entity_id)
     assert "run" not in state.attributes
+
+
+def get_issues_with_prefix(
+    issue_registry: ir.IssueRegistry, issue_id_prefix: str
+) -> list[ir.IssueEntry]:
+    """Return the template issues whose id is the prefix followed by an underscore."""
+    return [
+        issue
+        for (domain, issue_id), issue in issue_registry.issues.items()
+        if domain == template.DOMAIN and issue_id.startswith(f"{issue_id_prefix}_")
+    ]
+
+
+def assert_deprecated_missing_actions_issue(
+    issue_registry: ir.IssueRegistry,
+    deprecation: DeprecatedTemplateOptions,
+    platform_setup: TemplatePlatformSetup,
+    options: str,
+) -> None:
+    """Assert a single repair exists for options without their action."""
+    issues = get_issues_with_prefix(issue_registry, deprecation.translation_key)
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.6.0"
+    assert issues[0].is_fixable is False
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].learn_more_url == (
+        f"https://www.home-assistant.io/integrations/template/#{platform_setup.domain}"
+    )
+    assert issues[0].translation_key == deprecation.translation_key
+    assert issues[0].translation_placeholders == {
+        "identifier": f"name: {platform_setup.object_id}",
+        "options": options,
+    }

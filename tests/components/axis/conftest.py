@@ -16,7 +16,7 @@ from pytest_homeassistant.test_util.aiohttp import (
 )
 from yarl import URL
 
-from homeassistant.components.axis.const import DOMAIN
+from homeassistant.components.axis.const import CONF_COMPANION, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -77,7 +77,7 @@ class _RtspClientMock(Protocol):
 def fixture_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.axis.async_setup_entry", return_value=True
+        "homeassistant.components.axis.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -118,6 +118,7 @@ def fixture_config_entry_data() -> MappingProxyType[str, Any]:
         CONF_PORT: 80,
         CONF_MODEL: MODEL,
         CONF_NAME: NAME,
+        CONF_COMPANION: False,
     }
 
 
@@ -140,17 +141,22 @@ def reset_mock_requests(aioclient_mock: AiohttpClientMocker) -> Generator[None]:
 @pytest.fixture(name="mock_requests")
 def fixture_request(
     aioclient_mock: AiohttpClientMocker,
+    basic_device_info_payload: dict[str, Any],
     port_management_payload: dict[str, Any],
+    param_brand_payload: str,
     param_properties_payload: str,
     param_properties_status_code: int,
     param_ports_payload: str,
     mqtt_status_code: int,
+    basic_auth_challenge: bool,
 ) -> Callable[[str], None]:
     """Mock default Vapix requests responses."""
 
     def __mock_default_requests(host: str) -> None:
+        auth_challenge_sent = False
+
         def _url_pattern(path: str) -> re.Pattern[str]:
-            return re.compile(rf"^https?://{re.escape(host)}(?::\d+)?{path}$")
+            return re.compile(rf"^https?://{re.escape(host)}(?::\d+)?{path}(?:\?.*)?$")
 
         def _text_response(
             url: URL, text: str, status: int = 200
@@ -166,9 +172,10 @@ def fixture_request(
         async def _param_cgi_response(
             _method: str, url: URL, data: dict[str, Any] | None
         ) -> AiohttpClientMockResponse:
+            nonlocal auth_challenge_sent
             group = (data or {}).get("group")
             if group == "root.Brand":
-                return _text_response(url, BRAND_RESPONSE)
+                return _text_response(url, param_brand_payload)
             if group == "root.Image":
                 return _text_response(url, IMAGE_RESPONSE)
             if group == "root.Input":
@@ -178,6 +185,15 @@ def fixture_request(
             if group == "root.Output":
                 return _text_response(url, PORTS_RESPONSE)
             if group == "root.Properties":
+                if basic_auth_challenge and not auth_challenge_sent:
+                    auth_challenge_sent = True
+                    return AiohttpClientMockResponse(
+                        "post",
+                        url,
+                        text="",
+                        headers={"WWW-Authenticate": 'Basic realm="Axis"'},
+                        status=401,
+                    )
                 return _text_response(
                     url, param_properties_payload, param_properties_status_code
                 )
@@ -194,7 +210,7 @@ def fixture_request(
             )
         aioclient_mock.post(
             _url_pattern("/axis-cgi/basicdeviceinfo.cgi"),
-            json=BASIC_DEVICE_INFO_RESPONSE,
+            json=basic_device_info_payload,
         )
         aioclient_mock.post(
             _url_pattern("/axis-cgi/io/portmanagement.cgi"),
@@ -266,10 +282,22 @@ def fixture_api_discovery(
     )
 
 
+@pytest.fixture(name="basic_device_info_payload")
+def fixture_basic_device_info_data() -> dict[str, Any]:
+    """Basic device information data."""
+    return BASIC_DEVICE_INFO_RESPONSE
+
+
 @pytest.fixture(name="port_management_payload")
 def fixture_io_port_management_data() -> dict[str, Any]:
     """Property parameter data."""
     return PORT_MANAGEMENT_RESPONSE
+
+
+@pytest.fixture(name="param_brand_payload")
+def fixture_param_brand_data() -> str:
+    """Brand parameter data."""
+    return BRAND_RESPONSE
 
 
 @pytest.fixture(name="param_properties_payload")
@@ -288,6 +316,12 @@ def fixture_param_ports_data() -> str:
 def fixture_param_properties_status_code() -> int:
     """Property parameter status code."""
     return 200
+
+
+@pytest.fixture
+def basic_auth_challenge() -> bool:
+    """Whether the VAPIX mock challenges once with Basic authentication."""
+    return False
 
 
 @pytest.fixture(name="mqtt_status_code")

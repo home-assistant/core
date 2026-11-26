@@ -3,6 +3,7 @@
   "name": "Egardia",
   "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@jeroenterheerdt"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/egardia",
   "iot_class": "local_polling",
   "loggers": ["pythonegardia"],

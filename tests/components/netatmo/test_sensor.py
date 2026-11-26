@@ -1,17 +1,26 @@
 """The tests for the Netatmo sensor platform."""
 
-from unittest.mock import AsyncMock
+from datetime import timedelta
+from time import time
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netatmo import sensor
-from homeassistant.const import Platform
+from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import selected_platforms, snapshot_platform_entities
+from .common import (
+    fake_post_request,
+    selected_platforms,
+    simulate_webhook,
+    snapshot_platform_entities,
+)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -47,6 +56,129 @@ async def test_indoor_sensor(
     assert hass.states.get(f"{prefix}humidity").state == "63"
     assert hass.states.get(f"{prefix}carbon_dioxide").state == "494"
     assert hass.states.get(f"{prefix}atmospheric_pressure").state == "1014.5"
+
+
+@pytest.mark.parametrize(
+    ("response", "expected_state"),
+    [
+        pytest.param(
+            {
+                "room_id": "2746182631",
+                "home": {
+                    "id": "91763b24c43d3e344f424e8b",
+                    "name": "MYHOME",
+                    "country": "DE",
+                    "rooms": [
+                        {
+                            "id": "2746182631",
+                            "name": "Livingroom",
+                            "type": "livingroom",
+                            "therm_setpoint_mode": "manual",
+                            "therm_setpoint_temperature": 21,
+                            "therm_setpoint_end_time": 1612734552,
+                        }
+                    ],
+                    "modules": [
+                        {
+                            "id": "12:34:56:00:01:ae",
+                            "name": "Livingroom",
+                            "type": "NATherm1",
+                        }
+                    ],
+                },
+                "mode": "manual",
+                "event_type": "set_point",
+                "temperature": 21,
+                "push_type": "display_change",
+            },
+            "manual",
+            id="set_point",
+        ),
+        pytest.param(
+            {
+                "event_type": "therm_mode",
+                "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "hg"},
+                "mode": "hg",
+                "previous_mode": "away",
+                "push_type": "home_event_changed",
+            },
+            "hg",
+            id="therm_mode_frost_guard",
+        ),
+        pytest.param(
+            {
+                "event_type": "therm_mode",
+                "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "away"},
+                "mode": "away",
+                "previous_mode": "hg",
+                "push_type": "home_event_changed",
+            },
+            "away",
+            id="therm_mode_away",
+        ),
+    ],
+)
+async def test_webhook_setpoint_mode_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    response: dict[str, Any],
+    expected_state: str,
+) -> None:
+    """Test the setpoint mode sensor updates immediately from webhook events."""
+    with selected_platforms([Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    entity_id = "sensor.livingroom_livingroom_setpoint_mode"
+
+    assert hass.states.get(entity_id).state == "away"
+
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(entity_id).state == expected_state
+
+
+async def test_webhook_cancel_set_point_forces_setpoint_mode_update(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test a cancel_set_point webhook event schedules an immediate poll."""
+    with selected_platforms([Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    publisher = config_entry.runtime_data.publisher["home-91763b24c43d3e344f424e8b"]
+    publisher.next_scan = time() + 1000
+
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": "home",
+                }
+            ],
+            "modules": [
+                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
+            ],
+        },
+        "mode": "home",
+        "event_type": "cancel_set_point",
+        "push_type": "display_change",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert publisher.next_scan <= time()
 
 
 async def test_weather_sensor(
@@ -254,3 +386,121 @@ async def test_climate_battery_sensor(
     prefix = "sensor.livingroom_livingroom_"
 
     assert hass.states.get(f"{prefix}battery").state == "75"
+
+
+@pytest.mark.parametrize(
+    "cleared_end_time",
+    [
+        pytest.param(0, id="zero"),
+        pytest.param(None, id="null"),
+    ],
+)
+async def test_setpoint_end_time_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    cleared_end_time: int | None,
+) -> None:
+    """Test the setpoint end time sensor shows and then clears the end time."""
+    livingroom_end_time: int | None = 1612749189
+
+    def set_livingroom_end_time(payload: dict[str, Any]) -> None:
+        """Set the livingroom setpoint end time in the backend response."""
+        if not isinstance(payload.get("body"), dict):
+            return
+
+        for room in payload["body"].get("home", {}).get("rooms", []):
+            if room["id"] == "2746182631":
+                room["therm_setpoint_end_time"] = livingroom_end_time
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Return backend data with the livingroom setpoint end time."""
+        kwargs["msg_callback"] = set_livingroom_end_time
+        return await fake_post_request(hass, *args, **kwargs)
+
+    entity_id = "sensor.livingroom_livingroom_setpoint_end_time"
+
+    with (
+        selected_platforms([Platform.CLIMATE, Platform.SENSOR]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state.state == "2021-02-08T01:53:09+00:00"
+    assert state.attributes["device_class"] == "timestamp"
+
+    livingroom_end_time = cleared_end_time
+    # Poll several times so the coordinator's API throttling does not hide the update
+    for _ in range(11):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("updated_value", "expected"),
+    [
+        pytest.param(80, "80", id="new_value"),
+        pytest.param(None, "unknown", id="reset"),
+    ],
+)
+async def test_heating_power_request_sensor_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    updated_value: int | None,
+    expected: str,
+) -> None:
+    """Test the heating power request sensor shows and then follows the polled value."""
+    cocina_heating_power_request: int | None = 35
+
+    def set_cocina_heating_power_request(payload: dict[str, Any]) -> None:
+        """Set the cocina valve heating power request in the backend response."""
+        if not isinstance(payload.get("body"), dict):
+            return
+
+        for room in payload["body"].get("home", {}).get("rooms", []):
+            if room["id"] == "2940411577":
+                room["heating_power_request"] = cocina_heating_power_request
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Return backend data with the cocina heating power request."""
+        kwargs["msg_callback"] = set_cocina_heating_power_request
+        return await fake_post_request(hass, *args, **kwargs)
+
+    entity_id = "sensor.cocina_cocina_heating_power_request"
+
+    with (
+        selected_platforms([Platform.SENSOR]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert hass.states.get(entity_id).state == "35"
+
+        cocina_heating_power_request = updated_value
+        # Poll several times so the coordinator's API throttling does not hide the update
+        for _ in range(11):
+            freezer.tick(timedelta(seconds=30))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == expected

@@ -22,7 +22,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_SOURCE
+from homeassistant.const import CONF_MODE, CONF_SOURCE
 from homeassistant.core import callback
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -39,7 +39,6 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 from .const import (
     CONF_ADAPTER,
     CONF_DETAILS,
-    CONF_MODE,
     CONF_PASSIVE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DEVICE_ID,
@@ -263,7 +262,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         if CONF_SOURCE in config_entry.data:
             return RemoteAdapterOptionsFlowHandler()
-        if not (manager := get_manager()) or not manager.supports_passive_scan:
+        if not get_manager().supports_passive_scan:
             return LocalNoPassiveOptionsFlowHandler()
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
@@ -272,7 +271,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        return bool((manager := get_manager()) and manager.supports_passive_scan)
+        return get_manager().supports_passive_scan
 
 
 class RemoteAdapterOptionsFlowHandler(OptionsFlow):

@@ -509,6 +509,7 @@ def _stable_http_storage(
     pending: dict | None = None,
     pending_error: str | None = None,
     yaml_migration_done: bool = True,
+    version: tuple[int, int] = (2, 2),
 ) -> dict:
     """Build a hass_storage entry seeded with a confirmed-working stable config.
 
@@ -516,11 +517,12 @@ def _stable_http_storage(
     schema and carry the created_at/error metadata, matching what real users
     have on disk after migration / writes — the load path does direct key
     access and assumes the payload is complete. A ``pending_error`` seeds the
-    pending config as already failed/reverted.
+    pending config as already failed/reverted. ``version`` is the storage
+    (major, minor) version the payload is labelled with.
     """
     return {
-        "version": 2,
-        "minor_version": 2,
+        "version": version[0],
+        "minor_version": version[1],
         "key": DOMAIN,
         "data": {
             "stable": _stored_config(stable, created_at=STABLE_CREATED_AT),
@@ -1256,7 +1258,11 @@ async def test_yaml_migration_matches_stable_no_pending(
     stored = hass_storage[DOMAIN]["data"]
     assert stored["pending"] is None
     # Without a certificate the unversioned profile moves to the current one.
-    assert stored["stable"] == {**stored_stable, "ssl_profile": "modern_v6"}
+    assert stored["stable"] == {
+        **stored_stable,
+        "ssl_profile": "intermediate_v6",
+        "ssl_peer_certificate_remote": False,
+    }
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
     assert issue is not None
@@ -1281,7 +1287,7 @@ async def test_yaml_migration_matches_stable_no_pending(
                 "trusted_proxies": ["127.0.0.0/8", "10.11.12.0/24"],
                 "ip_ban_enabled": False,
                 "login_attempts_threshold": -1,
-                "ssl_profile": "modern_v6",
+                "ssl_profile": "intermediate_v6",
                 "use_x_frame_options": True,
             },
             id="other-change-creates-pending",
@@ -1376,13 +1382,18 @@ async def test_yaml_migration_differs_from_stable_creates_pending(
 
     stored = hass_storage[DOMAIN]["data"]
     # Without a certificate the unversioned profile moves to the current one.
-    assert stored["stable"] == {**stored_stable, "ssl_profile": "modern_v6"}
+    assert stored["stable"] == {
+        **stored_stable,
+        "ssl_profile": "intermediate_v6",
+        "ssl_peer_certificate_remote": False,
+    }
     assert stored["pending"] == {
         "server_port": 8765,
         "cors_allowed_origins": ["https://cast.home-assistant.io"],
         "login_attempts_threshold": -1,
         "ip_ban_enabled": False,
-        "ssl_profile": "modern_v6",
+        "ssl_profile": "intermediate_v6",
+        "ssl_peer_certificate_remote": False,
         "use_x_frame_options": True,
         "created_at": dt_util.utcnow().isoformat(),
         "error": None,
@@ -1604,7 +1615,7 @@ async def test_setup_migrates_v1_storage_to_v2(
     # staged.
     assert hass.config.api.port == 9876
     assert hass_storage[DOMAIN]["version"] == 3
-    assert hass_storage[DOMAIN]["minor_version"] == 1
+    assert hass_storage[DOMAIN]["minor_version"] == 2
     data = hass_storage[DOMAIN]["data"]
     # The v1→v2 migration normalises the payload through the storage schema,
     # so the v2 stable slot is well-formed (all keys present) on disk.
@@ -1702,7 +1713,7 @@ async def test_setup_migrates_v2_1_storage_to_v2_2(
         "error_message": None,
     }
     # The migrated payload is written back to disk right away.
-    assert hass_storage[DOMAIN]["minor_version"] == 1
+    assert hass_storage[DOMAIN]["minor_version"] == 2
     assert hass_storage[DOMAIN]["data"] == {
         "stable": _stored_config(
             {"server_port": 9876}, created_at=dt_util.utcnow().isoformat()
@@ -1731,7 +1742,7 @@ async def test_setup_migrates_v2_2_storage_to_v3(
     ssl_conf = {"ssl_certificate": str(cert_path), "ssl_key": str(key_path)}
     hass_storage[DOMAIN] = _stable_http_storage(
         {**ssl_conf, "ssl_profile": "modern_v4"},
-        pending={"server_port": 9999, "ssl_profile": "modern_v6"},
+        pending={"server_port": 9999, "ssl_profile": "intermediate_v6"},
     )
     hass_storage[DOMAIN]["data"]["stable"]["ssl_profile"] = "modern"
     hass_storage[DOMAIN]["data"]["pending"]["ssl_profile"] = "intermediate"
@@ -1740,12 +1751,14 @@ async def test_setup_migrates_v2_2_storage_to_v3(
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass_storage[DOMAIN]["minor_version"] == 1
+    assert hass_storage[DOMAIN]["minor_version"] == 2
     assert hass_storage[DOMAIN]["data"] == {
         "stable": _stored_config(
             {**ssl_conf, "ssl_profile": "modern_v4"}, created_at=STABLE_CREATED_AT
         ),
-        "pending": _stored_config({"server_port": 9999, "ssl_profile": "modern_v6"}),
+        "pending": _stored_config(
+            {"server_port": 9999, "ssl_profile": "intermediate_v6"}
+        ),
         "yaml_migration_done": True,
     }
 
@@ -1912,8 +1925,8 @@ async def test_ssl_profile_outdated_fix_flow(
     assert data["type"] == "menu"
     assert data["step_id"] == "init"
     assert data["menu_options"] == [
-        "confirm_modern_v6",
         "confirm_intermediate_v6",
+        "confirm_modern_v6",
         "ignore",
     ]
     assert data["description_placeholders"] == {"profile": profile_name}
@@ -2150,16 +2163,30 @@ async def test_default_config_under_supervisor_starts_redirect(
     assert hass.http._legacy_redirect_server is not None
 
 
+@pytest.mark.parametrize(
+    "stored_config",
+    [
+        pytest.param({"server_port": 80}, id="default-profile"),
+        # 2026.11.0b0 persisted modern_v6 as the default profile.
+        pytest.param(
+            {"server_port": 80, "ssl_profile": "modern_v6"},
+            id="earlier-default-profile",
+        ),
+    ],
+)
 async def test_persisted_default_config_starts_redirect(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
+    stored_config: dict[str, Any],
 ) -> None:
     """Test the redirect still starts for a default config loaded from disk.
 
     A persisted default config carries created_at/error metadata, so the
     transition gate must compare without it (not by identity or raw equality).
+    Without a certificate the SSL profile is unused, so a config persisted
+    with an earlier default profile is still the default config.
     """
-    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
+    hass_storage[DOMAIN] = _stable_http_storage(stored_config)
 
     with _supervisor_default_config():
         await _setup_http_with_onboarding(hass)
@@ -2450,6 +2477,7 @@ async def test_websocket_http_config(
         "ip_ban_enabled": False,
         "login_attempts_threshold": 5,
         "ssl_profile": "modern_v6",
+        "ssl_peer_certificate_remote": False,
         "use_x_frame_options": True,
     }
     await ws_client.send_json_auto_id(
@@ -2672,6 +2700,122 @@ async def test_websocket_configure_rejects_unusable_ssl(
 
     assert hass_storage[DOMAIN]["data"]["pending"] is None
     assert len(restart_calls) == 0
+
+
+async def test_websocket_configure_rejects_unusable_peer_certificate(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """A new config whose SSL peer certificate cannot be loaded is rejected.
+
+    It is checked even without local SSL, since remote access may require it.
+    """
+    peer_cert_path, _ = _setup_broken_ssl_pem_files(tmp_path)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "http/config/configure",
+            "config": {
+                "ssl_peer_certificate": str(peer_cert_path),
+                "ssl_peer_certificate_remote": True,
+            },
+        }
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_ssl_peer_certificate"
+    assert "Could not use SSL peer certificate" in response["error"]["message"]
+
+    assert hass_storage[DOMAIN]["data"]["pending"] is None
+    assert len(restart_calls) == 0
+
+
+async def test_websocket_configure_skips_unused_peer_certificate(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """An unusable peer certificate nothing requires does not block saving.
+
+    Without local SSL and without requiring it remotely, the file is unused,
+    so turning off the remote requirement works even if it broke.
+    """
+    peer_cert_path, _ = _setup_broken_ssl_pem_files(tmp_path)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+    config = {
+        "ssl_peer_certificate": str(peer_cert_path),
+        "ssl_peer_certificate_remote": False,
+    }
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {"type": "http/config/configure", "config": config}
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": True}
+    assert hass_storage[DOMAIN]["data"]["pending"] == _stored_config(
+        config, created_at=ANY
+    )
+
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 1
+
+
+async def test_websocket_configure_peer_certificate_remote(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """Requiring a loadable peer certificate remotely is staged as pending."""
+    _, _, peer_cert_path = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+    config = {
+        "ssl_peer_certificate": str(peer_cert_path),
+        "ssl_peer_certificate_remote": True,
+    }
+
+    ws_client = await hass_ws_client(hass)
+    with patch("ssl.SSLContext.load_verify_locations") as mock_load_verify_locations:
+        await ws_client.send_json_auto_id(
+            {"type": "http/config/configure", "config": config}
+        )
+        response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": True}
+    assert mock_load_verify_locations.mock_calls == [call(str(peer_cert_path))]
+    assert hass_storage[DOMAIN]["data"]["pending"] == _stored_config(
+        config, created_at=ANY
+    )
+
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 1
 
 
 async def test_websocket_configure_same_port_skips_bind_check(
@@ -3279,6 +3423,132 @@ async def test_stable_config_ssl_peer_cert_failure_fails_setup(
         assert await async_setup_component(hass, DOMAIN, {}) is False
 
 
+async def test_pending_config_reverted_in_place_on_remote_peer_cert_failure(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """A pending config requiring an unusable peer certificate remotely reverts.
+
+    Without local SSL the server never loads the peer certificate, so it is
+    checked on its own while the config is under trial.
+    """
+    peer_cert_path, _ = _setup_broken_ssl_pem_files(tmp_path)
+    pending = {
+        "server_port": 9999,
+        "ssl_peer_certificate": str(peer_cert_path),
+        "ssl_peer_certificate_remote": True,
+    }
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {"server_port": 9876}, pending=pending, version=(3, 2)
+    )
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert hass_storage[DOMAIN]["data"]["pending"] == _stored_config(
+        pending, error=ERROR_APPLY_FAILED, error_message=ANY
+    )
+    assert (
+        "Could not use SSL peer certificate"
+        in hass_storage[DOMAIN]["data"]["pending"]["error_message"]
+    )
+    assert hass.config.api.port == 9876
+    assert hass.http.remote_ssl_peer_certificate is None
+    assert len(restart_calls) == 0
+
+
+async def test_stable_config_remote_peer_cert_failure_keeps_setup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """A stable config requiring an unusable peer certificate remotely still sets up.
+
+    Remote access fails to load it and stays closed, local access keeps working.
+    """
+    peer_cert_path, _ = _setup_broken_ssl_pem_files(tmp_path)
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "server_port": 9876,
+            "ssl_peer_certificate": str(peer_cert_path),
+            "ssl_peer_certificate_remote": True,
+        },
+        version=(3, 2),
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert hass.config.api.port == 9876
+    assert hass.http.remote_ssl_peer_certificate == str(peer_cert_path)
+
+
+@pytest.mark.parametrize("remote", [True, False], ids=["remote", "local"])
+async def test_remote_ssl_peer_certificate(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+    remote: bool,
+) -> None:
+    """The peer certificate is only required remotely when enabled."""
+    _, _, peer_cert_path = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "ssl_peer_certificate": str(peer_cert_path),
+            "ssl_peer_certificate_remote": remote,
+        },
+        version=(3, 2),
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert hass.http.remote_ssl_peer_certificate == (
+        str(peer_cert_path) if remote else None
+    )
+
+
+async def test_setup_migrates_v3_1_storage_to_v3_2(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """v3.1 config slots do not require the peer certificate remotely."""
+    stable = _stored_config({"server_port": 9876}, created_at=STABLE_CREATED_AT)
+    pending = _stored_config({"server_port": 9999})
+    hass_storage[DOMAIN] = {
+        "version": 3,
+        "minor_version": 1,
+        "key": DOMAIN,
+        "data": {
+            "stable": {
+                k: v for k, v in stable.items() if k != "ssl_peer_certificate_remote"
+            },
+            "pending": {
+                k: v for k, v in pending.items() if k != "ssl_peer_certificate_remote"
+            },
+            "yaml_migration_done": True,
+        },
+    }
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    store = await async_get_and_load_store(hass)
+    # The migrated pending config still differs from stable and stays armed.
+    assert store.active_config_type is ActiveConfigType.PENDING
+    assert hass_storage[DOMAIN]["minor_version"] == 2
+    assert hass_storage[DOMAIN]["data"] == {
+        "stable": stable,
+        "pending": pending,
+        "yaml_migration_done": True,
+    }
+
+
 async def test_bound_server_closed_on_stop_before_start(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -3625,6 +3895,10 @@ async def test_pending_config_promote_cancels_revert(
         pytest.param(
             {"use_x_forwarded_for": True, "trusted_proxies": []},
             id="proxies_empty",
+        ),
+        pytest.param(
+            {"ssl_peer_certificate_remote": True},
+            id="peer_certificate_remote_without_peer_certificate",
         ),
     ],
 )

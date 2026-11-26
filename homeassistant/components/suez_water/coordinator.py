@@ -8,9 +8,12 @@ from typing import override
 from pysuez import PySuezError, SuezClient, TelemetryMeasure
 
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
-from homeassistant.components.recorder.statistics import (
+from homeassistant.components.recorder.models import (
+    StatisticData,
     StatisticMeanType,
+    StatisticMetaData,
+)
+from homeassistant.components.recorder.statistics import (
     StatisticsRow,
     async_add_external_statistics,
     get_last_statistics,

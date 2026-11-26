@@ -24,6 +24,8 @@ SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
 if TYPE_CHECKING:
     from homeassistant.components.sensor import SensorStateClass
 
+    from .template import Template
+
 
 def _get_selector_type_and_class(config: Any) -> tuple[str, type[Selector]]:
     """Get selector type and class."""
@@ -932,11 +934,19 @@ class DateTimeSelector(Selector[DateTimeSelectorConfig]):
         return data
 
 
+class DeviceClassSelectorContext(TypedDict, total=False):
+    """Class to represent a device class selector context."""
+
+    filter_unit_of_measurement: str
+
+
 class DeviceClassSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a device class selector config."""
 
     domain: Required[Platform]
     multiple: bool
+    # Maps context keys to the names of the fields providing their value
+    context: DeviceClassSelectorContext
 
 
 @cache
@@ -957,6 +967,12 @@ class DeviceClassSelector(Selector[DeviceClassSelectorConfig]):
     """Selector for device class."""
 
     selector_type = "device_class"
+    allowed_context_keys = ReadOnlyDict(
+        {
+            # Filters the available device classes based on the unit of measurement
+            "filter_unit_of_measurement": frozenset({"unit_of_measurement"}),
+        }
+    )
 
     SUPPORTED_PLATFORMS = {
         Platform.BINARY_SENSOR: "BinarySensorDeviceClass",
@@ -979,6 +995,9 @@ class DeviceClassSelector(Selector[DeviceClassSelectorConfig]):
                 probatio.In(SUPPORTED_PLATFORMS), lambda val: Platform(val).value
             ),
             probatio.Optional("multiple", default=False): cv.boolean,
+            probatio.Optional("context"): {
+                probatio.Optional("filter_unit_of_measurement"): str,
+            },
         }
     )
 
@@ -1379,8 +1398,8 @@ class LocationSelector(Selector[LocationSelectorConfig]):
     )
     DATA_SCHEMA = probatio.Schema(
         {
-            probatio.Required("latitude"): probatio.Coerce(float),
-            probatio.Required("longitude"): probatio.Coerce(float),
+            probatio.Required("latitude"): cv.latitude,
+            probatio.Required("longitude"): cv.longitude,
             probatio.Optional("radius"): probatio.Coerce(float),
         }
     )
@@ -1867,6 +1886,8 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
             raise probatio.Invalid("Value should be a dict or a list of dicts")
         if isinstance(data, list) and not self.config["multiple"]:
             raise probatio.Invalid("Value should not be a list")
+        if not isinstance(data, list) and self.config["multiple"]:
+            raise probatio.Invalid("Value should be a list")
 
         test_data = data if isinstance(data, list) else [data]
 
@@ -2184,6 +2205,10 @@ class TargetSelectorConfig(BaseSelectorConfig, total=False):
     primary_entities_only: bool
 
 
+# The IDs of one key of a target selection, which may contain templates
+type _TargetSelectionIds = str | Template | list[str | Template]
+
+
 @SELECTORS.register("target")
 class TargetSelector(Selector[TargetSelectorConfig]):
     """Selector of a target value (area ID, device ID, entity ID etc).
@@ -2214,9 +2239,13 @@ class TargetSelector(Selector[TargetSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> dict[str, list[str]]:
+    def __call__(
+        self, data: Any
+    ) -> dict[str, _TargetSelectionIds | dict[str, _TargetSelectionIds]]:
         """Validate the passed selection."""
-        target: dict[str, list[str]] = self.TARGET_SELECTION_SCHEMA(data)
+        target: dict[str, _TargetSelectionIds | dict[str, _TargetSelectionIds]] = (
+            self.TARGET_SELECTION_SCHEMA(data)
+        )
         return target
 
 

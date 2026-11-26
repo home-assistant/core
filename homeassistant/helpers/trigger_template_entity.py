@@ -1,5 +1,6 @@
 """TemplateEntity utility class."""
 
+from collections.abc import Mapping
 import itertools
 import logging
 from typing import Any, override
@@ -38,6 +39,8 @@ from .template import (
 )
 from .template.context import render_with_context
 from .typing import ConfigType
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_AVAILABILITY = "availability"
 CONF_ATTRIBUTES = "attributes"
@@ -242,7 +245,9 @@ class TriggerBaseEntity(Entity):
         """Set unique id."""
         self._unique_id = unique_id
 
-    def _template_variables(self, run_variables: dict[str, Any] | None = None) -> dict:
+    def _template_variables(
+        self, run_variables: Mapping[str, Any] | None = None
+    ) -> dict:
         """Render template variables."""
         return {
             "this": TemplateStateFromEntityId(self.hass, self.entity_id),
@@ -391,6 +396,32 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         ManualTriggerEntity.__init__(self, hass, config)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
+        self._non_numeric_logged = False
+
+    @callback
+    def _is_invalid_numeric_value(self, value: Any) -> bool:
+        """Return True if a numeric state is expected but value is not a number.
+
+        Logs a warning once until a valid value is set again, instead of the
+        state write raising on every update.
+        """
+        if value is None or not self._numeric_state_expected:
+            return False
+        try:
+            float(value)
+        except TypeError, ValueError:
+            if not self._non_numeric_logged:
+                _LOGGER.warning(
+                    "Sensor %s has a numeric device class, state class or unit but"
+                    " the value template returned the non-numeric value '%s',"
+                    " setting the state to unknown",
+                    self.entity_id,
+                    value,
+                )
+                self._non_numeric_logged = True
+            return True
+        self._non_numeric_logged = False
+        return False
 
     @callback
     def _set_native_value_with_possible_timestamp(self, value: Any) -> None:
@@ -399,11 +430,17 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         If self.device_class is `date`, `timestamp`, or `uptime`,
         it will try to parse the value to a date/datetime object.
         """
-        if self.device_class not in (
+        # Value templates render to strings, so a template rendering none gives "None"
+        if value == "None":
+            self._attr_native_value = None
+        elif self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
             SensorDeviceClass.UPTIME,
         ):
+            if self._is_invalid_numeric_value(value):
+                self._attr_native_value = None
+                return
             self._attr_native_value = value
         elif value is not None:
             self._attr_native_value = async_parse_date_datetime(

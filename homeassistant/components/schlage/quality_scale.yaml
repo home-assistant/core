@@ -4,22 +4,14 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      The error paths do not recover to a created config entry, and the unique
-      ID is not asserted in the user flow test.
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions: done
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
-  docs-high-level-description:
-    status: todo
-    comment: |
-      The description does not explain what Schlage is or link to the
-      manufacturer.
+  docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   docs-triggers:
@@ -37,20 +29,16 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      The lock, switch, and select platform actions do not translate pyschlage
-      failures into HomeAssistantError.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: This integration does not have an options flow.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
@@ -60,14 +48,9 @@ rules:
   discovery-update-info:
     status: exempt
     comment: |
-      Locks are reached exclusively through the Schlage cloud API and have no
-      discoverable presence on the local network.
-  discovery:
-    status: exempt
-    comment: |
-      Locks are enumerated from the user's Schlage cloud account. They do not
-      announce themselves over mDNS or SSDP and expose no local network
-      service to match against.
+      Locks are controlled through the Schlage cloud API, so there are no
+      connection details for discovery to update.
+  discovery: done
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: todo
@@ -82,12 +65,10 @@ rules:
     status: exempt
     comment: |
       Every entity maps to a lock feature a user is expected to want.
-  entity-translations:
-    status: todo
-    comment: Switch names are not sentence cased.
+  entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |

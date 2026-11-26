@@ -32,6 +32,14 @@
         "description": "No Roomba or Braava have been discovered on your network.",
         "title": "Manually connect to the device"
       },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::roomba::config::step::manual::data_description::host%]"
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -71,6 +79,23 @@
       },
       "scrubs_count": {
         "name": "Scrubs"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "charging": "Charging",
+          "charging_error": "Charging error",
+          "cleaning": "Cleaning",
+          "emptying": "Emptying",
+          "paused": "Paused",
+          "recharging": "Paused: recharging",
+          "refilling": "Refilling",
+          "returning_canceled": "Canceled: returning to dock",
+          "returning_finished": "Returning to dock",
+          "spot_cleaning": "Spot cleaning",
+          "stopped": "Stopped",
+          "stuck": "Stuck"
+        }
       },
       "successful_missions": {
         "name": "Successful missions"

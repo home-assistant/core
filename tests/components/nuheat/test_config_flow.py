@@ -34,7 +34,7 @@ def _patch_success() -> Generator[None]:
             "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.get_thermostat",
             return_value=_get_mock_thermostat_run(),
         ),
-        patch("homeassistant.components.nuheat.async_setup_entry", return_value=True),
+        patch("homeassistant.components.nuheat.async_setup_entry", return_value=None),
     ):
         yield
 
@@ -60,7 +60,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
             return_value=mock_thermostat,
         ),
         patch(
-            "homeassistant.components.nuheat.async_setup_entry", return_value=True
+            "homeassistant.components.nuheat.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

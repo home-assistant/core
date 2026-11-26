@@ -27,7 +27,7 @@ def _patch_valid_airport() -> Generator[None]:
     with (
         patch.object(faadelays.Airport, "update", new=mock_valid_airport),
         patch(
-            "homeassistant.components.faa_delays.async_setup_entry", return_value=True
+            "homeassistant.components.faa_delays.async_setup_entry", return_value=None
         ),
     ):
         yield
@@ -46,7 +46,7 @@ async def test_form(hass: HomeAssistant) -> None:
         patch.object(faadelays.Airport, "update", new=mock_valid_airport),
         patch(
             "homeassistant.components.faa_delays.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

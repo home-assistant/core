@@ -86,6 +86,8 @@ async def lock_fixture(hass: HomeAssistant) -> loqed.Lock:
     mock_lock.bolt_state = "locked"
     mock_lock.battery_percentage = 90
     mock_lock.ble_strength = -60
+    mock_lock.online = True
+    mock_lock.raw_data = {}
     return mock_lock
 
 
@@ -131,7 +133,7 @@ def patch_lock_creation_flow_fixture() -> PatchLockCreationFlow:
             ),
             patch(
                 "homeassistant.components.loqed.async_setup_entry",
-                return_value=True,
+                return_value=None,
             ),
             patch(
                 "homeassistant.components.webhook.async_generate_id",

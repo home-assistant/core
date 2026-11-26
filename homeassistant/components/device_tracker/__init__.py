@@ -3,9 +3,18 @@
 import asyncio
 from typing import Any
 
+from homeassistant.components.labs import (
+    EventLabsUpdatedData,
+    async_subscribe_preview_feature,
+)
+from homeassistant.components.zone import (
+    DOMAIN as ZONE_DOMAIN,
+    PREVIEW_FEATURE_IMPROVED_PRESENCE_DETECTION,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_HOME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -128,6 +137,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.config = {}
     component.register_shutdown()
 
+    async def _async_zone_presence_detection_changed(
+        _event_data: EventLabsUpdatedData,
+    ) -> None:
+        """Re-resolve the zones of tracker entities."""
+        for entity in list(component.entities):
+            if isinstance(entity, TrackerEntity):
+                entity.async_internal_zone_presence_detection_changed()
+
+    async_subscribe_preview_feature(
+        hass,
+        ZONE_DOMAIN,
+        PREVIEW_FEATURE_IMPROVED_PRESENCE_DETECTION,
+        _async_zone_presence_detection_changed,
+    )
+
     # The tracker is loaded in the async_setup_legacy_integration task so
     # we create a future to avoid waiting on it here so that only
     # async_platform_discovered will have to wait in the rare event
@@ -164,21 +188,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up an entry."""
     component: EntityComponent[BaseTrackerEntity] | None = hass.data.get(DOMAIN)
 
-    if component is not None:
-        return await component.async_setup_entry(entry)
+    if component is None:
+        component = hass.data[DATA_COMPONENT] = EntityComponent[BaseTrackerEntity](
+            LOGGER, DOMAIN, hass
+        )
+        component.register_shutdown()
 
-    component = hass.data[DATA_COMPONENT] = EntityComponent[BaseTrackerEntity](
-        LOGGER, DOMAIN, hass
-    )
-    component.register_shutdown()
+    if not await component.async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
-    return await component.async_setup_entry(entry)
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload an entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)

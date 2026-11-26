@@ -120,7 +120,7 @@ def motion_blinds_connect_fixture():
         ),
         patch(
             "homeassistant.components.motion_blinds.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield

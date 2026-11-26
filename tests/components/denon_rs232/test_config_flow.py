@@ -22,7 +22,7 @@ def mock_async_setup_entry(mock_receiver: MagicMock) -> Generator[AsyncMock]:
 
     with patch(
         "homeassistant.components.denon_rs232.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

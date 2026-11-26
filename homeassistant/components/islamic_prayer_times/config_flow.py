@@ -4,12 +4,7 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
@@ -22,19 +17,23 @@ from homeassistant.helpers.selector import (
 from .const import (
     CALC_METHODS,
     CONF_CALC_METHOD,
+    CONF_ISHA_CALENDAR_END,
     CONF_LAT_ADJ_METHOD,
     CONF_MIDNIGHT_MODE,
     CONF_SCHOOL,
     DEFAULT_CALC_METHOD,
+    DEFAULT_ISHA_CALENDAR_END,
     DEFAULT_LAT_ADJ_METHOD,
     DEFAULT_MIDNIGHT_MODE,
     DEFAULT_SCHOOL,
     DOMAIN,
+    ISHA_CALENDAR_ENDS,
     LAT_ADJ_METHODS,
     MIDNIGHT_MODES,
     NAME,
     SCHOOLS,
 )
+from .coordinator import IslamicPrayerTimesConfigEntry
 
 
 class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -47,7 +46,7 @@ class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: IslamicPrayerTimesConfigEntry,
     ) -> IslamicPrayerOptionsFlowHandler:
         """Get the options flow for this handler."""
         return IslamicPrayerOptionsFlowHandler()
@@ -143,6 +142,18 @@ class IslamicPrayerOptionsFlowHandler(OptionsFlow):
                     options=SCHOOLS,
                     mode=SelectSelectorMode.DROPDOWN,
                     translation_key=CONF_SCHOOL,
+                )
+            ),
+            probatio.Optional(
+                CONF_ISHA_CALENDAR_END,
+                default=self.config_entry.options.get(
+                    CONF_ISHA_CALENDAR_END, DEFAULT_ISHA_CALENDAR_END
+                ),
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=list(ISHA_CALENDAR_ENDS),
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key=CONF_ISHA_CALENDAR_END,
                 )
             ),
         }

@@ -96,7 +96,7 @@ async def mock_entry_with_one_event(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock the setup entry call, used for config flow tests."""
     with patch(
-        f"{AZURE_DATA_EXPLORER_PATH}.async_setup_entry", return_value=True
+        f"{AZURE_DATA_EXPLORER_PATH}.async_setup_entry", return_value=None
     ) as setup_entry:
         yield setup_entry
 

@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -24,6 +24,19 @@
         "data": {
           "phone_number": "Phone number"
         }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "indoor_coil_temperature": {
+        "name": "Indoor coil temperature"
+      },
+      "outdoor_coil_temperature": {
+        "name": "Outdoor coil temperature"
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
       }
     }
   }

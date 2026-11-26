@@ -7,10 +7,17 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import ProxmoxConfigEntry
 from .const import CONF_TOKEN_SECRET, CONF_USER
+from .coordinator import ProxmoxConfigEntry
 
-TO_REDACT = [CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_TOKEN_SECRET, CONF_USER]
+TO_REDACT = [
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_HOST,
+    CONF_TOKEN_SECRET,
+    CONF_USER,
+    "upid",
+]
 
 
 async def async_get_config_entry_diagnostics(
@@ -27,5 +34,5 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
-        "devices": devices,
+        "devices": async_redact_data(devices, TO_REDACT),
     }
