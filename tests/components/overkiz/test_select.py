@@ -17,7 +17,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -131,9 +131,9 @@ async def test_select_entities_snapshot(
         ),
         pytest.param(
             OVEN_MODE,
-            "pizza",
+            "fan_cooking",
             "setMode",
-            ["pizza"],
+            ["fanCooking"],
             id="oven_mode",
         ),
     ],
@@ -207,14 +207,14 @@ async def test_oven_mode_options_from_state(
     assert state.state == "defrost"
     assert state.attributes[ATTR_OPTIONS] == [
         "defrost",
-        "bottomHeat",
-        "bottomFan",
+        "bottom_heat",
+        "bottom_fan",
         "conventional",
-        "conventionalFan",
-        "fannedGrill",
-        "keepingWarm",
-        "fanCooking",
-        "combinedHeat",
+        "conventional_fan",
+        "fanned_grill",
+        "keeping_warm",
+        "fan_cooking",
+        "combined_heat",
         "bread",
         "drying",
         "pizza",
@@ -243,17 +243,50 @@ async def test_oven_mode_options_update_on_event(
                     {
                         "name": "core:AvailableModesState",
                         "type": 10,
-                        "value": ["eco", "pizza", "auto"],
+                        "value": ["eco", "fannedGrill", "auto"],
                     },
-                    {"name": "core:ModeState", "type": 3, "value": "pizza"},
+                    {"name": "core:ModeState", "type": 3, "value": "fannedGrill"},
                 ],
             )
         ],
     )
 
     state = hass.states.get(OVEN_MODE.entity_id)
-    assert state.state == "pizza"
-    assert state.attributes[ATTR_OPTIONS] == ["eco", "pizza", "auto"]
+    assert state.state == "fanned_grill"
+    assert state.attributes[ATTR_OPTIONS] == ["eco", "fanned_grill", "auto"]
+
+
+async def test_oven_mode_unknown_value(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test unknown oven modes are left out of the options and the state."""
+    await setup_overkiz_integration(fixture=OVEN_MODE.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=OVEN_MODE.device_url,
+                device_states=[
+                    {
+                        "name": "core:AvailableModesState",
+                        "type": 10,
+                        "value": ["eco", "futureMode"],
+                    },
+                    {"name": "core:ModeState", "type": 3, "value": "futureMode"},
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(OVEN_MODE.entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_OPTIONS] == ["eco"]
 
 
 async def test_oven_select_local_control_transition(
