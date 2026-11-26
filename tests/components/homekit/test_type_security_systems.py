@@ -12,7 +12,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.components.homekit.accessories import HomeDriver
+from homeassistant.components.homekit.accessories import HomeBridge, HomeDriver
 from homeassistant.components.homekit.const import ATTR_VALUE, PROP_VALID_VALUES
 from homeassistant.components.homekit.type_security_systems import SecuritySystem
 from homeassistant.const import (
@@ -680,6 +680,47 @@ async def test_missing_features_restore_default_valid_values(
     for char in (acc.char_current_state, acc.char_target_state):
         assert 0 in char.properties[PROP_VALID_VALUES].values()
         assert char.value == expected_value
+
+
+async def test_feature_change_in_bridge_bumps_config_version(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a bridged panel's new arm mode reaches the bridge's accessory response."""
+    hass.states.async_set(
+        PANEL_ENTITY_ID,
+        AlarmControlPanelState.DISARMED,
+        {"supported_features": AlarmControlPanelEntityFeature.ARM_AWAY},
+    )
+    await hass.async_block_till_done()
+    acc = SecuritySystem(hass, hk_driver, "SecuritySystem", PANEL_ENTITY_ID, 2, {})
+    bridge = HomeBridge(hass, hk_driver, "Test Bridge")
+    bridge.add_accessory(acc)
+    hk_driver.add_accessory(bridge)
+    hk_driver.state.set_accessories_hash(hk_driver.accessories_hash)
+    config_version = hk_driver.state.config_version
+    acc.run()
+    await hass.async_block_till_done()
+
+    with patch.object(hk_driver, "async_update_advertisement"):
+        hass.states.async_set(
+            PANEL_ENTITY_ID,
+            AlarmControlPanelState.ARMED_HOME,
+            {"supported_features": HOME_AND_AWAY},
+        )
+        await hass.async_block_till_done()
+
+    assert hk_driver.state.config_version == config_version + 1
+    hap_acc = next(
+        hap_acc
+        for hap_acc in hk_driver.get_accessories()["accessories"]
+        if hap_acc["aid"] == acc.aid
+    )
+    assert [
+        (char["value"], sorted(char["valid-values"]))
+        for service in hap_acc["services"]
+        for char in service["characteristics"]
+        if "valid-values" in char
+    ] == [(0, [0, 1, 3, 4]), (0, [0, 1, 3])]
 
 
 async def test_feature_change_without_new_valid_values_changes_nothing(
