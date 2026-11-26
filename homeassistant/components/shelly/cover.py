@@ -50,11 +50,12 @@ BLOCK_COVERS = {
     )
 }
 
-RPC_COVERS = {
-    "cover": RpcCoverDescription(
+RPC_COVERS = (
+    RpcCoverDescription(
         key="cover",
+        components=("cover",),
     ),
-}
+)
 
 
 async def async_setup_entry(

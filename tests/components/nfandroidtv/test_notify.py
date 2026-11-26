@@ -19,18 +19,12 @@ from homeassistant.components.nfandroidtv.const import (
 )
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
-    ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
+    NotifyServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_NAME,
-    STATE_UNKNOWN,
-    Platform,
-    TargetKey,
-)
+from homeassistant.const import CONF_NAME, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -99,11 +93,11 @@ async def test_send_message(
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MESSAGE: message_to_send,
-            ATTR_TITLE: "World",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            NotifyServiceArgument.MESSAGE: message_to_send,
+            NotifyServiceArgument.TITLE: "World",
         },
         blocking=True,
     )
@@ -135,11 +129,11 @@ async def test_send_message_exception(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "Hello",
-                ATTR_TITLE: "World",
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                NotifyServiceArgument.MESSAGE: "Hello",
+                NotifyServiceArgument.TITLE: "World",
             },
             blocking=True,
         )

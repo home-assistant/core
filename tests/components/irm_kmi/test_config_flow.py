@@ -2,11 +2,18 @@
 
 from unittest.mock import AsyncMock
 
-from irm_kmi_api import IrmKmiApiError
+from irm_kmi_api import IrmKmiApiError, RadarStyle
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
-from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
+from homeassistant.components.irm_kmi.const import (
+    CONF_DARK_MODE,
+    CONF_LANGUAGE_OVERRIDE,
+    CONF_LANGUAGE_OVERRIDE_OPTIONS,
+    CONF_RADAR_STYLE,
+    CONF_RADAR_STYLE_OPTIONS,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_LATITUDE,
@@ -16,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.translation import async_get_translations
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_config_flow_forecast")
@@ -111,6 +119,7 @@ async def test_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_irm_kmi_api")
 async def test_option_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -129,4 +138,61 @@ async def test_option_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_LANGUAGE_OVERRIDE: "none"}
+    assert result["data"] == {
+        CONF_DARK_MODE: False,
+        CONF_LANGUAGE_OVERRIDE: "none",
+        CONF_RADAR_STYLE: RadarStyle.OPTION_STYLE_STD,
+    }
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DARK_MODE: True,
+            CONF_LANGUAGE_OVERRIDE: "fr",
+            CONF_RADAR_STYLE: RadarStyle.OPTION_STYLE_YELLOW_RED,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_DARK_MODE: True,
+        CONF_LANGUAGE_OVERRIDE: "fr",
+        CONF_RADAR_STYLE: RadarStyle.OPTION_STYLE_YELLOW_RED,
+    }
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["data_schema"] is not None
+    assert {
+        key.schema: key.description["suggested_value"]
+        for key in result["data_schema"].schema
+    } == {
+        CONF_DARK_MODE: True,
+        CONF_LANGUAGE_OVERRIDE: "fr",
+        CONF_RADAR_STYLE: RadarStyle.OPTION_STYLE_YELLOW_RED,
+    }
+
+
+@pytest.mark.parametrize(
+    ("selector", "options"),
+    [
+        pytest.param(
+            CONF_LANGUAGE_OVERRIDE,
+            CONF_LANGUAGE_OVERRIDE_OPTIONS,
+            id="language_override",
+        ),
+        pytest.param(CONF_RADAR_STYLE, CONF_RADAR_STYLE_OPTIONS, id="radar_style"),
+    ],
+)
+async def test_selector_options_are_translated(
+    hass: HomeAssistant, selector: str, options: list[str]
+) -> None:
+    """Test every option of a selector has a translation."""
+    translations = await async_get_translations(hass, "en", "selector", {DOMAIN})
+    prefix = f"component.{DOMAIN}.selector.{selector}.options."
+
+    assert {
+        key.removeprefix(prefix) for key in translations if key.startswith(prefix)
+    } == set(options)

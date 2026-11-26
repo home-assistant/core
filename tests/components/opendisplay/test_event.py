@@ -128,7 +128,7 @@ async def test_stale_entities_removed_on_config_change(
     )
 
     # Device reconfigured: now only 1 active button
-    mock_opendisplay_device.config = make_button_device_config(
+    mock_opendisplay_device.config.cached = make_button_device_config(
         [make_binary_inputs(input_flags=0x01)]
     )
     assert await hass.config_entries.async_unload(mock_two_button_config_entry.entry_id)

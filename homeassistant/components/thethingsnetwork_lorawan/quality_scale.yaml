@@ -5,9 +5,7 @@ rules:
   appropriate-polling:
     status: done
     comment: The library polls the device list every 30 seconds; device readings arrive through event streams.
-  brands:
-    status: done
-    comment: https://github.com/home-assistant/brands/pull/11326
+  brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done

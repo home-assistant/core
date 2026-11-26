@@ -21,12 +21,10 @@ from homeassistant.components.humidifier import (
     DOMAIN as HUMIDIFIER_DOMAIN,
     MODE_AUTO,
     MODE_NORMAL,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_MODE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -145,8 +143,8 @@ async def test_humidifier_set_humidity(
     # Test set humidity
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HUMIDITY: 23},
+        HumidifierService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY_ID, HumidifierServiceArgument.HUMIDITY: 23},
         blocking=True,
     )
     mock_serial_bridge.set_humidity_status.assert_called()
@@ -172,8 +170,8 @@ async def test_humidifier_set_humidity_while_off(
     # Switch humidifier off
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_serial_bridge.set_humidity_status.assert_called()
@@ -185,8 +183,8 @@ async def test_humidifier_set_humidity_while_off(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
-            SERVICE_SET_HUMIDITY,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HUMIDITY: 23},
+            HumidifierService.SET_HUMIDITY,
+            {TargetKey.ENTITY_ID: ENTITY_ID, HumidifierServiceArgument.HUMIDITY: 23},
             blocking=True,
         )
     assert exc_info.value.translation_domain == DOMAIN
@@ -209,8 +207,8 @@ async def test_humidifier_set_mode(
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_SET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MODE: MODE_AUTO},
+        HumidifierService.SET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, HumidifierServiceArgument.MODE: MODE_AUTO},
         blocking=True,
     )
     mock_serial_bridge.set_humidity_status.assert_called()
@@ -236,8 +234,8 @@ async def test_humidifier_set_status(
     # Test turn off
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        HumidifierService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_serial_bridge.set_humidity_status.assert_called()
@@ -248,8 +246,8 @@ async def test_humidifier_set_status(
     # Test turn on
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        HumidifierService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_serial_bridge.set_humidity_status.assert_called()

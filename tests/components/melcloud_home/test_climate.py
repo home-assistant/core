@@ -629,30 +629,34 @@ async def test_atw_turn_on_off(
 
 
 @pytest.mark.parametrize(
-    ("operation_mode", "expected_min", "expected_max"),
+    ("power", "operation_mode", "expected_min", "expected_max"),
     [
-        pytest.param("Cool", 16.0, 31.0, id="cool"),
-        pytest.param("Automatic", 16.0, 31.0, id="auto"),
-        pytest.param("Fan", 7, 35, id="fan_only"),
+        pytest.param("True", "Cool", 16.0, 31.0, id="cool"),
+        pytest.param("True", "Automatic", 16.0, 31.0, id="auto"),
+        pytest.param("True", "Fan", 7, 35, id="fan_only"),
+        pytest.param("False", "Heat", 10.0, 31.0, id="off_heat"),
+        pytest.param("False", "Cool", 16.0, 31.0, id="off_cool"),
     ],
 )
 async def test_ata_temperature_range_by_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_melcloud_client: AsyncMock,
+    power: str,
     operation_mode: str,
     expected_min: float,
     expected_max: float,
 ) -> None:
-    """Test ATA min/max temperature for cool, auto, and fallback HVAC modes."""
+    """Test ATA min/max temperature follows the operation mode, also while off."""
     context: dict[str, Any] = await async_load_json_object_fixture(
         hass, "context.json", DOMAIN
     )
-    next(
-        setting
+    settings = {
+        setting["name"]: setting
         for setting in context["buildings"][0]["airToAirUnits"][0]["settings"]
-        if setting["name"] == "OperationMode"
-    )["value"] = operation_mode
+    }
+    settings["Power"]["value"] = power
+    settings["OperationMode"]["value"] = operation_mode
     mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
 
     await setup_integration(hass, mock_config_entry)
@@ -772,6 +776,11 @@ async def test_atw_zone_temperature_range(
             {"OperationMode": "FreezeStat"}, HVACAction.HEATING, id="freeze_stat"
         ),
         pytest.param({"OperationMode": "Cooling"}, HVACAction.COOLING, id="cooling"),
+        pytest.param(
+            {"OperationMode": "LegionellaPrevention"},
+            HVACAction.IDLE,
+            id="legionella_prevention",
+        ),
         pytest.param({"OperationMode": "Unknown"}, None, id="unknown"),
         pytest.param(
             {"OperationMode": "Heat", "Power": "False"}, HVACAction.OFF, id="off"

@@ -21,7 +21,10 @@ class FibaroEntity(Entity):
     _attr_should_poll = False
 
     def __init__(
-        self, fibaro_device: DeviceModel, controller: FibaroController
+        self,
+        fibaro_device: DeviceModel,
+        controller: FibaroController,
+        use_child_device_info: bool = False,
     ) -> None:
         """Initialize the device."""
         self.fibaro_device = fibaro_device
@@ -34,7 +37,12 @@ class FibaroEntity(Entity):
             f"{slugify(controller.hub_serial)}.{fibaro_device.fibaro_id}"
         )
 
-        self._attr_device_info = self.controller.get_device_info(fibaro_device)
+        if use_child_device_info:
+            self._attr_device_info = self.controller.get_child_device_info(
+                fibaro_device
+            )
+        else:
+            self._attr_device_info = self.controller.get_device_info(fibaro_device)
         # propagate hidden attribute set in fibaro home center to HA
         if not fibaro_device.visible:
             self._attr_entity_registry_visible_default = False

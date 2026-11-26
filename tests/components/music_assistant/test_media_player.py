@@ -29,27 +29,13 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
 from homeassistant.components.media_player import (
-    ATTR_GROUP_MEMBERS,
-    ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_REPEAT,
-    ATTR_MEDIA_SEARCH_QUERY,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
-    ATTR_SOUND_MODE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_CLEAR_PLAYLIST,
-    SERVICE_JOIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SEARCH_MEDIA,
-    SERVICE_SELECT_SOUND_MODE,
-    SERVICE_SELECT_SOURCE,
-    SERVICE_UNJOIN,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 from homeassistant.components.music_assistant.const import (
     ATTR_ALBUM,
@@ -71,13 +57,9 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
-    SERVICE_REPEAT_SET,
-    SERVICE_SHUFFLE_SET,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
     Platform,
@@ -249,10 +231,10 @@ async def test_media_player_volume_set_action(
     assert state
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
+        MediaPlayerService.VOLUME_SET,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+            TargetKey.ENTITY_ID: entity_id,
+            MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5,
         },
         blocking=True,
     )
@@ -274,10 +256,10 @@ async def test_media_player_volume_mute_action(
     assert state
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
+        MediaPlayerService.VOLUME_MUTE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MEDIA_VOLUME_MUTED: True,
+            TargetKey.ENTITY_ID: entity_id,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
         },
         blocking=True,
     )
@@ -328,10 +310,10 @@ async def test_media_player_shuffle_set_action(
     assert state
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SHUFFLE_SET,
+        MediaPlayerService.SHUFFLE_SET,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MEDIA_SHUFFLE: True,
+            TargetKey.ENTITY_ID: entity_id,
+            MediaPlayerServiceArgument.SHUFFLE: True,
         },
         blocking=True,
     )
@@ -356,10 +338,10 @@ async def test_media_player_repeat_set_action(
     assert state
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_REPEAT_SET,
+        MediaPlayerService.REPEAT_SET,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MEDIA_REPEAT: "one",
+            TargetKey.ENTITY_ID: entity_id,
+            MediaPlayerServiceArgument.REPEAT: "one",
         },
         blocking=True,
     )
@@ -384,10 +366,12 @@ async def test_media_player_join_players_action(
     assert state
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_GROUP_MEMBERS: ["media_player.my_super_test_player_2"],
+            TargetKey.ENTITY_ID: entity_id,
+            MediaPlayerServiceArgument.GROUP_MEMBERS: [
+                "media_player.my_super_test_player_2"
+            ],
         },
         blocking=True,
     )
@@ -404,10 +388,10 @@ async def test_media_player_join_players_action(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_GROUP_MEMBERS: ["media_player.blah_blah"],
+                TargetKey.ENTITY_ID: entity_id,
+                MediaPlayerServiceArgument.GROUP_MEMBERS: ["media_player.blah_blah"],
             },
             blocking=True,
         )
@@ -425,9 +409,9 @@ async def test_media_player_unjoin_player_action(
     assert state
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_UNJOIN,
+        MediaPlayerService.UNJOIN,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -449,9 +433,9 @@ async def test_media_player_clear_playlist_action(
     assert state
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_CLEAR_PLAYLIST,
+        MediaPlayerService.CLEAR_PLAYLIST,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -1242,11 +1226,11 @@ async def test_media_player_standard_play_media_default_user(
     user = MockUser(is_owner=True).add_to_hass(hass)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MEDIA_CONTENT_ID: "spotify://track/1234",
-            ATTR_MEDIA_CONTENT_TYPE: "music",
+            TargetKey.ENTITY_ID: entity_id,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "spotify://track/1234",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "music",
         },
         blocking=True,
         context=Context(user_id=user.id),
@@ -1605,7 +1589,7 @@ async def test_media_player_get_queue_action_items(
         DOMAIN,
         MusicAssistantService.GET_QUEUE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.LIMIT: 2,
             MusicAssistantServiceArgument.OFFSET: 25,
         },
@@ -1667,7 +1651,7 @@ async def test_media_player_get_queue_action_user(
         DOMAIN,
         MusicAssistantService.GET_QUEUE,
         {
-            ATTR_ENTITY_ID: "media_player.test_group_player_1",
+            TargetKey.ENTITY_ID: "media_player.test_group_player_1",
             MusicAssistantServiceArgument.LIMIT: 5,
         }
         | extra_data,
@@ -1695,7 +1679,7 @@ async def test_media_player_get_queue_action_older_server(
             DOMAIN,
             MusicAssistantService.GET_QUEUE,
             {
-                ATTR_ENTITY_ID: "media_player.test_group_player_1",
+                TargetKey.ENTITY_ID: "media_player.test_group_player_1",
                 MusicAssistantServiceArgument.LIMIT: 5,
                 MusicAssistantServiceArgument.USERNAME: "john",
             },
@@ -1716,7 +1700,7 @@ async def test_media_player_get_queue_action_no_active_queue(
         await hass.services.async_call(
             DOMAIN,
             MusicAssistantService.GET_QUEUE,
-            {ATTR_ENTITY_ID: "media_player.test_group_player_1"},
+            {TargetKey.ENTITY_ID: "media_player.test_group_player_1"},
             blocking=True,
             return_response=True,
         )
@@ -1734,7 +1718,7 @@ async def test_media_player_get_queue_action_offset_without_limit(
             DOMAIN,
             MusicAssistantService.GET_QUEUE,
             {
-                ATTR_ENTITY_ID: "media_player.test_group_player_1",
+                TargetKey.ENTITY_ID: "media_player.test_group_player_1",
                 MusicAssistantServiceArgument.OFFSET: 10,
             },
             blocking=True,
@@ -1756,10 +1740,10 @@ async def test_media_player_select_source_action(
     assert state
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
+        MediaPlayerService.SELECT_SOURCE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_INPUT_SOURCE: "Line-In",
+            TargetKey.ENTITY_ID: entity_id,
+            MediaPlayerServiceArgument.SOURCE: "Line-In",
         },
         blocking=True,
     )
@@ -1781,10 +1765,10 @@ async def test_media_player_select_sound_mode_action(
     assert state
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOUND_MODE,
+        MediaPlayerService.SELECT_SOUND_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_SOUND_MODE: "munich_translation",
+            TargetKey.ENTITY_ID: entity_id,
+            MediaPlayerServiceArgument.SOUND_MODE: "munich_translation",
         },
         blocking=True,
     )
@@ -2005,10 +1989,10 @@ async def test_search_media_acts_as_calling_user(
     ) as search:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SEARCH_MEDIA,
+            MediaPlayerService.SEARCH_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_player_1",
-                ATTR_MEDIA_SEARCH_QUERY: "nina chuba",
+                TargetKey.ENTITY_ID: "media_player.test_player_1",
+                MediaPlayerServiceArgument.SEARCH_QUERY: "nina chuba",
             },
             blocking=True,
             return_response=True,
@@ -2034,10 +2018,10 @@ async def test_websocket_search_media_acts_as_calling_user(
     ) as search:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SEARCH_MEDIA,
+            MediaPlayerService.SEARCH_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_player_1",
-                ATTR_MEDIA_SEARCH_QUERY: "artist a",
+                TargetKey.ENTITY_ID: "media_player.test_player_1",
+                MediaPlayerServiceArgument.SEARCH_QUERY: "artist a",
             },
             blocking=True,
             return_response=True,
@@ -2058,3 +2042,105 @@ async def test_websocket_search_media_acts_as_calling_user(
         user_id=hass_admin_user.id,
         required=False,
     )
+
+
+@pytest.mark.parametrize(
+    ("schema_version", "extra_data", "expected_user", "expected_schema"),
+    [
+        pytest.param(
+            101,
+            {MusicAssistantServiceArgument.USERNAME: "john"},
+            "john",
+            101,
+            id="given_user",
+        ),
+        pytest.param(
+            101,
+            {},
+            {"provider": "homeassistant", "user_id": "ha_user_1", "required": False},
+            101,
+            id="calling_user",
+        ),
+        pytest.param(
+            100,
+            {MusicAssistantServiceArgument.USERNAME: "john"},
+            "john",
+            101,
+            id="given_user_older_server",
+        ),
+        pytest.param(100, {}, None, None, id="older_server"),
+    ],
+)
+async def test_media_player_play_queue_item_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    schema_version: int,
+    extra_data: dict[str, Any],
+    expected_user: str | dict[str, Any] | None,
+    expected_schema: int | None,
+) -> None:
+    """Test play_queue_item runs on the active queue as a user where the server supports it."""
+    music_assistant_client.server_info.schema_version = schema_version
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    MockUser(id="ha_user_1", is_owner=True).add_to_hass(hass)
+    await hass.services.async_call(
+        DOMAIN,
+        MusicAssistantService.PLAY_QUEUE_ITEM,
+        {
+            TargetKey.ENTITY_ID: "media_player.test_group_player_1",
+            MusicAssistantServiceArgument.QUEUE_ITEM_ID: "queue_item_1",
+        }
+        | extra_data,
+        blocking=True,
+        context=Context(user_id="ha_user_1"),
+    )
+    sent = music_assistant_client.send_command.call_args
+    assert sent.args == ("player_queues/play_index",)
+    assert sent.kwargs["queue_id"] == "test_group_player_1"
+    assert sent.kwargs["index"] == "queue_item_1"
+    assert sent.kwargs.get("user") == expected_user
+    assert sent.kwargs["require_schema"] == expected_schema
+
+
+async def test_media_player_play_queue_item_action_older_server(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test play_queue_item as a given user on a server that can't act as a user."""
+    music_assistant_client.server_info.schema_version = 100
+    music_assistant_client.send_command.side_effect = InvalidServerVersion(
+        "Command requires schema 101"
+    )
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            MusicAssistantService.PLAY_QUEUE_ITEM,
+            {
+                TargetKey.ENTITY_ID: "media_player.test_group_player_1",
+                MusicAssistantServiceArgument.QUEUE_ITEM_ID: "queue_item_1",
+                MusicAssistantServiceArgument.USERNAME: "john",
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "server_too_old"
+
+
+async def test_media_player_play_queue_item_action_no_active_queue(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test play_queue_item raises a translated error when the player has no active queue."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.player_queues._queues.pop("test_group_player_1")
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            MusicAssistantService.PLAY_QUEUE_ITEM,
+            {
+                TargetKey.ENTITY_ID: "media_player.test_group_player_1",
+                MusicAssistantServiceArgument.QUEUE_ITEM_ID: "queue_item_1",
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "no_active_queue"

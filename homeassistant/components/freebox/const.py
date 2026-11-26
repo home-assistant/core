@@ -1,18 +1,18 @@
 """Freebox component constants."""
 
 import enum
-import socket
 from typing import Literal
 
 from homeassistant.const import Platform
 
 DOMAIN = "freebox"
 
+CONF_REGISTRATION_NAME = "registration_name"
+
 APP_DESC = {
     "app_id": "hass",
     "app_name": "Home Assistant",
     "app_version": "0.106",
-    "device_name": socket.gethostname(),
 }
 API_VERSION = "v6"
 

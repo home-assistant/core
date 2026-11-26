@@ -8,24 +8,13 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from samsung_exlink import CommandRejected, Key, SamsungTVError, TVState
 
 from homeassistant.components.remote import (
-    ATTR_DELAY_SECS,
-    ATTR_NUM_REPEATS,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
 from homeassistant.components.samsung_exlink.const import DOMAIN
 from homeassistant.components.samsung_exlink.coordinator import SCAN_INTERVAL
-from homeassistant.const import (
-    ATTR_COMMAND,
-    ATTR_ENTITY_ID,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -68,17 +57,26 @@ async def test_power_services_and_toggle(
 ) -> None:
     """Test power services delegate to the TV and toggle follows reported state."""
     await hass.services.async_call(
-        REMOTE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        REMOTE_DOMAIN,
+        RemoteService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     mock_samsung_tv.power_on.assert_awaited_once()
 
     await hass.services.async_call(
-        REMOTE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        REMOTE_DOMAIN,
+        RemoteService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     mock_samsung_tv.power_off.assert_awaited_once()
 
     await hass.services.async_call(
-        REMOTE_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        REMOTE_DOMAIN,
+        RemoteService.TOGGLE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert mock_samsung_tv.power_off.await_count == 2
 
@@ -86,7 +84,10 @@ async def test_power_services_and_toggle(
     mock_samsung_tv.mock_state(off_state)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        REMOTE_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        REMOTE_DOMAIN,
+        RemoteService.TOGGLE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert mock_samsung_tv.power_on.await_count == 2
 
@@ -138,12 +139,12 @@ async def test_send_command_repeats(
     """Test commands are mapped to library keys and repeated in order."""
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
+        RemoteService.SEND_COMMAND,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_COMMAND: ["KEY_POWER", "KEY_VOLUP"],
-            ATTR_NUM_REPEATS: 2,
-            ATTR_DELAY_SECS: 0,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            RemoteServiceArgument.COMMAND: ["KEY_POWER", "KEY_VOLUP"],
+            RemoteServiceArgument.NUM_REPEATS: 2,
+            RemoteServiceArgument.DELAY_SECS: 0,
         },
         blocking=True,
     )
@@ -166,12 +167,12 @@ async def test_send_command_delay_between_commands_and_repeats(
     ) as mock_sleep:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_COMMAND: ["KEY_POWER", "KEY_VOLUP"],
-                ATTR_NUM_REPEATS: 2,
-                ATTR_DELAY_SECS: 0.2,
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                RemoteServiceArgument.COMMAND: ["KEY_POWER", "KEY_VOLUP"],
+                RemoteServiceArgument.NUM_REPEATS: 2,
+                RemoteServiceArgument.DELAY_SECS: 0.2,
             },
             blocking=True,
         )
@@ -192,8 +193,11 @@ async def test_service_key_is_not_supported(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: "KEY_FACTORY"},
+            RemoteService.SEND_COMMAND,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                RemoteServiceArgument.COMMAND: "KEY_FACTORY",
+            },
             blocking=True,
         )
 
@@ -226,8 +230,11 @@ async def test_send_command_error(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: "KEY_POWER"},
+            RemoteService.SEND_COMMAND,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                RemoteServiceArgument.COMMAND: "KEY_POWER",
+            },
             blocking=True,
         )
 

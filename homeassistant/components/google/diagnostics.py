@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from gcal_sync.const import EVENT_SYNC
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -21,20 +23,17 @@ TO_REDACT = {
 
 def redact_store(data: dict[str, Any]) -> dict[str, Any]:
     """Redact personal information from calendar events in the store."""
-    id_num = 0
-    diagnostics = {}
-    for store_data in data.values():
-        local_store: dict[str, Any] = store_data.get("event_sync", {})
-        for calendar_data in local_store.values():
-            id_num += 1
-            items: dict[str, Any] = calendar_data.get("items", {})
-            diagnostics[f"calendar#{id_num}"] = {
-                "events": [
-                    async_redact_data(item, TO_REDACT) for item in items.values()
-                ],
-                "sync_token_version": calendar_data.get("sync_token_version"),
-            }
-    return diagnostics
+    local_store: dict[str, Any] = data.get(EVENT_SYNC, {})
+    return {
+        f"calendar#{id_num}": {
+            "events": [
+                async_redact_data(item, TO_REDACT)
+                for item in calendar_data.get("items", {}).values()
+            ],
+            "sync_token_version": calendar_data.get("sync_token_version"),
+        }
+        for id_num, calendar_data in enumerate(local_store.values(), start=1)
+    }
 
 
 async def async_get_config_entry_diagnostics(

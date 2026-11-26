@@ -6,7 +6,7 @@ from pyaprilaire.const import Attribute
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 
@@ -37,7 +37,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AprilaireConfigEntry) ->
             mac_address = format_mac(coordinator.data[Attribute.MAC_ADDRESS])
 
             if mac_address != entry.unique_id:
-                raise ConfigEntryAuthFailed("Invalid MAC address")
+                coordinator.stop_listen()
+
+                raise ConfigEntryError(
+                    f"Unexpected device found at {host}; expected {entry.unique_id},"
+                    f" found {mac_address}"
+                )
 
             entry.runtime_data = coordinator
             entry.async_on_unload(coordinator.stop_listen)

@@ -449,9 +449,9 @@ async def test_temp_unit_convert_sensor_invalid(
     state = hass.states.get("sensor.inverter_pool_heat_pump_temperature")
     assert state is not None
     assert state.attributes.get("device_class") is None
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.attributes.get("unit_of_measurement") is None
     assert (
-        "Device class temperature ignored for incompatible unit  in "
+        "Device class temperature ignored for incompatible unit None in "
         "sensor entity tuya.zuqudhznfzttizpgbrnztemp_current"
     ) in caplog.text
 

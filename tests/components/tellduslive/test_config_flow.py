@@ -1,12 +1,14 @@
 """Tests for the TelldusLive config flow."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tellduslive import APPLICATION_NAME, DOMAIN
+from homeassistant.components.tellduslive.const import KEY_SCAN_INTERVAL, KEY_SESSION
 from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -199,3 +201,87 @@ async def test_discovery_already_configured(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "expected_session"),
+    [
+        pytest.param(
+            {
+                "host": "Cloud API",
+                KEY_SCAN_INTERVAL: 60,
+                KEY_SESSION: {"token": "old", "token_secret": "old_secret"},
+            },
+            {"token": "token", "token_secret": "token_secret"},
+            id="cloud",
+        ),
+        pytest.param(
+            {
+                "host": "localhost",
+                KEY_SCAN_INTERVAL: 60,
+                KEY_SESSION: {"host": "localhost", "token": "old"},
+            },
+            {"host": "localhost", "token": "token"},
+            id="local",
+        ),
+    ],
+)
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_tellduslive: tuple[MagicMock, MagicMock],
+    mock_setup_entry: AsyncMock,
+    entry_data: dict[str, Any],
+    expected_session: dict[str, str],
+) -> None:
+    """Test reauthentication updates the session and reloads the entry."""
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["description_placeholders"]["auth_url"] == "https://example.com"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[KEY_SESSION] == expected_session
+    assert entry.data["host"] == entry_data["host"]
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize("authorize", [False])
+async def test_reauth_flow_invalid_auth(
+    hass: HomeAssistant,
+    mock_tellduslive: tuple[MagicMock, MagicMock],
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reauthentication recovers after a failed authorization."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "Cloud API",
+            KEY_SCAN_INTERVAL: 60,
+            KEY_SESSION: {"token": "old", "token_secret": "old_secret"},
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    session_cls, _ = mock_tellduslive
+    session_cls.return_value.authorize.return_value = True
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[KEY_SESSION] == {"token": "token", "token_secret": "token_secret"}
+    assert len(mock_setup_entry.mock_calls) == 1

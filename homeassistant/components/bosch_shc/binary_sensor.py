@@ -80,6 +80,16 @@ CLIMATE_CONTROL_DESCRIPTIONS: tuple[
     ),
 )
 
+SMOKE_DETECTION_SYSTEM_DESCRIPTION = SHCBinarySensorEntityDescription[
+    SHCSmokeDetectionSystem
+](
+    key="smoke_alarm",
+    device_class=BinarySensorDeviceClass.SMOKE,
+    is_on_fn=lambda device: (
+        device.alarm is not SurveillanceAlarmService.State.ALARM_OFF
+    ),
+)
+
 OUTDOOR_SIREN_DESCRIPTIONS: tuple[
     SHCBinarySensorEntityDescription[SHCOutdoorSiren], ...
 ] = (
@@ -100,6 +110,47 @@ OUTDOOR_SIREN_DESCRIPTIONS: tuple[
         device_class=BinarySensorDeviceClass.TAMPER,
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.siren.tamper_activated,
+    ),
+)
+
+OUTDOOR_SIREN_POWER_SUPPLY_DESCRIPTIONS: tuple[
+    SHCBinarySensorEntityDescription[SHCOutdoorSiren], ...
+] = (
+    SHCBinarySensorEntityDescription(
+        key="siren_ac_dc_error",
+        translation_key="siren_ac_dc_error",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: bool(
+            device.power_supply and device.power_supply.ac_dc_error
+        ),
+    ),
+    SHCBinarySensorEntityDescription(
+        key="siren_battery_defect",
+        translation_key="siren_battery_defect",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: bool(
+            device.power_supply and device.power_supply.battery_defect
+        ),
+    ),
+    SHCBinarySensorEntityDescription(
+        key="siren_battery_temperature_abnormal",
+        translation_key="siren_battery_temperature_abnormal",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: bool(
+            device.power_supply and device.power_supply.battery_temperature_abnormal
+        ),
+    ),
+    SHCBinarySensorEntityDescription(
+        key="siren_primary_power_supply_outage",
+        translation_key="siren_primary_power_supply_outage",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: bool(
+            device.power_supply and device.power_supply.primary_power_supply_outage
+        ),
     ),
 )
 
@@ -215,6 +266,19 @@ async def async_setup_entry(
     entities.extend(
         SHCBinarySensor(
             hass=hass,
+            device=siren,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            entity_description=description,
+        )
+        for siren in session.device_helper.outdoor_sirens
+        if siren.supports_power_supply
+        for description in OUTDOOR_SIREN_POWER_SUPPLY_DESCRIPTIONS
+    )
+
+    entities.extend(
+        SHCBinarySensor(
+            hass=hass,
             device=device,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
@@ -223,6 +287,19 @@ async def async_setup_entry(
         for device in session.device_helper.motion_detectors2
         for description in MOTION_DETECTOR2_DESCRIPTIONS
     )
+
+    if (
+        smoke_detection_system := session.device_helper.smoke_detection_system
+    ) is not None:
+        entities.append(
+            SHCBinarySensor(
+                hass=hass,
+                device=smoke_detection_system,
+                parent_id=shc_info.unique_id,
+                entry_id=config_entry.entry_id,
+                entity_description=SMOKE_DETECTION_SYSTEM_DESCRIPTION,
+            )
+        )
 
     async_add_entities(entities)
 

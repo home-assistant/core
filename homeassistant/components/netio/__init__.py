@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import NetioConfigEntry, NetioDataUpdateCoordinator
 
-PLATFORMS = [Platform.SWITCH]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NetioConfigEntry) -> None:

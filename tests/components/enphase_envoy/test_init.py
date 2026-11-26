@@ -527,6 +527,73 @@ async def test_dry_contact_relay_via_device(
     assert relay_device.via_device_id == enpower_device.id
 
 
+@pytest.mark.parametrize(
+    (
+        "mock_envoy",
+        "has_generator",
+        "remove_config",
+        "remove_schedule",
+        "remove_mode",
+    ),
+    [
+        ("envoy_metered_batt_relay", True, False, False, False),
+        ("envoy_metered_batt_relay", True, True, False, False),
+        ("envoy_metered_batt_relay", True, False, True, False),
+        ("envoy_metered_batt_relay", True, False, False, True),
+        ("envoy_metered_batt_relay", True, True, True, True),
+        ("envoy", False, False, False, False),
+    ],
+    indirect=["mock_envoy"],
+    ids=[
+        "generator",
+        "generator_no_config",
+        "generator_no_schedule",
+        "generator_no_mode",
+        "generator_only",
+        "no_generator",
+    ],
+)
+async def test_generator_device(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    has_generator: bool,
+    remove_config: bool,
+    remove_schedule: bool,
+    remove_mode: bool,
+) -> None:
+    """Test the standby generator device is created and can not be removed."""
+    if remove_config:
+        mock_envoy.data.generator_config = None
+    if remove_schedule:
+        mock_envoy.data.generator_schedule = None
+    if remove_mode:
+        mock_envoy.data.generator_mode = None
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, config_entry)
+
+    envoy_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234"), config_entry.entry_id
+    )
+    assert envoy_device is not None
+    generator_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234_generator"), config_entry.entry_id
+    )
+    if has_generator:
+        assert generator_device is not None
+        assert generator_device.via_device_id == envoy_device.id
+        assert generator_device.manufacturer == (None if remove_config else "Generac")
+    else:
+        assert generator_device is None
+
+    if has_generator:
+        hass_client = await hass_ws_client(hass)
+        response = await hass_client.remove_device(generator_device.id)
+        assert not response["success"]
+
+
 @pytest.mark.parametrize("mock_envoy", ["envoy_acb_batt"], indirect=["mock_envoy"])
 async def test_remove_config_entry_device_acb(
     hass: HomeAssistant,
@@ -1152,7 +1219,6 @@ async def test_init_no_solar(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test envoy options are passed to class at load."""
-    caplog.set_level(logging.DEBUG)
 
     token = envoy_token()
     entry = MockConfigEntry(

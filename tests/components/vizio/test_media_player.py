@@ -38,6 +38,8 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_UP,
     MediaPlayerDeviceClass,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 from homeassistant.components.vizio.const import (
     CONF_ADDITIONAL_CONFIGS,
@@ -765,8 +767,11 @@ async def test_setup_with_apps_additional_apps_config(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "_"},
+            MediaPlayerService.SELECT_SOURCE,
+            service_data={
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.SOURCE: "_",
+            },
             blocking=True,
         )
     assert not service_call1.called
@@ -1039,8 +1044,11 @@ async def test_select_invalid_sound_mode(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_SELECT_SOUND_MODE,
-            service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_SOUND_MODE: "invalid"},
+            MediaPlayerService.SELECT_SOUND_MODE,
+            service_data={
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.SOUND_MODE: "invalid",
+            },
             blocking=True,
         )
     set_setting.assert_not_called()
@@ -1062,8 +1070,8 @@ async def test_command_error_raises(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_TURN_ON,
-            service_data={ATTR_ENTITY_ID: ENTITY_ID},
+            MediaPlayerService.TURN_ON,
+            service_data={TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 

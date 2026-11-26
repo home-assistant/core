@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
 from typing import Any
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import Mock, patch
 
 import probatio
 import pytest
@@ -1807,13 +1807,23 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
     assert calls[0].data.get(ATTR_ENTITY_ID) == ["hello.world"]
 
 
+def _error_messages(caplog: pytest.LogCaptureFixture) -> list[str]:
+    """Return the errors which were logged by the automation integration."""
+    return [
+        record.getMessage()
+        for record in caplog.records
+        if record.name == automation.LOGGER.name and record.levelno == logging.ERROR
+    ]
+
+
 @pytest.mark.parametrize(
     ("broken_config", "problem", "details", "issue"),
     [
         (
             {},
             "could not be validated",
-            "required key not provided at 'actions'",
+            "required key not provided at 'triggers'. Got None\n"
+            "required key not provided at 'actions'. Got None",
             "validation_failed_schema",
         ),
         (
@@ -1823,7 +1833,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup triggers",
             "Integration 'automation' does not provide trigger support"
-            " at 'triggers[0]'. Got {'platform': 'automation'}",
+            " at 'triggers'. Got {'platform': 'automation'}",
             "validation_failed_triggers",
         ),
         (
@@ -1852,7 +1862,8 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup conditions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
-            " at 'conditions[0]'. Got {'condition': 'state',",
+            " at 'conditions'. Got {'condition': 'state',"
+            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'blah'}",
             "validation_failed_conditions",
         ),
         (
@@ -1867,7 +1878,8 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup actions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
-            " at 'actions[0]'. Got {'condition': 'state',",
+            " at 'actions'. Got {'condition': 'state',"
+            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'blah'}",
             "validation_failed_actions",
         ),
         (
@@ -1882,8 +1894,129 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup actions",
             "Invalid trigger 'not_a_platform' specified"
-            " at 'actions[0].wait_for_trigger[1]'. Got {'platform': 'not_a_platform'}",
+            " at 'actions.wait_for_trigger[1]'. Got {'platform': 'not_a_platform'}",
             "validation_failed_actions",
+        ),
+        (
+            # Errors in all sections, the issue is about the first one
+            {
+                "trigger": [
+                    {"trigger": "event", "event_type": "test_event"},
+                    {"trigger": "not_a_platform"},
+                ],
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                        "state": "blah",
+                    },
+                ],
+                "actions": [
+                    {"delay": 1},
+                    {
+                        "device_id": "unknown_device",
+                        "domain": "light",
+                        "type": "turn_on",
+                        "entity_id": "light.kitchen",
+                    },
+                    {"if": [{"condition": "not_a_platform"}], "then": []},
+                ],
+            },
+            "failed to setup triggers",
+            "Invalid trigger 'not_a_platform' specified at 'trigger[1]'."
+            " Got {'trigger': 'not_a_platform'}\n"
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            " at 'conditions[0]'. Got {'condition': 'state',"
+            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'blah'}\n"
+            "Unknown device 'unknown_device' at 'actions[1]'."
+            " Got {'device_id': 'unknown_device', 'domain': 'light',"
+            " 'type': 'turn_on', 'entity_id': 'light.kitchen'}\n"
+            'Invalid condition "not_a_platform" specified'
+            " at 'actions[2].if[0]'. Got {'condition': 'not_a_platform'}",
+            "validation_failed_triggers",
+        ),
+        (
+            # Errors of the schema and of triggers and actions
+            {
+                "triggers": {"trigger": "not_a_platform"},
+                "actions": [
+                    {"not_an_action": 1},
+                    {
+                        "device_id": "unknown_device",
+                        "domain": "light",
+                        "type": "turn_on",
+                        "entity_id": "light.kitchen",
+                    },
+                ],
+            },
+            "could not be validated",
+            "Unable to determine action at 'actions[0]'. Got {'not_an_action': 1}\n"
+            "Invalid trigger 'not_a_platform' specified at 'triggers'."
+            " Got {'trigger': 'not_a_platform'}\n"
+            "Unknown device 'unknown_device' at 'actions[1]'."
+            " Got {'device_id': 'unknown_device', 'domain': 'light',"
+            " 'type': 'turn_on', 'entity_id': 'light.kitchen'}",
+            "validation_failed_schema",
+        ),
+        (
+            # More errors than are listed
+            {
+                "triggers": [],
+                "actions": [
+                    {"delay": {"seconds": index}, "not_a_key": index}
+                    for index in range(12)
+                ],
+            },
+            "could not be validated",
+            "".join(
+                f"not a valid option at 'actions[{index}].not_a_key'. Got {index}\n"
+                for index in range(10)
+            )
+            + "… and 2 more errors",
+            "validation_failed_schema",
+        ),
+        (
+            # A key and the key it is renamed to, no other error is reported
+            {
+                "trigger": {"trigger": "not_a_platform"},
+                "triggers": {"trigger": "not_a_platform"},
+                "actions": [{"not_an_action": 1}],
+            },
+            "could not be validated",
+            "Cannot specify both 'trigger' and 'triggers'."
+            " Please use 'triggers' only.. Got {'alias': 'bad_automation',"
+            " 'trigger': {'trigger': 'not_a_platform'},"
+            " 'triggers': {'trigger': 'not_a_platform'},"
+            " 'actions': [{'not_an_action': 1}]}",
+            "validation_failed_schema",
+        ),
+        (
+            # The same for a key which is checked after another was renamed
+            {
+                "trigger": {"trigger": "not_a_platform"},
+                "action": [{"not_an_action": 1}],
+                "actions": [{"not_an_action": 1}],
+            },
+            "could not be validated",
+            "Cannot specify both 'action' and 'actions'."
+            " Please use 'actions' only.. Got {'alias': 'bad_automation',"
+            " 'trigger': {'trigger': 'not_a_platform'},"
+            " 'action': [{'not_an_action': 1}],"
+            " 'actions': [{'not_an_action': 1}]}",
+            "validation_failed_schema",
+        ),
+        (
+            # A null key, which YAML gives for `~:`, next to a renamed key
+            {
+                None: "oops",
+                "trigger": {"trigger": "not_a_platform"},
+                "actions": [],
+            },
+            "could not be validated",
+            "not a valid option at '[None]'. Got 'oops'\n"
+            "Invalid trigger 'not_a_platform' specified at 'trigger'."
+            " Got {'trigger': 'not_a_platform'}",
+            "validation_failed_schema",
         ),
     ],
 )
@@ -1916,11 +2049,11 @@ async def test_automation_bad_config_validation(
         },
     )
 
-    # Check we get the expected error message and issue
-    assert (
+    # Check we get the expected error message and issue, with all errors
+    assert _error_messages(caplog) == [
         f"Automation with alias 'bad_automation' {problem} and has been disabled:"
         f" {details}"
-    ) in caplog.text
+    ]
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 1
     assert issues[0]["issue_id"] == f"automation.bad_automation_{issue}"
@@ -1928,10 +2061,9 @@ async def test_automation_bad_config_validation(
     assert issues[0]["translation_placeholders"] == {
         "edit": "/config/automation/edit/None",
         "entity_id": "automation.bad_automation",
-        "error": ANY,
+        "error": details,
         "name": "bad_automation",
     }
-    assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # Make sure both automations are setup
     assert set(hass.states.async_entity_ids(DOMAIN)) == {
@@ -1964,6 +2096,45 @@ async def test_automation_bad_config_validation(
         )
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 0
+
+
+async def test_automation_valid_config_does_not_collect_errors(
+    hass: HomeAssistant,
+) -> None:
+    """Test the errors of a config are only collected if it is not valid."""
+    with patch(
+        "homeassistant.components.automation.config._async_collect_errors",
+        wraps=automation.config._async_collect_errors,
+    ) as mock_collect_errors:
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: [
+                    {
+                        "alias": "good_automation",
+                        "triggers": {"trigger": "event", "event_type": "test_event"},
+                        "conditions": {"condition": "template", "value_template": "1"},
+                        "actions": {"action": "test.automation"},
+                    },
+                ]
+            },
+        )
+        assert hass.states.get("automation.good_automation").state == STATE_ON
+        mock_collect_errors.assert_not_called()
+
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={
+                automation.DOMAIN: {"alias": "bad_automation", "triggers": []}
+            },
+        ):
+            await hass.services.async_call(
+                automation.DOMAIN, AutomationService.RELOAD, blocking=True
+            )
+        assert hass.states.get("automation.bad_automation").state == STATE_UNAVAILABLE
+        mock_collect_errors.assert_called_once()
 
 
 async def test_automation_trigger_validation_home_assistant_error(
@@ -3631,8 +3802,24 @@ async def test_blueprint_automation_override(
                 "service_to_call": {"dict": "not allowed"},
                 "a_number": 5,
             },
-            "Blueprint 'Call service based on event' generated invalid automation",
-            "value should be a string at 'actions.action'",
+            "Blueprint 'Call service based on event' generated invalid automation"
+            " with inputs {'trigger_event': 'blueprint_event',"
+            " 'service_to_call': {'dict': 'not allowed'}, 'a_number': 5}",
+            "value should be a string at 'actions.action'. Got {'dict': 'not allowed'}",
+        ),
+        (
+            # Wrong inputs, used in triggers and actions
+            {
+                "trigger_event": {"dict": "not allowed"},
+                "service_to_call": {"dict": "not allowed"},
+                "a_number": 5,
+            },
+            "Blueprint 'Call service based on event' generated invalid automation"
+            " with inputs {'trigger_event': {'dict': 'not allowed'},"
+            " 'service_to_call': {'dict': 'not allowed'}, 'a_number': 5}",
+            "value should be a string at 'actions.action'."
+            " Got {'dict': 'not allowed'}\n"
+            "template value should be a string at 'triggers.event_type[0]'. Got None",
         ),
     ],
 )
@@ -3640,9 +3827,9 @@ async def test_blueprint_automation_bad_config(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
-    blueprint_inputs,
-    problem,
-    details,
+    blueprint_inputs: dict[str, Any],
+    problem: str,
+    details: str,
 ) -> None:
     """Test blueprint automation with bad inputs."""
     assert await async_setup_component(
@@ -3657,8 +3844,7 @@ async def test_blueprint_automation_bad_config(
             }
         },
     )
-    assert problem in caplog.text
-    assert details in caplog.text
+    assert _error_messages(caplog) == [f"{problem}: {details}"]
 
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 1
@@ -3668,10 +3854,9 @@ async def test_blueprint_automation_bad_config(
     assert issues[0]["translation_placeholders"] == {
         "edit": "/config/automation/edit/None",
         "entity_id": "automation.automation_0",
-        "error": ANY,
+        "error": details,
         "name": "automation 0",
     }
-    assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # The automation is broken, but still listed under its blueprint
     assert automation.automations_with_blueprint(hass, "test_event_service.yaml") == [

@@ -119,6 +119,10 @@ def create_dyad_trait() -> Mock:
     dyad_trait = AsyncMock()
     dyad_trait.add_update_listener = Mock(return_value=Mock())
     dyad_trait.values = dict(DYAD_VALUES)
+    dyad_trait._values = dict(DYAD_VALUES)
+    dyad_trait.as_dict = Mock(
+        return_value={protocol.name: value for protocol, value in DYAD_VALUES.items()}
+    )
     dyad_trait.last_message_time = None
     return dyad_trait
 
@@ -126,7 +130,7 @@ def create_dyad_trait() -> Mock:
 def create_zeo_trait() -> Mock:
     """Create zeo trait for A01 devices."""
     zeo_trait = AsyncMock()
-    zeo_trait.query_values.return_value = {
+    zeo_values = {
         RoborockZeoProtocol.STATE: ZeoState.drying.name,
         RoborockZeoProtocol.COUNTDOWN: 0,
         RoborockZeoProtocol.WASHING_LEFT: 253,
@@ -144,6 +148,12 @@ def create_zeo_trait() -> Mock:
         RoborockZeoProtocol.DRYING_MODE: 3,
         RoborockZeoProtocol.SOUND_SET: False,
     }
+    zeo_trait.query_values.return_value = zeo_values
+    zeo_trait.values = dict(zeo_values)
+    zeo_trait._values = dict(zeo_values)
+    zeo_trait.as_dict = Mock(
+        return_value={protocol.name: value for protocol, value in zeo_values.items()}
+    )
     return zeo_trait
 
 

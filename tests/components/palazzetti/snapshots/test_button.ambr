@@ -12,7 +12,7 @@
     'device_id': <DeviceEntry connections=[('mac', '11:22:33:44:55:66')]>,
     'disabled_by': None,
     'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'button.stove_silent',
     'has_entity_name': True,
     'hidden_by': None,

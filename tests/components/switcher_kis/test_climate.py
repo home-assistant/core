@@ -356,3 +356,21 @@ async def test_climate_control_errors(
             {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.SWING_MODE: "off"},
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("mock_bridge", "mock_api")
+@pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
+async def test_unsupported_remote(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no climate entity is created for a remote without IR codes."""
+    monkeypatch.setattr(DEVICE, "remote_id", "TOSHIBA1")
+    await init_integration(hass)
+
+    assert hass.states.get(ENTITY_ID) is None
+    assert (
+        f"Cannot control {DEVICE.name}: Breeze remote TOSHIBA1 is not supported"
+        in caplog.text
+    )

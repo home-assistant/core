@@ -6,16 +6,11 @@ components. Instead call the service directly.
 
 from homeassistant.components.water_heater import (
     _LOGGER,
-    ATTR_AWAY_MODE,
-    ATTR_OPERATION_MODE,
     DOMAIN,
-    SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, ENTITY_MATCH_ALL
+from homeassistant.const import ENTITY_MATCH_ALL, TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -23,12 +18,14 @@ async def async_set_away_mode(
     hass: HomeAssistant, away_mode: bool, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Turn all or specified water_heater devices away mode on."""
-    data = {ATTR_AWAY_MODE: away_mode}
+    data = {WaterHeaterServiceArgument.AWAY_MODE: away_mode}
 
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_SET_AWAY_MODE, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, WaterHeaterService.SET_AWAY_MODE, data, blocking=True
+    )
     await hass.async_block_till_done()
 
 
@@ -42,15 +39,15 @@ async def async_set_temperature(
     kwargs = {
         key: value
         for key, value in (
-            (ATTR_TEMPERATURE, temperature),
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_OPERATION_MODE, operation_mode),
+            (WaterHeaterServiceArgument.TEMPERATURE, temperature),
+            (TargetKey.ENTITY_ID, entity_id),
+            (WaterHeaterServiceArgument.OPERATION_MODE, operation_mode),
         )
         if value is not None
     }
     _LOGGER.debug("set_temperature start data=%s", kwargs)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_TEMPERATURE, kwargs, blocking=True
+        DOMAIN, WaterHeaterService.SET_TEMPERATURE, kwargs, blocking=True
     )
     await hass.async_block_till_done()
 
@@ -59,13 +56,13 @@ async def async_set_operation_mode(
     hass: HomeAssistant, operation_mode: str, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Set new target operation mode."""
-    data = {ATTR_OPERATION_MODE: operation_mode}
+    data = {WaterHeaterServiceArgument.OPERATION_MODE: operation_mode}
 
     if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
+        DOMAIN, WaterHeaterService.SET_OPERATION_MODE, data, blocking=True
     )
     await hass.async_block_till_done()
 
@@ -75,9 +72,11 @@ async def async_turn_on(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) 
     data = {}
 
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, WaterHeaterService.TURN_ON, data, blocking=True
+    )
     await hass.async_block_till_done()
 
 
@@ -88,7 +87,9 @@ async def async_turn_off(
     data = {}
 
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, WaterHeaterService.TURN_OFF, data, blocking=True
+    )
     await hass.async_block_till_done()

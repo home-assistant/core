@@ -1,9 +1,9 @@
 """Sensor to indicate whether the current day is a workday."""
 
 from datetime import timedelta
-from typing import cast
+from typing import Any, cast
 
-from holidays import DateLike, HolidayBase
+from holidays import DateLike, HolidayBase, country_holidays
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
@@ -18,9 +18,12 @@ from .const import (
     CONF_OFFSET,
     CONF_PROVINCE,
     CONF_REMOVE_HOLIDAYS,
+    COUNTRY_OPTIONS,
     DOMAIN,
     LOGGER,
     PLATFORMS,
+    SECTION_COUNTRY_SETTINGS,
+    SECTION_CUSTOM_HOLIDAYS,
 )
 from .services import async_setup_services
 from .util import (
@@ -45,23 +48,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) -> None:
     """Set up Workday from a config entry."""
 
+    custom_holidays: dict[str, list[str]] = entry.options[SECTION_CUSTOM_HOLIDAYS]
+    country_settings: dict[str, Any] = entry.options.get(SECTION_COUNTRY_SETTINGS, {})
     calc_add_holidays = cast(
-        list[DateLike], validate_dates(entry.options[CONF_ADD_HOLIDAYS])
+        list[DateLike], validate_dates(custom_holidays[CONF_ADD_HOLIDAYS])
     )
     calc_remove_holidays: list[str] = validate_dates(
-        entry.options[CONF_REMOVE_HOLIDAYS]
+        custom_holidays[CONF_REMOVE_HOLIDAYS]
     )
-    categories: list[str] | None = entry.options.get(CONF_CATEGORY)
+    categories: list[str] | None = country_settings.get(CONF_CATEGORY)
     country: str | None = entry.options.get(CONF_COUNTRY)
     days_offset: int = int(entry.options[CONF_OFFSET])
-    language: str | None = entry.options.get(CONF_LANGUAGE)
-    province: str | None = entry.options.get(CONF_PROVINCE)
+    language: str | None = country_settings.get(CONF_LANGUAGE)
+    province: str | None = country_settings.get(CONF_PROVINCE)
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
 
     await async_validate_country_and_province(hass, entry, country, province)
 
     entry.runtime_data = await hass.async_add_executor_job(
-        get_holidays_object, country, province, year, language, categories
+        get_holidays_object,
+        country,
+        province,
+        year,
+        language,
+        categories,
+        country_settings,
     )
 
     add_remove_custom_holidays(
@@ -92,3 +103,39 @@ async def async_migrate_entry(hass: HomeAssistant, entry: WorkdayConfigEntry) ->
             entry,
             minor_version=2,
         )
+
+    if entry.version == 1:
+        options = dict(entry.options)
+        options[SECTION_CUSTOM_HOLIDAYS] = {
+            CONF_ADD_HOLIDAYS: options.pop(CONF_ADD_HOLIDAYS),
+            CONF_REMOVE_HOLIDAYS: options.pop(CONF_REMOVE_HOLIDAYS),
+        }
+        if country_settings := {
+            key: options.pop(key)
+            for key in (CONF_PROVINCE, CONF_LANGUAGE, CONF_CATEGORY)
+            if key in options
+        }:
+            options[SECTION_COUNTRY_SETTINGS] = country_settings
+        hass.config_entries.async_update_entry(
+            entry, options=options, version=2, minor_version=1
+        )
+
+    if entry.version == 2 and entry.minor_version < 2:
+        options = dict(entry.options)
+        if country := options.get(CONF_COUNTRY):
+            try:
+                country_data = await hass.async_add_import_executor_job(
+                    country_holidays, country
+                )
+            except NotImplementedError:
+                supported_options = {}
+            else:
+                supported_options = country_data.get_supported_options()
+            # Store the defaults, so equal entries are found as duplicates
+            country_settings = dict(options.get(SECTION_COUNTRY_SETTINGS, {}))
+            for option in COUNTRY_OPTIONS:
+                if option in supported_options:
+                    country_settings.setdefault(option, supported_options[option])
+            if country_settings:
+                options[SECTION_COUNTRY_SETTINGS] = country_settings
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=2)

@@ -118,10 +118,26 @@ def async_get_energy_site_for_entry(
     )
 
 
+def async_get_energy_site_for_signed_command(
+    hass: HomeAssistant, call: ServiceCall
+) -> TeslemetryEnergyData:
+    """Get the energy site for a command Teslemetry signs with its own key."""
+    device, config = async_get_device_and_config_for_service_call(hass, call)
+    site = async_get_energy_site_for_entry(hass, device, config)
+    if not site.signed_commands_available(
+        config.runtime_data.metadata_coordinator.data
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="energy_site_not_paired",
+            translation_placeholders={"site": site.device["name"]},
+        )
+    return site
+
+
 async def async_dispatch_battery_power(call: ServiceCall) -> None:
     """Charge or discharge the battery at a set power for a set time."""
-    device, config = async_get_device_and_config_for_service_call(call.hass, call)
-    site = async_get_energy_site_for_entry(call.hass, device, config)
+    site = async_get_energy_site_for_signed_command(call.hass, call)
 
     await handle_energy_site_command(
         site.api.dispatch_battery_power(
@@ -133,8 +149,7 @@ async def async_dispatch_battery_power(call: ServiceCall) -> None:
 
 async def async_resume_battery_operation(call: ServiceCall) -> None:
     """Return the battery to its configured operating mode."""
-    device, config = async_get_device_and_config_for_service_call(call.hass, call)
-    site = async_get_energy_site_for_entry(call.hass, device, config)
+    site = async_get_energy_site_for_signed_command(call.hass, call)
 
     await handle_energy_site_command(site.api.resume_battery_operation())
 
