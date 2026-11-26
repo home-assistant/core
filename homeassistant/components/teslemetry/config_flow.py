@@ -679,7 +679,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         # Without listed gateways, fall back to the site id: the gateway DIN,
         # which starts with its part number.
         part_numbers = [
-            gateway["part_number"]
+            gateway.get("part_number", "")
             for gateway in site_info.get("components_gateways", [])
         ] or [site_info.get("id", "")]
         self._legacy_gateway = any(

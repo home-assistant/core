@@ -2832,6 +2832,24 @@ def _site_info_with_gateway(din: str, gateways: list[dict[str, Any]]) -> dict[st
             True,
             id="gateway_1_site_din",
         ),
+        pytest.param(
+            _site_info_with_gateway(
+                SITE_INFO["response"]["id"],
+                [
+                    {
+                        key: value
+                        for key, value in SITE_INFO["response"]["components"][
+                            "gateways"
+                        ][0].items()
+                        if key != "part_number"
+                    }
+                ],
+            ),
+            "credentials",
+            "sword",
+            False,
+            id="gateway_without_part_number",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_rsa_key")
