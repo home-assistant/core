@@ -8,18 +8,7 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions
 from aiohttp import ClientError
 import pytest
-
-from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
-from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
-from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult, FlowResultType
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import ATTR_COMPONENT
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     MockPlatform,
     flush_store,
@@ -27,6 +16,17 @@ from tests.common import (
     mock_config_flow,
     mock_platform,
 )
+
+from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
+from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
+from homeassistant.components.homeassistant_hardware.util import FlasherType
+from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import EVENT_COMPONENT_LOADED
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import ATTR_COMPONENT
 
 TEST_DOMAIN = "test"
 TEST_DOMAIN_2 = "test_2"
@@ -106,9 +106,9 @@ class FakeOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
         return "test_zigbee_ncp"
 
     @property
-    def _flasher_cls(self) -> type:
-        """Return the hardware-specific flasher class."""
-        return Mock
+    def _flasher_type(self) -> FlasherType:
+        """Return the hardware-specific flasher type."""
+        return FlasherType.ZBT1
 
 
 @pytest.fixture(autouse=True)
@@ -159,7 +159,6 @@ def mock_firmware_client() -> Generator[tuple[AsyncMock, AsyncMock]]:
 def hassio_integration(hass: HomeAssistant) -> Generator[None]:
     """Fixture to mock the `hassio` integration."""
     mock_component(hass, "hassio")
-    hass.data["hassio"] = Mock(spec_set=HassIO)
 
 
 class MockMultiprotocolPlatform(MockPlatform):
@@ -200,7 +199,7 @@ def mock_multiprotocol_platform(
 
 
 def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
+    """Get suggested value for key in probatio schema."""
     for k in schema:
         if k == key:
             if k.description is None or "suggested_value" not in k.description:
@@ -1434,6 +1433,74 @@ async def test_import_channel(
     await hass.async_block_till_done()
 
     assert multipan_manager.async_get_channel() == new_multipan_channel
+
+
+@pytest.mark.parametrize(
+    ("initial_multipan_channel", "platform_using_multipan", "channel_read"),
+    [
+        (None, True, True),
+        (None, False, False),
+        (11, True, False),
+        (11, False, False),
+    ],
+)
+async def test_import_channel_only_read_when_needed(
+    hass: HomeAssistant,
+    initial_multipan_channel: int | None,
+    platform_using_multipan: bool,
+    channel_read: bool,
+) -> None:
+    """Test the platform channel is only read if it can be imported."""
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
+    multipan_manager._channel = initial_multipan_channel
+
+    mock_multiprotocol_platform = MockMultiprotocolPlatform()
+    mock_multiprotocol_platform.using_multipan = platform_using_multipan
+
+    hass.config.components.add(TEST_DOMAIN)
+    mock_platform(
+        hass, f"{TEST_DOMAIN}.silabs_multiprotocol", mock_multiprotocol_platform
+    )
+
+    with patch.object(
+        mock_multiprotocol_platform,
+        "async_get_channel",
+        AsyncMock(return_value=15),
+    ) as mock_get_channel:
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: TEST_DOMAIN})
+        await hass.async_block_till_done()
+
+    assert mock_get_channel.called is channel_read
+
+
+async def test_import_channel_not_overwritten_while_reading(
+    hass: HomeAssistant,
+) -> None:
+    """Test a channel imported while reading the platform channel is kept."""
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
+    multipan_manager._channel = None
+
+    mock_multiprotocol_platform = MockMultiprotocolPlatform()
+
+    async def get_channel(hass: HomeAssistant) -> int:
+        # Another platform imports its channel while this one is being read
+        multipan_manager.async_set_channel(11)
+        return 15
+
+    hass.config.components.add(TEST_DOMAIN)
+    mock_platform(
+        hass, f"{TEST_DOMAIN}.silabs_multiprotocol", mock_multiprotocol_platform
+    )
+
+    with patch.object(mock_multiprotocol_platform, "async_get_channel", get_channel):
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: TEST_DOMAIN})
+        await hass.async_block_till_done()
+
+    assert multipan_manager.async_get_channel() == 11
 
 
 @pytest.mark.parametrize(

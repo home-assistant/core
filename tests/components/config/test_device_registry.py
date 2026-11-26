@@ -5,17 +5,36 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant.components.config import DOMAIN, device_registry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, label_registry as lr
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    label_registry as lr,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
+
+@pytest.fixture
+def areas_and_labels(area_registry: ar.AreaRegistry) -> None:
+    """Create the areas that the tests assign to entries."""
+    for name in (
+        "12345a",
+        "12345b",
+        "attic",
+        "bedroom",
+        "garage",
+        "garden",
+        "kitchen",
+        "mock_area_id",
+    ):
+        area_registry.async_create(name)
 
 
 @pytest.fixture(name="client")
@@ -78,6 +97,7 @@ async def test_list_devices(
             "modified_at": utcnow().timestamp(),
             "name_by_user": None,
             "name": None,
+            "next_name_part": None,
             "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
@@ -104,6 +124,7 @@ async def test_list_devices(
             "modified_at": utcnow().timestamp(),
             "name_by_user": None,
             "name": None,
+            "next_name_part": None,
             "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
@@ -143,6 +164,7 @@ async def test_list_devices(
             "modified_at": utcnow().timestamp(),
             "name_by_user": None,
             "name": None,
+            "next_name_part": None,
             "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
@@ -274,7 +296,7 @@ async def test_list_composite_splits(
 @pytest.mark.parametrize(
     ("payload_key", "payload_value"),
     [
-        ("area_id", "12345A"),
+        ("area_id", "12345a"),
         ("area_id", None),
         ("disabled_by", dr.DeviceEntryDisabler.USER),
         ("disabled_by", "user"),
@@ -283,6 +305,7 @@ async def test_list_composite_splits(
         ("name_by_user", None),
     ],
 )
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_update_device(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
@@ -419,8 +442,10 @@ async def test_update_device_strips_unknown_labels(
         config_entry_id=entry.entry_id,
         identifiers={("bridgeid", "0123")},
     )
-    # Seed a stale label via the helper layer, bypassing WS stripping
+    # Seed a stale label: the label registry drops it without the usual cleanup
+    label_registry.async_create("stale_label")
     device_registry.async_update_device(device.id, labels={"stale_label"})
+    del label_registry.labels["stale_label"]
     label_registry.async_create("label1")
     await client.send_json_auto_id(
         {
@@ -435,6 +460,34 @@ async def test_update_device_strips_unknown_labels(
     assert msg["success"]
     assert set(msg["result"]["labels"]) == expected_labels
     assert device_registry.async_get(device.id).labels == expected_labels
+
+
+async def test_update_device_unknown_area(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test updating a device to an unknown area returns an error."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/update",
+            "device_id": device.id,
+            "area_id": "unknown",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_info"
+    assert msg["error"]["message"] == "Area 'unknown' not found."
+    assert device_registry.async_get(device.id).area_id is None
 
 
 async def test_update_device_unknown_device(
@@ -604,7 +657,7 @@ async def test_remove_device(
     # Identifiers and connections are unique per config entry, so the two config
     # entries get separate devices even though they share a connection
     assert device_entry_1.id != device_entry.id
-    assert device_entry.config_entries == {entry_2.entry_id}
+    assert device_entry.config_entry_id == entry_2.entry_id
 
     # Removal is rejected while async_remove_config_entry_device returns False
     response = await _send_remove_device(
@@ -628,9 +681,9 @@ async def test_remove_device(
     assert not device_registry.async_get(device_entry.id)
 
     # The device belonging to the other config entry is untouched
-    assert device_registry.async_get(device_entry_1.id).config_entries == {
-        entry_1.entry_id
-    }
+    assert (
+        device_registry.async_get(device_entry_1.id).config_entry_id == entry_1.entry_id
+    )
 
     # Only the deprecated alias logs a deprecation warning
     assert (_DEPRECATION_WARNING in caplog.text) is deprecated
@@ -698,9 +751,9 @@ async def test_remove_device_fails(
     )
     # Identifiers and connections are unique per config entry, so each config entry
     # gets its own device even though they share a connection
-    assert device_entry_1.config_entries == {entry_1.entry_id}
-    assert device_entry_2.config_entries == {entry_2.entry_id}
-    assert device_entry_3.config_entries == {entry_3.entry_id}
+    assert device_entry_1.config_entry_id == entry_1.entry_id
+    assert device_entry_2.config_entry_id == entry_2.entry_id
+    assert device_entry_3.config_entry_id == entry_3.entry_id
 
     fake_device_id = "abc123"
     assert device_entry_3.id != fake_device_id
@@ -797,7 +850,7 @@ async def test_remove_device_if_integration_removes(
     # Identifiers and connections are unique per config entry, so the two config
     # entries get separate devices even though they share a connection
     assert device_entry_1.id != device_entry.id
-    assert device_entry.config_entries == {entry_2.entry_id}
+    assert device_entry.config_entry_id == entry_2.entry_id
 
     # Removal is rejected while async_remove_config_entry_device returns False
     response = await ws_client.remove_device(device_entry.id)
@@ -817,9 +870,9 @@ async def test_remove_device_if_integration_removes(
     assert not device_registry.async_get(device_entry.id)
 
     # The device belonging to the other config entry is untouched
-    assert device_registry.async_get(device_entry_1.id).config_entries == {
-        entry_1.entry_id
-    }
+    assert (
+        device_registry.async_get(device_entry_1.id).config_entry_id == entry_1.entry_id
+    )
 
 
 @pytest.mark.parametrize(("command", "deprecated"), _REMOVE_DEVICE_COMMANDS)
@@ -1074,6 +1127,7 @@ async def test_list_devices_with_child_devices(
             "modified_at": parent.modified_at.timestamp(),
             "name_by_user": None,
             "name": "Power strip",
+            "next_name_part": None,
             "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
@@ -1092,6 +1146,7 @@ async def test_list_devices_with_child_devices(
             "modified_at": child_device.modified_at.timestamp(),
             "name_by_user": None,
             "name": "Outlet 1",
+            "next_name_part": "parent_device",
             "parent_device_id": parent.id,
         },
     ]
@@ -1108,6 +1163,7 @@ async def test_list_devices_with_child_devices(
         ),
     ],
 )
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_update_child_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1143,6 +1199,7 @@ async def test_update_child_device(
     assert getattr(updated_child, payload_key) == expected_registry_value
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_update_child_device_area_round_trip(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

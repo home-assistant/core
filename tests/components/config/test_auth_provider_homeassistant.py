@@ -1,15 +1,16 @@
 """Test config entries API."""
 
 from typing import Any
+from unittest.mock import patch
 
+from aiohttp import WSMsgType
 import pytest
+from pytest_homeassistant.common import CLIENT_ID, MockUser
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.auth.providers import homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
 from homeassistant.core import HomeAssistant
-
-from tests.common import CLIENT_ID, MockUser
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -74,9 +75,123 @@ async def test_create_auth_system_generated_user(
     assert result["error"]["code"] == "system_generated"
 
 
-async def test_create_auth_user_already_credentials() -> None:
+async def test_create_auth_user_already_credentials(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
     """Test we can't create auth for user with pre-existing credentials."""
-    # assert False
+    client = await hass_ws_client(hass)
+    user = MockUser().add_to_hass(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth_provider/homeassistant/create",
+            "user_id": user.id,
+            "username": "test-user2",
+            "password": "test-pass",
+        }
+    )
+    result = await client.receive_json()
+    assert result["success"], result
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/auth_provider/homeassistant/create",
+            "user_id": user.id,
+            "username": "test-user3",
+            "password": "test-pass",
+        }
+    )
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "credentials_exist"
+    assert len(user.credentials) == 1
+
+    with pytest.raises(prov_ha.InvalidAuth):
+        await auth_provider.async_validate_login("test-user3", "test-pass")
+
+
+async def test_create_auth_concurrent(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test concurrent creates for the same user attach only one credential."""
+    client = await hass_ws_client(hass)
+    user = MockUser().add_to_hass(hass)
+
+    for msg_id, username in ((5, "test-user2"), (6, "test-user3")):
+        await client.send_json(
+            {
+                "id": msg_id,
+                "type": "config/auth_provider/homeassistant/create",
+                "user_id": user.id,
+                "username": username,
+                "password": "test-pass",
+            }
+        )
+
+    results = {
+        result["id"]: result
+        for result in (await client.receive_json(), await client.receive_json())
+    }
+    assert results[5]["success"], results[5]
+    assert not results[6]["success"], results[6]
+    assert results[6]["error"]["code"] == "credentials_exist"
+    assert len(user.credentials) == 1
+
+
+async def test_create_auth_owner_not_owner(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_owner_user: MockUser,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test an admin that is not the owner can't add credentials to the owner."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth_provider/homeassistant/create",
+            "user_id": hass_owner_user.id,
+            "username": "test-user2",
+            "password": "test-pass",
+        }
+    )
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "unauthorized"
+    assert len(hass_owner_user.credentials) == 0
+
+    with pytest.raises(prov_ha.InvalidAuth):
+        await auth_provider.async_validate_login("test-user2", "test-pass")
+
+
+async def test_create_auth_owner(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_owner_user: MockUser,
+    owner_access_token: str,
+) -> None:
+    """Test the owner can add credentials to itself."""
+    client = await hass_ws_client(hass, owner_access_token)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth_provider/homeassistant/create",
+            "user_id": hass_owner_user.id,
+            "username": "test-user2",
+            "password": "test-pass",
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["success"], result
+    assert len(hass_owner_user.credentials) == 1
 
 
 async def test_create_auth_unknown_user(
@@ -195,60 +310,119 @@ async def test_create_auth_duplicate_username(
 async def test_delete_removes_just_auth(
     hass_ws_client: WebSocketGenerator,
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    auth_provider: prov_ha.HassAuthProvider,
 ) -> None:
     """Test deleting an auth without being connected to a user."""
     client = await hass_ws_client(hass)
-
-    hass_storage[prov_ha.STORAGE_KEY] = {
-        "version": 1,
-        "data": {"users": [{"username": "test-user"}]},
-    }
+    await auth_provider.async_add_auth("unlinked-user", "test-pass")
 
     await client.send_json(
         {
             "id": 5,
             "type": "config/auth_provider/homeassistant/delete",
-            "username": "test-user",
+            "username": "unlinked-user",
         }
     )
 
     result = await client.receive_json()
     assert result["success"], result
-    assert len(hass_storage[prov_ha.STORAGE_KEY]["data"]["users"]) == 0
+    assert auth_provider.data is not None
+    assert [user["username"] for user in auth_provider.data.users] == ["test-user"]
+
+
+async def test_delete_own_credentials_replies_before_logging_out(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test deleting the password of this session replies before it is closed."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 0.001
+    ):
+        await client.send_json(
+            {
+                "id": 5,
+                "type": "config/auth_provider/homeassistant/delete",
+                "username": "test-user",
+            }
+        )
+
+        result = await client.receive_json()
+        assert result["success"], result
+        assert (await client.receive()).type is WSMsgType.CLOSE
+
+    assert hass_admin_user.credentials == []
+    assert hass_admin_user.refresh_tokens == {}
+    assert auth_provider.data is not None
+    assert auth_provider.data.users == []
 
 
 async def test_delete_removes_credential(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    hass_storage: dict[str, Any],
+    auth_provider: prov_ha.HassAuthProvider,
 ) -> None:
     """Test deleting auth that is connected to a user."""
     client = await hass_ws_client(hass)
 
     user = MockUser().add_to_hass(hass)
-    hass_storage[prov_ha.STORAGE_KEY] = {
-        "version": 1,
-        "data": {"users": [{"username": "test-user"}]},
-    }
-
-    user.credentials.append(
-        await hass.auth.auth_providers[0].async_get_or_create_credentials(
-            {"username": "test-user"}
-        )
+    await hass.async_add_executor_job(
+        auth_provider.data.add_auth, "other-user", "other-pass"
     )
+    credential = await auth_provider.async_get_or_create_credentials(
+        {"username": "other-user"}
+    )
+    await hass.auth.async_link_user(user, credential)
 
     await client.send_json(
         {
             "id": 5,
             "type": "config/auth_provider/homeassistant/delete",
-            "username": "test-user",
+            "username": "other-user",
         }
     )
 
     result = await client.receive_json()
     assert result["success"], result
-    assert len(hass_storage[prov_ha.STORAGE_KEY]["data"]["users"]) == 0
+    assert user.credentials == []
+    assert not any(
+        entry["username"] == "other-user" for entry in auth_provider.data.users
+    )
+
+
+async def test_delete_owner_credentials(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test deleting auth that is connected to the owner is refused."""
+    client = await hass_ws_client(hass)
+
+    owner = MockUser(is_owner=True).add_to_hass(hass)
+    await hass.async_add_executor_job(
+        auth_provider.data.add_auth, "owner-user", "owner-pass"
+    )
+    credential = await auth_provider.async_get_or_create_credentials(
+        {"username": "owner-user"}
+    )
+    await hass.auth.async_link_user(owner, credential)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth_provider/homeassistant/delete",
+            "username": "owner-user",
+        }
+    )
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "cannot_delete_owner_credentials"
+    assert owner.credentials == [credential]
+    assert any(entry["username"] == "owner-user" for entry in auth_provider.data.users)
 
 
 async def test_delete_requires_admin(
@@ -309,6 +483,28 @@ async def test_change_password(
             "id": 6,
             "type": "config/auth_provider/homeassistant/change_password",
             "current_password": "test-pass",
+            "new_password": "new-pass",
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["success"], result
+    await auth_provider.async_validate_login("test-user", "new-pass")
+
+
+async def test_change_password_from_an_empty_password(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test a user with an empty password can change it to a real one."""
+    await auth_provider.async_change_password("test-user", "")
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/auth_provider/homeassistant/change_password",
+            "current_password": "",
             "new_password": "new-pass",
         }
     )

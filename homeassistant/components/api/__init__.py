@@ -9,7 +9,7 @@ from typing import Any
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest
-import voluptuous as vol
+import probatio
 
 from homeassistant import core as ha
 from homeassistant.auth.models import User
@@ -36,6 +36,7 @@ from homeassistant.const import (
     URL_API_STATES,
     URL_API_STREAM,
     URL_API_TEMPLATE,
+    TargetKey,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import (
@@ -455,7 +456,7 @@ class APIDomainServicesView(HomeAssistantView):
                     f"api service call {domain}.{service}",
                 )
             )
-        except (vol.Invalid, ServiceNotFound) as ex:
+        except (probatio.Invalid, ServiceNotFound) as ex:
             raise HTTPBadRequest from ex
         except ServiceValidationError as ex:
             return self.json_message(str(ex), HTTPStatus.BAD_REQUEST)
@@ -463,7 +464,21 @@ class APIDomainServicesView(HomeAssistantView):
             # Handled by the view wrapper, which maps it to 401
             raise
         except HomeAssistantError as ex:
-            _LOGGER.error("Error during service call to %s.%s: %s", domain, service, ex)
+            call_data = data if isinstance(data, dict) else {}
+            if target := {
+                key: value for key, value in call_data.items() if key in TargetKey
+            }:
+                _LOGGER.error(
+                    "Error during service call to %s.%s with target %s: %s",
+                    domain,
+                    service,
+                    target,
+                    ex,
+                )
+            else:
+                _LOGGER.error(
+                    "Error during service call to %s.%s: %s", domain, service, ex
+                )
             return self.json_message(str(ex), HTTPStatus.INTERNAL_SERVER_ERROR)
         finally:
             cancel_listen()

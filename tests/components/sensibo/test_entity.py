@@ -7,21 +7,20 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from pysensibo.model import SensiboData
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_FAN_MODE,
+    ClimateService,
+    ClimateServiceArgument,
 )
 from homeassistant.components.sensibo.const import DOMAIN, SENSIBO_ERRORS
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import async_fire_time_changed
 
 
 async def test_device(
@@ -140,8 +139,8 @@ async def test_entity_failed_service_calls(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_FAN_MODE: "low"},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: state.entity_id, ClimateServiceArgument.FAN_MODE: "low"},
         blocking=True,
     )
 
@@ -153,8 +152,11 @@ async def test_entity_failed_service_calls(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_FAN_MODE: "low"},
+            ClimateService.SET_FAN_MODE,
+            {
+                TargetKey.ENTITY_ID: state.entity_id,
+                ClimateServiceArgument.FAN_MODE: "low",
+            },
             blocking=True,
         )
 

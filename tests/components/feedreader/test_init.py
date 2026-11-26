@@ -9,6 +9,7 @@ import urllib.error
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.feedreader.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -25,8 +26,6 @@ from .const import (
     VALID_CONFIG_100,
     VALID_CONFIG_DEFAULT,
 )
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(

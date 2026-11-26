@@ -1,6 +1,7 @@
 """Support for a Genius Hub system."""
 
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import aiohttp
@@ -16,6 +17,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -52,7 +54,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) -> None:
     """Create a Genius Hub system."""
     if CONF_TOKEN in entry.data and CONF_MAC in entry.data:
         entity_registry = er.async_get(hass)
@@ -86,15 +88,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) ->
     try:
         await client.update()
     except aiohttp.ClientResponseError as err:
-        _LOGGER.error("Setup failed, check your configuration, %s", err)
-        return False
+        if err.status == HTTPStatus.UNAUTHORIZED:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+        ) from err
     broker.make_debug_log_entries()
 
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 class GeniusBroker:

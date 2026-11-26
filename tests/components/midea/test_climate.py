@@ -11,6 +11,7 @@ from midealocal.devices.cc import DeviceAttributes as CCAttributes
 from midealocal.devices.cf import DeviceAttributes as CFAttributes
 from midealocal.devices.fb import DeviceAttributes as FBAttributes
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -42,10 +43,12 @@ from homeassistant.components.climate import (
     SWING_BOTH,
     SWING_ON,
     SWING_VERTICAL,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.midea.climate import FAN_FULL_SPEED, FAN_SILENT
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -53,8 +56,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DummyDevice, entity_entries
 from .const import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _assert_service_calls(
@@ -615,18 +616,17 @@ async def test_ac_set_temperature_without_hvac_mode(
 @pytest.mark.parametrize(
     ("humidity", "expected_humidity"),
     [
-        pytest.param(50, 50.0, id="normal"),
-        pytest.param(0, None, id="invalid_zero"),
-        pytest.param(0xFF, None, id="invalid_ff"),
+        pytest.param(50, 50.0, id="numeric"),
+        pytest.param(None, None, id="unavailable"),
     ],
 )
-async def test_ac_humidity_filtering(
+async def test_ac_current_humidity(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
-    humidity: int,
+    humidity: int | None,
     expected_humidity: float | None,
 ) -> None:
-    """Test AC humidity filtering for invalid sensor values."""
+    """Test AC current_humidity reflects the device's raw attribute value."""
     device = DummyDevice(
         DeviceType.AC,
         attributes={
@@ -672,7 +672,7 @@ async def test_base_set_temperature_without_target_noop(
 
     device.calls.clear()
     assert entity is not None
-    entity.set_temperature()
+    await entity.async_set_temperature()
     assert device.calls == []
 
 
@@ -905,10 +905,10 @@ async def test_set_temperature_unsupported_hvac_mode_raises(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: entity_entry.entity_id,
-                ATTR_TEMPERATURE: 23.0,
+                TargetKey.ENTITY_ID: entity_entry.entity_id,
+                ClimateServiceArgument.TEMPERATURE: 23.0,
                 "hvac_mode": HVACMode.DRY,
             },
             blocking=True,

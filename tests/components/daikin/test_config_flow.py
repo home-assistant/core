@@ -1,12 +1,16 @@
 """Tests for the Daikin config flow."""
 
+import asyncio
 from collections.abc import Generator
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, PropertyMock, patch
+import threading
+import time
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aiohttp import ClientError, web_exceptions
-from pydaikin.exceptions import DaikinException
+from pydaikin.exceptions import DaikinException, DaikinUnsupportedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -15,17 +19,37 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from tests.common import MockConfigEntry
-
 MAC = "AABBCCDDEEFF"
 HOST = "127.0.0.1"
+ZEROCONF_INFO = ZeroconfServiceInfo(
+    ip_address=ip_address(HOST),
+    ip_addresses=[ip_address(HOST)],
+    hostname="mock_hostname",
+    name="mock_name",
+    port=None,
+    properties={},
+    type="mock_type",
+)
+
+
+def _zeroconf_info(host: str) -> ZeroconfServiceInfo:
+    """Return zeroconf discovery info for a host."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(host),
+        ip_addresses=[ip_address(host)],
+        hostname="mock_hostname",
+        name="mock_name",
+        port=None,
+        properties={},
+        type="mock_type",
+    )
 
 
 @pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.daikin.async_setup_entry", return_value=True
+        "homeassistant.components.daikin.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -56,6 +80,29 @@ def mock_daikin_discovery():
         yield Discovery
 
 
+@pytest.fixture
+def mock_daikin_discovery_unsupported() -> Generator[MagicMock]:
+    """Mock pydaikin Discovery returning an unsupported device."""
+    with patch("homeassistant.components.daikin.config_flow.Discovery") as Discovery:
+        Discovery().poll.return_value = {
+            "127.0.0.1": {
+                "mac": MAC,
+                "type": "GPF",
+                "protocol": "DGC",
+                "ver": "2_6_3",
+            }
+        }.values()
+        yield Discovery
+
+
+@pytest.fixture
+def mock_daikin_discovery_empty() -> Generator[MagicMock]:
+    """Mock pydaikin Discovery returning no devices."""
+    with patch("homeassistant.components.daikin.config_flow.Discovery") as Discovery:
+        Discovery().poll.return_value = {}.values()
+        yield Discovery
+
+
 async def test_user(hass: HomeAssistant, mock_daikin) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
@@ -74,6 +121,7 @@ async def test_user(hass: HomeAssistant, mock_daikin) -> None:
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][KEY_MAC] == MAC
+    assert result["result"].unique_id == MAC
 
 
 async def test_abort_if_already_setup(hass: HomeAssistant, mock_daikin) -> None:
@@ -106,7 +154,12 @@ async def test_abort_if_already_setup(hass: HomeAssistant, mock_daikin) -> None:
         (Exception, "unknown"),
     ],
 )
-async def test_device_abort(hass: HomeAssistant, mock_daikin, s_effect, reason) -> None:
+async def test_device_abort(
+    hass: HomeAssistant,
+    mock_daikin: MagicMock,
+    s_effect: type[Exception] | Exception,
+    reason: str,
+) -> None:
     """Test device abort."""
     mock_daikin.side_effect = s_effect
 
@@ -125,7 +178,35 @@ async def test_device_abort(hass: HomeAssistant, mock_daikin, s_effect, reason) 
     assert result["errors"] == {"base": reason}
     assert result["step_id"] == "user"
 
+    mock_daikin.side_effect = AsyncMock(return_value=mock_daikin)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: HOST},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
+
+async def test_user_unsupported_device(
+    hass: HomeAssistant, mock_daikin: MagicMock
+) -> None:
+    """Test user flow aborts for a detected but unsupported device."""
+    mock_daikin.side_effect = DaikinUnsupportedError("not supported")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: HOST},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+
+
+@pytest.mark.usefixtures("mock_daikin")
 async def test_api_password_abort(hass: HomeAssistant) -> None:
     """Test device abort."""
     result = await hass.config_entries.flow.async_init(
@@ -143,21 +224,19 @@ async def test_api_password_abort(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "api_password"}
     assert result["step_id"] == "user"
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: HOST},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("source", "data", "unique_id"),
     [
         (
             SOURCE_ZEROCONF,
-            ZeroconfServiceInfo(
-                ip_address=ip_address(HOST),
-                ip_addresses=[ip_address(HOST)],
-                hostname="mock_hostname",
-                name="mock_name",
-                port=None,
-                properties={},
-                type="mock_type",
-            ),
+            ZEROCONF_INFO,
             MAC,
         ),
     ],
@@ -198,3 +277,96 @@ async def test_discovery_zeroconf(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
+
+
+@pytest.mark.usefixtures("mock_daikin")
+async def test_discovery_zeroconf_runs_in_executor(hass: HomeAssistant) -> None:
+    """Test the blocking UDP discovery runs off the event loop thread."""
+    threads: list[int] = []
+
+    def mock_discovery() -> MagicMock:
+        threads.append(threading.get_ident())
+        discovery = MagicMock()
+
+        def mock_poll(ip: str) -> list[dict[str, str]]:
+            threads.append(threading.get_ident())
+            return [{"mac": MAC, "id": "test"}]
+
+        discovery.poll.side_effect = mock_poll
+        return discovery
+
+    with patch(
+        "homeassistant.components.daikin.config_flow.Discovery",
+        side_effect=mock_discovery,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_INFO
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert len(threads) == 2
+    assert threading.get_ident() not in threads
+
+
+@pytest.mark.usefixtures("mock_daikin")
+async def test_discovery_zeroconf_polls_serialized(hass: HomeAssistant) -> None:
+    """Test concurrent zeroconf flows do not poll at the same time."""
+    lock = threading.Lock()
+    active = 0
+    max_active = 0
+
+    def mock_poll(ip: str) -> list[dict[str, str]]:
+        nonlocal active, max_active
+        with lock:
+            active += 1
+            max_active = max(max_active, active)
+        # Keep the poll busy long enough for an unserialized one to overlap
+        time.sleep(0.1)
+        with lock:
+            active -= 1
+        return [{"mac": ip, "id": "test"}]
+
+    with patch("homeassistant.components.daikin.config_flow.Discovery") as discovery:
+        discovery.return_value.poll.side_effect = mock_poll
+        results = await asyncio.gather(
+            *(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_ZEROCONF},
+                    data=_zeroconf_info(host),
+                )
+                for host in ("127.0.0.1", "127.0.0.2")
+            )
+        )
+
+    assert [result["type"] for result in results] == [FlowResultType.FORM] * 2
+    assert discovery.return_value.poll.call_count == 2
+    assert max_active == 1
+
+
+async def test_discovery_zeroconf_unsupported_device(
+    hass: HomeAssistant, mock_daikin_discovery_unsupported: MagicMock
+) -> None:
+    """Test zeroconf aborts for a detected but unsupported device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+
+
+async def test_discovery_zeroconf_cannot_connect(
+    hass: HomeAssistant, mock_daikin_discovery_empty: MagicMock
+) -> None:
+    """Test zeroconf aborts when no device is discovered."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"

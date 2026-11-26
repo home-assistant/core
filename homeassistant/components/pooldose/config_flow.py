@@ -6,7 +6,7 @@ from typing import Any, override
 from pooldose.client import PooldoseClient
 from pooldose.request_status import RequestStatus
 from pooldose.type_definitions import APIVersionResponse
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC
@@ -18,9 +18,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SCHEMA_DEVICE = vol.Schema(
+SCHEMA_DEVICE = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
     }
 )
 
@@ -88,6 +88,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         # Else: Continue with new flow
         self._discovered_ip = discovery_info.ip
         self._discovered_mac = discovery_info.macaddress
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="dhcp_confirm",
             description_placeholders={

@@ -4,17 +4,26 @@ from collections.abc import Callable
 from enum import StrEnum
 from itertools import chain
 import logging
+import math
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.condition import ConditionsChecker
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trace import trace_get
-from homeassistant.helpers.typing import TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+
+from .const import CONF_DEFAULT_ENTITY_ID, DEFAULT_NAMES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +31,42 @@ _LOGGER = logging.getLogger(__name__)
 # from cv.boolean and are used to produce logger errors for the user.
 RESULT_ON = ("1", "true", "yes", "on", "enable")
 RESULT_OFF = ("0", "false", "no", "off", "disable")
+
+
+def entity_config_identifier(platform: Platform, entity_config: ConfigType) -> str:
+    """Return the most specific user facing identifier for an entity config."""
+    default_name = DEFAULT_NAMES[platform]
+    if (
+        (name := entity_config.get(CONF_NAME))
+        and isinstance(name, Template)
+        and name.template != default_name
+    ):
+        return f"{CONF_NAME}: {name.template}"
+    if default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID):
+        return f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
+    if unique_id := entity_config.get(CONF_UNIQUE_ID):
+        return f"{CONF_UNIQUE_ID}: {unique_id}"
+    return f"{CONF_NAME}: {default_name}"
+
+
+def entity_config_repair_identifier(
+    platform: Platform,
+    entity_config: ConfigType,
+    section_unique_id: str | None = None,
+) -> str:
+    """Return the most stable identifier of an entity config for a repair issue.
+
+    Entities can share a name but not a unique_id, so unlike
+    entity_config_identifier the unique_id and default_entity_id win over the name.
+    """
+    if unique_id := entity_config.get(CONF_UNIQUE_ID):
+        # Matches the unique_id the entity is created with
+        if section_unique_id:
+            unique_id = f"{section_unique_id}-{unique_id}"
+        return f"{CONF_UNIQUE_ID}: {unique_id}"
+    if default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID):
+        return f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
+    return entity_config_identifier(platform, entity_config)
 
 
 class BlockedTemplateAttributes:
@@ -68,7 +113,7 @@ def validate_attributes(
             return obj
 
         if blocked := blocked_attributes.blocked(obj):
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"Unsupported attribute(s) found for {breadcrumb}: {', '.join(blocked)}"
             )
 
@@ -82,7 +127,7 @@ def log_validation_error(
     template: Template,
     attribute: str,
     entity_id: str | None,
-    exception: vol.Invalid,
+    exception: probatio.Invalid,
 ):
     """Log template entity validation error."""
     logging.getLogger(
@@ -146,6 +191,8 @@ def strenum[T: StrEnum](
     state_enum: type[T],
     state_on: T | None = None,
     state_off: T | None = None,
+    *,
+    deprecated_enums: tuple[T, ...] | None = None,
     **kwargs: Any,
 ) -> Callable[[Any], T | None]:
     """Converts the template result to an StrEnum.
@@ -165,9 +212,12 @@ def strenum[T: StrEnum](
         if isinstance(result, str):
             value = result.lower().strip()
             try:
-                return state_enum(value)
+                enum_value = state_enum(value)
             except ValueError:
                 pass
+            else:
+                if enum_value not in (deprecated_enums or ()):
+                    return enum_value
 
         if state_on or state_off:
             try:
@@ -178,10 +228,12 @@ def strenum[T: StrEnum](
                 if state_off and not bool_value:
                     return state_off
 
-            except vol.Invalid:
+            except probatio.Invalid:
                 pass
 
-        expected = tuple(s.value for s in state_enum)
+        expected = tuple(
+            s.value for s in state_enum if s.value not in (deprecated_enums or ())
+        )
         if state_on:
             expected += RESULT_ON
         if state_off:
@@ -230,7 +282,7 @@ def boolean(
 
         try:
             return cv.boolean(result)
-        except vol.Invalid:
+        except probatio.Invalid:
             pass
 
         items: tuple[str, ...] = RESULT_ON + RESULT_OFF
@@ -270,24 +322,28 @@ def number(
         if check_result_for_none(result, **kwargs):
             return None
 
-        if (result_type := type(result)) is bool:
+        if type(result) is bool:
             log_validation_result_error(entity, attribute, result, message)
             return None
 
         if isinstance(result, (float, int)):
             value = result
-            if return_type is int and result_type is float:
-                value = int(value)
-            elif return_type is float and result_type is int:
-                value = float(value)
         else:
             try:
-                value = vol.Coerce(float)(result)
-                if return_type is int:
-                    value = int(value)
-            except vol.Invalid:
+                value = probatio.Coerce(float)(result)
+            except probatio.Invalid:
                 log_validation_result_error(entity, attribute, result, message)
                 return None
+
+        # int() raises on NaN and infinity
+        if isinstance(value, float) and not math.isfinite(value):
+            log_validation_result_error(entity, attribute, result, message)
+            return None
+
+        if return_type is int and isinstance(value, float):
+            value = int(value)
+        elif return_type is float and isinstance(value, int):
+            value = float(value)
 
         if minimum is None and maximum is None:
             return value
@@ -350,6 +406,7 @@ def item_in_list[T](
     attribute: str,
     items: list[Any] | str | None,
     items_attribute: str | None = None,
+    stringify_result: bool = False,
     **kwargs: Any,
 ) -> Callable[[Any], Any | None]:
     """Assert the result of the template is an item inside a list.
@@ -381,6 +438,9 @@ def item_in_list[T](
 
             return None
 
+        if stringify_result:
+            result = str(result)
+
         if result not in _items:
             log_validation_result_error(
                 entity,
@@ -408,7 +468,7 @@ def url(
 
         try:
             return cv.url(result)
-        except vol.Invalid:
+        except probatio.Invalid:
             log_validation_result_error(
                 entity,
                 attribute,
@@ -436,7 +496,7 @@ def string(
 
         try:
             return cv.string(result)
-        except vol.Invalid:
+        except probatio.Invalid:
             log_validation_result_error(
                 entity,
                 attribute,
@@ -463,3 +523,42 @@ def check_conditions(
         )
 
     return condition_result
+
+
+def inclusive_group(name: str, optional: str, *required: str) -> Callable[[dict], dict]:
+    """Validate an inclusive group of configuration options, with 1 optional option.
+
+    The optional member requires all required options, however the required options
+    do not require the optional option.
+    """
+    _all = {optional, *required}
+    _required = set(required)
+
+    def verify(obj: dict) -> dict:
+        options = set(obj.keys())
+        if not (common := options.intersection(_all)) or common in (_required, _all):
+            return obj
+
+        missing = _required - common
+        raise probatio.Invalid(
+            f"Some required option(s) are missing from inclusive group '{name}', expected missing options: {', '.join(missing)}."
+        )
+
+    return verify
+
+
+def requires_option(option: str, required_option: str) -> Callable[[dict], dict]:
+    """Validate a pair of options.
+
+    Raises probatio.Invalid if required_option is missing when option is present.
+    """
+
+    def verify(obj: dict) -> dict:
+        if (option in obj and required_option in obj) or option not in obj:
+            return obj
+
+        raise probatio.Invalid(
+            f"Required option: '{required_option}' is missing for option '{option}'. Remove '{option}' from your config or add '{required_option}'."
+        )
+
+    return verify

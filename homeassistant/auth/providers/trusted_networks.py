@@ -13,9 +13,9 @@ from ipaddress import (
     ip_address,
     ip_network,
 )
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -32,6 +32,9 @@ from ..models import (
 )
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
+if TYPE_CHECKING:
+    from homeassistant.components.http import HomeAssistantHTTP
+
 type IPAddress = IPv4Address | IPv6Address
 type IPNetwork = IPv4Network | IPv6Network
 
@@ -42,24 +45,26 @@ CONF_ALLOW_BYPASS_LOGIN = "allow_bypass_login"
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
-        vol.Required(CONF_TRUSTED_NETWORKS): vol.All(cv.ensure_list, [ip_network]),
-        vol.Optional(CONF_TRUSTED_USERS, default={}): vol.Schema(
+        probatio.Required(CONF_TRUSTED_NETWORKS): probatio.All(
+            probatio.EnsureList(), [ip_network]
+        ),
+        probatio.Optional(CONF_TRUSTED_USERS, default={}): probatio.Schema(
             # we only validate the format of user_id or group_id
             {
-                ip_network: vol.All(
-                    cv.ensure_list,
+                ip_network: probatio.All(
+                    probatio.EnsureList(),
                     [
-                        vol.Or(
+                        probatio.Or(
                             cv.uuid4_hex,
-                            vol.Schema({vol.Required(CONF_GROUP): str}),
+                            probatio.Schema({probatio.Required(CONF_GROUP): str}),
                         )
                     ],
                 )
             }
         ),
-        vol.Optional(CONF_ALLOW_BYPASS_LOGIN, default=False): cv.boolean,
+        probatio.Optional(CONF_ALLOW_BYPASS_LOGIN, default=False): cv.boolean,
     },
-    extra=vol.PREVENT_EXTRA,
+    extra=probatio.PREVENT_EXTRA,
 )
 
 
@@ -89,19 +94,12 @@ class TrustedNetworksAuthProvider(AuthProvider):
     @property
     def trusted_proxies(self) -> list[IPNetwork]:
         """Return trusted proxies in the system."""
-        if not self.hass.http:
+        # hass.http is only set once the http integration has been set up
+        http: HomeAssistantHTTP | None = self.hass.http
+        if http is None:
             return []
 
-        return [
-            ip_network(trusted_proxy)
-            for trusted_proxy in self.hass.http.trusted_proxies
-        ]
-
-    @property
-    @override
-    def support_mfa(self) -> bool:
-        """Trusted Networks auth provider does not support MFA."""
-        return False
+        return [ip_network(trusted_proxy) for trusted_proxy in http.trusted_proxies]
 
     @override
     async def async_login_flow(
@@ -208,6 +206,18 @@ class TrustedNetworksAuthProvider(AuthProvider):
 
     @callback
     @override
+    def async_can_start_login(self, context: AuthFlowContext) -> bool:
+        """Return if the request comes from a trusted network."""
+        if (ip_addr := context.get("ip_address")) is None:
+            return False
+        try:
+            self.async_validate_access(ip_addr)
+        except InvalidAuthError:
+            return False
+        return True
+
+    @callback
+    @override
     def async_validate_refresh_token(
         self, refresh_token: RefreshToken, remote_ip: str | None = None
     ) -> None:
@@ -256,7 +266,7 @@ class TrustedNetworksLoginFlow(LoginFlow[TrustedNetworksAuthProvider]):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {vol.Required("user"): vol.In(self._available_users)}
+            data_schema=probatio.Schema(
+                {probatio.Required("user"): probatio.In(self._available_users)}
             ),
         )

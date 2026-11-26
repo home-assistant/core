@@ -9,12 +9,12 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 from hdate.translator import get_language, set_language
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
-    SERVICE_GET_EVENTS,
+    CalendarService,
+    CalendarServiceArgument,
 )
 from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
@@ -26,13 +26,11 @@ from homeassistant.components.jewish_calendar.const import (
     DEFAULT_NAME,
     DOMAIN,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_LANGUAGE, CONF_TIME_ZONE
+from homeassistant.const import CONF_LANGUAGE, CONF_TIME_ZONE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import GetCalendarEvents, TimeValue
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 class _LocationData(NamedTuple):
@@ -53,7 +51,7 @@ LOCATIONS = {
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.jewish_calendar.async_setup_entry", return_value=True
+        "homeassistant.components.jewish_calendar.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -229,11 +227,11 @@ def get_calendar_events() -> GetCalendarEvents:
             end_date = end_date.replace(tzinfo=dt_util.UTC)
         response = await hass.services.async_call(
             CALENDAR_DOMAIN,
-            SERVICE_GET_EVENTS,
+            CalendarService.GET_EVENTS,
             {
-                ATTR_ENTITY_ID: entity_id,
-                EVENT_START_DATETIME: start_date.isoformat(),
-                EVENT_END_DATETIME: end_date.isoformat(),
+                TargetKey.ENTITY_ID: entity_id,
+                CalendarServiceArgument.START_DATE_TIME: start_date.isoformat(),
+                CalendarServiceArgument.END_DATE_TIME: end_date.isoformat(),
             },
             blocking=True,
             return_response=True,

@@ -5,7 +5,12 @@ from unittest.mock import call
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from samsung_exlink import CommandRejected, InputSource, SamsungTVError, TVState
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from samsung_exlink import MODELS, CommandRejected, InputSource, SamsungTVError, TVState
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -14,27 +19,23 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
-    SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 from homeassistant.components.samsung_exlink.const import DOMAIN
+from homeassistant.components.samsung_exlink.coordinator import SCAN_INTERVAL
 from homeassistant.components.samsung_exlink.media_player import (
     INPUT_SOURCE_SAMSUNG_TO_HA,
-    SCAN_INTERVAL,
+    SOURCE_ART_MODE,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
     STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -43,14 +44,18 @@ from homeassistant.util.json import load_json
 
 from .conftest import MockSamsungTV, _default_state
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
 ENTITY_ID = "media_player.samsung_tv"
 
 
 @pytest.fixture(autouse=True)
 async def auto_init_components(init_components: None) -> None:
     """Set up the component."""
+
+
+@pytest.fixture
+def samsung_exlink_platforms() -> list[Platform]:
+    """Load only the media player platform."""
+    return [Platform.MEDIA_PLAYER]
 
 
 async def test_entities_created(
@@ -101,7 +106,7 @@ async def test_polling_updates_state(
 async def test_state_updates(
     hass: HomeAssistant, mock_samsung_tv: MockSamsungTV
 ) -> None:
-    """Test the entity updates from TV pushes and disconnects."""
+    """Test the entity updates from TV state pushes."""
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     state = _default_state()
@@ -110,11 +115,6 @@ async def test_state_updates(
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
-
-    mock_samsung_tv.mock_state(None)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_state_unknown_when_not_queried(
@@ -134,12 +134,18 @@ async def test_power_controls(
 ) -> None:
     """Test power services call the right methods."""
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        MP_DOMAIN,
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     mock_samsung_tv.power_on.assert_awaited_once()
 
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        MP_DOMAIN,
+        MediaPlayerService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     mock_samsung_tv.power_off.assert_awaited_once()
 
@@ -152,20 +158,26 @@ async def test_volume_controls(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        MediaPlayerService.VOLUME_SET,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5},
         blocking=True,
     )
     assert mock_samsung_tv.set_volume.await_args == call(50)
 
     # Volume up/down use the media player base class default step.
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        MP_DOMAIN,
+        MediaPlayerService.VOLUME_UP,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert mock_samsung_tv.set_volume.await_args == call(30)
 
     await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_DOWN, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        MP_DOMAIN,
+        MediaPlayerService.VOLUME_DOWN,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert mock_samsung_tv.set_volume.await_args == call(10)
 
@@ -178,16 +190,22 @@ async def test_mute_controls(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
     assert mock_samsung_tv.set_mute.await_args == call(True)
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: False},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: False,
+        },
         blocking=True,
     )
     assert mock_samsung_tv.set_mute.await_args == call(False)
@@ -273,11 +291,49 @@ async def test_source_state_and_controls(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "hdmi3"},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: "hdmi3"},
         blocking=True,
     )
     assert mock_samsung_tv.select_input_source.await_args == call(InputSource.HDMI3)
+
+
+async def test_art_mode_source(
+    hass: HomeAssistant, mock_samsung_tv: MockSamsungTV
+) -> None:
+    """Test Art Mode is exposed as a source on a Frame TV."""
+    assert "art_mode" in hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
+
+    # The TV keeps reporting the last input source while in Art Mode.
+    state = _default_state()
+    state.art_mode = True
+    mock_samsung_tv.mock_state(state)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE] == "art_mode"
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: "art_mode"},
+        blocking=True,
+    )
+    assert mock_samsung_tv.set_art_mode.await_args == call(True)
+    mock_samsung_tv.select_input_source.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "tv_model",
+    [
+        pytest.param(MODELS["h_series_2016"], id="h_series_2016"),
+        pytest.param(None, id="no_model"),
+    ],
+)
+async def test_no_art_mode_source_without_art_mode_model(hass: HomeAssistant) -> None:
+    """Test Art Mode is not offered as a source on TVs without Art Mode."""
+    assert (
+        "art_mode" not in hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
+    )
 
 
 @pytest.mark.parametrize(
@@ -297,7 +353,10 @@ async def test_command_error_raises(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            MP_DOMAIN,
+            MediaPlayerService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            blocking=True,
         )
 
 
@@ -306,6 +365,6 @@ def test_input_source_translation_keys_cover_all_enum_members() -> None:
     assert set(INPUT_SOURCE_SAMSUNG_TO_HA) == set(InputSource)
 
     strings = load_json(Path("homeassistant/components/samsung_exlink/strings.json"))
-    assert set(INPUT_SOURCE_SAMSUNG_TO_HA.values()) == set(
+    assert {*INPUT_SOURCE_SAMSUNG_TO_HA.values(), SOURCE_ART_MODE} == set(
         strings["entity"]["media_player"]["tv"]["state_attributes"]["source"]["state"]
     )

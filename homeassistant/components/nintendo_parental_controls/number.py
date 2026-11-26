@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, override
 
+from pynintendoparental.device import Device
+
 from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
@@ -15,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
-from .entity import Device, NintendoDevice
+from .entity import NintendoDevice
 
 PARALLEL_UPDATES = 1
 

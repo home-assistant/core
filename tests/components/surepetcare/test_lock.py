@@ -1,14 +1,13 @@
 """The tests for the Sure Petcare lock platform."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from surepy.exceptions import SurePetcareError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import HOUSEHOLD_ID, MOCK_CAT_FLAP, MOCK_PET_FLAP
-
-from tests.common import MockConfigEntry
 
 EXPECTED_ENTITY_IDS = {
     "lock.cat_flap_locked_in": f"{HOUSEHOLD_ID}-{MOCK_CAT_FLAP['id']}-locked_in",

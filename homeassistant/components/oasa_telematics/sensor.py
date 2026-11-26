@@ -6,7 +6,7 @@ from operator import itemgetter
 from typing import Any, override
 
 import oasatelematics
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -40,9 +40,9 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STOP_ID): cv.string,
-        vol.Required(CONF_ROUTE_ID): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_STOP_ID): cv.string,
+        probatio.Required(CONF_ROUTE_ID): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -172,7 +172,7 @@ class OASATelematicsData:
             return
 
         # Parse results
-        results = [r for r in results if r.get("route_code") in self.route_id]
+        results = [r for r in results if str(r.get("route_code")) == str(self.route_id)]
         current_time = dt_util.utcnow()
 
         for result in results:

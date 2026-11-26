@@ -81,14 +81,14 @@ class StatesManager:
         self._last_reported.clear()
 
     def reset(self) -> None:
-        """Reset after the database has been reset or changed.
+        """Reset pending and last-committed caches after the event session is closed.
 
         This call is not thread-safe and must be called from the
         recorder thread.
         """
         self._last_committed_id.clear()
         self._pending.clear()
-        self._oldest_ts = None
+        # _oldest_ts is a database aggregate, not session state.
 
     def load_from_db(self, session: Session) -> None:
         """Update the cache.
@@ -122,6 +122,10 @@ class StatesManager:
             last_committed_ids_reversed
         ):
             last_committed_ids.pop(last_committed_ids_reversed[purged_state_id], None)
+
+        # A pending last reported update of a purged state would match no row
+        for purged_state_id in purged_state_ids.intersection(self._last_reported):
+            del self._last_reported[purged_state_id]
 
     def evict_purged_entity_ids(self, purged_entity_ids: set[str]) -> None:
         """Evict purged entity_ids from the committed states.

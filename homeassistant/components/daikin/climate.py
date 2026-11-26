@@ -35,7 +35,7 @@ from .const import (
     ZONE_NAME_UNCONFIGURED,
 )
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
-from .entity import DaikinEntity
+from .entity import DaikinEntity, daikin_exception_handler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -184,7 +184,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
     """Representation of a Daikin HVAC."""
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(HA_STATE_TO_DAIKIN)
     _attr_target_temperature_step = 1
     _attr_fan_modes: list[str]
@@ -216,6 +216,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         if self.device.support_swing_mode:
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
+    @daikin_exception_handler
     async def _set(self, settings: dict[str, Any]) -> None:
         """Set device settings using API."""
         values: dict[str, Any] = {}
@@ -253,13 +254,13 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.device.inside_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.device.target_temperature
 
@@ -337,6 +338,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         return PRESET_NONE
 
     @override
+    @daikin_exception_handler
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         if preset_mode == PRESET_AWAY:
@@ -373,12 +375,14 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         return ret
 
     @override
+    @daikin_exception_handler
     async def async_turn_on(self) -> None:
         """Turn device on."""
         await self.device.set({})
         await self.coordinator.async_refresh()
 
     @override
+    @daikin_exception_handler
     async def async_turn_off(self) -> None:
         """Turn device off."""
         await self.device.set(
@@ -390,7 +394,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
 class DaikinZoneClimate(DaikinEntity, ClimateEntity):
     """Representation of a Daikin zone temperature controller."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -439,7 +443,7 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the zone target temperature for the active mode."""
         heating, cooling = _zone_temperature_lists(self.device)
         mode = self._main_hvac_mode
@@ -484,6 +488,7 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
         return {"zone_id": self._zone_id}
 
     @override
+    @daikin_exception_handler
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the zone temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -531,12 +536,14 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     @override
+    @daikin_exception_handler
     async def async_turn_on(self) -> None:
         """Turn the zone on."""
         await self.device.set_zone(self._zone_id, "zone_onoff", "1")
         await self.coordinator.async_refresh()
 
     @override
+    @daikin_exception_handler
     async def async_turn_off(self) -> None:
         """Turn the zone off."""
         await self.device.set_zone(self._zone_id, "zone_onoff", "0")

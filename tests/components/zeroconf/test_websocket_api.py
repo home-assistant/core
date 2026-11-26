@@ -4,6 +4,7 @@ import asyncio
 import socket
 from unittest.mock import patch
 
+from pytest_homeassistant.typing import WebSocketGenerator
 from zeroconf import (
     DNSAddress,
     DNSPointer,
@@ -18,8 +19,6 @@ from homeassistant.components.zeroconf import DOMAIN, async_get_async_instance
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 PROPERTIES = {
     "md": "HASS Bridge W9DN",

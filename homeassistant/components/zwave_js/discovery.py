@@ -55,7 +55,6 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
 from .const import COVER_POSITION_PROPERTY_KEYS, COVER_TILT_PROPERTY_KEYS, LOGGER
 from .discovery_data_template import (
-    BaseDiscoverySchemaDataTemplate,
     ConfigurableFanValueMappingDataTemplate,
     CoverTiltDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
@@ -66,6 +65,7 @@ from .discovery_data_template import (
 from .entity import NewZwaveDiscoveryInfo
 from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
 from .models import (
+    BaseDiscoverySchemaDataTemplate,
     FirmwareVersionRange,
     NewZWaveDiscoverySchema,
     ValueType,
@@ -130,6 +130,9 @@ class ZWaveDiscoverySchema:
     entity_registry_enabled_default: bool = True
     # [optional] the entity category for the discovered entity
     entity_category: EntityCategory | None = None
+    # [optional] if True, a value matching this schema is consumed but produces no
+    # entity (used to suppress redundant endpoint values while blocking fallthrough)
+    discovery_suppressed: bool = False
 
 
 DOOR_LOCK_CURRENT_MODE_SCHEMA = ZWaveValueDiscoverySchema(
@@ -309,9 +312,44 @@ DISCOVERY_SCHEMAS = [
         ),
     ),
     # Fibaro Shutter Fibaro FGR222
+    # Operating mode (10) set to roller blind (0, 1)
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="shutter_tilt",
+        hint="shutter",
+        manufacturer_id={0x010F},
+        product_type={0x0301, 0x0302},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={10},
+                endpoint={0},
+                value={0, 1},
+            )
+        ],
+    ),
+    # Fibaro Shutter Fibaro FGR222
+    # Operating mode (10) set to gate (3, 4)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="gate",
+        manufacturer_id={0x010F},
+        product_type={0x0301, 0x0302},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={10},
+                endpoint={0},
+                value={3, 4},
+            )
+        ],
+    ),
+    # Fibaro Shutter Fibaro FGR222
+    # Operating mode (10) set to venetian blind (2)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="blind_tilt",
         manufacturer_id={0x010F},
         product_id={0x1000, 0x1001},
         product_type={0x0301, 0x0302},
@@ -335,17 +373,39 @@ DISCOVERY_SCHEMAS = [
                 command_class={CommandClass.MANUFACTURER_PROPRIETARY},
                 property={"fibaro"},
                 property_key={"venetianBlindsTilt"},
+            ),
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={10},
+                endpoint={0},
+                value={2},
+            ),
+        ],
+    ),
+    # Fibaro Shutter Fibaro FGR222
+    # Operating mode (10) set to venetian blind (2)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="blind",
+        manufacturer_id={0x010F},
+        product_type={0x0301, 0x0302},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={10},
+                endpoint={0},
+                value={2},
             )
         ],
     ),
     # Fibaro Shutter Fibaro FGR223
-    # Combine both switch_multilevel endpoints into shutter_tilt
+    # Combine both switch_multilevel endpoints into blind_tilt
     # if operating mode (151) is set to venetian blind (2)
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="shutter_tilt",
+        hint="blind_tilt",
         manufacturer_id={0x010F},
-        product_id={0x1000, 0x1001},
         product_type={0x0303},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
@@ -375,15 +435,14 @@ DISCOVERY_SCHEMAS = [
         ],
     ),
     # Fibaro Shutter Fibaro FGR223
-    # Disable endpoint 2 (slat),
-    # as these are either combined with endpoint one as shutter_tilt
-    # or it has no practical function.
+    # Suppress endpoint 2 (slat): it is either combined with endpoint 1 as blind_tilt
+    # or has no practical function. The value is consumed to block fallthrough to a
+    # generic cover schema, but no entity is created.
     # CC: Switch_Multilevel
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
         hint="shutter",
         manufacturer_id={0x010F},
-        product_id={0x1000, 0x1001},
         product_type={0x0303},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
@@ -391,7 +450,41 @@ DISCOVERY_SCHEMAS = [
             endpoint={2},
             type={ValueType.NUMBER},
         ),
-        entity_registry_enabled_default=False,
+        discovery_suppressed=True,
+    ),
+    # Fibaro Shutter Fibaro FGR223
+    # Operating mode (151) set to roller blind (1, 5, 6)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter",
+        manufacturer_id={0x010F},
+        product_type={0x0303},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={151},
+                endpoint={0},
+                value={1, 5, 6},
+            )
+        ],
+    ),
+    # Fibaro Shutter Fibaro FGR223
+    # Operating mode (151) set to gate (3, 4)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="gate",
+        manufacturer_id={0x010F},
+        product_type={0x0303},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={151},
+                endpoint={0},
+                value={3, 4},
+            )
+        ],
     ),
     # Fibaro Nice BiDi-ZWave (IBT4ZWAVE)
     ZWaveDiscoverySchema(
@@ -404,13 +497,13 @@ DISCOVERY_SCHEMAS = [
         required_values=[SWITCH_MULTILEVEL_TARGET_VALUE_SCHEMA],
     ),
     # Shelly Qubino Wave Shutter QNSH-001P10
-    # Combine both switch_multilevel endpoints into shutter_tilt
+    # Combine both switch_multilevel endpoints into blind_tilt
     # if operating mode (71) is set to venetian blind (1)
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="shutter_tilt",
+        hint="blind_tilt",
         manufacturer_id={0x0460},
-        product_id={0x0082, 0x0083},
+        product_id={0x0082, 0x0083, 0x0085},
         product_type={0x0003},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
@@ -440,15 +533,15 @@ DISCOVERY_SCHEMAS = [
         ],
     ),
     # Shelly Qubino Wave Shutter QNSH-001P10
-    # Disable endpoint 2 (slat),
-    # as these are either combined with endpoint one as shutter_tilt
-    # or it has no practical function.
+    # Suppress endpoint 2 (slat): it is either combined with endpoint 1 as blind_tilt
+    # or has no practical function. The value is consumed to block fallthrough to a
+    # generic cover schema, but no entity is created.
     # CC: Switch_Multilevel
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
         hint="shutter",
         manufacturer_id={0x0460},
-        product_id={0x0082, 0x0083},
+        product_id={0x0082, 0x0083, 0x0085},
         product_type={0x0003},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
@@ -456,7 +549,25 @@ DISCOVERY_SCHEMAS = [
             endpoint={2},
             type={ValueType.NUMBER},
         ),
-        entity_registry_enabled_default=False,
+        discovery_suppressed=True,
+    ),
+    # Shelly Qubino Wave Shutter QNSH-001P10
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter",
+        manufacturer_id={0x0460},
+        product_id={0x0082, 0x0083, 0x0085},
+        product_type={0x0003},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # Aeotec Nano Shutter ZW141
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter",
+        manufacturer_id={0x0371},
+        product_id={0x008D},
+        product_type={0x0003, 0x0103, 0x0203},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(
@@ -539,6 +650,15 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x045A},
         product_id={0x0507},
         product_type={0x0904},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # Simon IO: Roller Blind (700 Series)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter",
+        manufacturer_id={0x0267},
+        product_id={0x0000},
+        product_type={0x0102},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Vision Security ZL7432 In Wall Dual Relay Switch
@@ -1457,6 +1577,7 @@ def async_discover_single_value(
                 additional_value_ids_to_watch=additional_value_ids_to_watch,
                 entity_registry_enabled_default=schema.entity_registry_enabled_default,
                 entity_category=schema.entity_category,
+                discovery_suppressed=schema.discovery_suppressed,
             )
 
         yield discovery_info

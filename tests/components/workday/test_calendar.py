@@ -5,22 +5,20 @@ import logging
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
     EVENT_SUMMARY,
-    SERVICE_GET_EVENTS,
+    CalendarService,
+    CalendarServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import TEST_CONFIG_WITH_PROVINCE, init_integration
-
-from tests.common import async_fire_time_changed
 
 ATTR_END = "end"
 ATTR_START = "start"
@@ -42,11 +40,12 @@ async def test_holiday_calendar_entity(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: "calendar.workday_sensor_de_bw_calendar",
-            EVENT_START_DATETIME: dt_util.now(),
-            EVENT_END_DATETIME: dt_util.now() + timedelta(days=10, hours=1),
+            TargetKey.ENTITY_ID: "calendar.workday_sensor_de_bw_calendar",
+            CalendarServiceArgument.START_DATE_TIME: dt_util.now(),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.now()
+            + timedelta(days=10, hours=1),
         },
         blocking=True,
         return_response=True,

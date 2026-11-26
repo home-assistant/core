@@ -1,5 +1,6 @@
 """Demo platform that offers fake meteorological data."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import override
 
@@ -20,6 +21,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY_VARIANT,
     Forecast,
     WeatherEntity,
+    WeatherEntityDescription,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -52,203 +54,215 @@ CONDITION_MAP = {
 }
 
 
+@dataclass(frozen=True, kw_only=True)
+class DemoWeatherEntityDescription(WeatherEntityDescription):
+    """Describes a demo weather entity."""
+
+    condition: str
+    temperature: float
+    humidity: float
+    pressure: float
+    wind_speed: float
+    temperature_unit: str
+    pressure_unit: str
+    wind_speed_unit: str
+    forecast_daily: list[list] | None
+    forecast_hourly: list[list] | None
+    forecast_twice_daily: list[list] | None
+
+
+# Keys are in a legacy format, kept as migrating existing unique IDs is not worth
+# the risk
+WEATHERS = (
+    DemoWeatherEntityDescription(
+        key="test-weather-legacy + daily weather",
+        name="Test Weather Legacy + daily weather",
+        condition="Sunshine",
+        temperature=21.6414,
+        humidity=92,
+        pressure=1099,
+        wind_speed=0.5,
+        temperature_unit=UnitOfTemperature.CELSIUS,
+        pressure_unit=UnitOfPressure.HPA,
+        wind_speed_unit=UnitOfSpeed.METERS_PER_SECOND,
+        forecast_daily=[
+            [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
+            [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
+            [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
+            [ATTR_CONDITION_SUNNY, 0, 12, 6, 0],
+            [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20],
+            [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
+            [ATTR_CONDITION_FOG, 0.2, 21, 12, 100],
+        ],
+        forecast_hourly=None,
+        forecast_twice_daily=None,
+    ),
+    DemoWeatherEntityDescription(
+        key="test-weather-daily + hourly weather",
+        name="Test Weather Daily + hourly weather",
+        condition="Shower rain",
+        temperature=-12,
+        humidity=54,
+        pressure=987,
+        wind_speed=4.8,
+        temperature_unit=UnitOfTemperature.FAHRENHEIT,
+        pressure_unit=UnitOfPressure.INHG,
+        wind_speed_unit=UnitOfSpeed.MILES_PER_HOUR,
+        forecast_daily=[
+            [ATTR_CONDITION_SNOWY, 2, -10, -15, 60],
+            [ATTR_CONDITION_PARTLYCLOUDY, 1, -13, -14, 25],
+            [ATTR_CONDITION_SUNNY, 0, -18, -22, 70],
+            [ATTR_CONDITION_SUNNY, 0.1, -23, -23, 90],
+            [ATTR_CONDITION_SNOWY, 4, -19, -20, 40],
+            [ATTR_CONDITION_SUNNY, 0.3, -14, -19, 0],
+            [ATTR_CONDITION_SUNNY, 0, -9, -12, 0],
+        ],
+        forecast_hourly=[
+            [ATTR_CONDITION_SUNNY, 2, -10, -15, 60],
+            [ATTR_CONDITION_SUNNY, 1, -13, -14, 25],
+            [ATTR_CONDITION_SUNNY, 0, -18, -22, 70],
+            [ATTR_CONDITION_SUNNY, 0.1, -23, -23, 90],
+            [ATTR_CONDITION_SUNNY, 4, -19, -20, 40],
+            [ATTR_CONDITION_SUNNY, 0.3, -14, -19, 0],
+            [ATTR_CONDITION_SUNNY, 0, -9, -12, 0],
+        ],
+        forecast_twice_daily=None,
+    ),
+    DemoWeatherEntityDescription(
+        key="test-weather-daily + bi-daily + hourly weather",
+        name="Test Weather Daily + bi-daily + hourly weather",
+        condition="Sunshine",
+        temperature=21.6414,
+        humidity=92,
+        pressure=1099,
+        wind_speed=0.5,
+        temperature_unit=UnitOfTemperature.CELSIUS,
+        pressure_unit=UnitOfPressure.HPA,
+        wind_speed_unit=UnitOfSpeed.METERS_PER_SECOND,
+        forecast_daily=[
+            [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
+            [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
+            [ATTR_CONDITION_RAINY, 0, 15, 9, 10],
+            [ATTR_CONDITION_RAINY, 0, 12, 6, 0],
+            [ATTR_CONDITION_RAINY, 2, 14, 7, 20],
+            [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
+            [ATTR_CONDITION_RAINY, 0.2, 21, 12, 100],
+        ],
+        forecast_hourly=[
+            [ATTR_CONDITION_CLOUDY, 1, 22, 15, 60],
+            [ATTR_CONDITION_CLOUDY, 5, 19, 8, 30],
+            [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
+            [ATTR_CONDITION_CLOUDY, 0, 12, 6, 0],
+            [ATTR_CONDITION_CLOUDY, 2, 14, 7, 20],
+            [ATTR_CONDITION_CLOUDY, 15, 18, 7, 0],
+            [ATTR_CONDITION_CLOUDY, 0.2, 21, 12, 100],
+        ],
+        forecast_twice_daily=[
+            [ATTR_CONDITION_RAINY, 1, 22, 15, 60, True],
+            [ATTR_CONDITION_RAINY, 5, 19, 8, 30, False],
+            [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10, True],
+            [ATTR_CONDITION_SUNNY, 0, 12, 6, 0, False],
+            [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20, True],
+            [ATTR_CONDITION_RAINY, 15, 18, 7, 0, False],
+            [ATTR_CONDITION_FOG, 0.2, 21, 12, 100, True],
+        ],
+    ),
+    DemoWeatherEntityDescription(
+        key="test-weather-hourly + bi-daily weather",
+        name="Test Weather Hourly + bi-daily weather",
+        condition="Sunshine",
+        temperature=21.6414,
+        humidity=92,
+        pressure=1099,
+        wind_speed=0.5,
+        temperature_unit=UnitOfTemperature.CELSIUS,
+        pressure_unit=UnitOfPressure.HPA,
+        wind_speed_unit=UnitOfSpeed.METERS_PER_SECOND,
+        forecast_daily=None,
+        forecast_hourly=[
+            [ATTR_CONDITION_CLOUDY, 1, 22, 15, 60],
+            [ATTR_CONDITION_CLOUDY, 5, 19, 8, 30],
+            [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
+            [ATTR_CONDITION_CLOUDY, 0, 12, 6, 0],
+            [ATTR_CONDITION_CLOUDY, 2, 14, 7, 20],
+            [ATTR_CONDITION_CLOUDY, 15, 18, 7, 0],
+            [ATTR_CONDITION_CLOUDY, 0.2, 21, 12, 100],
+        ],
+        forecast_twice_daily=[
+            [ATTR_CONDITION_RAINY, 1, 22, 15, 60, True],
+            [ATTR_CONDITION_RAINY, 5, 19, 8, 30, False],
+            [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10, True],
+            [ATTR_CONDITION_SUNNY, 0, 12, 6, 0, False],
+            [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20, True],
+            [ATTR_CONDITION_RAINY, 15, 18, 7, 0, False],
+            [ATTR_CONDITION_FOG, 0.2, 21, 12, 100, True],
+        ],
+    ),
+    DemoWeatherEntityDescription(
+        key="test-weather-daily + broken bi-daily weather",
+        name="Test Weather Daily + broken bi-daily weather",
+        condition="Sunshine",
+        temperature=21.6414,
+        humidity=92,
+        pressure=1099,
+        wind_speed=0.5,
+        temperature_unit=UnitOfTemperature.CELSIUS,
+        pressure_unit=UnitOfPressure.HPA,
+        wind_speed_unit=UnitOfSpeed.METERS_PER_SECOND,
+        forecast_daily=[
+            [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
+            [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
+            [ATTR_CONDITION_RAINY, 0, 15, 9, 10],
+            [ATTR_CONDITION_RAINY, 0, 12, 6, 0],
+            [ATTR_CONDITION_RAINY, 2, 14, 7, 20],
+            [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
+            [ATTR_CONDITION_RAINY, 0.2, 21, 12, 100],
+        ],
+        forecast_hourly=None,
+        forecast_twice_daily=[
+            [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
+            [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
+            [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
+            [ATTR_CONDITION_SUNNY, 0, 12, 6, 0],
+            [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20],
+            [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
+            [ATTR_CONDITION_FOG, 0.2, 21, 12, 100],
+        ],
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
-    async_add_entities(
-        [
-            DemoWeather(
-                "Legacy + daily weather",
-                "Sunshine",
-                21.6414,
-                92,
-                1099,
-                0.5,
-                UnitOfTemperature.CELSIUS,
-                UnitOfPressure.HPA,
-                UnitOfSpeed.METERS_PER_SECOND,
-                [
-                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
-                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
-                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
-                    [ATTR_CONDITION_SUNNY, 0, 12, 6, 0],
-                    [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20],
-                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
-                    [ATTR_CONDITION_FOG, 0.2, 21, 12, 100],
-                ],
-                None,
-                None,
-            ),
-            DemoWeather(
-                "Daily + hourly weather",
-                "Shower rain",
-                -12,
-                54,
-                987,
-                4.8,
-                UnitOfTemperature.FAHRENHEIT,
-                UnitOfPressure.INHG,
-                UnitOfSpeed.MILES_PER_HOUR,
-                [
-                    [ATTR_CONDITION_SNOWY, 2, -10, -15, 60],
-                    [ATTR_CONDITION_PARTLYCLOUDY, 1, -13, -14, 25],
-                    [ATTR_CONDITION_SUNNY, 0, -18, -22, 70],
-                    [ATTR_CONDITION_SUNNY, 0.1, -23, -23, 90],
-                    [ATTR_CONDITION_SNOWY, 4, -19, -20, 40],
-                    [ATTR_CONDITION_SUNNY, 0.3, -14, -19, 0],
-                    [ATTR_CONDITION_SUNNY, 0, -9, -12, 0],
-                ],
-                [
-                    [ATTR_CONDITION_SUNNY, 2, -10, -15, 60],
-                    [ATTR_CONDITION_SUNNY, 1, -13, -14, 25],
-                    [ATTR_CONDITION_SUNNY, 0, -18, -22, 70],
-                    [ATTR_CONDITION_SUNNY, 0.1, -23, -23, 90],
-                    [ATTR_CONDITION_SUNNY, 4, -19, -20, 40],
-                    [ATTR_CONDITION_SUNNY, 0.3, -14, -19, 0],
-                    [ATTR_CONDITION_SUNNY, 0, -9, -12, 0],
-                ],
-                None,
-            ),
-            DemoWeather(
-                "Daily + bi-daily + hourly weather",
-                "Sunshine",
-                21.6414,
-                92,
-                1099,
-                0.5,
-                UnitOfTemperature.CELSIUS,
-                UnitOfPressure.HPA,
-                UnitOfSpeed.METERS_PER_SECOND,
-                [
-                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
-                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
-                    [ATTR_CONDITION_RAINY, 0, 15, 9, 10],
-                    [ATTR_CONDITION_RAINY, 0, 12, 6, 0],
-                    [ATTR_CONDITION_RAINY, 2, 14, 7, 20],
-                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
-                    [ATTR_CONDITION_RAINY, 0.2, 21, 12, 100],
-                ],
-                [
-                    [ATTR_CONDITION_CLOUDY, 1, 22, 15, 60],
-                    [ATTR_CONDITION_CLOUDY, 5, 19, 8, 30],
-                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
-                    [ATTR_CONDITION_CLOUDY, 0, 12, 6, 0],
-                    [ATTR_CONDITION_CLOUDY, 2, 14, 7, 20],
-                    [ATTR_CONDITION_CLOUDY, 15, 18, 7, 0],
-                    [ATTR_CONDITION_CLOUDY, 0.2, 21, 12, 100],
-                ],
-                [
-                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60, True],
-                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30, False],
-                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10, True],
-                    [ATTR_CONDITION_SUNNY, 0, 12, 6, 0, False],
-                    [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20, True],
-                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0, False],
-                    [ATTR_CONDITION_FOG, 0.2, 21, 12, 100, True],
-                ],
-            ),
-            DemoWeather(
-                "Hourly + bi-daily weather",
-                "Sunshine",
-                21.6414,
-                92,
-                1099,
-                0.5,
-                UnitOfTemperature.CELSIUS,
-                UnitOfPressure.HPA,
-                UnitOfSpeed.METERS_PER_SECOND,
-                None,
-                [
-                    [ATTR_CONDITION_CLOUDY, 1, 22, 15, 60],
-                    [ATTR_CONDITION_CLOUDY, 5, 19, 8, 30],
-                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
-                    [ATTR_CONDITION_CLOUDY, 0, 12, 6, 0],
-                    [ATTR_CONDITION_CLOUDY, 2, 14, 7, 20],
-                    [ATTR_CONDITION_CLOUDY, 15, 18, 7, 0],
-                    [ATTR_CONDITION_CLOUDY, 0.2, 21, 12, 100],
-                ],
-                [
-                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60, True],
-                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30, False],
-                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10, True],
-                    [ATTR_CONDITION_SUNNY, 0, 12, 6, 0, False],
-                    [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20, True],
-                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0, False],
-                    [ATTR_CONDITION_FOG, 0.2, 21, 12, 100, True],
-                ],
-            ),
-            DemoWeather(
-                "Daily + broken bi-daily weather",
-                "Sunshine",
-                21.6414,
-                92,
-                1099,
-                0.5,
-                UnitOfTemperature.CELSIUS,
-                UnitOfPressure.HPA,
-                UnitOfSpeed.METERS_PER_SECOND,
-                [
-                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
-                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
-                    [ATTR_CONDITION_RAINY, 0, 15, 9, 10],
-                    [ATTR_CONDITION_RAINY, 0, 12, 6, 0],
-                    [ATTR_CONDITION_RAINY, 2, 14, 7, 20],
-                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
-                    [ATTR_CONDITION_RAINY, 0.2, 21, 12, 100],
-                ],
-                None,
-                [
-                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
-                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
-                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
-                    [ATTR_CONDITION_SUNNY, 0, 12, 6, 0],
-                    [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20],
-                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
-                    [ATTR_CONDITION_FOG, 0.2, 21, 12, 100],
-                ],
-            ),
-        ]
-    )
+    async_add_entities(DemoWeather(description) for description in WEATHERS)
 
 
 class DemoWeather(WeatherEntity):
     """Representation of a weather condition."""
 
+    entity_description: DemoWeatherEntityDescription
     _attr_attribution = "Powered by Home Assistant"
     _attr_should_poll = False
 
-    def __init__(
-        self,
-        name: str,
-        condition: str,
-        temperature: float,
-        humidity: float,
-        pressure: float,
-        wind_speed: float,
-        temperature_unit: str,
-        pressure_unit: str,
-        wind_speed_unit: str,
-        forecast_daily: list[list] | None,
-        forecast_hourly: list[list] | None,
-        forecast_twice_daily: list[list] | None,
-    ) -> None:
+    def __init__(self, description: DemoWeatherEntityDescription) -> None:
         """Initialize the Demo weather."""
-        self._attr_name = f"Test Weather {name}"
-        self._attr_unique_id = f"test-weather-{name.lower()}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
-        self._condition = condition
-        self._native_temperature = temperature
-        self._native_temperature_unit = temperature_unit
-        self._humidity = humidity
-        self._native_pressure = pressure
-        self._native_pressure_unit = pressure_unit
-        self._native_wind_speed = wind_speed
-        self._native_wind_speed_unit = wind_speed_unit
-        self._forecast_daily = forecast_daily
-        self._forecast_hourly = forecast_hourly
-        self._forecast_twice_daily = forecast_twice_daily
+        self.entity_description = description
+        self._attr_unique_id = description.key
+        self._condition = description.condition
+        self._native_temperature = description.temperature
+        self._native_temperature_unit = description.temperature_unit
+        self._humidity = description.humidity
+        self._native_pressure = description.pressure
+        self._native_pressure_unit = description.pressure_unit
+        self._native_wind_speed = description.wind_speed
+        self._native_wind_speed_unit = description.wind_speed_unit
+        self._forecast_daily = description.forecast_daily
+        self._forecast_hourly = description.forecast_hourly
+        self._forecast_twice_daily = description.forecast_twice_daily
         self._attr_supported_features = 0
         if self._forecast_daily:
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_DAILY

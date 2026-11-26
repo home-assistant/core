@@ -1,9 +1,14 @@
 """Tests for the Sonos Media Browser."""
 
+from collections.abc import Callable, Coroutine
 from functools import partial
-from unittest.mock import MagicMock, Mock
+from http import HTTPStatus
+from typing import Any
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
+from soco.data_structures import SearchResult
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -23,8 +28,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockMusicServiceItem, SoCoMockFactory
-
-from tests.typing import WebSocketGenerator
 
 
 def mock_browse_by_idstring(
@@ -269,6 +272,147 @@ async def test_browse_media_root(
     assert response["result"]["children"] == snapshot
 
 
+@pytest.mark.parametrize("sonos_favorites", [SearchResult([], "favorites", 0, 0, 1)])
+@pytest.mark.usefixtures("soco")
+async def test_browse_media_root_no_favorites(
+    hass: HomeAssistant,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    music_library: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the root does not show an empty Favorites folder."""
+    # Sonos playlists are listed as favorites too
+    music_library.get_music_library_information.side_effect = None
+    music_library.get_music_library_information.return_value = []
+    await async_setup_sonos()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.zone_a",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert "favorites" not in [
+        child["media_content_type"] for child in response["result"]["children"]
+    ]
+
+
+@pytest.mark.parametrize(
+    ("media_content_type", "media_content_id", "target", "expected_args", "kwargs"),
+    [
+        pytest.param(
+            "music",
+            "plex://1/2",
+            "homeassistant.components.plex.async_browse_media",
+            ("music", "plex://1/2"),
+            {"platform": "sonos"},
+            id="plex_item",
+        ),
+        pytest.param(
+            "plex",
+            "",
+            "homeassistant.components.plex.async_browse_media",
+            (None, None),
+            {"platform": "sonos"},
+            id="plex_root",
+        ),
+        pytest.param(
+            "spotify://library",
+            "spotify://entry_id",
+            "homeassistant.components.spotify.async_browse_media",
+            ("spotify://library", "spotify://entry_id"),
+            {"can_play_artist": False},
+            id="spotify",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("soco_factory", "async_autosetup_sonos", "soco")
+async def test_browse_media_plex_spotify(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    media_content_type: str,
+    media_content_id: str,
+    target: str,
+    expected_args: tuple[str | None, str | None],
+    kwargs: dict[str, str | bool],
+) -> None:
+    """Test browsing is passed to Plex and Spotify when they are set up."""
+    hass.config.components.update({"plex", "spotify"})
+    result = BrowseMedia(
+        title="Result",
+        media_class=MediaClass.DIRECTORY,
+        media_content_id="result",
+        media_content_type="result",
+        can_play=False,
+        can_expand=True,
+    )
+
+    client = await hass_ws_client()
+    with patch(target, return_value=result) as mock_browse:
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": "media_player.zone_a",
+                "media_content_id": media_content_id,
+                "media_content_type": media_content_type,
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["title"] == "Result"
+    mock_browse.assert_called_once_with(hass, *expected_args, **kwargs)
+
+
+@pytest.mark.usefixtures("soco_factory", "async_autosetup_sonos", "soco")
+async def test_browse_media_root_spotify(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the root includes Spotify when it is set up."""
+    hass.config.components.add("spotify")
+    spotify_item = BrowseMedia(
+        title="Spotify",
+        media_class=MediaClass.APP,
+        media_content_id="spotify://entry_id",
+        media_content_type="spotify://library",
+        can_play=False,
+        can_expand=True,
+    )
+    spotify_root = BrowseMedia(
+        title="Spotify",
+        media_class=MediaClass.APP,
+        media_content_id="spotify://",
+        media_content_type="spotify",
+        can_play=False,
+        can_expand=True,
+        children=[spotify_item],
+    )
+
+    client = await hass_ws_client()
+    with patch(
+        "homeassistant.components.spotify.async_browse_media",
+        return_value=spotify_root,
+    ):
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": "media_player.zone_a",
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert "spotify://entry_id" in [
+        child["media_content_id"] for child in response["result"]["children"]
+    ]
+
+
 async def test_browse_media_library(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -480,3 +624,101 @@ async def test_search_media_invalid_media_content_type(
     assert response["error"]["translation_placeholders"] == {
         "media_content_type": "movie"
     }
+
+
+@pytest.mark.parametrize(
+    ("media_content_type", "media_content_id"),
+    [
+        pytest.param(
+            MediaType.TRACK,
+            "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3",
+            id="music_service_track",
+        ),
+        pytest.param(
+            MediaType.TRACK,
+            "x-file-cifs://server/Music/Abbey%20Road/01%20-%20Come%20Together.mp3",
+            id="local_library_track",
+        ),
+        pytest.param(
+            MediaType.ALBUM,
+            "A:ALBUM/Abbey%20Road",
+            id="album",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_browse_image_url_round_trip(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    media_content_type: str,
+    media_content_id: str,
+) -> None:
+    """Test the browse thumbnail URL hands the exact content id back to the proxy."""
+    entity_comp = hass.data["entity_components"]["media_player"]
+    player = entity_comp.get_entity("media_player.zone_a")
+    url = get_thumbnail_url_full(
+        player.media,
+        False,
+        player.get_browse_image_url,
+        media_content_type,
+        media_content_id,
+    )
+
+    client = await hass_client()
+    with patch.object(
+        player, "async_get_browse_image", return_value=(b"image", "image/jpeg")
+    ) as mock_get_browse_image:
+        resp = await client.get(url)
+
+    assert resp.status == HTTPStatus.OK
+    mock_get_browse_image.assert_awaited_once_with(
+        media_content_type, media_content_id, None
+    )
+
+
+@pytest.mark.parametrize(
+    ("track_uri", "expected_query"),
+    [
+        pytest.param(
+            "x-sonos-spotify:spotify%3atrack%3a5bcTCx?sid=12&flags=8224&sn=3",
+            "s=1&u=x-sonos-spotify%3Aspotify%253atrack%253a5bcTCx%3Fsid%3D12"
+            "%26flags%3D8224%26sn%3D3",
+            id="music_service",
+        ),
+        pytest.param(
+            "x-sonosapi-hls-static:track-%3esoundcloud%3atracks%3a1610992905"
+            "?sid=160&flags=8232&sn=25",
+            "s=1&u=x-sonosapi-hls-static%3Atrack-%253esoundcloud%253atracks"
+            "%253a1610992905%3Fsid%3D160%26flags%3D8232%26sn%3D25",
+            id="soundcloud",
+        ),
+        pytest.param(
+            "x-file-cifs://server/Music/Abbey%20Road/01%20-%20Come%20Together.mp3",
+            "u=x-file-cifs%3A%2F%2Fserver%2FMusic%2FAbbey%2520Road%2F01%2520-"
+            "%2520Come%2520Together.mp3",
+            id="local_library",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_browse_image_for_track(
+    hass: HomeAssistant,
+    track_uri: str,
+    expected_query: str,
+) -> None:
+    """Test a track's browse image is fetched from the art URL built from its URI."""
+    entity_comp = hass.data["entity_components"]["media_player"]
+    player = entity_comp.get_entity("media_player.zone_a")
+    player.media.library.build_album_art_full_uri = Mock(
+        side_effect=lambda path: f"http://192.168.42.2:1400{path}"
+    )
+
+    with patch.object(
+        player, "_async_fetch_image", return_value=(b"image", "image/jpeg")
+    ) as mock_fetch:
+        result = await player.async_get_browse_image(MediaType.TRACK, track_uri)
+
+    assert result == (b"image", "image/jpeg")
+    mock_fetch.assert_awaited_once_with(
+        f"http://192.168.42.2:1400/getaa?{expected_query}"
+    )

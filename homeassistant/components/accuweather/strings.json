@@ -20,14 +20,22 @@
           "api_key": "[%key:component::accuweather::config::step::user::data_description::api_key%]"
         }
       },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::accuweather::config::step::user::data_description::api_key%]"
+        }
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
-          "api_key": "API key generated in the AccuWeather APIs portal."
+          "api_key": "API key generated in the AccuWeather APIs portal.",
+          "location": "The location to get the weather data for. Defaults to the home location configured in Home Assistant."
         }
       }
     }
@@ -113,7 +121,18 @@
         }
       },
       "precipitation": {
-        "name": "[%key:component::sensor::entity_component::precipitation::name%]"
+        "name": "[%key:component::sensor::entity_component::precipitation::name%]",
+        "state_attributes": {
+          "type": {
+            "name": "Precipitation type",
+            "state": {
+              "ice": "Ice",
+              "mixed": "Mixed",
+              "rain": "Rain",
+              "snow": "Snow"
+            }
+          }
+        }
       },
       "pressure_tendency": {
         "name": "Pressure tendency",
@@ -232,19 +251,108 @@
         "name": "[%key:component::weather::entity_component::_::state_attributes::wind_gust_speed::name%]"
       },
       "wind_gust_speed_day": {
-        "name": "Wind gust speed day {forecast_day}"
+        "name": "Wind gust speed day {forecast_day}",
+        "state_attributes": {
+          "direction": {
+            "name": "Direction",
+            "state": {
+              "e": "E",
+              "ene": "ENE",
+              "ese": "ESE",
+              "n": "N",
+              "ne": "NE",
+              "nne": "NNE",
+              "nnw": "NNW",
+              "nw": "NW",
+              "s": "S",
+              "se": "SE",
+              "sse": "SSE",
+              "ssw": "SSW",
+              "sw": "SW",
+              "w": "W",
+              "wnw": "WNW",
+              "wsw": "WSW"
+            }
+          }
+        }
       },
       "wind_gust_speed_night": {
-        "name": "Wind gust speed night {forecast_day}"
-      },
-      "wind_speed": {
-        "name": "[%key:component::weather::entity_component::_::state_attributes::wind_speed::name%]"
+        "name": "Wind gust speed night {forecast_day}",
+        "state_attributes": {
+          "direction": {
+            "name": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::name%]",
+            "state": {
+              "e": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::e%]",
+              "ene": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::ene%]",
+              "ese": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::ese%]",
+              "n": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::n%]",
+              "ne": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::ne%]",
+              "nne": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::nne%]",
+              "nnw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::nnw%]",
+              "nw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::nw%]",
+              "s": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::s%]",
+              "se": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::se%]",
+              "sse": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::sse%]",
+              "ssw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::ssw%]",
+              "sw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::sw%]",
+              "w": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::w%]",
+              "wnw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::wnw%]",
+              "wsw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::wsw%]"
+            }
+          }
+        }
       },
       "wind_speed_day": {
-        "name": "Wind speed day {forecast_day}"
+        "name": "Wind speed day {forecast_day}",
+        "state_attributes": {
+          "direction": {
+            "name": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::name%]",
+            "state": {
+              "e": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::e%]",
+              "ene": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::ene%]",
+              "ese": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::ese%]",
+              "n": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::n%]",
+              "ne": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::ne%]",
+              "nne": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::nne%]",
+              "nnw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::nnw%]",
+              "nw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::nw%]",
+              "s": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::s%]",
+              "se": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::se%]",
+              "sse": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::sse%]",
+              "ssw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::ssw%]",
+              "sw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::sw%]",
+              "w": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::w%]",
+              "wnw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::wnw%]",
+              "wsw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::wsw%]"
+            }
+          }
+        }
       },
       "wind_speed_night": {
-        "name": "Wind speed night {forecast_day}"
+        "name": "Wind speed night {forecast_day}",
+        "state_attributes": {
+          "direction": {
+            "name": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::name%]",
+            "state": {
+              "e": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::e%]",
+              "ene": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::ene%]",
+              "ese": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::ese%]",
+              "n": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::n%]",
+              "ne": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::ne%]",
+              "nne": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::nne%]",
+              "nnw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::nnw%]",
+              "nw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::nw%]",
+              "s": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::s%]",
+              "se": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::se%]",
+              "sse": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::sse%]",
+              "ssw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::ssw%]",
+              "sw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::sw%]",
+              "w": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::w%]",
+              "wnw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::wnw%]",
+              "wsw": "[%key:component::accuweather::entity::sensor::wind_gust_speed_day::state_attributes::direction::state::wsw%]"
+            }
+          }
+        }
       }
     }
   },

@@ -1,0 +1,57 @@
+{
+  "traceId": "0",
+  "code": 0,
+  "msg": "request success",
+  "module": null,
+  "stacktrace": null,
+  "result": {
+    "traceId": "0",
+    "code": 0,
+    "result": {
+      "powerSwitch": 1,
+      "humidity": 45,
+      "targetHumidity": 50,
+      "virtualLevel": 1,
+      "mistLevel": 1,
+      "workMode": "autoPro",
+      "waterLacksState": 0,
+      "waterTankLifted": 0,
+      "autoStopSwitch": 1,
+      "autoStopState": 0,
+      "screenSwitch": 1,
+      "screenState": 1,
+      "autoModePreference": 0,
+      "autoPreference": 0,
+      "waterShortageDryingSwitch": 1,
+      "childLockSwitch": 0,
+      "filterLifePercent": 90,
+      "hepaFilterLifePercent": 85,
+      "temperature": 720,
+      "lampSwitch": 0,
+      "lampType": 0,
+      "dumpedState": 0,
+      "roomSize": 0,
+      "supportLampAct": 1,
+      "lastDryingCompletedTime": 1761850797,
+      "afterDryLastHumidityTime": 1761883500,
+      "breathingLamp": {
+        "breathingLampSwitch": 0,
+        "colorTemperature": 3500,
+        "timeInterval": 5,
+        "brightnessStart": 10,
+        "brightnessEnd": 90
+      },
+      "dryingMode": {
+        "dryingLevel": 1,
+        "autoDryingSwitch": 1,
+        "dryingState": 2,
+        "dryingRemain": 0
+      },
+      "nightLight": {
+        "nightLightSwitch": 0,
+        "brightness": 50,
+        "colorTemperature": 3500
+      }
+    }
+  }
+}

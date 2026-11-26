@@ -63,7 +63,9 @@ async def async_setup_entry(
 
         async_add_entities(entities)
 
-    async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, _create_entity)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, _create_entity)
+    )
 
 
 class NumberEntity(WiffiEntity, SensorEntity):

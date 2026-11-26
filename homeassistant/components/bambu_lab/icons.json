@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "current_layer": {
+        "default": "mdi:layers"
+      },
+      "print_progress": {
+        "default": "mdi:progress-clock"
+      },
+      "print_status": {
+        "default": "mdi:printer-3d"
+      },
+      "total_layers": {
+        "default": "mdi:layers-triple"
+      }
+    }
+  }
+}

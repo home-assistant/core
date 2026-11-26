@@ -21,9 +21,9 @@ from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TPLinkConfigEntry, legacy_device_id
+from . import legacy_device_id
 from .const import UNIT_MAPPING
-from .coordinator import TPLinkDataUpdateCoordinator
+from .coordinator import TPLinkConfigEntry, TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkModuleEntity,
     TPLinkModuleEntityDescription,
@@ -123,6 +123,7 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
         """Initialize the climate entity."""
         super().__init__(device, coordinator, description, parent=parent)
         self._thermostat_module = device.modules[Module.Thermostat]
+        self._humidity_module = device.modules.get(Module.HumiditySensor)
 
         if target_feature := self._thermostat_module.get_feature("target_temperature"):
             self._attr_min_temp = target_feature.minimum_value
@@ -134,7 +135,7 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
             )
 
         if temperature_feature := self._thermostat_module.get_feature("temperature"):
-            self._attr_temperature_unit = UNIT_MAPPING[
+            self._attr_native_temperature_unit = UNIT_MAPPING[
                 cast(str, temperature_feature.unit)
             ]
         else:
@@ -142,7 +143,7 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
                 "Unable to get correct temperature unit for %s, defaulting to celsius",
                 device.host,
             )
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     @async_refresh_after
     @override
@@ -177,8 +178,12 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
     @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
-        self._attr_current_temperature = self._thermostat_module.temperature
-        self._attr_target_temperature = self._thermostat_module.target_temperature
+        self._attr_native_current_temperature = self._thermostat_module.temperature
+        self._attr_native_target_temperature = (
+            self._thermostat_module.target_temperature
+        )
+        if self._humidity_module:
+            self._attr_current_humidity = self._humidity_module.humidity
 
         self._attr_hvac_mode = (
             HVACMode.HEAT if self._thermostat_module.state else HVACMode.OFF

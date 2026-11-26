@@ -7,7 +7,7 @@ from itertools import chain
 import logging
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 from zeroconf import BadTypeInNameException, DNSPointer, Zeroconf, current_time_millis
 from zeroconf.asyncio import AsyncServiceInfo, IPVersion
 
@@ -146,7 +146,7 @@ class _DiscoverySubscription:
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "zeroconf/subscribe_discovery",
+        probatio.Required("type"): "zeroconf/subscribe_discovery",
     }
 )
 @websocket_api.async_response

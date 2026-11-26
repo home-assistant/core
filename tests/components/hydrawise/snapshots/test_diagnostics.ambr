@@ -1,0 +1,190 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry_data': dict({
+      'api_key': '**REDACTED**',
+      'password': '**REDACTED**',
+      'username': '**REDACTED**',
+    }),
+    'daily_water_summary': dict({
+      '52496': dict({
+        'active_time_by_zone_id': dict({
+          '5965394': 123.0,
+          '5965395': 0.0,
+        }),
+        'active_use_by_zone_id': dict({
+          '5965394': 120.1,
+          '5965395': 0.0,
+        }),
+        'total_active_time': 123.0,
+        'total_active_use': 332.6,
+        'total_inactive_use': 13.0,
+        'total_use': 345.6,
+        'unit': 'gal',
+      }),
+    }),
+    'user': dict({
+      'controllers': list([
+        dict({
+          'hardware': dict({
+            'firmware': list([
+            ]),
+            'model': dict({
+              'description': '',
+              'name': '',
+            }),
+            'serial_number': '**REDACTED**',
+            'status': '',
+            'version': '',
+          }),
+          'id': 52496,
+          'last_action': '2024-01-01T00:00:00',
+          'last_contact_time': '2023-08-29T07:00:20',
+          'master_zone': None,
+          'name': '**REDACTED**',
+          'online': True,
+          'permitted_program_start_times': list([
+          ]),
+          'sensors': list([
+            dict({
+              'id': 337844,
+              'model': dict({
+                'active': True,
+                'delay': 0.0,
+                'divisor': 0.0,
+                'flow_rate': 0.0,
+                'id': 3318,
+                'name': 'Rain Sensor (normally closed wire)',
+                'off_level': 1,
+                'off_timer': 0,
+                'sensor_type': 'LEVEL_CLOSED',
+              }),
+              'name': 'Rain sensor ',
+              'status': dict({
+                'active': False,
+                'water_flow': None,
+              }),
+            }),
+            dict({
+              'id': 337845,
+              'model': dict({
+                'active': True,
+                'delay': 0.0,
+                'divisor': 0.52834,
+                'flow_rate': 3.7854,
+                'id': 3324,
+                'name': '1, 1½ or 2 inch NPT Flow Meter',
+                'off_level': 0,
+                'off_timer': 0,
+                'sensor_type': 'FLOW',
+              }),
+              'name': 'Flow meter',
+              'status': dict({
+                'active': False,
+                'water_flow': dict({
+                  'unit': 'gal',
+                  'value': 577.0044752010709,
+                }),
+              }),
+            }),
+          ]),
+          'software_version': '2.05',
+          'status': None,
+          'zones': list([
+            dict({
+              'id': 5965394,
+              'name': 'Zone One',
+              'number': dict({
+                'label': '',
+                'value': 0,
+              }),
+              'past_runs': dict({
+                'last_run': None,
+                'runs': list([
+                ]),
+              }),
+              'scheduled_runs': dict({
+                'current_run': None,
+                'next_run': dict({
+                  'duration': 1800.0,
+                  'end_time': '2024-01-04T12:19:57-08:00',
+                  'id': '',
+                  'normal_duration': 1800.0,
+                  'remaining_time': 0.0,
+                  'start_time': '2024-01-04T11:49:57-08:00',
+                  'status': dict({
+                    'label': '',
+                    'value': 0,
+                  }),
+                }),
+                'status': None,
+                'summary': '',
+              }),
+              'status': dict({
+                'relative_water_balance': 0,
+                'suspended_until': None,
+              }),
+              'suspensions': list([
+              ]),
+              'watering_settings': dict({
+                'cycle_and_soak_settings': None,
+                'fixed_watering_adjustment': 0,
+                'standard_program_applications': list([
+                ]),
+              }),
+            }),
+            dict({
+              'id': 5965395,
+              'name': 'Zone Two',
+              'number': dict({
+                'label': '',
+                'value': 0,
+              }),
+              'past_runs': dict({
+                'last_run': None,
+                'runs': list([
+                ]),
+              }),
+              'scheduled_runs': dict({
+                'current_run': dict({
+                  'duration': 0.0,
+                  'end_time': '2024-01-01T00:00:00',
+                  'id': '',
+                  'normal_duration': 0.0,
+                  'remaining_time': 1788.0,
+                  'start_time': '2024-01-01T00:00:00',
+                  'status': dict({
+                    'label': '',
+                    'value': 0,
+                  }),
+                }),
+                'next_run': None,
+                'status': None,
+                'summary': '',
+              }),
+              'status': dict({
+                'relative_water_balance': 0,
+                'suspended_until': None,
+              }),
+              'suspensions': list([
+              ]),
+              'watering_settings': dict({
+                'cycle_and_soak_settings': None,
+                'fixed_watering_adjustment': 0,
+                'standard_program_applications': list([
+                ]),
+              }),
+            }),
+          ]),
+        }),
+      ]),
+      'customer_id': '**REDACTED**',
+      'email': '**REDACTED**',
+      'id': '**REDACTED**',
+      'name': '**REDACTED**',
+      'units': dict({
+        'units_name': 'imperial',
+      }),
+    }),
+  })
+# ---

@@ -1,5 +1,6 @@
 """Tests for the OpenDisplay integration."""
 
+import struct
 from time import time
 
 from bleak.backends.scanner import AdvertisementData
@@ -10,15 +11,15 @@ from opendisplay import (
     DataExtended,
     DisplayConfig,
     GlobalConfig,
+    LengthPrefixedPacket,
     ManufacturerData,
     PowerOption,
     SecurityConfig,
     SystemConfig,
 )
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-
-from tests.components.bluetooth import generate_ble_device
 
 OPENDISPLAY_MANUFACTURER_ID = 9286  # 0x2446
 
@@ -28,6 +29,7 @@ V1_ADVERTISEMENT_DATA = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x82\x72\x
 
 TEST_ADDRESS = "AA:BB:CC:DD:EE:FF"
 TEST_TITLE = "OpenDisplay 1234"
+TEST_NAME = "OD1A2B3C"
 ENCRYPTION_KEY = "aabbccddee112233aabbccddee112233"  # 32 hex chars = 16 bytes
 
 # Firmware version response: major=1, minor=2, patch=3, sha="abc123"
@@ -100,6 +102,29 @@ DEVICE_CONFIG = GlobalConfig(
         reset_pin=0xFF,
         reserved=b"\x00" * 43,
     ),
+    findmy_config_raw=b"\x00\x2d" + b"\x11" * 128,
+    length_prefixed_packets=[
+        LengthPrefixedPacket(
+            0,
+            0xAE,
+            struct.pack(
+                "<BB12sBBbbB8s8sH",
+                0,
+                0,
+                b"full",
+                1,
+                1,
+                0,
+                50,
+                0,
+                b"\x00" + b"\xff" * 7,
+                bytes(8),
+                3,
+            )
+            + b"\x01\x12\x00",
+        ),
+        LengthPrefixedPacket(1, 0xF0, b"\x22" * 8),
+    ],
     data_extended=DataExtended.from_strings(
         manufacturer_name="Seeed Studio",
         model_name="XIAO EN04(NRF52840)",
@@ -111,11 +136,13 @@ DEVICE_CONFIG = GlobalConfig(
         custom_string_2="custom two",
         custom_string_3="custom three",
     ),
+    # Raw bytes of config packets the parser does not recognise; must be redacted.
+    unparsed_tail=b"\xde\xad\xbe\xef",
 )
 
 
 def make_service_info(
-    name: str | None = "OpenDisplay 1234",
+    name: str | None = TEST_NAME,
     address: str = "AA:BB:CC:DD:EE:FF",
     manufacturer_data: dict[int, bytes] | None = None,
 ) -> BluetoothServiceInfoBleak:
@@ -169,7 +196,7 @@ BUTTON_DEVICE_CONFIG = GlobalConfig(
 
 def make_v1_service_info(
     dynamic_data: bytes = b"\x00" * 11,
-    name: str | None = "OpenDisplay 1234",
+    name: str | None = TEST_NAME,
     address: str = TEST_ADDRESS,
 ) -> BluetoothServiceInfoBleak:
     """Create a v1 advertisement service info with a custom 11-byte dynamic block."""
@@ -215,8 +242,3 @@ def make_button_device_config(binary_inputs: list[BinaryInputs]) -> GlobalConfig
 
 
 VALID_SERVICE_INFO = make_service_info()
-
-NOT_OPENDISPLAY_SERVICE_INFO = make_service_info(
-    name="Other Device",
-    manufacturer_data={0x1234: b"\x00\x01"},
-)

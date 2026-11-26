@@ -3,6 +3,9 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 
@@ -27,10 +30,6 @@ from homeassistant.components.knx.const import (
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize("hass_config", [{}])
@@ -70,7 +69,7 @@ async def test_diagnostic_config_error(
     # change this with every library bump
     knx.xknx.version = "0.0.0"
     # the snapshot will contain 'configuration_error' key with
-    # the voluptuous error message
+    # the probatio error message
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
         == snapshot

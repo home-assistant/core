@@ -9,9 +9,18 @@ from pylast import LastFMNetwork, PyLastError, Track, WSError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_USERS, DOMAIN, ERROR_CODE_LOGIN_REQUIRED, LOGGER
+from .const import (
+    CONF_API_SECRET,
+    CONF_SESSION_KEY,
+    CONF_USERS,
+    DOMAIN,
+    ERROR_CODE_INVALID_SESSION_KEY,
+    ERROR_CODE_LOGIN_REQUIRED,
+    LOGGER,
+)
 
 type LastFMConfigEntry = ConfigEntry[LastFMDataUpdateCoordinator]
 
@@ -21,6 +30,13 @@ def format_track(track: Track | None) -> str | None:
     if track is None:
         return None
     return f"{track.artist} - {track.title}"
+
+
+def format_lastfm_error(error: PyLastError) -> str:
+    """Format a pylast error without including client credentials."""
+    if isinstance(error, WSError):
+        return f"{error.status}: {error.details}"
+    return str(error)
 
 
 @dataclass
@@ -37,10 +53,10 @@ class LastFMUserData:
 class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData]]):
     """A LastFM Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: LastFMConfigEntry
     _client: LastFMNetwork
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: LastFMConfigEntry) -> None:
         """Initialize the LastFM data coordinator."""
         super().__init__(
             hass,
@@ -49,29 +65,55 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
-        self._client = LastFMNetwork(api_key=config_entry.options[CONF_API_KEY])
+        self._client = LastFMNetwork(
+            api_key=config_entry.options[CONF_API_KEY],
+            api_secret=config_entry.options.get(CONF_API_SECRET, ""),
+            session_key=config_entry.options.get(CONF_SESSION_KEY, ""),
+        )
         self._warned_hidden_users: set[str] = set()
+
+    def _raise_if_auth_failed(self, error: PyLastError) -> None:
+        """Raise when Last.fm rejects the stored session key."""
+        if (
+            self.config_entry.options.get(CONF_SESSION_KEY)
+            and isinstance(error, WSError)
+            and error.status == ERROR_CODE_INVALID_SESSION_KEY
+        ):
+            raise ConfigEntryAuthFailed from error
 
     @override
     async def _async_update_data(self) -> dict[str, LastFMUserData]:
+        res = await self.hass.async_add_executor_job(self._get_users_data)
+        if not res:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            )
+        return res
+
+    def _get_users_data(self) -> dict[str, LastFMUserData]:
+        """Fetch the data of all users."""
         res = {}
         for username in self.config_entry.options[CONF_USERS]:
-            data = await self.hass.async_add_executor_job(self._get_user_data, username)
+            data = self._get_user_data(username)
             if data is not None:
                 res[username] = data
-        if not res:
-            raise UpdateFailed
         return res
 
     def _get_user_data(self, username: str) -> LastFMUserData | None:
         user = self._client.get_user(username)
         try:
-            play_count = user.get_playcount()
+            play_count = int(user.get_playcount())
             image = user.get_image()
             top_tracks = user.get_top_tracks(limit=1)
         except PyLastError as exc:
+            self._raise_if_auth_failed(exc)
             if self.last_update_success:
-                LOGGER.error("LastFM update for %s failed: %r", username, exc)
+                LOGGER.error(
+                    "LastFM update for %s failed: %s",
+                    username,
+                    format_lastfm_error(exc),
+                )
             return None
         now_playing = None
         last_tracks = []
@@ -79,18 +121,20 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             now_playing = format_track(user.get_now_playing())
             last_tracks = user.get_recent_tracks(limit=1)
         except PyLastError as exc:
-            if not (
-                isinstance(exc, WSError) and exc.status == ERROR_CODE_LOGIN_REQUIRED
-            ):
+            self._raise_if_auth_failed(exc)
+            if not isinstance(exc, WSError) or exc.status != ERROR_CODE_LOGIN_REQUIRED:
                 if self.last_update_success:
-                    LOGGER.error("LastFM update for %s failed: %r", username, exc)
+                    LOGGER.error(
+                        "LastFM update for %s failed: %s",
+                        username,
+                        format_lastfm_error(exc),
+                    )
                 return None
             if username not in self._warned_hidden_users:
                 self._warned_hidden_users.add(username)
                 LOGGER.warning(
                     "LastFM user %s has hidden their recent listening information "
-                    "(https://www.last.fm/settings/privacy); now playing and last "
-                    "played track are unavailable",
+                    "(https://www.last.fm/settings/privacy)",
                     username,
                 )
         else:

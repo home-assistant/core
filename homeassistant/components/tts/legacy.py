@@ -7,22 +7,21 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ANNOUNCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
 from homeassistant.config import config_per_platform
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DESCRIPTION,
     CONF_NAME,
     CONF_PLATFORM,
+    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, discovery
@@ -36,10 +35,6 @@ from homeassistant.setup import (
 from homeassistant.util.yaml import load_yaml_dict
 
 from .const import (
-    ATTR_CACHE,
-    ATTR_LANGUAGE,
-    ATTR_MESSAGE,
-    ATTR_OPTIONS,
     CONF_CACHE,
     CONF_CACHE_DIR,
     CONF_FIELDS,
@@ -49,6 +44,7 @@ from .const import (
     DEFAULT_CACHE_DIR,
     DEFAULT_TIME_MEMORY,
     DOMAIN,
+    TextToSpeechServiceArgument,
     TtsAudioType,
 )
 from .media_source import generate_media_source_id
@@ -62,7 +58,7 @@ CONF_SERVICE_NAME = "service_name"
 def _deprecated_platform(value: str) -> str:
     """Validate if platform is deprecated."""
     if value == "google":
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "google tts service has been renamed to google_translate,"
             " please update your configuration."
         )
@@ -71,26 +67,26 @@ def _deprecated_platform(value: str) -> str:
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
-        vol.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
-        vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
-        vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY): vol.All(
-            vol.Coerce(int), vol.Range(min=60, max=57600)
+        probatio.Required(CONF_PLATFORM): probatio.All(cv.string, _deprecated_platform),
+        probatio.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
+        probatio.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
+        probatio.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=60, max=57600)
         ),
-        vol.Optional(CONF_SERVICE_NAME): cv.string,
+        probatio.Optional(CONF_SERVICE_NAME): cv.string,
     }
 )
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
 SERVICE_SAY = "say"
 
-SCHEMA_SERVICE_SAY = vol.Schema(
+SCHEMA_SERVICE_SAY = probatio.Schema(
     {
-        vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_CACHE): cv.boolean,
-        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Optional(ATTR_LANGUAGE): cv.string,
-        vol.Optional(ATTR_OPTIONS): dict,
+        probatio.Required(TextToSpeechServiceArgument.MESSAGE): cv.string,
+        probatio.Optional(TextToSpeechServiceArgument.CACHE): cv.boolean,
+        probatio.Required(CommonServiceArgument.ENTITY_ID): cv.comp_entity_ids,
+        probatio.Optional(TextToSpeechServiceArgument.LANGUAGE): cv.string,
+        probatio.Optional(TextToSpeechServiceArgument.OPTIONS): dict,
     }
 )
 
@@ -148,29 +144,31 @@ async def async_setup_legacy(
 
         async def async_say_handle(service: ServiceCall) -> None:
             """Service handle for say."""
-            entity_ids = service.data[ATTR_ENTITY_ID]
+            entity_ids = service.data[CommonServiceArgument.ENTITY_ID]
 
             await hass.services.async_call(
                 MP_DOMAIN,
-                SERVICE_PLAY_MEDIA,
+                MediaPlayerService.PLAY_MEDIA,
                 {
-                    ATTR_ENTITY_ID: entity_ids,
-                    ATTR_MEDIA_CONTENT_ID: generate_media_source_id(
+                    TargetKey.ENTITY_ID: entity_ids,
+                    MediaPlayerServiceArgument.MEDIA_CONTENT_ID: generate_media_source_id(
                         hass,
                         engine=p_type,
-                        message=service.data[ATTR_MESSAGE],
-                        language=service.data.get(ATTR_LANGUAGE),
-                        options=service.data.get(ATTR_OPTIONS),
-                        cache=service.data.get(ATTR_CACHE),
+                        message=service.data[TextToSpeechServiceArgument.MESSAGE],
+                        language=service.data.get(TextToSpeechServiceArgument.LANGUAGE),
+                        options=service.data.get(TextToSpeechServiceArgument.OPTIONS),
+                        cache=service.data.get(TextToSpeechServiceArgument.CACHE),
                     ),
-                    ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                    ATTR_MEDIA_ANNOUNCE: True,
+                    MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                    MediaPlayerServiceArgument.ANNOUNCE: True,
                 },
                 blocking=True,
                 context=service.context,
             )
 
         service_name = p_config.get(CONF_SERVICE_NAME, f"{p_type}_{SERVICE_SAY}")
+        # Cannot be moved: actions are registered per legacy platform
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.async_register(
             DOMAIN, service_name, async_say_handle, schema=SCHEMA_SERVICE_SAY
         )

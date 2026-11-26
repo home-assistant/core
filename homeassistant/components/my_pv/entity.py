@@ -17,13 +17,14 @@ class MyPVBaseEntity(CoordinatorEntity[MyPVCoordinator]):
         self,
         coordinator: MyPVCoordinator,
         entity_description: EntityDescription,
-        serial_number: str,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
 
         self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{serial_number}-{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.device.serial_number}-{entity_description.key}"
+        )
 
         self.entity_description = entity_description
 
@@ -48,5 +49,19 @@ class MyPVDataEntity(MyPVBaseEntity):
         return (
             super().available
             and self.coordinator.device.get_data_value(self.entity_description.key)
+            is not None
+        )
+
+
+class MyPVSetupEntity(MyPVBaseEntity):
+    """The my-PV setup entity."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            super().available
+            and self.coordinator.device.get_setup_value(self.entity_description.key)
             is not None
         )

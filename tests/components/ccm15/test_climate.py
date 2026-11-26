@@ -5,39 +5,33 @@ from unittest.mock import patch
 
 from ccm15 import CCM15DeviceState, CCM15SlaveDevice, TriState
 from freezegun.api import FrozenDateTimeFactory
+import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ccm15.const import DOMAIN
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_SWING_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_HIGH,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_ON,
     SWING_OFF,
     SWING_ON,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PORT,
-    SERVICE_TURN_OFF,
+    STATE_UNAVAILABLE,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("ccm15_device")
@@ -72,8 +66,11 @@ async def test_climate_state(
     ) as mock_set_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: ["climate.midea_0"], ATTR_FAN_MODE: FAN_HIGH},
+            ClimateService.SET_FAN_MODE,
+            {
+                TargetKey.ENTITY_ID: ["climate.midea_0"],
+                ClimateServiceArgument.FAN_MODE: FAN_HIGH,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -84,8 +81,11 @@ async def test_climate_state(
     ) as mock_set_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ["climate.midea_0"], ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: ["climate.midea_0"],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -96,8 +96,11 @@ async def test_climate_state(
     ) as mock_set_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ["climate.midea_0"], ATTR_TEMPERATURE: 25},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: ["climate.midea_0"],
+                ClimateServiceArgument.TEMPERATURE: 25,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -108,8 +111,8 @@ async def test_climate_state(
     ) as mock_set_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ["climate.midea_0"]},
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: ["climate.midea_0"]},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -120,8 +123,8 @@ async def test_climate_state(
     ) as mock_set_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ["climate.midea_0"]},
+            ClimateService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ["climate.midea_0"]},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -142,6 +145,49 @@ async def test_climate_state(
 
     assert hass.states.get("climate.midea_0") == snapshot
     assert hass.states.get("climate.midea_1") == snapshot
+
+
+async def test_climate_unavailable_on_update_failure(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the climate entity becomes unavailable when the update fails."""
+    device_state = CCM15DeviceState(
+        devices={0: CCM15SlaveDevice(bytes.fromhex("000000b0b8001b"))}
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1.1.1.1",
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 80},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.ccm15.coordinator.CCM15Device.get_status_async",
+        return_value=device_state,
+    ) as mock_get_status:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert (state := hass.states.get("climate.midea_0"))
+        assert state.state != STATE_UNAVAILABLE
+
+        mock_get_status.side_effect = httpx2.RequestError("Connection failed")
+
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert (state := hass.states.get("climate.midea_0"))
+        assert state.state == STATE_UNAVAILABLE
+
+        mock_get_status.side_effect = None
+
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert (state := hass.states.get("climate.midea_0"))
+        assert state.state != STATE_UNAVAILABLE
 
 
 async def test_climate_fahrenheit_unit(hass: HomeAssistant) -> None:
@@ -168,7 +214,7 @@ async def test_climate_fahrenheit_unit(hass: HomeAssistant) -> None:
     climate_component = hass.data[CLIMATE_DOMAIN]
     entity = climate_component.get_entity("climate.midea_0")
     assert entity is not None
-    assert entity.temperature_unit == UnitOfTemperature.FAHRENHEIT
+    assert entity.native_temperature_unit == UnitOfTemperature.FAHRENHEIT
 
     # With the entity already in Fahrenheit under the US system, the device's
     # native values pass through unconverted; were it still Celsius they would
@@ -203,8 +249,11 @@ async def test_climate_set_swing_mode(
     ) as mock_set_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_SWING_MODE,
-            {ATTR_ENTITY_ID: ["climate.midea_0"], ATTR_SWING_MODE: swing_mode},
+            ClimateService.SET_SWING_MODE,
+            {
+                TargetKey.ENTITY_ID: ["climate.midea_0"],
+                ClimateServiceArgument.SWING_MODE: swing_mode,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()

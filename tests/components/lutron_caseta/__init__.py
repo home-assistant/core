@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from pylutron_caseta.color_value import ColorMode as LutronColorMode, WarmCoolColorValue
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lutron_caseta import DOMAIN
 from homeassistant.components.lutron_caseta.const import (
@@ -17,8 +18,6 @@ from homeassistant.components.lutron_caseta.const import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -205,13 +204,15 @@ class MockBridge:
     async def set_warm_dim(
         self,
         device_id: str,
+        enabled: bool,
         value: int | None = None,
         fade_time: timedelta | None = None,
     ) -> None:
         """Mock changing the warm dim state and invoke callbacks."""
-        if device_id in self.devices and value is not None:
-            self.devices[device_id]["current_state"] = value
-            self.devices[device_id]["warm_dim"] = True
+        if device_id in self.devices:
+            self.devices[device_id]["warm_dim"] = enabled
+            if value is not None:
+                self.devices[device_id]["current_state"] = value
         self.call_subscribers(device_id)
 
     def load_devices(self):
@@ -523,6 +524,28 @@ class MockBridgeWithOpenCloseStopCover(MockBridge):
             "model": None,
             "serial": 5442325,
             "tilt": None,
+            "area": "822",
+        }
+        return devices
+
+
+class MockBridgeWithTiltOnlyBlind(MockBridge):
+    """Mock bridge that also exposes a tilt only blind."""
+
+    def load_devices(self):
+        """Add a tilt only blind to the mock devices."""
+        devices = super().load_devices()
+        devices["806"] = {
+            "device_id": "806",
+            "current_state": -1,
+            "fan_speed": None,
+            "zone": "806",
+            "name": "Basement Bedroom_Wood Blind",
+            "button_groups": None,
+            "type": "SerenaTiltOnlyWoodBlind",
+            "model": None,
+            "serial": 5442326,
+            "tilt": 100,
             "area": "822",
         }
         return devices

@@ -3,13 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.components.light.condition import CONDITIONS
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
     TargetSupport,
     assert_condition_behavior_all,
@@ -23,6 +17,11 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.light import LightEntityStateAttribute
+from homeassistant.components.light.condition import CONDITIONS
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 # Brightness is stored as a uint8 (0-255) but the threshold is in percent.
 _BRIGHTNESS_VALUE_SCALE = 255 / 100
@@ -172,7 +171,7 @@ async def test_light_state_condition_behavior_all(
         *parametrize_numerical_attribute_condition_above_below_any(
             "light.is_brightness",
             STATE_ON,
-            ATTR_BRIGHTNESS,
+            LightEntityStateAttribute.BRIGHTNESS,
             attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
     ],
@@ -210,7 +209,7 @@ async def test_light_brightness_condition_behavior_any(
         *parametrize_numerical_attribute_condition_above_below_all(
             "light.is_brightness",
             STATE_ON,
-            ATTR_BRIGHTNESS,
+            LightEntityStateAttribute.BRIGHTNESS,
             attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
     ],

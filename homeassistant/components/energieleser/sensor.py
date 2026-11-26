@@ -13,6 +13,7 @@ from energieleser import (
 )
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -73,7 +74,17 @@ class WaermeleserSensorEntityDescription(SensorEntityDescription):
     """Describes a wärmeleser sensor."""
 
     value_fn: Callable[[WaermeleserDevice], StateType]
+    unit_fn: Callable[[WaermeleserDevice], str | None] | None = None
     present_fn: Callable[[WaermeleserDevice], bool] = lambda _: True
+
+
+# Wärmeleser devices pass through the unit of the connected heat meter, which
+# may differ in spelling from the Home Assistant unit constants.
+WAERMELESER_UNIT_ALIASES: dict[str, str] = {
+    "l/h": UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+    "m3": UnitOfVolume.CUBIC_METERS,
+    "m3/h": UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+}
 
 
 STROMLESER_SENSORS: tuple[StromleserSensorEntityDescription, ...] = (
@@ -216,7 +227,6 @@ WASSERLESER_SENSORS: tuple[WasserleserSensorEntityDescription, ...] = (
     ),
     WasserleserSensorEntityDescription(
         key="current_flow_rate_m3",
-        translation_key="water_flow_rate_m3",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
@@ -246,6 +256,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.total_energy_t1.value if d.total_energy_t1 else None,
+        unit_fn=lambda d: d.total_energy_t1.unit if d.total_energy_t1 else None,
         present_fn=lambda d: d.total_energy_t1 is not None,
     ),
     WaermeleserSensorEntityDescription(
@@ -256,6 +267,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.total_energy_t2.value if d.total_energy_t2 else None,
+        unit_fn=lambda d: d.total_energy_t2.unit if d.total_energy_t2 else None,
         present_fn=lambda d: d.total_energy_t2 is not None,
     ),
     WaermeleserSensorEntityDescription(
@@ -266,6 +278,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.total_energy_t3.value if d.total_energy_t3 else None,
+        unit_fn=lambda d: d.total_energy_t3.unit if d.total_energy_t3 else None,
         present_fn=lambda d: d.total_energy_t3 is not None,
     ),
     WaermeleserSensorEntityDescription(
@@ -274,6 +287,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.power.value if d.power else None,
+        unit_fn=lambda d: d.power.unit if d.power else None,
         present_fn=lambda d: d.power is not None,
     ),
     WaermeleserSensorEntityDescription(
@@ -283,6 +297,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda d: d.total_volume.value if d.total_volume else None,
+        unit_fn=lambda d: d.total_volume.unit if d.total_volume else None,
         present_fn=lambda d: d.total_volume is not None,
     ),
     WaermeleserSensorEntityDescription(
@@ -292,6 +307,7 @@ WAERMELESER_SENSORS: tuple[WaermeleserSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.volume_flow.value if d.volume_flow else None,
+        unit_fn=lambda d: d.volume_flow.unit if d.volume_flow else None,
         present_fn=lambda d: d.volume_flow is not None,
     ),
     WaermeleserSensorEntityDescription(
@@ -474,3 +490,22 @@ class WaermeleserSensor(_EnergieleserSensorBase):
         if TYPE_CHECKING:
             assert isinstance(device, WaermeleserDevice)
         return self.entity_description.value_fn(device)
+
+    @property
+    @override
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit, preferring the device-reported one when valid."""
+        description = self.entity_description
+        if description.unit_fn is not None:
+            device = self.coordinator.data
+            if TYPE_CHECKING:
+                assert isinstance(device, WaermeleserDevice)
+            unit = description.unit_fn(device)
+            if unit and description.device_class is not None:
+                unit = WAERMELESER_UNIT_ALIASES.get(unit, unit)
+                # Return the canonical unit constant; ignore units that are
+                # not valid for the device class.
+                for valid_unit in DEVICE_CLASS_UNITS[description.device_class]:
+                    if valid_unit == unit:
+                        return valid_unit
+        return description.native_unit_of_measurement

@@ -1,0 +1,8 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'device_type': 'tv',
+    'infrared_emitter_entity_id': 'infrared.test_ir_emitter',
+    'infrared_emitter_state': 'unknown',
+  })
+# ---

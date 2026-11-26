@@ -1,10 +1,12 @@
 """Support for monitoring OctoPrint 3D printers."""
 
+import asyncio
 import logging
+from typing import Any
 
 import aiohttp
+import probatio
 from pyoctoprintapi import OctoprintClient
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -21,8 +23,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Event,
+    HomeAssistant,
+    callback,
+)
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify as util_slugify
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
@@ -37,13 +45,13 @@ _LOGGER = logging.getLogger(__name__)
 def has_all_unique_names(value):
     """Validate that printers have an unique name."""
     names = [util_slugify(printer["name"]) for printer in value]
-    vol.Schema(vol.Unique())(names)
+    probatio.Schema(probatio.Unique())(names)
     return value
 
 
 def ensure_valid_path(value):
     """Validate the path, ensuring it starts and ends with a /."""
-    vol.Schema(cv.string)(value)
+    probatio.Schema(cv.string)(value)
     if value[0] != "/":
         value = f"/{value}"
     if value[-1] != "/":
@@ -67,12 +75,12 @@ BINARY_SENSOR_TYPES = [
     "Printing Error",
 ]
 
-BINARY_SENSOR_SCHEMA = vol.Schema(
+BINARY_SENSOR_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSOR_TYPES)
-        ): vol.All(cv.ensure_list, [vol.In(BINARY_SENSOR_TYPES)]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        ): probatio.All(probatio.EnsureList(), [probatio.In(BINARY_SENSOR_TYPES)]),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -84,48 +92,45 @@ SENSOR_TYPES = [
     "Time Elapsed",
 ]
 
-SENSOR_SCHEMA = vol.Schema(
+SENSOR_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(
+            CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
+        ): probatio.All(probatio.EnsureList(), [probatio.In(SENSOR_TYPES)]),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.All(
-                cv.ensure_list,
-                [
-                    vol.Schema(
-                        {
-                            vol.Required(CONF_API_KEY): cv.string,
-                            vol.Required(CONF_HOST): cv.string,
-                            vol.Optional(CONF_SSL, default=False): cv.boolean,
-                            vol.Optional(CONF_PORT, default=80): cv.port,
-                            vol.Optional(CONF_PATH, default="/"): ensure_valid_path,
-                            # Following values are not longer used in the configuration
-                            # of the integration and are here for historical purposes
-                            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                            vol.Optional(
-                                CONF_NUMBER_OF_TOOLS, default=0
-                            ): cv.positive_int,
-                            vol.Optional(CONF_BED, default=False): cv.boolean,
-                            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-                            vol.Optional(
-                                CONF_BINARY_SENSORS, default={}
-                            ): BINARY_SENSOR_SCHEMA,
-                        }
-                    )
-                ],
-                has_all_unique_names,
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {
+        DOMAIN: probatio.All(
+            probatio.EnsureList(),
+            [
+                probatio.Schema(
+                    {
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
+                        probatio.Required(CONF_HOST): cv.string,
+                        probatio.Optional(CONF_SSL, default=False): cv.boolean,
+                        probatio.Optional(CONF_PORT, default=80): probatio.Port(),
+                        probatio.Optional(CONF_PATH, default="/"): ensure_valid_path,
+                        # Following values are not longer used in the configuration
+                        # of the integration and are here for historical purposes
+                        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                        probatio.Optional(
+                            CONF_NUMBER_OF_TOOLS, default=0
+                        ): cv.positive_int,
+                        probatio.Optional(CONF_BED, default=False): cv.boolean,
+                        probatio.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+                        probatio.Optional(
+                            CONF_BINARY_SENSORS, default={}
+                        ): BINARY_SENSOR_SCHEMA,
+                    }
+                )
+            ],
+            has_all_unique_names,
+        )
+    },
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -135,27 +140,82 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    domain_config = config[DOMAIN]
-
-    for conf in domain_config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
+    hass.async_create_task(
+        _async_import_yaml(
+            hass,
+            [
+                {
                     CONF_API_KEY: conf[CONF_API_KEY],
                     CONF_HOST: conf[CONF_HOST],
                     CONF_PATH: conf[CONF_PATH],
                     CONF_PORT: conf[CONF_PORT],
                     CONF_SSL: conf[CONF_SSL],
-                },
-            )
+                }
+                for conf in config[DOMAIN]
+            ],
         )
+    )
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) -> bool:
+async def _async_import_yaml(
+    hass: HomeAssistant, import_data: list[dict[str, Any]]
+) -> None:
+    """Import the YAML devices into config entries."""
+    # Eager tasks register the import flows before setup waits for them.
+    results = await asyncio.gather(
+        *(
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+                )
+            )
+            for data in import_data
+        )
+    )
+    failed_reasons = {
+        result["reason"]
+        for result in results
+        if result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    }
+    for reason in failed_reasons:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{reason}",
+            breaks_in_ha_version="2027.6.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": DEFAULT_NAME,
+            },
+        )
+    # The shared issue tells users to remove all YAML, which would drop failed devices.
+    if failed_reasons:
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": DEFAULT_NAME,
+        },
+    )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) -> None:
     """Set up OctoPrint from a config entry."""
     if CONF_VERIFY_SSL not in entry.data:
         data = {**entry.data, CONF_VERIFY_SSL: True}
@@ -197,9 +257,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

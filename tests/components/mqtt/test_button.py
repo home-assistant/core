@@ -5,13 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.components import button
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-
-from .common import (
+from pytest_homeassistant.components.mqtt.common import (
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -39,8 +33,12 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.components import button
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.core import HomeAssistant
 
 DEFAULT_CONFIG = {
     DOMAIN: {button.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
@@ -76,8 +74,8 @@ async def test_sending_mqtt_commands(
 
     await hass.services.async_call(
         button.DOMAIN,
-        button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_button"},
+        button.ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.test_button"},
         blocking=True,
     )
 
@@ -136,8 +134,8 @@ async def test_sending_mqtt_commands_with_message_expiry_interval(
 
     await hass.services.async_call(
         button.DOMAIN,
-        button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_button"},
+        button.ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.test_button"},
         blocking=True,
     )
 
@@ -176,8 +174,8 @@ async def test_command_template(
 
     await hass.services.async_call(
         button.DOMAIN,
-        button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test"},
+        button.ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.test"},
         blocking=True,
     )
 
@@ -437,7 +435,7 @@ async def test_entity_debug_info_message(
         mqtt_mock_entry,
         button.DOMAIN,
         DEFAULT_CONFIG,
-        button.SERVICE_PRESS,
+        button.ButtonService.PRESS,
         command_payload="PRESS",
         state_topic=None,
     )
@@ -514,7 +512,13 @@ async def test_valid_device_class(
 @pytest.mark.parametrize(
     ("service", "topic", "parameters", "payload", "template"),
     [
-        (button.SERVICE_PRESS, "command_topic", None, "PRESS", "command_template"),
+        (
+            button.ButtonService.PRESS,
+            "command_topic",
+            None,
+            "PRESS",
+            "command_template",
+        ),
     ],
 )
 async def test_publishing_with_custom_encoding(

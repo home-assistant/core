@@ -1,13 +1,31 @@
 """Platform providing event entities for UniFi Protect."""
 
+from abc import abstractmethod
+from collections.abc import Callable, Iterable
 import dataclasses
-import re
 from typing import Any, override
 
 from uiprotect import ProtectEvent
-from uiprotect.data import Fob, ModelType, PublicDeviceModel, SmartDetectObjectType
+from uiprotect.data import (
+    Bootstrap,
+    EventType,
+    Fob,
+    LinkStation,
+    ModelType,
+    OnOffState,
+    ProtectAdoptableDeviceModel,
+    PublicCamera,
+    PublicDeviceModel,
+    SmartDetectObjectType,
+)
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
-from uiprotect.data.types import EventButtonType
+from uiprotect.data.public_devices import PublicSensor, SensorFeatureCapability
+from uiprotect.data.types import (
+    AlarmHubInputStatus,
+    AlarmHubTamperStatus,
+    EventButtonType,
+    SensorAlarmType,
+)
 
 from homeassistant.components.event import (
     DoorbellEventType,
@@ -15,12 +33,12 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_at
 
-from . import Bootstrap
 from .const import (
     ATTR_EVENT_ID,
     ATTR_EVENT_SOURCE,
@@ -36,21 +54,19 @@ from .const import (
     KEYRINGS_USER_STATUS,
     VEHICLE_EVENT_DELAY_SECONDS,
 )
-from .data import (
-    EventType,
-    ProtectAdoptableDeviceModel,
-    ProtectData,
-    ProtectDeviceType,
-    UFPConfigEntry,
-)
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     EventEntityMixin,
     ProtectDeviceEntity,
     ProtectEventMixin,
-    ProtectFobEntity,
+    _async_capability_supported,
+    async_remove_unsupported_sense_entities,
 )
 
 PARALLEL_UPDATES = 0
+
+ATTR_INPUT = "input"
+ATTR_STATUS = "status"
 
 # Per-entity cap on tracked event ids for fire dedup (far above realistic
 # concurrent/recent events per camera per category).
@@ -99,13 +115,22 @@ _SMART_DETECT_EVENT_TYPES = (
     EventType.SMART_DETECT_LINE,
     EventType.SMART_DETECT_LOITER,
 )
+# The event types uiprotect keeps in the camera's last smart detect event; a
+# line crossing inside a zone can leave it on the line event.
+_VEHICLE_EVENT_TYPES = (EventType.SMART_DETECT, EventType.SMART_DETECT_LINE)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class ProtectDetectionEventEntityDescription(ProtectEventEntityDescription):
-    """Describes a category detection event entity driven by the public events WS."""
+class ProtectPublicEventEntityDescription(ProtectEventEntityDescription):
+    """Describes an event entity fired from the public events WS."""
 
     ufp_public_event_types: tuple[EventType, ...]
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ProtectDetectionEventEntityDescription(ProtectPublicEventEntityDescription):
+    """Describes a category detection event entity driven by the public events WS."""
+
     include_event_source: bool = False
 
 
@@ -146,8 +171,66 @@ class ProtectFireOnceMixin(EventEntity):
         self.async_write_ha_state()
 
 
+class ProtectPublicEventSubscriberEntity(ProtectDeviceEntity):
+    """Base for entities fired from public events keyed by the device id.
+
+    A re-adopted device gets a new id. In hybrid mode the private and public
+    objects learn it independently, so both ids are subscribed while they differ.
+    """
+
+    _public_event_unsubs: list[CALLBACK_TYPE] | None = None
+    _public_event_device_ids: frozenset[str] = frozenset()
+
+    @abstractmethod
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        """Return the public event types and their callbacks."""
+
+    @callback
+    def _async_subscribe_public_events(self) -> None:
+        device_ids = frozenset(
+            obj.id for obj in (self.device, self._ufp_public_obj) if obj is not None
+        )
+        if device_ids == self._public_event_device_ids:
+            return
+        self._async_unsubscribe_public_events()
+        self._public_event_device_ids = device_ids
+        self._public_event_unsubs = [
+            self.data.async_subscribe_public_event(
+                device_id, event_type, update_callback
+            )
+            for device_id in device_ids
+            for event_type, update_callback in self._async_public_event_subscriptions()
+        ]
+
+    @callback
+    def _async_unsubscribe_public_events(self) -> None:
+        for unsub in self._public_event_unsubs or ():
+            unsub()
+        self._public_event_unsubs = None
+        self._public_event_device_ids = frozenset()
+
+    @callback
+    @override
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        if self._public_event_unsubs is not None:
+            self._async_subscribe_public_events()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the public events of this device."""
+        await super().async_added_to_hass()
+        self._async_subscribe_public_events()
+        self.async_on_remove(self._async_unsubscribe_public_events)
+
+
 class ProtectDevicePublicEventEntity(
-    ProtectFireOnceMixin, EventEntityMixin, ProtectDeviceEntity, EventEntity
+    ProtectFireOnceMixin,
+    EventEntityMixin,
+    ProtectPublicEventSubscriberEntity,
+    EventEntity,
 ):
     """Base for entities driven by the public events WS.
 
@@ -167,14 +250,10 @@ class ProtectDeviceRingEventEntity(ProtectDevicePublicEventEntity):
     entity_description: ProtectEventEntityDescription
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to public ring events for this doorbell."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.data.async_subscribe_public_event(
-                self.device.id, EventType.RING, self._async_ring_event
-            )
-        )
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        return ((EventType.RING, self._async_ring_event),)
 
     @callback
     def _async_ring_event(self, event: ProtectEvent) -> None:
@@ -196,7 +275,7 @@ class ProtectDeviceNFCEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEn
         super()._async_update_device_from_protect(device)
         if event := description.get_event_obj(device):
             self._event = event
-            self._event_end = event.end if event else None
+            self._event_end = event.end
 
         if (
             event
@@ -241,7 +320,7 @@ class ProtectDeviceFingerprintEventEntity(
         super()._async_update_device_from_protect(device)
         if event := description.get_event_obj(device):
             self._event = event
-            self._event_end = event.end if event else None
+            self._event_end = event.end
 
         if (
             event
@@ -410,12 +489,12 @@ class ProtectDeviceVehicleEventEntity(
         super()._async_update_device_from_protect(device)
         if event := description.get_event_obj(device):
             self._event = event
-            self._event_end = event.end if event else None
+            self._event_end = event.end
 
         # Process vehicle detection events with thumbnails
         if (
             event
-            and event.type is EventType.SMART_DETECT
+            and event.type in _VEHICLE_EVENT_TYPES
             and (thumbnails := self._get_vehicle_thumbnails(event))
         ):
             # Skip if same event with same data (no changes)
@@ -460,15 +539,13 @@ class ProtectDeviceSmartDetectEventEntity(ProtectDevicePublicEventEntity):
     entity_description: ProtectEventEntityDescription
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to public smart-detect events for this camera."""
-        await super().async_added_to_hass()
-        for event_type in _SMART_DETECT_EVENT_TYPES:
-            self.async_on_remove(
-                self.data.async_subscribe_public_event(
-                    self.device.id, event_type, self._async_smart_detect_event
-                )
-            )
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        return (
+            (event_type, self._async_smart_detect_event)
+            for event_type in _SMART_DETECT_EVENT_TYPES
+        )
 
     @callback
     def _async_smart_detect_event(self, event: ProtectEvent) -> None:
@@ -485,29 +562,18 @@ class ProtectDeviceSmartDetectEventEntity(ProtectDevicePublicEventEntity):
             )
 
 
-_CAMEL_BOUNDARY = re.compile(r"(?<!^)(?=[A-Z])")
-
-# Friendly event-type slugs where the raw enum value is unclear or prefixed;
-# unlisted types fall back to a snake_case slug so new ones still auto-surface.
+# Event types that differ from the library slug; unlisted types use the
+# library slug so new ones still auto-surface.
 _EVENT_TYPE_OVERRIDES = {
-    SmartDetectObjectType.SMOKE: "smoke",
     SmartDetectObjectType.CMONX: "co",
-    SmartDetectObjectType.SIREN: "siren",
-    SmartDetectObjectType.BABY_CRY: "baby_cry",
     SmartDetectObjectType.SPEAK: "speaking",
-    SmartDetectObjectType.BARK: "bark",
     SmartDetectObjectType.BURGLAR: "car_alarm",
-    SmartDetectObjectType.CAR_HORN: "car_horn",
-    SmartDetectObjectType.GLASS_BREAK: "glass_break",
 }
 
 
 def _event_type(detected: SmartDetectObjectType) -> str:
     """Stable snake_case event type for a detection (HA translation-key rules)."""
-    return (
-        _EVENT_TYPE_OVERRIDES.get(detected)
-        or _CAMEL_BOUNDARY.sub("_", detected.value).lower()
-    )
+    return _EVENT_TYPE_OVERRIDES.get(detected) or detected.slug
 
 
 _SMART_OBJECT_EVENT_TYPES = [
@@ -531,17 +597,13 @@ class ProtectDeviceDetectionEventEntity(ProtectDevicePublicEventEntity):
     entity_description: ProtectDetectionEventEntityDescription
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to the category's public detection events."""
-        await super().async_added_to_hass()
-        for event_type in self.entity_description.ufp_public_event_types:
-            self.async_on_remove(
-                self.data.async_subscribe_public_event(
-                    self.device.id,
-                    event_type,
-                    self._async_detection_event,
-                )
-            )
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        return (
+            (event_type, self._async_detection_event)
+            for event_type in self.entity_description.ufp_public_event_types
+        )
 
     @callback
     def _async_detection_event(self, event: ProtectEvent) -> None:
@@ -588,7 +650,16 @@ _FOB_EVENT_TYPES: list[str] = [
 ]
 
 
-class ProtectFobButtonEventEntity(ProtectFireOnceMixin, ProtectFobEntity, EventEntity):
+_FOB_EVENT_DESCRIPTION = EventEntityDescription(
+    key="keyfob",
+    translation_key="keyfob",
+    event_types=_FOB_EVENT_TYPES,
+)
+
+
+class ProtectFobButtonEventEntity(
+    ProtectFireOnceMixin, ProtectPublicEventSubscriberEntity, EventEntity
+):
     """A UniFi Protect key fob button-press event entity.
 
     Each fob exposes one event entity that fires the pressed button (from a
@@ -596,28 +667,22 @@ class ProtectFobButtonEventEntity(ProtectFireOnceMixin, ProtectFobEntity, EventE
     type.
     """
 
-    _attr_translation_key = "keyfob"
-    _attr_event_types = _FOB_EVENT_TYPES
+    _ufp_uses_public = True
     # Presses arrive only on the events websocket, so its health gates
     # availability on top of the devices websocket.
     _ufp_requires_events_ws = True
 
     def __init__(self, data: ProtectData, fob: Fob) -> None:
         """Initialize the key fob button event entity."""
-        self._attr_unique_id = f"{fob.mac}_keyfob"
-        super().__init__(data, fob)
+        super().__init__(data, fob, _FOB_EVENT_DESCRIPTION)
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to public key-fob button-press events."""
-        await super().async_added_to_hass()
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
         # A press arrives as a ``sensorButtonPressed`` event whose ``device`` is
         # the fob and whose ``metadata.button`` is the pressed button.
-        self.async_on_remove(
-            self.data.async_subscribe_public_event(
-                self._fob_id, EventType.SENSOR_BUTTON_PRESSED, self._async_button_event
-            )
-        )
+        return ((EventType.SENSOR_BUTTON_PRESSED, self._async_button_event),)
 
     @callback
     def _async_button_event(self, event: ProtectEvent) -> None:
@@ -631,6 +696,278 @@ class ProtectFobButtonEventEntity(ProtectFireOnceMixin, ProtectFobEntity, EventE
         # the same press can arrive more than once.
         self._fire_once(event, button_type, {ATTR_EVENT_ID: event.id})
 
+
+_ALARM_HUB_INPUT_EVENT_TYPES: dict[EventType, str] = {
+    EventType.ALARM_HUB_MOTION: "motion",
+    EventType.ALARM_HUB_ENTRY_OPENED: "entry_opened",
+    EventType.ALARM_HUB_ENTRY_CLOSED: "entry_closed",
+    EventType.ALARM_HUB_SMOKE: "smoke",
+    EventType.ALARM_HUB_GLASS_BREAK: "glass_break",
+    EventType.ALARM_HUB_BUTTON_PRESS: "button_press",
+    EventType.ALARM_HUB_TAMPER: "tamper",
+}
+
+_ALARM_HUB_EVENT_TYPES: dict[EventType, str] = {
+    **_ALARM_HUB_INPUT_EVENT_TYPES,
+    EventType.ALARM_HUB_DEVICE_TAMPER: "device_tamper",
+    EventType.ALARM_HUB_RELAY_SWITCHED: "relay_switched",
+    EventType.ALARM_HUB_BATTERY_LOW: "battery_low",
+    EventType.ALARM_HUB_BATTERY_CONNECTED: "battery_connected",
+}
+
+_ALARM_HUB_EVENT_DESCRIPTION = EventEntityDescription(
+    key="alarm_hub",
+    translation_key="alarm_hub",
+    event_types=list(_ALARM_HUB_EVENT_TYPES.values()),
+)
+
+
+def _alarm_hub_terminals(hub: LinkStation) -> set[int] | None:
+    """Return the inputs that have a numbered terminal, if the hub lists them.
+
+    The emergency input has its own connector and no number.
+    """
+    connector = (hub.alarm_hub or {}).get("connector")
+    terminals = connector.get("tb") if isinstance(connector, dict) else None
+    if not isinstance(terminals, dict):
+        return None
+    return {int(terminal) for terminal in terminals if terminal.isdecimal()}
+
+
+# Statuses that report an input or the hub going back to rest. Only entry
+# inputs have an event type of their own for that.
+_ALARM_HUB_REST_STATUSES = frozenset(
+    {AlarmHubInputStatus.NORMAL, AlarmHubTamperStatus.RESTORED}
+)
+
+
+def _alarm_hub_event_fires(event: ProtectEvent) -> bool:
+    """Return whether an alarm hub event is fired.
+
+    A return to rest is skipped, except the closing of an entry input.
+    """
+    if event.type is EventType.ALARM_HUB_ENTRY_CLOSED:
+        return True
+    metadata = event.metadata
+    return metadata is None or metadata.status_text not in _ALARM_HUB_REST_STATUSES
+
+
+def _alarm_hub_event_data(event: ProtectEvent) -> dict[str, Any]:
+    """Return the event id and the reported status of an alarm hub event."""
+    event_data: dict[str, Any] = {ATTR_EVENT_ID: event.id}
+    if (metadata := event.metadata) is not None and metadata.status_text is not None:
+        event_data[ATTR_STATUS] = metadata.status_text
+    return event_data
+
+
+def _alarm_hub_event_input(event: ProtectEvent) -> int | None:
+    """Return the input an alarm hub event belongs to."""
+    if (
+        (metadata := event.metadata) is None
+        or (pin := metadata.pin) is None
+        or not pin.isdecimal()
+    ):
+        return None
+    return int(pin)
+
+
+class ProtectAlarmHubEventEntity(
+    ProtectFireOnceMixin, ProtectPublicEventSubscriberEntity, EventEntity
+):
+    """The event entity of a UniFi Protect alarm hub itself.
+
+    Fires the events of the hub and those of inputs without an entity of
+    their own.
+    """
+
+    _attr_name = None  # device name is the entity name
+    _unrecorded_attributes = frozenset({ATTR_EVENT_ID})
+    _ufp_uses_public = True
+    _ufp_requires_events_ws = True
+
+    def __init__(
+        self, data: ProtectData, hub: LinkStation, input_ids: frozenset[int]
+    ) -> None:
+        """Initialize the alarm hub event entity."""
+        super().__init__(data, hub, _ALARM_HUB_EVENT_DESCRIPTION)
+        self._input_ids = input_ids
+
+    @override
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        return (
+            (event_type, self._async_hub_event) for event_type in _ALARM_HUB_EVENT_TYPES
+        )
+
+    @callback
+    def _async_hub_event(self, event: ProtectEvent) -> None:
+        if not _alarm_hub_event_fires(event):
+            return
+        input_id = _alarm_hub_event_input(event)
+        if event.type in _ALARM_HUB_INPUT_EVENT_TYPES and input_id in self._input_ids:
+            # The entity of that input fires it.
+            return
+        event_data = _alarm_hub_event_data(event)
+        hub = self._ufp_public_obj
+        terminals = _alarm_hub_terminals(hub) if isinstance(hub, LinkStation) else None
+        if input_id is not None and (terminals is None or input_id in terminals):
+            # Protect numbers the inputs from 1, the API from 0.
+            event_data[ATTR_INPUT] = input_id + 1
+        self._fire_once(event, _ALARM_HUB_EVENT_TYPES[event.type], event_data)
+
+
+class ProtectAlarmHubInputEventEntity(
+    ProtectFireOnceMixin, ProtectPublicEventSubscriberEntity, EventEntity
+):
+    """The event entity of one input of a UniFi Protect alarm hub."""
+
+    _unrecorded_attributes = frozenset({ATTR_EVENT_ID})
+    _ufp_uses_public = True
+    _ufp_requires_events_ws = True
+
+    def __init__(
+        self, data: ProtectData, hub: LinkStation, input_id: int, name: str | None
+    ) -> None:
+        """Initialize the alarm hub input event entity."""
+        # The input type can change in Protect, so every type is declared.
+        description = EventEntityDescription(
+            key=f"input_{input_id}",
+            translation_key="alarm_hub_input",
+            event_types=list(_ALARM_HUB_INPUT_EVENT_TYPES.values()),
+        )
+        super().__init__(data, hub, description)
+        self._input_id = input_id
+        # Protect numbers the inputs from 1, the API from 0.
+        self._attr_translation_placeholders = {"input": str(input_id + 1)}
+        if name:
+            # Device-provided names take precedence over the translated default.
+            self._attr_name = name
+
+    @override
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        return (
+            (event_type, self._async_input_event)
+            for event_type in _ALARM_HUB_INPUT_EVENT_TYPES
+        )
+
+    @callback
+    def _async_input_event(self, event: ProtectEvent) -> None:
+        if _alarm_hub_event_input(event) != self._input_id:
+            return
+        if not _alarm_hub_event_fires(event):
+            return
+        self._fire_once(
+            event,
+            _ALARM_HUB_INPUT_EVENT_TYPES[event.type],
+            _alarm_hub_event_data(event),
+        )
+
+
+@callback
+def _async_alarm_hub_event_entities(
+    data: ProtectData, hub: LinkStation
+) -> list[ProtectDeviceEntity]:
+    """Build the event entities of one alarm hub.
+
+    Every enabled input with a numbered terminal gets its own entity. A hub
+    that lists no terminals gets one for every enabled input.
+    """
+    terminals = _alarm_hub_terminals(hub)
+    inputs = {
+        input_id: hub_input
+        for input_id, hub_input in hub.alarm_hub_inputs.items()
+        if hub_input.enable is OnOffState.ON
+        and (terminals is None or input_id in terminals)
+    }
+    return [
+        ProtectAlarmHubEventEntity(data, hub, frozenset(inputs)),
+        *(
+            ProtectAlarmHubInputEventEntity(data, hub, input_id, hub_input.name)
+            for input_id, hub_input in inputs.items()
+        ),
+    ]
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ProtectSensorEventEntityDescription(ProtectPublicEventEntityDescription):
+    """Describes a sensor event entity driven by the public events WS."""
+
+    ufp_event_type_fn: Callable[[ProtectEvent], str | None]
+
+
+class ProtectSensorEventEntity(ProtectDevicePublicEventEntity):
+    """A sensor event entity that fires the mapped type of each public event."""
+
+    entity_description: ProtectSensorEventEntityDescription
+
+    @override
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        return (
+            (event_type, self._async_sensor_event)
+            for event_type in self.entity_description.ufp_public_event_types
+        )
+
+    @callback
+    def _async_sensor_event(self, event: ProtectEvent) -> None:
+        if (event_type := self.entity_description.ufp_event_type_fn(event)) is None:
+            return
+        self._fire_once(event, event_type, {ATTR_EVENT_ID: event.id})
+
+
+_SENSOR_ALARM_EVENT_TYPES: dict[SensorAlarmType, str] = {
+    SensorAlarmType.SMOKE: "smoke",
+    SensorAlarmType.CO: "co",
+}
+
+
+def _sensor_alarm_event_type(event: ProtectEvent) -> str | None:
+    """Event type of a ``sensorAlarm``; other alarm types are not surfaced."""
+    if (alarm_type := event.alarm_type) is None:
+        return None
+    return _SENSOR_ALARM_EVENT_TYPES.get(alarm_type)
+
+
+_MAINTENANCE_EVENT_TYPES: dict[EventType, str] = {
+    EventType.SENSOR_SMOKE_TEST: "self_test",
+    EventType.SENSOR_SMOKE_BATTERY_LOW: "battery_low",
+    EventType.SENSOR_SMOKE_NEEDS_CLEANING: "needs_cleaning",
+    EventType.SENSOR_SMOKE_FAULT: "smoke_fault",
+    EventType.SENSOR_CO_FAULT: "co_fault",
+    EventType.SENSOR_SMOKE_END_OF_LIFE: "end_of_life",
+}
+
+
+def _maintenance_event_type(event: ProtectEvent) -> str:
+    """Event type of a smoke detector maintenance event."""
+    return _MAINTENANCE_EVENT_TYPES[event.type]
+
+
+SENSOR_EVENT_DESCRIPTIONS: tuple[ProtectSensorEventEntityDescription, ...] = (
+    ProtectSensorEventEntityDescription(
+        key="alarm",
+        translation_key="alarm",
+        event_types=list(_SENSOR_ALARM_EVENT_TYPES.values()),
+        ufp_capability=SensorFeatureCapability.SMOKE,
+        ufp_public_event_types=(EventType.SENSOR_ALARM,),
+        ufp_event_type_fn=_sensor_alarm_event_type,
+        entity_class=ProtectSensorEventEntity,
+    ),
+    ProtectSensorEventEntityDescription(
+        key="maintenance",
+        translation_key="maintenance",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        event_types=list(_MAINTENANCE_EVENT_TYPES.values()),
+        ufp_capability=SensorFeatureCapability.SMOKE,
+        ufp_public_event_types=tuple(_MAINTENANCE_EVENT_TYPES),
+        ufp_event_type_fn=_maintenance_event_type,
+        entity_class=ProtectSensorEventEntity,
+    ),
+)
 
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
@@ -671,7 +1008,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="package",
         translation_key="package",
-        ufp_required_field="can_detect_package",
+        ufp_capability=SmartDetectObjectType.PACKAGE,
         ufp_obj_type=SmartDetectObjectType.PACKAGE,
         event_types=[EVENT_TYPE_PACKAGE_DETECTED],
         entity_class=ProtectDeviceSmartDetectEventEntity,
@@ -687,7 +1024,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectDetectionEventEntityDescription(
         key="smart_detection",
         translation_key="smart_detection",
-        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_required_field="feature_flags.smart_detect_types",
         event_types=_SMART_OBJECT_EVENT_TYPES,
         ufp_public_event_types=_SMART_DETECT_EVENT_TYPES,
         include_event_source=True,
@@ -714,6 +1051,35 @@ def _async_event_entities(
         for device in (data.get_cameras() if ufp_device is None else [ufp_device])
         for description in EVENT_DESCRIPTIONS
         if description.has_required(device)
+        and _async_capability_supported(None, device, description)
+    ]
+
+
+@callback
+def _async_public_event_entities(
+    data: ProtectData, camera: PublicCamera
+) -> list[ProtectDeviceEntity]:
+    # NFC, fingerprint and vehicle read their events from the private bootstrap;
+    # the doorbell ring drops out on the missing public is_doorbell flag.
+    return [
+        description.entity_class(data, camera, description)
+        for description in EVENT_DESCRIPTIONS
+        if issubclass(description.entity_class, ProtectDevicePublicEventEntity)
+        and description.has_required_public(camera)
+        and _async_capability_supported(camera, None, description)
+    ]
+
+
+@callback
+def _async_sensor_event_entities(
+    data: ProtectData, device: ProtectDeviceType, public: PublicDeviceModel | None
+) -> list[ProtectDeviceEntity]:
+    # A sensor not yet mirrored publicly has no feature flags to check; it is
+    # built and stays unavailable until its public object arrives.
+    return [
+        description.entity_class(data, device, description)
+        for description in SENSOR_EVENT_DESCRIPTIONS
+        if _async_capability_supported(public, None, description)
     ]
 
 
@@ -729,30 +1095,76 @@ async def async_setup_entry(
     def _add_new_public_device(device: PublicDeviceModel) -> None:
         if isinstance(device, Fob):
             async_add_entities([ProtectFobButtonEventEntity(data, device)])
+        elif isinstance(device, LinkStation) and device.is_alarm_hub:
+            async_add_entities(_async_alarm_hub_event_entities(data, device))
+        elif isinstance(device, PublicCamera):
+            async_add_entities(_async_public_event_entities(data, device))
+        elif isinstance(device, PublicSensor):
+            async_add_entities(_async_sensor_event_entities(data, device, device))
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
     )
 
+    async_remove_unsupported_sense_entities(
+        hass, Platform.EVENT, data, SENSOR_EVENT_DESCRIPTIONS
+    )
+
     # The public bootstrap is primed only with an API key and supported NVR
-    # firmware; without it there are no fobs to expose.
+    # firmware; without it there are no fobs or alarm hubs to expose.
     api = data.api
     if api.has_public_bootstrap:
         async_add_entities(
-            ProtectFobButtonEventEntity(data, fob)
-            for fob in api.public_bootstrap.fobs.values()
+            [
+                *(
+                    ProtectFobButtonEventEntity(data, fob)
+                    for fob in api.public_bootstrap.fobs.values()
+                ),
+                *(
+                    entity
+                    for hub in api.public_bootstrap.alarm_hubs.values()
+                    for entity in _async_alarm_hub_event_entities(data, hub)
+                ),
+            ]
         )
+
+    if api.is_public_only:
+        public_entities = [
+            entity
+            for public, _ in data.get_public_cameras()
+            if public is not None
+            for entity in _async_public_event_entities(data, public)
+        ]
+        public_entities.extend(
+            entity
+            for public, _ in data.get_public_devices(ModelType.SENSOR)
+            if public is not None
+            for entity in _async_sensor_event_entities(data, public, public)
+        )
+        async_add_entities(public_entities)
+        return
 
     # Everything below is driven by the private bootstrap, which public-only
     # entries do not have.
-    if api.is_public_only:
-        return
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         # AiPort inherits from Camera but should not create camera-specific entities
         if device.is_adopted and device.model is ModelType.CAMERA:
             async_add_entities(_async_event_entities(data, ufp_device=device))
+        elif device.model is ModelType.SENSOR:
+            async_add_entities(
+                _async_sensor_event_entities(
+                    data, device, data.async_get_public_device(device)
+                )
+            )
 
     data.async_subscribe_adopt(_add_new_device)
-    async_add_entities(_async_event_entities(data))
+    entities = _async_event_entities(data)
+    entities.extend(
+        entity
+        for public, private in data.get_public_devices(ModelType.SENSOR)
+        if private is not None
+        for entity in _async_sensor_event_entities(data, private, public)
+    )
+    async_add_entities(entities)

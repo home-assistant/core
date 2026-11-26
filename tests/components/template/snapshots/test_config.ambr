@@ -1,0 +1,30 @@
+# serializer version: 1
+# name: test_deprecated_template_options_issue_blueprint
+  list([
+    IssueRegistryItemSnapshot({
+      'active': True,
+      'breaks_in_ha_version': '2027.6.0',
+      'config_entry_id': None,
+      'config_subentry_id': None,
+      'created': <ANY>,
+      'data': None,
+      'dismissed_version': None,
+      'domain': 'template',
+      'is_fixable': False,
+      'is_persistent': False,
+      'issue_domain': None,
+      'issue_id': 'deprecated_weather_template_options_ec6a6f67c0f0c494',
+      'learn_more_url': 'https://www.home-assistant.io/integrations/template/#weather',
+      'severity': <IssueSeverity.WARNING: 'warning'>,
+      'translation_key': 'deprecated_weather_template_options_blueprint',
+      'translation_placeholders': dict({
+        'blueprint': 'test_weather_with_variables.yaml',
+        'options': '''
+          - `blueprints/template/test_weather_with_variables.yaml:16`: `condition_template` → `condition`
+          - `blueprints/template/test_weather_with_variables.yaml:17`: `temperature_template` → `temperature`
+          - `blueprints/template/test_weather_with_variables.yaml:18`: `humidity_template` → `humidity`
+        ''',
+      }),
+    }),
+  ])
+# ---

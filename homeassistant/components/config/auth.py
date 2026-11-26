@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
@@ -20,7 +20,7 @@ def async_setup(hass: HomeAssistant) -> bool:
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "config/auth/list"})
+@websocket_api.websocket_command({probatio.Required("type"): "config/auth/list"})
 @websocket_api.async_response
 async def websocket_list(
     hass: HomeAssistant,
@@ -35,7 +35,7 @@ async def websocket_list(
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
-    {vol.Required("type"): "config/auth/delete", vol.Required("user_id"): str}
+    {probatio.Required("type"): "config/auth/delete", probatio.Required("user_id"): str}
 )
 @websocket_api.async_response
 async def websocket_delete(
@@ -58,6 +58,24 @@ async def websocket_delete(
         )
         return
 
+    if user.system_generated:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"],
+                "cannot_modify_system_generated",
+                "Unable to delete system generated users.",
+            )
+        )
+        return
+
+    if user.is_owner:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], "cannot_delete_owner", "Unable to delete the owner"
+            )
+        )
+        return
+
     await hass.auth.async_remove_user(user)
 
     connection.send_message(websocket_api.result_message(msg["id"]))
@@ -66,10 +84,10 @@ async def websocket_delete(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/auth/create",
-        vol.Required("name"): str,
-        vol.Optional("group_ids"): [str],
-        vol.Optional("local_only"): bool,
+        probatio.Required("type"): "config/auth/create",
+        probatio.Required("name"): str,
+        probatio.Optional("group_ids"): [str],
+        probatio.Optional("local_only"): bool,
     }
 )
 @websocket_api.async_response
@@ -91,12 +109,12 @@ async def websocket_create(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/auth/update",
-        vol.Required("user_id"): str,
-        vol.Optional("name"): str,
-        vol.Optional("is_active"): bool,
-        vol.Optional("group_ids"): [str],
-        vol.Optional("local_only"): bool,
+        probatio.Required("type"): "config/auth/update",
+        probatio.Required("user_id"): str,
+        probatio.Optional("name"): str,
+        probatio.Optional("is_active"): bool,
+        probatio.Optional("group_ids"): [str],
+        probatio.Optional("local_only"): bool,
     }
 )
 @websocket_api.async_response
@@ -137,7 +155,11 @@ async def websocket_update(
     msg.pop("type")
     msg_id = msg.pop("id")
 
-    await hass.auth.async_update_user(user, **msg)
+    try:
+        await hass.auth.async_update_user(user, **msg)
+    except ValueError as err:
+        connection.send_error(msg_id, websocket_api.ERR_INVALID_FORMAT, str(err))
+        return
 
     connection.send_message(
         websocket_api.result_message(msg_id, {"user": _user_info(user)})

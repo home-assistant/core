@@ -4,21 +4,15 @@ from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.siren import (
-    DOMAIN as SIREN_DOMAIN,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenService
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import async_update_attribute_value, build_mock_node, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -40,9 +34,9 @@ async def setup_siren(
 @pytest.mark.parametrize(
     ("service", "target_value"),
     [
-        (SERVICE_TURN_ON, 1),
-        (SERVICE_TURN_OFF, 0),
-        (SERVICE_TOGGLE, 1),
+        (SirenService.TURN_ON, 1),
+        (SirenService.TURN_OFF, 0),
+        (SirenService.TOGGLE, 1),
     ],
 )
 async def test_siren_services(
@@ -58,7 +52,7 @@ async def test_siren_services(
     await hass.services.async_call(
         SIREN_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "siren.test_siren"},
+        {TargetKey.ENTITY_ID: "siren.test_siren"},
     )
     mock_homee.set_value.assert_called_once_with(1, 1, target_value)
 

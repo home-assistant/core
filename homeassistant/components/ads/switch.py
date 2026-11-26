@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 import pyads
-import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -22,16 +22,16 @@ DEFAULT_NAME = "ADS Switch"
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_ADS_VAR): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up switch platform for ADS."""
@@ -40,7 +40,7 @@ def setup_platform(
     name: str = config[CONF_NAME]
     ads_var: str = config[CONF_ADS_VAR]
 
-    add_entities([AdsSwitch(ads_hub, name, ads_var)])
+    async_add_entities([AdsSwitch(ads_hub, name, ads_var)])
 
 
 class AdsSwitch(AdsEntity, SwitchEntity):

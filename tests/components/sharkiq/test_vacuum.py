@@ -7,9 +7,10 @@ import enum
 from typing import Any
 from unittest.mock import patch
 
+from probatio.error import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sharkiq import AylaApi, SharkIqAuthError, SharkIqNotAuthedError, SharkIqVacuum
-from voluptuous.error import MultipleInvalid
 
 from homeassistant import exceptions
 from homeassistant.components.homeassistant import (
@@ -17,7 +18,10 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.sharkiq.const import ATTR_ROOMS, DOMAIN
-from homeassistant.components.sharkiq.services import SERVICE_CLEAN_ROOM
+from homeassistant.components.sharkiq.services import (
+    SharkIqService,
+    SharkIqServiceArgument,
+)
 from homeassistant.components.sharkiq.vacuum import (
     ATTR_ERROR_CODE,
     ATTR_ERROR_MSG,
@@ -28,14 +32,13 @@ from homeassistant.components.sharkiq.vacuum import (
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
-    SERVICE_LOCATE,
     SERVICE_PAUSE,
     SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
     VacuumActivity,
     VacuumEntityFeature,
+    VacuumService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -55,8 +58,6 @@ from .const import (
     SHARK_PROPERTIES_DICT,
     TEST_USERNAME,
 )
-
-from tests.common import MockConfigEntry
 
 VAC_ENTITY_ID = f"vacuum.{SHARK_DEVICE_DICT['product_name'].lower()}"
 ROOM_LIST = ["Kitchen", "Living Room"]
@@ -208,7 +209,7 @@ async def test_fan_speed(hass: HomeAssistant, fan_speed: str) -> None:
     """Test setting fan speeds."""
     service_data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_FAN_SPEED: fan_speed}
     await hass.services.async_call(
-        "vacuum", SERVICE_SET_FAN_SPEED, service_data, blocking=True
+        "vacuum", VacuumService.SET_FAN_SPEED, service_data, blocking=True
     )
     state = hass.states.get(VAC_ENTITY_ID)
     assert state.attributes.get(ATTR_FAN_SPEED) == fan_speed
@@ -248,17 +249,21 @@ async def test_clean_room_error(
     hass: HomeAssistant, room_list: list, exception: Exception
 ) -> None:
     """Test clean_room errors."""
-    data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
+    data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, SharkIqServiceArgument.ROOMS: room_list}
 
     with pytest.raises(exception):
-        await hass.services.async_call(DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, SharkIqService.CLEAN_ROOM, data, blocking=True
+        )
 
 
 async def test_locate(hass: HomeAssistant) -> None:
     """Test that the locate command works."""
     with patch.object(SharkIqVacuum, "async_find_device") as mock_locate:
         data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
-        await hass.services.async_call("vacuum", SERVICE_LOCATE, data, blocking=True)
+        await hass.services.async_call(
+            "vacuum", VacuumService.LOCATE, data, blocking=True
+        )
         mock_locate.assert_called_once()
 
 
@@ -269,8 +274,10 @@ async def test_locate(hass: HomeAssistant) -> None:
 async def test_clean_room(hass: HomeAssistant, room_list: list) -> None:
     """Test that the clean_room command works."""
     with patch.object(SharkIqVacuum, "async_clean_rooms") as mock_clean_room:
-        data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_ROOMS: room_list}
-        await hass.services.async_call(DOMAIN, SERVICE_CLEAN_ROOM, data, blocking=True)
+        data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, SharkIqServiceArgument.ROOMS: room_list}
+        await hass.services.async_call(
+            DOMAIN, SharkIqService.CLEAN_ROOM, data, blocking=True
+        )
         mock_clean_room.assert_called_once_with(room_list)
 
 

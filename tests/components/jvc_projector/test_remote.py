@@ -3,18 +3,17 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.remote import (
-    ATTR_COMMAND,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "remote.jvc_projector"
 
@@ -40,43 +39,46 @@ async def test_commands(
     """Test service call are called."""
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        RemoteService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        RemoteService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["ok"]},
+        RemoteService.SEND_COMMAND,
+        {TargetKey.ENTITY_ID: ENTITY_ID, RemoteServiceArgument.COMMAND: ["ok"]},
         blocking=True,
     )
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["hdmi1"]},
+        RemoteService.SEND_COMMAND,
+        {TargetKey.ENTITY_ID: ENTITY_ID, RemoteServiceArgument.COMMAND: ["hdmi1"]},
         blocking=True,
     )
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["anamo"]},
+        RemoteService.SEND_COMMAND,
+        {TargetKey.ENTITY_ID: ENTITY_ID, RemoteServiceArgument.COMMAND: ["anamo"]},
         blocking=True,
     )
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["picture_mode"]},
+        RemoteService.SEND_COMMAND,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            RemoteServiceArgument.COMMAND: ["picture_mode"],
+        },
         blocking=True,
     )
     assert mock_device.remote.call_count == 4
@@ -91,8 +93,8 @@ async def test_unknown_command(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["bad"]},
+            RemoteService.SEND_COMMAND,
+            {TargetKey.ENTITY_ID: ENTITY_ID, RemoteServiceArgument.COMMAND: ["bad"]},
             blocking=True,
         )
     assert str(err.value) == "bad is not a known command"

@@ -1,9 +1,19 @@
 """Constants for cover entity platform."""
 
 from enum import IntFlag, StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+import probatio
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from .entity import CoverEntity
 
 DOMAIN: Final = "cover"
+DATA_COMPONENT: HassKey[EntityComponent[CoverEntity]] = HassKey(DOMAIN)
 
 ATTR_CURRENT_POSITION = "current_position"
 ATTR_CURRENT_TILT_POSITION = "current_tilt_position"
@@ -17,6 +27,10 @@ class CoverEntityCapabilityAttribute(StrEnum):
     """Capability attributes for cover entities."""
 
     SUPPORTED_SPEEDS = "supported_speeds"
+    OPEN_TILT_POSITION = "open_tilt_position"
+    CLOSED_TILT_POSITIONS = "closed_tilt_positions"
+    TILT_START_ANGLE = "tilt_start_angle"
+    TILT_END_ANGLE = "tilt_end_angle"
 
 
 class CoverEntityStateAttribute(StrEnum):
@@ -45,6 +59,22 @@ class CoverEntityFeature(IntFlag):
     SPEED = 256
 
 
+class CoverSpeed(StrEnum):
+    """Standard speeds for cover entities.
+
+    Without a speed, the cover moves at the device's default speed.
+    """
+
+    # Move fast
+    FAST = "fast"
+
+    # Move at a speed between slow and fast
+    MEDIUM = "medium"
+
+    # Move slowly, e.g. to be quieter
+    SLOW = "slow"
+
+
 class CoverState(StrEnum):
     """State of Cover entities."""
 
@@ -68,3 +98,29 @@ class CoverDeviceClass(StrEnum):
     SHADE = "shade"
     SHUTTER = "shutter"
     WINDOW = "window"
+
+
+DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(CoverDeviceClass))
+
+
+class CoverService(StrEnum):
+    """Store keys for cover services."""
+
+    CLOSE = "close_cover"
+    CLOSE_TILT = "close_cover_tilt"
+    OPEN = "open_cover"
+    OPEN_TILT = "open_cover_tilt"
+    SET_POSITION = "set_cover_position"
+    SET_TILT_POSITION = "set_cover_tilt_position"
+    STOP = "stop_cover"
+    STOP_TILT = "stop_cover_tilt"
+    TOGGLE = "toggle"
+    TOGGLE_TILT = "toggle_cover_tilt"
+
+
+class CoverServiceArgument(StrEnum):
+    """Store keys for cover service arguments."""
+
+    POSITION = "position"
+    SPEED = "speed"
+    TILT_POSITION = "tilt_position"

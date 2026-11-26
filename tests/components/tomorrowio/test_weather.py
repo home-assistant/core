@@ -2,50 +2,33 @@
 
 from datetime import datetime, timedelta
 from typing import Any
+from unittest.mock import AsyncMock
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
+from pytomorrowio.const import FORECASTS, NOWCAST
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.tomorrowio.config_flow import (
-    _get_config_schema,
-    _get_unique_id,
-)
-from homeassistant.components.tomorrowio.const import (
-    ATTRIBUTION,
-    CONF_TIMESTEP,
-    DEFAULT_NAME,
-    DEFAULT_TIMESTEP,
-    DOMAIN,
-)
+from homeassistant.components.tomorrowio.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_OZONE,
-    ATTR_WEATHER_PRECIPITATION_UNIT,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_PRESSURE_UNIT,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_TEMPERATURE_UNIT,
-    ATTR_WEATHER_VISIBILITY,
-    ATTR_WEATHER_VISIBILITY_UNIT,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED,
-    ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
+    WeatherEntityCapabilityAttribute,
+    WeatherEntityStateAttribute,
+    WeatherService,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, SOURCE_USER
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME, CONF_NAME
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .const import API_V4_ENTRY_DATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
+from . import make_location_subentry_data, make_v2_config_entry
+from .const import API_V4_ENTRY_DATA, BASE_UNIQUE_ID
 
 
 @callback
@@ -58,18 +41,9 @@ def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
     assert updated_entry.disabled is False
 
 
-async def _setup_config_entry(hass: HomeAssistant, config: dict[str, Any]) -> State:
+async def _setup_config_entry(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Set up entry and return entity state."""
-    data = _get_config_schema(hass, SOURCE_USER)(config)
-    data[CONF_NAME] = DEFAULT_NAME
-    config_entry = MockConfigEntry(
-        title=DEFAULT_NAME,
-        domain=DOMAIN,
-        data=data,
-        options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
-        unique_id=_get_unique_id(hass, data),
-        version=1,
-    )
+    config_entry = make_v2_config_entry(data=config)
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -86,12 +60,11 @@ async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
 async def _setup_legacy(hass: HomeAssistant, config: dict[str, Any]) -> State:
     """Set up entry and return entity state."""
     registry = er.async_get(hass)
-    data = _get_config_schema(hass, SOURCE_USER)(config)
     for entity_name in ("hourly", "nowcast"):
         registry.async_get_or_create(
             WEATHER_DOMAIN,
             DOMAIN,
-            f"{_get_unique_id(hass, data)}_{entity_name}",
+            f"{BASE_UNIQUE_ID}_{entity_name}",
             disabled_by=er.RegistryEntryDisabler.INTEGRATION,
             suggested_object_id=f"tomorrow_io_{entity_name}",
         )
@@ -127,12 +100,11 @@ async def test_legacy_config_entry(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test the expected entities are created."""
-    data = _get_config_schema(hass, SOURCE_USER)(API_V4_ENTRY_DATA)
     for entity_name in ("hourly", "nowcast"):
         entity_registry.async_get_or_create(
             WEATHER_DOMAIN,
             DOMAIN,
-            f"{_get_unique_id(hass, data)}_{entity_name}",
+            f"{BASE_UNIQUE_ID}_{entity_name}",
         )
     await _setup(hass, API_V4_ENTRY_DATA)
     assert len(hass.states.async_entity_ids("weather")) == 3
@@ -204,18 +176,35 @@ async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -
     assert weather_state.state == ATTR_CONDITION_SUNNY
     assert weather_state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io Daily"
-    assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
-    assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
-    assert weather_state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == "mm"
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 30.35
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == "hPa"
-    assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE] == 44.1
-    assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == "°C"
-    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 8.15
-    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == "km"
-    assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 315.14
-    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 33.59  # 9.33 m/s ->km/h
-    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == "km/h"
+    assert weather_state.attributes[WeatherEntityStateAttribute.HUMIDITY] == 23
+    assert weather_state.attributes[WeatherEntityStateAttribute.OZONE] == 46.53
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT]
+        == "mm"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.PRESSURE] == 30.35
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.PRESSURE_UNIT]
+        == "hPa"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.TEMPERATURE] == 44.1
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        == "°C"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.VISIBILITY] == 8.15
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.VISIBILITY_UNIT]
+        == "km"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.WIND_BEARING] == 315.14
+    assert (
+        weather_state.attributes[WeatherEntityStateAttribute.WIND_SPEED] == 33.59
+    )  # 9.33 m/s ->km/h
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT]
+        == "km/h"
+    )
 
 
 async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
@@ -224,23 +213,40 @@ async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
     assert weather_state.state == ATTR_CONDITION_SUNNY
     assert weather_state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io Daily"
-    assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
-    assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
-    assert weather_state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == "mm"
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 30.35
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == "hPa"
-    assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE] == 44.1
-    assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == "°C"
-    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 8.15
-    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == "km"
-    assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 315.14
-    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 33.59  # 9.33 m/s ->km/h
-    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == "km/h"
+    assert weather_state.attributes[WeatherEntityStateAttribute.HUMIDITY] == 23
+    assert weather_state.attributes[WeatherEntityStateAttribute.OZONE] == 46.53
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT]
+        == "mm"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.PRESSURE] == 30.35
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.PRESSURE_UNIT]
+        == "hPa"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.TEMPERATURE] == 44.1
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        == "°C"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.VISIBILITY] == 8.15
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.VISIBILITY_UNIT]
+        == "km"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.WIND_BEARING] == 315.14
+    assert (
+        weather_state.attributes[WeatherEntityStateAttribute.WIND_SPEED] == 33.59
+    )  # 9.33 m/s ->km/h
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT]
+        == "km/h"
+    )
 
 
 @pytest.mark.parametrize(
     ("service"),
-    [SERVICE_GET_FORECASTS],
+    [WeatherService.GET_FORECASTS],
 )
 @pytest.mark.freeze_time(datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC))
 async def test_v4_forecast_service(
@@ -286,7 +292,7 @@ async def test_v4_bad_forecast(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {
             "entity_id": entity_id,
             "type": "hourly",
@@ -347,3 +353,83 @@ async def test_forecast_subscription(
 
     assert forecast2 != []
     assert forecast2 == snapshot
+
+
+MINUTE_FORECAST_ENTITY_ID = "weather.tomorrow_io_daily"
+
+
+async def _setup_minute_forecast(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Set up a location with 5 minute nowcast intervals."""
+    # The first nowcast interval (17:48-17:53) has already ended at 17:55
+    freezer.move_to(datetime(2021, 3, 7, 17, 55, tzinfo=dt_util.UTC))
+    config_entry = make_v2_config_entry(
+        subentries_data=[make_location_subentry_data(timestep=5)]
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def _get_minute_forecast(hass: HomeAssistant) -> dict[str, Any]:
+    """Call the get_minute_forecast action."""
+    return await hass.services.async_call(
+        DOMAIN,
+        "get_minute_forecast",
+        {ATTR_ENTITY_ID: MINUTE_FORECAST_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+
+
+async def test_minute_forecast_service(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    tomorrowio_config_entry_update: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the get_minute_forecast action."""
+    nowcast = tomorrowio_config_entry_update.return_value[FORECASTS][NOWCAST]
+    # 1.2 mm/h over a 5 minute interval is 0.1 mm
+    nowcast[1]["values"]["precipitationIntensityAvg"] = 1.2
+    await _setup_minute_forecast(hass, freezer)
+
+    response = await _get_minute_forecast(hass)
+
+    forecast = response[MINUTE_FORECAST_ENTITY_ID]["forecast"]
+    assert forecast[0]["datetime"] == "2021-03-07T17:53:00+00:00"
+    assert forecast[0]["precipitation"] == pytest.approx(0.1)
+    assert response == snapshot
+
+
+async def test_minute_forecast_service_keeps_small_amounts(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    tomorrowio_config_entry_update: AsyncMock,
+) -> None:
+    """Test small per-interval amounts survive conversion to coarser units."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    nowcast = tomorrowio_config_entry_update.return_value[FORECASTS][NOWCAST]
+    nowcast[1]["values"]["precipitationIntensityAvg"] = 1.2
+    await _setup_minute_forecast(hass, freezer)
+
+    response = await _get_minute_forecast(hass)
+
+    # 0.1 mm is 0.0039 in; rounding to two decimals would report 0.0
+    amount = response[MINUTE_FORECAST_ENTITY_ID]["forecast"][0]["precipitation"]
+    assert amount == pytest.approx(0.1 / 25.4)
+
+
+async def test_minute_forecast_service_no_data(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    tomorrowio_config_entry_update: AsyncMock,
+) -> None:
+    """Test the get_minute_forecast action without nowcast data."""
+    tomorrowio_config_entry_update.return_value[FORECASTS][NOWCAST] = []
+    await _setup_minute_forecast(hass, freezer)
+
+    assert await _get_minute_forecast(hass) == {
+        MINUTE_FORECAST_ENTITY_ID: {"forecast": []}
+    }

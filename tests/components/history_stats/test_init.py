@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import history_stats
 from homeassistant.components.history_stats.config_flow import (
@@ -11,10 +12,12 @@ from homeassistant.components.history_stats.config_flow import (
 from homeassistant.components.history_stats.const import (
     CONF_END,
     CONF_MIN_STATE_DURATION,
+    CONF_PERIOD,
     CONF_START,
     DEFAULT_NAME,
     DOMAIN,
     SECTION_ADDITIONAL_SETTINGS,
+    Period,
 )
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -22,8 +25,6 @@ from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -76,6 +77,7 @@ def history_stats_config_entry(
             CONF_ENTITY_ID: sensor_entity_entry.entity_id,
             CONF_STATE: ["on"],
             CONF_TYPE: "count",
+            CONF_PERIOD: Period.CUSTOM,
             CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
             CONF_END: "{{ utcnow() }}",
         },
@@ -133,7 +135,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     assert history_stats_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert history_stats_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != history_stats_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, history_stats_entity_entry.entity_id)
 
@@ -185,7 +187,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     assert history_stats_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert history_stats_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != history_stats_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, history_stats_entity_entry.entity_id)
 
@@ -205,7 +207,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     # Check that the source device is not removed
     sensor_device = device_registry.async_get(sensor_device.id)
     assert sensor_device is not None
-    assert history_stats_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != history_stats_config_entry.entry_id
 
     # Check that the history_stats config entry is removed
     assert (
@@ -235,7 +237,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     assert history_stats_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert history_stats_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != history_stats_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, history_stats_entity_entry.entity_id)
 
@@ -258,7 +260,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
 
     # Check that the history_stats config entry is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert history_stats_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != history_stats_config_entry.entry_id
 
     # Check that the history_stats config entry is not removed
     assert history_stats_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -292,9 +294,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     assert history_stats_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert history_stats_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != history_stats_config_entry.entry_id
     sensor_device_2 = device_registry.async_get(sensor_device_2.id)
-    assert history_stats_config_entry.entry_id not in sensor_device_2.config_entries
+    assert sensor_device_2.config_entry_id != history_stats_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, history_stats_entity_entry.entity_id)
 
@@ -317,9 +319,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
 
     # Check that the history_stats config entry is not in any of the devices
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert history_stats_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != history_stats_config_entry.entry_id
     sensor_device_2 = device_registry.async_get(sensor_device_2.id)
-    assert history_stats_config_entry.entry_id not in sensor_device_2.config_entries
+    assert sensor_device_2.config_entry_id != history_stats_config_entry.entry_id
 
     # Check that the history_stats config entry is not removed
     assert history_stats_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -347,7 +349,7 @@ async def test_async_handle_source_entity_new_entity_id(
     assert history_stats_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert history_stats_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != history_stats_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, history_stats_entity_entry.entity_id)
 
@@ -367,7 +369,7 @@ async def test_async_handle_source_entity_new_entity_id(
 
     # Check that the helper config is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert history_stats_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != history_stats_config_entry.entry_id
 
     # Check that the history_stats config entry is not removed
     assert history_stats_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -411,7 +413,7 @@ async def test_migration_1_1(
     # Check that the helper config entry is not on the source device and the helper
     # entity is linked to the source device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert history_stats_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != history_stats_config_entry.entry_id
     history_stats_entity_entry = entity_registry.async_get(
         "sensor.mock_title_my_history_stats"
     )
@@ -512,6 +514,48 @@ async def test_migration_1_3(
         history_stats_config_entry.minor_version
         == HistoryStatsConfigFlowHandler.MINOR_VERSION
     )
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_migration_2_1(
+    hass: HomeAssistant,
+    sensor_entity_entry: er.RegistryEntry,
+) -> None:
+    """Test migration from v2.1 keeps the existing period as custom."""
+
+    history_stats_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: sensor_entity_entry.entity_id,
+            CONF_STATE: ["on"],
+            CONF_TYPE: "count",
+            CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
+            CONF_END: "{{ utcnow() }}",
+            CONF_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        title="My history stats",
+        version=2,
+        minor_version=1,
+    )
+    history_stats_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(history_stats_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert history_stats_config_entry.state is ConfigEntryState.LOADED
+    assert history_stats_config_entry.options == {
+        CONF_NAME: DEFAULT_NAME,
+        CONF_ENTITY_ID: sensor_entity_entry.entity_id,
+        CONF_STATE: ["on"],
+        CONF_TYPE: "count",
+        CONF_PERIOD: Period.CUSTOM,
+        CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
+        CONF_END: "{{ utcnow() }}",
+        CONF_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    }
+    assert history_stats_config_entry.version == 2
+    assert history_stats_config_entry.minor_version == 2
 
 
 @pytest.mark.usefixtures("recorder_mock")

@@ -1,0 +1,36 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_country": "MeteoAlarm has no warnings feed for this country."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "country": "[%key:common::config_flow::data::country%]",
+          "language": "[%key:common::config_flow::data::language%]",
+          "province": "Region"
+        },
+        "data_description": {
+          "country": "The country whose MeteoAlarm feed to use.",
+          "language": "The language for the warning texts. Warnings not available in this language are shown in the first language the feed has.",
+          "province": "The region's name as MeteoAlarm shows it, or its EMMA_ID code. You can find both on meteoalarm.org."
+        },
+        "description": "Get weather warnings for a region from MeteoAlarm."
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring MeteoAlarm using YAML is being removed, but your configuration for {province} ({country}) could not be imported because MeteoAlarm could not be reached.\n\nCheck your internet connection and restart Home Assistant to try again, or remove the `meteoalarm` binary sensor from your configuration.yaml and add the integration in the UI.",
+      "title": "The MeteoAlarm YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_country": {
+      "description": "Configuring MeteoAlarm using YAML is being removed, but your configuration for {province} ({country}) could not be imported because MeteoAlarm has no feed for that country.\n\nCorrect the country in your YAML configuration and restart Home Assistant, or remove the `meteoalarm` binary sensor from your configuration.yaml and add the integration in the UI.",
+      "title": "[%key:component::meteoalarm::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    }
+  }
+}

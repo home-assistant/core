@@ -13,7 +13,7 @@ from .const import CONF_MODEL_FAMILY, DOMAIN, PLATFORMS
 from .coordinator import GoodweConfigEntry, GoodweRuntimeData, GoodweUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> None:
     """Set up the Goodwe components from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data.get(CONF_PORT, GOODWE_UDP_PORT)
@@ -58,8 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_check_port(
     hass: HomeAssistant, entry: GoodweConfigEntry, host: str
@@ -83,9 +81,9 @@ async def async_check_port(
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: GoodweConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, config_entry: GoodweConfigEntry) -> None:
@@ -95,7 +93,7 @@ async def update_listener(hass: HomeAssistant, config_entry: GoodweConfigEntry) 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: GoodweConfigEntry
-) -> bool:
+) -> None:
     """Migrate old config entries."""
 
     if config_entry.version == 1:
@@ -113,5 +111,3 @@ async def async_migrate_entry(
             CONF_MODEL_FAMILY: type(inverter).__name__,
         }
         hass.config_entries.async_update_entry(config_entry, data=new_data, version=2)
-
-    return True

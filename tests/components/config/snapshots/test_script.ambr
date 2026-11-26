@@ -1,0 +1,469 @@
+# serializer version: 1
+# name: test_update_script_config_with_error[blueprint_generated_config_error-script_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': 'Service 5 does not match format <domain>.<name>',
+        'path': list([
+          'use_blueprint',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: Service 5 does not match format <domain>.<name> at 'use_blueprint'",
+  })
+# ---
+# name: test_update_script_config_with_error[blueprint_instance_key_and_generated_config_errors-script_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': 'Service 5 does not match format <domain>.<name>',
+        'path': list([
+          'use_blueprint',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'not_in_list',
+        'message': "value must be one of ['parallel', 'queued', 'restart', 'single']",
+        'path': list([
+          'mode',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'value_one_of',
+        'translation_placeholders': dict({
+          'values': list([
+            'parallel',
+            'queued',
+            'restart',
+            'single',
+          ]),
+        }),
+      }),
+    ]),
+    'message': "Message malformed: Service 5 does not match format <domain>.<name> at 'use_blueprint'",
+  })
+# ---
+# name: test_update_script_config_with_error[blueprint_instance_key_error-script_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': 'not_in_list',
+        'message': "value must be one of ['parallel', 'queued', 'restart', 'single']",
+        'path': list([
+          'mode',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'value_one_of',
+        'translation_placeholders': dict({
+          'values': list([
+            'parallel',
+            'queued',
+            'restart',
+            'single',
+          ]),
+        }),
+      }),
+    ]),
+    'message': "Message malformed: value must be one of ['parallel', 'queued', 'restart', 'single'] at 'mode'",
+  })
+# ---
+# name: test_update_script_config_with_error[blueprint_missing_input-script_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': 'Missing input service_to_call',
+        'path': list([
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': 'Message malformed: Missing input service_to_call',
+  })
+# ---
+# name: test_update_script_config_with_error[blueprint_not_found-script_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': 'Failed to load blueprint: Unable to find not_found.yaml',
+        'path': list([
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': 'Message malformed: Failed to load blueprint: Unable to find not_found.yaml',
+  })
+# ---
+# name: test_update_script_config_with_error[missing_key-script_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'sequence',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: required key not provided at 'sequence'",
+  })
+# ---
+# name: test_update_script_config_with_error[missing_key_and_schema_error-script_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': 'not_in_list',
+        'message': "value must be one of ['parallel', 'queued', 'restart', 'single']",
+        'path': list([
+          'mode',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'value_one_of',
+        'translation_placeholders': dict({
+          'values': list([
+            'parallel',
+            'queued',
+            'restart',
+            'single',
+          ]),
+        }),
+      }),
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'sequence',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: value must be one of ['parallel', 'queued', 'restart', 'single'] at 'mode'",
+  })
+# ---
+# name: test_update_script_config_with_error[nested_blocks-script_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'",
+        'path': list([
+          'sequence',
+          0,
+          'else',
+          'choose',
+          0,
+          'sequence',
+          0,
+          'delay',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'sequence',
+          0,
+          'if',
+          0,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'sequence',
+          0,
+          'then',
+          0,
+          'wait_for_trigger',
+          0,
+          'entity_id',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'sequence',
+          0,
+          'else',
+          'choose',
+          0,
+          'conditions',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'sequence',
+          1,
+          'parallel',
+          1,
+          0,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' at 'sequence[0].else.choose[0].sequence[0].delay'",
+  })
+# ---
+# name: test_update_script_config_with_error[platform_errors-script_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'sequence',
+          1,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'sequence',
+          2,
+          'wait_for_trigger',
+          0,
+          'entity_id',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd at 'sequence[1]'",
+  })
+# ---
+# name: test_update_script_config_with_error[schema_and_platform_errors-script_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'",
+        'path': list([
+          'sequence',
+          0,
+          'delay',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'sequence',
+          1,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': "Integration 'automation' does not provide trigger support",
+        'path': list([
+          'sequence',
+          2,
+          'wait_for_trigger',
+          0,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' at 'sequence[0].delay'",
+  })
+# ---
+# name: test_update_script_config_with_error[schema_errors-script_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'",
+        'path': list([
+          'sequence',
+          0,
+          'delay',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'extra_keys_not_allowed',
+        'message': 'not a valid option',
+        'path': list([
+          'sequence',
+          1,
+          'bogus',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'not_a_valid_option',
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': 'not_in_list',
+        'message': "value must be one of ['parallel', 'queued', 'restart', 'single']",
+        'path': list([
+          'mode',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'value_one_of',
+        'translation_placeholders': dict({
+          'values': list([
+            'parallel',
+            'queued',
+            'restart',
+            'single',
+          ]),
+        }),
+      }),
+    ]),
+    'message': "Message malformed: offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' at 'sequence[0].delay'",
+  })
+# ---
+# name: test_update_script_config_with_error[schema_errors_outside_sequence_and_platform_error-script_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': 'not_in_list',
+        'message': "value must be one of ['parallel', 'queued', 'restart', 'single']",
+        'path': list([
+          'mode',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'value_one_of',
+        'translation_placeholders': dict({
+          'values': list([
+            'parallel',
+            'queued',
+            'restart',
+            'single',
+          ]),
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'invalid boolean value maybe',
+        'path': list([
+          'fields',
+          'brightness',
+          'required',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'sequence',
+          0,
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: value must be one of ['parallel', 'queued', 'restart', 'single'] at 'mode'",
+  })
+# ---
+# name: test_update_script_config_with_error[single_action-script_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': None,
+        'message': 'Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd',
+        'path': list([
+          'sequence',
+        ]),
+        'translation_domain': None,
+        'translation_key': None,
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd at 'sequence'",
+  })
+# ---
+# name: test_update_script_config_with_error[single_items-script_config0]
+  dict({
+    'errors': list([
+      dict({
+        'code': 'required',
+        'message': 'required key not provided',
+        'path': list([
+          'sequence',
+          'wait_for_trigger',
+          'entity_id',
+        ]),
+        'translation_domain': None,
+        'translation_key': 'required',
+        'translation_placeholders': dict({
+        }),
+      }),
+    ]),
+    'message': "Message malformed: required key not provided at 'sequence.wait_for_trigger.entity_id'",
+  })
+# ---

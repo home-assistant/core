@@ -1,17 +1,15 @@
 """Test reproduce state for Number entities."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
-from homeassistant.components.number.const import (
-    ATTR_MAX,
-    ATTR_MIN,
-    DOMAIN,
-    SERVICE_SET_VALUE,
+from homeassistant.components.number import (
+    NumberEntityCapabilityAttribute,
+    NumberService,
 )
+from homeassistant.components.number.const import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
-
-from tests.common import async_mock_service
 
 VALID_NUMBER1 = "19.0"
 VALID_NUMBER2 = "99.9"
@@ -23,7 +21,12 @@ async def test_reproducing_states(
     """Test reproducing Number states."""
 
     hass.states.async_set(
-        "number.test_number", VALID_NUMBER1, {ATTR_MIN: 5, ATTR_MAX: 100}
+        "number.test_number",
+        VALID_NUMBER1,
+        {
+            NumberEntityCapabilityAttribute.MIN: 5,
+            NumberEntityCapabilityAttribute.MAX: 100,
+        },
     )
 
     # These calls should do nothing as entities already in desired state
@@ -39,7 +42,7 @@ async def test_reproducing_states(
     assert hass.states.get("number.test_number").state == VALID_NUMBER1
 
     # Test reproducing with different state
-    calls = async_mock_service(hass, DOMAIN, SERVICE_SET_VALUE)
+    calls = async_mock_service(hass, DOMAIN, NumberService.SET_VALUE)
     await async_reproduce_state(
         hass,
         [

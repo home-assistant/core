@@ -3,6 +3,12 @@
 from unittest.mock import mock_open, patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, patch_yaml_files
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import legacy
@@ -14,10 +20,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import dump
 
 from .common import MockScanner, mock_legacy_device_tracker_setup
-
-from tests.common import assert_setup_component, patch_yaml_files
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: "test"}}
 

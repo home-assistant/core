@@ -6,7 +6,7 @@ from enum import StrEnum
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import automation, group, person, script, websocket_api
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
@@ -60,9 +60,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "search/related",
-        vol.Required("item_type"): vol.Coerce(ItemType),
-        vol.Required("item_id"): str,
+        probatio.Required("type"): "search/related",
+        probatio.Required("item_type"): probatio.Coerce(ItemType),
+        probatio.Required("item_id"): str,
+        probatio.Optional("include_disabled_entities", default=False): bool,
     }
 )
 @callback
@@ -72,7 +73,11 @@ def websocket_search_related(
     msg: dict[str, Any],
 ) -> None:
     """Handle search."""
-    searcher = Searcher(hass, get_entity_sources(hass))
+    searcher = Searcher(
+        hass,
+        get_entity_sources(hass),
+        include_disabled_entities=msg["include_disabled_entities"],
+    )
     connection.send_result(
         msg["id"], searcher.async_search(msg["item_type"], msg["item_id"])
     )
@@ -87,6 +92,8 @@ class Searcher:
         self,
         hass: HomeAssistant,
         entity_sources: dict[str, EntityInfo],
+        *,
+        include_disabled_entities: bool = False,
     ) -> None:
         """Search results."""
         self.hass = hass
@@ -94,7 +101,10 @@ class Searcher:
         self._device_registry = dr.async_get(hass)
         self._entity_registry = er.async_get(hass)
         self._entity_sources = entity_sources
+        self._include_disabled_entities = include_disabled_entities
         self.results: defaultdict[ItemType, set[str]] = defaultdict(set)
+        # Scripts already searched, as scripts can reference each other in a cycle
+        self._searched_scripts: set[str] = set()
 
     @callback
     def async_search(self, item_type: ItemType, item_id: str) -> dict[str, set[str]]:
@@ -147,15 +157,16 @@ class Searcher:
             self._add(ItemType.DEVICE, device.id)
 
             # Config entries for devices in this area
-            if device_entry := self._device_registry.async_get(device.id):
-                self._add(ItemType.CONFIG_ENTRY, device_entry.config_entries)
+            self._add(ItemType.CONFIG_ENTRY, device.config_entry_id)
 
             # Automations and scripts referencing this device
             self._async_add_automations_and_scripts_for_device(device)
 
             # Entities of this device
             for entity_entry in er.async_entries_for_device(
-                self._entity_registry, device.id
+                self._entity_registry,
+                device.id,
+                include_disabled_entities=self._include_disabled_entities,
             ):
                 # Skip the entity if it's in a different area
                 if entity_entry.area_id is not None:
@@ -327,7 +338,9 @@ class Searcher:
 
         # Entities of this device
         for entity_entry in er.async_entries_for_device(
-            self._entity_registry, device_id
+            self._entity_registry,
+            device_id,
+            include_disabled_entities=self._include_disabled_entities,
         ):
             self._add(ItemType.ENTITY, entity_entry.entity_id)
             # Add all entity information as well
@@ -546,6 +559,10 @@ class Searcher:
         self, script_entity_id: str, *, entry_point: bool = True
     ) -> None:
         """Find results for a script."""
+        if script_entity_id in self._searched_scripts:
+            return
+        self._searched_scripts.add(script_entity_id)
+
         # Up resolve the script entity itself
         entity_entry = self._async_resolve_up_entity(script_entity_id)
 
@@ -623,8 +640,12 @@ class Searcher:
                 self._add(ItemType.AREA, area_id)
                 self._async_resolve_up_area(area_id)
 
-            self._add(ItemType.CONFIG_ENTRY, device_entry.config_entries)
-            for config_entry_id in device_entry.config_entries:
+            if device_entry.is_composite_device:
+                config_entry_ids = device_entry.config_entries
+            else:
+                config_entry_ids = {device_entry.config_entry_id}
+            self._add(ItemType.CONFIG_ENTRY, config_entry_ids)
+            for config_entry_id in config_entry_ids:
                 if entry := self.hass.config_entries.async_get_entry(config_entry_id):
                     self._add(ItemType.INTEGRATION, entry.domain)
 

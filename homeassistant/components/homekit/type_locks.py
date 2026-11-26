@@ -5,8 +5,12 @@ from typing import Any, override
 
 from pyhap.const import CATEGORY_DOOR_LOCK
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
-from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.components.lock import (
+    DOMAIN as LOCK_DOMAIN,
+    LockServiceArgument,
+    LockState,
+)
+from homeassistant.const import ATTR_CODE, STATE_UNKNOWN, TargetKey
 from homeassistant.core import State, callback
 
 from .accessories import TYPES
@@ -85,9 +89,9 @@ class Lock(HomeDoorbellAccessory):
         hass_value = HOMEKIT_TO_HASS[value]
         service = STATE_TO_SERVICE[hass_value]
 
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         if self._code:
-            params[ATTR_CODE] = self._code
+            params[LockServiceArgument.CODE] = self._code
         self.async_call_service(LOCK_DOMAIN, service, params)
 
     @callback

@@ -69,6 +69,16 @@
     ),
   ])
 # ---
+# name: test_ctl_set_hvac_mode[sys_006]
+  list([
+    tuple(
+      <SystemMode.HEATING_OFF: 'heating_off'>,
+    ),
+    tuple(
+      <SystemMode.AUTO: 'auto'>,
+    ),
+  ])
+# ---
 # name: test_ctl_turn_off[default]
   list([
     tuple(
@@ -112,6 +122,13 @@
   ])
 # ---
 # name: test_ctl_turn_off[sys_004]
+  list([
+    tuple(
+      <SystemMode.HEATING_OFF: 'heating_off'>,
+    ),
+  ])
+# ---
+# name: test_ctl_turn_off[sys_006]
   list([
     tuple(
       <SystemMode.HEATING_OFF: 'heating_off'>,
@@ -167,6 +184,13 @@
     ),
   ])
 # ---
+# name: test_ctl_turn_on[sys_006]
+  list([
+    tuple(
+      <SystemMode.AUTO: 'auto'>,
+    ),
+  ])
+# ---
 # name: test_entities_update_over_time[default][climate.bathroom_dn-state-initial]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -192,10 +216,6 @@
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.1,
-          'this_sp_from': HAFakeDatetime(2024, 7, 9, 23, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 15.9,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -205,6 +225,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.bathroom_dn',
@@ -252,6 +273,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.bathroom_dn',
@@ -286,10 +308,6 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.1,
-          'this_sp_from': HAFakeDatetime(2024, 7, 9, 23, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 15.9,
         }),
         'temperature_status': dict({
           'is_available': False,
@@ -298,6 +316,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.dead_zone',
@@ -344,6 +363,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.dead_zone',
@@ -379,10 +399,6 @@
           'until': '2022-03-07T19:00:00+00:00',
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.1,
-          'this_sp_from': HAFakeDatetime(2024, 7, 9, 23, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 15.9,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -392,6 +408,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.front_room',
@@ -440,6 +457,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.front_room',
@@ -474,10 +492,6 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.1,
-          'this_sp_from': HAFakeDatetime(2024, 7, 9, 23, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 15.9,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -487,6 +501,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kids_room',
@@ -534,6 +549,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kids_room',
@@ -568,10 +584,6 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.1,
-          'this_sp_from': HAFakeDatetime(2024, 7, 9, 23, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 15.9,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -581,6 +593,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kitchen',
@@ -628,6 +641,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kitchen',
@@ -662,10 +676,6 @@
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.1,
-          'this_sp_from': HAFakeDatetime(2024, 7, 9, 23, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 15.9,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -675,6 +685,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_bedroom',
@@ -722,6 +733,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_bedroom',
@@ -756,10 +768,6 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.1,
-          'this_sp_from': HAFakeDatetime(2024, 7, 9, 23, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 15.9,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -769,6 +777,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_room',
@@ -816,6 +825,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_room',
@@ -834,12 +844,10 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
@@ -855,6 +863,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_home',
@@ -873,12 +882,10 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
@@ -894,6 +901,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_home',
@@ -928,10 +936,6 @@
           'target_heat_temperature': 14.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.1,
-          'this_sp_from': HAFakeDatetime(2024, 7, 9, 23, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 15.9,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -941,6 +945,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 14.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.spare_room',
@@ -988,6 +993,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 14.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.spare_room',
@@ -1022,10 +1028,6 @@
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'next_sp_temp': 16.0,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'this_sp_temp': 18.1,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1035,6 +1037,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.bathroom_dn',
@@ -1069,10 +1072,6 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'next_sp_temp': 16.0,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'this_sp_temp': 18.1,
         }),
         'temperature_status': dict({
           'is_available': False,
@@ -1081,6 +1080,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.dead_zone',
@@ -1120,10 +1120,6 @@
           'until': '2022-03-07T16:00:00-03:00',
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'next_sp_temp': 16.0,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'this_sp_temp': 18.1,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1133,6 +1129,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.front_room',
@@ -1167,10 +1164,6 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'next_sp_temp': 16.0,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'this_sp_temp': 18.1,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1180,6 +1173,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kids_room',
@@ -1214,10 +1208,6 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'next_sp_temp': 16.0,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'this_sp_temp': 18.1,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1227,6 +1217,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kitchen',
@@ -1261,10 +1252,6 @@
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'next_sp_temp': 16.0,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'this_sp_temp': 18.1,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1274,6 +1261,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_bedroom',
@@ -1312,10 +1300,6 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'next_sp_temp': 16.0,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'this_sp_temp': 18.1,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1325,6 +1309,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_room',
@@ -1343,12 +1328,10 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
@@ -1364,6 +1347,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_home',
@@ -1398,10 +1382,6 @@
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1411,6 +1391,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.bathroom_dn',
@@ -1445,10 +1426,6 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': False,
@@ -1457,6 +1434,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.dead_zone',
@@ -1492,10 +1470,6 @@
           'until': '2022-03-07T19:00:00+00:00',
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1505,6 +1479,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.front_room',
@@ -1539,10 +1514,6 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1552,6 +1523,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kids_room',
@@ -1586,10 +1558,6 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1599,6 +1567,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kitchen',
@@ -1633,10 +1602,6 @@
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1646,6 +1611,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_bedroom',
@@ -1680,10 +1646,6 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1693,6 +1655,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_room',
@@ -1711,12 +1674,10 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
@@ -1732,6 +1693,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_home',
@@ -1766,10 +1728,6 @@
           'target_heat_temperature': 14.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1779,6 +1737,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 14.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.spare_room',
@@ -1797,7 +1756,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       'status': dict({
@@ -1810,6 +1768,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 384>,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_home',
@@ -1844,10 +1803,6 @@
           'target_heat_temperature': 21.5,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1857,6 +1812,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.5,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat',
@@ -1875,7 +1831,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
@@ -1893,6 +1848,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_home',
@@ -1927,10 +1883,6 @@
           'target_heat_temperature': 21.5,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Kiev')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Kiev')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1940,6 +1892,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.5,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat',
@@ -1974,10 +1927,6 @@
           'target_heat_temperature': 21.5,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Kiev')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Kiev')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -1987,6 +1936,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.5,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat_2',
@@ -2034,6 +1984,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 5.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat',
@@ -2068,10 +2019,6 @@
           'target_heat_temperature': 20.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 23, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'next_sp_temp': 15.0,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 12, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'this_sp_temp': 22.5,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -2081,6 +2028,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 20.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat_2',
@@ -2099,7 +2047,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
@@ -2117,6 +2064,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.vr',
@@ -2151,10 +2099,6 @@
           'target_heat_temperature': 5.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -2164,6 +2108,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 5.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.ba',
@@ -2198,10 +2143,6 @@
           'target_heat_temperature': 15.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -2211,6 +2152,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 15.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.ka',
@@ -2245,10 +2187,6 @@
           'target_heat_temperature': 15.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -2258,6 +2196,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 15.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.ka_2',
@@ -2276,13 +2215,11 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'eco',
-        'Reset',
         'away',
         'home',
         'Custom',
@@ -2297,6 +2234,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kl',
@@ -2331,10 +2269,6 @@
           'target_heat_temperature': 18.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -2344,6 +2278,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 18.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.sl',
@@ -2378,10 +2313,6 @@
           'target_heat_temperature': 19.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -2391,6 +2322,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 19.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.wo',
@@ -2425,10 +2357,6 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -2438,6 +2366,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_room',
@@ -2456,12 +2385,10 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
@@ -2477,6 +2404,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_home',
@@ -2495,7 +2423,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'away',
@@ -2518,6 +2445,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.living_room',
@@ -2552,10 +2480,6 @@
           'target_heat_temperature': 15.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -2565,6 +2489,7 @@
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 15.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat',
@@ -2572,6 +2497,107 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
+  })
+# ---
+# name: test_setup_platform[sys_006][climate.main_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.5,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Room',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'activeFaults': tuple(
+          dict({
+            'fault_type': 'TempZoneActuatorLowBattery',
+            'since': '2024-11-01T01:00:00+01:00',
+          }),
+          dict({
+            'fault_type': 'TempZoneSensorCommunicationLost',
+            'since': '2024-05-01T01:00:00+02:00',
+          }),
+        ),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 14.0,
+        }),
+        'setpoints': dict({
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 19.5,
+        }),
+        'zone_id': '0001004',
+      }),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 14.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.main_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[sys_006][climate.my_home_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.5,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home 1',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'eco',
+        'away',
+      ]),
+      'status': dict({
+        'activeSystemFaults': tuple(
+          dict({
+            'fault_type': 'BoilerCommunicationLost',
+            'since': '2024-10-01T01:00:00+02:00',
+          }),
+          dict({
+            'fault_type': 'ChValveCommunicationLost',
+            'since': '2024-09-01T01:00:00+02:00',
+          }),
+          dict({
+            'fault_type': 'GatewayCommunicationLost',
+            'since': '2024-06-01T01:00:00+02:00',
+          }),
+        ),
+        'system_id': '0001003',
+        'system_mode_status': dict({
+          'is_permanent': False,
+          'mode': 'AutoWithEco',
+          'time_until': '2024-07-11T02:00:00+02:00',
+        }),
+      }),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.my_home_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
   })
 # ---
 # name: test_zone_set_hvac_mode[default]
@@ -2623,6 +2649,13 @@
     ),
   ])
 # ---
+# name: test_zone_set_hvac_mode[sys_006]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
 # name: test_zone_set_preset_mode[default]
   list([
     tuple(
@@ -2632,7 +2665,7 @@
       17.0,
     ),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
     }),
   ])
 # ---
@@ -2645,7 +2678,7 @@
       21.5,
     ),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
     }),
   ])
 # ---
@@ -2658,7 +2691,7 @@
       21.5,
     ),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Kiev')),
     }),
   ])
 # ---
@@ -2684,7 +2717,7 @@
       5.0,
     ),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     }),
   ])
 # ---
@@ -2697,7 +2730,7 @@
       17.0,
     ),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
     }),
   ])
 # ---
@@ -2710,28 +2743,41 @@
       15.0,
     ),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+    }),
+  ])
+# ---
+# name: test_zone_set_preset_mode[sys_006]
+  list([
+    tuple(
+      14.0,
+    ),
+    tuple(
+      14.0,
+    ),
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Paris')),
     }),
   ])
 # ---
 # name: test_zone_set_temperature[default]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
     }),
   ])
 # ---
 # name: test_zone_set_temperature[h032585]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
     }),
   ])
 # ---
 # name: test_zone_set_temperature[h099625]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Kiev')),
     }),
   ])
 # ---
@@ -2745,14 +2791,14 @@
 # name: test_zone_set_temperature[h157546]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     }),
   ])
 # ---
 # name: test_zone_set_temperature[minimal]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
     }),
   ])
 # ---
@@ -2760,6 +2806,13 @@
   list([
     dict({
       'until': None,
+    }),
+  ])
+# ---
+# name: test_zone_set_temperature[sys_006]
+  list([
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Paris')),
     }),
   ])
 # ---
@@ -2806,6 +2859,13 @@
   ])
 # ---
 # name: test_zone_turn_off[sys_004]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_turn_off[sys_006]
   list([
     tuple(
       5.0,

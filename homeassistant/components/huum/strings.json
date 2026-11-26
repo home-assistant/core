@@ -49,15 +49,18 @@
         "name": "[%key:component::light::title%]"
       }
     },
-    "number": {
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+    "sensor": {
+      "measured_humidity": {
+        "name": "Measured humidity"
       }
     }
   },
   "exceptions": {
     "auth_failed": {
       "message": "Could not log in to Huum with the given credentials."
+    },
+    "communication_error": {
+      "message": "An error occurred while communicating with the Huum sauna."
     },
     "unable_to_turn_on": {
       "message": "Unable to turn on the sauna."

@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 from bluetooth_data_tools import human_readable_name
-from pycasperglow import CasperGlow, CasperGlowError
-import voluptuous as vol
+import probatio
+from pycasperglow import MANUFACTURER_ID, CasperGlow, CasperGlowError
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -22,11 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def _is_casper_glow_discovery(discovery_info: BluetoothServiceInfoBleak) -> bool:
     """Return whether the Bluetooth discovery looks like a Casper Glow."""
-    return bool(
-        discovery_info.name
-        and any(
-            discovery_info.name.startswith(local_name) for local_name in LOCAL_NAMES
-        )
+    return MANUFACTURER_ID in discovery_info.manufacturer_data and any(
+        discovery_info.name.startswith(local_name) for local_name in LOCAL_NAMES
     )
 
 
@@ -71,7 +68,8 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         glow = CasperGlow(self._discovery_info.device)
         try:
-            await glow.handshake()
+            # Unconfirmed discovery: don't hold a connection slot retrying.
+            await glow.handshake(max_attempts=1)
         except CasperGlowError:
             return self.async_abort(reason="cannot_connect")
         except Exception:
@@ -81,7 +79,6 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovery_info.address,
             )
             return self.async_abort(reason="unknown")
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=self.context["title_placeholders"],
@@ -139,9 +136,9 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_ADDRESS): vol.In(
+                probatio.Required(CONF_ADDRESS): probatio.In(
                     {
                         service_info.address: human_readable_name(
                             None, service_info.name, service_info.address

@@ -1,14 +1,20 @@
 """The test for sensor device automation."""
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_device_automation_capabilities,
+    async_get_device_automations,
+    setup_test_component_platform,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
     DOMAIN,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
     SensorStateClass,
     device_condition,
 )
@@ -22,13 +28,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.json import load_json
 
 from .common import UNITS_OF_MEASUREMENT, MockSensor
-
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automation_capabilities,
-    async_get_device_automations,
-    setup_test_component_platform,
-)
 
 
 @pytest.mark.parametrize(
@@ -257,7 +256,7 @@ async def test_get_conditions_no_unit_or_stateclass(
         DOMAIN,
         "test",
         "5678",
-        capabilities={ATTR_STATE_CLASS: state_class},
+        capabilities={SensorEntityCapabilityAttribute.STATE_CLASS: state_class},
         device_id=device_entry.id,
         unit_of_measurement=unit,
     )
@@ -510,7 +509,7 @@ async def test_if_state_not_above_below(
             ]
         },
     )
-    assert "must contain at least one of below, above" in caplog.text
+    assert "at least one of ['below', 'above'] is required" in caplog.text
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")

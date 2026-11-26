@@ -3,7 +3,11 @@
 from datetime import timedelta
 from typing import Any
 
+import probatio
+
 from homeassistant.const import Platform
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "yeelight"
@@ -29,6 +33,7 @@ MODELS_WITH_DELAYED_ON_TRANSITION = {
 }
 
 DATA_UPDATED = "yeelight_{}_data_updated"
+DEVICE_ANNOUNCED = "yeelight_{}_announced"
 
 DEFAULT_NAME = "Yeelight"
 DEFAULT_TRANSITION = 350
@@ -49,7 +54,6 @@ CONF_NIGHTLIGHT_SWITCH = "nightlight_switch"
 ATTR_COUNT = "count"
 ATTR_ACTION = "action"
 ATTR_TRANSITIONS = "transitions"
-ATTR_MODE_MUSIC = "music_mode"
 
 ACTION_RECOVER = "recover"
 ACTION_STAY = "stay"
@@ -67,6 +71,7 @@ SSDP_ST = "wifi_bulb"
 DISCOVERY_ATTEMPTS = 3
 DISCOVERY_SEARCH_INTERVAL = timedelta(seconds=2)
 DISCOVERY_TIMEOUT = 8
+ALIVE_RECONNECT_GRACE = 15
 
 
 YEELIGHT_RGB_TRANSITION = "RGBTransition"
@@ -99,3 +104,26 @@ UPDATE_REQUEST_PROPERTIES = [
 
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT]
+
+YEELIGHT_FLOW_TRANSITION_SCHEMA: VolDictType = {
+    probatio.Optional(ATTR_COUNT, default=0): cv.positive_int,
+    probatio.Optional(ATTR_ACTION, default=ACTION_RECOVER): probatio.Any(
+        ACTION_RECOVER, ACTION_OFF, ACTION_STAY
+    ),
+    probatio.Required(ATTR_TRANSITIONS): [
+        {
+            probatio.Exclusive(YEELIGHT_RGB_TRANSITION, CONF_TRANSITION): probatio.All(
+                probatio.EnsureList(), [cv.positive_int]
+            ),
+            probatio.Exclusive(YEELIGHT_HSV_TRANSACTION, CONF_TRANSITION): probatio.All(
+                probatio.EnsureList(), [cv.positive_int]
+            ),
+            probatio.Exclusive(
+                YEELIGHT_TEMPERATURE_TRANSACTION, CONF_TRANSITION
+            ): probatio.All(probatio.EnsureList(), [cv.positive_int]),
+            probatio.Exclusive(
+                YEELIGHT_SLEEP_TRANSACTION, CONF_TRANSITION
+            ): probatio.All(probatio.EnsureList(), [cv.positive_int]),
+        }
+    ],
+}

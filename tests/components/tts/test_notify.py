@@ -3,19 +3,19 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_mock_service
 
-from homeassistant.components import notify, tts
+from homeassistant.components import notify
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.components.notify import NotifyServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
-from .common import MockTTSEntity, mock_config_entry_setup
-
-from tests.common import assert_setup_component, async_mock_service
+from .common import MockTTSEntity, MockTTSProvider, mock_config_entry_setup, mock_setup
 
 
 @pytest.fixture(autouse=True)
@@ -43,7 +43,7 @@ async def test_setup_legacy_platform(hass: HomeAssistant) -> None:
         notify.DOMAIN: {
             "platform": "tts",
             "name": "tts_test",
-            "tts_service": "tts.demo_say",
+            "tts_service": "tts.test_say",
             "media_player": "media_player.demo",
         }
     }
@@ -87,25 +87,24 @@ async def test_setup_platform_missing_key(hass: HomeAssistant) -> None:
     assert not hass.services.has_service(notify.DOMAIN, "tts_test")
 
 
-async def test_setup_legacy_service(hass: HomeAssistant) -> None:
-    """Set up the demo platform and call service."""
+async def test_setup_legacy_service(
+    hass: HomeAssistant, mock_provider: MockTTSProvider
+) -> None:
+    """Set up the legacy platform and call service."""
     calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     config = {
-        tts.DOMAIN: {"platform": "demo"},
         notify.DOMAIN: {
             "platform": "tts",
             "name": "tts_test",
-            "tts_service": "tts.demo_say",
+            "tts_service": "tts.test_say",
             "media_player": "media_player.demo",
-            "language": "en",
+            "language": "en_US",
         },
     }
 
     await async_setup_component(hass, "homeassistant", {})
-
-    with assert_setup_component(1, tts.DOMAIN):
-        assert await async_setup_component(hass, tts.DOMAIN, config)
+    await mock_setup(hass, mock_provider)
 
     with assert_setup_component(1, notify.DOMAIN):
         assert await async_setup_component(hass, notify.DOMAIN, config)
@@ -116,7 +115,7 @@ async def test_setup_legacy_service(hass: HomeAssistant) -> None:
         notify.DOMAIN,
         "tts_test",
         {
-            tts.ATTR_MESSAGE: "There is someone at the door.",
+            NotifyServiceArgument.MESSAGE: "There is someone at the door.",
         },
         blocking=True,
     )
@@ -153,7 +152,7 @@ async def test_setup_service(
         notify.DOMAIN,
         "tts_test",
         {
-            tts.ATTR_MESSAGE: "There is someone at the door.",
+            NotifyServiceArgument.MESSAGE: "There is someone at the door.",
         },
         blocking=True,
     )

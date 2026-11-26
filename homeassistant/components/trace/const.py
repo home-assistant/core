@@ -10,8 +10,11 @@ if TYPE_CHECKING:
     from .models import TraceData
 
 
+ATTR_ITEM_ID = "item_id"
+ATTR_RUN_ID = "run_id"
 CONF_STORED_TRACES = "stored_traces"
 DATA_TRACE: HassKey[TraceData] = HassKey("trace")
 DATA_TRACE_STORE: HassKey[Store[dict[str, list]]] = HassKey("trace_store")
 DATA_TRACES_RESTORED: HassKey[bool] = HassKey("trace_traces_restored")
 DEFAULT_STORED_TRACES = 5  # Stored traces per script or automation
+TRACE_DOMAINS = ("automation", "script")

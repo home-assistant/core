@@ -33,9 +33,7 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions:
-    status: exempt
-    comment: No service actions registered.
+  action-exceptions: done
   reauthentication-flow: todo
   parallel-updates: todo
   test-coverage: todo
@@ -55,7 +53,11 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: Single climate entity per device, enabled by default.
-  discovery: todo
+  discovery:
+    status: todo
+    comment: |
+      DHCP is only used to update the host of already configured devices,
+      not to discover new devices.
   stale-devices: todo
   diagnostics: todo
   exception-translations: todo

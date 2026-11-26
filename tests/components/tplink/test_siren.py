@@ -2,24 +2,20 @@
 
 from kasa import Device, Module
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.siren import (
-    ATTR_DURATION,
-    ATTR_TONE,
-    ATTR_VOLUME_LEVEL,
     DOMAIN as SIREN_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    SirenService,
+    SirenServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import _mocked_device, setup_platform_for_device, snapshot_platform
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "siren.hub"
 
@@ -61,8 +57,8 @@ async def test_turn_on_and_off(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: [ENTITY_ID]},
+        SirenService.TURN_OFF,
+        {TargetKey.ENTITY_ID: [ENTITY_ID]},
         blocking=True,
     )
 
@@ -70,8 +66,8 @@ async def test_turn_on_and_off(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [ENTITY_ID]},
+        SirenService.TURN_ON,
+        {TargetKey.ENTITY_ID: [ENTITY_ID]},
         blocking=True,
     )
 
@@ -110,8 +106,11 @@ async def test_turn_on_with_volume(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [ENTITY_ID], ATTR_VOLUME_LEVEL: volume_level},
+        SirenService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: [ENTITY_ID],
+            SirenServiceArgument.VOLUME_LEVEL: volume_level,
+        },
         blocking=True,
     )
 
@@ -133,8 +132,12 @@ async def test_turn_on_with_duration_and_sound(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [ENTITY_ID], ATTR_DURATION: 5, ATTR_TONE: "Foo"},
+        SirenService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: [ENTITY_ID],
+            SirenServiceArgument.DURATION: 5,
+            SirenServiceArgument.TONE: "Foo",
+        },
         blocking=True,
     )
 
@@ -157,10 +160,10 @@ async def test_turn_on_with_invalid_duration(
     with pytest.raises(ServiceValidationError, match=msg):
         await hass.services.async_call(
             SIREN_DOMAIN,
-            SERVICE_TURN_ON,
+            SirenService.TURN_ON,
             {
-                ATTR_ENTITY_ID: [ENTITY_ID],
-                ATTR_DURATION: duration,
+                TargetKey.ENTITY_ID: [ENTITY_ID],
+                SirenServiceArgument.DURATION: duration,
             },
             blocking=True,
         )

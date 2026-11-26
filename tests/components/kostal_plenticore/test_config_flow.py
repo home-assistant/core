@@ -1,18 +1,18 @@
 """Test the Kostal Plenticore Solar Inverter config flow."""
 
 from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
-from pykoplenti import ApiClient, AuthenticationException, SettingsData
+from pykoplenti import ApiClient, AuthenticationException, SettingsData, VersionData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
-from homeassistant.components.kostal_plenticore.const import DOMAIN
+from homeassistant.components.kostal_plenticore.const import CONF_SERVICE_CODE, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -36,12 +36,36 @@ def mock_apiclient_class(mock_apiclient) -> Generator[type[ApiClient]]:
         yield mock_api_class
 
 
-async def test_form_g1(
+@contextmanager
+def _patch_apiclient_success() -> Generator[None]:
+    """Patch a reachable G1 inverter and the entry setup."""
+    with (
+        patch(
+            "homeassistant.components.kostal_plenticore.config_flow.ApiClient"
+        ) as mock_api_class,
+        patch(
+            "homeassistant.components.kostal_plenticore.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        mock_api_ctx = MagicMock()
+        mock_api_ctx.login = AsyncMock()
+        mock_api_ctx.get_version = AsyncMock(
+            return_value=VersionData(
+                hostname="scb", api_version="", name="", sw_version=""
+            )
+        )
+
+        mock_api_class.return_value.__aenter__.return_value = mock_api_ctx
+        yield
+
+
+async def test_form(
     hass: HomeAssistant,
     mock_apiclient_class: type[ApiClient],
     mock_apiclient: ApiClient,
 ) -> None:
-    """Test the config flow for G1 models."""
+    """Test the config flow."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -51,28 +75,14 @@ async def test_form_g1(
 
     with patch(
         "homeassistant.components.kostal_plenticore.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         # mock of the context manager instance
         mock_apiclient.login = AsyncMock()
-        mock_apiclient.get_settings = AsyncMock(
-            return_value={
-                "scb:network": [
-                    SettingsData(
-                        min="1",
-                        max="63",
-                        default=None,
-                        access="readwrite",
-                        unit=None,
-                        id="Hostname",
-                        type="string",
-                    ),
-                ]
-            }
-        )
-        mock_apiclient.get_setting_values = AsyncMock(
-            # G1 model has the entry id "Hostname"
-            return_value={"scb:network": {"Hostname": "scb"}}
+        mock_apiclient.get_version = AsyncMock(
+            return_value=VersionData(
+                hostname="scb", api_version="", name="", sw_version=""
+            )
         )
 
         result = await hass.config_entries.flow.async_configure(
@@ -88,76 +98,7 @@ async def test_form_g1(
         mock_apiclient.__aenter__.assert_called_once()
         mock_apiclient.__aexit__.assert_called_once()
         mock_apiclient.login.assert_called_once_with("test-password", service_code=None)
-        mock_apiclient.get_settings.assert_called_once()
-        mock_apiclient.get_setting_values.assert_called_once_with(
-            "scb:network", "Hostname"
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "scb"
-    assert result["data"] == {
-        "host": "1.1.1.1",
-        "password": "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_g2(
-    hass: HomeAssistant,
-    mock_apiclient_class: type[ApiClient],
-    mock_apiclient: ApiClient,
-) -> None:
-    """Test the config flow for G2 models."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.kostal_plenticore.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        # mock of the context manager instance
-        mock_apiclient.login = AsyncMock()
-        mock_apiclient.get_settings = AsyncMock(
-            return_value={
-                "scb:network": [
-                    SettingsData(
-                        min="1",
-                        max="63",
-                        default=None,
-                        access="readwrite",
-                        unit=None,
-                        id="Network:Hostname",
-                        type="string",
-                    ),
-                ]
-            }
-        )
-        mock_apiclient.get_setting_values = AsyncMock(
-            # G1 model has the entry id "Hostname"
-            return_value={"scb:network": {"Network:Hostname": "scb"}}
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "password": "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-        mock_apiclient_class.assert_called_once_with(ANY, "1.1.1.1")
-        mock_apiclient.__aenter__.assert_called_once()
-        mock_apiclient.__aexit__.assert_called_once()
-        mock_apiclient.login.assert_called_once_with("test-password", service_code=None)
-        mock_apiclient.get_settings.assert_called_once()
-        mock_apiclient.get_setting_values.assert_called_once_with(
-            "scb:network", "Network:Hostname"
-        )
+        mock_apiclient.get_version.assert_called_once()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "scb"
@@ -183,28 +124,14 @@ async def test_form_g2_with_service_code(
 
     with patch(
         "homeassistant.components.kostal_plenticore.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         # mock of the context manager instance
         mock_apiclient.login = AsyncMock()
-        mock_apiclient.get_settings = AsyncMock(
-            return_value={
-                "scb:network": [
-                    SettingsData(
-                        min="1",
-                        max="63",
-                        default=None,
-                        access="readwrite",
-                        unit=None,
-                        id="Network:Hostname",
-                        type="string",
-                    ),
-                ]
-            }
-        )
-        mock_apiclient.get_setting_values = AsyncMock(
-            # G1 model has the entry id "Hostname"
-            return_value={"scb:network": {"Network:Hostname": "scb"}}
+        mock_apiclient.get_version = AsyncMock(
+            return_value=VersionData(
+                hostname="scb", api_version="", name="", sw_version=""
+            )
         )
 
         result = await hass.config_entries.flow.async_configure(
@@ -223,10 +150,7 @@ async def test_form_g2_with_service_code(
         mock_apiclient.login.assert_called_once_with(
             "test-password", service_code="test-service-code"
         )
-        mock_apiclient.get_settings.assert_called_once()
-        mock_apiclient.get_setting_values.assert_called_once_with(
-            "scb:network", "Network:Hostname"
-        )
+        mock_apiclient.get_version.assert_called_once()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "scb"
@@ -252,6 +176,11 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         mock_api_ctx.login = AsyncMock(
             side_effect=AuthenticationException(404, "invalid user"),
         )
+        mock_api_ctx.get_version = AsyncMock(
+            return_value=VersionData(
+                hostname="scb", api_version="", name="", sw_version=""
+            )
+        )
 
         # mock of the return instance of ApiClient
         mock_api = MagicMock()
@@ -270,6 +199,18 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"password": "invalid_auth"}
+
+    with _patch_apiclient_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -305,6 +246,18 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"host": "cannot_connect"}
 
+    with _patch_apiclient_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unexpected_error(hass: HomeAssistant) -> None:
     """Test we handle unexpected error."""
@@ -338,6 +291,18 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+    with _patch_apiclient_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_already_configured(hass: HomeAssistant) -> None:
@@ -380,29 +345,13 @@ async def test_reconfigure(
 
     # mock of the context manager instance
     mock_apiclient.login = AsyncMock()
-    mock_apiclient.get_settings = AsyncMock(
-        return_value={
-            "scb:network": [
-                SettingsData(
-                    min="1",
-                    max="63",
-                    default=None,
-                    access="readwrite",
-                    unit=None,
-                    id="Hostname",
-                    type="string",
-                ),
-            ]
-        }
-    )
-    mock_apiclient.get_setting_values = AsyncMock(
-        # G1 model has the entry id "Hostname"
-        return_value={"scb:network": {"Hostname": "scb"}}
+    mock_apiclient.get_version = AsyncMock(
+        return_value=VersionData(hostname="scb", api_version="", name="", sw_version="")
     )
 
     with patch(
         "homeassistant.components.kostal_plenticore.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -417,8 +366,7 @@ async def test_reconfigure(
     mock_apiclient.__aenter__.assert_called_once()
     mock_apiclient.__aexit__.assert_called_once()
     mock_apiclient.login.assert_called_once_with("test-password", service_code=None)
-    mock_apiclient.get_settings.assert_called_once()
-    mock_apiclient.get_setting_values.assert_called_once_with("scb:network", "Hostname")
+    mock_apiclient.get_version.assert_called_once()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -464,6 +412,19 @@ async def test_reconfigure_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"password": "invalid_auth"}
 
+    with _patch_apiclient_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
 
 async def test_reconfigure_cannot_connect(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
@@ -498,6 +459,19 @@ async def test_reconfigure_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"host": "cannot_connect"}
+
+    with _patch_apiclient_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_unexpected_error(
@@ -534,6 +508,19 @@ async def test_reconfigure_unexpected_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
 
+    with _patch_apiclient_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
 
 async def test_reconfigure_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
@@ -558,3 +545,123 @@ async def test_reconfigure_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("user_input", "expected_data"),
+    [
+        pytest.param(
+            {CONF_PASSWORD: "new-password", CONF_SERVICE_CODE: "67890"},
+            {
+                CONF_HOST: "192.168.1.2",
+                CONF_PASSWORD: "new-password",
+                CONF_SERVICE_CODE: "67890",
+            },
+            id="with_service_code",
+        ),
+        pytest.param(
+            {CONF_PASSWORD: "new-password"},
+            {CONF_HOST: "192.168.1.2", CONF_PASSWORD: "new-password"},
+            id="without_service_code",
+        ),
+    ],
+)
+async def test_reauth(
+    hass: HomeAssistant,
+    mock_apiclient_class: type[ApiClient],
+    mock_apiclient: ApiClient,
+    mock_installer_config_entry: MockConfigEntry,
+    user_input: dict[str, str],
+    expected_data: dict[str, str],
+) -> None:
+    """Test the reauth flow updates the credentials."""
+    mock_installer_config_entry.add_to_hass(hass)
+    result = await mock_installer_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    mock_apiclient.login = AsyncMock()
+    mock_apiclient.get_settings = AsyncMock(
+        return_value={
+            "scb:network": [
+                SettingsData(
+                    min="1",
+                    max="63",
+                    default=None,
+                    access="readwrite",
+                    unit=None,
+                    id="Hostname",
+                    type="string",
+                ),
+            ]
+        }
+    )
+    mock_apiclient.get_setting_values = AsyncMock(
+        return_value={"scb:network": {"Hostname": "scb"}}
+    )
+
+    with patch(
+        "homeassistant.components.kostal_plenticore.async_setup_entry",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+        await hass.async_block_till_done()
+
+    mock_apiclient_class.assert_called_once_with(ANY, "192.168.1.2")
+    mock_apiclient.login.assert_called_once_with(
+        "new-password", service_code=user_input.get(CONF_SERVICE_CODE)
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_installer_config_entry.data == expected_data
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "errors"),
+    [
+        pytest.param(
+            AuthenticationException(404, "invalid user"),
+            {CONF_PASSWORD: "invalid_auth"},
+            id="invalid_auth",
+        ),
+        pytest.param(TimeoutError(), {"base": "cannot_connect"}, id="cannot_connect"),
+        pytest.param(Exception(), {"base": "unknown"}, id="unknown"),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    errors: dict[str, str],
+) -> None:
+    """Test we handle errors during reauth and can recover."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.kostal_plenticore.config_flow.ApiClient"
+    ) as mock_api_class:
+        mock_api_ctx = MagicMock()
+        mock_api_ctx.login = AsyncMock(side_effect=side_effect)
+        mock_api_class.return_value.__aenter__.return_value = mock_api_ctx
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "wrong-password"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == errors
+
+    with _patch_apiclient_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new-password"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"

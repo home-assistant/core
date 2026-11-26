@@ -19,6 +19,7 @@ from hotspring import (
     LightWheelMode,
     LightZone,
     LogoLight,
+    PowerMetrics,
     Spa,
     SpaBrand,
     SpaFailureState,
@@ -30,12 +31,11 @@ from hotspring import (
 )
 from hotspring.models import SpaTestData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hotspring.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -52,7 +52,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.hotspring.async_setup_entry", return_value=True
+        "homeassistant.components.hotspring.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -91,8 +91,6 @@ def device_fixture() -> Spa:
         heater_lock=False,
         heatpump_installed=False,
         heating_mode=HeatingMode.HEAT_SAVER,
-        heater_current=5.0,
-        heater_on_seconds=3600,
         set_temperature=104.0,
         current_temperature=102.0,
         temperature_unit=TemperatureUnit.FAHRENHEIT,
@@ -107,13 +105,13 @@ def device_fixture() -> Spa:
         boost_active=False,
         salt_value=12,
     )
-    spa.jets = [
-        Jet(jet_id=1, speed=JetSpeed.OFF, is_enabled=True, on_seconds=0),
-        Jet(jet_id=2, speed=JetSpeed.OFF, is_enabled=True, on_seconds=0),
-    ]
+    spa.jets = {
+        1: Jet(jet_id=1, speed=JetSpeed.OFF, is_enabled=True, on_seconds=0),
+        2: Jet(jet_id=2, speed=JetSpeed.OFF, is_enabled=True, on_seconds=0),
+    }
     spa.blower = Blower(is_enabled=False, is_on=False)
-    spa.light_zones = [
-        LightZone(
+    spa.light_zones = {
+        1: LightZone(
             zone_id=1,
             is_enabled=True,
             is_on=False,
@@ -122,7 +120,7 @@ def device_fixture() -> Spa:
             intensity=0,
             loop_speed=0,
         ),
-    ]
+    }
     spa.logo_light = LogoLight(brightness=BrightnessLevel.LEVEL_1)
     spa.clean_cycle = CleanCycle(is_enabled=False, vanishing_act=False)
     spa.spa_lock = SpaLock(is_locked=False)
@@ -134,33 +132,25 @@ def device_fixture() -> Spa:
         sensor_life_percentage=100.0,
         installed=False,
     )
-    spa.energy_savings = [
-        EnergySaving(schedule_id=1, mode=0, start_hour=0, start_minute=0, duration=0),
-    ]
+    spa.energy_savings = {
+        1: EnergySaving(
+            schedule_id=1, mode=0, start_hour=0, start_minute=0, duration=0
+        ),
+    }
     spa.connection_status = ConnectionStatus(spa_connected=True)
     spa.diagnostics = Diagnostics(
         spa_failure_state=SpaFailureState.OK,
         heater_error="0",
         power_frequency="60",
         pressure_switch_status="0",
-        l1_n_volts=120.0,
-        l2_n_volts=120.0,
-        heater_volts=240.0,
-        jet3_volts=0.0,
-        jet1_jet2_blower_power="0",
-        small_loads_power="0",
-        heater_power="0",
-        jet3_power="0",
+        jet3_volts=0,
     )
     spa.test_metrics = SpaTestData(
         heater_test_status="off",
         temp_offset=0.0,
         vsense_cal=0.0,
-        jet1_jet2_blower_current=0.0,
-        small_loads_current=0.0,
-        heater_current=0.0,
-        jet3_current=0.0,
     )
+    spa.power = PowerMetrics()
     return spa
 
 

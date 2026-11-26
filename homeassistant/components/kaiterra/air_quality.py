@@ -55,7 +55,7 @@ class KaiterraAirQuality(AirQualityEntity):
 
     @property
     @override
-    def available(self):
+    def available(self) -> bool:
         """Return the availability of the sensor."""
         return self._api.data.get(self._device_id) is not None
 
@@ -108,6 +108,7 @@ class KaiterraAirQuality(AirQualityEntity):
     @override
     def unique_id(self):
         """Return the sensor's unique id."""
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         return f"{self._device_id}_air_quality"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
@@ -125,7 +126,7 @@ class KaiterraAirQuality(AirQualityEntity):
         }
 
     @override
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callback."""
         self.async_on_remove(
             async_dispatcher_connect(

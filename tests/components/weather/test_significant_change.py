@@ -2,23 +2,9 @@
 
 import pytest
 
-from homeassistant.components.weather.const import (
-    ATTR_WEATHER_APPARENT_TEMPERATURE,
-    ATTR_WEATHER_CLOUD_COVERAGE,
-    ATTR_WEATHER_DEW_POINT,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_OZONE,
-    ATTR_WEATHER_PRECIPITATION_UNIT,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_PRESSURE_UNIT,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_TEMPERATURE_UNIT,
-    ATTR_WEATHER_UV_INDEX,
-    ATTR_WEATHER_VISIBILITY_UNIT,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_GUST_SPEED,
-    ATTR_WEATHER_WIND_SPEED,
-    ATTR_WEATHER_WIND_SPEED_UNIT,
+from homeassistant.components.weather import (
+    WeatherEntityCapabilityAttribute,
+    WeatherEntityStateAttribute,
 )
 from homeassistant.components.weather.significant_change import (
     async_check_significant_change,
@@ -39,268 +25,278 @@ async def test_significant_state_change() -> None:
     [
         # insignificant attributes
         (
-            {ATTR_WEATHER_PRECIPITATION_UNIT: "a"},
-            {ATTR_WEATHER_PRECIPITATION_UNIT: "b"},
-            False,
-        ),
-        ({ATTR_WEATHER_PRESSURE_UNIT: "a"}, {ATTR_WEATHER_PRESSURE_UNIT: "b"}, False),
-        (
-            {ATTR_WEATHER_TEMPERATURE_UNIT: "a"},
-            {ATTR_WEATHER_TEMPERATURE_UNIT: "b"},
+            {WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT: "a"},
+            {WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT: "b"},
             False,
         ),
         (
-            {ATTR_WEATHER_VISIBILITY_UNIT: "a"},
-            {ATTR_WEATHER_VISIBILITY_UNIT: "b"},
+            {WeatherEntityCapabilityAttribute.PRESSURE_UNIT: "a"},
+            {WeatherEntityCapabilityAttribute.PRESSURE_UNIT: "b"},
             False,
         ),
         (
-            {ATTR_WEATHER_WIND_SPEED_UNIT: "a"},
-            {ATTR_WEATHER_WIND_SPEED_UNIT: "b"},
+            {WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: "a"},
+            {WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: "b"},
             False,
         ),
         (
-            {ATTR_WEATHER_PRECIPITATION_UNIT: "a", ATTR_WEATHER_WIND_SPEED_UNIT: "a"},
-            {ATTR_WEATHER_PRECIPITATION_UNIT: "b", ATTR_WEATHER_WIND_SPEED_UNIT: "a"},
+            {WeatherEntityCapabilityAttribute.VISIBILITY_UNIT: "a"},
+            {WeatherEntityCapabilityAttribute.VISIBILITY_UNIT: "b"},
+            False,
+        ),
+        (
+            {WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: "a"},
+            {WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: "b"},
+            False,
+        ),
+        (
+            {
+                WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT: "a",
+                WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: "a",
+            },
+            {
+                WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT: "b",
+                WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: "a",
+            },
             False,
         ),
         # significant attributes, close to but not significant change
         (
-            {ATTR_WEATHER_APPARENT_TEMPERATURE: 20},
-            {ATTR_WEATHER_APPARENT_TEMPERATURE: 20.4},
+            {WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 20},
+            {WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 20.4},
             False,
         ),
         (
-            {ATTR_WEATHER_APPARENT_TEMPERATURE: 68},
+            {WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 68},
             {
-                ATTR_WEATHER_APPARENT_TEMPERATURE: 68.9,
-                ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 68.9,
+                WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
             },
             False,
         ),
         (
-            {ATTR_WEATHER_DEW_POINT: 20},
-            {ATTR_WEATHER_DEW_POINT: 20.4},
+            {WeatherEntityStateAttribute.DEW_POINT: 20},
+            {WeatherEntityStateAttribute.DEW_POINT: 20.4},
             False,
         ),
         (
-            {ATTR_WEATHER_TEMPERATURE: 20},
-            {ATTR_WEATHER_TEMPERATURE: 20.4},
+            {WeatherEntityStateAttribute.TEMPERATURE: 20},
+            {WeatherEntityStateAttribute.TEMPERATURE: 20.4},
             False,
         ),
         (
-            {ATTR_WEATHER_CLOUD_COVERAGE: 80},
-            {ATTR_WEATHER_CLOUD_COVERAGE: 80.9},
+            {WeatherEntityStateAttribute.CLOUD_COVERAGE: 80},
+            {WeatherEntityStateAttribute.CLOUD_COVERAGE: 80.9},
             False,
         ),
         (
-            {ATTR_WEATHER_HUMIDITY: 90},
-            {ATTR_WEATHER_HUMIDITY: 89.1},
+            {WeatherEntityStateAttribute.HUMIDITY: 90},
+            {WeatherEntityStateAttribute.HUMIDITY: 89.1},
             False,
         ),
         (
-            {ATTR_WEATHER_WIND_BEARING: "W"},  # W = 270°
-            {ATTR_WEATHER_WIND_BEARING: 269.1},
+            {WeatherEntityStateAttribute.WIND_BEARING: "W"},  # W = 270°
+            {WeatherEntityStateAttribute.WIND_BEARING: 269.1},
             False,
         ),
         (
-            {ATTR_WEATHER_WIND_BEARING: "W"},
-            {ATTR_WEATHER_WIND_BEARING: "W"},
+            {WeatherEntityStateAttribute.WIND_BEARING: "W"},
+            {WeatherEntityStateAttribute.WIND_BEARING: "W"},
             False,
         ),
         (
-            {ATTR_WEATHER_WIND_BEARING: 270},
-            {ATTR_WEATHER_WIND_BEARING: 269.1},
+            {WeatherEntityStateAttribute.WIND_BEARING: 270},
+            {WeatherEntityStateAttribute.WIND_BEARING: 269.1},
             False,
         ),
         (
-            {ATTR_WEATHER_WIND_GUST_SPEED: 5},
+            {WeatherEntityStateAttribute.WIND_GUST_SPEED: 5},
             {
-                ATTR_WEATHER_WIND_GUST_SPEED: 5.9,
-                ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.KILOMETERS_PER_HOUR,
+                WeatherEntityStateAttribute.WIND_GUST_SPEED: 5.9,
+                WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: UnitOfSpeed.KILOMETERS_PER_HOUR,
             },
             False,
         ),
         (
-            {ATTR_WEATHER_WIND_GUST_SPEED: 5},
+            {WeatherEntityStateAttribute.WIND_GUST_SPEED: 5},
             {
-                ATTR_WEATHER_WIND_GUST_SPEED: 5.4,
-                ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND,
+                WeatherEntityStateAttribute.WIND_GUST_SPEED: 5.4,
+                WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND,
             },
             False,
         ),
         (
-            {ATTR_WEATHER_WIND_SPEED: 5},
+            {WeatherEntityStateAttribute.WIND_SPEED: 5},
             {
-                ATTR_WEATHER_WIND_SPEED: 5.9,
-                ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.KILOMETERS_PER_HOUR,
+                WeatherEntityStateAttribute.WIND_SPEED: 5.9,
+                WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: UnitOfSpeed.KILOMETERS_PER_HOUR,
             },
             False,
         ),
         (
-            {ATTR_WEATHER_WIND_SPEED: 5},
+            {WeatherEntityStateAttribute.WIND_SPEED: 5},
             {
-                ATTR_WEATHER_WIND_SPEED: 5.4,
-                ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND,
+                WeatherEntityStateAttribute.WIND_SPEED: 5.4,
+                WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND,
             },
             False,
         ),
         (
-            {ATTR_WEATHER_UV_INDEX: 1},
-            {ATTR_WEATHER_UV_INDEX: 1.09},
+            {WeatherEntityStateAttribute.UV_INDEX: 1},
+            {WeatherEntityStateAttribute.UV_INDEX: 1.09},
             False,
         ),
         (
-            {ATTR_WEATHER_OZONE: 20},
-            {ATTR_WEATHER_OZONE: 20.9},
+            {WeatherEntityStateAttribute.OZONE: 20},
+            {WeatherEntityStateAttribute.OZONE: 20.9},
             False,
         ),
         (
-            {ATTR_WEATHER_PRESSURE: 1000},
-            {ATTR_WEATHER_PRESSURE: 1000.9},
+            {WeatherEntityStateAttribute.PRESSURE: 1000},
+            {WeatherEntityStateAttribute.PRESSURE: 1000.9},
             False,
         ),
         (
-            {ATTR_WEATHER_PRESSURE: 750.06},
+            {WeatherEntityStateAttribute.PRESSURE: 750.06},
             {
-                ATTR_WEATHER_PRESSURE: 750.74,
-                ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.MMHG,
+                WeatherEntityStateAttribute.PRESSURE: 750.74,
+                WeatherEntityCapabilityAttribute.PRESSURE_UNIT: UnitOfPressure.MMHG,
             },
             False,
         ),
         (
-            {ATTR_WEATHER_PRESSURE: 100},
+            {WeatherEntityStateAttribute.PRESSURE: 100},
             {
-                ATTR_WEATHER_PRESSURE: 100.09,
-                ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.KPA,
+                WeatherEntityStateAttribute.PRESSURE: 100.09,
+                WeatherEntityCapabilityAttribute.PRESSURE_UNIT: UnitOfPressure.KPA,
             },
             False,
         ),
         (
-            {ATTR_WEATHER_PRESSURE: 29.5},
+            {WeatherEntityStateAttribute.PRESSURE: 29.5},
             {
-                ATTR_WEATHER_PRESSURE: 29.54,
-                ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.INHG,
+                WeatherEntityStateAttribute.PRESSURE: 29.54,
+                WeatherEntityCapabilityAttribute.PRESSURE_UNIT: UnitOfPressure.INHG,
             },
             False,
         ),
         # significant attributes with significant change
         (
-            {ATTR_WEATHER_APPARENT_TEMPERATURE: 20},
-            {ATTR_WEATHER_APPARENT_TEMPERATURE: 20.5},
+            {WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 20},
+            {WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 20.5},
             True,
         ),
         (
-            {ATTR_WEATHER_APPARENT_TEMPERATURE: 68},
+            {WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 68},
             {
-                ATTR_WEATHER_APPARENT_TEMPERATURE: 69,
-                ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 69,
+                WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
             },
             True,
         ),
         (
-            {ATTR_WEATHER_DEW_POINT: 20},
-            {ATTR_WEATHER_DEW_POINT: 20.5},
+            {WeatherEntityStateAttribute.DEW_POINT: 20},
+            {WeatherEntityStateAttribute.DEW_POINT: 20.5},
             True,
         ),
         (
-            {ATTR_WEATHER_TEMPERATURE: 20},
-            {ATTR_WEATHER_TEMPERATURE: 20.5},
+            {WeatherEntityStateAttribute.TEMPERATURE: 20},
+            {WeatherEntityStateAttribute.TEMPERATURE: 20.5},
             True,
         ),
         (
-            {ATTR_WEATHER_CLOUD_COVERAGE: 80},
-            {ATTR_WEATHER_CLOUD_COVERAGE: 81},
+            {WeatherEntityStateAttribute.CLOUD_COVERAGE: 80},
+            {WeatherEntityStateAttribute.CLOUD_COVERAGE: 81},
             True,
         ),
         (
-            {ATTR_WEATHER_HUMIDITY: 90},
-            {ATTR_WEATHER_HUMIDITY: 89},
+            {WeatherEntityStateAttribute.HUMIDITY: 90},
+            {WeatherEntityStateAttribute.HUMIDITY: 89},
             True,
         ),
         (
-            {ATTR_WEATHER_WIND_BEARING: "W"},  # W = 270°
-            {ATTR_WEATHER_WIND_BEARING: 269},
+            {WeatherEntityStateAttribute.WIND_BEARING: "W"},  # W = 270°
+            {WeatherEntityStateAttribute.WIND_BEARING: 269},
             True,
         ),
         (
-            {ATTR_WEATHER_WIND_BEARING: "W"},
-            {ATTR_WEATHER_WIND_BEARING: "NW"},  # NW = 315°
+            {WeatherEntityStateAttribute.WIND_BEARING: "W"},
+            {WeatherEntityStateAttribute.WIND_BEARING: "NW"},  # NW = 315°
             True,
         ),
         (
-            {ATTR_WEATHER_WIND_BEARING: 270},
-            {ATTR_WEATHER_WIND_BEARING: 269},
+            {WeatherEntityStateAttribute.WIND_BEARING: 270},
+            {WeatherEntityStateAttribute.WIND_BEARING: 269},
             True,
         ),
         (
-            {ATTR_WEATHER_WIND_GUST_SPEED: 5},
+            {WeatherEntityStateAttribute.WIND_GUST_SPEED: 5},
             {
-                ATTR_WEATHER_WIND_GUST_SPEED: 6,
-                ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.KILOMETERS_PER_HOUR,
+                WeatherEntityStateAttribute.WIND_GUST_SPEED: 6,
+                WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: UnitOfSpeed.KILOMETERS_PER_HOUR,
             },
             True,
         ),
         (
-            {ATTR_WEATHER_WIND_GUST_SPEED: 5},
+            {WeatherEntityStateAttribute.WIND_GUST_SPEED: 5},
             {
-                ATTR_WEATHER_WIND_GUST_SPEED: 5.5,
-                ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND,
+                WeatherEntityStateAttribute.WIND_GUST_SPEED: 5.5,
+                WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND,
             },
             True,
         ),
         (
-            {ATTR_WEATHER_WIND_SPEED: 5},
+            {WeatherEntityStateAttribute.WIND_SPEED: 5},
             {
-                ATTR_WEATHER_WIND_SPEED: 6,
-                ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.KILOMETERS_PER_HOUR,
+                WeatherEntityStateAttribute.WIND_SPEED: 6,
+                WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: UnitOfSpeed.KILOMETERS_PER_HOUR,
             },
             True,
         ),
         (
-            {ATTR_WEATHER_WIND_SPEED: 5},
+            {WeatherEntityStateAttribute.WIND_SPEED: 5},
             {
-                ATTR_WEATHER_WIND_SPEED: 5.5,
-                ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND,
+                WeatherEntityStateAttribute.WIND_SPEED: 5.5,
+                WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND,
             },
             True,
         ),
         (
-            {ATTR_WEATHER_UV_INDEX: 1},
-            {ATTR_WEATHER_UV_INDEX: 1.1},
+            {WeatherEntityStateAttribute.UV_INDEX: 1},
+            {WeatherEntityStateAttribute.UV_INDEX: 1.1},
             True,
         ),
         (
-            {ATTR_WEATHER_OZONE: 20},
-            {ATTR_WEATHER_OZONE: 21},
+            {WeatherEntityStateAttribute.OZONE: 20},
+            {WeatherEntityStateAttribute.OZONE: 21},
             True,
         ),
         (
-            {ATTR_WEATHER_PRESSURE: 1000},
-            {ATTR_WEATHER_PRESSURE: 1001},
+            {WeatherEntityStateAttribute.PRESSURE: 1000},
+            {WeatherEntityStateAttribute.PRESSURE: 1001},
             True,
         ),
         (
-            {ATTR_WEATHER_PRESSURE: 750},
+            {WeatherEntityStateAttribute.PRESSURE: 750},
             {
-                ATTR_WEATHER_PRESSURE: 749,
-                ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.MMHG,
+                WeatherEntityStateAttribute.PRESSURE: 749,
+                WeatherEntityCapabilityAttribute.PRESSURE_UNIT: UnitOfPressure.MMHG,
             },
             True,
         ),
         (
-            {ATTR_WEATHER_PRESSURE: 100},
+            {WeatherEntityStateAttribute.PRESSURE: 100},
             {
-                ATTR_WEATHER_PRESSURE: 100.11,
-                ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.KPA,
+                WeatherEntityStateAttribute.PRESSURE: 100.11,
+                WeatherEntityCapabilityAttribute.PRESSURE_UNIT: UnitOfPressure.KPA,
             },
             True,
         ),
         (
-            {ATTR_WEATHER_PRESSURE: 29.5},
+            {WeatherEntityStateAttribute.PRESSURE: 29.5},
             {
-                ATTR_WEATHER_PRESSURE: 29.55,
-                ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.INHG,
+                WeatherEntityStateAttribute.PRESSURE: 29.55,
+                WeatherEntityCapabilityAttribute.PRESSURE_UNIT: UnitOfPressure.INHG,
             },
             True,
         ),
@@ -321,34 +317,34 @@ async def test_significant_atributes_change(
     [
         # invalid new values
         (
-            {ATTR_WEATHER_APPARENT_TEMPERATURE: 30},
-            {ATTR_WEATHER_APPARENT_TEMPERATURE: "invalid"},
+            {WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 30},
+            {WeatherEntityStateAttribute.APPARENT_TEMPERATURE: "invalid"},
             False,
         ),
         (
-            {ATTR_WEATHER_APPARENT_TEMPERATURE: 30},
-            {ATTR_WEATHER_APPARENT_TEMPERATURE: None},
+            {WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 30},
+            {WeatherEntityStateAttribute.APPARENT_TEMPERATURE: None},
             False,
         ),
         (
-            {ATTR_WEATHER_WIND_BEARING: "NNW"},
-            {ATTR_WEATHER_WIND_BEARING: "invalid"},
+            {WeatherEntityStateAttribute.WIND_BEARING: "NNW"},
+            {WeatherEntityStateAttribute.WIND_BEARING: "invalid"},
             False,
         ),
         # invalid old values
         (
-            {ATTR_WEATHER_APPARENT_TEMPERATURE: "invalid"},
-            {ATTR_WEATHER_APPARENT_TEMPERATURE: 30},
+            {WeatherEntityStateAttribute.APPARENT_TEMPERATURE: "invalid"},
+            {WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 30},
             True,
         ),
         (
-            {ATTR_WEATHER_APPARENT_TEMPERATURE: None},
-            {ATTR_WEATHER_APPARENT_TEMPERATURE: 30},
+            {WeatherEntityStateAttribute.APPARENT_TEMPERATURE: None},
+            {WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 30},
             True,
         ),
         (
-            {ATTR_WEATHER_WIND_BEARING: "invalid"},
-            {ATTR_WEATHER_WIND_BEARING: "NNW"},
+            {WeatherEntityStateAttribute.WIND_BEARING: "invalid"},
+            {WeatherEntityStateAttribute.WIND_BEARING: "NNW"},
             True,
         ),
     ],

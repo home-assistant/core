@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from simplipy.system.v3 import SystemV3
 
 from homeassistant.components.simplisafe.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
 from .common import REFRESH_TOKEN, USER_ID, USERNAME
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 CODE = "12345"
 PASSWORD = "password"
@@ -100,6 +99,10 @@ def reauth_config_fixture() -> dict[str, str]:
 @pytest.fixture(name="patch_simplisafe_api")
 def patch_simplisafe_api_fixture(api: Mock, websocket: Mock):
     """Patch the SimpliSafe API creation methods."""
+    websocket_start_patch = patch(
+        "homeassistant.components.simplisafe.SimpliSafe._async_start_websocket_if_needed"
+    )
+    websocket_start_patch.start()
     with (
         patch(
             "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
@@ -113,12 +116,12 @@ def patch_simplisafe_api_fixture(api: Mock, websocket: Mock):
             "homeassistant.components.simplisafe.API.async_from_refresh_token",
             return_value=api,
         ),
-        patch(
-            "homeassistant.components.simplisafe.SimpliSafe._async_start_websocket_if_needed",
-        ),
     ):
         api.websocket = websocket
-        yield
+        try:
+            yield websocket_start_patch
+        finally:
+            websocket_start_patch.stop()
 
 
 @pytest.fixture(name="setup_simplisafe")

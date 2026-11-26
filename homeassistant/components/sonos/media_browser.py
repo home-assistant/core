@@ -11,7 +11,7 @@ from soco.data_structures import DidlContainer, DidlObject
 from soco.ms_data_structures import MusicServiceItem
 from soco.music_library import MusicLibrary
 
-from homeassistant.components import media_source, plex, spotify
+from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
@@ -41,7 +41,8 @@ from .const import (
 )
 from .exception import UnknownMediaType
 from .favorites import SonosFavorites
-from .speaker import SonosMedia, SonosSpeaker
+from .media import SonosMedia
+from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,12 +96,11 @@ def get_thumbnail_url_full(
             )
         return fix_image_url(getattr(item, "album_art_uri", ""))
 
-    return urllib.parse.unquote(
-        get_browse_image_url(
-            media_content_type,
-            media_content_id,
-            media_image_id,
-        )
+    # The content id must stay percent-encoded; aiohttp decodes the path once.
+    return get_browse_image_url(
+        media_content_type,
+        media_content_id,
+        media_image_id,
     )
 
 
@@ -152,18 +152,25 @@ async def async_browse_media(
             hass, media_content_id, content_filter=media_source_filter
         )
 
-    if plex.is_plex_media_id(media_content_id):
-        return await plex.async_browse_media(
-            hass, media_content_type, media_content_id, platform=DOMAIN
-        )
+    # Plex and Spotify are only imported once set up, as they are heavy to load
+    if "plex" in hass.config.components:
+        from homeassistant.components import plex  # noqa: PLC0415
 
-    if media_content_type == "plex":
-        return await plex.async_browse_media(hass, None, None, platform=DOMAIN)
+        if plex.is_plex_media_id(media_content_id):
+            return await plex.async_browse_media(
+                hass, media_content_type, media_content_id, platform=DOMAIN
+            )
 
-    if spotify.is_spotify_media_type(media_content_type):
-        return await spotify.async_browse_media(
-            hass, media_content_type, media_content_id, can_play_artist=False
-        )
+        if media_content_type == "plex":
+            return await plex.async_browse_media(hass, None, None, platform=DOMAIN)
+
+    if "spotify" in hass.config.components:
+        from homeassistant.components import spotify  # noqa: PLC0415
+
+        if spotify.is_spotify_media_type(media_content_type):
+            return await spotify.async_browse_media(
+                hass, media_content_type, media_content_id, can_play_artist=False
+            )
 
     if media_content_type == "library":
         return await hass.async_add_executor_job(
@@ -208,7 +215,14 @@ async def async_browse_media(
         ),
     )
     if response is None:
-        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="media_not_found",
+            translation_placeholders={
+                "media_content_type": media_content_type,
+                "media_content_id": media_content_id,
+            },
+        )
     return response
 
 
@@ -378,7 +392,7 @@ async def root_payload(
     """Return root payload for Sonos."""
     children: list[BrowseMedia] = []
 
-    if speaker.favorites:
+    if speaker.favorites.count:
         children.append(
             BrowseMedia(
                 title="Favorites",
@@ -420,6 +434,8 @@ async def root_payload(
         )
 
     if "spotify" in hass.config.components:
+        from homeassistant.components import spotify  # noqa: PLC0415
+
         result = await spotify.async_browse_media(hass, None, None)
         if result.children:
             children.extend(result.children)

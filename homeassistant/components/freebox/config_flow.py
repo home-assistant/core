@@ -1,19 +1,33 @@
 """Config flow to configure the Freebox integration."""
 
 import logging
+import socket
 from typing import Any, override
 
+from aiohttp import ClientError
 from freebox_api.exceptions import AuthorizationError, HttpRequestError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN
-from .router import get_api, get_hosts_list_if_supported
+from .const import CONF_REGISTRATION_NAME, DOMAIN
+from .router import (
+    async_forget_registration,
+    get_api,
+    get_hosts_list_if_supported,
+    is_invalid_token_error,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _link_schema(registration_name: str) -> probatio.Schema:
+    """Return the schema of the link step."""
+    return probatio.Schema(
+        {probatio.Required(CONF_REGISTRATION_NAME, default=registration_name): str}
+    )
 
 
 class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -33,10 +47,10 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): str,
-                        vol.Required(CONF_PORT): int,
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT): int,
                     }
                 ),
                 errors={},
@@ -61,11 +75,16 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
         to connect to the router.
         """
         if user_input is None:
-            return self.async_show_form(step_id="link")
+            return self.async_show_form(
+                step_id="link", data_schema=_link_schema(socket.gethostname())
+            )
 
         errors = {}
+        self._data[CONF_REGISTRATION_NAME] = user_input[CONF_REGISTRATION_NAME]
 
-        fbx = await get_api(self.hass, self._data[CONF_HOST])
+        fbx = await get_api(
+            self.hass, self._data[CONF_HOST], self._data[CONF_REGISTRATION_NAME]
+        )
         try:
             # Open connection and check authentication
             await fbx.open(self._data[CONF_HOST], self._data[CONF_PORT])
@@ -77,16 +96,17 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
             # Close connection
             await fbx.close()
 
-            return self.async_create_entry(
-                title=self._data[CONF_HOST],
-                data=self._data,
-            )
-
         except AuthorizationError as error:
             _LOGGER.error(error)
             errors["base"] = "register_failed"
+            if is_invalid_token_error(error):
+                # The stored application token was rejected by the
+                # Freebox. Clear it so resubmitting this form performs a
+                # fresh pairing instead of retrying with the same
+                # rejected token forever.
+                await async_forget_registration(self.hass, self._data[CONF_HOST])
 
-        except HttpRequestError:
+        except HttpRequestError, ClientError, TimeoutError:
             _LOGGER.error(
                 "Error connecting to the Freebox router at %s", self._data[CONF_HOST]
             )
@@ -99,7 +119,17 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             errors["base"] = "unknown"
 
-        return self.async_show_form(step_id="link", errors=errors)
+        else:
+            return self.async_create_entry(
+                title=self._data[CONF_HOST],
+                data=self._data,
+            )
+
+        return self.async_show_form(
+            step_id="link",
+            data_schema=_link_schema(self._data[CONF_REGISTRATION_NAME]),
+            errors=errors,
+        )
 
     @override
     async def async_step_zeroconf(

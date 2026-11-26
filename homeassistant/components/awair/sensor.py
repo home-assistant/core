@@ -14,8 +14,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_CONNECTIONS,
-    ATTR_SW_VERSION,
     LIGHT_LUX,
     UnitOfDensity,
     UnitOfRatio,
@@ -321,12 +319,10 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
         )
 
         if self._device.mac_address:
-            info[ATTR_CONNECTIONS] = {
-                (dr.CONNECTION_NETWORK_MAC, self._device.mac_address)
-            }
+            info.connections = {(dr.CONNECTION_NETWORK_MAC, self._device.mac_address)}
 
         if isinstance(self._device, AwairLocalDevice):
-            info[ATTR_SW_VERSION] = self._device.fw_version
+            info.sw_version = self._device.fw_version
 
         return info
 

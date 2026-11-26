@@ -5,7 +5,7 @@ from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -18,7 +18,7 @@ from homeassistant.components.fan import (
     FanEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_STATE
+from homeassistant.const import CONF_NAME, CONF_STATE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -29,7 +29,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import validators as tcv
-from .const import DOMAIN
+from .const import DEFAULT_NAMES, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -63,7 +63,7 @@ CONF_OSCILLATING = "oscillating"
 CONF_PERCENTAGE = "percentage"
 CONF_PRESET_MODE = "preset_mode"
 
-DEFAULT_NAME = "Template Fan"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.FAN]
 
 SCRIPT_FIELDS = (
     CONF_OFF_ACTION,
@@ -74,21 +74,21 @@ SCRIPT_FIELDS = (
     CONF_SET_PRESET_MODE_ACTION,
 )
 
-FAN_COMMON_SCHEMA = vol.Schema(
+FAN_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_DIRECTION): cv.template,
-        vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_OSCILLATING): cv.template,
-        vol.Optional(CONF_PERCENTAGE): cv.template,
-        vol.Optional(CONF_PRESET_MODE): cv.template,
-        vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
-        vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
-        vol.Optional(CONF_STATE): cv.template,
+        probatio.Optional(CONF_DIRECTION): cv.template,
+        probatio.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_OSCILLATING): cv.template,
+        probatio.Optional(CONF_PERCENTAGE): cv.template,
+        probatio.Optional(CONF_PRESET_MODE): cv.template,
+        probatio.Optional(CONF_PRESET_MODES): probatio.EnsureList(),
+        probatio.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_SPEED_COUNT): probatio.Coerce(int),
+        probatio.Optional(CONF_STATE): cv.template,
     }
 )
 

@@ -1,8 +1,23 @@
 {
   "entity": {
     "sensor": {
+      "impressions_completed": {
+        "default": "mdi:file-document-outline"
+      },
+      "impressions_completed_full_color": {
+        "default": "mdi:file-document-outline"
+      },
+      "impressions_completed_monochrome": {
+        "default": "mdi:file-document-outline"
+      },
       "marker": {
         "default": "mdi:water"
+      },
+      "media_sheets_completed": {
+        "default": "mdi:file-document-outline"
+      },
+      "pages_completed": {
+        "default": "mdi:file-document-outline"
       },
       "printer": {
         "default": "mdi:printer"

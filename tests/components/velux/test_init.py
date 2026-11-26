@@ -11,14 +11,13 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import ConfigEntry, MockConfigEntry
 from pyvlx.exception import PyVLXException
 
 from homeassistant.components.velux.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import ConfigEntry, MockConfigEntry
 
 
 async def test_setup_retry_on_nodes_failure(

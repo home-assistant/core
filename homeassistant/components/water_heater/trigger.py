@@ -2,11 +2,10 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_OPTIONS, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
@@ -21,16 +20,16 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN, WaterHeaterStateAttribute
+from .const import DOMAIN, WaterHeaterCapabilityAttribute, WaterHeaterStateAttribute
 
 CONF_OPERATION_MODE = "operation_mode"
 
 _OPERATION_MODE_CHANGED_TRIGGER_SCHEMA = (
     ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
         {
-            vol.Required(CONF_OPTIONS): {
-                vol.Required(CONF_OPERATION_MODE): vol.All(
-                    cv.ensure_list, vol.Length(min=1), [str]
+            probatio.Required(CONF_OPTIONS): {
+                probatio.Required(CONF_OPERATION_MODE): probatio.All(
+                    probatio.EnsureList(), probatio.NonEmpty(), [str]
                 ),
             },
         }
@@ -73,8 +72,7 @@ class _WaterHeaterTargetTemperatureTriggerMixin(
     @override
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the temperature unit of a water heater entity from its state."""
-        # Water heater entities convert temperatures to the system unit via show_temp
-        return self._hass.config.units.temperature_unit
+        return state.attributes.get(WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT)
 
 
 class WaterHeaterTargetTemperatureChangedTrigger(

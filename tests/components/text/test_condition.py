@@ -3,20 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.text.condition import CONDITIONS, CONF_VALUE
-from homeassistant.const import (
-    CONF_CONDITION,
-    CONF_ENTITY_ID,
-    CONF_OPTIONS,
-    CONF_TARGET,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.condition import (
-    async_from_config as async_condition_from_config,
-)
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
     TargetSupport,
     assert_condition_behavior_all,
@@ -27,6 +14,13 @@ from tests.components.common import (
     parametrize_condition_states_any,
     parametrize_target_entities,
     target_entities,
+)
+
+from homeassistant.components.text.condition import CONDITIONS, CONF_VALUE
+from homeassistant.const import CONF_CONDITION, CONF_OPTIONS, CONF_TARGET, TargetKey
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.condition import (
+    async_from_config as async_condition_from_config,
 )
 
 
@@ -233,7 +227,7 @@ async def test_text_condition_fires_for_both_domains(
         {
             CONF_CONDITION: "text.is_equal_to",
             CONF_TARGET: {
-                CONF_ENTITY_ID: [entity_id_text, entity_id_input_text],
+                TargetKey.ENTITY_ID: [entity_id_text, entity_id_input_text],
             },
             CONF_OPTIONS: {"behavior": "all", CONF_VALUE: "hello"},
         },

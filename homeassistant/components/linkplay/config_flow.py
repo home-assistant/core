@@ -8,7 +8,7 @@ from linkplay.bridge import LinkPlayBridge
 from linkplay.discovery import linkplay_factory_httpapi_bridge
 from linkplay.exceptions import LinkPlayRequestException
 from linkplay.manufacturers import MANUFACTURER_WIIM
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
@@ -82,7 +82,6 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self.data[CONF_HOST]},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
@@ -128,6 +127,39 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the LinkPlay device host."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            session: ClientSession = await async_get_client_session(self.hass)
+            try:
+                bridge = await linkplay_factory_httpapi_bridge(
+                    user_input[CONF_HOST], session
+                )
+            except LinkPlayRequestException:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(
+                    bridge.device.uuid, raise_on_progress=False
+                )
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or reconfigure_entry.data,
+            ),
             errors=errors,
         )

@@ -15,8 +15,9 @@ from aioesphomeapi import (
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
+    WaterHeaterServiceArgument,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
+from homeassistant.const import PRECISION_TENTHS
 from homeassistant.core import callback
 
 from .entity import (
@@ -58,7 +59,7 @@ class EsphomeWaterHeater(
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
         static_info = self._static_info
-        self._attr_temperature_unit = get_temperature_unit(static_info)
+        self._attr_native_temperature_unit = get_temperature_unit(static_info)
         self._attr_min_temp = static_info.min_temperature
         self._attr_max_temp = static_info.max_temperature
         self._attr_target_temperature_step = static_info.target_temperature_step
@@ -80,14 +81,14 @@ class EsphomeWaterHeater(
     @property
     @esphome_float_state_property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._state.current_temperature
 
     @property
     @esphome_float_state_property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._state.target_temperature
 
@@ -111,7 +112,7 @@ class EsphomeWaterHeater(
         """Set new target temperature."""
         self._client.water_heater_command(
             key=self._key,
-            target_temperature=kwargs[ATTR_TEMPERATURE],
+            target_temperature=kwargs[WaterHeaterServiceArgument.TEMPERATURE],
             device_id=self._static_info.device_id,
         )
 

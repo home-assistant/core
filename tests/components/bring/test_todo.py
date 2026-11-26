@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from bring_api import BringItemOperation, BringItemsResponse, BringRequestException
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bring.const import DOMAIN
@@ -16,12 +21,10 @@ from homeassistant.components.todo import (
     TodoServices,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_load_fixture, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -80,7 +83,7 @@ async def test_add_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         service_data={ATTR_ITEM: "Äpfel", ATTR_DESCRIPTION: "rot"},
-        target={ATTR_ENTITY_ID: "todo.einkauf"},
+        target={TargetKey.ENTITY_ID: "todo.einkauf"},
         blocking=True,
     )
 
@@ -111,7 +114,7 @@ async def test_add_item_exception(
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
             service_data={ATTR_ITEM: "Äpfel", ATTR_DESCRIPTION: "rot"},
-            target={ATTR_ENTITY_ID: "todo.einkauf"},
+            target={TargetKey.ENTITY_ID: "todo.einkauf"},
             blocking=True,
         )
     assert err.value.translation_key == "todo_save_item_failed"
@@ -140,7 +143,7 @@ async def test_update_item(
             ATTR_RENAME: "Paprika",
             ATTR_DESCRIPTION: "Rot",
         },
-        target={ATTR_ENTITY_ID: "todo.einkauf"},
+        target={TargetKey.ENTITY_ID: "todo.einkauf"},
         blocking=True,
     )
 
@@ -178,7 +181,7 @@ async def test_update_item_exception(
                 ATTR_RENAME: "Paprika",
                 ATTR_DESCRIPTION: "Rot",
             },
-            target={ATTR_ENTITY_ID: "todo.einkauf"},
+            target={TargetKey.ENTITY_ID: "todo.einkauf"},
             blocking=True,
         )
     assert err.value.translation_key == "todo_update_item_failed"
@@ -207,7 +210,7 @@ async def test_rename_item(
             ATTR_RENAME: "Gurke",
             ATTR_DESCRIPTION: "",
         },
-        target={ATTR_ENTITY_ID: "todo.einkauf"},
+        target={TargetKey.ENTITY_ID: "todo.einkauf"},
         blocking=True,
     )
 
@@ -253,7 +256,7 @@ async def test_rename_item_exception(
                 ATTR_RENAME: "Gurke",
                 ATTR_DESCRIPTION: "",
             },
-            target={ATTR_ENTITY_ID: "todo.einkauf"},
+            target={TargetKey.ENTITY_ID: "todo.einkauf"},
             blocking=True,
         )
     assert err.value.translation_key == "todo_rename_item_failed"
@@ -278,7 +281,7 @@ async def test_delete_items(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
         service_data={ATTR_ITEM: "b5d0790b-5f32-4d5c-91da-e29066f167de"},
-        target={ATTR_ENTITY_ID: "todo.einkauf"},
+        target={TargetKey.ENTITY_ID: "todo.einkauf"},
         blocking=True,
     )
 
@@ -313,7 +316,7 @@ async def test_delete_items_exception(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
             service_data={ATTR_ITEM: "b5d0790b-5f32-4d5c-91da-e29066f167de"},
-            target={ATTR_ENTITY_ID: "todo.einkauf"},
+            target={TargetKey.ENTITY_ID: "todo.einkauf"},
             blocking=True,
         )
 

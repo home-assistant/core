@@ -3,7 +3,10 @@
   dict({
     'config-entry': dict({
       'data': dict({
+        'AccessoryIP': '**REDACTED**',
+        'AccessoryIPs': '**REDACTED**',
         'AccessoryPairingID': '00:00:00:00:00:00',
+        'AccessoryPort': 51826,
       }),
       'title': 'test',
       'version': 1,
@@ -11,6 +14,8 @@
     'config-num': 0,
     'devices': list([
       dict({
+        'child_devices': list([
+        ]),
         'entities': list([
           dict({
             'device_class': None,
@@ -20,7 +25,7 @@
             'icon': None,
             'original_device_class': 'identify',
             'original_icon': None,
-            'original_name': 'Koogeek-LS1-20833F Identify',
+            'original_name': 'Identify',
             'state': dict({
               'attributes': dict({
                 'device_class': 'identify',
@@ -326,13 +331,18 @@
   dict({
     'config-entry': dict({
       'data': dict({
+        'AccessoryIP': '**REDACTED**',
+        'AccessoryIPs': '**REDACTED**',
         'AccessoryPairingID': '00:00:00:00:00:00',
+        'AccessoryPort': 51826,
       }),
       'title': 'test',
       'version': 1,
     }),
     'config-num': 0,
     'device': dict({
+      'child_devices': list([
+      ]),
       'entities': list([
         dict({
           'device_class': None,
@@ -342,7 +352,7 @@
           'icon': None,
           'original_device_class': 'identify',
           'original_icon': None,
-          'original_name': 'Koogeek-LS1-20833F Identify',
+          'original_name': 'Identify',
           'state': dict({
             'attributes': dict({
               'device_class': 'identify',

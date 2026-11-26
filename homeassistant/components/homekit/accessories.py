@@ -51,18 +51,14 @@ from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchDeviceClass
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
+from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumEntityFeature
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_SERVICE,
-    ATTR_SW_VERSION,
     CONF_NAME,
     CONF_TYPE,
     LIGHT_LUX,
@@ -71,6 +67,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
     UnitOfTemperature,
     __version__,
 )
@@ -98,7 +95,11 @@ from .climate_util import (
 )
 from .const import (
     ATTR_DISPLAY_NAME,
+    ATTR_HW_VERSION,
     ATTR_INTEGRATION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_SERIAL_NUMBER,
@@ -373,6 +374,10 @@ def get_accessory(  # noqa: C901
             a_type = "NitrogenDioxideSensor"
         elif device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
             a_type = "VolatileOrganicCompoundsSensor"
+        elif device_class == SensorDeviceClass.OZONE:
+            a_type = "OzoneSensor"
+        elif device_class == SensorDeviceClass.SULPHUR_DIOXIDE:
+            a_type = "SulphurDioxideSensor"
         elif device_class == SensorDeviceClass.GAS:
             a_type = "AirQualitySensor"
         elif device_class == SensorDeviceClass.CO:
@@ -414,7 +419,7 @@ def get_accessory(  # noqa: C901
     elif state.domain == VALVE_DOMAIN:
         a_type = "Valve"
 
-    elif state.domain == VACUUM_DOMAIN:
+    elif state.domain == VACUUM_DOMAIN and features & VacuumEntityFeature.START:
         a_type = "Vacuum"
 
     elif (
@@ -803,7 +808,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         requested action.
         """
         event_data = {
-            ATTR_ENTITY_ID: service_data.get(ATTR_ENTITY_ID, self.entity_id),
+            ATTR_ENTITY_ID: service_data.get(TargetKey.ENTITY_ID, self.entity_id),
             ATTR_DISPLAY_NAME: self.display_name,
             ATTR_SERVICE: service,
             ATTR_VALUE: value,
@@ -858,6 +863,10 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             SIGNAL_RELOAD_ENTITIES.format(self.driver.entry_id),
             (self.entity_id,),
         )
+
+    def diagnostics(self) -> dict[str, Any]:
+        """Return accessory specific diagnostics."""
+        return {}
 
     @ha_callback
     def async_stop(self) -> None:

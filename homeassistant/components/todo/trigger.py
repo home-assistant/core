@@ -8,7 +8,7 @@ import functools
 import logging
 from typing import TYPE_CHECKING, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -40,10 +40,10 @@ from homeassistant.helpers.typing import ConfigType
 from . import TodoItem, TodoListEntity
 from .const import DATA_COMPONENT, DOMAIN, TodoItemStatus
 
-ITEM_TRIGGER_SCHEMA = vol.Schema(
+ITEM_TRIGGER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Required(CONF_OPTIONS, default={}): {},
+        probatio.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Required(CONF_OPTIONS, default={}): {},
     }
 )
 

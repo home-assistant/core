@@ -5,6 +5,7 @@ from unittest import mock
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from requests.exceptions import HTTPError
 from syrupy.assertion import SnapshotAssertion
 
@@ -18,8 +19,6 @@ from homeassistant.util import dt as dt_util
 
 from . import FritzDeviceBinarySensorMock, set_devices, setup_config_entry
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = f"{BINARY_SENSOR_DOMAIN}.{CONF_FAKE_NAME}"
 

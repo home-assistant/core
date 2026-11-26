@@ -1,5 +1,18 @@
 {
   "entity": {
+    "binary_sensor": {
+      "is_disable": {
+        "default": "mdi:power",
+        "state": {
+          "off": "mdi:power-off"
+        }
+      }
+    },
+    "number": {
+      "dynamic_current_limit": {
+        "default": "mdi:current-ac"
+      }
+    },
     "sensor": {
       "access_level": {
         "default": "mdi:account-lock"

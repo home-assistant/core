@@ -4,28 +4,26 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from waterfurnace.waterfurnace import WFException
 
 from homeassistant.components.climate import (
-    ATTR_HUMIDITY,
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.components.waterfurnace.const import UPDATE_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "climate.test_abc_type"
 
@@ -67,7 +65,7 @@ async def test_hvac_mode_mapping(
     expected_hvac_mode: HVACMode,
 ) -> None:
     """Test that ActiveSettings.mode maps to the correct HVACMode."""
-    mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = (
+    mock_waterfurnace_client.read.return_value.activesettings.activemode = (
         active_mode_index
     )
 
@@ -117,7 +115,7 @@ async def test_hvac_action_mapping(
     expected_action: HVACAction,
 ) -> None:
     """Test that WFReading.mode maps to the correct HVACAction."""
-    mock_waterfurnace_client.read_with_retry.return_value.modeofoperation = mode_index
+    mock_waterfurnace_client.read.return_value.modeofoperation = mode_index
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -147,8 +145,8 @@ async def test_set_hvac_mode(
     """Test setting HVAC mode calls the library with the correct integer."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.HVAC_MODE: hvac_mode},
         blocking=True,
     )
     mock_waterfurnace_client.set_mode.assert_called_once_with(expected_wf_mode)
@@ -164,8 +162,8 @@ async def test_set_temperature_single_heat(
     # Send 22°C (HA test default unit); entity converts to ~71.6°F
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 22},
         blocking=True,
     )
     mock_waterfurnace_client.set_heating_setpoint.assert_called_once_with(
@@ -182,7 +180,7 @@ async def test_set_temperature_single_cool(
 ) -> None:
     """Test setting temperature in cool mode sets cooling setpoint."""
     # Switch to Cool mode
-    mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = 2
+    mock_waterfurnace_client.read.return_value.activesettings.activemode = 2
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -190,8 +188,8 @@ async def test_set_temperature_single_cool(
     # Send 24°C; entity converts to ~75.2°F
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 24},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 24},
         blocking=True,
     )
     mock_waterfurnace_client.set_cooling_setpoint.assert_called_once_with(
@@ -208,7 +206,7 @@ async def test_set_temperature_range(
 ) -> None:
     """Test setting temperature range sets both setpoints."""
     # Switch to Auto mode
-    mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = 1
+    mock_waterfurnace_client.read.return_value.activesettings.activemode = 1
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -216,11 +214,11 @@ async def test_set_temperature_range(
     # Send 18°C low / 26°C high; entity converts to ~64.4°F / ~78.8°F
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TARGET_TEMP_LOW: 18,
-            ATTR_TARGET_TEMP_HIGH: 26,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 18,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 26,
         },
         blocking=True,
     )
@@ -240,8 +238,8 @@ async def test_set_humidity(
     """Test setting target humidity."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HUMIDITY: 50},
+        ClimateService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.HUMIDITY: 50},
         blocking=True,
     )
     mock_waterfurnace_client.set_humidity.assert_called_once_with(50)
@@ -254,7 +252,7 @@ async def test_target_temperature_cool_mode(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test target_temperature returns cooling setpoint in cool mode."""
-    mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = 2
+    mock_waterfurnace_client.read.return_value.activesettings.activemode = 2
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -272,7 +270,7 @@ async def test_target_temperature_range_auto_mode(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test target_temperature_high/low in auto mode."""
-    mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = 1
+    mock_waterfurnace_client.read.return_value.activesettings.activemode = 1
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -295,8 +293,11 @@ async def test_set_hvac_mode_error(
     with pytest.raises(HomeAssistantError, match="Failed to set HVAC mode"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
 
@@ -311,8 +312,8 @@ async def test_set_temperature_error(
     with pytest.raises(HomeAssistantError, match="Failed to set temperature"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 22},
             blocking=True,
         )
 
@@ -327,8 +328,8 @@ async def test_set_humidity_error(
     with pytest.raises(HomeAssistantError, match="Failed to set humidity"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HUMIDITY,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HUMIDITY: 50},
+            ClimateService.SET_HUMIDITY,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.HUMIDITY: 50},
             blocking=True,
         )
 
@@ -342,11 +343,11 @@ async def test_set_temperature_with_hvac_mode(
     # Fixture default is activemode=3 (Heat); send cool mode + temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: 24,
-            ATTR_HVAC_MODE: HVACMode.COOL,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 24,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
         },
         blocking=True,
     )

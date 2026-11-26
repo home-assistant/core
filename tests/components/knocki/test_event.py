@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock
 
 from knocki import Event, EventType, Trigger, TriggerDetails
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.knocki.const import DOMAIN
@@ -13,12 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_array_fixture,
-    snapshot_platform,
-)
 
 
 async def test_entities(

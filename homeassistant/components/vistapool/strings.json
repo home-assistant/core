@@ -34,7 +34,7 @@
       },
       "user": {
         "data": {
-          "password": "Password",
+          "password": "[%key:common::config_flow::data::password%]",
           "username": "Vistapool Username"
         },
         "data_description": {
@@ -112,6 +112,9 @@
     "button": {
       "led_pulse": {
         "name": "LED next color"
+      },
+      "sync_time": {
+        "name": "Sync time"
       }
     },
     "light": {

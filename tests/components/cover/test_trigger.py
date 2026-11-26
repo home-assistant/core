@@ -3,13 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.cover import ATTR_IS_CLOSED, CoverDeviceClass, CoverState
-from homeassistant.components.cover.trigger import TRIGGERS
-from homeassistant.const import ATTR_DEVICE_CLASS
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
@@ -21,6 +15,15 @@ from tests.components.common import (
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.cover import (
+    CoverDeviceClass,
+    CoverEntityStateAttribute,
+    CoverState,
+)
+from homeassistant.components.cover.trigger import TRIGGERS
+from homeassistant.const import EntityStateAttribute
+from homeassistant.core import HomeAssistant
 
 DEVICE_CLASS_TRIGGERS = [
     (CoverDeviceClass.AWNING, "cover.awning_opened", "cover.awning_closed"),
@@ -101,36 +104,40 @@ def test_trigger_target_support() -> None:
             *parametrize_trigger_states(
                 trigger=opened_key,
                 target_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
-                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.OPENING, {CoverEntityStateAttribute.IS_CLOSED: False}),
                 ],
                 other_states=[
-                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSED, {CoverEntityStateAttribute.IS_CLOSED: True}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: True}),
                 ],
                 extra_invalid_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: None}),
                     (CoverState.OPEN, {}),
                 ],
-                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={
+                    EntityStateAttribute.DEVICE_CLASS: device_class
+                },
                 trigger_from_none=False,
             ),
             *parametrize_trigger_states(
                 trigger=closed_key,
                 target_states=[
-                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSED, {CoverEntityStateAttribute.IS_CLOSED: True}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: True}),
                 ],
                 other_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
-                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.OPENING, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: False}),
                 ],
                 extra_invalid_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: None}),
                     (CoverState.OPEN, {}),
                 ],
-                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={
+                    EntityStateAttribute.DEVICE_CLASS: device_class
+                },
                 trigger_from_none=False,
             ),
         )
@@ -172,36 +179,40 @@ async def test_cover_trigger_behavior_each(
             *parametrize_trigger_states(
                 trigger=opened_key,
                 target_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
-                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.OPENING, {CoverEntityStateAttribute.IS_CLOSED: False}),
                 ],
                 other_states=[
-                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSED, {CoverEntityStateAttribute.IS_CLOSED: True}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: True}),
                 ],
                 extra_invalid_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: None}),
                     (CoverState.OPEN, {}),
                 ],
-                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={
+                    EntityStateAttribute.DEVICE_CLASS: device_class
+                },
                 trigger_from_none=False,
             ),
             *parametrize_trigger_states(
                 trigger=closed_key,
                 target_states=[
-                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSED, {CoverEntityStateAttribute.IS_CLOSED: True}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: True}),
                 ],
                 other_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
-                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.OPENING, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: False}),
                 ],
                 extra_invalid_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: None}),
                     (CoverState.OPEN, {}),
                 ],
-                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={
+                    EntityStateAttribute.DEVICE_CLASS: device_class
+                },
                 trigger_from_none=False,
             ),
         )
@@ -243,36 +254,40 @@ async def test_cover_trigger_behavior_first(
             *parametrize_trigger_states(
                 trigger=opened_key,
                 target_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
-                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.OPENING, {CoverEntityStateAttribute.IS_CLOSED: False}),
                 ],
                 other_states=[
-                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSED, {CoverEntityStateAttribute.IS_CLOSED: True}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: True}),
                 ],
                 extra_invalid_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: None}),
                     (CoverState.OPEN, {}),
                 ],
-                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={
+                    EntityStateAttribute.DEVICE_CLASS: device_class
+                },
                 trigger_from_none=False,
             ),
             *parametrize_trigger_states(
                 trigger=closed_key,
                 target_states=[
-                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSED, {CoverEntityStateAttribute.IS_CLOSED: True}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: True}),
                 ],
                 other_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
-                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.OPENING, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: False}),
                 ],
                 extra_invalid_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: None}),
                     (CoverState.OPEN, {}),
                 ],
-                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={
+                    EntityStateAttribute.DEVICE_CLASS: device_class
+                },
                 trigger_from_none=False,
             ),
         )

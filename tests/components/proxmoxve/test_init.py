@@ -1,13 +1,30 @@
 """Tests for the Proxmox VE integration initialization."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, create_autospec
 
+from aioproxmox.endpoints import NodeEndpoint
+from aioproxmox.exceptions import (
+    ProxmoxAPIError,
+    ProxmoxAuthError,
+    ProxmoxConnectionError,
+    ProxmoxResponseError,
+    ProxmoxSSLError,
+    ProxmoxTimeoutError,
+)
+from aioproxmox.model import PVEPermissions
+from aioproxmox.model.pve import (
+    ContainerResource,
+    NodeStorageResources,
+    NodeTasks,
+    QemuResource,
+)
 from freezegun.api import FrozenDateTimeFactory
-from proxmoxer import AuthenticationError
-from proxmoxer.core import ResourceException
 import pytest
-import requests
-from requests.exceptions import ConnectTimeout, SSLError
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+)
 
 from homeassistant.components.proxmoxve.const import (
     AUTH_OTHER,
@@ -16,11 +33,7 @@ from homeassistant.components.proxmoxve.const import (
     CONF_REALM,
     DOMAIN,
 )
-from homeassistant.components.proxmoxve.coordinator import (
-    DEFAULT_UPDATE_INTERVAL,
-    ProxmoxNodesNotFoundError,
-    ProxmoxPermissionsError,
-)
+from homeassistant.components.proxmoxve.coordinator import DEFAULT_UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -30,71 +43,65 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_array_fixture,
-)
-
 
 @pytest.mark.parametrize(
     ("exception", "expected_state", "target"),
     [
         (
-            AuthenticationError("Invalid credentials"),
+            ProxmoxAuthError("Invalid credentials"),
             ConfigEntryState.SETUP_ERROR,
-            "access.permissions.get",
+            "access.permissions",
         ),
         (
-            SSLError("SSL handshake failed"),
+            ProxmoxSSLError("SSL handshake failed"),
             ConfigEntryState.SETUP_ERROR,
-            "access.permissions.get",
+            "access.permissions",
         ),
         (
-            ConnectTimeout("Connection timed out"),
+            ProxmoxTimeoutError("Connection timed out"),
             ConfigEntryState.SETUP_RETRY,
-            "access.permissions.get",
+            "access.permissions",
         ),
         (
-            ResourceException(403, "Forbidden", ""),
+            ProxmoxAPIError(403, "Forbidden", "access/permissions"),
             ConfigEntryState.SETUP_ERROR,
-            "access.permissions.get",
+            "access.permissions",
         ),
         (
-            ResourceException(500, "Internal Server Error", ""),
+            ProxmoxAPIError(500, "Internal Server Error", "access/permissions"),
             ConfigEntryState.SETUP_RETRY,
-            "access.permissions.get",
+            "access.permissions",
         ),
         (
-            ResourceException(403, "Forbidden", ""),
+            ProxmoxAPIError(403, "Forbidden", "cluster/resources"),
             ConfigEntryState.SETUP_ERROR,
-            "nodes.get",
+            "connect",
         ),
         (
-            ResourceException(500, "Internal Server Error", ""),
+            ProxmoxAPIError(500, "Internal Server Error", "cluster/resources"),
             ConfigEntryState.SETUP_RETRY,
-            "nodes.get",
+            "connect",
         ),
         (
-            requests.exceptions.ConnectionError("Connection refused"),
-            ConfigEntryState.SETUP_ERROR,
-            "access.permissions.get",
+            ProxmoxResponseError(
+                200,
+                "Attempt to decode JSON with unexpected mimetype: text/html",
+                "cluster/resources",
+            ),
+            ConfigEntryState.SETUP_RETRY,
+            "connect",
         ),
         (
-            ProxmoxPermissionsError("Failed to retrieve permissions"),
-            ConfigEntryState.SETUP_ERROR,
-            "access.permissions.get",
-        ),
-        (
-            ProxmoxNodesNotFoundError("No nodes found"),
-            ConfigEntryState.SETUP_ERROR,
-            "nodes.get",
+            ProxmoxConnectionError("Connection refused"),
+            ConfigEntryState.SETUP_RETRY,
+            "access.permissions",
         ),
     ],
     ids=[
@@ -105,9 +112,8 @@ from tests.common import (
         "resource_exception_permissions_500",
         "resource_exception_nodes_403",
         "resource_exception_nodes_500",
+        "response_error_nodes",
         "connection_error",
-        "permissions_error",
-        "nodes_not_found",
     ],
 )
 async def test_setup_exceptions(
@@ -324,8 +330,10 @@ async def test_offline_node(
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that an offline node doesn't cause the entire update to fail."""
-    mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
+    """Test that an offline or unknown state node doesn't cause the entire update to fail."""
+    mock_proxmox_client.cluster_resources.resources = (
+        mock_proxmox_client._all_cluster_resources.resources
+    )
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -336,15 +344,22 @@ async def test_offline_node(
     state = hass.states.get("binary_sensor.pve3_status")
     assert state.state == STATE_OFF
 
+    state = hass.states.get("sensor.pve3_cpu_usage")
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.pve4_cpu_usage")
+    assert state.state == STATE_UNAVAILABLE
+
 
 async def test_new_vm_creates_entity(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a VM appearing after initial load gets an entity created."""
-    mock_proxmox_client._node_mock.qemu.get.return_value = []
+    mock_proxmox_client._node_mock.qemu_all.return_value = []
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -352,13 +367,16 @@ async def test_new_vm_creates_entity(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
-    mock_proxmox_client._node_mock.qemu.get.return_value = (
-        await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN)
-    )
+    mock_proxmox_client._node_mock.qemu_all.return_value = [
+        QemuResource.from_dict(guest)
+        for guest in await async_load_json_array_fixture(
+            hass, "nodes/qemu.json", DOMAIN
+        )
+    ]
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         len(
@@ -375,9 +393,10 @@ async def test_new_container_creates_entity(
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a container appearing after initial load gets an entity created."""
-    mock_proxmox_client._node_mock.lxc.get.return_value = []
+    mock_proxmox_client._node_mock.lxc_all.return_value = []
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -385,13 +404,14 @@ async def test_new_container_creates_entity(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
-    mock_proxmox_client._node_mock.lxc.get.return_value = (
-        await async_load_json_array_fixture(hass, "nodes/lxc.json", DOMAIN)
-    )
+    mock_proxmox_client._node_mock.lxc_all.return_value = [
+        ContainerResource.from_dict(guest)
+        for guest in await async_load_json_array_fixture(hass, "nodes/lxc.json", DOMAIN)
+    ]
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         len(
@@ -449,7 +469,7 @@ async def test_new_node_registers_device_before_children(
     registration its child (the configured VM, whose entities are always
     created) cannot resolve its via_device_id.
     """
-    mock_proxmox_client.access.permissions.get.return_value = {}
+    mock_proxmox_client.access.permissions.return_value = PVEPermissions()
 
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -467,25 +487,25 @@ async def test_new_node_registers_device_before_children(
         "vmid": 300,
         "name": "vm-pve2",
     }
-    pve2_node_mock = MagicMock()
-    pve2_node_mock.qemu.get.return_value = [pve2_vm]
-    pve2_node_mock.lxc.get.return_value = []
-    pve2_node_mock.storage.get.return_value = []
-    pve2_node_mock.tasks.get.return_value = []
+    pve2_node_mock = create_autospec(NodeEndpoint, instance=True)
+    pve2_node_mock.qemu_all.return_value = [QemuResource.from_dict(pve2_vm)]
+    pve2_node_mock.lxc_all.return_value = []
+    pve2_node_mock.storage.return_value = NodeStorageResources(storages=[])
+    pve2_node_mock.tasks.return_value = NodeTasks(tasks=[])
 
     default_node_mock = mock_proxmox_client._node_mock
-    mock_proxmox_client._nodes_mock.side_effect = lambda node: (
+    mock_proxmox_client.nodes.side_effect = lambda node: (
         pve2_node_mock if node == "pve2" else default_node_mock
     )
-    mock_proxmox_client.nodes.get.return_value = [
+    mock_proxmox_client.cluster_resources.resources = [
         node
-        for node in mock_proxmox_client._all_nodes
-        if node["node"] in ("pve1", "pve2")
+        for node in mock_proxmox_client._all_cluster_resources
+        if node.node in ("pve1", "pve2")
     ]
 
     freezer.tick(DEFAULT_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entry_id = mock_config_entry.entry_id
     node_device = device_registry.async_get_device_by_identifier(
@@ -510,6 +530,7 @@ async def test_stale_devices_removed(
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that devices are removed when their resource disappears."""
     await setup_integration(hass, mock_config_entry)
@@ -524,15 +545,15 @@ async def test_stale_devices_removed(
     )
 
     # VM 100 is gone, VM 101 remains
-    mock_proxmox_client._node_mock.qemu.get.return_value = [
-        vm
+    mock_proxmox_client._node_mock.qemu_all.return_value = [
+        QemuResource.from_dict(vm)
         for vm in await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN)
         if vm["vmid"] != 100
     ]
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         device_registry.async_get_device_by_identifier(

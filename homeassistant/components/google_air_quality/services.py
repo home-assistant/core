@@ -1,12 +1,13 @@
 """Services for the Google Air Quality integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 from typing import Final, cast
 
 from google_air_quality_api.exceptions import GoogleAirQualityApiError
-import voluptuous as vol
+import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -20,17 +21,28 @@ from homeassistant.helpers import selector, service
 from .const import DOMAIN
 from .coordinator import GoogleAirQualityConfigEntry
 
-ATTR_HOURS: Final = "hours"
-
 FORECAST_HOURS_MAX: Final = 96
 
-SERVICE_GET_FORECAST: Final = "get_forecast"
 
-SERVICE_GET_FORECAST_SCHEMA: Final = vol.Schema(
+class GoogleAirQualityService(StrEnum):
+    """Store keys for Google Air Quality services."""
+
+    GET_FORECAST = "get_forecast"
+
+
+class GoogleAirQualityServiceArgument(StrEnum):
+    """Store keys for Google Air Quality service arguments."""
+
+    HOURS = "hours"
+
+
+SERVICE_GET_FORECAST_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): selector.DeviceSelector({"integration": DOMAIN}),
-        vol.Required(ATTR_HOURS): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=FORECAST_HOURS_MAX)
+        probatio.Required(CommonServiceArgument.DEVICE_ID): selector.DeviceSelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Required(GoogleAirQualityServiceArgument.HOURS): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1, max=FORECAST_HOURS_MAX)
         ),
     }
 )
@@ -57,7 +69,7 @@ def _get_config_entry_and_subentry_id(
 async def _async_get_forecast(call: ServiceCall) -> ServiceResponse:
     """Fetch the air quality forecast for a configured location."""
     config_entry, subentry_id = _get_config_entry_and_subentry_id(
-        call.hass, call.data[ATTR_DEVICE_ID]
+        call.hass, call.data[CommonServiceArgument.DEVICE_ID]
     )
 
     coordinator = config_entry.runtime_data.subentries_runtime_data[subentry_id]
@@ -66,7 +78,7 @@ async def _async_get_forecast(call: ServiceCall) -> ServiceResponse:
         forecast = await config_entry.runtime_data.api.async_get_forecast(
             coordinator.lat,
             coordinator.long,
-            timedelta(hours=call.data[ATTR_HOURS]),
+            timedelta(hours=call.data[GoogleAirQualityServiceArgument.HOURS]),
         )
     except GoogleAirQualityApiError as err:
         raise HomeAssistantError(
@@ -89,7 +101,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_FORECAST,
+        GoogleAirQualityService.GET_FORECAST,
         _async_get_forecast,
         schema=SERVICE_GET_FORECAST_SCHEMA,
         supports_response=SupportsResponse.ONLY,

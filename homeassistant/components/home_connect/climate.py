@@ -155,7 +155,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if event := self.appliance.events.get(
             EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_OPTION_SETPOINT_TEMPERATURE
@@ -165,8 +165,8 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
+    def native_temperature_unit(self) -> str:
+        """Return the native unit of measurement."""
         if (
             (
                 option_definition := self.appliance.options.get(

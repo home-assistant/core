@@ -1,13 +1,12 @@
 """Tests for the Atag integration."""
 
 from pyatag import AtagException
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.atag import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 USER_INPUT = {
     CONF_HOST: "127.0.0.1",

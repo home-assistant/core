@@ -11,6 +11,7 @@ from pyscorpiontrack import (
     ScorpionTrackShareUnavailableError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.scorpiontrack.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_entry(
@@ -147,7 +146,9 @@ async def test_vehicle_added_after_setup(
     freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id) is None
+    assert entity_registry.async_get(entity_id) is None
+    assert device_registry.async_get(device.id) is None
 
     mock_scorpiontrack_client.async_get_share.return_value = updated_share
     freezer.tick(DEFAULT_SCAN_INTERVAL)

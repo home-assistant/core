@@ -1,12 +1,22 @@
 """The tests for Humidifier device actions."""
 
-from probatio import to_field_list
+from probatio import Invalid, to_field_list
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_device_automations,
+    async_mock_service,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.humidifier import DOMAIN, const, device_action
+from homeassistant.components.humidifier import (
+    DOMAIN,
+    HumidifierEntityCapabilityAttribute,
+    const,
+    device_action,
+)
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -16,12 +26,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
-)
 
 
 @pytest.mark.parametrize(
@@ -159,7 +163,12 @@ async def test_action(
     hass.states.async_set(
         entry.entity_id,
         STATE_ON,
-        {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+        {
+            HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                const.MODE_HOME,
+                const.MODE_AWAY,
+            ]
+        },
     )
 
     assert await async_setup_component(
@@ -318,7 +327,12 @@ async def test_action_legacy(
     hass.states.async_set(
         entry.entity_id,
         STATE_ON,
-        {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+        {
+            HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                const.MODE_HOME,
+                const.MODE_AWAY,
+            ]
+        },
     )
 
     assert await async_setup_component(
@@ -392,7 +406,12 @@ async def test_action_legacy(
         ),
         (
             False,
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             {},
             "set_mode",
             [
@@ -434,7 +453,12 @@ async def test_action_legacy(
         (
             True,
             {},
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             "set_mode",
             [
                 {
@@ -536,7 +560,12 @@ async def test_capabilities(
         ),
         (
             False,
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             {},
             "set_mode",
             [
@@ -578,7 +607,12 @@ async def test_capabilities(
         (
             True,
             {},
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             "set_mode",
             [
                 {
@@ -681,3 +715,17 @@ async def test_capabilities_missing_entity(
         )
         == expected_capabilities
     )
+
+
+async def test_set_mode_without_mode_is_invalid(hass: HomeAssistant) -> None:
+    """Test the action type selects the schema that reports the error."""
+    with pytest.raises(Invalid, match="required key not provided at 'mode'"):
+        await device_action.async_validate_action_config(
+            hass,
+            {
+                "domain": DOMAIN,
+                "device_id": "abcdefgh",
+                "entity_id": "humidifier.test",
+                "type": "set_mode",
+            },
+        )

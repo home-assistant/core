@@ -5,14 +5,15 @@ from unittest.mock import AsyncMock
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
+    FanService,
+    FanServiceArgument,
 )
 from homeassistant.components.smartthings import MAIN
 from homeassistant.const import (
@@ -22,6 +23,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -32,8 +34,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_all_entities(
@@ -100,8 +100,11 @@ async def test_set_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.theater_fake_fan", ATTR_PERCENTAGE: 50},
+        FanService.SET_PERCENTAGE,
+        {
+            TargetKey.ENTITY_ID: "fan.theater_fake_fan",
+            FanServiceArgument.PERCENTAGE: 50,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -132,8 +135,8 @@ async def test_set_percentage_off(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 0},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 0},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -155,8 +158,11 @@ async def test_set_percentage_on(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "fan.theater_fake_fan", ATTR_PERCENTAGE: 50},
+        FanService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "fan.theater_fake_fan",
+            FanServiceArgument.PERCENTAGE: 50,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -179,8 +185,11 @@ async def test_set_preset_mode(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "fan.theater_fake_fan", ATTR_PRESET_MODE: "turbo"},
+        FanService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: "fan.theater_fake_fan",
+            FanServiceArgument.PRESET_MODE: "turbo",
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -238,8 +247,8 @@ async def test_set_hood_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.range_hood", ATTR_PERCENTAGE: 50},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: "fan.range_hood", FanServiceArgument.PERCENTAGE: 50},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -262,8 +271,11 @@ async def test_set_hood_preset_mode(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "fan.range_hood", ATTR_PRESET_MODE: "smart"},
+        FanService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: "fan.range_hood",
+            FanServiceArgument.PRESET_MODE: "smart",
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(

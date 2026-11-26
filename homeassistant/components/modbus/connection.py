@@ -1,8 +1,10 @@
 """Hand out Modbus units over connections shared between integrations."""
 
+import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
+from functools import partial
 import logging
 from typing import Any
 
@@ -16,7 +18,8 @@ from modbus_connection import (
 from modbus_connection.tmodbus import ModbusConnection
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.hass_dict import HassKey
 
@@ -32,6 +35,27 @@ type ModbusEndpoint = tuple[str, str, int] | tuple[str, str]
 DATA_MODBUS_CONNECTIONS: HassKey[dict[ModbusEndpoint, _SharedConnection]] = HassKey(
     f"{DOMAIN}_connections"
 )
+
+
+def _canonical(params: ModbusParams) -> ModbusParams:
+    """Return the params in the form the link is actually built from.
+
+    RTU and ASCII frame a serial line, so `ModbusTcpParams` carrying one builds
+    the serial link over a `socket://` device that `ModbusSerialParams` names
+    directly. Both spellings of that link have to reach the same connection.
+    """
+    if not isinstance(params, ModbusTcpParams) or params.framer not in ("rtu", "ascii"):
+        return params
+    # An IPv6 literal is bracketed, or its own colons read as the port separator.
+    host = f"[{params.host}]" if ":" in params.host else params.host
+    return ModbusSerialParams(
+        device=f"socket://{host}:{params.port}",
+        framer=params.framer,
+        # The line speed modbus-connection gives a socket-carried serial framing.
+        # It is fast enough to land on tmodbus's 1.75 ms inter-frame gap floor,
+        # which any value at or above 19200 baud also gets.
+        baudrate=115200,
+    )
 
 
 @dataclass
@@ -61,6 +85,25 @@ class ModbusConnectionInfo:
     """The unit ids each config entry holds, keyed by entry id."""
 
 
+async def _async_close_all(hass: HomeAssistant, event: Event) -> None:
+    """Close every shared connection when Home Assistant stops."""
+    connections = hass.data.get(DATA_MODBUS_CONNECTIONS, {})
+    shared_connections = list(connections.values())
+    # Drop them first, so a hold released later does not close one twice.
+    connections.clear()
+    results = await asyncio.gather(
+        *(shared.connection.close() for shared in shared_connections),
+        return_exceptions=True,
+    )
+    for shared, result in zip(shared_connections, results, strict=True):
+        if isinstance(result, Exception):
+            _LOGGER.error(
+                "Error closing the Modbus connection to %s",
+                shared.params.endpoint,
+                exc_info=result,
+            )
+
+
 @callback
 def _async_acquire(
     hass: HomeAssistant,
@@ -77,16 +120,26 @@ def _async_acquire(
     Raises `HomeAssistantError` if the device is already in use over different
     link settings, which cannot both be honoured on one connection.
     """
+    params = _canonical(params)
     endpoint = params.endpoint
-    connections = hass.data.setdefault(DATA_MODBUS_CONNECTIONS, {})
+    if (connections := hass.data.get(DATA_MODBUS_CONNECTIONS)) is None:
+        connections = hass.data[DATA_MODBUS_CONNECTIONS] = {}
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, partial(_async_close_all, hass)
+        )
     if (shared := connections.get(endpoint)) is None:
         shared = connections[endpoint] = _SharedConnection(
             params, ModbusConnection(params)
         )
     elif shared.params != params:
         raise HomeAssistantError(
-            f"Modbus device {endpoint} is already in use with different link "
-            f"settings: {shared.params} against {params}"
+            translation_domain=DOMAIN,
+            translation_key="device_in_use",
+            translation_placeholders={
+                "endpoint": str(endpoint),
+                "existing_params": str(shared.params),
+                "params": str(params),
+            },
         )
 
     if entry_id is None:

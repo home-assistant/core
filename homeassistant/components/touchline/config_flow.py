@@ -3,12 +3,11 @@
 import logging
 from typing import Any, override
 
-from pytouchline_extended import PyTouchline
-import voluptuous as vol
+import probatio
+from pytouchline_extended import TouchlineController, TouchlineError
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
@@ -17,32 +16,29 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
     }
 )
 
 
-def fetch_unique_id(host: str) -> str:
-    """Fetch the unique id for the Touchline controller."""
-    client = PyTouchline(url=host)
-    client.get_number_of_devices()
-    client.update()
-    return str(client.get_controller_id())
-
-
-async def _async_validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
-    """Validate the user input allows us to connect."""
+async def _async_validate_input(data: dict[str, Any]) -> str:
+    """Validate the user input allows us to connect, and return the controller ID."""
     host = data[CONF_HOST]
 
     try:
-        return await hass.async_add_executor_job(fetch_unique_id, host)
-    except (OSError, ConnectionError, TimeoutError) as err:
+        state = await TouchlineController(url=host).fetch_async()
+    except TouchlineError as err:
         _LOGGER.debug(
             "Error while connecting to Touchline controller at %s", host, exc_info=True
         )
         raise CannotConnect from err
+
+    # The ID that the thermostats report as their owner identifies the controller.
+    if not state.rooms or (controller_id := state.rooms[0].controller_id) is None:
+        raise CannotConnect
+    return str(controller_id)
 
 
 class CannotConnect(HomeAssistantError):
@@ -65,7 +61,7 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             try:
-                unique_id = await _async_validate_input(self.hass, user_input)
+                unique_id = await _async_validate_input(user_input)
 
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -84,26 +80,4 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
-        )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from YAML."""
-
-        # Abort if an entry with the same host already exists, to avoid duplicates
-        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-
-        # Validate the user input allows us to connect
-        try:
-            unique_id = await _async_validate_input(self.hass, user_input)
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:  # noqa: BLE001
-            return self.async_abort(reason="unknown")
-
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=user_input[CONF_HOST],
-            data=user_input,
         )

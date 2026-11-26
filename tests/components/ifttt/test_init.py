@@ -1,13 +1,20 @@
 """Test the init file of IFTTT."""
 
+from unittest.mock import MagicMock, patch
+
+import pytest
+from pytest_homeassistant.common import async_setup_component
+from pytest_homeassistant.typing import ClientSessionGenerator
+import requests
+
 from homeassistant import config_entries
 from homeassistant.components import ifttt
-from homeassistant.components.ifttt import DOMAIN
+from homeassistant.components.ifttt import CONF_KEY
+from homeassistant.components.ifttt.const import DOMAIN, IftttService
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.typing import ClientSessionGenerator
+from homeassistant.exceptions import HomeAssistantError
 
 
 async def test_config_flow_registers_webhook(
@@ -51,3 +58,62 @@ async def test_config_flow_registers_webhook(
     # Not a dict
     await client.post(f"/api/webhook/{webhook_id}", json="not a dict")
     assert len(ifttt_events) == 1
+
+
+async def test_trigger_service_raises_when_ifttt_unreachable(
+    hass: HomeAssistant,
+) -> None:
+    """Test trigger_service raises when IFTTT cannot be reached."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_KEY: "secret"}})
+
+    with (
+        patch(
+            "homeassistant.components.ifttt.services.pyfttt.send_event",
+            side_effect=requests.exceptions.ConnectionError,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            IftttService.TRIGGER,
+            {"event": "test_event"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "trigger_failed"
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_keys"),
+    [
+        pytest.param({}, ["secret_a", "secret_b"], id="all_keys"),
+        pytest.param({"target": "a"}, ["secret_a"], id="single_target"),
+        pytest.param(
+            {"target": ["a", "b"]}, ["secret_a", "secret_b"], id="multiple_targets"
+        ),
+        pytest.param({"target": "unknown"}, [], id="unknown_target"),
+    ],
+)
+async def test_trigger_service_target(
+    hass: HomeAssistant,
+    service_data: dict[str, str | list[str]],
+    expected_keys: list[str],
+) -> None:
+    """Test the trigger action sends the event to the targeted API keys."""
+    await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {CONF_KEY: {"a": "secret_a", "b": "secret_b"}}}
+    )
+
+    with patch(
+        "homeassistant.components.ifttt.services.pyfttt.send_event",
+        return_value=MagicMock(status_code=200),
+    ) as send_event:
+        await hass.services.async_call(
+            DOMAIN,
+            "trigger",
+            {"event": "test_event", **service_data},
+            blocking=True,
+        )
+
+    assert [call.args[0] for call in send_event.call_args_list] == expected_keys

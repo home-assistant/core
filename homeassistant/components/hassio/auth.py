@@ -11,18 +11,24 @@ from aiohttp.web_exceptions import (
     HTTPServiceUnavailable,
     HTTPUnauthorized,
 )
-import voluptuous as vol
+import probatio
 
+from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
-from homeassistant.components.http.const import is_supervisor_unix_socket_request
+from homeassistant.components.http.const import (
+    DATA_SUPERVISOR_USER,
+    is_supervisor_unix_socket_request,
+)
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME, DATA_HASSIO_SUPERVISOR_USER
+from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME, ENV_SUPERVISOR
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_GROUP_IDS = "group_ids"
 
 
 @callback
@@ -41,7 +47,7 @@ class HassIOBaseAuth(HomeAssistantView):
 
     def _check_access(self, request: web.Request) -> None:
         """Check if this call is from Supervisor."""
-        user = self.hass.data.get(DATA_HASSIO_SUPERVISOR_USER)
+        user = self.hass.data.get(DATA_SUPERVISOR_USER)
         if user is None:
             raise HTTPServiceUnavailable
 
@@ -51,7 +57,7 @@ class HassIOBaseAuth(HomeAssistantView):
         # Unix sockets). The user-ID check still runs to ensure only the
         # Supervisor user can reach this endpoint.
         if not is_supervisor_unix_socket_request(request):
-            hassio_ip = os.environ["SUPERVISOR"].split(":")[0]
+            hassio_ip = os.environ[ENV_SUPERVISOR].split(":")[0]
             assert request.transport
             peername = request.transport.get_extra_info("peername")
             if not peername or ip_address(peername[0]) != ip_address(hassio_ip):
@@ -71,13 +77,13 @@ class HassIOAuth(HassIOBaseAuth):
     url = "/api/hassio_auth"
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(ATTR_USERNAME): cv.string,
-                vol.Required(ATTR_PASSWORD): cv.string,
-                vol.Required(ATTR_ADDON): cv.string,
+                probatio.Required(ATTR_USERNAME): cv.string,
+                probatio.Required(ATTR_PASSWORD): cv.string,
+                probatio.Required(ATTR_ADDON): cv.string,
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
     )
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
@@ -92,7 +98,21 @@ class HassIOAuth(HassIOBaseAuth):
         except auth_ha.InvalidAuth:
             raise HTTPNotFound from None
 
-        return web.Response(status=HTTPStatus.OK)
+        credentials = await provider.async_get_or_create_credentials(
+            {ATTR_USERNAME: data[ATTR_USERNAME]}
+        )
+        user = await self.hass.auth.async_get_user_by_credentials(credentials)
+        if user is None:
+            return self.json({ATTR_GROUP_IDS: []})
+        # The login flow refuses inactive users as well
+        if not user.is_active:
+            raise HTTPNotFound
+
+        group_ids = [group.id for group in user.groups]
+        # Mirror User.is_admin, which also covers the owner
+        if user.is_admin and GROUP_ID_ADMIN not in group_ids:
+            group_ids.insert(0, GROUP_ID_ADMIN)
+        return self.json({ATTR_GROUP_IDS: group_ids})
 
 
 class HassIOPasswordReset(HassIOBaseAuth):
@@ -102,12 +122,12 @@ class HassIOPasswordReset(HassIOBaseAuth):
     url = "/api/hassio_auth/password_reset"
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(ATTR_USERNAME): cv.string,
-                vol.Required(ATTR_PASSWORD): cv.string,
+                probatio.Required(ATTR_USERNAME): cv.string,
+                probatio.Required(ATTR_PASSWORD): cv.string,
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
     )
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:

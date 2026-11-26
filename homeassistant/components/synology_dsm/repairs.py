@@ -4,8 +4,8 @@ from contextlib import suppress
 import logging
 from typing import cast
 
+import probatio
 from synology_dsm.api.file_station.models import SynoFileSharedFolder
-import voluptuous as vol
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
@@ -36,11 +36,9 @@ LOGGER = logging.getLogger(__name__)
 class MissingBackupSetupRepairFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
-    def __init__(self, entry: SynologyDSMConfigEntry, issue_id: str) -> None:
+    def __init__(self, entry: SynologyDSMConfigEntry) -> None:
         """Create flow."""
         self.entry = entry
-        self.issue_id = issue_id
-        super().__init__()
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -48,6 +46,7 @@ class MissingBackupSetupRepairFlow(RepairsFlow):
         """Handle the first step of a fix flow."""
 
         return self.async_show_menu(
+            step_id="init",
             menu_options=["confirm", "ignore"],
             description_placeholders={
                 "docs_url": "https://www.home-assistant.io/integrations/synology_dsm/#backup-location"
@@ -78,9 +77,10 @@ class MissingBackupSetupRepairFlow(RepairsFlow):
             return self.async_abort(reason="no_shares")
 
         return self.async_show_form(
-            data_schema=vol.Schema(
+            step_id="confirm",
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_BACKUP_SHARE,
                         default=self.entry.options[CONF_BACKUP_SHARE],
                     ): SelectSelector(
@@ -92,7 +92,7 @@ class MissingBackupSetupRepairFlow(RepairsFlow):
                             mode=SelectSelectorMode.DROPDOWN,
                         ),
                     ),
-                    vol.Required(
+                    probatio.Required(
                         CONF_BACKUP_PATH,
                         default=self.entry.options[CONF_BACKUP_PATH],
                     ): str,
@@ -120,6 +120,6 @@ async def async_create_fix_flow(
         entry = hass.config_entries.async_get_entry(entry_id)
 
     if entry and issue_id.startswith(ISSUE_MISSING_BACKUP_SETUP):
-        return MissingBackupSetupRepairFlow(entry, issue_id)
+        return MissingBackupSetupRepairFlow(entry)
 
     return ConfirmRepairFlow()

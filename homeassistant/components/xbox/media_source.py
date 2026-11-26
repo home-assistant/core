@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, override
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.provider.titlehub.models import Image, Title, TitleFields
 
 from homeassistant.components.media_player import BrowseError, MediaClass
@@ -17,10 +17,9 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .binary_sensor import profile_pic
 from .const import DOMAIN
 from .coordinator import XboxConfigEntry
-from .entity import to_https
+from .entity import profile_pic, to_https
 
 _LOGGER = logging.getLogger(__name__)
 

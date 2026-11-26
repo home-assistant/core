@@ -16,7 +16,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) -> None:
     """Set up this integration using UI."""
     api = APsystemsEZ1M(
         ip_address=entry.data[CONF_IP_ADDRESS],
@@ -32,9 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) ->
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

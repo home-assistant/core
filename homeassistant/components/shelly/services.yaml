@@ -1,3 +1,21 @@
+command:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: shelly
+    command:
+      required: true
+      example: Switch.Set
+      selector:
+        text:
+    params:
+      required: false
+      example: '{"id": 0, "on": true}'
+      selector:
+        object:
+
 get_kvs_value:
   fields:
     device_id:
@@ -25,3 +43,27 @@ set_kvs_value:
       required: true
       selector:
         object:
+
+set_cover_position_and_tilt:
+  target:
+    entity:
+      integration: shelly
+      domain: cover
+      supported_features:
+        - - cover.CoverEntityFeature.SET_POSITION
+          - cover.CoverEntityFeature.SET_TILT_POSITION
+  fields:
+    position:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    tilt_position:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"

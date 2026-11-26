@@ -1,17 +1,18 @@
 """Support for Danfoss Air HRV."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
+import threading
 
+import probatio
 from pydanfossair.commands import ReadCommand
 from pydanfossair.danfossclient import DanfossClient
-import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import Throttle
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,8 +21,9 @@ DOMAIN = "danfoss_air"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Schema({probatio.Required(CONF_HOST): cv.string})},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -43,6 +45,9 @@ class DanfossAir:
     def __init__(self, host):
         """Initialize the Danfoss Air CCM connection."""
         self._data = {}
+        self.available = True
+        self._lock = threading.Lock()
+        self._last_update: datetime | None = None
 
         self._client = DanfossClient(host)
 
@@ -52,13 +57,45 @@ class DanfossAir:
 
     def update_state(self, command, state_command):
         """Send update command to Danfoss Air CCM."""
-        self._data[state_command] = self._client.command(command)
+        with self._lock:
+            self._data[state_command] = self._client.command(command)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
+        """Fetch new data, at most once per MIN_TIME_BETWEEN_UPDATES.
+
+        Every entity calls this from its own update, often at the same time.
+        A caller that arrives while a fetch is running waits for it, instead
+        of reading the data before it is filled in.
+        """
+        with self._lock:
+            if (
+                self._last_update is not None
+                and dt_util.utcnow() - self._last_update < MIN_TIME_BETWEEN_UPDATES
+            ):
+                return
+            self._update()
+            self._last_update = dt_util.utcnow()
+
+    def _update(self) -> None:
         """Use the data from Danfoss Air API."""
         _LOGGER.debug("Fetching data from Danfoss Air CCM module")
 
+        try:
+            self._fetch()
+        except OSError as err:
+            if self.available:
+                _LOGGER.warning("Lost connection to Danfoss Air CCM module: %s", err)
+            self.available = False
+            return
+
+        if not self.available:
+            _LOGGER.info("Connection to Danfoss Air CCM module restored")
+        self.available = True
+
+        _LOGGER.debug("Done fetching data from Danfoss Air CCM module")
+
+    def _fetch(self) -> None:
+        """Read all values from the Danfoss Air CCM module."""
         self._data[ReadCommand.exhaustTemperature] = self._client.command(
             ReadCommand.exhaustTemperature
         )
@@ -78,7 +115,9 @@ class DanfossAir:
             self._client.command(ReadCommand.filterPercent), 2
         )
         self._data[ReadCommand.bypass] = self._client.command(ReadCommand.bypass)
-        self._data[ReadCommand.fan_step] = self._client.command(ReadCommand.fan_step)
+        self._data[ReadCommand.fan_speed_percent] = self._client.command(
+            ReadCommand.fan_speed_percent
+        )
         self._data[ReadCommand.supply_fan_speed] = self._client.command(
             ReadCommand.supply_fan_speed
         )
@@ -94,5 +133,3 @@ class DanfossAir:
         self._data[ReadCommand.automatic_bypass] = self._client.command(
             ReadCommand.automatic_bypass
         )
-
-        _LOGGER.debug("Done fetching data from Danfoss Air CCM module")

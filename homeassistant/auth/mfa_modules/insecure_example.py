@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant
 
@@ -15,11 +15,13 @@ from . import (
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend(
     {
-        vol.Required("data"): [
-            vol.Schema({vol.Required("user_id"): str, vol.Required("pin"): str})
+        probatio.Required("data"): [
+            probatio.Schema(
+                {probatio.Required("user_id"): str, probatio.Required("pin"): str}
+            )
         ]
     },
-    extra=vol.PREVENT_EXTRA,
+    extra=probatio.PREVENT_EXTRA,
 )
 
 
@@ -36,14 +38,14 @@ class InsecureExampleModule(MultiFactorAuthModule):
 
     @property
     @override
-    def input_schema(self) -> vol.Schema:
+    def input_schema(self) -> probatio.Schema:
         """Validate login flow input data."""
-        return vol.Schema({vol.Required("pin"): str})
+        return probatio.Schema({probatio.Required("pin"): str})
 
     @property
-    def setup_schema(self) -> vol.Schema:
+    def setup_schema(self) -> probatio.Schema:
         """Validate async_setup_user input data."""
-        return vol.Schema({vol.Required("pin"): str})
+        return probatio.Schema({probatio.Required("pin"): str})
 
     @override
     async def async_setup_flow(self, user_id: str) -> SetupFlow:

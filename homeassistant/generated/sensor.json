@@ -123,6 +123,7 @@
       "MJ",
       "MWh",
       "mWh",
+      "thm",
       "TWh",
       "Wh"
     ],
@@ -145,6 +146,7 @@
       "MJ",
       "MWh",
       "mWh",
+      "thm",
       "TWh",
       "Wh"
     ],
@@ -281,6 +283,7 @@
       "m\u00b3"
     ],
     "volume_flow_rate": [
+      "ft\u00b3/h",
       "ft\u00b3/min",
       "gal/d",
       "gal/h",
@@ -465,6 +468,7 @@
       "MJ",
       "MWh",
       "mWh",
+      "thm",
       "TWh",
       "Wh"
     ],
@@ -487,6 +491,7 @@
       "MJ",
       "MWh",
       "mWh",
+      "thm",
       "TWh",
       "Wh"
     ],
@@ -662,6 +667,7 @@
       "m\u00b3"
     ],
     "volume_flow_rate": [
+      "ft\u00b3/h",
       "ft\u00b3/min",
       "gal/d",
       "gal/h",

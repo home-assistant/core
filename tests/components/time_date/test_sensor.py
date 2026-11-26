@@ -4,6 +4,7 @@ from unittest.mock import ANY, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.time_date.const import OPTION_TYPES
 from homeassistant.core import HomeAssistant
@@ -11,8 +12,6 @@ from homeassistant.helpers import event
 from homeassistant.util import dt as dt_util
 
 from . import load_int
-
-from tests.common import async_fire_time_changed
 
 
 @patch("homeassistant.components.time_date.sensor.async_track_point_in_utc_time")

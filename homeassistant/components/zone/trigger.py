@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -69,23 +69,25 @@ def _state_has_zone_info(state: State) -> bool:
     )
 
 
-_LEGACY_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
-    vol.Required(CONF_ENTITY_ID): cv.entity_ids_or_uuids,
-    vol.Required(CONF_ZONE): cv.entity_id,
-    vol.Required(CONF_EVENT, default=DEFAULT_EVENT): vol.Any(EVENT_ENTER, EVENT_LEAVE),
+_LEGACY_OPTIONS_SCHEMA: dict[probatio.Marker, Any] = {
+    probatio.Required(CONF_ENTITY_ID): cv.entity_ids_or_uuids,
+    probatio.Required(CONF_ZONE): cv.entity_id,
+    probatio.Required(CONF_EVENT, default=DEFAULT_EVENT): probatio.Any(
+        EVENT_ENTER, EVENT_LEAVE
+    ),
 }
 
-_LEGACY_TRIGGER_OPTIONS_SCHEMA = vol.Schema(
+_LEGACY_TRIGGER_OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS): _LEGACY_OPTIONS_SCHEMA,
+        probatio.Required(CONF_OPTIONS): _LEGACY_OPTIONS_SCHEMA,
     },
 )
 
 # New-style zone trigger schema
 _ZONE_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
         },
     }
 )
@@ -140,6 +142,8 @@ class LegacyZoneTrigger(Trigger):
         entity_id: list[str] = self._options[CONF_ENTITY_ID]
         zone_entity_id: str = self._options[CONF_ZONE]
         event: str = self._options[CONF_EVENT]
+        # Zone match per entity, an ambiguous location keeps the previous match
+        matches: dict[str, bool] = {}
 
         @callback
         def zone_automation_listener(zone_event: Event[EventStateChangedData]) -> None:
@@ -160,10 +164,19 @@ class LegacyZoneTrigger(Trigger):
                 )
                 return
 
+            previous_match = matches.pop(entity, False)
             from_match = (
-                condition.zone(self._hass, zone_state, from_s) if from_s else False
+                condition.zone(self._hass, zone_state, from_s, previous_match)
+                if from_s
+                else False
             )
-            to_match = condition.zone(self._hass, zone_state, to_s) if to_s else False
+            to_match = (
+                condition.zone(self._hass, zone_state, to_s, from_match)
+                if to_s
+                else False
+            )
+            if to_s:
+                matches[entity] = to_match
 
             if (event == EVENT_ENTER and not from_match and to_match) or (
                 event == EVENT_LEAVE and from_match and not to_match
@@ -242,11 +255,11 @@ class LeftZoneTrigger(ZoneTriggerBase):
         return not self._in_target_zone(state)
 
 
-_OCCUPANCY_TRIGGER_SCHEMA = vol.Schema(
+_OCCUPANCY_TRIGGER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
-            vol.Optional(CONF_FOR): cv.positive_time_period,
+        probatio.Required(CONF_OPTIONS, default={}): {
+            probatio.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
+            probatio.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
 )

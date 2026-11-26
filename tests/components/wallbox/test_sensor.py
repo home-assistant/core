@@ -1,5 +1,7 @@
 """Test Wallbox Switch component."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, UnitOfPower
 from homeassistant.core import HomeAssistant
 
@@ -9,8 +11,6 @@ from .const import (
     MOCK_SENSOR_CHARGING_SPEED_ID,
     MOCK_SENSOR_MAX_AVAILABLE_POWER,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_wallbox_sensor_class(

@@ -4,6 +4,8 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_capture_events
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.tag import DOMAIN, EVENT_TAG_SCANNED, async_scan_tag
 from homeassistant.core import HomeAssistant
@@ -12,9 +14,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import TEST_DEVICE_ID, TEST_TAG_ID, TEST_TAG_NAME
-
-from tests.common import async_capture_events
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
