@@ -80,6 +80,14 @@
         }
       }
     },
+    "number": {
+      "external_temperature": {
+        "name": "External temperature reference"
+      },
+      "window_timeout": {
+        "name": "Open window timeout"
+      }
+    },
     "sensor": {
       "control_lock": {
         "name": "Control lock",
