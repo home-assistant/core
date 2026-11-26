@@ -16,21 +16,14 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.intesis_modbus.const import DOMAIN
 from homeassistant.components.intesis_modbus.coordinator import SCAN_INTERVAL
 from homeassistant.components.number import (
-    ATTR_MAX,
-    ATTR_MIN,
-    ATTR_STEP,
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberEntityCapabilityAttribute,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 EXTERNAL = "number.inmbsmhi001r000_air_conditioner_external_temperature_reference"
@@ -58,22 +51,46 @@ async def test_external_temperature_is_written_in_the_gateway_format(
     hass: HomeAssistant, mock_connection: MockModbusConnection
 ) -> None:
     """The external reference lands on register 22 and is read back."""
-    state = hass.states.get(EXTERNAL)
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_MIN] == 10
-    assert state.attributes[ATTR_MAX] == 38
-    assert state.attributes[ATTR_STEP] == 0.5
     writes: list[WriteEvent] = []
     mock_connection.for_unit(1).on_write(writes.append)
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: EXTERNAL, ATTR_VALUE: 21.5},
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: EXTERNAL, NumberServiceArgument.VALUE: 21.5},
         blocking=True,
     )
     await hass.async_block_till_done(wait_background_tasks=True)
     assert [(w.address, w.values[0]) for w in writes] == [(22, 215)]
     assert hass.states.get(EXTERNAL).state == "21.5"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_external_temperature_follows_the_temperature_format(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """A gateway switched to whole degrees is written and read in whole degrees."""
+    unit = mock_connection.for_unit(1)
+    for address, value in {4: 22, 5: 20, 23: 22, 24: 30, 25: 16}.items():
+        unit.holding[address] = value
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert (
+        hass.states.get(EXTERNAL).attributes[NumberEntityCapabilityAttribute.STEP] == 1
+    )
+    writes: list[WriteEvent] = []
+    unit.on_write(writes.append)
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: EXTERNAL, NumberServiceArgument.VALUE: 22},
+        blocking=True,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert [(w.address, w.values[0]) for w in writes] == [(22, 22)]
+    assert hass.states.get(EXTERNAL).state == "22.0"
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -87,30 +104,55 @@ async def test_open_window_timeout_is_disabled_by_default(
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
+@pytest.mark.parametrize(
+    ("value", "written"),
+    [
+        pytest.param(5, 5, id="whole_minutes"),
+        pytest.param(4.6, 5, id="rounded_to_the_nearest_minute"),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_open_window_timeout_write_and_range(
-    hass: HomeAssistant, mock_connection: MockModbusConnection
+async def test_open_window_timeout_is_written_in_whole_minutes(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    value: float,
+    written: int,
 ) -> None:
-    """The timeout writes register 13 and refuses more than 30 minutes."""
-    assert hass.states.get(TIMEOUT).state == "30"
+    """The timeout lands on register 13 as the nearest whole minute."""
     writes: list[WriteEvent] = []
     mock_connection.for_unit(1).on_write(writes.append)
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: TIMEOUT, ATTR_VALUE: 5},
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: TIMEOUT, NumberServiceArgument.VALUE: value},
         blocking=True,
     )
-    assert [(w.address, w.values[0]) for w in writes] == [(13, 5)]
-    with pytest.raises(ServiceValidationError) as err:
-        await hass.services.async_call(
-            NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: TIMEOUT, ATTR_VALUE: 31},
-            blocking=True,
-        )
-    assert err.value.translation_domain == NUMBER_DOMAIN
-    assert err.value.translation_key == "out_of_range"
+    assert [(w.address, w.values[0]) for w in writes] == [(13, written)]
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_open_window_timeout_keeps_its_value_in_another_unit(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """A timeout shown in hours is still the 30 minutes the gateway holds."""
+    entity_registry.async_update_entity_options(
+        TIMEOUT, NUMBER_DOMAIN, {"unit_of_measurement": UnitOfTime.HOURS}
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(TIMEOUT)
+    assert state.state == "0.5"
+    assert state.attributes[NumberEntityCapabilityAttribute.MAX] == 0.5
+    writes: list[WriteEvent] = []
+    mock_connection.for_unit(1).on_write(writes.append)
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: TIMEOUT, NumberServiceArgument.VALUE: 0.25},
+        blocking=True,
+    )
+    assert [(w.address, w.values[0]) for w in writes] == [(13, 15)]
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -122,8 +164,8 @@ async def test_write_failure_raises_home_assistant_error(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: EXTERNAL, ATTR_VALUE: 20},
+            NumberService.SET_VALUE,
+            {TargetKey.ENTITY_ID: EXTERNAL, NumberServiceArgument.VALUE: 20},
             blocking=True,
         )
     assert err.value.translation_domain == DOMAIN

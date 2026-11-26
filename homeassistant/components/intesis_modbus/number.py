@@ -32,6 +32,17 @@ class IntesisNumberEntityDescription(NumberEntityDescription):
     step_fn: Callable[[IntesisSingleUnitGateway], float] | None = None
 
 
+def _window_timeout(device: IntesisSingleUnitGateway) -> float | None:
+    """The open window timeout in minutes.
+
+    A decimal value, although the gateway counts whole minutes: Home Assistant
+    converts to the unit the user picked with the precision of this value, and
+    a whole number would turn 30 minutes into 0 hours.
+    """
+    minutes = device.window_timeout_minutes
+    return None if minutes is None else float(minutes)
+
+
 NUMBERS: Final[tuple[IntesisNumberEntityDescription, ...]] = (
     IntesisNumberEntityDescription(
         key="external_temperature",
@@ -40,8 +51,8 @@ NUMBERS: Final[tuple[IntesisNumberEntityDescription, ...]] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
         mode=NumberMode.BOX,
-        native_max_value=38,
-        native_min_value=10,
+        native_max_value=38.0,
+        native_min_value=10.0,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda device: device.external_temperature,
         set_fn=lambda device, value: device.async_set_external_temperature(value),
@@ -55,12 +66,12 @@ NUMBERS: Final[tuple[IntesisNumberEntityDescription, ...]] = (
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         mode=NumberMode.BOX,
-        native_max_value=30,
-        native_min_value=0,
+        native_max_value=30.0,
+        native_min_value=0.0,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        value_fn=lambda device: device.window_timeout_minutes,
-        set_fn=lambda device, value: device.async_set_window_timeout(int(value)),
+        value_fn=_window_timeout,
+        set_fn=lambda device, value: device.async_set_window_timeout(round(value)),
     ),
 )
 
