@@ -113,6 +113,7 @@ from .coordinator import (
 )
 from .helpers import (
     async_get_ble_parent,
+    async_handle_credits,
     async_update_device_sw_version,
     create_powerwall_client,
     flatten,
@@ -1096,6 +1097,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     if stream:
         entry.async_on_unload(stream.close)
+        entry.async_on_unload(
+            stream.listen_Credits(partial(async_handle_credits, hass, entry))
+        )
         # The stream is the only freshness signal for the energy coordinators, so
         # a dropped connection must mark their entities unavailable rather than
         # leaving stale live/info/tariff data available indefinitely.

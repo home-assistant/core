@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from functools import partial
 from typing import Any, override
 
 from tesla_fleet_api import firmware_at_least
@@ -225,7 +226,9 @@ class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
         self.raise_for_scope(self.entity_description.scopes[0])
-        await handle_vehicle_command(self.entity_description.on_func(self.api))
+        await handle_vehicle_command(
+            self.hass, self.config_entry, self.entity_description.on_func(self.api)
+        )
         self._attr_is_on = True
         self.async_write_ha_state()
 
@@ -233,7 +236,9 @@ class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Switch."""
         self.raise_for_scope(self.entity_description.scopes[0])
-        await handle_vehicle_command(self.entity_description.off_func(self.api))
+        await handle_vehicle_command(
+            self.hass, self.config_entry, self.entity_description.off_func(self.api)
+        )
         self._attr_is_on = False
         self.async_write_ha_state()
 
@@ -338,9 +343,11 @@ class TeslemetryChargeFromGridSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEnt
         """Turn on the Switch."""
         self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(
+            self.hass,
+            self.config_entry,
             self.api.grid_import_export(
                 disallow_charge_from_grid_with_solar_installed=False
-            )
+            ),
         )
         self._attr_is_on = True
         self.coordinator.async_set_command_value(self.key, False)
@@ -351,9 +358,11 @@ class TeslemetryChargeFromGridSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEnt
         """Turn off the Switch."""
         self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(
+            self.hass,
+            self.config_entry,
             self.api.grid_import_export(
                 disallow_charge_from_grid_with_solar_installed=True
-            )
+            ),
         )
         self._attr_is_on = False
         self.coordinator.async_set_command_value(self.key, True)
@@ -384,7 +393,9 @@ class TeslemetryStormModeSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
         self.raise_for_scope(Scope.ENERGY_CMDS)
-        await handle_command(self.api.storm_mode(enabled=True))
+        await handle_command(
+            self.hass, self.config_entry, self.api.storm_mode(enabled=True)
+        )
         self._attr_is_on = True
         self.coordinator.async_set_command_value(self.key, True)
         self.async_write_ha_state()
@@ -393,7 +404,9 @@ class TeslemetryStormModeSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Switch."""
         self.raise_for_scope(Scope.ENERGY_CMDS)
-        await handle_command(self.api.storm_mode(enabled=False))
+        await handle_command(
+            self.hass, self.config_entry, self.api.storm_mode(enabled=False)
+        )
         self._attr_is_on = False
         self.coordinator.async_set_command_value(self.key, False)
         self.async_write_ha_state()
@@ -412,7 +425,7 @@ class TeslemetryChargeOnSolarSwitchEntity(TeslemetryChargeOnSolarEntity, SwitchE
         """Set charge-on-solar mode, omitting the upper bound if it isn't known yet."""
         async with self.vehicle.charge_on_solar_lock:
             await async_set_charge_on_solar(
-                handle_vehicle_command,
+                partial(handle_vehicle_command, self.hass, self.config_entry),
                 self.api,
                 enabled=enabled,
                 lower_charge_limit=self.vehicle.charge_on_solar_lower_limit,

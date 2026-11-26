@@ -33,6 +33,8 @@ POWERWALL_KEY_FILE = "tesla_powerwall.key"
 RSA_PARENT_KEY = f"{DOMAIN}_rsa_parent"
 ISSUE_GATEWAY_NOT_FOUND = "gateway_not_found"
 ISSUE_ENERGY_SITE_NOT_PAIRED = "energy_site_not_paired"
+ISSUE_INSUFFICIENT_CREDITS = "insufficient_credits"
+CREDITS_URL = "https://teslemetry.com/console/credits"
 ISSUE_STREAMING_ALLOWANCE = "streaming_allowance"
 STREAMING_ALLOWANCE_EXCEEDED = "streaming_allowance_exceeded"
 

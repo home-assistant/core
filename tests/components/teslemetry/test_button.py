@@ -5,11 +5,14 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.exceptions import InsufficientCredits
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.components.teslemetry.const import CREDITS_URL, DOMAIN
 from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from . import assert_entities, setup_platform
 from .const import COMMAND_OK, METADATA
@@ -109,3 +112,39 @@ async def test_keep_accessory_power_firmware_gate(
     assert (
         hass.states.get("button.test_disable_keep_accessory_power") is not None
     ) == expected
+
+
+async def test_press_insufficient_credits(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a command rejected for credits explains why and raises a repair."""
+    entry = await setup_platform(hass, [Platform.BUTTON])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.flash_lights",
+            side_effect=InsufficientCredits,
+        ),
+        pytest.raises(
+            HomeAssistantError,
+            match="Your Teslemetry account does not have enough command credits",
+        ),
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: ["button.test_flash_lights"]},
+            blocking=True,
+        )
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"insufficient_credits_{entry.entry_id}"
+    )
+    assert issue
+    # Kept across a restart, as setup does not check credits.
+    assert issue.is_persistent
+    assert issue.learn_more_url == CREDITS_URL
+    assert issue.translation_placeholders == {
+        "account": entry.title,
+        "credits_url": CREDITS_URL,
+    }

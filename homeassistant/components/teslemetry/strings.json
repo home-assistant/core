@@ -1345,6 +1345,9 @@
     "energy_site_not_paired": {
       "message": "Teslemetry is not paired with the Powerwall system for {site}, pair it in the Teslemetry console or set up local control"
     },
+    "insufficient_credits": {
+      "message": "Your Teslemetry account does not have enough command credits. Purchase more credits to continue controlling your vehicles."
+    },
     "live_status_timeout": {
       "message": "No live status received from the Teslemetry stream for energy site {site_id} in {minutes} minutes"
     },
@@ -1449,6 +1452,10 @@
         }
       },
       "title": "Local control unavailable for {site}"
+    },
+    "insufficient_credits": {
+      "description": "A command could not be sent because your Teslemetry account ({account}) does not have enough command credits.\n\nSending commands to your Tesla vehicles consumes credits. To continue controlling your vehicles, purchase more credits from the [Teslemetry console]({credits_url}).\n\nThis issue will be removed automatically once your account has enough credits available again.",
+      "title": "Insufficient Teslemetry credits"
     },
     "key": {
       "fix_flow": {
