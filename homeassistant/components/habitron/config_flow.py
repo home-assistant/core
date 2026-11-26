@@ -48,14 +48,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """Validate the user input allows us to connect."""
     host_input = data[CONF_HOST]
 
-    # Any of HA's own addresses means a hub on this machine.
+    host_to_test = host_input
+    # Any of HA's own addresses means a hub on this machine; probe the one entered.
     own_ips = {str(ip) for ip in await network.async_get_enabled_source_ips(hass)}
     if host_input in own_ips:
-        host_input = CONF_DEFAULT_HOST
         data[CONF_HOST] = CONF_DEFAULT_HOST
-
-    host_to_test = host_input
-    if host_to_test == CONF_DEFAULT_HOST:
+    elif host_input == CONF_DEFAULT_HOST:
         host_to_test = await network.async_get_source_ip(hass)
 
     # Resolve first: ``test_connection`` reports a DNS failure like any other error.

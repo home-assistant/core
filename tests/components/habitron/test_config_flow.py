@@ -701,6 +701,25 @@ async def test_validate_input_local_loopback_rewrites_host(
     assert info == {"title": MOCK_NAME}
 
 
+async def test_validate_input_probes_the_entered_own_address(
+    hass: HomeAssistant,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """An own address of a second interface is probed as entered, not HA's primary."""
+    with patch(
+        "homeassistant.components.habitron.config_flow.network."
+        "async_get_enabled_source_ips",
+        new=AsyncMock(
+            return_value=[IPv4Address("192.168.1.10"), IPv4Address("10.0.0.20")]
+        ),
+    ):
+        data = {CONF_HOST: "10.0.0.20"}
+        await validate_input(hass, data)
+
+    assert data[CONF_HOST] == "local"
+    mock_habitron_client.assert_awaited_once_with("10.0.0.20")
+
+
 async def test_validate_input_falls_back_to_host_when_hub_unnamed(
     hass: HomeAssistant,
 ) -> None:
