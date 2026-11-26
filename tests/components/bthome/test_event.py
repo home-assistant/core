@@ -2,13 +2,7 @@
 
 from collections.abc import Generator
 import time
-from typing import Any
 
-from habluetooth import (
-    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
-    DiscoveredDeviceAdvertisementData,
-    discovered_device_advertisement_data_to_dict,
-)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 from pytest_homeassistant.components.bluetooth import (
@@ -20,7 +14,7 @@ from pytest_homeassistant.components.bluetooth import (
     inject_bluetooth_service_info,
 )
 
-from homeassistant.components.bluetooth import async_register_scanner, storage
+from homeassistant.components.bluetooth import async_register_scanner
 from homeassistant.components.bthome.const import (
     BTHOME_BLE_EVENT,
     CONF_SLEEPY_DEVICE,
@@ -35,7 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import make_bthome_v2_adv
+from . import BTHOME_UUID, make_bthome_v2_adv
 
 
 @pytest.mark.parametrize(
@@ -180,7 +174,6 @@ async def test_v2_events(
 
 
 BUTTON_ADDRESS = "A4:C1:38:8D:18:B2"
-BTHOME_UUID = "0000fcd2-0000-1000-8000-00805f9b34fb"
 STRONG_PROXY = "strong_proxy"
 WEAK_PROXY = "weak_proxy"
 WINDOW_ENTITY_ID = "binary_sensor.test_device_18b2_window"
@@ -321,64 +314,6 @@ async def test_reload_keeps_taking_packets_from_any_proxy(
     _inject_button_payload(hass, b"\x44\x00\x04\x2d\x00", WEAK_PROXY, -90, now + 15)
     await hass.async_block_till_done()
     assert hass.states.get(WINDOW_ENTITY_ID).state == STATE_OFF
-
-
-def _stored_packets(
-    packets: dict[str, tuple[bytes, int, float]], now: float
-) -> dict[str, Any]:
-    """Return stored button advertisements as Bluetooth storage data."""
-    return discovered_device_advertisement_data_to_dict(
-        DiscoveredDeviceAdvertisementData(
-            connectable=False,
-            expire_seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
-            discovered_device_advertisement_datas={
-                address: (
-                    generate_ble_device(address, "Test Device"),
-                    generate_advertisement_data(
-                        local_name="Test Device",
-                        service_data={BTHOME_UUID: payload},
-                        service_uuids=[BTHOME_UUID],
-                        rssi=rssi,
-                    ),
-                )
-                for address, (payload, rssi, _) in packets.items()
-            },
-            discovered_device_timestamps={
-                address: now - age for address, (_, _, age) in packets.items()
-            },
-        )
-    )
-
-
-@pytest.fixture
-def mock_bluetooth_storage(
-    hass_storage: dict[str, Any], request: pytest.FixtureRequest
-) -> None:
-    """Store packets per proxy and the accepted ones, aged in seconds."""
-    proxies, accepted = getattr(request, "param", ({}, {}))
-    now = time.monotonic()
-    hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = {
-        "version": storage.REMOTE_SCANNER_STORAGE_VERSION,
-        "minor_version": 1,
-        "key": storage.REMOTE_SCANNER_STORAGE_KEY,
-        "data": {
-            proxy: _stored_packets(packets, now) for proxy, packets in proxies.items()
-        },
-    }
-    hass_storage[storage.EVENT_DRIVEN_STORAGE_KEY] = {
-        "version": storage.EVENT_DRIVEN_STORAGE_VERSION,
-        "minor_version": 1,
-        "key": storage.EVENT_DRIVEN_STORAGE_KEY,
-        "data": {
-            "sources": {
-                address: {"source": source, "connectable": False}
-                for address, (source, _) in accepted.items()
-            },
-            "advertisements": _stored_packets(
-                {address: packet for address, (_, packet) in accepted.items()}, now
-            ),
-        },
-    }
 
 
 @pytest.mark.parametrize(
