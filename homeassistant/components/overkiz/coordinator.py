@@ -101,6 +101,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.data = {}
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
+        self.setup_device_urls = set(self.devices)
         self.executions: dict[str, set[OverkizDeviceCommand]] = {}
         # A gateway reports its devices' states from cache while it is
         # unreachable, so nothing in the device payload reveals the outage.
@@ -275,7 +276,7 @@ async def on_device_created(
     """Handle device created event."""
     # A rebooted gateway re-announces all its devices while it still reports
     # incomplete devices and placeholder labels, so only reload for a new one.
-    if event.device_url not in coordinator.devices:
+    if event.device_url not in coordinator.setup_device_urls:
         coordinator.reload_requested = True
 
 
@@ -311,6 +312,7 @@ async def on_device_removed(
     coordinator: OverkizDataUpdateCoordinator, event: DeviceRemovedEvent
 ) -> None:
     """Handle device removed event."""
+    coordinator.setup_device_urls.discard(event.device_url)
     base_device_url = event.device_url.split("#")[0]
     registry = dr.async_get(coordinator.hass)
 

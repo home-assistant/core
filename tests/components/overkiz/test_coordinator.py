@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from unittest.mock import Mock, patch
 
-from aiohttp import ClientConnectorError
+from aiohttp import ClientConnectorError, ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import ExecutionState, OverkizState, Server
 from pyoverkiz.exceptions import (
@@ -576,6 +576,42 @@ async def test_device_events_reload_once_per_batch(
 
     assert mock_client.get_setup.await_count == expected_reloads
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_device_paired_during_disconnect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A device first seen during reconnect gains entities on its creation event."""
+    mock_config_entry.add_to_hass(hass)
+    mock_client.set_setup_fixture(TAHOMA_V2_FIXTURE)
+    devices = mock_client.setup.devices
+    garage = next(
+        device for device in devices if device.device_url == GARAGE.device_url
+    )
+    devices.remove(garage)
+
+    with patch(
+        "homeassistant.components.overkiz.create_cloud_client",
+        return_value=mock_client,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        devices.append(garage)
+        with patch.object(
+            mock_client, "fetch_events", side_effect=ServerDisconnectedError
+        ):
+            await async_deliver_events(hass, freezer, mock_client)
+        mock_client.get_devices.assert_awaited_once_with(refresh=True)
+        assert hass.states.get(GARAGE.entity_id) is None
+
+        await async_deliver_events(
+            hass, freezer, mock_client, [device_created_event(GARAGE.device_url)]
+        )
+
+    assert hass.states.get(GARAGE.entity_id) is not None
 
 
 async def test_child_devices_link_to_their_gateway(
