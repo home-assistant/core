@@ -255,6 +255,7 @@ async def test_setup_non_default_location(
 _STALE_ISSUES = {  # issue_id: translation_key
     "deprecated_clear_zone_override_service": "deprecated_clear_zone_override_service",
     "deprecated_preset_reset": "deprecated_preset_reset",
+    "deprecated_refresh_system_service": "deprecated_refresh_system_service",
     "deprecated_reset_system_service": "deprecated_reset_system_service",
     "deprecated_set_system_mode_service": "deprecated_controller_service",
 }

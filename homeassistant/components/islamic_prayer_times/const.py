@@ -43,6 +43,14 @@ CONF_MIDNIGHT_MODE: Final = "midnight_mode"
 MIDNIGHT_MODES: Final = ["standard", "jafari"]
 DEFAULT_MIDNIGHT_MODE: Final = "standard"
 
+CONF_ISHA_CALENDAR_END: Final = "isha_calendar_end"
+ISHA_CALENDAR_ENDS: Final = {
+    "first_third": "Firstthird",
+    "half_night": "Midnight",
+    "next_fajr": "Fajr",
+}
+DEFAULT_ISHA_CALENDAR_END: Final = "half_night"
+
 CONF_SCHOOL: Final = "school"
 SCHOOLS: Final = ["shafi", "hanafi"]
 DEFAULT_SCHOOL: Final = "shafi"
