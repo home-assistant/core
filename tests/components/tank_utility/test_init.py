@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 
-@pytest.mark.usefixtures("mock_get_token", "mock_get_device_data")
+@pytest.mark.usefixtures("mock_get_token", "mock_get_devices", "mock_get_device_data")
 async def test_setup_and_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

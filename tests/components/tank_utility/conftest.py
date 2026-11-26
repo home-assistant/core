@@ -7,7 +7,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tank_utility.const import DOMAIN
-from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 MOCK_DEVICE_ID = "device_1"
@@ -38,7 +38,6 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         data={
             CONF_EMAIL: TEST_EMAIL,
             CONF_PASSWORD: TEST_PASSWORD,
-            CONF_DEVICES: [MOCK_DEVICE_ID],
         },
     )
     entry.add_to_hass(hass)
@@ -50,7 +49,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock async_setup_entry."""
     with patch(
         "homeassistant.components.tank_utility.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 
@@ -58,18 +57,24 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_get_token() -> Generator[MagicMock]:
     """Mock auth.get_token."""
-    with patch(
-        "tank_utility.auth.get_token",
-        return_value="mock_token",
-    ) as mock:
+    with (
+        patch(
+            "homeassistant.components.tank_utility.config_flow.auth.get_token",
+            return_value="mock_token",
+        ) as mock,
+        patch(
+            "homeassistant.components.tank_utility.sensor.auth.get_token",
+            new=mock,
+        ),
+    ):
         yield mock
 
 
 @pytest.fixture
 def mock_get_devices() -> Generator[MagicMock]:
-    """Mock device.get_devices."""
+    """Mock tank_monitor.get_devices."""
     with patch(
-        "tank_utility.device.get_devices",
+        "homeassistant.components.tank_utility.sensor.tank_monitor.get_devices",
         return_value=[MOCK_DEVICE_ID],
     ) as mock:
         yield mock
@@ -77,9 +82,9 @@ def mock_get_devices() -> Generator[MagicMock]:
 
 @pytest.fixture
 def mock_get_device_data() -> Generator[MagicMock]:
-    """Mock device.get_device_data."""
+    """Mock tank_monitor.get_device_data."""
     with patch(
-        "tank_utility.device.get_device_data",
+        "homeassistant.components.tank_utility.sensor.tank_monitor.get_device_data",
         return_value=dict(DEVICE_DATA),
     ) as mock:
         yield mock

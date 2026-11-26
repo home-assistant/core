@@ -11,7 +11,7 @@ from homeassistant.components.tank_utility.const import DOMAIN
 from homeassistant.components.tank_utility.sensor import SENSOR_ATTRS
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -27,22 +27,27 @@ CONFIG = {
 }
 
 
+@pytest.mark.usefixtures("mock_get_token", "mock_get_devices", "mock_get_device_data")
 async def test_setup_platform_success(
     hass: HomeAssistant,
-    mock_get_token: MagicMock,
-    mock_get_device_data: MagicMock,
+    entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test successful setup of Tank Utility sensor via YAML import."""
     assert await async_setup_component(hass, "sensor", CONFIG)
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"sensor.tank_utility_{MOCK_DEVICE_ID}")
+    entity_id = f"sensor.tank_utility_{MOCK_DEVICE_ID}"
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "78.4"
     assert state.attributes["unit_of_measurement"] == PERCENTAGE
     for attr in SENSOR_ATTRS:
         assert attr in state.attributes
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.unique_id == f"{MOCK_DEVICE_ID}_tank"
 
     issue = issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
@@ -50,7 +55,7 @@ async def test_setup_platform_success(
     assert issue is not None
 
 
-@pytest.mark.usefixtures("mock_get_token", "mock_get_device_data")
+@pytest.mark.usefixtures("mock_get_token", "mock_get_devices", "mock_get_device_data")
 async def test_setup_platform_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -146,6 +151,7 @@ async def test_setup_entry_other_http_error(
     assert state is None
 
 
+@pytest.mark.usefixtures("mock_get_devices")
 async def test_sensor_update_token_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

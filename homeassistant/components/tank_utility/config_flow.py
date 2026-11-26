@@ -5,18 +5,12 @@ from typing import Any, override
 
 import probatio
 import requests
-from tank_utility import auth, device as tank_monitor
+from tank_utility import auth
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from .const import DOMAIN, LOGGER
-
-
-def _get_devices(email: str, password: str) -> list[str]:
-    """Validate credentials and return the account's device IDs."""
-    token = auth.get_token(email, password, force=True)
-    return tank_monitor.get_devices(token)
 
 
 class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -24,32 +18,25 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _async_validate_input(
-        self, email: str, password: str, devices: list[str] | None = None
-    ) -> tuple[list[str] | None, str | None]:
-        """Validate credentials and return (devices, error)."""
+    async def _async_validate_input(self, email: str, password: str) -> str | None:
+        """Validate credentials and return an error key or None."""
         try:
-            if devices is None:
-                devices = await self.hass.async_add_executor_job(
-                    _get_devices, email, password
-                )
-            else:
-                await self.hass.async_add_executor_job(
-                    partial(auth.get_token, email, password, force=True)
-                )
+            await self.hass.async_add_executor_job(
+                partial(auth.get_token, email, password, force=True)
+            )
         except requests.exceptions.HTTPError as err:
             if (
                 err.response is not None
                 and err.response.status_code == requests.codes.unauthorized
             ):
-                return None, "invalid_auth"
-            return None, "cannot_connect"
+                return "invalid_auth"
+            return "cannot_connect"
         except requests.exceptions.RequestException:
-            return None, "cannot_connect"
+            return "cannot_connect"
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception")
-            return None, "unknown"
-        return devices, None
+            return "unknown"
+        return None
 
     @override
     async def async_step_user(
@@ -63,7 +50,7 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
             self._async_abort_entries_match({CONF_EMAIL: email})
 
-            devices, error = await self._async_validate_input(email, password)
+            error = await self._async_validate_input(email, password)
             if error:
                 errors["base"] = error
             else:
@@ -72,7 +59,6 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_EMAIL: email,
                         CONF_PASSWORD: password,
-                        CONF_DEVICES: devices,
                     },
                 )
 
@@ -93,9 +79,7 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
         password = import_data[CONF_PASSWORD]
         self._async_abort_entries_match({CONF_EMAIL: email})
 
-        devices, error = await self._async_validate_input(
-            email, password, import_data[CONF_DEVICES]
-        )
+        error = await self._async_validate_input(email, password)
         if error:
             return self.async_abort(reason=error)
 
@@ -104,6 +88,5 @@ class TankUtilityConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_EMAIL: email,
                 CONF_PASSWORD: password,
-                CONF_DEVICES: devices,
             },
         )

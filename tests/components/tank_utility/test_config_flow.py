@@ -22,7 +22,7 @@ def _mock_http_error(status_code: int) -> requests.exceptions.HTTPError:
     return requests.exceptions.HTTPError(response=response)
 
 
-@pytest.mark.usefixtures("mock_get_devices", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_success(
     hass: HomeAssistant,
     mock_get_token: MagicMock,
@@ -48,7 +48,6 @@ async def test_user_flow_success(
     assert result["data"] == {
         CONF_EMAIL: TEST_EMAIL,
         CONF_PASSWORD: TEST_PASSWORD,
-        CONF_DEVICES: [MOCK_DEVICE_ID],
     }
     mock_get_token.assert_called_once_with(TEST_EMAIL, TEST_PASSWORD, force=True)
 
@@ -78,7 +77,7 @@ async def test_user_flow_success(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_get_devices", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_get_token: MagicMock,
@@ -116,7 +115,7 @@ async def test_user_flow_errors(
     assert result["title"] == TEST_EMAIL
 
 
-@pytest.mark.usefixtures("mock_get_token", "mock_get_devices", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_get_token", "mock_setup_entry")
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -159,7 +158,6 @@ async def test_import_flow_success(
     assert result["data"] == {
         CONF_EMAIL: TEST_EMAIL,
         CONF_PASSWORD: TEST_PASSWORD,
-        CONF_DEVICES: [MOCK_DEVICE_ID],
     }
     mock_get_token.assert_called_once_with(TEST_EMAIL, TEST_PASSWORD, force=True)
 

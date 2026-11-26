@@ -72,7 +72,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             f"deprecated_yaml_import_issue_{reason}",
-            breaks_in_ha_version="2027.4.0",
+            breaks_in_ha_version="2027.7.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
@@ -84,7 +84,7 @@ async def async_setup_platform(
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2027.4.0",
+        breaks_in_ha_version="2027.7.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
@@ -104,7 +104,6 @@ async def async_setup_entry(
     """Set up the Tank Utility sensor from a config entry."""
     email = entry.data[CONF_EMAIL]
     password = entry.data[CONF_PASSWORD]
-    devices = entry.data[CONF_DEVICES]
 
     try:
         token = await hass.async_add_executor_job(auth.get_token, email, password)
@@ -114,10 +113,10 @@ async def async_setup_entry(
             return
         raise
 
-    all_sensors = []
-    for device in devices:
-        sensor = TankUtilitySensor(email, password, token, device)
-        all_sensors.append(sensor)
+    devices = await hass.async_add_executor_job(tank_monitor.get_devices, token)
+    all_sensors = [
+        TankUtilitySensor(email, password, token, device) for device in devices
+    ]
     async_add_entities(all_sensors, True)
 
 
@@ -133,7 +132,7 @@ class TankUtilitySensor(SensorEntity):
         self._token = token
         self._device = device
         self._attr_name = f"Tank Utility {device}"
-        self._attr_unique_id = device
+        self._attr_unique_id = f"{device}_{SENSOR_TYPE}"
 
     def get_data(self):
         """Get data from the device.
