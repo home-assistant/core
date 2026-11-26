@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "VeSync account is already configured",
+      "unique_id_mismatch": "The account you are trying to use is different from the one configured",
       "wrong_account": "The account you are trying to re-authenticate is different from the one configured"
     },
     "error": {
@@ -21,6 +22,16 @@
         },
         "description": "The VeSync integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "password": "[%key:component::vesync::config::step::user::data_description::password%]",
+          "username": "[%key:component::vesync::config::step::user::data_description::username%]"
+        }
       },
       "user": {
         "data": {
@@ -133,7 +144,13 @@
     },
     "sensor": {
       "air_quality": {
-        "name": "Air quality"
+        "name": "Air quality",
+        "state": {
+          "excellent": "Excellent",
+          "good": "Good",
+          "moderate": "Moderate",
+          "poor": "Poor"
+        }
       },
       "co2": {
         "name": "Carbon dioxide"
@@ -215,11 +232,17 @@
       "filter_life": {
         "name": "Filter lifetime"
       },
+      "hepa_filter_life": {
+        "name": "HEPA filter lifetime"
+      },
       "preheat_set_time": {
         "name": "Preheating set time"
       },
       "preheat_set_time_basket": {
         "name": "Basket {basket} preheating set time"
+      },
+      "voc": {
+        "name": "Volatile organic compounds"
       }
     },
     "switch": {

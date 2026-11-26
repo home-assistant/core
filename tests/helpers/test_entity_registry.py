@@ -43,12 +43,41 @@ from homeassistant.helpers import (
     entity_registry as er,
     floor_registry as fr,
     issue_registry as ir,
+    label_registry as lr,
 )
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import Undefined
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
+
+
+@pytest.fixture
+def areas_and_labels(
+    area_registry: ar.AreaRegistry, label_registry: lr.LabelRegistry
+) -> None:
+    """Create the areas and labels that the tests assign to entries."""
+    for name in (
+        "12345a",
+        "12345b",
+        "attic",
+        "bedroom",
+        "garage",
+        "garden",
+        "kitchen",
+        "mock_area_id",
+    ):
+        area_registry.async_create(name)
+    for name in (
+        "label1",
+        "label2",
+        "label3",
+        "mock_label1",
+        "mock_label2",
+        "outdoor",
+        "xmas",
+    ):
+        label_registry.async_create(name)
 
 
 @pytest.mark.parametrize(
@@ -96,6 +125,7 @@ async def test_get_all_entity_aliases(
     )
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_get_entity_aliases_next_name_part(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -471,6 +501,7 @@ def test_create_triggers_save(entity_registry: er.EntityRegistry) -> None:
     assert len(mock_schedule_save.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_loading_saving_data(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -507,7 +538,7 @@ async def test_loading_saving_data(
     entity_registry.async_update_entity(
         orig_entry2.entity_id,
         aliases=["initial_alias_1", "initial_alias_2"],
-        area_id="mock-area-id",
+        area_id="mock_area_id",
         device_class="user-class",
         name="User Name",
         icon="hass:user-icon",
@@ -560,7 +591,7 @@ async def test_loading_saving_data(
     assert orig_entry4.modified_at < new_entry4.modified_at
     assert attr.evolve(orig_entry4, modified_at=new_entry4.modified_at) == new_entry4
 
-    assert new_entry2.area_id == "mock-area-id"
+    assert new_entry2.area_id == "mock_area_id"
     assert new_entry2.categories == {"scope", "id"}
     assert new_entry2.capabilities == {"max": 100}
     assert new_entry2.config_entry_id == mock_config.entry_id
@@ -1411,6 +1442,7 @@ def test_regenerate_entity_id_overrides(
     assert entity_registry.async_get(entry.entity_id) == entry
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 def test_next_name_part(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -2215,21 +2247,23 @@ async def test_deleted_entity_removing_config_subentry_id(
     assert entity_registry.deleted_entities[("light", "hue", "1234")] == deleted_entry2
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_removing_area_id(entity_registry: er.EntityRegistry) -> None:
     """Make sure we can clear area id."""
     entry = entity_registry.async_get_or_create("light", "hue", "5678")
 
     entry_w_area = entity_registry.async_update_entity(
-        entry.entity_id, area_id="12345A"
+        entry.entity_id, area_id="12345a"
     )
 
-    entity_registry.async_clear_area_id("12345A")
+    entity_registry.async_clear_area_id("12345a")
     entry_wo_area = entity_registry.async_get(entry.entity_id)
 
     assert not entry_wo_area.area_id
     assert entry_w_area != entry_wo_area
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_removing_area_id_deleted_entity(
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -2238,21 +2272,21 @@ async def test_removing_area_id_deleted_entity(
     entry2 = entity_registry.async_get_or_create("light", "hue", "1234")
 
     entry1_w_area = entity_registry.async_update_entity(
-        entry1.entity_id, area_id="12345A"
+        entry1.entity_id, area_id="12345a"
     )
     entry2_w_area = entity_registry.async_update_entity(
-        entry2.entity_id, area_id="12345B"
+        entry2.entity_id, area_id="12345b"
     )
 
     entity_registry.async_remove(entry1.entity_id)
     entity_registry.async_remove(entry2.entity_id)
 
-    entity_registry.async_clear_area_id("12345A")
+    entity_registry.async_clear_area_id("12345a")
     entry1_restored = entity_registry.async_get_or_create("light", "hue", "5678")
     entry2_restored = entity_registry.async_get_or_create("light", "hue", "1234")
 
     assert not entry1_restored.area_id
-    assert entry2_restored.area_id == "12345B"
+    assert entry2_restored.area_id == "12345b"
     assert entry1_w_area != entry1_restored
     assert entry2_w_area != entry2_restored
 
@@ -3154,6 +3188,7 @@ async def test_update_entity(
         entry = updated_entry
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_update_entity_own_area_without_own_name(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -3229,6 +3264,7 @@ async def test_update_entity_own_area_without_own_name(
     assert entry.area_id == "kitchen"
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_entity_own_area_without_own_name_issue(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -3330,6 +3366,7 @@ async def test_entity_own_area_without_own_name_issue(
         pytest.param("bedroom", "kitchen", "bedroom", {}, id="other_area"),
     ],
 )
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_move_to_child_device_takes_over_own_area(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -3403,6 +3440,7 @@ async def test_move_to_child_device_takes_over_own_area(
     assert (issue is not None) is (expected_entity_area_id is not None)
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_move_to_child_device_with_area_in_same_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -3441,6 +3479,7 @@ async def test_move_to_child_device_with_area_in_same_update(
     assert events[0].data["changes"] == {"device_id": device_entry.id}
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_move_to_main_device_keeps_own_area(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -3487,6 +3526,7 @@ async def test_move_to_main_device_keeps_own_area(
     assert issue_registry.async_get_issue("homeassistant", issue_id) is not None
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_entity_own_area_without_own_name_issue_on_start(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -6012,6 +6052,7 @@ async def test_migrate_entity_to_new_platform_error_handling(
         )
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_restore_entity(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -6089,7 +6130,7 @@ async def test_restore_entity(
     entry1 = entity_registry.async_update_entity(
         entry1.entity_id,
         aliases=["alias1", "alias2"],
-        area_id="12345A",
+        area_id="12345a",
         categories={"scope1": "id", "scope2": "id"},
         device_class="device_class_user",
         disabled_by=er.RegistryEntryDisabler.USER,
@@ -6154,7 +6195,7 @@ async def test_restore_entity(
         unique_id="1234",
         platform="hue",
         aliases=["alias1", "alias2"],
-        area_id="12345A",
+        area_id="12345a",
         categories={"scope1": "id", "scope2": "id"},
         capabilities={"key2": "value2"},
         config_entry_id=config_entry.entry_id,
@@ -7186,6 +7227,7 @@ async def test_async_migrate_entry_delete_other(
     assert not entity_registry.async_is_registered(entry2.entity_id)
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_removing_labels(entity_registry: er.EntityRegistry) -> None:
     """Make sure we can clear labels."""
     entry = entity_registry.async_get_or_create(
@@ -7213,6 +7255,7 @@ async def test_removing_labels(entity_registry: er.EntityRegistry) -> None:
     assert not entry_cleared_label2.labels
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_removing_labels_deleted_entity(
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -7256,6 +7299,7 @@ async def test_removing_labels_deleted_entity(
     assert entry2_restored.labels == {"label3"}
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_entries_for_label(entity_registry: er.EntityRegistry) -> None:
     """Test getting entity entries by label."""
     entity_registry.async_get_or_create(
@@ -7872,6 +7916,7 @@ async def test_async_entries_for_device_composite_id(
     } == {entity_1.entity_id, entity_2.entity_id}
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_async_get_effective_area_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -8602,3 +8647,96 @@ async def test_compat_name_cleared_on_name_changes(
         for event in events
         if event.data["action"] == "update"
     )
+
+
+async def test_update_entity_unknown_area_or_label(
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test an update with an unknown area or label raises and changes nothing."""
+    entry = entity_registry.async_get_or_create("light", "hue", "5678")
+
+    with pytest.raises(ValueError, match="Area 'unknown' not found."):
+        entity_registry.async_update_entity(entry.entity_id, area_id="unknown")
+    with pytest.raises(ValueError, match="Labels not found: missing, unknown"):
+        entity_registry.async_update_entity(
+            entry.entity_id, labels={"unknown", "missing"}
+        )
+    assert entity_registry.async_get(entry.entity_id) == entry
+
+    area = area_registry.async_create("Kitchen")
+    label = label_registry.async_create("Outdoor")
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, area_id=area.id, labels={label.label_id}
+    )
+    assert entry.area_id == area.id
+    assert entry.labels == {label.label_id}
+
+
+async def test_update_entity_keeps_stale_label(
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test a stale label already on the entity does not block an update."""
+    stale = label_registry.async_create("Stale")
+    entry = entity_registry.async_get_or_create("light", "hue", "5678")
+    entity_registry.async_update_entity(entry.entity_id, labels={stale.label_id})
+    # The label registry drops the label without the usual cleanup
+    del label_registry.labels[stale.label_id]
+    label = label_registry.async_create("Outdoor")
+
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, labels={stale.label_id, label.label_id}
+    )
+    assert entry.labels == {stale.label_id, label.label_id}
+
+
+async def test_move_to_child_device_unknown_own_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a move that hands an unknown area to a child device changes nothing."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "child")},
+        parent_device_id=device_entry.id,
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Light",
+    )
+    area = area_registry.async_create("Kitchen")
+    entry = entity_registry.async_update_entity(entry.entity_id, area_id=area.id)
+    # The area registry drops the area without the usual cleanup
+    del area_registry.areas[area.id]
+    events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
+
+    with pytest.raises(ValueError, match="Area 'kitchen' not found."):
+        entity_registry.async_get_or_create(
+            "light",
+            "hue",
+            "5678",
+            config_entry=config_entry,
+            device_id=child_device.id,
+            has_entity_name=True,
+            original_name=None,
+        )
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entry.entity_id) == entry
+    assert device_registry.async_get(child_device.id) == child_device
+    assert not events

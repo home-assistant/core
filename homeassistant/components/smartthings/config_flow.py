@@ -2,16 +2,53 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
+from uuid import uuid4
 
-from pysmartthings import SmartThings
+import probatio
+from pysmartthings import (
+    SmartThings,
+    SmartThingsAuthenticationFailedError,
+    SmartThingsConnectionError,
+    SmartThingsForbiddenError,
+    SmartThingsQuotaExceededError,
+)
 
+from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    AbstractOAuth2BaseImplementation,
+    AbstractOAuth2FlowHandler,
+    AbstractOAuth2Implementation,
+    ImplementationUnavailableError,
+    async_get_config_entry_implementation,
+    async_get_implementations,
+    async_get_redirect_uri,
+)
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
+from homeassistant.util import dt as dt_util
 
-from .const import CONF_LOCATION_ID, DOMAIN, OLD_DATA, REQUESTED_SCOPES, SCOPES
+from .app_ledger import async_get_app_ledger
+from .const import (
+    APP_NAME_PREFIX,
+    CONF_APP_ID,
+    CONF_LOCATION_ID,
+    CONF_PAT_TOKEN,
+    DOMAIN,
+    HOME_ASSISTANT_CLOUD_CLIENT_ID,
+    MANAGE_PLANS_URL,
+    OLD_DATA,
+    PAT_TOKEN_URL,
+    REQUESTED_SCOPES,
+    SCOPES,
+    app_auth_domain,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +59,13 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     VERSION = 3
     MINOR_VERSION = 3
     DOMAIN = DOMAIN
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self._app_id: str | None = None
+        self._replace_app = False
+        self._implementations: dict[str, AbstractOAuth2BaseImplementation] = {}
 
     @property
     @override
@@ -39,13 +83,166 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Check we have the cloud integration set up."""
-        if "cloud" not in self.hass.config.components:
-            return self.async_abort(
-                reason="cloud_not_enabled",
-                description_placeholders={"default_config": "default_config"},
+        """Check how we should authenticate with SmartThings."""
+        return await self.async_step_pick_implementation(user_input)
+
+    @override
+    async def async_step_pick_implementation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Use a stored credential or a personal access token.
+
+        Overrides the base class, so the Home Assistant Cloud implementation
+        is never offered.
+        """
+        try:
+            self._implementations = await async_get_implementations(self.hass, DOMAIN)
+        except ImplementationUnavailableError:
+            self._implementations = {}
+        return await self.async_step_pat_implementation()
+
+    async def async_step_pat_implementation(self) -> ConfigFlowResult:
+        """Use a stored credential, or fall back to a personal access token."""
+        ledger = await async_get_app_ledger(self.hass)
+        redirect_uri = async_get_redirect_uri(self.hass)
+        implementations = {
+            key: impl
+            for key, impl in self._implementations.items()
+            if isinstance(impl, AbstractOAuth2Implementation)
+            and key != "cloud"
+            and getattr(impl, "client_id", None) != HOME_ASSISTANT_CLOUD_CLIENT_ID
+            and not ledger.is_stale(key, redirect_uri)
+        }
+        if not implementations:
+            return await self.async_step_pat()
+
+        self.flow_impl = next(iter(implementations.values()))
+        return await self.async_step_auth()
+
+    async def async_step_pat(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create a per-user SmartThings app from a Personal Access Token."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                await self._provision_app(user_input[CONF_PAT_TOKEN])
+            except SmartThingsAuthenticationFailedError:
+                errors["base"] = "invalid_pat"
+            except SmartThingsForbiddenError:
+                errors["base"] = "entitlement_required"
+            except SmartThingsConnectionError:
+                errors["base"] = "cannot_connect"
+            except SmartThingsQuotaExceededError:
+                errors["base"] = "quota_exceeded"
+            else:
+                return await self.async_step_auth()
+        return self.async_show_form(
+            step_id="pat",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(probatio.Secret(CONF_PAT_TOKEN)): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    )
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "token_url": PAT_TOKEN_URL,
+                "manage_plans_url": MANAGE_PLANS_URL,
+            },
+        )
+
+    async def _provision_app(self, pat: str) -> None:
+        """Provision a per-user OAuth app for the given Personal Access Token."""
+        redirect_uri = async_get_redirect_uri(self.hass)
+        client = SmartThings(session=async_get_clientsession(self.hass))
+        client.authenticate(pat)
+
+        ledger = await async_get_app_ledger(self.hass)
+
+        # Serialize provisioning, so concurrent flows don't rotate the
+        # credentials of an app another flow is still authorizing with.
+        async with ledger.provisioning_lock:
+            apps = await client.list_apps()
+            try:
+                implementations = await async_get_implementations(self.hass, DOMAIN)
+            except ImplementationUnavailableError:
+                implementations = {}
+            # Apps from another instance on the same account must not be reused, as
+            # regenerating their OAuth credentials would break that instance.
+            existing_app = next(
+                (
+                    app
+                    for app in apps
+                    if app.app_name.startswith(APP_NAME_PREFIX)
+                    and ledger.is_reusable(app.app_id, redirect_uri)
+                    # Rotating the secret of an app in use would break its entries.
+                    and not (
+                        self._is_app_in_use(app.app_id)
+                        and (
+                            self._replace_app
+                            or app_auth_domain(app.app_id) not in implementations
+                        )
+                    )
+                ),
+                None,
             )
-        return await super().async_step_user(user_input)
+
+            if existing_app is not None:
+                self._app_id = existing_app.app_id
+                # Another flow may have just provisioned this app; regenerating its
+                # credentials would invalidate the secret that flow still uses.
+                if isinstance(
+                    implementation := implementations.get(
+                        app_auth_domain(self._app_id)
+                    ),
+                    AbstractOAuth2Implementation,
+                ):
+                    self.flow_impl = implementation
+                    return
+                regenerated = await client.regenerate_oauth(
+                    existing_app.app_id, "Home Assistant", REQUESTED_SCOPES
+                )
+                client_id = regenerated.client_id
+                client_secret = regenerated.client_secret
+            else:
+                app = await client.create_app(
+                    app_name=APP_NAME_PREFIX + str(uuid4()),
+                    display_name="Home Assistant",
+                    description=self.hass.config.location_name,
+                    redirect_uris=[redirect_uri],
+                    scopes=REQUESTED_SCOPES,
+                )
+                self._app_id = app.app_id
+                client_id = app.client_id
+                client_secret = app.client_secret
+
+            auth_domain = app_auth_domain(self._app_id)
+
+            await ledger.async_record(self._app_id, redirect_uri)
+
+            created_at = dt_util.now().strftime("%b %d, %Y at %H:%M")
+            await ledger.async_replace_credential(
+                auth_domain,
+                ClientCredential(
+                    client_id, client_secret, name=f"Created {created_at}"
+                ),
+            )
+
+            implementations = await async_get_implementations(self.hass, DOMAIN)
+            implementation = implementations[auth_domain]
+            if TYPE_CHECKING:
+                assert isinstance(implementation, AbstractOAuth2Implementation)
+            self.flow_impl = implementation
+
+    def _is_app_in_use(self, app_id: str) -> bool:
+        """Return if a config entry authenticates with the app."""
+        auth_domain = app_auth_domain(app_id)
+        return any(
+            entry.data.get("auth_implementation") == auth_domain
+            for entry in self._async_current_entries(include_ignore=False)
+        )
 
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
@@ -54,7 +251,15 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_abort(reason="missing_scopes")
         client = SmartThings(session=async_get_clientsession(self.hass))
         client.authenticate(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
-        locations = await client.get_locations()
+        try:
+            locations = await client.get_locations()
+        except SmartThingsQuotaExceededError:
+            return self.async_abort(
+                reason="quota_exceeded",
+                description_placeholders={"manage_plans_url": MANAGE_PLANS_URL},
+            )
+        except SmartThingsForbiddenError:
+            return self.async_abort(reason="entitlement_required")
         location = locations[0]
         # We pick to use the location id as unique id rather than the installed app id
         # as the installed app id could change with the right settings in the SmartApp
@@ -63,27 +268,42 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
 
+            entry_data: dict[str, Any] = {
+                **data,
+                CONF_LOCATION_ID: location.location_id,
+            }
+            if self._app_id is not None:
+                entry_data[CONF_APP_ID] = self._app_id
             return self.async_create_entry(
                 title=location.name,
-                data={**data, CONF_LOCATION_ID: location.location_id},
+                data=entry_data,
             )
 
         entry = self._get_reauth_entry()
         if CONF_TOKEN not in entry.data:
             if entry.data[OLD_DATA][CONF_LOCATION_ID] != location.location_id:
                 return self.async_abort(reason="reauth_location_mismatch")
+            data_updates: dict[str, Any] = {
+                **data,
+                CONF_LOCATION_ID: location.location_id,
+            }
+            if self._app_id is not None:
+                data_updates[CONF_APP_ID] = self._app_id
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),
-                data_updates={
-                    **data,
-                    CONF_LOCATION_ID: location.location_id,
-                },
+                data_updates=data_updates,
                 unique_id=location.location_id,
             )
         self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
-        return self.async_update_reload_and_abort(
-            self._get_reauth_entry(), data_updates=data
-        )
+        data_updates = dict(data)
+        if self._app_id is not None:
+            data_updates[CONF_APP_ID] = self._app_id
+        previous_auth_domain = entry.data.get("auth_implementation")
+        result = self.async_update_reload_and_abort(entry, data_updates=data_updates)
+        if previous_auth_domain not in (None, data["auth_implementation"]):
+            ledger = await async_get_app_ledger(self.hass)
+            await ledger.async_remove_unused_credential(previous_auth_domain)
+        return result
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -99,4 +319,42 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
             )
+        entry = self._get_reauth_entry()
+        # Cloud entries restart the flow, so they move to a PAT app.
+        if entry.data.get("auth_implementation") not in (None, "cloud"):
+            try:
+                implementation = await async_get_config_entry_implementation(
+                    self.hass, entry
+                )
+            except ValueError, ImplementationUnavailableError:
+                return await self.async_step_user()
+            if (
+                not isinstance(implementation, AbstractOAuth2Implementation)
+                or getattr(implementation, "client_id", None)
+                == HOME_ASSISTANT_CLOUD_CLIENT_ID
+            ):
+                return await self.async_step_user()
+            self.flow_impl = implementation
+            ledger = await async_get_app_ledger(self.hass)
+            # The app's registered callback no longer matches after a URL change.
+            if ledger.is_stale(
+                self.flow_impl.domain, async_get_redirect_uri(self.hass)
+            ):
+                return await self.async_step_user()
+            return await self.async_step_reauth_method()
         return await self.async_step_user()
+
+    async def async_step_reauth_method(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconnect with the stored credential or replace the app."""
+        return self.async_show_menu(
+            step_id="reauth_method", menu_options=["auth", "new_app"]
+        )
+
+    async def async_step_new_app(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Replace the app of the entry being reauthenticated."""
+        self._replace_app = True
+        return await self.async_step_pat()

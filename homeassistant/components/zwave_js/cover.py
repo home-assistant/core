@@ -508,6 +508,10 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
         self._attr_name = self.generate_name(additional_info=additional_info)
         if tilt_value:
             self._attr_device_class = CoverDeviceClass.BLIND
+            self._attr_tilt_start_angle = -90
+            self._attr_tilt_end_angle = 90
+            # The open slat value 50 of the 0-99 scale reads back as 51
+            self._attr_open_tilt_position = self.zwave_to_percent_tilt(SlatStates.OPEN)
         elif pos_value and pos_value.property_key in HORIZONTAL_POSITION_PROPERTY_KEYS:
             self._attr_device_class = CoverDeviceClass.CURTAIN
         else:

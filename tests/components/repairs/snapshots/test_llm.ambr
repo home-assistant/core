@@ -52,33 +52,121 @@
 # ---
 # name: test_tool_exposure_and_schema
   dict({
-    'additionalProperties': False,
-    'properties': dict({
-      'domain': dict({
-        'description': "Filter by the issue's owning integration domain (e.g. 'automation', 'hue', 'mqtt', or 'homeassistant' for core reauth and YAML issues).",
-        'items': dict({
-          'format': 'strip',
-          'type': 'string',
+    'repairs__configure_fix_flow': dict({
+      'annotations': dict({
+        'destructive': True,
+        'idempotent': False,
+        'open_world': True,
+        'read_only': False,
+      }),
+      'description': '''
+        Inspect, submit input to, or abort an in-progress repair fix flow by flow_id.
+        - To inspect the current step without submitting, omit both 'user_input' and 'next_step_id'.
+        - For a 'progress' step, omit both 'user_input' and 'next_step_id' to poll until it advances.
+        - To submit a 'form' step, pass field values in 'user_input' (pass {} for a confirmation form with no fields).
+        - To select an option in a 'menu' step, pass the option key in 'next_step_id'.
+        - To cancel/abort the flow, set 'abort' to true.
+      ''',
+      'parameters': dict({
+        'additionalProperties': False,
+        'properties': dict({
+          'abort': dict({
+            'default': False,
+            'description': 'Set to true to cancel and abort the flow (default: false).',
+            'type': 'boolean',
+          }),
+          'flow_id': dict({
+            'description': 'The flow_id returned by repairs__start_fix_flow.',
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'next_step_id': dict({
+            'description': "Menu option key to select when the current step has type 'menu'.",
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'user_input': dict({
+            'additionalProperties': True,
+            'description': "Field values to submit when the current step has type 'form' (pass {} to confirm an empty form). Omit to fetch the current step state.",
+            'type': 'object',
+          }),
         }),
-        'minItems': 1,
-        'type': 'array',
-      }),
-      'include_ignored': dict({
-        'default': True,
-        'description': 'Whether to include ignored (dismissed) issues in the results.',
-        'type': 'boolean',
-      }),
-      'severity': dict({
-        'description': 'Filter by issue severity.',
-        'enum': list([
-          'critical',
-          'error',
-          'warning',
+        'required': list([
+          'flow_id',
         ]),
-        'format': 'lower',
-        'type': 'string',
+        'type': 'object',
       }),
+      'title': 'Configure repair fix flow step',
     }),
-    'type': 'object',
+    'repairs__get_issues': dict({
+      'annotations': dict({
+        'destructive': False,
+        'idempotent': True,
+        'open_world': False,
+        'read_only': True,
+      }),
+      'description': "Retrieve active Home Assistant repair issues raised by integrations or core (such as broken automations, deprecated configurations, or device problems), including their severity, fixability, and translated title and description. Ignored issues are included by default and marked with 'ignored: true'; issues for disabled config entries are excluded.",
+      'parameters': dict({
+        'additionalProperties': False,
+        'properties': dict({
+          'domain': dict({
+            'description': "Filter by the issue's owning integration domain (e.g. 'automation', 'hue', 'mqtt', or 'homeassistant' for core reauth and YAML issues).",
+            'items': dict({
+              'format': 'strip',
+              'type': 'string',
+            }),
+            'minItems': 1,
+            'type': 'array',
+          }),
+          'include_ignored': dict({
+            'default': True,
+            'description': 'Whether to include ignored (dismissed) issues in the results.',
+            'type': 'boolean',
+          }),
+          'severity': dict({
+            'description': 'Filter by issue severity.',
+            'enum': list([
+              'critical',
+              'error',
+              'warning',
+            ]),
+            'format': 'lower',
+            'type': 'string',
+          }),
+        }),
+        'type': 'object',
+      }),
+      'title': 'Get repair issues',
+    }),
+    'repairs__start_fix_flow': dict({
+      'annotations': dict({
+        'destructive': True,
+        'idempotent': False,
+        'open_world': True,
+        'read_only': False,
+      }),
+      'description': "Start a repair fix flow for a fixable Home Assistant repair issue and return its initial step. Use repairs__get_issues first to find the issue's 'domain' and 'issue_id' (only issues with 'is_fixable: true' have a fix flow).",
+      'parameters': dict({
+        'additionalProperties': False,
+        'properties': dict({
+          'domain': dict({
+            'description': "The owning integration domain of the repair issue (e.g. 'automation', 'homeassistant').",
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'issue_id': dict({
+            'description': 'The issue_id of the fixable repair issue to fix.',
+            'format': 'strip',
+            'type': 'string',
+          }),
+        }),
+        'required': list([
+          'domain',
+          'issue_id',
+        ]),
+        'type': 'object',
+      }),
+      'title': 'Start repair fix flow',
+    }),
   })
 # ---

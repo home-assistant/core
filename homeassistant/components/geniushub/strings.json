@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "wrong_account": "The credentials belong to a different Genius Hub."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -24,6 +25,20 @@
         },
         "title": "Genius Hub local configuration"
       },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "token": "[%key:common::config_flow::data::access_token%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password of the user on your Genius Hub.",
+          "token": "The API token of your Genius Hub cloud account.",
+          "username": "The username to log in to your Genius Hub."
+        },
+        "description": "The credentials for your Genius Hub are no longer valid. Enter new credentials.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "menu_options": {
           "cloud_api": "Cloud: API token",
@@ -34,6 +49,9 @@
     }
   },
   "exceptions": {
+    "invalid_auth": {
+      "message": "Authentication failed, reauthenticate the Genius Hub"
+    },
     "invalid_entity_id": {
       "message": "Unknown Genius Hub entity: {entity_id}"
     },

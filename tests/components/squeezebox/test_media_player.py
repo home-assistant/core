@@ -660,8 +660,8 @@ async def test_squeezebox_load_playlist(
         MEDIA_PLAYER_DOMAIN,
         MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_ID: json.dumps(
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: json.dumps(
                 {
                     "urls": [
                         {"url": FAKE_VALID_ITEM_ID},
@@ -670,7 +670,7 @@ async def test_squeezebox_load_playlist(
                     "index": "0",
                 }
             ),
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
         },
         blocking=True,
     )
