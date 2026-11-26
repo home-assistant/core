@@ -8,10 +8,12 @@ from aioanylist import AuthenticationError, AuthTokens, TransportError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components import homeassistant as ha_component
 from homeassistant.components.any_list.const import CONF_REFRESH_TOKEN, CONF_USER_LOCALE
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ACCESS_TOKEN, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .conftest import USER_ID
@@ -245,3 +247,54 @@ async def test_socket_setup_timeout_retries_and_closes_client(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_anylist_client.close.assert_awaited_once()
+
+
+async def test_socket_closes_during_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+) -> None:
+    """A lost socket during initial setup defers setup and closes the client."""
+
+    async def load(**kwargs: object) -> None:
+        mock_anylist_client.realtime.connected.clear()
+        mock_anylist_client.realtime_error_listener(TransportError())
+
+    mock_anylist_client.load.side_effect = load
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_anylist_client.close.assert_awaited_once()
+
+
+async def test_update_entity_does_not_restore_availability_before_catchup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+) -> None:
+    """A manual refresh cannot recover an outage by publishing cached data."""
+    assert await async_setup_component(hass, ha_component.DOMAIN, {})
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "todo.groceries"
+
+    mock_anylist_client.realtime.connected.clear()
+    mock_anylist_client.realtime_error_listener(TransportError())
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    mock_anylist_client.realtime.connected.set()
+    await hass.services.async_call(
+        ha_component.DOMAIN,
+        ha_component.SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    mock_anylist_client.sync_status_listener(None)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE

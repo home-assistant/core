@@ -47,6 +47,7 @@ class AnyListDataUpdateCoordinator(DataUpdateCoordinator[AnyListState]):
             update_interval=None,
         )
         self.client = client
+        self.write_lock = asyncio.Lock()
         self._started = False
 
     @override
@@ -75,6 +76,11 @@ class AnyListDataUpdateCoordinator(DataUpdateCoordinator[AnyListState]):
     @override
     async def _async_update_data(self) -> AnyListState:
         """Return the event-driven AnyList state."""
+        if not self.last_update_success:
+            # A cached refresh must not clear an outage before the next live sync.
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="update_failed"
+            )
         return self.client.state
 
     @callback

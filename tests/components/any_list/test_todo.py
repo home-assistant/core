@@ -1,9 +1,7 @@
 """Tests for AnyList todo entities."""
 
 import asyncio
-from collections.abc import Coroutine
 from operator import attrgetter
-from typing import Any
 from unittest.mock import MagicMock
 
 from aioanylist import AnyListError, AuthenticationError, Domain
@@ -19,12 +17,14 @@ from homeassistant.components.todo import (
     ATTR_STATUS,
     DOMAIN as TODO_DOMAIN,
     TodoServices,
+    intent as todo_intent,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er, intent
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .conftest import ITEM_ID, LIST_ID
@@ -109,6 +109,32 @@ async def test_update_item(
     mock_anylist_client.flush.assert_awaited_once()
 
 
+async def test_update_item_deleted_before_write(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+) -> None:
+    """Return a translated error if an item disappears before the write."""
+    await setup_integration(hass, mock_config_entry)
+    mock_anylist_client.lists.item.side_effect = None
+    mock_anylist_client.lists.item.return_value = None
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: ITEM_ID, ATTR_RENAME: "Oat milk"},
+            target={TargetKey.ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == TODO_DOMAIN
+    assert err.value.translation_key == "item_not_found"
+    assert err.value.translation_placeholders == {"item": ITEM_ID}
+    mock_anylist_client.lists.rename_item.assert_not_awaited()
+    mock_anylist_client.flush.assert_not_awaited()
+
+
 async def test_delete_items(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -130,43 +156,74 @@ async def test_delete_items(
     )
 
 
-async def test_parallel_writes_are_serialized(
+@pytest.mark.parametrize(
+    ("intent_type", "item", "sdk_method"),
+    [
+        pytest.param(todo_intent.INTENT_LIST_ADD_ITEM, "apples", "add_item", id="add"),
+        pytest.param(
+            todo_intent.INTENT_LIST_COMPLETE_ITEM, "milk", "set_checked", id="complete"
+        ),
+        pytest.param(
+            todo_intent.INTENT_LIST_REMOVE_ITEM,
+            "milk",
+            "bulk_remove_items",
+            id="remove",
+        ),
+    ],
+)
+async def test_assist_waits_for_service_write(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_anylist_client: MagicMock,
+    intent_type: str,
+    item: str,
+    sdk_method: str,
 ) -> None:
-    """Two actions cannot enter the same AnyList write path simultaneously."""
+    """Assist writes wait for an in-flight todo service to finish flushing."""
+    assert await async_setup_component(hass, "homeassistant", {})
     await setup_integration(hass, mock_config_entry)
+    await todo_intent.async_setup_intents(hass)
     entered = asyncio.Event()
     release = asyncio.Event()
 
-    async def slow_add(*args: object, **kwargs: object) -> None:
+    async def slow_flush() -> None:
         entered.set()
         await release.wait()
 
-    mock_anylist_client.lists.add_item.side_effect = slow_add
+    lists = mock_anylist_client.lists
+    mutation = getattr(lists, sdk_method)
+    mock_anylist_client.flush.side_effect = slow_flush
 
-    def add_item(name: str) -> Coroutine[Any, Any, None]:
-        return hass.services.async_call(
-            TODO_DOMAIN,
-            TodoServices.ADD_ITEM,
-            {ATTR_ITEM: name},
-            target={TargetKey.ENTITY_ID: ENTITY_ID},
-            blocking=True,
+    async with asyncio.TaskGroup() as tasks:
+        tasks.create_task(
+            hass.services.async_call(
+                TODO_DOMAIN,
+                TodoServices.UPDATE_ITEM,
+                {ATTR_ITEM: ITEM_ID, ATTR_RENAME: "Oat milk"},
+                target={TargetKey.ENTITY_ID: ENTITY_ID},
+                blocking=True,
+            )
         )
+        async with asyncio.timeout(5):
+            await entered.wait()
 
-    first = asyncio.create_task(add_item("First"))
-    try:
-        await entered.wait()
-        second = asyncio.create_task(add_item("Second"))
-        await asyncio.sleep(0)
-        await asyncio.sleep(0)
-        assert mock_anylist_client.lists.add_item.await_count == 1
-    finally:
+        # Start the intent synchronously up to its first blocking await.
+        assist = tasks.create_task(
+            intent.async_handle(
+                hass,
+                "test",
+                intent_type,
+                {"item": {"value": item}, "name": {"value": "Groceries"}},
+                assistant="conversation",
+            ),
+            eager_start=True,
+        )
+        mutation.assert_not_awaited()
+        lists.item.assert_called_once_with(LIST_ID, ITEM_ID)
         release.set()
-        await asyncio.gather(first, second)
 
-    assert mock_anylist_client.lists.add_item.await_count == 2
+    assert assist.result().response_type is intent.IntentResponseType.ACTION_DONE
+    mutation.assert_awaited_once()
 
 
 @pytest.mark.parametrize(

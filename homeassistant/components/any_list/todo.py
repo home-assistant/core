@@ -13,7 +13,7 @@ from homeassistant.components.todo import (
     TodoListEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -155,73 +155,81 @@ class AnyListTodoListEntity(
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the shopping list."""
-        lists = self.coordinator.client.lists
-        if TYPE_CHECKING:
-            assert lists is not None
-        try:
-            await lists.add_item(
-                self._list_id,
-                item.summary or "",
-                details=item.description,
-            )
-        except AuthenticationError as err:
-            raise self._async_start_reauth() from err
-        except (AnyListError, TimeoutError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="add_item_failed",
-                translation_placeholders={"list_name": self.shopping_list.name},
-            ) from err
-        self.coordinator.async_update_from_client()
+        async with self.coordinator.write_lock:
+            lists = self.coordinator.client.lists
+            if TYPE_CHECKING:
+                assert lists is not None
+            try:
+                await lists.add_item(
+                    self._list_id,
+                    item.summary or "",
+                    details=item.description,
+                )
+            except AuthenticationError as err:
+                raise self._async_start_reauth() from err
+            except (AnyListError, TimeoutError) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="add_item_failed",
+                    translation_placeholders={"list_name": self.shopping_list.name},
+                ) from err
+            self.coordinator.async_update_from_client()
 
     @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the shopping list."""
-        lists = self.coordinator.client.lists
-        if TYPE_CHECKING:
-            assert lists is not None
-        uid = cast(str, item.uid)
-        current = lists.item(self._list_id, uid)
-        if TYPE_CHECKING:
-            assert current is not None
+        async with self.coordinator.write_lock:
+            lists = self.coordinator.client.lists
+            if TYPE_CHECKING:
+                assert lists is not None
+            uid = cast(str, item.uid)
+            if (current := lists.item(self._list_id, uid)) is None:
+                raise ServiceValidationError(
+                    translation_domain=TODO_DOMAIN,
+                    translation_key="item_not_found",
+                    translation_placeholders={"item": uid},
+                )
 
-        try:
-            if item.summary is not None and item.summary != current.name:
-                await lists.rename_item(self._list_id, uid, item.summary, flush=False)
+            try:
+                if item.summary is not None and item.summary != current.name:
+                    await lists.rename_item(
+                        self._list_id, uid, item.summary, flush=False
+                    )
 
-            checked = item.status == TodoItemStatus.COMPLETED
-            if item.status is not None and checked != bool(current.checked):
-                await lists.set_checked(self._list_id, uid, checked, flush=False)
+                checked = item.status == TodoItemStatus.COMPLETED
+                if item.status is not None and checked != bool(current.checked):
+                    await lists.set_checked(self._list_id, uid, checked, flush=False)
 
-            details = item.description or ""
-            if details != str(current.details):
-                await lists.set_details(self._list_id, uid, details, flush=False)
+                details = item.description or ""
+                if details != str(current.details):
+                    await lists.set_details(self._list_id, uid, details, flush=False)
 
-            await self.coordinator.client.flush()
-        except AuthenticationError as err:
-            raise self._async_start_reauth() from err
-        except (AnyListError, TimeoutError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="update_item_failed",
-                translation_placeholders={"list_name": self.shopping_list.name},
-            ) from err
-        self.coordinator.async_update_from_client()
+                await self.coordinator.client.flush()
+            except AuthenticationError as err:
+                raise self._async_start_reauth() from err
+            except (AnyListError, TimeoutError) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="update_item_failed",
+                    translation_placeholders={"list_name": self.shopping_list.name},
+                ) from err
+            self.coordinator.async_update_from_client()
 
     @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete items from the shopping list."""
-        lists = self.coordinator.client.lists
-        if TYPE_CHECKING:
-            assert lists is not None
-        try:
-            await lists.bulk_remove_items(self._list_id, uids)
-        except AuthenticationError as err:
-            raise self._async_start_reauth() from err
-        except (AnyListError, TimeoutError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="delete_item_failed",
-                translation_placeholders={"list_name": self.shopping_list.name},
-            ) from err
-        self.coordinator.async_update_from_client()
+        async with self.coordinator.write_lock:
+            lists = self.coordinator.client.lists
+            if TYPE_CHECKING:
+                assert lists is not None
+            try:
+                await lists.bulk_remove_items(self._list_id, uids)
+            except AuthenticationError as err:
+                raise self._async_start_reauth() from err
+            except (AnyListError, TimeoutError) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="delete_item_failed",
+                    translation_placeholders={"list_name": self.shopping_list.name},
+                ) from err
+            self.coordinator.async_update_from_client()
