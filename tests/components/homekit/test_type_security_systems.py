@@ -656,6 +656,32 @@ async def test_feature_change_while_unknown_updates_valid_values(
     assert 0 in acc.char_target_state.properties[PROP_VALID_VALUES].values()
 
 
+@pytest.mark.parametrize(
+    ("state", "expected_value"),
+    [
+        pytest.param(AlarmControlPanelState.ARMED_HOME, 0, id="known"),
+        # Unknown states aren't mapped, so the disarmed value stays
+        pytest.param(STATE_UNKNOWN, 3, id="unknown"),
+    ],
+)
+async def test_missing_features_restore_default_valid_values(
+    hass: HomeAssistant, hk_driver: HomeDriver, state: str, expected_value: int
+) -> None:
+    """Test a state without supported features advertises the default arm modes."""
+    acc = await _async_setup_panel(
+        hass, hk_driver, AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+
+    with patch.object(hk_driver, "async_update_advertisement") as mock_advertise:
+        hass.states.async_set(PANEL_ENTITY_ID, state)
+        await hass.async_block_till_done()
+
+    mock_advertise.assert_called_once()
+    for char in (acc.char_current_state, acc.char_target_state):
+        assert 0 in char.properties[PROP_VALID_VALUES].values()
+        assert char.value == expected_value
+
+
 async def test_feature_change_without_new_valid_values_changes_nothing(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:

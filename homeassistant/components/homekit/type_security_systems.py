@@ -57,6 +57,14 @@ HASS_TO_HOMEKIT_TARGET = {
     AlarmControlPanelState.DISARMED: HK_ALARM_DISARMED,
 }
 
+DEFAULT_SUPPORTED_FEATURES = (
+    AlarmControlPanelEntityFeature.ARM_HOME
+    | AlarmControlPanelEntityFeature.ARM_VACATION
+    | AlarmControlPanelEntityFeature.ARM_AWAY
+    | AlarmControlPanelEntityFeature.ARM_NIGHT
+    | AlarmControlPanelEntityFeature.TRIGGER
+)
+
 HASS_TO_HOMEKIT_FEATURES = {
     AlarmControlPanelEntityFeature.ARM_HOME: HK_ALARM_STAY_ARMED,
     AlarmControlPanelEntityFeature.ARM_AWAY: HK_ALARM_AWAY_ARMED,
@@ -79,8 +87,11 @@ HK_TO_SERVICE = {
 }
 
 
-def _armed_states(features: int) -> set[int]:
+def _armed_states(state: State) -> set[int]:
     """Return the HomeKit armed states the alarm panel features allow."""
+    features = state.attributes.get(
+        EntityStateAttribute.SUPPORTED_FEATURES, DEFAULT_SUPPORTED_FEATURES
+    )
     return {
         hk for feature, hk in HASS_TO_HOMEKIT_FEATURES.items() if features & feature
     }
@@ -99,17 +110,7 @@ class SecuritySystem(HomeAccessory):
         self._skipped: set[tuple[str, int]] = set()
         self._unannounced: set[Characteristic] = set()
 
-        supported_states = state.attributes.get(
-            EntityStateAttribute.SUPPORTED_FEATURES,
-            (
-                AlarmControlPanelEntityFeature.ARM_HOME
-                | AlarmControlPanelEntityFeature.ARM_VACATION
-                | AlarmControlPanelEntityFeature.ARM_AWAY
-                | AlarmControlPanelEntityFeature.ARM_NIGHT
-                | AlarmControlPanelEntityFeature.TRIGGER
-            ),
-        )
-        self._armed = _armed_states(supported_states)
+        self._armed = _armed_states(state)
         # Feature changes update the valid values in place instead
         self._reload_on_change_attrs.remove(EntityStateAttribute.SUPPORTED_FEATURES)
 
@@ -204,13 +205,12 @@ class SecuritySystem(HomeAccessory):
     def async_update_state_callback(self, new_state: State | None) -> None:
         """Update the armed states, including for unknown states."""
         # Unavailable states carry the registry's features, which can be stale
-        if new_state is not None and new_state.state != STATE_UNAVAILABLE:
-            features = new_state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES)
-            if (
-                features is not None
-                and (armed := _armed_states(features)) != self._armed
-            ):
-                self._async_update_armed_states(armed)
+        if (
+            new_state is not None
+            and new_state.state != STATE_UNAVAILABLE
+            and (armed := _armed_states(new_state)) != self._armed
+        ):
+            self._async_update_armed_states(armed)
         super().async_update_state_callback(new_state)
 
     @callback
