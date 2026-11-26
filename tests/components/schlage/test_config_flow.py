@@ -138,6 +138,91 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    mock_pyschlage_auth: Mock,
+) -> None:
+    """Test changing the email address and password of an account."""
+    result = await mock_added_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "New@asdf.com", "password": "new-password"},
+    )
+
+    mock_pyschlage_auth.authenticate.assert_called_once_with()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_added_config_entry.unique_id == "abc123"
+    assert mock_added_config_entry.data == {
+        "username": "new@asdf.com",
+        "password": "new-password",
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(NotAuthorizedError, "invalid_auth", id="invalid_auth"),
+        pytest.param(PyschlageError, "unknown", id="unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    mock_pyschlage_auth: Mock,
+    side_effect: type[Exception],
+    error: str,
+) -> None:
+    """Test the reconfigure flow handles errors and recovers."""
+    result = await mock_added_config_entry.start_reconfigure_flow(hass)
+
+    mock_pyschlage_auth.authenticate.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "new@asdf.com", "password": "new-password"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_pyschlage_auth.authenticate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "new@asdf.com", "password": "new-password"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_added_config_entry.data == {
+        "username": "new@asdf.com",
+        "password": "new-password",
+    }
+
+
+async def test_reconfigure_wrong_account(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    mock_pyschlage_auth: Mock,
+) -> None:
+    """Test the reconfigure flow rejects a different account."""
+    result = await mock_added_config_entry.start_reconfigure_flow(hass)
+
+    mock_pyschlage_auth.user_id = "bad-user-id"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "other@asdf.com", "password": "new-password"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+    assert mock_added_config_entry.data == {
+        "username": "asdf@asdf.com",
+        "password": "hunter2",
+    }
+
+
 async def test_reauth(
     hass: HomeAssistant,
     mock_added_config_entry: MockSchlageConfigEntry,

@@ -26,6 +26,7 @@ from homeassistant.helpers.typing import Undefined
 from homeassistant.util.enum import try_parse_enum
 
 from .const import DOMAIN
+from .models import BluetoothCallbackReplay
 from .update_coordinator import BasePassiveBluetoothCoordinator
 
 if TYPE_CHECKING:
@@ -315,10 +316,19 @@ class PassiveBluetoothProcessorCoordinator[_DataT](BasePassiveBluetoothCoordinat
         connectable: bool = False,
         scan_interval: float | None = None,
         scan_duration: float | None = None,
+        *,
+        replay: BluetoothCallbackReplay = BluetoothCallbackReplay.OLDEST_FIRST,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
-            hass, logger, address, mode, connectable, scan_interval, scan_duration
+            hass,
+            logger,
+            address,
+            mode,
+            connectable,
+            scan_interval,
+            scan_duration,
+            replay=replay,
         )
         self._processors: list[PassiveBluetoothDataProcessor[Any, _DataT]] = []
         self._update_method = update_method

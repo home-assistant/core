@@ -1169,7 +1169,14 @@ async def test_async_step_reauth_legacy(hass: HomeAssistant) -> None:
     saved_callback = None
 
     def _async_register_callback(
-        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+        _hass,
+        _callback,
+        _matcher,
+        _mode,
+        *,
+        scan_interval=None,
+        scan_duration=None,
+        replay=None,
     ):
         nonlocal saved_callback
         saved_callback = _callback
@@ -1220,7 +1227,14 @@ async def test_async_step_reauth_legacy_wrong_key(hass: HomeAssistant) -> None:
     saved_callback = None
 
     def _async_register_callback(
-        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+        _hass,
+        _callback,
+        _matcher,
+        _mode,
+        *,
+        scan_interval=None,
+        scan_duration=None,
+        replay=None,
     ):
         nonlocal saved_callback
         saved_callback = _callback
@@ -1279,7 +1293,14 @@ async def test_async_step_reauth_v4(hass: HomeAssistant) -> None:
     saved_callback = None
 
     def _async_register_callback(
-        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+        _hass,
+        _callback,
+        _matcher,
+        _mode,
+        *,
+        scan_interval=None,
+        scan_duration=None,
+        replay=None,
     ):
         nonlocal saved_callback
         saved_callback = _callback
@@ -1335,7 +1356,14 @@ async def test_async_step_reauth_v4_wrong_key(hass: HomeAssistant) -> None:
     saved_callback = None
 
     def _async_register_callback(
-        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+        _hass,
+        _callback,
+        _matcher,
+        _mode,
+        *,
+        scan_interval=None,
+        scan_duration=None,
+        replay=None,
     ):
         nonlocal saved_callback
         saved_callback = _callback
@@ -1399,7 +1427,14 @@ async def test_async_step_reauth_v4_from_cloud(hass: HomeAssistant) -> None:
     saved_callback = None
 
     def _async_register_callback(
-        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+        _hass,
+        _callback,
+        _matcher,
+        _mode,
+        *,
+        scan_interval=None,
+        scan_duration=None,
+        replay=None,
     ):
         nonlocal saved_callback
         saved_callback = _callback

@@ -123,6 +123,7 @@ async def test_ingress_host(hass: HomeAssistant, mock_mealie_client: AsyncMock) 
         ("v0.1.0"),
         ("v1.9.0"),
         ("v2.0.0beta-2"),
+        ("v3.6.0"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")

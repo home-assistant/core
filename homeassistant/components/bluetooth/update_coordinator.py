@@ -15,7 +15,7 @@ from .api import (
     async_track_unavailable,
 )
 from .match import BluetoothCallbackMatcher
-from .models import BluetoothChange
+from .models import BluetoothCallbackReplay, BluetoothChange
 
 
 class BasePassiveBluetoothCoordinator(ABC):
@@ -33,6 +33,8 @@ class BasePassiveBluetoothCoordinator(ABC):
         connectable: bool,
         scan_interval: float | None = None,
         scan_duration: float | None = None,
+        *,
+        replay: BluetoothCallbackReplay = BluetoothCallbackReplay.OLDEST_FIRST,
     ) -> None:
         """Initialize the coordinator."""
         self.hass = hass
@@ -43,6 +45,7 @@ class BasePassiveBluetoothCoordinator(ABC):
         self.mode = mode
         self._scan_interval = scan_interval
         self._scan_duration = scan_duration
+        self._replay = replay
         self._last_unavailable_time = 0.0
         self._last_name = address
         # Subclasses are responsible for setting _available to True
@@ -99,6 +102,7 @@ class BasePassiveBluetoothCoordinator(ABC):
                 self.mode,
                 scan_interval=self._scan_interval,
                 scan_duration=self._scan_duration,
+                replay=self._replay,
             )
         )
         self._on_stop.append(

@@ -30,6 +30,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.bluetooth import (
     DOMAIN,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    BluetoothCallbackReplay,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
@@ -707,7 +708,14 @@ async def test_exception_from_update_method(
     saved_callback = None
 
     def _async_register_callback(
-        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+        _hass,
+        _callback,
+        _matcher,
+        _mode,
+        *,
+        scan_interval=None,
+        scan_duration=None,
+        replay=None,
     ):
         nonlocal saved_callback
         saved_callback = _callback
@@ -774,7 +782,14 @@ async def test_bad_data_from_update_method(hass: HomeAssistant) -> None:
     saved_callback = None
 
     def _async_register_callback(
-        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+        _hass,
+        _callback,
+        _matcher,
+        _mode,
+        *,
+        scan_interval=None,
+        scan_duration=None,
+        replay=None,
     ):
         nonlocal saved_callback
         saved_callback = _callback
@@ -2133,3 +2148,36 @@ def test_update_stores_equal_device_info() -> None:
     changed = DeviceInfo(name="Renamed")
     assert data.update(PassiveBluetoothDataUpdate(devices={None: changed})) is None
     assert data.devices[None] is changed
+
+
+@pytest.mark.parametrize(
+    ("replay", "expected_updates"),
+    [
+        pytest.param(BluetoothCallbackReplay.OLDEST_FIRST, 1, id="oldest_first"),
+        pytest.param(BluetoothCallbackReplay.DISABLED, 0, id="disabled"),
+    ],
+)
+async def test_replay_on_start(
+    hass: HomeAssistant, replay: BluetoothCallbackReplay, expected_updates: int
+) -> None:
+    """Test the coordinator replays the cached advertisement only when asked."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    update_method = MagicMock(return_value={"test": "data"})
+
+    coordinator = PassiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.PASSIVE,
+        update_method,
+        replay=replay,
+    )
+    cancel_coordinator = coordinator.async_start()
+
+    assert update_method.call_count == expected_updates
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
+
+    assert update_method.call_count == expected_updates + 1
+    cancel_coordinator()

@@ -77,7 +77,7 @@ async def async_setup_platform(
         tcs.model,
         tcs.id,
         tcs.location.name,
-        coordinator.loc_idx,
+        hass.data[EVOHOME_DATA].loc_idx,
     )
 
     entities: list[EvoController | EvoZone] = [EvoController(coordinator, tcs)]
