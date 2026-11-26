@@ -22,7 +22,12 @@ from homeassistant.config_entries import (
     ConfigSubentry,
     ConfigSubentryData,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_DEVICE, CONF_ID
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    CONF_DEVICE,
+    CONF_DEVICE_CLASS,
+    CONF_ID,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -224,7 +229,7 @@ async def test_yaml_import_with_invalid_id(
     assert not mock_config_entry.subentries
     assert not hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)
     assert issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_invalid_id_binary_sensor_button"
+        DOMAIN, "deprecated_yaml_import_issue_invalid_id_binary_sensor_01:02:03"
     )
 
 
@@ -332,8 +337,13 @@ async def test_yaml_import_of_two_sensors_with_the_same_id(
     issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that the user is told when a second sensor of a device is not imported."""
+    """Test that the user is told when a second sensor of a device is not imported.
+
+    The YAML entries are set up as separate tasks, so either of them can be the
+    one that is imported.
+    """
     mock_config_entry.add_to_hass(hass)
+    device_classes = {"button": None, "door": "door"}
 
     assert await async_setup_component(
         hass,
@@ -353,17 +363,20 @@ async def test_yaml_import_of_two_sensors_with_the_same_id(
     await hass.async_block_till_done()
 
     (subentry,) = mock_config_entry.subentries.values()
-    assert subentry.title == "button"
+    imported = subentry.title
+    (not_imported,) = device_classes.keys() - {imported}
+    assert subentry.data.get(CONF_DEVICE_CLASS) == device_classes[imported]
     assert hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN) == [
-        "binary_sensor.button"
+        f"binary_sensor.{imported}"
     ]
     issue = issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_already_configured_binary_sensor_door"
+        DOMAIN,
+        f"deprecated_yaml_import_issue_already_configured_binary_sensor_{DEVICE_ADDRESS}",
     )
     assert issue is not None
     assert issue.translation_placeholders == {
         "platform": "binary_sensor",
-        "name": "door",
+        "name": not_imported,
         "id": DEVICE_ADDRESS,
     }
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_binary_sensor")

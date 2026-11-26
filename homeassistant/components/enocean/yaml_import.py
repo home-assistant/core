@@ -51,9 +51,10 @@ def async_import_yaml_device(
     try:
         address = str(Address(dev_id))
     except ValueError:
+        yaml_id = ":".join(f"{byte:02X}" for byte in dev_id)
         _async_create_issue(
             hass,
-            f"deprecated_yaml_import_issue_invalid_id_{platform}_{name}",
+            f"deprecated_yaml_import_issue_invalid_id_{platform}_{yaml_id}",
             "deprecated_yaml_import_issue_invalid_id",
             {"platform": platform, "name": name},
         )
@@ -92,7 +93,7 @@ def async_import_yaml_device(
         # settings, which used to be an entity of its own, cannot be imported.
         _async_create_issue(
             hass,
-            f"deprecated_yaml_import_issue_already_configured_{platform}_{name}",
+            f"deprecated_yaml_import_issue_already_configured_{platform}_{address}",
             "deprecated_yaml_import_issue_already_configured",
             {"platform": platform, "name": name, "id": address},
         )

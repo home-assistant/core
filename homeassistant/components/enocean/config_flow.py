@@ -4,15 +4,24 @@ import glob
 from typing import Any, override
 
 from enocean_async import Gateway
+from enocean_async.address import Address
 import probatio
 
 from homeassistant.components import usb
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.usb import (
     human_readable_device_name,
     usb_unique_id_from_service_info,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
+from homeassistant.const import CONF_DEVICE, CONF_DEVICE_CLASS, CONF_ID
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -21,11 +30,34 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER, MANUFACTURER
+from .const import (
+    CONF_DEVICE_TYPE_ID,
+    DEVICE_TYPE_ROCKER_SWITCH,
+    DOMAIN,
+    ERROR_INVALID_DEVICE_ID,
+    ERROR_INVALID_DONGLE_PATH,
+    LOGGER,
+    MANUFACTURER,
+    SUBENTRY_TYPE_DEVICE,
+)
 
 MANUAL_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_DEVICE): cv.string,
+    }
+)
+
+DEVICE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_ID): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): SelectSelector(
+            SelectSelectorConfig(
+                options=[cls.value for cls in BinarySensorDeviceClass],
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="binary_sensor_device_class",
+                sort=True,
+            )
+        ),
     }
 )
 
@@ -57,6 +89,15 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the EnOcean config flow."""
         self.data: dict[str, Any] = {}
+
+    @classmethod
+    @callback
+    @override
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return the subentries a gateway can have."""
+        return {SUBENTRY_TYPE_DEVICE: EnOceanDeviceSubentryFlowHandler}
 
     @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
@@ -181,3 +222,40 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     def create_enocean_entry(self, user_input):
         """Create an entry for the provided configuration."""
         return self.async_create_entry(title=MANUFACTURER, data=user_input)
+
+
+class EnOceanDeviceSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle adding an EnOcean device to a gateway."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a rocker switch."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                address = str(Address(user_input[CONF_ID]))
+            except ValueError:
+                errors[CONF_ID] = ERROR_INVALID_DEVICE_ID
+            else:
+                if any(
+                    subentry.unique_id == address
+                    for subentry in self._get_entry().subentries.values()
+                ):
+                    errors[CONF_ID] = "already_configured_device"
+                else:
+                    data = {
+                        CONF_ID: address,
+                        CONF_DEVICE_TYPE_ID: DEVICE_TYPE_ROCKER_SWITCH,
+                    }
+                    if CONF_DEVICE_CLASS in user_input:
+                        data[CONF_DEVICE_CLASS] = user_input[CONF_DEVICE_CLASS]
+                    return self.async_create_entry(
+                        title=f"Rocker switch {address}", data=data, unique_id=address
+                    )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(DEVICE_SCHEMA, user_input),
+            errors=errors,
+        )

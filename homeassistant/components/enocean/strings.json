@@ -31,6 +31,32 @@
       }
     }
   },
+  "config_subentries": {
+    "device": {
+      "entry_type": "Device",
+      "error": {
+        "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
+        "invalid_device_id": "This is not an EnOcean device ID. Enter four bytes separated by colons, for example FE:DC:BA:98."
+      },
+      "initiate_flow": {
+        "user": "Add device"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "device_class": "Device class",
+            "id": "Device ID"
+          },
+          "data_description": {
+            "device_class": "What the switch stands for, which decides how its state is shown. Leave empty for a plain on/off state.",
+            "id": "The EnOcean ID of the device, as printed on it, for example FE:DC:BA:98."
+          },
+          "description": "Add a rocker switch, such as a wall switch. It gets a binary sensor, which you can rename afterwards, and fires the `button_pressed` event.",
+          "title": "Add an EnOcean device"
+        }
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml": {
       "description": "Configuring EnOcean devices under `{platform}` in YAML is being removed.\n\nYour existing devices have been imported into the EnOcean integration automatically.\n\nRemove the entries with `platform: enocean` under `{platform}` from your `configuration.yaml` file and restart Home Assistant to fix this issue. Keep the EnOcean entries under other platforms; they are not imported yet.",
@@ -50,6 +76,39 @@
     }
   },
   "selector": {
+    "binary_sensor_device_class": {
+      "options": {
+        "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",
+        "battery_charging": "[%key:component::binary_sensor::entity_component::battery_charging::name%]",
+        "carbon_monoxide": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]",
+        "cold": "[%key:component::binary_sensor::entity_component::cold::name%]",
+        "connectivity": "[%key:component::binary_sensor::entity_component::connectivity::name%]",
+        "door": "[%key:component::binary_sensor::entity_component::door::name%]",
+        "garage_door": "[%key:component::binary_sensor::entity_component::garage_door::name%]",
+        "gas": "[%key:component::binary_sensor::entity_component::gas::name%]",
+        "glass_break": "[%key:component::binary_sensor::entity_component::glass_break::name%]",
+        "heat": "[%key:component::binary_sensor::entity_component::heat::name%]",
+        "light": "[%key:component::binary_sensor::entity_component::light::name%]",
+        "lock": "[%key:component::binary_sensor::entity_component::lock::name%]",
+        "moisture": "[%key:component::binary_sensor::entity_component::moisture::name%]",
+        "motion": "[%key:component::binary_sensor::entity_component::motion::name%]",
+        "moving": "[%key:component::binary_sensor::entity_component::moving::name%]",
+        "occupancy": "[%key:component::binary_sensor::entity_component::occupancy::name%]",
+        "opening": "[%key:component::binary_sensor::entity_component::opening::name%]",
+        "plug": "[%key:component::binary_sensor::entity_component::plug::name%]",
+        "power": "[%key:component::binary_sensor::entity_component::power::name%]",
+        "presence": "[%key:component::binary_sensor::entity_component::presence::name%]",
+        "problem": "[%key:component::binary_sensor::entity_component::problem::name%]",
+        "running": "[%key:component::binary_sensor::entity_component::running::name%]",
+        "safety": "[%key:component::binary_sensor::entity_component::safety::name%]",
+        "smoke": "[%key:component::binary_sensor::entity_component::smoke::name%]",
+        "sound": "[%key:component::binary_sensor::entity_component::sound::name%]",
+        "tamper": "[%key:component::binary_sensor::entity_component::tamper::name%]",
+        "update": "[%key:component::binary_sensor::entity_component::update::name%]",
+        "vibration": "[%key:component::binary_sensor::entity_component::vibration::name%]",
+        "window": "[%key:component::binary_sensor::entity_component::window::name%]"
+      }
+    },
     "devices": {
       "options": {
         "manual": "Custom path"

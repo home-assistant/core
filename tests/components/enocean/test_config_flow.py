@@ -2,17 +2,34 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from pytest_homeassistant.common import MockConfigEntry
+from enocean_async import EURID
+from enocean_async.protocol.erp1.rorg import RORG
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.enocean.config_flow import EnOceanFlowHandler
-from homeassistant.components.enocean.const import DOMAIN, MANUFACTURER
+from homeassistant.components.enocean.const import (
+    CONF_DEVICE_TYPE_ID,
+    DEVICE_TYPE_ROCKER_SWITCH,
+    DOMAIN,
+    MANUFACTURER,
+    SUBENTRY_TYPE_DEVICE,
+)
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     SOURCE_USB,
     SOURCE_USER,
     ConfigEntryState,
+    ConfigSubentryData,
 )
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    CONF_DEVICE,
+    CONF_DEVICE_CLASS,
+    CONF_ID,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -292,3 +309,177 @@ async def test_usb_discovery_already_configured_updates_path(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def _start_add_device_flow(hass: HomeAssistant, config_entry: MockConfigEntry):
+    """Set up the entry and start the flow that adds a device."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE), context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+    return result
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    [
+        pytest.param(None, id="without_device_class"),
+        pytest.param("door", id="with_device_class"),
+    ],
+)
+async def test_add_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: Mock,
+    device_class: str | None,
+) -> None:
+    """Test that a rocker switch added in the UI gets its binary sensor."""
+    options = {CONF_DEVICE_CLASS: device_class} if device_class else {}
+    result = await _start_add_device_flow(hass, mock_config_entry)
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_ID: "de:ad:be:ef", **options},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    (subentry,) = mock_config_entry.subentries.values()
+    assert subentry.subentry_type == SUBENTRY_TYPE_DEVICE
+    assert subentry.title == "Rocker switch DE:AD:BE:EF"
+    assert subentry.unique_id == "DE:AD:BE:EF"
+    assert subentry.data == {
+        CONF_ID: "DE:AD:BE:EF",
+        CONF_DEVICE_TYPE_ID: DEVICE_TYPE_ROCKER_SWITCH,
+        **options,
+    }
+
+    state = hass.states.get("binary_sensor.rocker_switch_de_ad_be_ef")
+    assert state is not None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
+
+    events = async_capture_events(hass, "button_pressed")
+    mock_gateway.add_erp1_received_callback.call_args.args[0](
+        ERP1Telegram(RORG.RORG_RPS, b"\x70", EURID("DE:AD:BE:EF"), 0x30)
+    )
+    await hass.async_block_till_done()
+    assert len(events) == 1
+
+    # the gateway keeps running: the serial port is not closed and opened again
+    assert mock_gateway.start.call_count == 1
+    mock_gateway.stop.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_gateway")
+async def test_add_several_devices(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that every added device gets one binary sensor."""
+    result = await _start_add_device_flow(hass, mock_config_entry)
+    await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={CONF_ID: "DE:AD:BE:01"}
+    )
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
+        context={"source": SOURCE_USER},
+    )
+    await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={CONF_ID: "DE:AD:BE:02"}
+    )
+    await hass.async_block_till_done()
+
+    assert sorted(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == [
+        "binary_sensor.rocker_switch_de_ad_be_01",
+        "binary_sensor.rocker_switch_de_ad_be_02",
+    ]
+
+
+@pytest.mark.parametrize(
+    "device_id",
+    [
+        pytest.param("nonsense", id="no_address"),
+        pytest.param("DE:AD:BE", id="three_bytes"),
+        pytest.param("DE:AD:BE:EF:00", id="five_bytes"),
+        pytest.param("GG:AD:BE:EF", id="no_hex"),
+        pytest.param("DEADBEEF", id="no_colons"),
+    ],
+)
+@pytest.mark.usefixtures("mock_gateway")
+async def test_add_device_with_invalid_id(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, device_id: str
+) -> None:
+    """Test that an ID no EnOcean device can have is refused and can be corrected."""
+    result = await _start_add_device_flow(hass, mock_config_entry)
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={CONF_ID: device_id}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_ID: "invalid_device_id"}
+    assert not mock_config_entry.subentries
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={CONF_ID: "DE:AD:BE:EF"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert hass.states.get("binary_sensor.rocker_switch_de_ad_be_ef") is not None
+
+
+@pytest.mark.parametrize(
+    "device_id",
+    [
+        pytest.param("DE:AD:BE:EF", id="same_spelling"),
+        pytest.param("de:ad:be:ef", id="lower_case"),
+    ],
+)
+@pytest.mark.usefixtures("mock_gateway")
+async def test_add_device_that_is_already_configured(
+    hass: HomeAssistant, device_id: str
+) -> None:
+    """Test that a device cannot be added twice."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_DEVICE: "/dev/ttyUSB0"},
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    CONF_ID: "DE:AD:BE:EF",
+                    CONF_DEVICE_TYPE_ID: DEVICE_TYPE_ROCKER_SWITCH,
+                },
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title="Existing",
+                unique_id="DE:AD:BE:EF",
+            )
+        ],
+    )
+    result = await _start_add_device_flow(hass, config_entry)
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={CONF_ID: device_id}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_ID: "already_configured_device"}
+    assert len(config_entry.subentries) == 1
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={CONF_ID: "DE:AD:BE:01"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert sorted(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == [
+        "binary_sensor.existing",
+        "binary_sensor.rocker_switch_de_ad_be_01",
+    ]
