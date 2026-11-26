@@ -328,11 +328,7 @@ def async_set_fallback_availability_interval(
 def async_advertisement_restored(
     hass: HomeAssistant, service_info: BluetoothServiceInfoBleak
 ) -> bool:
-    """Return if an advertisement was restored from before the start.
-
-    The history loaded at startup and restored event-driven advertisements are
-    restored; advertisements heard since are not.
-    """
+    """Return if an advertisement was restored rather than heard since start."""
     return _get_manager(hass).async_advertisement_restored(service_info)
 
 
@@ -340,12 +336,7 @@ def async_advertisement_restored(
 def async_register_event_driven(
     hass: HomeAssistant, address: str
 ) -> Callable[[], None]:
-    """Register a device that only advertises when something happens.
-
-    A new payload of the device is taken from any scanner that hears it, not
-    only from the scanner the device is assigned to. Returns a callback that
-    removes the registration.
-    """
+    """Take new payloads of an event-driven device from any scanner."""
     return _get_manager(hass).async_register_event_driven(address)
 
 
