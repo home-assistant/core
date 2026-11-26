@@ -34,11 +34,20 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "The Touchline controller at {url} cannot be reached."
+    },
+    "communication_error": {
+      "message": "An error occurred while communicating with the Touchline controller at {url}."
+    },
     "error_set_preset": {
       "message": "An error occurred while setting the preset mode."
     },
     "error_set_temperature": {
       "message": "An error occurred while setting the temperature."
+    },
+    "missing_device_id": {
+      "message": "The Touchline controller at {url} returned no ID for thermostat {index}."
     }
   }
 }

@@ -18,5 +18,10 @@
         "description": "Please enter the host name or IP address of the Devialet device."
       }
     }
+  },
+  "exceptions": {
+    "play_media_failed": {
+      "message": "The Devialet device could not play the media."
+    }
   }
 }

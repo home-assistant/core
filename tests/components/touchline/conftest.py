@@ -65,9 +65,11 @@ ROOM_STATUS = RoomStatus(
 )
 
 
-def make_state(*rooms: RoomStatus) -> TouchlineState:
+def make_state(
+    *rooms: RoomStatus, controller: ControllerStatus = CONTROLLER_STATUS
+) -> TouchlineState:
     """Return a controller state with the given thermostats."""
-    return TouchlineState(controller=CONTROLLER_STATUS, rooms=rooms)
+    return TouchlineState(controller=controller, rooms=rooms)
 
 
 @pytest.fixture

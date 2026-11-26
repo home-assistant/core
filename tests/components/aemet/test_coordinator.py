@@ -67,7 +67,7 @@ async def test_coordinator_auth_error(
 
     with (
         patch(
-            "homeassistant.components.aemet.config_flow.AEMET",
+            "homeassistant.components.aemet.util.AEMET",
             return_value=MagicMock(select_coordinates=AsyncMock()),
         ),
         patch(

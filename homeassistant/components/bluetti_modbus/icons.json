@@ -1,5 +1,14 @@
 {
   "entity": {
+    "select": {
+      "working_mode": {
+        "default": "mdi:home-battery",
+        "state": {
+          "backup": "mdi:battery-lock",
+          "custom": "mdi:tune-variant"
+        }
+      }
+    },
     "sensor": {
       "cell_count": {
         "default": "mdi:counter"
