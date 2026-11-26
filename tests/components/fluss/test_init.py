@@ -81,24 +81,16 @@ async def test_offline_device_stays_unavailable(
     assert hass.states.get("button.device_2").state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize(
-    "exception",
-    [
-        FlussApiClientError("boom"),
-        FlussApiClientAuthenticationError("permission revoked"),
-    ],
-)
 async def test_failed_status_does_not_fail_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
-    exception: Exception,
 ) -> None:
     """A non-offline status error is best-effort: setup still completes."""
 
     async def _status(device_id: str) -> dict[str, Any]:
         if device_id == "2a303030sdj1":
-            raise exception
+            raise FlussApiClientError("API usage limit exceeded")
         return {"status": {"internetConnected": True}}
 
     mock_api_client.async_get_device_status.side_effect = _status
@@ -108,6 +100,26 @@ async def test_failed_status_does_not_fail_update(
     # device_1 has no status; it stays usable as a trigger button
     assert hass.states.get("button.device_1").state == STATE_UNKNOWN
     assert hass.states.get("button.device_2").state == STATE_UNKNOWN
+
+
+async def test_status_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+) -> None:
+    """A 401 on the status endpoint is account-level: ask for reauth, do not hide it."""
+    mock_api_client.async_get_device_status.side_effect = (
+        FlussApiClientAuthenticationError("Invalid credentials")
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    reauth_flows = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+    assert len(reauth_flows) == 1
 
 
 async def test_status_error_logged_once_until_recovery(

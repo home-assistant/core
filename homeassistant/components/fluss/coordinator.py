@@ -52,6 +52,8 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             response = await self.api.async_get_device_status(device_id)
         except FlussDeviceOfflineError:
             return {"internetConnected": False}
+        except FlussApiClientAuthenticationError as err:
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except FlussApiClientError as err:
             # Best effort: the trigger buttons work without status, and the API can
             # refuse reads for account-level reasons (e.g. an exhausted quota).
