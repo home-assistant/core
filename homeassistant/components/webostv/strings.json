@@ -93,8 +93,7 @@
   },
   "options": {
     "error": {
-      "cannot_connect": "[%key:component::webostv::config::error::cannot_connect%]",
-      "error_pairing": "[%key:component::webostv::config::error::error_pairing%]"
+      "cannot_connect": "[%key:component::webostv::config::error::cannot_connect%]"
     },
     "step": {
       "init": {
