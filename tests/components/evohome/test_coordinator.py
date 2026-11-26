@@ -240,6 +240,7 @@ async def test_high_precision_temps_grace_period(
         assert _MSG_HP_TEMPS_UNAVAILABLE not in caplog.text
 
         await _poll(hass, freezer)
+        assert current_temperature() is None
         await _poll(hass, freezer)
 
     # the zone uses its v2 temperature (it has none in this fixture), warned only once
