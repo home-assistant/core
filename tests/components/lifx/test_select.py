@@ -20,7 +20,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from . import LABEL, SERIAL, async_setup_lifx_entry, async_trigger_update
 from .helpers import (
@@ -518,13 +522,50 @@ async def test_disabled_unused_infrared_select_is_removed(
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test a disabled select nothing uses is removed without an issue."""
+    """Test a select the user disabled and nothing uses is removed without an issue."""
     register_legacy_infrared_select(entity_registry, er.RegistryEntryDisabler.USER)
 
     await async_setup_lifx_entry(hass, create_mock_infrared_light())
 
     assert entity_registry.async_get(INFRARED_SELECT_ENTITY_ID) is None
     assert not issue_registry.issues
+
+
+async def test_infrared_select_disabled_with_its_device_comes_back(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a select disabled with its device is kept and returns with the device."""
+    register_legacy_infrared_select(entity_registry)
+    device = create_mock_infrared_light()
+    entry = await async_setup_lifx_entry(hass, device)
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), entry.entry_id
+    )
+    assert device_entry
+
+    device_registry.async_update_device(
+        device_entry.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    with patch("homeassistant.components.lifx.Device.connect", return_value=device):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    select = entity_registry.async_get(INFRARED_SELECT_ENTITY_ID)
+    assert select
+    assert select.disabled_by is er.RegistryEntryDisabler.DEVICE
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_infrared_select_{entry.entry_id}"
+    )
+
+    device_registry.async_update_device(device_entry.id, disabled_by=None)
+    with patch("homeassistant.components.lifx.Device.connect", return_value=device):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(INFRARED_SELECT_ENTITY_ID) is not None
 
 
 async def test_infrared_select_removed_before_start_raises_no_issue(

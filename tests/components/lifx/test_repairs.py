@@ -30,6 +30,7 @@ from .helpers import (
 
 MALFORMED_UNIQUE_ID = "gg:bb:cc:dd:ee:cc"
 RENAMED_SELECT_ENTITY_ID = "select.night_vision_level"
+RENAMED_NUMBER_ENTITY_ID = "number.night_vision_level"
 
 
 async def _setup_malformed_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -124,10 +125,16 @@ async def _setup_deprecated_select(
 
 
 @pytest.mark.parametrize(
-    "entity_id",
+    ("entity_id", "number_entity_id"),
     [
-        pytest.param(INFRARED_SELECT_ENTITY_ID, id="original"),
-        pytest.param(RENAMED_SELECT_ENTITY_ID, id="renamed-after-the-issue"),
+        pytest.param(
+            INFRARED_SELECT_ENTITY_ID, INFRARED_NUMBER_ENTITY_ID, id="original"
+        ),
+        pytest.param(
+            RENAMED_SELECT_ENTITY_ID,
+            RENAMED_NUMBER_ENTITY_ID,
+            id="renamed-after-the-issue",
+        ),
     ],
 )
 async def test_deprecated_infrared_select_fix_flow_removes_select(
@@ -136,12 +143,17 @@ async def test_deprecated_infrared_select_fix_flow_removes_select(
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     entity_id: str,
+    number_entity_id: str,
 ) -> None:
-    """Test confirming the repair removes the select, even after a rename."""
+    """Test confirming the repair removes the select and names the current number."""
     issue_id = await _setup_deprecated_select(hass, entity_registry)
     entity_registry.async_update_entity(
         INFRARED_SELECT_ENTITY_ID, new_entity_id=entity_id
     )
+    entity_registry.async_update_entity(
+        INFRARED_NUMBER_ENTITY_ID, new_entity_id=number_entity_id
+    )
+    await hass.async_block_till_done()
     client = await hass_client()
 
     result = await start_repair_fix_flow(client, DOMAIN, issue_id)
@@ -150,7 +162,7 @@ async def test_deprecated_infrared_select_fix_flow_removes_select(
     assert result["description_placeholders"] == {
         "device_name": LABEL,
         "entity_id": entity_id,
-        "replacement_entity_id": INFRARED_NUMBER_ENTITY_ID,
+        "replacement_entity_id": number_entity_id,
     }
 
     result = await process_repair_fix_flow(client, result["flow_id"])
@@ -158,7 +170,7 @@ async def test_deprecated_infrared_select_fix_flow_removes_select(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert entity_registry.async_get(entity_id) is None
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
-    assert hass.states.get(INFRARED_NUMBER_ENTITY_ID) is not None
+    assert hass.states.get(number_entity_id) is not None
 
 
 @pytest.mark.parametrize(

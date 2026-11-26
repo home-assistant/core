@@ -43,7 +43,7 @@ def async_deprecate_infrared_select(
 
     @callback
     def _async_warn_or_remove(hass: HomeAssistant) -> None:
-        """Warn about the select, or remove it once it is disabled and unused."""
+        """Warn about the select, or remove one the user disabled and nothing uses."""
         registry = er.async_get(hass)
         entity_id = coordinator.async_get_entity_id(
             Platform.SELECT, INFRARED_BRIGHTNESS
@@ -51,7 +51,10 @@ def async_deprecate_infrared_select(
         if entity_id is None or (select := registry.async_get(entity_id)) is None:
             ir.async_delete_issue(hass, DOMAIN, issue_id)
             return
-        if select.disabled and not _async_used_by(hass, entity_id):
+        # A select disabled with its device comes back when the device is enabled
+        if select.disabled_by is er.RegistryEntryDisabler.USER and not _async_used_by(
+            hass, entity_id
+        ):
             registry.async_remove(entity_id)
             ir.async_delete_issue(hass, DOMAIN, issue_id)
             return
@@ -143,7 +146,11 @@ class DeprecatedInfraredSelectRepairFlow(ConfirmRepairFlow):
         placeholders = {
             "device_name": self.device_name,
             "entity_id": select.entity_id,
-            "replacement_entity_id": self.replacement_entity_id,
+            # The number shares the select's unique ID and may have been renamed
+            "replacement_entity_id": registry.async_get_entity_id(
+                Platform.NUMBER, DOMAIN, select.unique_id
+            )
+            or self.replacement_entity_id,
         }
         if used_by := _async_used_by(self.hass, select.entity_id):
             return self.async_abort(
