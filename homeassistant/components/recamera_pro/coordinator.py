@@ -337,7 +337,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
     @property
     def stream_ready(self) -> bool:
         """Return whether at least one Result Hub envelope was received."""
-        return bool(self.data and self.data.stream_ready)
+        return bool(self.data is not None and self.data.stream_ready)
 
     def source_state(self, source_id: str) -> DetectionState | None:
         """Return visual or sound state for the requested source."""
@@ -406,7 +406,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
             if self._firmware_reboot is not None:
                 return self._firmware_update
             now = dt_util.utcnow()
-            current = self.data.info.firmware_version if self.data else None
+            current = self.data.info.firmware_version if self.data is not None else None
             cached = self._firmware_update
             if (
                 not force
@@ -620,7 +620,7 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
     ) -> FirmwareUpdateState:
         """Run a fresh OTA check while the caller owns the firmware lock."""
         response = await self.client.async_check_firmware_update(OTA_RELEASE_URL)
-        current = self.data.info.firmware_version if self.data else None
+        current = self.data.info.firmware_version if self.data is not None else None
         available = bool(response["iUpdateAvailable"])
         installed = (
             str(response.get("sCurrentVersion") or current or "").strip() or None

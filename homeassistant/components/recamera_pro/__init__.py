@@ -103,7 +103,11 @@ async def _async_refresh_entry_identity(
             translation_key="identity_mac_missing",
         )
 
-    info = coordinator.data.info if coordinator.data else coordinator.client.info
+    info = (
+        coordinator.data.info
+        if coordinator.data is not None
+        else coordinator.client.info
+    )
     stored_serial = normalize_serial_number(config_entry.data.get(CONF_SERIAL_NUMBER))
     mac_matches = bool(stored_mac and detected_mac and stored_mac == detected_mac)
     if stored_serial:

@@ -31,23 +31,23 @@ def recamera_device_info(coordinator: RecameraCoordinator) -> DeviceInfo:
         manufacturer=MANUFACTURER,
         model=(
             coordinator.data.info.base_plate_model
-            if coordinator.data
+            if coordinator.data is not None
             else data.get(CONF_MODEL)
         ),
         name=coordinator.config_entry.title,
         serial_number=(
             coordinator.data.info.serial_number
-            if coordinator.data
+            if coordinator.data is not None
             else data.get(CONF_SERIAL_NUMBER)
         ),
         hw_version=(
             coordinator.data.info.hardware_version
-            if coordinator.data
+            if coordinator.data is not None
             else data.get(CONF_HW_VERSION)
         ),
         sw_version=(
             coordinator.data.info.firmware_version
-            if coordinator.data
+            if coordinator.data is not None
             else data.get(CONF_SW_VERSION)
         ),
         configuration_url=(f"https://{format_url_host(data[CONF_HOST])}"),
