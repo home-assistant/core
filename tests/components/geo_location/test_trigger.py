@@ -6,12 +6,8 @@ import pytest
 from pytest_homeassistant.common import async_mock_service, mock_component
 
 from homeassistant.components import automation, zone
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ENTITY_MATCH_ALL,
-    SERVICE_TURN_OFF,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.components.automation import AutomationService
+from homeassistant.const import ENTITY_MATCH_ALL, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
@@ -106,8 +102,8 @@ async def test_if_fires_on_zone_enter(
 
     await hass.services.async_call(
         automation.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_MATCH_ALL},
         blocking=True,
     )
 
