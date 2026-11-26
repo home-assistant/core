@@ -134,6 +134,7 @@ ENTITY_DESCRIBING_ATTRIBUTES = {
     "original_name",
     "supported_features",
     "unit_of_measurement",
+    "aliases",
 }
 
 
