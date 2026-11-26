@@ -11,7 +11,7 @@ from typing import override
 from aiohttp import ClientSession, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
-from go2rtc_client import Go2RtcRestClient
+from go2rtc_client import Go2RtcRestClient, Stream
 from go2rtc_client.exceptions import Go2RtcClientError, Go2RtcVersionError
 from go2rtc_client.ws import (
     Go2RtcWsClient,
@@ -78,6 +78,19 @@ _LOGGER = logging.getLogger(__name__)
 _FFMPEG = "ffmpeg"
 # go2rtc handles these sources natively, and ffmpeg can't open them
 _SCHEMES_WITHOUT_FFMPEG = frozenset({"nest"})
+# Suffix of the separate stream that ffmpeg reads such a source from
+_SOURCE_STREAM_SUFFIX = "_source"
+
+
+def _source_stream_identifier(identifier: str) -> str:
+    """Return the name of the stream that ffmpeg reads a camera's source from.
+
+    go2rtc's RTSP server looks a stream up by the decoded path, so the name
+    can't have percent-escapes.
+    """
+    return identifier.replace("%", "_") + _SOURCE_STREAM_SUFFIX
+
+
 _AUTH = "auth"
 # Mirrors go2rtc 1.9.15+, which masks the userinfo of URLs in its API responses
 _USERINFO = re.compile(r"://[A-Za-z0-9\-._~!$&'()*+,;=%:]+@")
@@ -414,8 +427,10 @@ class WebRTCProvider(CameraWebRTCProvider):
             return await self._rest_client.get_jpeg_snapshot(
                 get_camera_identifier(camera), width, height
             )
-        except Go2RtcClientError as err:
-            raise HomeAssistantError("Unable to get image from go2rtc") from err
+        except Go2RtcClientError:
+            # Not chained, as the client error can contain the stream source
+            # with its credentials
+            raise HomeAssistantError("Unable to get image from go2rtc") from None
 
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""
@@ -436,13 +451,20 @@ class WebRTCProvider(CameraWebRTCProvider):
         camera_prefs = await get_dynamic_camera_stream_settings(
             self._hass, camera.entity_id
         )
-        if (
-            camera_prefs.orientation is not Orientation.NO_TRANSFORM
-            # The orientation is applied with ffmpeg
-            and stream_source.partition(":")[0] not in _SCHEMES_WITHOUT_FFMPEG
-        ):
+        streams = await self._rest_client.streams.list()
+        identifier = get_camera_identifier(camera)
+
+        if camera_prefs.orientation is not Orientation.NO_TRANSFORM:
             # Camera orientation manually set by user
-            if not stream_source.startswith(_FFMPEG):
+            if stream_source.partition(":")[0] in _SCHEMES_WITHOUT_FFMPEG:
+                # ffmpeg can't open the source itself, so it reads it from a
+                # separate go2rtc stream
+                source_identifier = _source_stream_identifier(identifier)
+                await self._async_add_stream(
+                    streams, source_identifier, stream_source, [stream_source]
+                )
+                stream_source = f"{_FFMPEG}:{source_identifier}"
+            elif not stream_source.startswith(_FFMPEG):
                 stream_source = _FFMPEG + ":" + stream_source
             stream_source += "#video=h264#audio=copy"
             match camera_prefs.orientation:
@@ -463,24 +485,33 @@ class WebRTCProvider(CameraWebRTCProvider):
                 case Orientation.ROTATE_RIGHT:
                     stream_source += "#rotate=90"
 
-        streams = await self._rest_client.streams.list()
-        identifier = get_camera_identifier(camera)
+        await self._async_add_stream(
+            streams,
+            identifier,
+            stream_source,
+            [
+                stream_source,
+                # We are setting any ffmpeg rtsp related logs to debug
+                # Connection problems to the camera will be
+                # logged by the first stream
+                # Therefore setting it to debug will not hide any important logs
+                f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+            ],
+        )
 
+    async def _async_add_stream(
+        self,
+        streams: dict[str, Stream],
+        identifier: str,
+        stream_source: str,
+        sources: list[str],
+    ) -> None:
+        """Add a stream to go2rtc, unless it already has the stream source."""
         if (stream := streams.get(identifier)) is None or not any(
             self._is_added_stream_source(identifier, stream_source, producer.url)
             for producer in stream.producers
         ):
-            await self._rest_client.streams.add(
-                identifier,
-                [
-                    stream_source,
-                    # We are setting any ffmpeg rtsp related logs to debug
-                    # Connection problems to the camera will be
-                    # logged by the first stream
-                    # Therefore setting it to debug will not hide any important logs
-                    f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
-                ],
-            )
+            await self._rest_client.streams.add(identifier, sources)
             self._added_stream_sources[identifier] = stream_source
 
     def _is_added_stream_source(
@@ -545,6 +576,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         await self._close_camera_sessions(camera)
         identifier = get_camera_identifier(camera)
         self._added_stream_sources.pop(identifier, None)
+        self._added_stream_sources.pop(_source_stream_identifier(identifier), None)
         if identifier in await self._rest_client.preload.list():
             await self._rest_client.preload.disable(identifier)
 
