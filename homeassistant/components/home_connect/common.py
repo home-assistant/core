@@ -130,7 +130,6 @@ def _handle_paired_or_connected_appliance(
                             event_key,
                         )
                     )
-                    entry.async_on_unload(changed_options_listener_remove_callback)
                     callbacks_for_appliance.append(
                         changed_options_listener_remove_callback
                     )
@@ -176,6 +175,15 @@ def setup_home_connect_entry(
         defaultdict(list)
     )
 
+    def _remove_changed_options_listeners() -> None:
+        # A depaired appliance's listeners are already removed and dropped
+        # from the dict, so each remaining listener is removed exactly once.
+        for callbacks in changed_options_listener_remove_callbacks.values():
+            for remove_callback in callbacks:
+                remove_callback()
+        changed_options_listener_remove_callbacks.clear()
+
+    entry.async_on_unload(_remove_changed_options_listeners)
     entry.async_on_unload(
         entry.runtime_data.async_add_global_listener(
             partial(
