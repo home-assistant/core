@@ -15,7 +15,7 @@ from pyoverkiz.exceptions import (
     TooManyConcurrentRequestsError,
     TooManyRequestsError,
 )
-from pyoverkiz.models import Setup
+from pyoverkiz.models import Event, Setup
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -44,6 +44,7 @@ from .helpers import (
     device_created_event,
     device_removed_event,
     device_state_changed_event,
+    device_updated_event,
     execution_registered_event,
     execution_state_changed_event,
     gateway_alive_event,
@@ -78,6 +79,7 @@ GARAGE = FixtureDevice(
     "io://1234-1234-6233/1166863",
     "cover.living_room_main_garage_door",
 )
+NEW_DEVICE_URLS = ("io://1234-1234-6233/9000001", "io://1234-1234-6233/9000002")
 RTS_SHUTTER = FixtureDevice(
     "setup/cloud_somfy_connexoon_rts_asia.json",
     "rts://1234-1234-6362/16730022",
@@ -528,6 +530,54 @@ async def test_device_removed_keeps_device_owned_by_other_entry(
     assert device.config_entry_id == other_entry.entry_id
 
 
+@pytest.mark.parametrize(
+    ("events", "expected_reloads"),
+    [
+        pytest.param(
+            [
+                device_created_event(SHUTTER.device_url),
+                device_created_event(GARAGE.device_url),
+            ],
+            0,
+            id="known_devices_reannounced_after_gateway_reboot",
+        ),
+        pytest.param(
+            [device_created_event(device_url) for device_url in NEW_DEVICE_URLS],
+            1,
+            id="new_devices",
+        ),
+        pytest.param(
+            [
+                device_updated_event(SHUTTER.device_url),
+                device_updated_event(GARAGE.device_url),
+            ],
+            1,
+            id="updated_devices",
+        ),
+    ],
+)
+async def test_device_events_reload_once_per_batch(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    events: list[Event],
+    expected_reloads: int,
+) -> None:
+    """Only new or updated devices reload the entry, once per event batch."""
+    entry = await setup_overkiz_integration(fixture=TAHOMA_V2_FIXTURE)
+    mock_client.reset_mock()
+
+    with patch(
+        "homeassistant.components.overkiz.create_cloud_client",
+        return_value=mock_client,
+    ):
+        await async_deliver_events(hass, freezer, mock_client, events)
+
+    assert mock_client.get_setup.await_count == expected_reloads
+    assert entry.state is ConfigEntryState.LOADED
+
+
 async def test_child_devices_link_to_their_gateway(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -539,7 +589,7 @@ async def test_child_devices_link_to_their_gateway(
 
     The secondary box that hosts the swinging gate is not returned in
     setup.gateways, but the via_device link of its child must still resolve.
-    A DEVICE_CREATED event reloads the entry, which must keep the link intact.
+    A DEVICE_UPDATED event reloads the entry, which must keep the link intact.
     """
     mock_config_entry.add_to_hass(hass)
     mock_client.set_setup_fixture(TAHOMA_V2_FIXTURE)
@@ -571,12 +621,12 @@ async def test_child_devices_link_to_their_gateway(
         assert main_child.via_device_id == main_gateway.id
         assert secondary_child.via_device_id == secondary_gateway.id
 
-        # A DEVICE_CREATED event reloads the entry; the links must survive.
+        # A DEVICE_UPDATED event reloads the entry; the links must survive.
         await async_deliver_events(
             hass,
             freezer,
             mock_client,
-            [device_created_event(SECONDARY_GATEWAY_CHILD_URL)],
+            [device_updated_event(SECONDARY_GATEWAY_CHILD_URL)],
         )
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
