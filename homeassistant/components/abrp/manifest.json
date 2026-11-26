@@ -11,6 +11,6 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["aioabrp"],
-  "quality_scale": "silver",
+  "quality_scale": "gold",
   "requirements": ["aioabrp==0.9.0"]
 }
