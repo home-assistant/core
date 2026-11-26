@@ -4,7 +4,7 @@ from typing import Any, override
 
 from xiaomi_gateway import XiaomiGateway
 
-from homeassistant.components.cover import ATTR_POSITION, CoverEntity
+from homeassistant.components.cover import CoverEntity, CoverServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -84,7 +84,7 @@ class XiaomiGenericCover(XiaomiDevice, CoverEntity):
     @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs.get(ATTR_POSITION)
+        position = kwargs.get(CoverServiceArgument.POSITION)
         if self._data_key == DATA_KEY_PROTO_V2:
             self._write_to_hub(self._sid, **{ATTR_CURTAIN_LEVEL: position})
         else:
