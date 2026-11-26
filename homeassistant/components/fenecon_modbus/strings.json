@@ -149,15 +149,18 @@
           "ok": "OK",
           "warning": "Warning"
         }
-      },
-      "system_time": {
-        "name": "System time"
       }
     }
   },
   "exceptions": {
-    "update_error": {
-      "message": "Error communicating with the FEMS: {error}"
+    "cannot_connect": {
+      "message": "Could not connect to the FEMS at {host}."
+    },
+    "invalid_response": {
+      "message": "The FEMS sent an invalid response."
+    },
+    "timeout": {
+      "message": "The FEMS at {host} did not respond in time."
     }
   }
 }

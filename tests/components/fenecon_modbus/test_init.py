@@ -39,8 +39,14 @@ async def test_load_unload(
 
 @pytest.mark.parametrize("method", ["read_device_info", "read_data"])
 @pytest.mark.parametrize(
-    "side_effect",
-    [FeneconConnectionError, FeneconTimeoutError, FeneconInvalidResponseError],
+    ("side_effect", "translation_key"),
+    [
+        pytest.param(FeneconConnectionError, "cannot_connect", id="cannot_connect"),
+        pytest.param(FeneconTimeoutError, "timeout", id="timeout"),
+        pytest.param(
+            FeneconInvalidResponseError, "invalid_response", id="invalid_response"
+        ),
+    ],
 )
 async def test_setup_retry(
     hass: HomeAssistant,
@@ -48,13 +54,15 @@ async def test_setup_retry(
     mock_config_entry: MockConfigEntry,
     method: str,
     side_effect: type[Exception],
+    translation_key: str,
 ) -> None:
-    """Test setup is retried when the FEMS cannot be read."""
+    """Test setup is retried with a translated error when the FEMS cannot be read."""
     getattr(mock_fenecon_client, method).side_effect = side_effect
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == translation_key
     mock_fenecon_client.close.assert_awaited_once()
 
 
