@@ -37,7 +37,6 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
-    ATTR_RELEASE_SUMMARY,
     ATTR_TITLE,
     ATTR_VERSION,
     DOMAIN as UPDATE_DOMAIN,
@@ -53,7 +52,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 ENTITY_ID = "update.amazon_fire"
@@ -105,14 +104,13 @@ async def install(hass: HomeAssistant, version: str | None = None) -> None:
 
 
 @pytest.mark.parametrize(
-    ("device_info", "state", "title", "latest_version", "summary", "apk"),
+    ("device_info", "state", "title", "latest_version", "apk"),
     [
         pytest.param(
             {},
             STATE_ON,
             "Fully Kiosk Browser",
             "1.61.4",
-            "Download Fully-Kiosk-Browser-v1.61.4.apk (7.05 MB)",
             "Fully-Kiosk-Browser-v1.61.4.apk",
             id="regular",
         ),
@@ -121,7 +119,6 @@ async def install(hass: HomeAssistant, version: str | None = None) -> None:
             STATE_ON,
             "Fully Kiosk Browser",
             "1.61.4",
-            "Download Fully-Kiosk-Browser-v1.61.4.apk (7.05 MB)",
             "Fully-Kiosk-Browser-v1.61.4.apk",
             id="regular_with_package",
         ),
@@ -130,7 +127,6 @@ async def install(hass: HomeAssistant, version: str | None = None) -> None:
             STATE_ON,
             "Fully Kiosk Browser",
             "1.61.4",
-            "Download Fully-Kiosk-Browser-v1.61.4.apk (7.05 MB)",
             "Fully-Kiosk-Browser-v1.61.4.apk",
             id="foreground_app_ignored",
         ),
@@ -139,7 +135,6 @@ async def install(hass: HomeAssistant, version: str | None = None) -> None:
             STATE_ON,
             "Fully Kiosk Browser",
             "1.61.4-emm",
-            "Download Fully-Kiosk-Browser-v1.61.4-emm.apk (7.61 MB)",
             "Fully-Kiosk-Browser-v1.61.4-emm.apk",
             id="emm",
         ),
@@ -148,7 +143,6 @@ async def install(hass: HomeAssistant, version: str | None = None) -> None:
             STATE_ON,
             "Fully Single App Kiosk",
             "1.21.4",
-            "Download Fully-Single-App-Kiosk-v1.21.4.apk (7.10 MB)",
             "Fully-Single-App-Kiosk-v1.21.4.apk",
             id="single_app",
         ),
@@ -157,7 +151,6 @@ async def install(hass: HomeAssistant, version: str | None = None) -> None:
             STATE_ON,
             "Fully Video Kiosk",
             "1.21.4",
-            "Download Fully-Video-Kiosk-v1.21.4.apk (7.10 MB)",
             "Fully-Video-Kiosk-v1.21.4.apk",
             id="video",
         ),
@@ -173,7 +166,6 @@ async def test_install_latest(
     state: str,
     title: str,
     latest_version: str,
-    summary: str,
     apk: str,
 ) -> None:
     """Test the matching release is offered and installed."""
@@ -190,7 +182,6 @@ async def test_install_latest(
         == (device_info["appVersionName"])
     )
     assert entity_state.attributes[ATTR_LATEST_VERSION] == latest_version
-    assert entity_state.attributes[ATTR_RELEASE_SUMMARY] == summary
     assert entity_state.attributes[ATTR_TITLE] == title
     assert entity_state.attributes[ATTR_IN_PROGRESS] is False
     assert entity_state.attributes[ATTR_SUPPORTED_FEATURES] == (
@@ -216,6 +207,33 @@ async def test_install_latest(
     assert entity_state.state == STATE_OFF
     assert entity_state.attributes[ATTR_INSTALLED_VERSION] == latest_version
     assert entity_state.attributes[ATTR_IN_PROGRESS] is False
+
+
+async def test_firmware_version_updated(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_fully_kiosk: MagicMock,
+    setup_integration: Callable[[], Awaitable[None]],
+    device_info: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the device firmware version follows the installed version."""
+    await setup_integration()
+    entry = entity_registry.async_get(ENTITY_ID)
+    assert entry
+
+    mock_fully_kiosk.getDeviceInfo.return_value = {
+        **device_info,
+        "appVersionName": "1.61.4",
+    }
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get(entry.device_id)
+    assert device
+    assert device.sw_version == "1.61.4"
 
 
 @pytest.mark.parametrize(
@@ -346,7 +364,7 @@ async def test_release_notes(
     setup_integration: Callable[[], Awaitable[None]],
     messages: list[dict[str, str]],
 ) -> None:
-    """Test the release notes warn when the installation must be confirmed."""
+    """Test the release notes explain the installation."""
     await setup_integration()
 
     client = await hass_ws_client(hass)
@@ -357,8 +375,15 @@ async def test_release_notes(
 
     assert result["success"]
     assert result["result"] == {
-        "release_notes": "Download Fully-Kiosk-Browser-v1.61.4.apk (7.05 MB)",
-        "messages": messages,
+        "release_notes": None,
+        "messages": [
+            {
+                "severity": "info",
+                "message": "Fully Kiosk downloads [version 1.61.4]"
+                f"({APK_URL}) from its website, installs it and restarts.",
+            },
+            *messages,
+        ],
     }
 
 

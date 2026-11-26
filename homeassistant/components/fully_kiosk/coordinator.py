@@ -15,6 +15,7 @@ from fullykiosk.exceptions import FullyKioskError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
@@ -50,7 +51,6 @@ class FullyKioskRelease:
     version: str
     variant: str | None
     url: str
-    description: str | None
 
 
 @dataclass(frozen=True)
@@ -139,7 +139,6 @@ class FullyKioskReleasesDataUpdateCoordinator(
         for item in root.findall(".//item"):
             title = item.findtext("title")
             link = item.findtext("link")
-            description = item.findtext("description")
             if not title or not link:
                 continue
             if match := APK_FILENAME_REGEX.match(title.strip()):
@@ -149,7 +148,6 @@ class FullyKioskReleasesDataUpdateCoordinator(
                         version=match.group("version"),
                         variant=match.group("variant"),
                         url=link.strip(),
-                        description=description.strip() if description else None,
                     )
                 )
 
@@ -198,12 +196,9 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             async with asyncio.timeout(15):
                 # Get device info and settings in parallel
-                result = await asyncio.gather(
+                data, settings = await asyncio.gather(
                     self.fully.getDeviceInfo(), self.fully.getSettings()
                 )
-                # Store settings under settings key in data
-                result[0]["settings"] = result[1]
-                return cast(dict[str, Any], result[0])
         except FullyKioskError as error:
             raise UpdateFailed(error) from error
         except (TimeoutError, aiohttp.ClientError) as error:
@@ -212,3 +207,15 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN,
                 translation_key="device_unreachable",
             ) from error
+        # Store settings under settings key in data
+        data["settings"] = settings
+
+        # The device registry only reads the version when the entities are added
+        if (version := data.get("appVersionName")) is not None:
+            device_registry = dr.async_get(self.hass)
+            device = device_registry.async_get_device_by_identifier(
+                (DOMAIN, data["deviceID"]), self.config_entry.entry_id
+            )
+            if device is not None and device.sw_version != version:
+                device_registry.async_update_device(device.id, sw_version=version)
+        return cast(dict[str, Any], data)

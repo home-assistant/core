@@ -155,25 +155,29 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
 
     @property
     @override
-    def release_summary(self) -> str | None:
-        """Return release summary."""
-        return release.description if (release := self._get_release()) else None
-
-    @property
-    @override
     def release_notes_messages(self) -> tuple[UpdateReleaseNotesMessage, ...]:
-        """Messages shown before the release notes."""
+        """Explain how the latest release is installed."""
+        if (release := self._get_release()) is None:
+            return ()
+        install = UpdateReleaseNotesMessage(
+            translation_domain=DOMAIN,
+            translation_key="download_and_install",
+            translation_placeholders={
+                "version": self._installed_name(release),
+                "apk_url": release.url,
+            },
+        )
         # Android only installs silently for device owners or with root
         if self.coordinator.data.get("isDeviceOwner") or self.coordinator.data.get(
             "isRooted"
         ):
-            return ()
-        return (RELEASE_NOTES_MESSAGE_CONFIRM_INSTALL,)
+            return (install,)
+        return (install, RELEASE_NOTES_MESSAGE_CONFIRM_INSTALL)
 
     @override
     async def async_release_notes(self) -> str | None:
-        """Return the release summary, shown with the messages."""
-        return self.release_summary
+        """Return no release notes, the feed only links the APK."""
+        return None
 
     @property
     @override
