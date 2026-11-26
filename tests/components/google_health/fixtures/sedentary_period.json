@@ -1,0 +1,11 @@
+{
+  "rollupDataPoints": [
+    {
+      "sedentaryPeriod": {
+        "durationSum": "27000s"
+      },
+      "civilStartTime": { "date": { "year": 2026, "month": 6, "day": 28 } },
+      "civilEndTime": { "date": { "year": 2026, "month": 6, "day": 29 } }
+    }
+  ]
+}

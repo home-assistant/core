@@ -5,9 +5,7 @@ from dataclasses import dataclass
 from enum import IntFlag
 from typing import override
 
-from sofar_modbus.modern.device import SofarInverter
-from sofar_modbus.modern.enums import PowerControlFlags
-from sofar_modbus.modern.faults import FaultCategory
+from sofar_modbus import FaultCategory, PowerControlFlags, SofarInverter
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -92,16 +90,15 @@ async def async_setup_entry(
         FAULT_SENSOR_DESCRIPTIONS + FLAG_SENSOR_DESCRIPTIONS,
     )
     runtime_data = entry.runtime_data
-    served = runtime_data.served_components
     entities: list[SofarFaultBinarySensor | SofarFlagBinarySensor] = [
         SofarFaultBinarySensor(runtime_data, description)
         for description in FAULT_SENSOR_DESCRIPTIONS
-        if description.component in served
+        if description.component in runtime_data.served_components
     ]
     entities.extend(
         SofarFlagBinarySensor(runtime_data, description)
         for description in FLAG_SENSOR_DESCRIPTIONS
-        if description.component in served
+        if description.component in runtime_data.served_components
     )
     async_add_entities(entities)
 

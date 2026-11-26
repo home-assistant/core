@@ -14,6 +14,8 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -23,6 +25,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -55,8 +58,8 @@ async def test_turn_on(
     """Test turning on the light."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -71,8 +74,8 @@ async def test_turn_off(
     """Test turning off the light."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -134,8 +137,11 @@ async def test_brightness_snap_to_nearest(
     """Test that brightness values map correctly to device percentages."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: ha_brightness},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.BRIGHTNESS: ha_brightness,
+        },
         blocking=True,
     )
 
@@ -207,8 +213,8 @@ async def test_state_update_via_callback_after_command_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 

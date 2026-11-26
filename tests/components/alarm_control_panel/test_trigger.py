@@ -22,7 +22,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.components.alarm_control_panel.trigger import TRIGGERS
-from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 
 
@@ -106,7 +106,7 @@ def test_trigger_target_support() -> None:
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
             trigger_from_none=False,
         ),
@@ -115,7 +115,7 @@ def test_trigger_target_support() -> None:
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
             trigger_from_none=False,
         ),
@@ -124,7 +124,7 @@ def test_trigger_target_support() -> None:
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
             trigger_from_none=False,
         ),
@@ -133,7 +133,7 @@ def test_trigger_target_support() -> None:
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
             trigger_from_none=False,
         ),
@@ -205,7 +205,7 @@ async def test_alarm_control_panel_state_trigger_behavior_each(
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
             trigger_from_none=False,
         ),
@@ -214,7 +214,7 @@ async def test_alarm_control_panel_state_trigger_behavior_each(
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
             trigger_from_none=False,
         ),
@@ -223,7 +223,7 @@ async def test_alarm_control_panel_state_trigger_behavior_each(
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
             trigger_from_none=False,
         ),
@@ -232,7 +232,7 @@ async def test_alarm_control_panel_state_trigger_behavior_each(
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
             trigger_from_none=False,
         ),
@@ -304,7 +304,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
             trigger_from_none=False,
         ),
@@ -313,7 +313,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
             trigger_from_none=False,
         ),
@@ -322,7 +322,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
             trigger_from_none=False,
         ),
@@ -331,7 +331,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
             trigger_from_none=False,
         ),

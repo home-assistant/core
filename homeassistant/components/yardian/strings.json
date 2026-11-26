@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "The access token belongs to a different Yardian controller."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,12 +10,23 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::yardian::config::step::user::data_description::access_token%]"
+        },
+        "description": "Enter the new access token for your Yardian Smart Sprinkler Controller.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]",
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
+          "access_token": "Access token for your Yardian Smart Sprinkler Controller. You can find it in the Yardian app.",
           "host": "Hostname or IP address of your Yardian Smart Sprinkler Controller. You can find it in the Yardian app."
         }
       }
@@ -54,6 +66,14 @@
       "zone_delay": {
         "name": "Zone delay"
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
     }
   },
   "services": {

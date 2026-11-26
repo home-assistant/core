@@ -121,6 +121,7 @@
       }),
     }),
     'system': dict({
+      'manufacture_date': None,
       'model': 'HUSQVARNA AUTOMOWER® 450XH',
       'name': 'Test Mower 1',
       'serial_number': '123',
@@ -301,6 +302,7 @@
       }),
     }),
     'system': dict({
+      'manufacture_date': None,
       'model': 'HUSQVARNA AUTOMOWER® 450XH',
       'name': 'Test Mower 1',
       'serial_number': '123',

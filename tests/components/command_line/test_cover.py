@@ -16,19 +16,14 @@ from homeassistant.components.command_line.cover import CommandCover
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SCAN_INTERVAL,
+    CoverService,
     CoverState,
 )
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_STOP_COVER,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -120,8 +115,8 @@ async def test_state_value(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.test"},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: "cover.test"},
             blocking=True,
         )
         entity_state = hass.states.get("cover.test")
@@ -130,8 +125,8 @@ async def test_state_value(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.test"},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: "cover.test"},
             blocking=True,
         )
         entity_state = hass.states.get("cover.test")
@@ -140,8 +135,8 @@ async def test_state_value(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: "cover.test"},
+            CoverService.STOP,
+            {TargetKey.ENTITY_ID: "cover.test"},
             blocking=True,
         )
         entity_state = hass.states.get("cover.test")
@@ -170,7 +165,10 @@ async def test_move_cover_failure(
     """Test command failure."""
 
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
+        COVER_DOMAIN,
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: "cover.test"},
+        blocking=True,
     )
     assert "Command failed" in caplog.text
     assert "return code 1" in caplog.text
@@ -445,15 +443,15 @@ async def test_icon_template(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.test"},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: "cover.test"},
             blocking=True,
         )
 
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.test"},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: "cover.test"},
             blocking=True,
         )
         entity_state = hass.states.get("cover.test")
@@ -462,8 +460,8 @@ async def test_icon_template(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.test"},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: "cover.test"},
             blocking=True,
         )
         entity_state = hass.states.get("cover.test")

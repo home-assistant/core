@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus import InvalidStateReason, NeoPoolInvalidStateError
@@ -23,13 +23,14 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.neopool.const import FOLLOW_UP_REFRESH_DELAY
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.neopool.const import DOMAIN, FOLLOW_UP_REFRESH_DELAY
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -43,7 +44,7 @@ from .conftest import MOCK_POOL_DATA
 async def _turn_on(hass: HomeAssistant, entity_id: str) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -52,7 +53,7 @@ async def _turn_on(hass: HomeAssistant, entity_id: str) -> None:
 async def _turn_off(hass: HomeAssistant, entity_id: str) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -628,6 +629,83 @@ async def test_aux_and_cover_absent_when_options_off(
     assert gated == []
 
 
+@pytest.mark.parametrize(
+    ("occupied_relay", "hidden_suffix"),
+    [(4, "_aux1"), (5, "_aux2"), (6, "_aux3"), (7, "_aux4")],
+)
+async def test_aux_switch_absent_when_relay_assigned_to_function(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_neopool_client: MagicMock,
+    mock_config_entry_switch: MockConfigEntry,
+    occupied_relay: int,
+    hidden_suffix: str,
+) -> None:
+    """An AUX switch is not created when its relay is assigned to a function.
+
+    The option is enabled (mock_config_entry_switch), so this exercises the
+    entity-level safety net, not the option gate.
+    """
+    data = {**mock_neopool_client.async_read_all.return_value}
+    data["MBF_PAR_PH_BASE_RELAY_GPIO"] = occupied_relay
+    mock_neopool_client.async_read_all = AsyncMock(return_value=data)
+    await setup_integration(hass, mock_config_entry_switch)
+
+    aux_suffixes = {
+        suffix
+        for suffix in ("_aux1", "_aux2", "_aux3", "_aux4")
+        for e in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry_switch.entry_id
+        )
+        if e.domain == SWITCH_DOMAIN and e.unique_id.endswith(suffix)
+    }
+    assert hidden_suffix not in aux_suffixes
+    # The other three AUX relays stay free and keep their switches.
+    assert aux_suffixes == {"_aux1", "_aux2", "_aux3", "_aux4"} - {hidden_suffix}
+
+
+async def test_occupied_aux_cleanup_removes_only_disabled_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_neopool_client: MagicMock,
+    mock_config_entry_switch: MockConfigEntry,
+) -> None:
+    """Setup removes a disabled occupied-AUX entry but keeps an enabled one.
+
+    On an existing install the gate alone leaves a registered AUX entity as a
+    restored, unavailable state. The cleanup drops such a stale entry only when
+    it is disabled, so a user-enabled AUX keeps its customisations even once its
+    relay becomes occupied.
+    """
+    mock_config_entry_switch.add_to_hass(hass)
+    # AUX1 relay 4 and AUX2 relay 5 are both claimed by a function.
+    data = {**mock_neopool_client.async_read_all.return_value}
+    data["MBF_PAR_PH_ACID_RELAY_GPIO"] = 4
+    data["MBF_PAR_PH_BASE_RELAY_GPIO"] = 5
+    mock_neopool_client.async_read_all = AsyncMock(return_value=data)
+    serial = mock_config_entry_switch.unique_id
+    # A stale disabled AUX1 entry (should be removed) and an enabled, customised
+    # AUX2 entry (should be kept).
+    disabled = entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        f"{serial}_aux1",
+        config_entry=mock_config_entry_switch,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    enabled = entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        f"{serial}_aux2",
+        config_entry=mock_config_entry_switch,
+    )
+
+    await setup_integration(hass, mock_config_entry_switch)
+
+    assert entity_registry.async_get(disabled.entity_id) is None
+    assert entity_registry.async_get(enabled.entity_id) is not None
+
+
 async def test_switch_write_schedules_follow_up_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -661,3 +739,32 @@ async def test_all_entities(
     await snapshot_platform(
         hass, entity_registry, snapshot, mock_config_entry_switch.entry_id
     )
+
+
+async def test_aux_switch_becomes_unavailable_when_relay_occupied_mid_run(
+    hass: HomeAssistant,
+    mock_neopool_client: MagicMock,
+    mock_config_entry_switch: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """AUX switch becomes unavailable when its relay is claimed mid-run.
+
+    The supported_fn gate runs only at setup. The available property must
+    re-evaluate it on every coordinator update so that an occupied relay
+    makes existing entities unavailable instead of leaving them writable
+    with stale values.
+    """
+    with patch("homeassistant.components.neopool.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, mock_config_entry_switch)
+
+    entity_id = _entity_id_by_suffix(hass, mock_config_entry_switch, "_aux1")
+    assert hass.states.get(entity_id) is not None
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    occupied_data = {**MOCK_POOL_DATA, "MBF_PAR_HEATING_GPIO": 4}  # relay 4 == AUX1
+    mock_neopool_client.async_read_all.return_value = occupied_data
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

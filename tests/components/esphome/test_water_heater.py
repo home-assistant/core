@@ -19,18 +19,11 @@ from homeassistant.components.water_heater import (
     ATTR_MIN_TEMP,
     ATTR_OPERATION_LIST,
     DOMAIN as WATER_HEATER_DOMAIN,
-    SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     WaterHeaterEntityFeature,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_TEMPERATURE,
-)
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -148,10 +141,10 @@ async def test_water_heater_set_temperature(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        WaterHeaterService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.test_my_boiler",
-            ATTR_TEMPERATURE: 55,
+            TargetKey.ENTITY_ID: "water_heater.test_my_boiler",
+            WaterHeaterServiceArgument.TEMPERATURE: 55,
         },
         blocking=True,
     )
@@ -193,9 +186,9 @@ async def test_water_heater_set_operation_mode(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
+        WaterHeaterService.SET_OPERATION_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.test_my_boiler",
+            TargetKey.ENTITY_ID: "water_heater.test_my_boiler",
             "operation_mode": "gas",
         },
         blocking=True,
@@ -241,8 +234,8 @@ async def test_water_heater_on_off(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "water_heater.test_my_boiler"},
+        WaterHeaterService.TURN_ON,
+        {TargetKey.ENTITY_ID: "water_heater.test_my_boiler"},
         blocking=True,
     )
 
@@ -254,8 +247,8 @@ async def test_water_heater_on_off(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "water_heater.test_my_boiler"},
+        WaterHeaterService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "water_heater.test_my_boiler"},
         blocking=True,
     )
 
@@ -455,10 +448,10 @@ async def test_water_heater_set_away_mode(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_AWAY_MODE,
+        WaterHeaterService.SET_AWAY_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.test_my_boiler",
-            ATTR_AWAY_MODE: away_mode,
+            TargetKey.ENTITY_ID: "water_heater.test_my_boiler",
+            WaterHeaterServiceArgument.AWAY_MODE: away_mode,
         },
         blocking=True,
     )
@@ -539,8 +532,11 @@ async def test_water_heater_fahrenheit_unit(
     # set_temperature is called in °C; ESPHome must receive the °F equivalent
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "water_heater.test_my_boiler", ATTR_TEMPERATURE: 10},
+        WaterHeaterService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "water_heater.test_my_boiler",
+            WaterHeaterServiceArgument.TEMPERATURE: 10,
+        },
         blocking=True,
     )
     mock_client.water_heater_command.assert_called_once_with(
@@ -581,8 +577,11 @@ async def test_water_heater_fahrenheit_unit_fahrenheit_system(
     # set_temperature is called in °F; ESPHome must receive the same value
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "water_heater.test_my_boiler", ATTR_TEMPERATURE: 86},
+        WaterHeaterService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "water_heater.test_my_boiler",
+            WaterHeaterServiceArgument.TEMPERATURE: 86,
+        },
         blocking=True,
     )
     mock_client.water_heater_command.assert_called_once_with(

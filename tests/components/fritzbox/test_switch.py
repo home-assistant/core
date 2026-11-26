@@ -9,16 +9,9 @@ from requests.exceptions import HTTPError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritzbox.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_DEVICES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import CONF_DEVICES, STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -62,7 +55,10 @@ async def test_switch_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
     )
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: SWITCH_ENTITY_ID}, True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: SWITCH_ENTITY_ID},
+        True,
     )
     assert device.set_switch_state_on.call_count == 1
 
@@ -76,7 +72,10 @@ async def test_switch_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
     )
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: SWITCH_ENTITY_ID}, True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: SWITCH_ENTITY_ID},
+        True,
     )
 
     assert device.set_switch_state_off.call_count == 1
@@ -96,7 +95,10 @@ async def test_switch_toggle_while_locked(hass: HomeAssistant, fritz: Mock) -> N
         match="Can't toggle switch while manual switching is disabled for the device",
     ):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: SWITCH_ENTITY_ID}, True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: SWITCH_ENTITY_ID},
+            True,
         )
 
     with pytest.raises(
@@ -104,7 +106,10 @@ async def test_switch_toggle_while_locked(hass: HomeAssistant, fritz: Mock) -> N
         match="Can't toggle switch while manual switching is disabled for the device",
     ):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: SWITCH_ENTITY_ID}, True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: SWITCH_ENTITY_ID},
+            True,
         )
 
 
@@ -218,7 +223,10 @@ async def test_activate_trigger(hass: HomeAssistant, fritz: Mock) -> None:
     )
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TRIGGER_ENTITY_ID}, True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: TRIGGER_ENTITY_ID},
+        True,
     )
     assert fritz().set_trigger_active.call_count == 1
 
@@ -234,6 +242,9 @@ async def test_deactivate_trigger(hass: HomeAssistant, fritz: Mock) -> None:
     )
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: TRIGGER_ENTITY_ID}, True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: TRIGGER_ENTITY_ID},
+        True,
     )
     assert fritz().set_trigger_inactive.call_count == 1

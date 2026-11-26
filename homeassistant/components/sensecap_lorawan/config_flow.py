@@ -26,8 +26,6 @@ class SenseCapConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm setup without choosing a server."""
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
         return await self.async_step_confirm(user_input)
 
     @override
@@ -35,7 +33,8 @@ class SenseCapConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: LoRaWANDiscoveryInfo | dict[str, Any]
     ) -> ConfigFlowResult:
         """Discover the vendor once across all servers."""
-        return await self.async_step_user()
+        await self._async_handle_discovery_without_unique_id()
+        return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None

@@ -1,8 +1,10 @@
 """Button platform for the Vitesy integration."""
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import override
 
+from aiovitesy.api import VitesyDevice
 from aiovitesy.exceptions import VitesyError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -13,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import VitesyConfigEntry, VitesyDataUpdateCoordinator
-from .entity import VitesyEntity
+from .entity import VitesyEntity, async_add_device_entities
 
 PARALLEL_UPDATES = 1
 
@@ -48,12 +50,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Vitesy buttons from a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        VitesyButton(coordinator, device_id, description)
-        for device_id, device in coordinator.data.items()
-        for description in BUTTONS
-        if description.component in device.maintenance
-    )
+
+    def _entities(device_id: str, device: VitesyDevice) -> Iterable[VitesyButton]:
+        return (
+            VitesyButton(coordinator, device_id, description)
+            for description in BUTTONS
+            if description.component in device.maintenance
+        )
+
+    async_add_device_entities(coordinator, async_add_entities, _entities)
 
 
 class VitesyButton(VitesyEntity, ButtonEntity):

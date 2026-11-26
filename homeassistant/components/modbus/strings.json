@@ -15,6 +15,9 @@
     },
     "not_loaded": {
       "message": "Modbus is not loaded, so this action cannot be performed."
+    },
+    "unknown_hub": {
+      "message": "Modbus hub {hub} is not configured."
     }
   },
   "issues": {

@@ -25,18 +25,18 @@ from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_UPDATE_PERCENTAGE,
-    ATTR_VERSION,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
+    UpdateServiceArgument,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -45,6 +45,7 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import get_mock_event_function
 from .conftest import setup_integration
@@ -331,6 +332,17 @@ async def test_unsupported_radio_catalog(
     assert state.attributes[ATTR_LATEST_VERSION] == "20240716"
 
 
+@pytest.mark.parametrize(
+    ("message", "wait"),
+    [
+        pytest.param(MOCK_FIRMWARE_DONE, timedelta(seconds=5), id="completion-event"),
+        pytest.param(
+            MOCK_FIRMWARE_PROGRESS,
+            timedelta(minutes=10, seconds=1),
+            id="missed-completion-event",
+        ),
+    ],
+)
 @patch("homeassistant.components.smlight.update.asyncio.sleep", return_value=None)
 async def test_update_firmware(
     mock_sleep: MagicMock,
@@ -338,8 +350,10 @@ async def test_update_firmware(
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
+    message: MessageEvent,
+    wait: timedelta,
 ) -> None:
-    """Test firmware updates."""
+    """Test firmware updates, with and without the completion event."""
     await setup_integration(hass, mock_config_entry)
     mock_smlight_client.get_firmware_version.reset_mock()
     entity_id = "update.mock_title_core_firmware"
@@ -348,11 +362,13 @@ async def test_update_firmware(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
-    await hass.services.async_call(
-        UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=False,
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
     )
 
     assert len(mock_smlight_client.fw_update.mock_calls) == 1
@@ -364,17 +380,20 @@ async def test_update_firmware(
     assert state.attributes[ATTR_IN_PROGRESS] is True
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 50
 
-    event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
+    event_function = get_mock_event_function(
+        mock_smlight_client, SmEvents[message.type]
+    )
 
-    event_function(MOCK_FIRMWARE_DONE)
+    event_function(message)
 
     mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(
         sw_version="v2.7.5",
     )
 
-    freezer.tick(timedelta(seconds=5))
+    freezer.tick(wait)
     async_fire_time_changed(hass)
+    await install_task
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -405,8 +424,8 @@ async def test_update_zigbee2_firmware(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=False,
     )
 
@@ -450,8 +469,8 @@ async def test_update_legacy_firmware_v2(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=False,
     )
 
@@ -476,12 +495,14 @@ async def test_update_legacy_firmware_v2(
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
 
+@patch("homeassistant.components.smlight.update.asyncio.sleep", return_value=None)
 async def test_update_firmware_failed(
+    mock_sleep: MagicMock,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
 ) -> None:
-    """Test firmware updates."""
+    """A flash error is reported to the install action and a retry can succeed."""
     await setup_integration(hass, mock_config_entry)
     entity_id = "update.mock_title_core_firmware"
     state = hass.states.get(entity_id)
@@ -489,25 +510,83 @@ async def test_update_firmware_failed(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
-    await hass.services.async_call(
-        UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=False,
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
     )
-
-    assert len(mock_smlight_client.fw_update.mock_calls) == 1
-
+    mock_smlight_client.fw_update.assert_awaited_once()
     event_function = get_mock_event_function(mock_smlight_client, SmEvents.ZB_FW_err)
+    event_function(MOCK_FIRMWARE_FAIL)
 
-    async def _call_event_function(event: MessageEvent):
-        event_function(event)
-
-    with pytest.raises(HomeAssistantError):
-        await _call_event_function(MOCK_FIRMWARE_FAIL)
+    with pytest.raises(HomeAssistantError, match="Firmware update failed"):
+        await install_task
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+    # Only callbacks registered by the retry may complete it.
+    mock_smlight_client.sse.register_callback.reset_mock()
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    )
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
+    event_function(MOCK_FIRMWARE_DONE)
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(sw_version="v2.7.5")
+    await install_task
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.7.5"
+
+
+@pytest.mark.parametrize(
+    "elapsed",
+    [
+        pytest.param(timedelta(seconds=2), id="next-poll"),
+        pytest.param(timedelta(minutes=3, seconds=1), id="version-check-timeout"),
+    ],
+)
+async def test_update_firmware_failed_during_version_check(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    elapsed: timedelta,
+) -> None:
+    """A flash error reported after the completion wait expired is not masked."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "update.mock_title_core_firmware"
+
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    )
+    mock_smlight_client.fw_update.assert_awaited_once()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10, seconds=1))
+    await asyncio.sleep(0)
+    assert mock_config_entry.runtime_data.firmware.in_progress is True
+
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.ZB_FW_err)
+    event_function(MOCK_FIRMWARE_FAIL)
+    async_fire_time_changed(hass, dt_util.utcnow() + elapsed)
+    await asyncio.sleep(0)
+    assert mock_config_entry.runtime_data.firmware.in_progress is False
+    with pytest.raises(HomeAssistantError, match="Firmware update failed"):
+        await install_task
 
 
 @pytest.mark.parametrize(
@@ -527,18 +606,21 @@ async def test_update_firmware_failed(
             True,
             id="auth_error",
         ),
+        pytest.param(
+            [False], HomeAssistantError, "Firmware update failed", False, id="rejected"
+        ),
     ],
 )
 async def test_update_install_command_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
-    side_effect: type[Exception],
+    side_effect: type[Exception] | list[bool],
     expected_exception: type[Exception],
     expected_match: str,
     expected_reauth: bool,
 ) -> None:
-    """Test install service handles connection and auth errors from fw_update."""
+    """Test errors and rejections from the firmware command."""
     await setup_integration(hass, mock_config_entry)
     entity_id = "update.mock_title_core_firmware"
     mock_smlight_client.fw_update.side_effect = side_effect
@@ -546,8 +628,8 @@ async def test_update_install_command_error(
     with pytest.raises(expected_exception, match=expected_match):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -565,12 +647,33 @@ async def test_update_install_command_error(
     assert bool(reauth_flows) is expected_reauth
 
 
-async def test_update_reboot_timeout(
+@pytest.mark.parametrize(
+    ("message", "wait", "expected_error"),
+    [
+        pytest.param(
+            MOCK_FIRMWARE_PROGRESS,
+            timedelta(minutes=10, seconds=1),
+            "Firmware update timed out",
+            id="no-completion-event",
+        ),
+        pytest.param(
+            MOCK_FIRMWARE_DONE,
+            timedelta(0),
+            r"Timeout waiting for .* to reboot after update",
+            id="reboot",
+        ),
+    ],
+)
+async def test_update_timeout(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
+    message: MessageEvent,
+    wait: timedelta,
+    expected_error: str,
 ) -> None:
-    """Test reboot timeout raises a translated user-facing error."""
+    """Report which phase timed out when the version never changes."""
     await setup_integration(hass, mock_config_entry)
     entity_id = "update.mock_title_core_firmware"
     state = hass.states.get(entity_id)
@@ -578,42 +681,99 @@ async def test_update_reboot_timeout(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
-    with (
-        patch(
-            "homeassistant.components.smlight.update.asyncio.timeout",
-            side_effect=TimeoutError,
-        ),
-        patch(
-            "homeassistant.components.smlight.update.asyncio.sleep",
-            return_value=None,
-        ),
-    ):
-        install_task = hass.async_create_task(
-            hass.services.async_call(
-                UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: entity_id},
-                blocking=True,
-            )
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
-        await asyncio.sleep(0)
+    )
+    mock_smlight_client.fw_update.assert_awaited_once()
+    event_function = get_mock_event_function(
+        mock_smlight_client, SmEvents[message.type]
+    )
+    event_function(message)
+    await asyncio.sleep(0)
 
-        assert len(mock_smlight_client.fw_update.mock_calls) == 1
+    freezer.tick(wait)
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+    # The version is checked before any timeout is reported.
+    assert mock_config_entry.runtime_data.firmware.in_progress is True
 
-        event_function = get_mock_event_function(
-            mock_smlight_client, SmEvents.FW_UPD_done
-        )
-        event_function(MOCK_FIRMWARE_DONE)
-
-        with pytest.raises(
-            HomeAssistantError,
-            match=r"Timeout waiting for .* to reboot after update",
-        ):
-            await install_task
+    freezer.tick(timedelta(minutes=3, seconds=1))
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+    assert mock_config_entry.runtime_data.firmware.in_progress is False
+    with pytest.raises(HomeAssistantError, match=expected_error):
+        await install_task
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+    assert mock_smlight_client.sse.register_callback.return_value.call_count == 3
+
+
+@pytest.mark.parametrize(
+    ("message", "wait"),
+    [
+        pytest.param(
+            MOCK_FIRMWARE_PROGRESS,
+            timedelta(minutes=10, seconds=1),
+            id="no-completion-event",
+        ),
+        pytest.param(MOCK_FIRMWARE_DONE, timedelta(0), id="reboot"),
+    ],
+)
+async def test_update_version_seen_at_deadline(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    message: MessageEvent,
+    wait: timedelta,
+) -> None:
+    """The install succeeds if the last poll before the deadline sees the new version."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "update.mock_title_core_firmware"
+
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    )
+    mock_smlight_client.fw_update.assert_awaited_once()
+    event_function = get_mock_event_function(
+        mock_smlight_client, SmEvents[message.type]
+    )
+    event_function(message)
+    await asyncio.sleep(0)
+
+    freezer.tick(wait)
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(sw_version="v2.7.5")
+    freezer.tick(timedelta(minutes=2, seconds=59))
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+    assert hass.states.get(entity_id).attributes[ATTR_INSTALLED_VERSION] == "v2.7.5"
+    assert mock_config_entry.runtime_data.firmware.in_progress is True
+
+    # The deadline expires during the sleep after the poll that saw the new version.
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+    await install_task
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_IN_PROGRESS] is False
 
 
 @pytest.mark.parametrize(
@@ -650,7 +810,7 @@ async def test_update_release_notes(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] is not None
+    assert result["result"]["release_notes"] is not None
 
 
 async def test_update_blank_release_notes(
@@ -682,7 +842,7 @@ async def test_update_blank_release_notes(
     )
     result = await ws_client.receive_json()
     await hass.async_block_till_done()
-    assert result["result"] is None
+    assert result["result"]["release_notes"] is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_ultima_client")
@@ -763,8 +923,11 @@ async def test_update_firmware_specific_version(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VERSION: version},
+        UpdateService.INSTALL,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            UpdateServiceArgument.VERSION: version,
+        },
         blocking=False,
     )
 
@@ -810,8 +973,11 @@ async def test_update_firmware_specific_version_invalid(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.mock_title_core_firmware", ATTR_VERSION: version},
+            UpdateService.INSTALL,
+            {
+                TargetKey.ENTITY_ID: "update.mock_title_core_firmware",
+                UpdateServiceArgument.VERSION: version,
+            },
             blocking=True,
         )
 

@@ -90,6 +90,7 @@ from .utils import (
     remove_empty_sub_devices,
     remove_stale_blu_trv_devices,
 )
+from .views import StorageProxyView
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -98,6 +99,7 @@ PLATFORMS: Final = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.EVENT,
+    Platform.FAN,
     Platform.INFRARED,
     Platform.LIGHT,
     Platform.MEDIA_PLAYER,
@@ -145,6 +147,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[DOMAIN] = {CONF_COAP_PORT: conf[CONF_COAP_PORT]}
 
     async_setup_services(hass)
+    hass.http.register_view(StorageProxyView(hass))
 
     return True
 

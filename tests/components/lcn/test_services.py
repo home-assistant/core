@@ -6,29 +6,8 @@ import pypck
 import pytest
 
 from homeassistant.components.lcn import DOMAIN
-from homeassistant.components.lcn.const import (
-    CONF_KEYS,
-    CONF_LED,
-    CONF_OUTPUT,
-    CONF_PCK,
-    CONF_RELVARREF,
-    CONF_ROW,
-    CONF_SETPOINT,
-    CONF_TABLE,
-    CONF_TEXT,
-    CONF_TIME,
-    CONF_TIME_UNIT,
-    CONF_TRANSITION,
-    CONF_VALUE,
-    CONF_VARIABLE,
-)
-from homeassistant.components.lcn.services import LcnService
-from homeassistant.const import (
-    CONF_BRIGHTNESS,
-    CONF_DEVICE_ID,
-    CONF_STATE,
-    CONF_UNIT_OF_MEASUREMENT,
-)
+from homeassistant.components.lcn.services import LcnService, LcnServiceArgument
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -55,9 +34,9 @@ async def test_service_output_abs(
             LcnService.OUTPUT_ABS,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_OUTPUT: "output1",
-                CONF_BRIGHTNESS: 100,
-                CONF_TRANSITION: 5,
+                LcnServiceArgument.OUTPUT: "output1",
+                LcnServiceArgument.BRIGHTNESS: 100,
+                LcnServiceArgument.TRANSITION: 5,
             },
             blocking=True,
         )
@@ -79,8 +58,8 @@ async def test_service_output_rel(
             LcnService.OUTPUT_REL,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_OUTPUT: "output1",
-                CONF_BRIGHTNESS: 25,
+                LcnServiceArgument.OUTPUT: "output1",
+                LcnServiceArgument.BRIGHTNESS: 25,
             },
             blocking=True,
         )
@@ -102,8 +81,8 @@ async def test_service_output_toggle(
             LcnService.OUTPUT_TOGGLE,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_OUTPUT: "output1",
-                CONF_TRANSITION: 5,
+                LcnServiceArgument.OUTPUT: "output1",
+                LcnServiceArgument.TRANSITION: 5,
             },
             blocking=True,
         )
@@ -125,7 +104,7 @@ async def test_service_relays(
             LcnService.RELAYS,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_STATE: "0011TT--",
+                LcnServiceArgument.STATE: "0011TT--",
             },
             blocking=True,
         )
@@ -145,7 +124,7 @@ async def test_service_relays(
             LcnService.RELAYS,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_STATE: "0011TT--00",
+                LcnServiceArgument.STATE: "0011TT--00",
             },
             blocking=True,
         )
@@ -167,8 +146,8 @@ async def test_service_led(
             LcnService.LED,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_LED: "led6",
-                CONF_STATE: "blink",
+                LcnServiceArgument.LED: "led6",
+                LcnServiceArgument.STATE: "blink",
             },
             blocking=True,
         )
@@ -193,9 +172,9 @@ async def test_service_var_abs(
             LcnService.VAR_ABS,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_VARIABLE: "var1",
-                CONF_VALUE: 75,
-                CONF_UNIT_OF_MEASUREMENT: "%",
+                LcnServiceArgument.VARIABLE: "var1",
+                LcnServiceArgument.VALUE: 75,
+                LcnServiceArgument.UNIT_OF_MEASUREMENT: "%",
             },
             blocking=True,
         )
@@ -219,10 +198,10 @@ async def test_service_var_rel(
             LcnService.VAR_REL,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_VARIABLE: "var1",
-                CONF_VALUE: 10,
-                CONF_UNIT_OF_MEASUREMENT: "%",
-                CONF_RELVARREF: "current",
+                LcnServiceArgument.VARIABLE: "var1",
+                LcnServiceArgument.VALUE: 10,
+                LcnServiceArgument.UNIT_OF_MEASUREMENT: "%",
+                LcnServiceArgument.VALUE_REFERENCE: "current",
             },
             blocking=True,
         )
@@ -249,7 +228,7 @@ async def test_service_var_reset(
             LcnService.VAR_RESET,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_VARIABLE: "var1",
+                LcnServiceArgument.VARIABLE: "var1",
             },
             blocking=True,
         )
@@ -271,8 +250,8 @@ async def test_service_lock_regulator(
             LcnService.LOCK_REGULATOR,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_SETPOINT: "r1varsetpoint",
-                CONF_STATE: True,
+                LcnServiceArgument.SETPOINT: "r1varsetpoint",
+                LcnServiceArgument.STATE: True,
             },
             blocking=True,
         )
@@ -294,8 +273,8 @@ async def test_service_send_keys(
             LcnService.SEND_KEYS,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_KEYS: "a1a5d8",
-                CONF_STATE: "hit",
+                LcnServiceArgument.KEYS: "a1a5d8",
+                LcnServiceArgument.STATE: "hit",
             },
             blocking=True,
         )
@@ -330,9 +309,9 @@ async def test_service_send_keys_hit_deferred(
             LcnService.SEND_KEYS,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_KEYS: "a1a5d8",
-                CONF_TIME: 5,
-                CONF_TIME_UNIT: "s",
+                LcnServiceArgument.KEYS: "a1a5d8",
+                LcnServiceArgument.TIME: 5,
+                LcnServiceArgument.TIME_UNIT: "s",
             },
             blocking=True,
         )
@@ -353,10 +332,10 @@ async def test_service_send_keys_hit_deferred(
             LcnService.SEND_KEYS,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_KEYS: "a1a5d8",
-                CONF_STATE: "make",
-                CONF_TIME: 5,
-                CONF_TIME_UNIT: "s",
+                LcnServiceArgument.KEYS: "a1a5d8",
+                LcnServiceArgument.STATE: "make",
+                LcnServiceArgument.TIME: 5,
+                LcnServiceArgument.TIME_UNIT: "s",
             },
             blocking=True,
         )
@@ -378,8 +357,8 @@ async def test_service_lock_keys(
             LcnService.LOCK_KEYS,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_TABLE: "a",
-                CONF_STATE: "0011TT--",
+                LcnServiceArgument.TABLE: "a",
+                LcnServiceArgument.STATE: "0011TT--",
             },
             blocking=True,
         )
@@ -399,8 +378,8 @@ async def test_service_lock_keys(
             LcnService.LOCK_KEYS,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_TABLE: "a",
-                CONF_STATE: "0011TT--00",
+                LcnServiceArgument.TABLE: "a",
+                LcnServiceArgument.STATE: "0011TT--00",
             },
             blocking=True,
         )
@@ -425,9 +404,9 @@ async def test_service_lock_keys_tab_a_temporary(
             LcnService.LOCK_KEYS,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_STATE: "0011TT--",
-                CONF_TIME: 10,
-                CONF_TIME_UNIT: "s",
+                LcnServiceArgument.STATE: "0011TT--",
+                LcnServiceArgument.TIME: 10,
+                LcnServiceArgument.TIME_UNIT: "s",
             },
             blocking=True,
         )
@@ -451,10 +430,10 @@ async def test_service_lock_keys_tab_a_temporary(
             LcnService.LOCK_KEYS,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_TABLE: "b",
-                CONF_STATE: "0011TT--",
-                CONF_TIME: 10,
-                CONF_TIME_UNIT: "s",
+                LcnServiceArgument.TABLE: "b",
+                LcnServiceArgument.STATE: "0011TT--",
+                LcnServiceArgument.TIME: 10,
+                LcnServiceArgument.TIME_UNIT: "s",
             },
             blocking=True,
         )
@@ -476,8 +455,8 @@ async def test_service_dyn_text(
             LcnService.DYN_TEXT,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_ROW: 1,
-                CONF_TEXT: "text in row 1",
+                LcnServiceArgument.ROW: 1,
+                LcnServiceArgument.TEXT: "text in row 1",
             },
             blocking=True,
         )
@@ -499,7 +478,7 @@ async def test_service_pck(
             LcnService.PCK,
             {
                 CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
-                CONF_PCK: "PIN4",
+                LcnServiceArgument.PCK: "PIN4",
             },
             blocking=True,
         )
@@ -521,7 +500,7 @@ async def test_service_unknown_device_id(
             LcnService.PCK,
             {
                 CONF_DEVICE_ID: "unknown_device_id",
-                CONF_PCK: "PIN4",
+                LcnServiceArgument.PCK: "PIN4",
             },
             blocking=True,
         )
@@ -545,7 +524,7 @@ async def test_service_unloaded_config_entry(
             LcnService.PCK,
             {
                 CONF_DEVICE_ID: device_id,
-                CONF_PCK: "PIN4",
+                LcnServiceArgument.PCK: "PIN4",
             },
             blocking=True,
         )

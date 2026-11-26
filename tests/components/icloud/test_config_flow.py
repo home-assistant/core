@@ -7,6 +7,7 @@ from pyicloud.const import AppleAuthError
 from pyicloud.exceptions import (
     PyiCloud2FARequiredException,
     PyiCloudAcceptTermsException,
+    PyiCloudAccountLockedException,
     PyiCloudAPIResponseException,
     PyiCloudAuthRequiredException,
     PyiCloudConnectionException,
@@ -330,6 +331,46 @@ async def test_login_failed(hass: HomeAssistant) -> None:
         user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    "apple_error_code",
+    [-20209, "20209"],
+    ids=["numeric", "string"],
+)
+@pytest.mark.usefixtures("service_authenticated")
+async def test_account_locked_during_login(
+    hass: HomeAssistant, apple_error_code: int | str
+) -> None:
+    """Test that a locked Apple Account gets its own error rather than invalid auth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=PyiCloudAccountLockedException(
+            apple_error_code, Mock(spec=Response)
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_PASSWORD: "account_locked"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
 
 
 @pytest.mark.usefixtures("service_authenticated")
@@ -1386,6 +1427,37 @@ async def test_retry_login_unreachable_is_a_connection_error(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_account_locked_when_logging_in_again_without_the_session(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a locked account found on the password retry gets the same error."""
+    retry_service = MagicMock()
+    retry_service.authenticate.side_effect = PyiCloudAccountLockedException(
+        -20209, Mock(spec=Response)
+    )
+    recovered_service = MagicMock(requires_2fa=False, requires_2sa=False)
+    recovered_service.devices = [MagicMock()]
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=[
+            PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response)),
+            retry_service,
+            recovered_service,
+        ],
+    ):
+        result = await _submit_user_form(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {CONF_PASSWORD: "account_locked"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
 
 
 async def test_changed_credentials_after_an_outage_are_logged_in_again(

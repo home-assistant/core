@@ -5,7 +5,12 @@ from typing import Any
 
 import pytest
 from pytest_homeassistant.common import load_fixture
-from pytradfri.const import ATTR_DEVICE_STATE, ATTR_LIGHT_CONTROL, ATTR_REACHABLE_STATE
+from pytradfri.const import (
+    ATTR_DEVICE_STATE,
+    ATTR_ID,
+    ATTR_LIGHT_CONTROL,
+    ATTR_REACHABLE_STATE,
+)
 from pytradfri.device import Device
 
 from homeassistant.components.light import (
@@ -19,15 +24,11 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.tradfri.const import DOMAIN
-from homeassistant.const import (
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .common import CommandStore, setup_integration
@@ -43,6 +44,14 @@ def bulb_w() -> str:
 def bulb_ws() -> str:
     """Return a bulb WS response."""
     return load_fixture("bulb_ws.json", DOMAIN)
+
+
+@pytest.fixture(scope="module")
+def bulb_ws_without_values(bulb_ws: str) -> str:
+    """Return a bulb WS response whose control reports no values."""
+    response = json.loads(bulb_ws)
+    response[ATTR_LIGHT_CONTROL] = [{ATTR_ID: 0}]
+    return json.dumps(response)
 
 
 @pytest.fixture(scope="module")
@@ -290,7 +299,7 @@ async def test_turn_on(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {"entity_id": entity_id, **service_data, **transition},
         blocking=True,
     )
@@ -334,7 +343,7 @@ async def test_turn_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {"entity_id": entity_id, **transition},
         blocking=True,
     )
@@ -406,10 +415,10 @@ async def test_turn_on_commands(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
             "entity_id": entity_id,
-            ATTR_BRIGHTNESS: 200,
+            LightServiceArgument.BRIGHTNESS: 200,
             **service_data,
             **transition,
         },
@@ -454,7 +463,7 @@ async def test_turn_off_commands(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {"entity_id": "light.test_w", **transition},
         blocking=True,
     )
@@ -463,3 +472,34 @@ async def test_turn_off_commands(
         (command.method, command.path, command.data)
         for command in command_store.sent_commands
     ] == [("put", device.path, {"3311": [light_payload]})]
+
+
+@pytest.mark.parametrize("device", ["bulb_ws_without_values"], indirect=True)
+async def test_light_without_values(
+    hass: HomeAssistant,
+    command_store: CommandStore,
+    device: Device,
+    bulb_ws: str,
+) -> None:
+    """Test a light whose control reports no values and later recovers."""
+    entity_id = "light.test_ws"
+    await setup_integration(hass)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+
+    await command_store.trigger_observe_callback(
+        hass,
+        device,
+        {ATTR_LIGHT_CONTROL: json.loads(bulb_ws)[ATTR_LIGHT_CONTROL]},
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    assert state.attributes[ATTR_BRIGHTNESS] == 250
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 2500

@@ -6,10 +6,10 @@ from typing import Any, override
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
     ColorMode,
     LightEntity,
     LightEntityStateAttribute,
+    LightServiceArgument,
 )
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import STATE_ON
@@ -89,7 +89,7 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS)
         self._attr_is_on = True
         if brightness is None:
             await self._async_send(self._device.send_on)

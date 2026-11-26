@@ -2,13 +2,7 @@
 
 import pytest
 
-from homeassistant.components.fan import (
-    ATTR_DIRECTION,
-    ATTR_OSCILLATING,
-    ATTR_PERCENTAGE,
-    ATTR_PERCENTAGE_STEP,
-    ATTR_PRESET_MODE,
-)
+from homeassistant.components.fan import FanEntityStateAttribute
 from homeassistant.components.fan.significant_change import (
     async_check_significant_change,
 )
@@ -24,20 +18,70 @@ async def test_significant_state_change() -> None:
 @pytest.mark.parametrize(
     ("old_attrs", "new_attrs", "expected_result"),
     [
-        ({ATTR_PERCENTAGE_STEP: "1"}, {ATTR_PERCENTAGE_STEP: "2"}, False),
-        ({ATTR_PERCENTAGE: 1}, {ATTR_PERCENTAGE: 2}, True),
-        ({ATTR_PERCENTAGE: 1}, {ATTR_PERCENTAGE: 1.9}, False),
-        ({ATTR_PERCENTAGE: "invalid"}, {ATTR_PERCENTAGE: 1}, True),
-        ({ATTR_PERCENTAGE: 1}, {ATTR_PERCENTAGE: "invalid"}, False),
-        ({ATTR_DIRECTION: "front"}, {ATTR_DIRECTION: "front"}, False),
-        ({ATTR_DIRECTION: "front"}, {ATTR_DIRECTION: "back"}, True),
-        ({ATTR_OSCILLATING: True}, {ATTR_OSCILLATING: True}, False),
-        ({ATTR_OSCILLATING: True}, {ATTR_OSCILLATING: False}, True),
-        ({ATTR_PRESET_MODE: "auto"}, {ATTR_PRESET_MODE: "auto"}, False),
-        ({ATTR_PRESET_MODE: "auto"}, {ATTR_PRESET_MODE: "whoosh"}, True),
         (
-            {ATTR_PRESET_MODE: "auto", ATTR_OSCILLATING: True},
-            {ATTR_PRESET_MODE: "auto", ATTR_OSCILLATING: False},
+            {FanEntityStateAttribute.PERCENTAGE_STEP: "1"},
+            {FanEntityStateAttribute.PERCENTAGE_STEP: "2"},
+            False,
+        ),
+        (
+            {FanEntityStateAttribute.PERCENTAGE: 1},
+            {FanEntityStateAttribute.PERCENTAGE: 2},
+            True,
+        ),
+        (
+            {FanEntityStateAttribute.PERCENTAGE: 1},
+            {FanEntityStateAttribute.PERCENTAGE: 1.9},
+            False,
+        ),
+        (
+            {FanEntityStateAttribute.PERCENTAGE: "invalid"},
+            {FanEntityStateAttribute.PERCENTAGE: 1},
+            True,
+        ),
+        (
+            {FanEntityStateAttribute.PERCENTAGE: 1},
+            {FanEntityStateAttribute.PERCENTAGE: "invalid"},
+            False,
+        ),
+        (
+            {FanEntityStateAttribute.DIRECTION: "front"},
+            {FanEntityStateAttribute.DIRECTION: "front"},
+            False,
+        ),
+        (
+            {FanEntityStateAttribute.DIRECTION: "front"},
+            {FanEntityStateAttribute.DIRECTION: "back"},
+            True,
+        ),
+        (
+            {FanEntityStateAttribute.OSCILLATING: True},
+            {FanEntityStateAttribute.OSCILLATING: True},
+            False,
+        ),
+        (
+            {FanEntityStateAttribute.OSCILLATING: True},
+            {FanEntityStateAttribute.OSCILLATING: False},
+            True,
+        ),
+        (
+            {FanEntityStateAttribute.PRESET_MODE: "auto"},
+            {FanEntityStateAttribute.PRESET_MODE: "auto"},
+            False,
+        ),
+        (
+            {FanEntityStateAttribute.PRESET_MODE: "auto"},
+            {FanEntityStateAttribute.PRESET_MODE: "whoosh"},
+            True,
+        ),
+        (
+            {
+                FanEntityStateAttribute.PRESET_MODE: "auto",
+                FanEntityStateAttribute.OSCILLATING: True,
+            },
+            {
+                FanEntityStateAttribute.PRESET_MODE: "auto",
+                FanEntityStateAttribute.OSCILLATING: False,
+            },
             True,
         ),
     ],

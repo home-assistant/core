@@ -14,7 +14,12 @@ from syrupy.filters import props
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import build_epex_payload, setup_dynamic_entry, setup_entry
+from .conftest import (
+    build_epex_payload,
+    build_monthly_peaks,
+    setup_dynamic_entry,
+    setup_entry,
+)
 
 
 def _build_payload_without_final_quarter(
@@ -82,22 +87,49 @@ async def test_diagnostics_setup_retry(
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
-async def test_diagnostics_prices_failure(
+@pytest.mark.parametrize(
+    "failing_method",
+    [
+        pytest.param("async_get_prices", id="prices"),
+        pytest.param("async_get_monthly_peaks", id="peaks"),
+    ],
+)
+async def test_diagnostics_fetch_failure(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    snapshot: SnapshotAssertion,
+    failing_method: str,
+) -> None:
+    """Test the diagnostics of a household whose prices or peaks fetch failed."""
+    getattr(
+        mock_engie_client.return_value, failing_method
+    ).side_effect = EngieBeCommunicationError("boom")
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    ) == snapshot(exclude=props("entry_id", "created_at", "modified_at"))
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_diagnostics_no_peak_in_either_month(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the diagnostics of a household whose prices fetch failed."""
-    mock_engie_client.return_value.async_get_prices.side_effect = (
-        EngieBeCommunicationError("boom")
+    """Test the peaks diagnostics when neither this month nor last month has a peak."""
+    mock_engie_client.return_value.async_get_monthly_peaks.side_effect = (
+        lambda ban, year, month: build_monthly_peaks(year, month)
     )
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    await setup_entry(hass, mock_config_entry)
 
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry

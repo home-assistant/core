@@ -29,6 +29,7 @@ from .const import (
     DAILY,
     DOMAIN,
     HOURLY,
+    MAX_METER_OFFSET_DAYS,
     MONTHLY,
     QUARTER_HOURLY,
     QUARTERLY,
@@ -90,7 +91,7 @@ CONFIG_SCHEMA = probatio.Schema(
         probatio.Required(CONF_METER_OFFSET, default=0): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,
-                max=28,
+                max=MAX_METER_OFFSET_DAYS,
                 mode=selector.NumberSelectorMode.BOX,
                 unit_of_measurement="days",
                 translation_key=CONF_METER_OFFSET,
@@ -129,7 +130,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Utility Meter."""
 
     VERSION = 2
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
