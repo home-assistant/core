@@ -39,6 +39,7 @@ async def test_valid_port(
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "TIS Control Bridge"
     assert result2["data"] == {CONF_PORT: 1234}
+    assert result2["result"].unique_id == f"{DOMAIN}:1234"
 
     # Ensure the setup function and connect were called.
     mock_setup_entry.assert_called_once()
@@ -46,8 +47,10 @@ async def test_valid_port(
     mock_tis_api.disconnect.assert_called_once()
 
 
-async def test_connection_error(hass: HomeAssistant, mock_tis_api: MagicMock) -> None:
-    """Test handling of connection errors."""
+async def test_connection_error(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_tis_api: MagicMock
+) -> None:
+    """Test recovery from a connection error on the same flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -65,6 +68,25 @@ async def test_connection_error(hass: HomeAssistant, mock_tis_api: MagicMock) ->
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
     mock_tis_api.disconnect.assert_called_once()
+    mock_setup_entry.assert_not_called()
+
+    # Clear the failure and resubmit the SAME flow to verify it can recover.
+    mock_tis_api.connect.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], user_input={CONF_PORT: 6000}
+    )
+    await hass.async_block_till_done()
+
+    # The flow should now complete and create the entry.
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "TIS Control Bridge"
+    assert result3["data"] == {CONF_PORT: 6000}
+    assert result3["result"].unique_id == f"{DOMAIN}:6000"
+    mock_setup_entry.assert_called_once()
+
+    # One failed attempt + one successful attempt, each cleaned up after itself.
+    assert mock_tis_api.connect.await_count == 2
+    assert mock_tis_api.disconnect.call_count == 2
 
 
 async def test_duplicate_entry(
@@ -83,6 +105,7 @@ async def test_duplicate_entry(
 
     # Verify the first entry was created.
     assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == f"{DOMAIN}:6000"
 
     # Try to create a second entry with the same port.
     result3 = await hass.config_entries.flow.async_init(
@@ -102,7 +125,7 @@ async def test_duplicate_entry(
 
 
 async def test_unexpected_exception(
-    hass: HomeAssistant, mock_tis_api: MagicMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_tis_api: MagicMock
 ) -> None:
     """Test handling of an unexpected exception during validation."""
     result = await hass.config_entries.flow.async_init(
@@ -122,6 +145,17 @@ async def test_unexpected_exception(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
     mock_tis_api.disconnect.assert_called_once()
+
+    mock_tis_api.connect.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], user_input={CONF_PORT: 6000}
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["result"].unique_id == f"{DOMAIN}:6000"
+    mock_setup_entry.assert_called_once()
+    assert mock_tis_api.disconnect.call_count == 2
 
 
 async def test_no_devices_found(hass: HomeAssistant, mock_tis_api: MagicMock) -> None:
