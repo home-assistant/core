@@ -261,12 +261,10 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
 
     async def async_restart_camera(self, camera_id: str) -> None:
         """Restart a camera through the Bosch cloud."""
-        await self._oauth_session.async_ensure_token_valid()
+        token = await self.async_get_access_token()
         try:
             result = await soft_reset(
-                async_get_clientsession(self.hass),
-                str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
-                camera_id,
+                async_get_clientsession(self.hass), token, camera_id
             )
         except BoschCameraAuthError as err:
             self.config_entry.async_start_reauth_if_available(self.hass)
