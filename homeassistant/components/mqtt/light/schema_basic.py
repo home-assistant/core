@@ -702,12 +702,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             attribute: str,
             value: Any,
             color_mode: ColorMode | None = None,
-            condition_attribute: str | None = None,
         ) -> bool:
             """Optimistically update a state attribute."""
-            if condition_attribute is None:
-                condition_attribute = attribute
-            if not self._is_optimistic(condition_attribute):
+            if not self._is_optimistic(attribute):
                 return False
             if color_mode and self._optimistic_color_mode:
                 self._attr_color_mode = color_mode
