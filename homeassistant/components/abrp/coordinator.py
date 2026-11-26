@@ -127,10 +127,9 @@ class AbrpTelemetryCoordinator(DataUpdateCoordinator[dict[int, Telemetry]]):
 
         ``AUTH_FAILED`` is the one exception: the library stops the stream for
         good, so entities stop claiming values nothing will refresh and reauth
-        starts. Clearing that
-        flag on a reconnect rather than on any later event is defensive: aioabrp
-        returns from its run loop once it has dispatched ``AUTH_FAILED``, so
-        today nothing follows it at all.
+        starts. Clearing that flag on a reconnect rather than on any later event
+        is defensive: aioabrp returns from its run loop once it has dispatched
+        ``AUTH_FAILED``, so today nothing follows it at all.
         """
         previous = self.last_connection_event
         changed = previous is None or previous.state is not event.state
