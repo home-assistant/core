@@ -1,21 +1,29 @@
 """DataUpdateCoordinator for the OpenWrt (ubus) integration."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
 from openwrt.ubus import Ubus
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
-from .const import CONF_DHCP_SOFTWARE, DOMAIN
+from .const import CONF_DHCP_SOFTWARE, DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=30)
+LEASE_REREAD_INTERVAL = timedelta(minutes=10)
 
 type UbusConfigEntry = ConfigEntry[UbusDataUpdateCoordinator]
 
@@ -29,14 +37,18 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         """Initialize the coordinator from a config entry."""
         self.host: str = config_entry.data[CONF_HOST]
         self.dhcp_software: str = config_entry.data[CONF_DHCP_SOFTWARE]
+        scheme = "https" if config_entry.data.get(CONF_SSL, DEFAULT_SSL) else "http"
         self.ubus = Ubus(
-            f"http://{self.host}/ubus",
+            f"{scheme}://{self.host}/ubus",
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_PASSWORD],
+            verify=config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
         self._hostapd: list[str] = []
         self._leasefile: str | None = None
         self._mac2name: dict[str, str] | None = None
+        self._unnamed: set[str] = set()
+        self._last_lease_read = datetime.min.replace(tzinfo=dt_util.UTC)
 
         super().__init__(
             hass,
@@ -82,25 +94,45 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         PermissionError is left to propagate so the caller can re-authenticate.
         """
         clients = self._fetch_hostapd_clients()
-        if self._mac2name is None:
-            self._mac2name = self._generate_mac2name()
-        return {
-            mac: self._name_for(mac)
-            for mac, client in clients.items()
-            if client["authorized"]
-        }
+        # Filter list of client MAC addresses by authorization status, then
+        # make sure they are unique to preserve the invariant that callers
+        # expect unique MACs.  Sort the set so it is stable.
+        authorized = sorted(
+            {client["mac"] for client in clients if client["authorized"]}
+        )
+        known = self._mac2name or {}
+        unnamed = {mac.upper() for mac in authorized} - known.keys()
+        now = dt_util.utcnow()
+        # Reread the leases for a new client without a hostname, and only
+        # periodically for clients which never get one (e.g. static IPs).
+        if (
+            self._mac2name is None
+            or unnamed - self._unnamed
+            or (unnamed and now - self._last_lease_read >= LEASE_REREAD_INTERVAL)
+        ):
+            self._last_lease_read = now
+            if (mac2name := self._generate_mac2name()) is not None:
+                # Merge, as an empty or partial read must not forget names.
+                self._mac2name = {**known, **mac2name}
+                self._unnamed = unnamed - mac2name.keys()
+        return {mac: self._name_for(mac) for mac in authorized}
 
-    def _fetch_hostapd_clients(self) -> dict[str, dict]:
-        """Return the raw hostapd client table merged across all interfaces."""
+    def _fetch_hostapd_clients(self) -> list[dict]:
+        """Return the raw hostapd client table from all interfaces."""
         try:
             if not self._hostapd:
                 if not (hostapd := self.ubus.get_hostapd()):
                     raise UpdateFailed(f"No hostapd data from ubus at {self.host}")
                 self._hostapd = list(hostapd)
-            clients: dict[str, dict] = {}
+            clients: list[dict] = []
             for interface in self._hostapd:
                 if result := self.ubus.get_hostapd_clients(interface):
-                    clients.update(result["clients"])
+                    # Keep per-interface records, even when a client appears
+                    # to be "duplicate", as authorization can differ between
+                    # interfaces for the same client due to band steering or
+                    # other forms of roaming.
+                    for mac, client_data in result["clients"].items():
+                        clients.append({**client_data, "mac": mac})
         except ConnectionError as err:
             raise UpdateFailed(f"Error querying ubus at {self.host}") from err
         return clients
@@ -138,7 +170,9 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         mac2name = {}
         for line in result["data"].splitlines():
             hosts = line.split(" ")
-            mac2name[hosts[1].upper()] = hosts[3]
+            # dnsmasq writes "*" when the client did not send a hostname.
+            if hosts[3] != "*":
+                mac2name[hosts[1].upper()] = hosts[3]
         return mac2name
 
     def _odhcpd_mac2name(self) -> dict[str, str] | None:
@@ -159,5 +193,6 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                 mac = ":".join(
                     lease["mac"][i : i + 2] for i in range(0, len(lease["mac"]), 2)
                 )
-                mac2name[mac.upper()] = lease["hostname"]
+                if hostname := lease["hostname"]:
+                    mac2name[mac.upper()] = hostname
         return mac2name

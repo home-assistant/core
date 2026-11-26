@@ -1,0 +1,296 @@
+{
+  "observations": [
+    {
+      "station": "Tromso",
+      "distance": "1 km W",
+      "time": "2026-11-06T13:00:00+01:00",
+      "temperature": 5,
+      "feelsLikeTemp": 1,
+      "symbol": "d420",
+      "windDirString": "S",
+      "windDir": 197,
+      "windSpeed": 6,
+      "windGust": 11,
+      "pressure": 1016.2,
+      "relHumidity": 91,
+      "visibility": 30000,
+      "snowDepth": null,
+      "longitude": 18.94,
+      "latitude": 69.65,
+      "elevation": 100,
+      "precip1h": [
+        {
+          "endtime": "2026-11-05T14:00:00+01:00",
+          "accum": 0.1,
+          "prectype": "sleet"
+        },
+        {
+          "endtime": "2026-11-05T15:00:00+01:00",
+          "accum": 0.4,
+          "prectype": "sleet"
+        },
+        {
+          "endtime": "2026-11-05T16:00:00+01:00",
+          "accum": 0.4,
+          "prectype": "sleet"
+        },
+        {
+          "endtime": "2026-11-05T17:00:00+01:00",
+          "accum": 0.2,
+          "prectype": "sleet"
+        },
+        {
+          "endtime": "2026-11-05T18:00:00+01:00",
+          "accum": 1,
+          "prectype": "sleet"
+        },
+        {
+          "endtime": "2026-11-05T19:00:00+01:00",
+          "accum": 1,
+          "prectype": "sleet"
+        },
+        {
+          "endtime": "2026-11-05T20:00:00+01:00",
+          "accum": 0.6,
+          "prectype": "sleet"
+        },
+        {
+          "endtime": "2026-11-05T21:00:00+01:00",
+          "accum": 0.5,
+          "prectype": "sleet"
+        },
+        {
+          "endtime": "2026-11-05T22:00:00+01:00",
+          "accum": 0.1,
+          "prectype": "sleet"
+        },
+        {
+          "endtime": "2026-11-05T23:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T00:00:00+01:00",
+          "accum": 0.1,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T01:00:00+01:00",
+          "accum": 0.1,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T02:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T03:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T04:00:00+01:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T05:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T07:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T08:00:00+01:00",
+          "accum": 0.1,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T09:00:00+01:00",
+          "accum": 0.1,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T10:00:00+01:00",
+          "accum": 0.4,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T11:00:00+01:00",
+          "accum": 0.7,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T12:00:00+01:00",
+          "accum": 0.6,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T13:00:00+01:00",
+          "accum": 0.3,
+          "prectype": "rain"
+        }
+      ]
+    },
+    {
+      "station": "Troms\u00f6-Holt",
+      "distance": "2 km W",
+      "time": "2026-11-06T13:00:00+01:00",
+      "temperature": 6,
+      "feelsLikeTemp": null,
+      "symbol": null,
+      "windDirString": "N",
+      "windDir": null,
+      "windSpeed": null,
+      "windGust": null,
+      "pressure": null,
+      "relHumidity": 85,
+      "visibility": null,
+      "snowDepth": null,
+      "longitude": 18.91,
+      "latitude": 69.65,
+      "elevation": 10,
+      "precip1h": [
+        {
+          "endtime": "2026-11-05T14:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-05T15:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-05T16:00:00+01:00",
+          "accum": 0,
+          "prectype": "sleet"
+        },
+        {
+          "endtime": "2026-11-05T17:00:00+01:00",
+          "accum": 0,
+          "prectype": "sleet"
+        },
+        {
+          "endtime": "2026-11-05T18:00:00+01:00",
+          "accum": 1,
+          "prectype": "sleet"
+        },
+        {
+          "endtime": "2026-11-05T19:00:00+01:00",
+          "accum": 1,
+          "prectype": "sleet"
+        },
+        {
+          "endtime": "2026-11-05T20:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-05T21:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-05T22:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-05T23:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T00:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T01:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T02:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T03:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T04:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T05:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T07:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T08:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T09:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T10:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T11:00:00+01:00",
+          "accum": 1,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T12:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        },
+        {
+          "endtime": "2026-11-06T13:00:00+01:00",
+          "accum": 0,
+          "prectype": "rain"
+        }
+      ]
+    },
+    {
+      "station": "Tromso \/ Langnes",
+      "distance": "4 km NW",
+      "time": "2026-11-06T13:20:00+01:00",
+      "temperature": 6,
+      "feelsLikeTemp": 1,
+      "symbol": "d310",
+      "windDirString": "SW",
+      "windDir": 210,
+      "windSpeed": 8,
+      "windGust": null,
+      "pressure": 1016,
+      "relHumidity": 87,
+      "visibility": 9999,
+      "snowDepth": null,
+      "longitude": 18.92,
+      "latitude": 69.68,
+      "elevation": 1,
+      "precip1h": []
+    }
+  ]
+}

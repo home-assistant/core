@@ -1,14 +1,11 @@
 {
   "entity": {
     "sensor": {
-      "battery_cycle_count": {
-        "default": "mdi:battery-sync"
-      },
-      "battery_soh": {
-        "default": "mdi:battery-heart-variant"
-      },
       "cell_count": {
         "default": "mdi:counter"
+      },
+      "cycle_count": {
+        "default": "mdi:battery-sync"
       },
       "dc_pv_input_count": {
         "default": "mdi:counter"
@@ -31,6 +28,9 @@
           "adapter": "mdi:power-plug",
           "car": "mdi:car-electric"
         }
+      },
+      "soh": {
+        "default": "mdi:battery-heart-variant"
       },
       "temperature_sensor_count": {
         "default": "mdi:counter"

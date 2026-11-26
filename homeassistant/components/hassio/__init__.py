@@ -1,7 +1,8 @@
 """Support for Hass.io."""
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import AsyncIterator, Coroutine
+from contextlib import aclosing
 from functools import partial
 import logging
 import os
@@ -12,6 +13,7 @@ from aiohasupervisor import SupervisorBadRequestError, SupervisorError
 from aiohasupervisor.models import (
     GreenOptions,
     HomeAssistantOptions,
+    LogsOptions,
     SupervisorOptions,
     YellowOptions,
 )
@@ -34,7 +36,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
     system_state,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.issue_registry import IssueSeverity
@@ -66,11 +67,12 @@ from .const import (
     ATTR_UPDATE_KEY,
     ATTR_WS_EVENT,
     DATA_AUTO_UPDATE,
-    DATA_COMPONENT,
-    DATA_HASSIO_HOST,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
     ENTRY_DATA_USER,
+    ENV_SUPERVISOR,
+    ENV_SUPERVISOR_SOCKET,
+    ENV_SUPERVISOR_TOKEN,
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
     ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
@@ -107,10 +109,9 @@ from .coordinator import (
 from .discovery import async_setup_discovery_view
 from .exceptions import HassioNotReadyError
 from .handler import (
-    HassIO,
-    HassioAPIError,
     async_update_diagnostics,
     get_supervisor_client,
+    get_supervisor_connection,
 )
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
@@ -149,6 +150,9 @@ __all__ = [
 
 _LOGGER = logging.getLogger(__name__)
 
+# Seconds to wait for the next log lines, so a stalled journal does not hang the reader
+CORE_LOG_READ_TIMEOUT = 30
+
 
 # If new platforms are added, be sure to import them above
 # so we do not make other components that depend on hassio
@@ -158,10 +162,6 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 NETWORK_RELOAD_COOLDOWN = 10
-
-# Journal lines read for the log stream, on slow system reading can be as slow as ~1 s per 1,000
-CORE_LOG_LINES = 5000
-CORE_LOG_TIMEOUT = 30
 
 
 DEPRECATION_URL = (
@@ -341,36 +341,39 @@ def _check_deprecated_setup(hass: HomeAssistant) -> None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Hass.io component."""
-    # Check local setup
-    for env in ("SUPERVISOR", "SUPERVISOR_TOKEN"):
-        if os.environ.get(env):
-            continue
-        _LOGGER.error("Missing %s environment variable", env)
+    missing_env: str | None = None
+    if not os.environ.get(ENV_SUPERVISOR):
+        missing_env = ENV_SUPERVISOR
+    elif not os.environ.get(ENV_SUPERVISOR_SOCKET) and not os.environ.get(
+        ENV_SUPERVISOR_TOKEN
+    ):
+        missing_env = f"{ENV_SUPERVISOR_SOCKET} or {ENV_SUPERVISOR_TOKEN}"
+    if missing_env:
+        _LOGGER.error("Missing %s environment variable", missing_env)
         if config_entries := hass.config_entries.async_entries(DOMAIN):
             hass.async_create_task(
                 hass.config_entries.async_remove(config_entries[0].entry_id)
             )
         return False
 
-    host = os.environ["SUPERVISOR"]
-    websession = async_get_clientsession(hass)
-    hassio = hass.data[DATA_COMPONENT] = HassIO(hass.loop, websession, host)
-    hass.data[DATA_HASSIO_HOST] = host
+    # The persistent issue of the removed legacy "homeassistant" backup folder,
+    # remove when the issue registry cleans up stale persistent issues itself
+    ir.async_delete_issue(hass, DOMAIN, "legacy_homeassistant_folder")
 
-    async def _async_read_core_log() -> list[str]:
-        """Return the end of the log of Home Assistant since it started."""
+    async def _async_read_core_log(lines: int) -> AsyncIterator[str]:
+        """Stream the last lines of the log of Home Assistant since it started."""
+        client = get_supervisor_client(hass)
         try:
-            text: str = await hassio.send_command(
-                "/core/logs/latest",
-                method="get",
-                return_text=True,
-                timeout=CORE_LOG_TIMEOUT,
-                params={"lines": CORE_LOG_LINES},
+            stream = await client.homeassistant.logs(
+                LogsOptions(lines=lines),
+                latest=True,
+                read_timeout=CORE_LOG_READ_TIMEOUT,
             )
-        except HassioAPIError as err:
+            async with aclosing(stream):
+                async for line in stream:
+                    yield line
+        except SupervisorError as err:
             _LOGGER.debug("Could not read the Home Assistant log: %s", err)
-            return []
-        return text.splitlines()
 
     # Without a log file, Home Assistant only logs to the Supervisor journal
     async_register_log_reader(hass, _async_read_core_log)
@@ -389,7 +392,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     async_load_websocket_api(hass)
-    hass.http.register_view(HassIOView(host, websession))
+    hass.http.register_view(HassIOView(get_supervisor_connection(hass)))
     async_setup_services(hass)
     async_setup_discovery_view(hass)
     async_setup_auth_view(hass)

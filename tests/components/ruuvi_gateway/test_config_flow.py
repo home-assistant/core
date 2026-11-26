@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aioruuvigateway.excs import CannotConnect, InvalidAuth
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.ruuvi_gateway.const import DOMAIN
@@ -153,3 +154,27 @@ async def test_form_unexpected(hass: HomeAssistant) -> None:
     assert config_result["data"] == BASE_DATA
     assert config_result["context"]["unique_id"] == GATEWAY_MAC_LOWER
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_already_configured(hass: HomeAssistant) -> None:
+    """Test we abort and update the host if the gateway is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=GATEWAY_MAC_LOWER,
+        data={**BASE_DATA, "host": "5.6.7.8"},
+    )
+    entry.add_to_hass(hass)
+
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch_gateway_ok():
+        config_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            BASE_DATA,
+        )
+
+    assert config_result["type"] is FlowResultType.ABORT
+    assert config_result["reason"] == "already_configured"
+    assert entry.data == BASE_DATA

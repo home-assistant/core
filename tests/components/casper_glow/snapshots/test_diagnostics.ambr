@@ -6,6 +6,10 @@
       'advertisement': list([
         'Jar',
         dict({
+          '65535': dict({
+            '__type': "<class 'bytes'>",
+            'repr': "b'\\x00'",
+          }),
         }),
         dict({
         }),
@@ -21,6 +25,10 @@
       'connectable': True,
       'device': '**REDACTED**',
       'manufacturer_data': dict({
+        '65535': dict({
+          '__type': "<class 'bytes'>",
+          'repr': "b'\\x00'",
+        }),
       }),
       'name': '**REDACTED**',
       'raw': None,

@@ -5,40 +5,90 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytouchline_extended import (
+    ControllerOperationMode,
+    ControllerStatus,
+    RoomOperationMode,
+    RoomStatus,
+    TemperatureUnit,
+    TouchlineErrorCode,
+    TouchlineState,
+    WeekProgram,
+)
 
 from homeassistant.components.touchline.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 TEST_HOST = "1.2.3.4"
+TEST_UNIQUE_ID = "1"
+
+CONTROLLER_STATUS = ControllerStatus(
+    unique_id="51FF6E064965525706340287",
+    controller_id=1,
+    paired_devices=1,
+    total_devices=1,
+    is_master=True,
+    slave_controllers=0,
+    hostname="ROTH-01",
+    mac_address="00:11:22:33:44:55",
+    ip_address=TEST_HOST,
+    stm_app_version="A.FA",
+    stm_bootloader_version="1.0",
+    actuator_app_version="1.0",
+    actuator_bootloader_version="1.0",
+    operation_mode=ControllerOperationMode.DAY,
+    error_code=TouchlineErrorCode.NO_ERROR,
+    safety_tripped=False,
+    dew_point_active=False,
+    week_program_warning=False,
+    system_status=0,
+    timestamp=0,
+)
+
+ROOM_STATUS = RoomStatus(
+    index=0,
+    device_id=0,
+    controller_id=1,
+    unique_id="1-0",
+    name="Zone 1",
+    temperature=21.5,
+    target_temperature=22.0,
+    min_temperature=5.0,
+    max_temperature=30.0,
+    temperature_step=0.5,
+    operation_mode=RoomOperationMode.NORMAL,
+    operation_mode_enabled=True,
+    week_program=WeekProgram.OFF,
+    week_program_enabled=True,
+    temperature_unit=TemperatureUnit.CELSIUS,
+)
+
+
+def make_state(*rooms: RoomStatus) -> TouchlineState:
+    """Return a controller state with the given thermostats."""
+    return TouchlineState(controller=CONTROLLER_STATUS, rooms=rooms)
 
 
 @pytest.fixture
-def mock_pytouchline() -> Generator[MagicMock]:
-    """Mock PyTouchline across all integration modules."""
+def mock_touchline_controller() -> Generator[MagicMock]:
+    """Mock TouchlineController across all integration modules."""
     with (
         patch(
-            "homeassistant.components.touchline.PyTouchline",
+            "homeassistant.components.touchline.coordinator.TouchlineController",
             autospec=True,
         ) as mock_class,
         patch(
-            "homeassistant.components.touchline.config_flow.PyTouchline",
-            new=mock_class,
-        ),
-        patch(
-            "homeassistant.components.touchline.climate.PyTouchline",
+            "homeassistant.components.touchline.config_flow.TouchlineController",
             new=mock_class,
         ),
     ):
         instance = mock_class.return_value
-        instance.get_number_of_devices.return_value = 1
-        instance.get_controller_id.return_value = "controller-1"
-        instance.get_name.return_value = "Zone 1"
-        instance.get_device_id.return_value = 0
-        instance.get_current_temperature.return_value = 21.5
-        instance.get_target_temperature.return_value = 22.0
-        instance.get_operation_mode.return_value = 0
-        instance.get_week_program.return_value = 0
+        instance.url = TEST_HOST
+        instance.fetch_async.return_value = make_state(ROOM_STATUS)
+        instance.set_room_target_temperature_async.return_value = True
+        instance.set_room_operation_mode_async.return_value = True
+        instance.set_room_week_program_async.return_value = True
         yield instance
 
 
@@ -58,7 +108,7 @@ def mock_config_entry() -> MockConfigEntry:
         title=TEST_HOST,
         domain=DOMAIN,
         data={CONF_HOST: TEST_HOST},
-        unique_id="controller-1",
+        unique_id=TEST_UNIQUE_ID,
     )
 
 
@@ -66,7 +116,7 @@ def mock_config_entry() -> MockConfigEntry:
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pytouchline: MagicMock,
+    mock_touchline_controller: MagicMock,
 ) -> MockConfigEntry:
     """Set up the Touchline integration for testing."""
     mock_config_entry.add_to_hass(hass)

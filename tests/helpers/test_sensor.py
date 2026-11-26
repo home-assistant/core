@@ -8,6 +8,7 @@ from sensor_state_data import SensorDeviceInfo
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
+from homeassistant.helpers.typing import Undefined
 
 
 def test_sensor_device_info_to_hass_device_info() -> None:
@@ -51,6 +52,19 @@ def test_sensor_device_info_to_hass_device_info() -> None:
     ).as_dict() == {"name": "Thermometer"}
 
 
+def test_sensor_device_info_to_hass_device_info_int_model() -> None:
+    """Test an int model, which some parsers set, is converted to a string."""
+    assert sensor_device_info_to_hass_device_info(
+        SensorDeviceInfo(
+            name="Thermometer",
+            manufacturer="Acme",
+            model=17,  # type: ignore[arg-type]
+            sw_version=None,
+            hw_version=None,
+        )
+    ) == DeviceInfo(name="Thermometer", manufacturer="Acme", model="17")
+
+
 def test_sensor_device_info_to_hass_device_info_read_only() -> None:
     """Test the shared device info cannot be modified, but can be copied."""
     device_info = sensor_device_info_to_hass_device_info(
@@ -63,8 +77,6 @@ def test_sensor_device_info_to_hass_device_info_read_only() -> None:
         )
     )
 
-    with pytest.raises(TypeError, match="is shared and cannot be modified"):
-        device_info["sw_version"] = "1.0"
     with pytest.raises(TypeError, match="is shared and cannot be modified"):
         device_info.sw_version = "1.0"
     with pytest.raises(TypeError, match="is shared and cannot be modified"):
@@ -79,7 +91,6 @@ def test_sensor_device_info_to_hass_device_info_read_only() -> None:
 @pytest.mark.parametrize(
     "copy_device_info",
     [
-        pytest.param(lambda device_info: DeviceInfo(**device_info), id="unpack"),
         pytest.param(copy.copy, id="copy"),
         pytest.param(copy.deepcopy, id="deepcopy"),
     ],
@@ -106,4 +117,4 @@ def test_sensor_device_info_to_hass_device_info_copy(
         "model": "B1",
         "sw_version": "1.0",
     }
-    assert "sw_version" not in device_info
+    assert device_info.sw_version is Undefined

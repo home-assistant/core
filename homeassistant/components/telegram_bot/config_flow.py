@@ -35,7 +35,6 @@ from homeassistant.helpers.selector import (
 from .bot import TelegramBotConfigEntry, TelegramNotificationService, initialize_bot
 from .const import (
     ATTR_PARSER,
-    BOT_NAME,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
@@ -45,15 +44,12 @@ from .const import (
     DOMAIN,
     ERROR_FIELD,
     ERROR_MESSAGE,
-    PARSER_HTML,
-    PARSER_MD,
-    PARSER_MD2,
-    PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
     SECTION_ADDITIONAL_SETTINGS,
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
+    TelegramBotParseMode,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -161,7 +157,12 @@ OPTIONS_SCHEMA: probatio.Schema = probatio.Schema(
             ATTR_PARSER,
         ): SelectSelector(
             SelectSelectorConfig(
-                options=[PARSER_MD, PARSER_MD2, PARSER_HTML, PARSER_PLAIN_TEXT],
+                options=[
+                    TelegramBotParseMode.MARKDOWN,
+                    TelegramBotParseMode.MARKDOWN_V2,
+                    TelegramBotParseMode.HTML,
+                    TelegramBotParseMode.PLAIN_TEXT,
+                ],
                 translation_key="parse_mode",
             )
         ),
@@ -273,7 +274,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_API_KEY: user_input[CONF_API_KEY],
                     CONF_PROXY_URL: user_input[CONF_PROXY_URL],
                 },
-                options={ATTR_PARSER: PARSER_MD},
+                options={ATTR_PARSER: TelegramBotParseMode.MARKDOWN},
                 description_placeholders=description_placeholders,
             )
 
@@ -354,7 +355,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {BOT_NAME: self._bot_name}
+        description_placeholders: dict[str, str] = {"telegram_bot": self._bot_name}
         self._validate_webhooks(user_input, errors, description_placeholders)
         if errors:
             return self.async_show_form(
@@ -391,7 +392,11 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_URL: user_input.get(CONF_URL),
                 CONF_TRUSTED_NETWORKS: user_input[CONF_TRUSTED_NETWORKS],
             },
-            options={ATTR_PARSER: self._step_user_data.get(ATTR_PARSER, PARSER_MD)},
+            options={
+                ATTR_PARSER: self._step_user_data.get(
+                    ATTR_PARSER, TelegramBotParseMode.MARKDOWN
+                )
+            },
             description_placeholders=description_placeholders,
         )
 

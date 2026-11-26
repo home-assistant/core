@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
 )
 from homeassistant.core import State, callback
 
@@ -170,7 +171,7 @@ class MediaPlayer(HomeAccessory):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "on_off" to %s', self.entity_id, value)
         service = MediaPlayerService.TURN_ON if value else MediaPlayerService.TURN_OFF
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         self.async_call_service(MEDIA_PLAYER_DOMAIN, service, params)
 
     def set_play_pause(self, value: bool) -> None:
@@ -181,7 +182,7 @@ class MediaPlayer(HomeAccessory):
         service = (
             MediaPlayerService.MEDIA_PLAY if value else MediaPlayerService.MEDIA_PAUSE
         )
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         self.async_call_service(MEDIA_PLAYER_DOMAIN, service, params)
 
     def set_play_stop(self, value: bool) -> None:
@@ -192,7 +193,7 @@ class MediaPlayer(HomeAccessory):
         service = (
             MediaPlayerService.MEDIA_PLAY if value else MediaPlayerService.MEDIA_STOP
         )
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         self.async_call_service(MEDIA_PLAYER_DOMAIN, service, params)
 
     def set_toggle_mute(self, value: bool) -> None:
@@ -200,8 +201,8 @@ class MediaPlayer(HomeAccessory):
         _LOGGER.debug(
             '%s: Set switch state for "toggle_mute" to %s', self.entity_id, value
         )
-        params = {
-            ATTR_ENTITY_ID: self.entity_id,
+        params: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self.entity_id,
             MediaPlayerServiceArgument.IS_VOLUME_MUTED: value,
         }
         self.async_call_service(
@@ -320,7 +321,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "on_off" to %s', self.entity_id, value)
         service = MediaPlayerService.TURN_ON if value else MediaPlayerService.TURN_OFF
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         self.async_call_service(MEDIA_PLAYER_DOMAIN, service, params)
 
     def set_mute(self, value: bool) -> None:
@@ -328,8 +329,8 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
         _LOGGER.debug(
             '%s: Set switch state for "toggle_mute" to %s', self.entity_id, value
         )
-        params = {
-            ATTR_ENTITY_ID: self.entity_id,
+        params: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self.entity_id,
             MediaPlayerServiceArgument.IS_VOLUME_MUTED: value,
         }
         self.async_call_service(
@@ -339,8 +340,8 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
     def set_volume(self, value: bool) -> None:
         """Send volume step value if call came from HomeKit."""
         _LOGGER.debug("%s: Set volume to %s", self.entity_id, value)
-        params = {
-            ATTR_ENTITY_ID: self.entity_id,
+        params: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self.entity_id,
             MediaPlayerServiceArgument.VOLUME_LEVEL: value,
         }
         self.async_call_service(
@@ -353,7 +354,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
         service = (
             MediaPlayerService.VOLUME_DOWN if value else MediaPlayerService.VOLUME_UP
         )
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         self.async_call_service(MEDIA_PLAYER_DOMAIN, service, params)
 
     @override
@@ -361,8 +362,8 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
         """Send input set value if call came from HomeKit."""
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, value)
         source_name = self._mapped_sources[self.sources[value]]
-        params = {
-            ATTR_ENTITY_ID: self.entity_id,
+        params: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self.entity_id,
             MediaPlayerServiceArgument.SOURCE: source_name,
         }
         self.async_call_service(
@@ -390,7 +391,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
                 )
             else:
                 service = MediaPlayerService.MEDIA_PLAY_PAUSE
-            params = {ATTR_ENTITY_ID: self.entity_id}
+            params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
             self.async_call_service(MEDIA_PLAYER_DOMAIN, service, params)
             return
 

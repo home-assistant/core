@@ -10,7 +10,7 @@ from python_qube_heatpump.models import QubeState
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_SW_VERSION, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -32,6 +32,7 @@ class QubeData:
 class QubeCoordinator(DataUpdateCoordinator[QubeData]):
     """Qube Heat Pump data coordinator."""
 
+    config_entry: QubeConfigEntry
     sw_version: str | None = None
 
     def __init__(
@@ -52,24 +53,18 @@ class QubeCoordinator(DataUpdateCoordinator[QubeData]):
 
     @override
     async def _async_setup(self) -> None:
-        """Connect to the device and read its software version."""
-        try:
-            connected = await self.client.connect()
-            if not connected:
-                await self.client.close()
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="cannot_connect",
-                    translation_placeholders={"host": self.client.host},
-                )
-            self.sw_version = await self.client.async_get_software_version()
-        except OSError as err:
-            await self.client.close()
+        """Read the software version; the first request opens the connection."""
+        self.sw_version = await self.client.async_get_software_version()
+        if not self.client.is_connected:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={"host": self.client.host},
-            ) from err
+            )
+        # Register 77 reads 0 on recent firmware; the version on the panel is
+        # only in the mDNS record, which discovery stores with the entry
+        if sw_version := self.config_entry.data.get(CONF_SW_VERSION):
+            self.sw_version = sw_version
 
     @override
     async def _async_update_data(self) -> QubeData:

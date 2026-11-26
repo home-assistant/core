@@ -14,7 +14,6 @@ from satel_integra.exceptions import (
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -160,7 +159,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: SatelConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {
@@ -238,7 +237,12 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             if not errors:
-                return self.async_update_reload_and_abort(
+                update_and_abort = (
+                    self.async_update_and_abort
+                    if reconfigure_entry.update_listeners
+                    else self.async_update_reload_and_abort
+                )
+                return update_and_abort(
                     reconfigure_entry,
                     data_updates={
                         CONF_HOST: normalized_input[CONF_HOST],
@@ -368,7 +372,7 @@ class PartitionSubentryFlowHandler(ConfigSubentryFlow):
                 subconfig_entry.data,
             ),
             description_placeholders={
-                CONF_PARTITION_NUMBER: subconfig_entry.data[CONF_PARTITION_NUMBER]
+                "partition_number": subconfig_entry.data[CONF_PARTITION_NUMBER]
             },
         )
 
@@ -462,7 +466,7 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
                 ZONE_SCHEMA, suggested_values
             ),
             description_placeholders={
-                CONF_ZONE_NUMBER: subconfig_entry.data[CONF_ZONE_NUMBER]
+                "zone_number": subconfig_entry.data[CONF_ZONE_NUMBER]
             },
         )
 
@@ -525,7 +529,7 @@ class OutputSubentryFlowHandler(ConfigSubentryFlow):
                 ZONE_AND_OUTPUT_SCHEMA, subconfig_entry.data
             ),
             description_placeholders={
-                CONF_OUTPUT_NUMBER: subconfig_entry.data[CONF_OUTPUT_NUMBER]
+                "output_number": subconfig_entry.data[CONF_OUTPUT_NUMBER]
             },
         )
 
@@ -594,7 +598,7 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
                 SWITCHABLE_OUTPUT_SCHEMA, subconfig_entry.data
             ),
             description_placeholders={
-                CONF_SWITCHABLE_OUTPUT_NUMBER: subconfig_entry.data[
+                "switchable_output_number": subconfig_entry.data[
                     CONF_SWITCHABLE_OUTPUT_NUMBER
                 ]
             },

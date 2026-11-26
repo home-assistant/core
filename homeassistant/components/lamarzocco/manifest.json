@@ -48,5 +48,5 @@
   "iot_class": "cloud_push",
   "loggers": ["pylamarzocco"],
   "quality_scale": "platinum",
-  "requirements": ["pylamarzocco==2.5.6"]
+  "requirements": ["pylamarzocco==2.6.0"]
 }

@@ -11,8 +11,9 @@ from pytest_homeassistant.common import assert_setup_component, async_fire_time_
 from homeassistant.components.group.valve import DEFAULT_NAME
 from homeassistant.components.valve import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as VALVE_DOMAIN,
+    ValveService,
+    ValveServiceArgument,
     ValveState,
 )
 from homeassistant.const import (
@@ -22,13 +23,9 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_UNIQUE_ID,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_SET_VALVE_POSITION,
-    SERVICE_STOP_VALVE,
-    SERVICE_TOGGLE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -351,7 +348,10 @@ async def test_attributes(
 async def test_open_valves(hass: HomeAssistant) -> None:
     """Test open valve function."""
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
 
     for _ in range(10):
@@ -373,7 +373,10 @@ async def test_open_valves(hass: HomeAssistant) -> None:
 async def test_close_valves(hass: HomeAssistant) -> None:
     """Test close valve function."""
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_CLOSE_VALVE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
 
     for _ in range(10):
@@ -396,7 +399,10 @@ async def test_toggle_valves(hass: HomeAssistant) -> None:
     """Test toggle valve function."""
     # Start valves in open state
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -408,7 +414,10 @@ async def test_toggle_valves(hass: HomeAssistant) -> None:
 
     # Toggle will close valves
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.TOGGLE,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -425,7 +434,10 @@ async def test_toggle_valves(hass: HomeAssistant) -> None:
 
     # Toggle again will open valves
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.TOGGLE,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -446,7 +458,10 @@ async def test_toggle_valves(hass: HomeAssistant) -> None:
 async def test_stop_valves(hass: HomeAssistant) -> None:
     """Test stop valve function."""
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
     future = dt_util.utcnow() + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
@@ -456,7 +471,10 @@ async def test_stop_valves(hass: HomeAssistant) -> None:
     assert state.state == ValveState.OPENING
 
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_STOP_VALVE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.STOP,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
     future = dt_util.utcnow() + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
@@ -477,8 +495,8 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
     """Test set valve position function."""
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_SET_VALVE_POSITION,
-        {ATTR_ENTITY_ID: VALVE_GROUP, ATTR_POSITION: 50},
+        ValveService.SET_POSITION,
+        {TargetKey.ENTITY_ID: VALVE_GROUP, ValveServiceArgument.POSITION: 50},
         blocking=True,
     )
     for _ in range(4):
@@ -500,7 +518,10 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
 async def test_is_opening_closing(hass: HomeAssistant) -> None:
     """Test is_opening property."""
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -515,7 +536,10 @@ async def test_is_opening_closing(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_CLOSE_VALVE, {ATTR_ENTITY_ID: VALVE_GROUP}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: VALVE_GROUP},
+        blocking=True,
     )
 
     # Both valves closing -> closing
@@ -678,8 +702,8 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     async with asyncio.timeout(0.5):
         await hass.services.async_call(
             VALVE_DOMAIN,
-            SERVICE_CLOSE_VALVE,
-            {ATTR_ENTITY_ID: "valve.nested_group"},
+            ValveService.CLOSE,
+            {TargetKey.ENTITY_ID: "valve.nested_group"},
             blocking=True,
         )
     assert hass.states.get(DEMO_VALVE_POS1).state == ValveState.CLOSING

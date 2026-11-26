@@ -27,6 +27,9 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
+    "progress": {
+      "wait_for_device": "[%key:common::config_flow::progress::oauth2_wait_for_device%]"
+    },
     "step": {}
   },
   "exceptions": {
@@ -132,6 +135,12 @@
     "service_config_entry_wrong_domain": {
       "message": "Config entry {entry_title} does not belong to integration {domain}."
     },
+    "service_data_template_error": {
+      "message": "Error rendering data template: {error}"
+    },
+    "service_data_template_not_dict": {
+      "message": "Error rendering data template: Result is not a Dictionary"
+    },
     "service_device_not_found": {
       "message": "Device with ID {device_id} was not found."
     },
@@ -164,6 +173,12 @@
     },
     "unload_platforms_failed": {
       "message": "Failed to unload one or more platforms."
+    },
+    "update_failed": {
+      "message": "Failed to fetch the data"
+    },
+    "update_failed_timeout": {
+      "message": "Timed out while fetching the data"
     }
   },
   "integration_category": {
@@ -379,7 +394,7 @@
       "name": "News & social media"
     },
     "other_ecosystems": {
-      "description": "Use your Home Assistant devices in Apple Home, Alexa, Google Assistant and other platforms.",
+      "description": "Use your Home Assistant devices in Apple Home, Alexa, Google Home and other platforms.",
       "name": "Other ecosystems"
     },
     "pets": {

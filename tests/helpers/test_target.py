@@ -489,16 +489,12 @@ def registries_mock(hass: HomeAssistant) -> None:
         ),
     ],
 )
-@pytest.mark.parametrize(
-    "selection_class", [target.TargetSelection, target.TargetSelectorData]
-)
 @pytest.mark.usefixtures("registries_mock")
 async def test_extract_referenced_entity_ids(
     hass: HomeAssistant,
     selector_config: ConfigType,
     expand_group: bool,
     expected_selected: target.SelectedEntities,
-    selection_class,
 ) -> None:
     """Test extract_entity_ids method."""
     hass.states.async_set("light.Bowl", STATE_ON)
@@ -519,7 +515,7 @@ async def test_extract_referenced_entity_ids(
         context=None,
     )
 
-    target_selection = selection_class(selector_config)
+    target_selection = target.TargetSelection(selector_config)
     assert (
         target.async_extract_referenced_entity_ids(
             hass, target_selection, expand_group=expand_group
@@ -1015,7 +1011,7 @@ async def test_async_track_target_selector_state_change_event(
     targeted_entities = [targeted_entity, device_entity]
     await set_states_and_check_events(targeted_entities, [])
 
-    label = lr.async_get(hass).async_create("Test Label").name
+    label = lr.async_get(hass).async_create("Test Label").label_id
     area = ar.async_get(hass).async_create("Test Area").id
     floor = fr.async_get(hass).async_create("Test Floor").floor_id
 
@@ -1145,7 +1141,7 @@ async def test_async_track_target_selector_state_change_event_filter(
 
     entity_reg = er.async_get(hass)
 
-    label = lr.async_get(hass).async_create("Test Label").name
+    label = lr.async_get(hass).async_create("Test Label").label_id
     label_entity = entity_reg.async_get_or_create(
         domain="light",
         platform="test",
@@ -1591,12 +1587,18 @@ def child_device_setup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
 ) -> dict[str, str]:
     """Create a parent device with child devices and entities.
 
-    The parent is in the garage with the label strip-label. Outlet 1 inherits the
-    parent's area, outlet 2 has its own area (garden) and label (outlet-label).
+    The parent is in the garage with the label strip_label. Outlet 1 inherits the
+    parent's area, outlet 2 has its own area (garden) and label (outlet_label).
     """
+    for area_name in ("Attic", "Garage", "Garden"):
+        area_registry.async_create(area_name)
+    for label_name in ("Outlet label", "Strip label"):
+        label_registry.async_create(label_name)
     config_entry = MockConfigEntry(title=None)
     config_entry.add_to_hass(hass)
     parent = device_registry.async_get_or_create(
@@ -1605,7 +1607,7 @@ def child_device_setup(
         name="Power strip",
     )
     device_registry.async_update_device(
-        parent.id, area_id="garage", labels={"strip-label"}
+        parent.id, area_id="garage", labels={"strip_label"}
     )
     outlet_1 = device_registry.async_get_or_create_child(
         config_entry_id=config_entry.entry_id,
@@ -1620,7 +1622,7 @@ def child_device_setup(
         name="Outlet 2",
     )
     device_registry.async_update_child_device(
-        outlet_2.id, area_id="garden", labels={"outlet-label"}
+        outlet_2.id, area_id="garden", labels={"outlet_label"}
     )
 
     entity_ids: dict[str, str] = {}
@@ -1730,7 +1732,7 @@ async def test_extract_label_with_child_devices(
     ids = child_device_setup
 
     selected = target.async_extract_referenced_entity_ids(
-        hass, target.TargetSelection({"label_id": "strip-label"})
+        hass, target.TargetSelection({"label_id": "strip_label"})
     )
     assert selected.referenced_devices == {
         ids["parent"],
@@ -1746,7 +1748,7 @@ async def test_extract_label_with_child_devices(
 
     # A label on a child device targets only the child device
     selected = target.async_extract_referenced_entity_ids(
-        hass, target.TargetSelection({"label_id": "outlet-label"})
+        hass, target.TargetSelection({"label_id": "outlet_label"})
     )
     assert selected.referenced_devices == {ids["outlet_2"]}
     assert selected.indirectly_referenced == {ids["outlet_2_switch"]}

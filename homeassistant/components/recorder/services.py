@@ -1,18 +1,21 @@
 """Support for recorder services."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
+from enum import StrEnum
 from typing import cast
 
 import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
+    State,
     SupportsResponse,
     callback,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.recorder import DATA_INSTANCE
@@ -23,51 +26,82 @@ from homeassistant.helpers.service import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
-from .const import ATTR_APPLY_FILTER, ATTR_KEEP_DAYS, ATTR_REPACK, DOMAIN
+from .const import DOMAIN
+from .history import state_changes_during_period
 from .statistics import statistics_during_period
 from .tasks import PurgeEntitiesTask, PurgeTask
 
-SERVICE_PURGE = "purge"
-SERVICE_PURGE_ENTITIES = "purge_entities"
-SERVICE_ENABLE = "enable"
-SERVICE_DISABLE = "disable"
-SERVICE_GET_STATISTICS = "get_statistics"
+
+class RecorderService(StrEnum):
+    """Store keys for recorder services."""
+
+    DISABLE = "disable"
+    ENABLE = "enable"
+    GET_HISTORY = "get_history"
+    GET_STATISTICS = "get_statistics"
+    PURGE = "purge"
+    PURGE_ENTITIES = "purge_entities"
+
+
+class RecorderServiceArgument(StrEnum):
+    """Store keys for recorder service arguments."""
+
+    ALLOW_TRUNCATION = "allow_truncation"
+    APPLY_FILTER = "apply_filter"
+    DOMAINS = "domains"
+    END_TIME = "end_time"
+    ENTITY_GLOBS = "entity_globs"
+    KEEP_DAYS = "keep_days"
+    PERIOD = "period"
+    REPACK = "repack"
+    START_TIME = "start_time"
+    STATISTIC_IDS = "statistic_ids"
+    TYPES = "types"
+    UNITS = "units"
+
 
 SERVICE_PURGE_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(ATTR_KEEP_DAYS): cv.positive_int,
-        probatio.Optional(ATTR_REPACK, default=False): cv.boolean,
-        probatio.Optional(ATTR_APPLY_FILTER, default=False): cv.boolean,
+        probatio.Optional(RecorderServiceArgument.KEEP_DAYS): cv.positive_int,
+        probatio.Optional(RecorderServiceArgument.REPACK, default=False): cv.boolean,
+        probatio.Optional(
+            RecorderServiceArgument.APPLY_FILTER, default=False
+        ): cv.boolean,
     }
 )
-
-ATTR_DOMAINS = "domains"
-ATTR_ENTITY_GLOBS = "entity_globs"
 
 SERVICE_PURGE_ENTITIES_SCHEMA = probatio.All(
     probatio.Schema(
         {
-            probatio.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-            probatio.Optional(ATTR_DOMAINS, default=[]): probatio.All(
-                probatio.EnsureList(), [cv.string]
-            ),
-            probatio.Optional(ATTR_ENTITY_GLOBS, default=[]): probatio.All(
-                probatio.EnsureList(), [cv.string]
-            ),
-            probatio.Optional(ATTR_KEEP_DAYS, default=0): cv.positive_int,
+            probatio.Optional(
+                CommonServiceArgument.ENTITY_ID, default=[]
+            ): cv.entity_ids,
+            probatio.Optional(
+                RecorderServiceArgument.DOMAINS, default=[]
+            ): probatio.All(probatio.EnsureList(), [cv.string]),
+            probatio.Optional(
+                RecorderServiceArgument.ENTITY_GLOBS, default=[]
+            ): probatio.All(probatio.EnsureList(), [cv.string]),
+            probatio.Optional(
+                RecorderServiceArgument.KEEP_DAYS, default=0
+            ): cv.positive_int,
         }
     ),
     probatio.Any(
         probatio.Schema(
-            {probatio.Required(ATTR_ENTITY_ID): probatio.IsTrue()},
+            {probatio.Required(CommonServiceArgument.ENTITY_ID): probatio.IsTrue()},
             extra=probatio.ALLOW_EXTRA,
         ),
         probatio.Schema(
-            {probatio.Required(ATTR_DOMAINS): probatio.IsTrue()},
+            {probatio.Required(RecorderServiceArgument.DOMAINS): probatio.IsTrue()},
             extra=probatio.ALLOW_EXTRA,
         ),
         probatio.Schema(
-            {probatio.Required(ATTR_ENTITY_GLOBS): probatio.IsTrue()},
+            {
+                probatio.Required(
+                    RecorderServiceArgument.ENTITY_GLOBS
+                ): probatio.IsTrue()
+            },
             extra=probatio.ALLOW_EXTRA,
         ),
         msg="At least one of entity_id, domains, or entity_globs must have a value",
@@ -79,15 +113,15 @@ SERVICE_DISABLE_SCHEMA = probatio.Schema({})
 
 SERVICE_GET_STATISTICS_SCHEMA = probatio.Schema(
     {
-        probatio.Required("start_time"): cv.datetime,
-        probatio.Optional("end_time"): cv.datetime,
-        probatio.Required("statistic_ids"): probatio.All(
+        probatio.Required(RecorderServiceArgument.START_TIME): cv.datetime,
+        probatio.Optional(RecorderServiceArgument.END_TIME): cv.datetime,
+        probatio.Required(RecorderServiceArgument.STATISTIC_IDS): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Required("period"): probatio.In(
+        probatio.Required(RecorderServiceArgument.PERIOD): probatio.In(
             ["5minute", "hour", "day", "week", "month", "year"]
         ),
-        probatio.Required("types"): probatio.All(
+        probatio.Required(RecorderServiceArgument.TYPES): probatio.All(
             probatio.EnsureList(),
             [
                 probatio.In(
@@ -95,18 +129,34 @@ SERVICE_GET_STATISTICS_SCHEMA = probatio.Schema(
                 )
             ],
         ),
-        probatio.Optional("units"): probatio.Schema({cv.string: cv.string}),
+        probatio.Optional(RecorderServiceArgument.UNITS): probatio.Schema(
+            {cv.string: cv.string}
+        ),
     }
 )
+
+SERVICE_GET_HISTORY_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(RecorderServiceArgument.START_TIME): cv.datetime,
+        probatio.Optional(RecorderServiceArgument.END_TIME): cv.datetime,
+        probatio.Required(CommonServiceArgument.ENTITY_ID): cv.entity_ids,
+        probatio.Optional(
+            RecorderServiceArgument.ALLOW_TRUNCATION, default=False
+        ): cv.boolean,
+    }
+)
+
+MAX_GET_HISTORY_ENTITIES = 100
+MAX_GET_HISTORY_RECORDS_PER_ENTITY = 1000
 
 
 async def _async_handle_purge_service(service: ServiceCall) -> None:
     """Handle calls to the purge service."""
     instance = service.hass.data[DATA_INSTANCE]
     kwargs = service.data
-    keep_days = kwargs.get(ATTR_KEEP_DAYS, instance.keep_days)
-    repack = cast(bool, kwargs[ATTR_REPACK])
-    apply_filter = cast(bool, kwargs[ATTR_APPLY_FILTER])
+    keep_days = kwargs.get(RecorderServiceArgument.KEEP_DAYS, instance.keep_days)
+    repack = cast(bool, kwargs[RecorderServiceArgument.REPACK])
+    apply_filter = cast(bool, kwargs[RecorderServiceArgument.APPLY_FILTER])
     purge_before = dt_util.utcnow() - timedelta(days=keep_days)
     instance.queue_task(PurgeTask(purge_before, repack, apply_filter))
 
@@ -115,9 +165,9 @@ async def _async_handle_purge_entities_service(service: ServiceCall) -> None:
     """Handle calls to the purge entities service."""
     # Keep group entities as purge targets instead of expanding them to their members.
     entity_ids = await async_extract_entity_ids(service, expand_group=False)
-    domains = service.data.get(ATTR_DOMAINS, [])
-    keep_days = service.data.get(ATTR_KEEP_DAYS, 0)
-    entity_globs = service.data.get(ATTR_ENTITY_GLOBS, [])
+    domains = service.data.get(RecorderServiceArgument.DOMAINS, [])
+    keep_days = service.data.get(RecorderServiceArgument.KEEP_DAYS, 0)
+    entity_globs = service.data.get(RecorderServiceArgument.ENTITY_GLOBS, [])
     entity_filter = generate_filter(domains, list(entity_ids), [], [], entity_globs)
     purge_before = dt_util.utcnow() - timedelta(days=keep_days)
     service.hass.data[DATA_INSTANCE].queue_task(
@@ -138,15 +188,17 @@ async def _async_handle_get_statistics_service(
 ) -> ServiceResponse:
     """Handle calls to the get_statistics service."""
     hass = service.hass
-    start_time = dt_util.as_utc(service.data["start_time"])
+    start_time = dt_util.as_utc(service.data[RecorderServiceArgument.START_TIME])
     end_time = (
-        dt_util.as_utc(service.data["end_time"]) if "end_time" in service.data else None
+        dt_util.as_utc(service.data[RecorderServiceArgument.END_TIME])
+        if RecorderServiceArgument.END_TIME in service.data
+        else None
     )
 
-    statistic_ids = service.data["statistic_ids"]
-    types = service.data["types"]
-    period = service.data["period"]
-    units = service.data.get("units")
+    statistic_ids = service.data[RecorderServiceArgument.STATISTIC_IDS]
+    types = service.data[RecorderServiceArgument.TYPES]
+    period = service.data[RecorderServiceArgument.PERIOD]
+    units = service.data.get(RecorderServiceArgument.UNITS)
 
     result = await hass.data[DATA_INSTANCE].async_add_executor_job(
         statistics_during_period,
@@ -192,13 +244,151 @@ async def _async_handle_get_statistics_service(
     return {"statistics": formatted_result}
 
 
+def _get_history(
+    hass: HomeAssistant,
+    start_time: datetime,
+    end_time: datetime | None,
+    entity_ids: list[str],
+    allow_truncation: bool,
+) -> dict[str, list[State]]:
+    """Fetch history states for entities in a single executor job."""
+    result: dict[str, list[State]] = {}
+    start_ts = start_time.timestamp()
+
+    for entity_id in entity_ids:
+        entity_states = state_changes_during_period(
+            hass,
+            start_time,
+            end_time,
+            entity_id=entity_id,
+            no_attributes=True,
+            descending=False,
+            # Request limit + 1 records to allow detection of SQL silently truncating the in-window states.
+            limit=MAX_GET_HISTORY_RECORDS_PER_ENTITY + 1,
+            include_start_time_state=True,
+        )
+        if not allow_truncation and (states := entity_states.get(entity_id)):
+            # The start time state is clamped to start_time, in-window states are later
+            in_window_count = sum(
+                state.last_updated_timestamp > start_ts for state in states
+            )
+            if in_window_count > MAX_GET_HISTORY_RECORDS_PER_ENTITY:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="max_records_exceeded",
+                    translation_placeholders={
+                        "entity_id": entity_id,
+                        "max_records": str(MAX_GET_HISTORY_RECORDS_PER_ENTITY),
+                    },
+                )
+        result.update(entity_states)
+
+    return result
+
+
+async def _async_handle_get_history_service(
+    service: ServiceCall,
+) -> ServiceResponse:
+    """Handle calls to the get_history service."""
+    hass = service.hass
+    start_time = dt_util.as_utc(service.data[RecorderServiceArgument.START_TIME])
+    end_time = (
+        dt_util.as_utc(service.data[RecorderServiceArgument.END_TIME])
+        if RecorderServiceArgument.END_TIME in service.data
+        else None
+    )
+
+    now = dt_util.utcnow()
+    if start_time > now:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="start_time_in_future",
+        )
+
+    if end_time and end_time < start_time:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="end_time_before_start_time",
+        )
+
+    entity_ids: list[str] = service.data[CommonServiceArgument.ENTITY_ID]
+    if len(entity_ids) > MAX_GET_HISTORY_ENTITIES:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="max_entities_exceeded",
+            translation_placeholders={
+                "max_entities": str(MAX_GET_HISTORY_ENTITIES),
+            },
+        )
+
+    allow_truncation: bool = service.data[RecorderServiceArgument.ALLOW_TRUNCATION]
+    result = await hass.data[DATA_INSTANCE].async_add_executor_job(
+        _get_history,
+        hass,
+        start_time,
+        end_time,
+        entity_ids,
+        allow_truncation,
+    )
+
+    start_ts = start_time.timestamp()
+    formatted_result: JsonObjectType = {}
+    truncated_entities: JsonArrayType = []
+    for entity_id, states in result.items():
+        # The start time state is clamped to start_time, in-window states are later
+        in_window_count = sum(
+            state.last_updated_timestamp > start_ts for state in states
+        )
+        cutoff: datetime | None = None
+        if in_window_count > MAX_GET_HISTORY_RECORDS_PER_ENTITY:
+            truncated_entities.append(entity_id)
+            # The extra state was only fetched to detect truncation
+            cutoff = dt_util.utc_from_timestamp(states[-1].last_updated_timestamp)
+            states = states[:-1]
+
+        # Remove consecutive states that are the same, this can occur due to restarts
+        history_states = [
+            state
+            for index, state in enumerate(states)
+            if index == 0 or states[index - 1].state != state.state
+        ]
+
+        formatted_history_states: JsonArrayType = []
+
+        for index, state in enumerate(history_states):
+            if index < len(history_states) - 1:
+                end = dt_util.utc_from_timestamp(
+                    history_states[index + 1].last_updated_timestamp
+                )
+            elif cutoff is not None:
+                end = cutoff
+            else:
+                end = min(end_time, now) if end_time else now
+            formatted_state: JsonObjectType = {
+                "start": dt_util.utc_from_timestamp(
+                    state.last_updated_timestamp
+                ).isoformat(),
+                "end": end.isoformat(),
+                "state": state.state,
+            }
+
+            formatted_history_states.append(formatted_state)
+
+        formatted_result[entity_id] = formatted_history_states
+
+    response: JsonObjectType = {"history": formatted_result}
+    if allow_truncation:
+        response["truncated"] = truncated_entities
+    return response
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register recorder services."""
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_PURGE,
+        RecorderService.PURGE,
         _async_handle_purge_service,
         schema=SERVICE_PURGE_SCHEMA,
     )
@@ -206,7 +396,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_PURGE_ENTITIES,
+        RecorderService.PURGE_ENTITIES,
         _async_handle_purge_entities_service,
         schema=SERVICE_PURGE_ENTITIES_SCHEMA,
     )
@@ -214,7 +404,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_ENABLE,
+        RecorderService.ENABLE,
         _async_handle_enable_service,
         schema=SERVICE_ENABLE_SCHEMA,
     )
@@ -222,7 +412,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_DISABLE,
+        RecorderService.DISABLE,
         _async_handle_disable_service,
         schema=SERVICE_DISABLE_SCHEMA,
     )
@@ -230,8 +420,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_GET_STATISTICS,
+        RecorderService.GET_STATISTICS,
         _async_handle_get_statistics_service,
         schema=SERVICE_GET_STATISTICS_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        RecorderService.GET_HISTORY,
+        _async_handle_get_history_service,
+        schema=SERVICE_GET_HISTORY_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

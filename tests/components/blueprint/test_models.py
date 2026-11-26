@@ -3,7 +3,7 @@
 from collections.abc import Callable
 import logging
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from pytest_homeassistant.common import get_test_config_dir
@@ -11,6 +11,7 @@ from pytest_homeassistant.common import get_test_config_dir
 from homeassistant.components.blueprint import BLUEPRINT_SCHEMA, errors, models
 from homeassistant.config import _get_annotation
 from homeassistant.core import HomeAssistant
+from homeassistant.util import yaml as yaml_util
 from homeassistant.util.yaml import Input
 from homeassistant.util.yaml.objects import NodeDictClass, NodeListClass, NodeStrClass
 
@@ -210,6 +211,46 @@ def test_blueprint_validate() -> None:
         },
         schema=BLUEPRINT_SCHEMA,
     ).validate() == ["Requires at least Home Assistant 100000.0.0"]
+
+
+def test_blueprint_dump_preserves_original_data() -> None:
+    """Test blueprint dump preserves original data.
+
+    Blueprint validation resolves some values to types that are not supported
+    by the schema, therefore dumping should keep the original values.
+    """
+    bp = models.Blueprint(
+        {
+            "blueprint": {
+                "name": "Hello",
+                "domain": "automation",
+                "input": {
+                    "light": {
+                        "selector": {
+                            "entity": {
+                                "filter": [
+                                    {
+                                        "supported_features": [
+                                            "light.LightEntityFeature.EFFECT"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+            },
+        },
+        schema=BLUEPRINT_SCHEMA,
+    )
+
+    bp.update_metadata(source_url="http://example.com/blueprint.yaml")
+    dumped = bp.yaml()
+
+    assert "light.LightEntityFeature.EFFECT" in dumped
+    reloaded = models.Blueprint(yaml_util.parse_yaml(dumped), schema=BLUEPRINT_SCHEMA)
+    assert reloaded.inputs == bp.inputs
+    assert reloaded.metadata["source_url"] == "http://example.com/blueprint.yaml"
 
 
 def test_blueprint_inputs(blueprint_2: models.Blueprint) -> None:
@@ -439,6 +480,70 @@ async def test_domain_blueprints_add_blueprint(
     with patch.object(domain_bps, "_load_blueprint") as mock_load:
         assert await domain_bps.async_get_blueprint("something.yaml") == blueprint_1
         assert not mock_load.mock_calls
+
+
+_PATHS_OUTSIDE_FOLDER = [
+    pytest.param("../script/test_service.yaml", id="parent"),
+    pytest.param("in_folder/../../script/test_service.yaml", id="nested_parent"),
+    pytest.param("/etc/hosts.yaml", id="absolute"),
+    pytest.param("", id="empty"),
+    pytest.param(".", id="folder"),
+    pytest.param("in_folder/..", id="folder_through_subfolder"),
+]
+
+
+@pytest.mark.parametrize("blueprint_path", _PATHS_OUTSIDE_FOLDER)
+async def test_domain_blueprints_load_only_in_folder(
+    domain_bps: models.DomainBlueprints, blueprint_path: str
+) -> None:
+    """Test a blueprint is not loaded from outside the blueprint folder."""
+    with (
+        patch(
+            "homeassistant.components.blueprint.models.yaml_util.load_yaml_dict"
+        ) as load_yaml,
+        pytest.raises(errors.FailedToLoad, match="not in the blueprint folder"),
+    ):
+        await domain_bps.async_get_blueprint(blueprint_path)
+    load_yaml.assert_not_called()
+
+
+@pytest.mark.parametrize("blueprint_path", _PATHS_OUTSIDE_FOLDER)
+async def test_domain_blueprints_write_only_in_folder(
+    hass: HomeAssistant, blueprint_1: models.Blueprint, blueprint_path: str
+) -> None:
+    """Test a blueprint is not written or removed outside the blueprint folder."""
+    domain_bps = models.DomainBlueprints(
+        hass,
+        "automation",
+        logging.getLogger(__name__),
+        Mock(return_value=False),
+        AsyncMock(),
+        BLUEPRINT_SCHEMA,
+    )
+
+    with (
+        patch("pathlib.Path.write_text") as write_text,
+        pytest.raises(errors.BlueprintException, match="not in the blueprint folder"),
+    ):
+        await domain_bps.async_add_blueprint(blueprint_1, blueprint_path)
+    write_text.assert_not_called()
+
+    with (
+        patch("pathlib.Path.unlink") as unlink,
+        pytest.raises(errors.BlueprintException, match="not in the blueprint folder"),
+    ):
+        await domain_bps.async_remove_blueprint(blueprint_path)
+    unlink.assert_not_called()
+
+
+async def test_domain_blueprints_load_in_subfolder(
+    domain_bps: models.DomainBlueprints,
+) -> None:
+    """Test a blueprint in a subfolder of the blueprint folder still loads."""
+    blueprint = await domain_bps.async_get_blueprint(
+        "in_folder/../in_folder/in_folder_blueprint.yaml"
+    )
+    assert blueprint.name == "In Folder Blueprint"
 
 
 async def test_inputs_from_config_nonexisting_blueprint(

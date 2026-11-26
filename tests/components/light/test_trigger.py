@@ -19,7 +19,7 @@ from pytest_homeassistant.components.common import (
     target_entities,
 )
 
-from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light import LightEntityStateAttribute
 from homeassistant.components.light.trigger import TRIGGERS
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -140,13 +140,13 @@ async def test_light_state_trigger_behavior_each(
         *parametrize_numerical_attribute_changed_trigger_states(
             "light.brightness_changed",
             STATE_ON,
-            ATTR_BRIGHTNESS,
+            LightEntityStateAttribute.BRIGHTNESS,
             attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "light.brightness_crossed_threshold",
             STATE_ON,
-            ATTR_BRIGHTNESS,
+            LightEntityStateAttribute.BRIGHTNESS,
             attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
     ],
@@ -226,7 +226,7 @@ async def test_light_state_trigger_behavior_first(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "light.brightness_crossed_threshold",
             STATE_ON,
-            ATTR_BRIGHTNESS,
+            LightEntityStateAttribute.BRIGHTNESS,
             attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
     ],
@@ -306,7 +306,7 @@ async def test_light_state_trigger_behavior_all(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "light.brightness_crossed_threshold",
             STATE_ON,
-            ATTR_BRIGHTNESS,
+            LightEntityStateAttribute.BRIGHTNESS,
             attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
     ],
@@ -373,8 +373,14 @@ async def test_light_trigger_ignores_limit_entity_with_wrong_unit(
         trigger=trigger,
         trigger_options=trigger_options,
         entity_id="light.test_light",
-        reset_state={"state": STATE_ON, "attributes": {ATTR_BRIGHTNESS: 0}},
-        trigger_state={"state": STATE_ON, "attributes": {ATTR_BRIGHTNESS: 128}},
+        reset_state={
+            "state": STATE_ON,
+            "attributes": {LightEntityStateAttribute.BRIGHTNESS: 0},
+        },
+        trigger_state={
+            "state": STATE_ON,
+            "attributes": {LightEntityStateAttribute.BRIGHTNESS: 128},
+        },
         limit_entities=[
             (limit_entities[0], "10"),
             (limit_entities[1], "90"),

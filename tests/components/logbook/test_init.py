@@ -58,6 +58,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import Context, Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -100,7 +101,7 @@ async def test_service_call_create_logbook_entry(hass_: HomeAssistant) -> None:
             LogbookServiceArgument.NAME: "Alarm",
             LogbookServiceArgument.MESSAGE: "is triggered",
             LogbookServiceArgument.DOMAIN: "switch",
-            ATTR_ENTITY_ID: "switch.test_switch",
+            CommonServiceArgument.ENTITY_ID: "switch.test_switch",
         },
         True,
     )

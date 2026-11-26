@@ -404,7 +404,7 @@ class RepositoryManifest:
             if (validator := REPOSITORY_MANIFEST_VALUES.get(key)) is None:
                 continue
             try:
-                validator(value)
+                value = validator(value)
             except probatio.Invalid:
                 LOGGER.warning("Ignoring %s in hacs.json, %r is not valid", key, value)
                 continue

@@ -37,9 +37,11 @@ from .const import (
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
     CONF_ORIGIN,
+    CONF_REFERRER,
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_TRAVEL_ROUTING_PREFERENCE,
     CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
@@ -80,7 +82,7 @@ async def async_setup_entry(
     destination = config_entry.data[CONF_DESTINATION]
     name = config_entry.title
 
-    client = get_client(hass, api_key)
+    client = get_client(hass, api_key, config_entry.data.get(CONF_REFERRER))
 
     sensors = [
         GoogleTravelTimeSensor(
@@ -191,6 +193,9 @@ class GoogleTravelTimeSensor(SensorEntity):
                     destination=self._resolved_destination,
                     hass=self.hass,
                     travel_mode=travel_mode,
+                    travel_routing_preference=self._config_entry.options.get(
+                        CONF_TRAVEL_ROUTING_PREFERENCE
+                    ),
                     units=self._config_entry.options[CONF_UNITS],
                     language=self._config_entry.options.get(CONF_LANGUAGE),
                     avoid=self._config_entry.options.get(CONF_AVOID),

@@ -14,7 +14,13 @@ from homeassistant.components.neopool.const import (
     CONF_BAUDRATE,
     CONF_MODBUS_FRAMER,
     CONF_UNIT_ID,
+    CONF_USE_AUX1,
+    CONF_USE_AUX2,
+    CONF_USE_AUX3,
+    CONF_USE_AUX4,
+    CONF_USE_COVER_SENSOR,
     CONF_USE_LIGHT,
+    CURRENT_VERSION,
     DEFAULT_BAUDRATE,
     DEFAULT_UNIT_ID,
     DOMAIN,
@@ -598,4 +604,78 @@ async def test_options_flow_save_changes(
     assert mock_config_entry.options[CONF_USE_LIGHT] is True
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_options_flow_aborts_when_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The options flow needs the coordinator snapshot, so it aborts if unloaded."""
+    mock_config_entry.add_to_hass(hass)
+    # No setup_integration: the entry is NOT_LOADED and has no runtime_data.
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+
+
+@pytest.mark.usefixtures("mock_neopool_client")
+async def test_options_flow_hides_occupied_aux_checkbox(
+    hass: HomeAssistant,
+    mock_neopool_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An AUX whose physical relay a function claims is omitted from the form."""
+    # Assign the pH base pump to relay 4 (AUX1); leave AUX2-4 free.
+    data = {**mock_neopool_client.async_read_all.return_value}
+    data["MBF_PAR_PH_BASE_RELAY_GPIO"] = 4
+    mock_neopool_client.async_read_all = AsyncMock(return_value=data)
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    keys = {str(marker) for marker in result["data_schema"].schema}
+    assert CONF_USE_AUX1 not in keys
+    assert {CONF_USE_AUX2, CONF_USE_AUX3, CONF_USE_AUX4} <= keys
+
+
+@pytest.mark.usefixtures("mock_neopool_client")
+async def test_options_flow_forces_occupied_aux_off_on_submit(
+    hass: HomeAssistant,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """A stale enabled flag for an occupied AUX relay is cleared on submit."""
+    data = {**mock_neopool_client.async_read_all.return_value}
+    data["MBF_PAR_PH_BASE_RELAY_GPIO"] = 4  # AUX1 occupied
+    mock_neopool_client.async_read_all = AsyncMock(return_value=data)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_MODBUS_FRAMER: "tcp",
+            SECTION_MORE_OPTIONS: {CONF_UNIT_ID: DEFAULT_UNIT_ID},
+        },
+        # A stale option left over from before the relay was assigned.
+        options={CONF_USE_AUX1: True},
+    )
+    await setup_integration(hass, entry)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_USE_LIGHT: False,
+            CONF_USE_COVER_SENSOR: False,
+            CONF_USE_AUX2: False,
+            CONF_USE_AUX3: False,
+            CONF_USE_AUX4: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_USE_AUX1] is False
+
+    await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

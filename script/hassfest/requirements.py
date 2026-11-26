@@ -163,12 +163,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "evil_genius_labs": {"pyevilgenius": {"async-timeout"}},
     "familyhub": {"python-family-hub-local": {"async-timeout"}},
     "ffmpeg": {"ha-ffmpeg": {"async-timeout"}},
-    "fitbit": {
-        # https://github.com/orcasgit/python-fitbit/pull/178
-        # but project seems unmaintained
-        # fitbit > setuptools
-        "fitbit": {"setuptools"}
-    },
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
     "geocaching": {"geocachingapi": {"backoff"}},
@@ -210,7 +204,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "modern_forms": {"aiomodernforms": {"backoff"}},
     "monarch_money": {"gql": {"backoff"}},
-    "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
     "overkiz": {"pyoverkiz": {"backoff"}},
@@ -232,7 +225,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "toon": {"toonapi": {"backoff"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
     "weatherflow_cloud": {"weatherflow4py": {"dataclasses-json"}},
-    "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
     "zamg": {"zamg": {"async-timeout"}},
     "zha": {
         # https://github.com/waveform80/colorzero/issues/9
@@ -283,10 +275,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     # https://github.com/tkdrob/pyefergy/pull/47
     "efergy": {"codecov": {"coverage"}},
     # https://github.com/ChrisMandich/PyFlume  # Fixed with >=0.7.1
-    "fitbit": {
-        # Setuptools - distutils-precedence.pth
-        "fitbit": {"setuptools"}
-    },
     "flume": {"homeassistant": {"pyflume"}},
     # https://github.com/fortinet-solutions-cse/fortiosapi
     "fortios": {"homeassistant": {"fortiosapi"}},

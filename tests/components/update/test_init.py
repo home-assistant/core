@@ -1,6 +1,6 @@
 """The tests for the Update component."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -21,46 +21,35 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.update import (
-    ATTR_BACKUP,
-    ATTR_VERSION,
     DOMAIN,
-    SERVICE_INSTALL,
-    SERVICE_SKIP,
+    RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
+    UpdateEntityStateAttribute,
+    UpdateReleaseNotesMessage,
+    UpdateReleaseNotesMessageSeverity,
+    UpdateService,
+    UpdateServiceArgument,
 )
-from homeassistant.components.update.const import (
-    ATTR_AUTO_UPDATE,
-    ATTR_DISPLAY_PRECISION,
-    ATTR_IN_PROGRESS,
-    ATTR_INSTALLED_VERSION,
-    ATTR_LATEST_VERSION,
-    ATTR_RELEASE_SUMMARY,
-    ATTR_RELEASE_URL,
-    ATTR_SKIPPED_VERSION,
-    ATTR_TITLE,
-    ATTR_UPDATE_PERCENTAGE,
-    UpdateEntityFeature,
-)
+from homeassistant.components.update.const import UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_ENTITY_PICTURE,
-    ATTR_FRIENDLY_NAME,
-    ATTR_SUPPORTED_FEATURES,
     CONF_PLATFORM,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     EntityCategory,
+    EntityStateAttribute,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import system_state
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
 
 from .common import MockUpdateEntity
@@ -90,16 +79,16 @@ async def test_update(hass: HomeAssistant) -> None:
     assert update.in_progress is False
     assert update.state == STATE_ON
     assert update.state_attributes == {
-        ATTR_AUTO_UPDATE: False,
-        ATTR_DISPLAY_PRECISION: 0,
-        ATTR_INSTALLED_VERSION: "1.0.0",
-        ATTR_IN_PROGRESS: False,
-        ATTR_LATEST_VERSION: "1.0.1",
-        ATTR_RELEASE_SUMMARY: "Summary",
-        ATTR_RELEASE_URL: "https://example.com",
-        ATTR_SKIPPED_VERSION: None,
-        ATTR_TITLE: "Title",
-        ATTR_UPDATE_PERCENTAGE: None,
+        UpdateEntityStateAttribute.AUTO_UPDATE: False,
+        UpdateEntityStateAttribute.DISPLAY_PRECISION: 0,
+        UpdateEntityStateAttribute.INSTALLED_VERSION: "1.0.0",
+        UpdateEntityStateAttribute.IN_PROGRESS: False,
+        UpdateEntityStateAttribute.LATEST_VERSION: "1.0.1",
+        UpdateEntityStateAttribute.RELEASE_SUMMARY: "Summary",
+        UpdateEntityStateAttribute.RELEASE_URL: "https://example.com",
+        UpdateEntityStateAttribute.SKIPPED_VERSION: None,
+        UpdateEntityStateAttribute.TITLE: "Title",
+        UpdateEntityStateAttribute.UPDATE_PERCENTAGE: None,
     }
 
     # Test no update available
@@ -185,15 +174,15 @@ async def test_entity_with_no_install(
     state = hass.states.get("update.update_no_install")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.1"
 
     # Should not be able to install as the entity doesn't support that
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.update_no_install"},
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: "update.update_no_install"},
             blocking=True,
         )
 
@@ -201,39 +190,39 @@ async def test_entity_with_no_install(
     state = hass.states.get("update.update_no_install")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
-    assert state.attributes[ATTR_SKIPPED_VERSION] is None
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.SKIPPED_VERSION] is None
 
     # We can mark the update as skipped
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SKIP,
-        {ATTR_ENTITY_ID: "update.update_no_install"},
+        UpdateService.SKIP,
+        {TargetKey.ENTITY_ID: "update.update_no_install"},
         blocking=True,
     )
 
     state = hass.states.get("update.update_no_install")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
-    assert state.attributes[ATTR_SKIPPED_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.SKIPPED_VERSION] == "1.0.1"
 
     # We can clear the skipped marker again
     await hass.services.async_call(
         DOMAIN,
         "clear_skipped",
-        {ATTR_ENTITY_ID: "update.update_no_install"},
+        {TargetKey.ENTITY_ID: "update.update_no_install"},
         blocking=True,
     )
 
     state = hass.states.get("update.update_no_install")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
-    assert state.attributes[ATTR_SKIPPED_VERSION] is None
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.SKIPPED_VERSION] is None
 
 
 async def test_entity_with_no_updates(
@@ -250,15 +239,15 @@ async def test_entity_with_no_updates(
     state = hass.states.get("update.no_update")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.0"
 
     # Should not be able to skip when there is no update available
     with pytest.raises(HomeAssistantError, match="No update available to skip for"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SKIP,
-            {ATTR_ENTITY_ID: "update.no_update"},
+            UpdateService.SKIP,
+            {TargetKey.ENTITY_ID: "update.no_update"},
             blocking=True,
         )
 
@@ -266,8 +255,8 @@ async def test_entity_with_no_updates(
     with pytest.raises(HomeAssistantError, match="No update available for"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.no_update"},
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: "update.no_update"},
             blocking=True,
         )
 
@@ -278,8 +267,11 @@ async def test_entity_with_no_updates(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_VERSION: "0.9.0", ATTR_ENTITY_ID: "update.no_update"},
+            UpdateService.INSTALL,
+            {
+                UpdateServiceArgument.VERSION: "0.9.0",
+                TargetKey.ENTITY_ID: "update.no_update",
+            },
             blocking=True,
         )
 
@@ -298,15 +290,15 @@ async def test_entity_with_auto_update(
     state = hass.states.get("update.update_with_auto_update")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
-    assert state.attributes[ATTR_SKIPPED_VERSION] is None
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.SKIPPED_VERSION] is None
 
     # Should be able to manually install an update even if it can auto update
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.update_with_auto_update"},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: "update.update_with_auto_update"},
         blocking=True,
     )
 
@@ -317,8 +309,8 @@ async def test_entity_with_auto_update(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SKIP,
-            {ATTR_ENTITY_ID: "update.update_with_auto_update"},
+            UpdateService.SKIP,
+            {TargetKey.ENTITY_ID: "update.update_with_auto_update"},
             blocking=True,
         )
 
@@ -331,7 +323,7 @@ async def test_entity_with_auto_update(
         await hass.services.async_call(
             DOMAIN,
             "clear_skipped",
-            {ATTR_ENTITY_ID: "update.update_with_auto_update"},
+            {TargetKey.ENTITY_ID: "update.update_with_auto_update"},
             blocking=True,
         )
 
@@ -351,15 +343,15 @@ async def test_entity_with_updates_available(
     state = hass.states.get("update.update_available")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
-    assert state.attributes[ATTR_SKIPPED_VERSION] is None
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.SKIPPED_VERSION] is None
 
     # Skip skip the update
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SKIP,
-        {ATTR_ENTITY_ID: "update.update_available"},
+        UpdateService.SKIP,
+        {TargetKey.ENTITY_ID: "update.update_available"},
         blocking=True,
     )
 
@@ -367,15 +359,15 @@ async def test_entity_with_updates_available(
     state = hass.states.get("update.update_available")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
-    assert state.attributes[ATTR_SKIPPED_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.SKIPPED_VERSION] == "1.0.1"
 
     # Even though skipped, we can still update if we want to
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.update_available"},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: "update.update_available"},
         blocking=True,
     )
 
@@ -383,17 +375,17 @@ async def test_entity_with_updates_available(
     state = hass.states.get("update.update_available")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.1"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
-    assert state.attributes[ATTR_SKIPPED_VERSION] is None
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.SKIPPED_VERSION] is None
     assert "Installed latest update" in caplog.text
 
 
 @pytest.mark.parametrize(
     ("service", "state_after_admin_call"),
     [
-        pytest.param(SERVICE_INSTALL, STATE_OFF, id="install"),
-        pytest.param(SERVICE_SKIP, STATE_OFF, id="skip"),
+        pytest.param(UpdateService.INSTALL, STATE_OFF, id="install"),
+        pytest.param(UpdateService.SKIP, STATE_OFF, id="skip"),
         pytest.param("clear_skipped", STATE_ON, id="clear_skipped"),
     ],
 )
@@ -417,7 +409,7 @@ async def test_services_require_admin(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "update.update_available"},
+            {TargetKey.ENTITY_ID: "update.update_available"},
             blocking=True,
             context=Context(user_id=hass_read_only_user.id),
         )
@@ -429,7 +421,7 @@ async def test_services_require_admin(
     await hass.services.async_call(
         DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "update.update_available"},
+        {TargetKey.ENTITY_ID: "update.update_available"},
         blocking=True,
         context=Context(user_id=hass_admin_user.id),
     )
@@ -453,16 +445,16 @@ async def test_entity_with_unknown_version(
     state = hass.states.get("update.update_unknown")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert state.attributes[ATTR_LATEST_VERSION] is None
-    assert state.attributes[ATTR_SKIPPED_VERSION] is None
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] is None
+    assert state.attributes[UpdateEntityStateAttribute.SKIPPED_VERSION] is None
 
     # Should not be able to install an update when there is no update available
     with pytest.raises(HomeAssistantError, match="No update available for"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.update_unknown"},
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: "update.update_unknown"},
             blocking=True,
         )
 
@@ -470,8 +462,8 @@ async def test_entity_with_unknown_version(
     with pytest.raises(HomeAssistantError, match="Cannot skip an unknown version for"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SKIP,
-            {ATTR_ENTITY_ID: "update.update_unknown"},
+            UpdateService.SKIP,
+            {TargetKey.ENTITY_ID: "update.update_unknown"},
             blocking=True,
         )
 
@@ -490,14 +482,17 @@ async def test_entity_with_specific_version(
     state = hass.states.get("update.update_specific_version")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.0"
 
     # Update to a specific version
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_VERSION: "0.9.9", ATTR_ENTITY_ID: "update.update_specific_version"},
+        UpdateService.INSTALL,
+        {
+            UpdateServiceArgument.VERSION: "0.9.9",
+            TargetKey.ENTITY_ID: "update.update_specific_version",
+        },
         blocking=True,
     )
 
@@ -505,34 +500,34 @@ async def test_entity_with_specific_version(
     state = hass.states.get("update.update_specific_version")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.9.9"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "0.9.9"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.0"
     assert "Installed update with version: 0.9.9" in caplog.text
 
     # Update back to the latest version
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.update_specific_version"},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: "update.update_specific_version"},
         blocking=True,
     )
 
     state = hass.states.get("update.update_specific_version")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.0"
     assert "Installed latest update" in caplog.text
 
     # This entity does not support doing a backup before upgrade
     with pytest.raises(HomeAssistantError, match="Backup is not supported for"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_VERSION: "0.9.9",
-                ATTR_BACKUP: True,
-                ATTR_ENTITY_ID: "update.update_specific_version",
+                UpdateServiceArgument.VERSION: "0.9.9",
+                UpdateServiceArgument.BACKUP: True,
+                TargetKey.ENTITY_ID: "update.update_specific_version",
             },
             blocking=True,
         )
@@ -553,16 +548,16 @@ async def test_entity_with_backup_support(
     state = hass.states.get("update.update_backup")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.1"
 
     # Without a backup
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_INSTALL,
+        UpdateService.INSTALL,
         {
-            ATTR_BACKUP: False,
-            ATTR_ENTITY_ID: "update.update_backup",
+            UpdateServiceArgument.BACKUP: False,
+            TargetKey.ENTITY_ID: "update.update_backup",
         },
         blocking=True,
     )
@@ -570,19 +565,19 @@ async def test_entity_with_backup_support(
     state = hass.states.get("update.update_backup")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.1"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.1"
     assert "Creating backup before installing update" not in caplog.text
     assert "Installed latest update" in caplog.text
 
     # Specific version, do create a backup this time
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_INSTALL,
+        UpdateService.INSTALL,
         {
-            ATTR_BACKUP: True,
-            ATTR_VERSION: "0.9.8",
-            ATTR_ENTITY_ID: "update.update_backup",
+            UpdateServiceArgument.BACKUP: True,
+            UpdateServiceArgument.VERSION: "0.9.8",
+            TargetKey.ENTITY_ID: "update.update_backup",
         },
         blocking=True,
     )
@@ -591,8 +586,8 @@ async def test_entity_with_backup_support(
     state = hass.states.get("update.update_backup")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.9.8"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "0.9.8"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.1"
     assert "Creating backup before installing update" in caplog.text
     assert "Installed update with version: 0.9.8" in caplog.text
 
@@ -621,11 +616,17 @@ async def test_entity_already_in_progress(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_DISPLAY_PRECISION] == expected_display_precision
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
-    assert state.attributes[ATTR_IN_PROGRESS] is True
-    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == expected_update_percentage
+    assert (
+        state.attributes[UpdateEntityStateAttribute.DISPLAY_PRECISION]
+        == expected_display_precision
+    )
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is True
+    assert (
+        state.attributes[UpdateEntityStateAttribute.UPDATE_PERCENTAGE]
+        == expected_update_percentage
+    )
 
     with pytest.raises(
         HomeAssistantError,
@@ -633,8 +634,8 @@ async def test_entity_already_in_progress(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -645,8 +646,8 @@ async def test_entity_already_in_progress(
     entity._attr_in_progress = False
     entity.async_write_ha_state()
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_IN_PROGRESS] is False
-    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is False
+    assert state.attributes[UpdateEntityStateAttribute.UPDATE_PERCENTAGE] is None
 
 
 async def test_entity_without_progress_support(
@@ -673,22 +674,62 @@ async def test_entity_without_progress_support(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.update_available"},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: "update.update_available"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     assert len(events) == 2
-    assert events[0].data.get("old_state").attributes[ATTR_IN_PROGRESS] is False
-    assert events[0].data.get("old_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert events[0].data.get("new_state").attributes[ATTR_IN_PROGRESS] is True
-    assert events[0].data.get("new_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
+    assert (
+        events[0]
+        .data.get("old_state")
+        .attributes[UpdateEntityStateAttribute.IN_PROGRESS]
+        is False
+    )
+    assert (
+        events[0]
+        .data.get("old_state")
+        .attributes[UpdateEntityStateAttribute.INSTALLED_VERSION]
+        == "1.0.0"
+    )
+    assert (
+        events[0]
+        .data.get("new_state")
+        .attributes[UpdateEntityStateAttribute.IN_PROGRESS]
+        is True
+    )
+    assert (
+        events[0]
+        .data.get("new_state")
+        .attributes[UpdateEntityStateAttribute.INSTALLED_VERSION]
+        == "1.0.0"
+    )
 
-    assert events[1].data.get("old_state").attributes[ATTR_IN_PROGRESS] is True
-    assert events[1].data.get("old_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert events[1].data.get("new_state").attributes[ATTR_IN_PROGRESS] is False
-    assert events[1].data.get("new_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.1"
+    assert (
+        events[1]
+        .data.get("old_state")
+        .attributes[UpdateEntityStateAttribute.IN_PROGRESS]
+        is True
+    )
+    assert (
+        events[1]
+        .data.get("old_state")
+        .attributes[UpdateEntityStateAttribute.INSTALLED_VERSION]
+        == "1.0.0"
+    )
+    assert (
+        events[1]
+        .data.get("new_state")
+        .attributes[UpdateEntityStateAttribute.IN_PROGRESS]
+        is False
+    )
+    assert (
+        events[1]
+        .data.get("new_state")
+        .attributes[UpdateEntityStateAttribute.INSTALLED_VERSION]
+        == "1.0.1"
+    )
 
 
 async def test_entity_without_progress_support_raising(
@@ -722,23 +763,63 @@ async def test_entity_without_progress_support_raising(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.update_available"},
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: "update.update_available"},
             blocking=True,
         )
 
     await hass.async_block_till_done()
 
     assert len(events) == 2
-    assert events[0].data.get("old_state").attributes[ATTR_IN_PROGRESS] is False
-    assert events[0].data.get("old_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert events[0].data.get("new_state").attributes[ATTR_IN_PROGRESS] is True
-    assert events[0].data.get("new_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
+    assert (
+        events[0]
+        .data.get("old_state")
+        .attributes[UpdateEntityStateAttribute.IN_PROGRESS]
+        is False
+    )
+    assert (
+        events[0]
+        .data.get("old_state")
+        .attributes[UpdateEntityStateAttribute.INSTALLED_VERSION]
+        == "1.0.0"
+    )
+    assert (
+        events[0]
+        .data.get("new_state")
+        .attributes[UpdateEntityStateAttribute.IN_PROGRESS]
+        is True
+    )
+    assert (
+        events[0]
+        .data.get("new_state")
+        .attributes[UpdateEntityStateAttribute.INSTALLED_VERSION]
+        == "1.0.0"
+    )
 
-    assert events[1].data.get("old_state").attributes[ATTR_IN_PROGRESS] is True
-    assert events[1].data.get("old_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert events[1].data.get("new_state").attributes[ATTR_IN_PROGRESS] is False
-    assert events[1].data.get("new_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
+    assert (
+        events[1]
+        .data.get("old_state")
+        .attributes[UpdateEntityStateAttribute.IN_PROGRESS]
+        is True
+    )
+    assert (
+        events[1]
+        .data.get("old_state")
+        .attributes[UpdateEntityStateAttribute.INSTALLED_VERSION]
+        == "1.0.0"
+    )
+    assert (
+        events[1]
+        .data.get("new_state")
+        .attributes[UpdateEntityStateAttribute.IN_PROGRESS]
+        is False
+    )
+    assert (
+        events[1]
+        .data.get("new_state")
+        .attributes[UpdateEntityStateAttribute.INSTALLED_VERSION]
+        == "1.0.0"
+    )
 
 
 def _restart_update_entity(**values: Any) -> MockUpdateEntity:
@@ -800,14 +881,14 @@ async def test_restart_required(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.update"},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: "update.update"},
         blocking=True,
     )
 
-    assert hass.states.get("update.update").attributes[ATTR_INSTALLED_VERSION] == (
-        "1.0.1"
-    )
+    assert hass.states.get("update.update").attributes[
+        UpdateEntityStateAttribute.INSTALLED_VERSION
+    ] == ("1.0.1")
     assert (
         system_state.async_get(hass).home_assistant_restart_sources == restart_sources
     )
@@ -830,8 +911,8 @@ async def test_restart_required_install_failed(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.update"},
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: "update.update"},
             blocking=True,
         )
 
@@ -849,7 +930,7 @@ async def test_restore_state(
                 "update.update_available",
                 STATE_ON,  # Incorrect, but helps checking if it is ignored
                 {
-                    ATTR_SKIPPED_VERSION: "1.0.1",
+                    UpdateEntityStateAttribute.SKIPPED_VERSION: "1.0.1",
                 },
             ),
         ),
@@ -863,9 +944,9 @@ async def test_restore_state(
     state = hass.states.get("update.update_available")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
-    assert state.attributes[ATTR_SKIPPED_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "1.0.1"
+    assert state.attributes[UpdateEntityStateAttribute.SKIPPED_VERSION] == "1.0.1"
 
 
 async def test_release_notes(
@@ -890,7 +971,311 @@ async def test_release_notes(
         }
     )
     result = await client.receive_json()
-    assert result["result"] == "Release notes"
+    assert result["result"] == {"release_notes": "Release notes", "messages": []}
+
+
+DO_NOT_INTERRUPT_MESSAGE = {
+    "severity": "warning",
+    "message": (
+        "Do not restart, remove power from, or otherwise interrupt the device "
+        "while the update is in progress."
+    ),
+}
+REVIEW_DOCS_MESSAGE = UpdateReleaseNotesMessage(
+    translation_domain=TEST_DOMAIN,
+    translation_key="review_docs",
+    severity=UpdateReleaseNotesMessageSeverity.ERROR,
+    translation_placeholders={"docs_url": "https://example.com/update"},
+)
+INTEGRATION_RELEASE_NOTES_TRANSLATIONS = {
+    "component.test.entity.update.release_notes_messages.review_docs": (
+        "Review {docs_url} before starting the update."
+    ),
+}
+
+
+async def _async_get_translations_with_integration(
+    hass: HomeAssistant,
+    language: str,
+    category: str,
+    integrations: Iterable[str] | None = None,
+) -> dict[str, str]:
+    """Return translations including the test integration's update messages."""
+    translations = await async_get_translations(hass, language, category, integrations)
+    return translations | INTEGRATION_RELEASE_NOTES_TRANSLATIONS
+
+
+@pytest.mark.parametrize(
+    ("latest_version", "release_notes_messages", "release_notes", "expected"),
+    [
+        pytest.param(
+            "1.0.1",
+            (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,),
+            "Release notes",
+            {"release_notes": "Release notes", "messages": [DO_NOT_INTERRUPT_MESSAGE]},
+            id="shared_message",
+        ),
+        pytest.param(
+            "1.0.1",
+            (REVIEW_DOCS_MESSAGE,),
+            "Release notes",
+            {
+                "release_notes": "Release notes",
+                "messages": [
+                    {
+                        "severity": "error",
+                        "message": (
+                            "Review https://example.com/update before starting "
+                            "the update."
+                        ),
+                    }
+                ],
+            },
+            id="integration_message_with_placeholders",
+        ),
+        pytest.param(
+            "1.0.1",
+            (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,),
+            None,
+            {"release_notes": None, "messages": [DO_NOT_INTERRUPT_MESSAGE]},
+            id="no_release_notes",
+        ),
+        pytest.param(
+            "1.0.0",
+            (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,),
+            "Release notes",
+            {"release_notes": "Release notes", "messages": []},
+            id="no_update_available",
+        ),
+        pytest.param(
+            "1.0.0",
+            (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,),
+            None,
+            {"release_notes": None, "messages": []},
+            id="no_update_available_no_release_notes",
+        ),
+        pytest.param(
+            None,
+            (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,),
+            "Release notes",
+            {"release_notes": "Release notes", "messages": []},
+            id="unknown_latest_version",
+        ),
+    ],
+)
+async def test_release_notes_with_messages(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    latest_version: str | None,
+    release_notes_messages: tuple[UpdateReleaseNotesMessage, ...],
+    release_notes: str | None,
+    expected: dict[str, Any],
+) -> None:
+    """Test release notes messages are returned with the release notes."""
+    entity = MockUpdateEntity(
+        name="Update with release notes messages",
+        unique_id="with_release_notes_messages",
+        installed_version="1.0.0",
+        latest_version=latest_version,
+        supported_features=UpdateEntityFeature.RELEASE_NOTES,
+        release_notes_messages=release_notes_messages,
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity])
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    with (
+        patch.object(entity, "release_notes", return_value=release_notes),
+        patch(
+            "homeassistant.components.update.async_get_translations",
+            side_effect=_async_get_translations_with_integration,
+        ),
+    ):
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "update/release_notes",
+                "entity_id": "update.update_with_release_notes_messages",
+            }
+        )
+        result = await client.receive_json()
+
+    assert result["result"] == expected
+
+
+async def test_release_notes_with_messages_skipped_version(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test release notes messages are returned for a skipped version."""
+    entity = MockUpdateEntity(
+        name="Update with skipped version",
+        unique_id="with_skipped_version",
+        installed_version="1.0.0",
+        latest_version="1.0.1",
+        supported_features=UpdateEntityFeature.RELEASE_NOTES,
+        release_notes_messages=(RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,),
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity])
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        UpdateService.SKIP,
+        {TargetKey.ENTITY_ID: "update.update_with_skipped_version"},
+        blocking=True,
+    )
+    state = hass.states.get("update.update_with_skipped_version")
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[UpdateEntityStateAttribute.SKIPPED_VERSION] == "1.0.1"
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.update_with_skipped_version",
+        }
+    )
+    result = await client.receive_json()
+
+    assert result["result"] == {
+        "release_notes": "Release notes",
+        "messages": [DO_NOT_INTERRUPT_MESSAGE],
+    }
+
+
+async def test_release_notes_message_missing_translation(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test release notes messages without a translation are skipped."""
+    entity = MockUpdateEntity(
+        name="Update with missing release notes message",
+        unique_id="with_missing_release_notes_message",
+        installed_version="1.0.0",
+        latest_version="1.0.1",
+        supported_features=UpdateEntityFeature.RELEASE_NOTES,
+        release_notes_messages=(
+            UpdateReleaseNotesMessage(
+                translation_domain=TEST_DOMAIN, translation_key="missing"
+            ),
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity])
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.update_with_missing_release_notes_message",
+        }
+    )
+    result = await client.receive_json()
+
+    assert result["result"] == {"release_notes": "Release notes", "messages": []}
+    assert "Missing translation for release notes message missing of test" in (
+        caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    ("message_language", "expected_language"),
+    [
+        pytest.param({"language": "de"}, "de", id="frontend_language"),
+        pytest.param({}, "en", id="default_language"),
+    ],
+)
+async def test_release_notes_messages_language(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    message_language: dict[str, str],
+    expected_language: str,
+) -> None:
+    """Test release notes messages are translated in the requested language."""
+    entity = MockUpdateEntity(
+        name="Update with release notes messages",
+        unique_id="with_release_notes_messages",
+        installed_version="1.0.0",
+        latest_version="1.0.1",
+        supported_features=UpdateEntityFeature.RELEASE_NOTES,
+        release_notes_messages=(
+            RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
+            REVIEW_DOCS_MESSAGE,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity])
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.update.async_get_translations",
+        wraps=async_get_translations,
+    ) as mock_get_translations:
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "update/release_notes",
+                "entity_id": "update.update_with_release_notes_messages",
+                **message_language,
+            }
+        )
+        result = await client.receive_json()
+
+    assert result["success"]
+    assert [call.args[1] for call in mock_get_translations.call_args_list] == [
+        expected_language,
+        expected_language,
+    ]
+
+
+@pytest.mark.parametrize(
+    ("entity_values", "entity_description", "expected"),
+    [
+        pytest.param(
+            {},
+            UpdateEntityDescription(
+                key="update",
+                release_notes_messages=(REVIEW_DOCS_MESSAGE,),
+            ),
+            (REVIEW_DOCS_MESSAGE,),
+            id="entity_description",
+        ),
+        pytest.param(
+            {"release_notes_messages": (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,)},
+            UpdateEntityDescription(
+                key="update",
+                release_notes_messages=(REVIEW_DOCS_MESSAGE,),
+            ),
+            (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,),
+            id="attribute_overrides_entity_description",
+        ),
+    ],
+)
+def test_release_notes_messages_property(
+    entity_values: dict[str, Any],
+    entity_description: UpdateEntityDescription,
+    expected: tuple[UpdateReleaseNotesMessage, ...],
+) -> None:
+    """Test the release notes messages property."""
+    entity = MockUpdateEntity(**entity_values)
+    entity.entity_description = entity_description
+
+    assert entity.release_notes_messages == expected
 
 
 async def test_release_notes_entity_not_found(
@@ -1128,6 +1513,12 @@ async def test_custom_version_is_newer(hass: HomeAssistant) -> None:
         pytest.param("1.0.0", "1.0.1", True, id="newer-version"),
         pytest.param("1.0.0", "0.9.0", False, id="older-version"),
         pytest.param("1.0.0", "awesome_update", True, id="incomparable-version"),
+        pytest.param("latest", "1.1.0", True, id="installed-special-latest"),
+        pytest.param("dev", "1.1.0", True, id="installed-special-dev"),
+        pytest.param("beta", "1.1.0", True, id="installed-special-beta"),
+        pytest.param("stable", "1.1.0", True, id="installed-special-stable"),
+        pytest.param("1.0.0", "latest", True, id="latest-special"),
+        pytest.param("latest", "latest", False, id="same-special-version"),
     ],
 )
 def test_has_update(
@@ -1232,13 +1623,25 @@ def test_custom_has_update_state_precedence(
         (
             UpdateEntityFeature.PROGRESS,
             [
-                {ATTR_IN_PROGRESS: False},
-                {ATTR_IN_PROGRESS: False},
-                {ATTR_IN_PROGRESS: True, ATTR_UPDATE_PERCENTAGE: 0},
-                {ATTR_IN_PROGRESS: True},
-                {ATTR_IN_PROGRESS: True, ATTR_UPDATE_PERCENTAGE: 1},
-                {ATTR_IN_PROGRESS: True, ATTR_UPDATE_PERCENTAGE: 10},
-                {ATTR_IN_PROGRESS: True, ATTR_UPDATE_PERCENTAGE: 100},
+                {UpdateEntityStateAttribute.IN_PROGRESS: False},
+                {UpdateEntityStateAttribute.IN_PROGRESS: False},
+                {
+                    UpdateEntityStateAttribute.IN_PROGRESS: True,
+                    UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 0,
+                },
+                {UpdateEntityStateAttribute.IN_PROGRESS: True},
+                {
+                    UpdateEntityStateAttribute.IN_PROGRESS: True,
+                    UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 1,
+                },
+                {
+                    UpdateEntityStateAttribute.IN_PROGRESS: True,
+                    UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 10,
+                },
+                {
+                    UpdateEntityStateAttribute.IN_PROGRESS: True,
+                    UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 100,
+                },
             ],
         ),
     ],
@@ -1264,19 +1667,19 @@ async def test_update_percentage_backwards_compatibility(
     await hass.async_block_till_done()
 
     expected_attributes = {
-        ATTR_AUTO_UPDATE: False,
-        ATTR_DISPLAY_PRECISION: 0,
-        ATTR_ENTITY_PICTURE: "/api/brands/integration/test/icon.png",
-        ATTR_FRIENDLY_NAME: "legacy",
-        ATTR_INSTALLED_VERSION: "1.0.0",
-        ATTR_IN_PROGRESS: False,
-        ATTR_LATEST_VERSION: "1.0.1",
-        ATTR_RELEASE_SUMMARY: "Summary",
-        ATTR_RELEASE_URL: "https://example.com",
-        ATTR_SKIPPED_VERSION: None,
-        ATTR_SUPPORTED_FEATURES: supported_features,
-        ATTR_TITLE: "Title",
-        ATTR_UPDATE_PERCENTAGE: None,
+        UpdateEntityStateAttribute.AUTO_UPDATE: False,
+        UpdateEntityStateAttribute.DISPLAY_PRECISION: 0,
+        EntityStateAttribute.ENTITY_PICTURE: "/api/brands/integration/test/icon.png",
+        EntityStateAttribute.FRIENDLY_NAME: "legacy",
+        UpdateEntityStateAttribute.INSTALLED_VERSION: "1.0.0",
+        UpdateEntityStateAttribute.IN_PROGRESS: False,
+        UpdateEntityStateAttribute.LATEST_VERSION: "1.0.1",
+        UpdateEntityStateAttribute.RELEASE_SUMMARY: "Summary",
+        UpdateEntityStateAttribute.RELEASE_URL: "https://example.com",
+        UpdateEntityStateAttribute.SKIPPED_VERSION: None,
+        EntityStateAttribute.SUPPORTED_FEATURES: supported_features,
+        UpdateEntityStateAttribute.TITLE: "Title",
+        UpdateEntityStateAttribute.UPDATE_PERCENTAGE: None,
     }
 
     state = hass.states.get("update.legacy")

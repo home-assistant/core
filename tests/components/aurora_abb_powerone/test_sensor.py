@@ -8,14 +8,16 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.aurora_abb_powerone.const import (
-    ATTR_DEVICE_NAME,
-    ATTR_FIRMWARE,
+    CONF_DEVICE_NAME,
+    CONF_FIRMWARE,
+    CONF_MODEL,
+    CONF_SERIAL_NUMBER,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
     SCAN_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_MODEL, ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
+from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 
@@ -57,10 +59,10 @@ def _mock_config_entry():
         data={
             CONF_PORT: "/dev/usb999",
             CONF_ADDRESS: 3,
-            ATTR_DEVICE_NAME: "mydevicename",
-            ATTR_MODEL: "mymodel",
-            ATTR_SERIAL_NUMBER: "123456",
-            ATTR_FIRMWARE: "1.2.3.4",
+            CONF_DEVICE_NAME: "mydevicename",
+            CONF_MODEL: "mymodel",
+            CONF_SERIAL_NUMBER: "123456",
+            CONF_FIRMWARE: "1.2.3.4",
         },
         source="dummysource",
         entry_id="13579",
@@ -156,7 +158,11 @@ async def test_sensors(hass: HomeAssistant, entity_registry: EntityRegistry) -> 
             assert item.state == value
 
 
-async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+async def test_sensor_dark(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test that darkness (no comms) is handled correctly."""
     mock_entry = _mock_config_entry()
 
@@ -213,7 +219,9 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
         power = hass.states.get("sensor.mydevicename_total_energy")
-        assert power.state == "unknown"
+        assert power.state == "unavailable"
+        assert "No response from the inverter, it may be dark" in caplog.text
+        assert "Error fetching" not in caplog.text
     # sun rose again
     with (
         patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
@@ -249,7 +257,7 @@ async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
         power = hass.states.get("sensor.mydevicename_power_output")
-        assert power.state == "unknown"  # should this be 'available'?
+        assert power.state == "unavailable"
 
 
 async def test_sensor_unknown_error(

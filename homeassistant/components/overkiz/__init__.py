@@ -76,6 +76,7 @@ from .const import (
     PLATFORMS,
     UPDATE_INTERVAL_ALL_ASSUMED_STATE,
     UPDATE_INTERVAL_LOCAL,
+    UPDATE_INTERVAL_SAUTER_SMART_CONTROL,
 )
 from .coordinator import OverkizDataUpdateCoordinator
 from .services import async_setup_services
@@ -201,11 +202,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         )
         coordinator.set_update_interval(UPDATE_INTERVAL_LOCAL)
 
+    if entry.data[CONF_HUB] == Server.SAUTER_SMART_CONTROL:
+        LOGGER.debug(
+            "Sauter Smart Control listening sessions expire within 30 seconds."
+            " Update interval has been reduced to: %s",
+            UPDATE_INTERVAL_SAUTER_SMART_CONTROL,
+        )
+        coordinator.set_update_interval(UPDATE_INTERVAL_SAUTER_SMART_CONTROL)
+
     platforms: defaultdict[Platform, list[Device]] = defaultdict(list)
 
     entry.runtime_data = HomeAssistantOverkizData(
         coordinator=coordinator, platforms=platforms, scenarios=scenarios
     )
+
+    coordinator.setup_device_urls = set(coordinator.data)
 
     # Map Overkiz entities to Home Assistant platform
     for device in coordinator.data.values():

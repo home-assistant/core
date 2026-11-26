@@ -37,12 +37,7 @@ from homeassistant import core as ha
 from homeassistant.components import binary_sensor, mqtt, sensor
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.client import MQTT
-from homeassistant.components.mqtt.const import (
-    ATTR_EVALUATE_PAYLOAD,
-    ATTR_MESSAGE_EXPIRY_INTERVAL,
-    DOMAIN,
-    SERVICE_DUMP,
-)
+from homeassistant.components.mqtt.const import DOMAIN, MqttService, MqttServiceArgument
 from homeassistant.components.mqtt.models import (
     MessageCallbackType,
     MqttCommandTemplateException,
@@ -56,7 +51,6 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     CONF_PORT,
     CONF_PROTOCOL,
-    SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     __version__ as HA_VERSION,
@@ -414,7 +408,7 @@ async def test_service_call_without_topic_does_not_publish(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            mqtt.SERVICE_PUBLISH,
+            MqttService.PUBLISH,
             {},
             blocking=True,
         )
@@ -434,10 +428,10 @@ async def test_service_call_mqtt_entry_does_not_publish(
     ):
         await hass.services.async_call(
             DOMAIN,
-            mqtt.SERVICE_PUBLISH,
+            MqttService.PUBLISH,
             {
-                mqtt.ATTR_TOPIC: "test_topic",
-                mqtt.ATTR_PAYLOAD: "payload",
+                MqttServiceArgument.TOPIC: "test_topic",
+                MqttServiceArgument.PAYLOAD: "payload",
             },
             blocking=True,
         )
@@ -454,10 +448,10 @@ async def test_service_call_with_template_topic_renders_invalid_topic(
     with pytest.raises(probatio.Invalid) as exc:
         await hass.services.async_call(
             DOMAIN,
-            mqtt.SERVICE_PUBLISH,
+            MqttService.PUBLISH,
             {
-                mqtt.ATTR_TOPIC: "test/{{ '+' if True else 'topic' }}/topic",
-                mqtt.ATTR_PAYLOAD: "payload",
+                MqttServiceArgument.TOPIC: "test/{{ '+' if True else 'topic' }}/topic",
+                MqttServiceArgument.PAYLOAD: "payload",
             },
             blocking=True,
         )
@@ -495,11 +489,11 @@ async def test_mqtt_publish_action_call_with_raw_data(
     mqtt_mock = await mqtt_mock_entry()
     await hass.services.async_call(
         DOMAIN,
-        mqtt.SERVICE_PUBLISH,
+        MqttService.PUBLISH,
         {
-            mqtt.ATTR_TOPIC: "test/topic",
-            mqtt.ATTR_PAYLOAD: attr_payload,
-            ATTR_EVALUATE_PAYLOAD: evaluate_payload,
+            MqttServiceArgument.TOPIC: "test/topic",
+            MqttServiceArgument.PAYLOAD: attr_payload,
+            MqttServiceArgument.EVALUATE_PAYLOAD: evaluate_payload,
         },
         blocking=True,
     )
@@ -511,10 +505,10 @@ async def test_mqtt_publish_action_call_with_raw_data(
     ) as literal_eval_mock:
         await hass.services.async_call(
             DOMAIN,
-            mqtt.SERVICE_PUBLISH,
+            MqttService.PUBLISH,
             {
-                mqtt.ATTR_TOPIC: "test/topic",
-                mqtt.ATTR_PAYLOAD: attr_payload,
+                MqttServiceArgument.TOPIC: "test/topic",
+                MqttServiceArgument.PAYLOAD: attr_payload,
             },
             blocking=True,
         )
@@ -522,11 +516,11 @@ async def test_mqtt_publish_action_call_with_raw_data(
 
         await hass.services.async_call(
             DOMAIN,
-            mqtt.SERVICE_PUBLISH,
+            MqttService.PUBLISH,
             {
-                mqtt.ATTR_TOPIC: "test/topic",
-                mqtt.ATTR_PAYLOAD: attr_payload,
-                ATTR_EVALUATE_PAYLOAD: evaluate_payload,
+                MqttServiceArgument.TOPIC: "test/topic",
+                MqttServiceArgument.PAYLOAD: attr_payload,
+                MqttServiceArgument.EVALUATE_PAYLOAD: evaluate_payload,
             },
             blocking=True,
         )
@@ -543,12 +537,12 @@ async def test_service_call_with_ascii_qos_retain_flags(
     mqtt_mock = await mqtt_mock_entry()
     await hass.services.async_call(
         DOMAIN,
-        mqtt.SERVICE_PUBLISH,
+        MqttService.PUBLISH,
         {
-            mqtt.ATTR_TOPIC: "test/topic",
-            mqtt.ATTR_PAYLOAD: "",
-            mqtt.ATTR_QOS: "2",
-            mqtt.ATTR_RETAIN: "no",
+            MqttServiceArgument.TOPIC: "test/topic",
+            MqttServiceArgument.PAYLOAD: "",
+            MqttServiceArgument.QOS: "2",
+            MqttServiceArgument.RETAIN: "no",
         },
         blocking=True,
     )
@@ -562,11 +556,11 @@ async def test_service_call_with_ascii_qos_retain_flags(
     # Test service call without payload
     await hass.services.async_call(
         DOMAIN,
-        mqtt.SERVICE_PUBLISH,
+        MqttService.PUBLISH,
         {
-            mqtt.ATTR_TOPIC: "test/topic",
-            mqtt.ATTR_QOS: "2",
-            mqtt.ATTR_RETAIN: "no",
+            MqttServiceArgument.TOPIC: "test/topic",
+            MqttServiceArgument.QOS: "2",
+            MqttServiceArgument.RETAIN: "no",
         },
         blocking=True,
     )
@@ -624,13 +618,13 @@ async def test_publish_action_with_message_expiry_interval(
     mqtt_mock = await mqtt_mock_entry()
     await hass.services.async_call(
         DOMAIN,
-        mqtt.SERVICE_PUBLISH,
+        MqttService.PUBLISH,
         {
-            mqtt.ATTR_TOPIC: "test/topic",
-            mqtt.ATTR_PAYLOAD: "bla",
-            mqtt.ATTR_QOS: 2,
-            mqtt.ATTR_RETAIN: False,
-            ATTR_MESSAGE_EXPIRY_INTERVAL: interval_data,
+            MqttServiceArgument.TOPIC: "test/topic",
+            MqttServiceArgument.PAYLOAD: "bla",
+            MqttServiceArgument.QOS: 2,
+            MqttServiceArgument.RETAIN: False,
+            MqttServiceArgument.MESSAGE_EXPIRY_INTERVAL: interval_data,
         },
         blocking=True,
     )
@@ -1237,8 +1231,7 @@ async def test_reload_without_entry(
     # Setup the MQTT integration without entry
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    with caplog.at_level(logging.DEBUG):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+    await hass.services.async_call(DOMAIN, MqttService.RELOAD, {}, blocking=True)
     assert (
         "Skipped reloading MQTT integration, the MQTT config entry is not enabled"
         in caplog.text
@@ -1461,7 +1454,10 @@ async def test_dump_service(
     mopen = mock_open()
 
     await hass.services.async_call(
-        "mqtt", "dump", {"topic": "bla/#", "duration": 3}, blocking=True
+        "mqtt",
+        MqttService.DUMP,
+        {MqttServiceArgument.TOPIC: "bla/#", MqttServiceArgument.DURATION: 3},
+        blocking=True,
     )
     async_fire_mqtt_message(hass, "bla/1", "test1")
     async_fire_mqtt_message(hass, "bla/2", "test2")
@@ -1477,11 +1473,18 @@ async def test_dump_service(
 
 ADMIN_SERVICE_CALLS = [
     pytest.param(
-        mqtt.SERVICE_PUBLISH,
-        {mqtt.ATTR_TOPIC: "test/topic", mqtt.ATTR_PAYLOAD: "payload"},
+        MqttService.PUBLISH,
+        {
+            MqttServiceArgument.TOPIC: "test/topic",
+            MqttServiceArgument.PAYLOAD: "payload",
+        },
         id="publish",
     ),
-    pytest.param(SERVICE_DUMP, {"topic": "bla/#", "duration": 3}, id="dump"),
+    pytest.param(
+        MqttService.DUMP,
+        {MqttServiceArgument.TOPIC: "bla/#", MqttServiceArgument.DURATION: 3},
+        id="dump",
+    ),
 ]
 
 
@@ -2437,7 +2440,7 @@ async def test_setup_manual_items_with_unique_ids(
     caplog.clear()
     await hass.services.async_call(
         "mqtt",
-        SERVICE_RELOAD,
+        MqttService.RELOAD,
         {},
         blocking=True,
     )
@@ -2521,7 +2524,7 @@ async def test_link_config_entry(
     # reload manual configured items and assert again
     await hass.services.async_call(
         "mqtt",
-        SERVICE_RELOAD,
+        MqttService.RELOAD,
         {},
         blocking=True,
     )
@@ -2651,7 +2654,7 @@ async def test_reload_config_entry(
     ):
         await hass.services.async_call(
             "mqtt",
-            SERVICE_RELOAD,
+            MqttService.RELOAD,
             {},
             blocking=True,
         )
@@ -2756,7 +2759,7 @@ async def test_reload_with_invalid_config(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 "mqtt",
-                SERVICE_RELOAD,
+                MqttService.RELOAD,
                 {},
                 blocking=True,
             )
@@ -2792,7 +2795,7 @@ async def test_reload_with_empty_config(
     with patch("homeassistant.config.load_yaml_config_file", return_value={}):
         await hass.services.async_call(
             "mqtt",
-            SERVICE_RELOAD,
+            MqttService.RELOAD,
             {},
             blocking=True,
         )
@@ -2843,7 +2846,7 @@ async def test_reload_with_new_platform_config(
     with patch("homeassistant.config.load_yaml_config_file", return_value=new_config):
         await hass.services.async_call(
             "mqtt",
-            SERVICE_RELOAD,
+            MqttService.RELOAD,
             {},
             blocking=True,
         )
@@ -3105,7 +3108,12 @@ async def test_mqtt_protocol_failed_migration_to_v5(
         not in caplog.text
     )
     entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert issue.config_entry_id == entry.entry_id
     assert entry.data.get(mqtt.CONF_PROTOCOL, mqtt.PROTOCOL_311) == current_protocol
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "protocol_5_migration") is None
 
 
 INVALID_SENSOR_1 = {
@@ -3205,7 +3213,7 @@ async def test_reload_service_invalid_platform_config_issues(
         ),
         pytest.raises(ServiceValidationError),
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+        await hass.services.async_call(DOMAIN, MqttService.RELOAD, {}, blocking=True)
     await hass.async_block_till_done()
 
     assert set(issue_registry.issues) == {
@@ -3222,7 +3230,7 @@ async def test_reload_service_invalid_platform_config_issues(
         "homeassistant.config.load_yaml_config_file",
         return_value={DOMAIN: {"sensor": [VALID_SENSOR_2]}},
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+        await hass.services.async_call(DOMAIN, MqttService.RELOAD, {}, blocking=True)
     await hass.async_block_till_done()
 
     assert set(issue_registry.issues) == {(DOMAIN, OTHER_ISSUE_ID)}

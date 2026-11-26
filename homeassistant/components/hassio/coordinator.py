@@ -102,15 +102,18 @@ from .const import (
     HASSIO_ISSUES_UPDATE_INTERVAL,
     HASSIO_MAIN_UPDATE_INTERVAL,
     HASSIO_STATS_UPDATE_INTERVAL,
+    ISSUE_BREAKS_IN_HA_VERSION,
     ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_ADDON_PWNED,
+    ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_SYSTEM_FREE_SPACE,
     ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
+    ISSUE_LEARN_MORE_URLS,
     ISSUE_MOUNT_MOUNT_FAILED,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
@@ -158,6 +161,7 @@ ISSUE_KEYS_FOR_REPAIRS = {
     ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     "issue_system_ntp_sync_failed",
+    ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST,
 }
 
 
@@ -429,7 +433,9 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             self.hass,
             DOMAIN,
             issue.uuid.hex,
+            breaks_in_ha_version=ISSUE_BREAKS_IN_HA_VERSION.get(issue.key),
             is_fixable=bool(presentable),
+            learn_more_url=ISSUE_LEARN_MORE_URLS.get(issue.key),
             severity=IssueSeverity.WARNING,
             translation_key=issue.key,
             translation_placeholders=placeholders or None,
@@ -545,7 +551,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh issue data and apply repair/subscription deltas."""
-        previous_data = self.data or SupervisorIssuesData(set(), set(), {})
+        previous_data = self.data_or_none or SupervisorIssuesData(set(), set(), {})
         await super()._async_refresh(
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
@@ -576,7 +582,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             self.config_entry.async_create_task(self.hass, self.async_refresh())
             return
 
-        previous_data = self.data or SupervisorIssuesData(set(), set(), {})
+        previous_data = self.data_or_none or SupervisorIssuesData(set(), set(), {})
 
         if event[ATTR_WS_EVENT] == EVENT_HEALTH_CHANGED:
             unhealthy_reasons = (
@@ -1435,7 +1441,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
     @override
     async def _async_update_data(self) -> HassioAddonData:
         """Update data via library."""
-        is_first_update = not self.data
+        is_first_update = self.data_or_none is None
         client = self.supervisor_client
 
         # Collect state change events arriving while fetching, as the fetched
@@ -1517,7 +1523,9 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         # If there are new add-ons, we should reload the config entry so we can
         # create new devices and entities. We can return the new data because
         # coordinator will be recreated.
-        if self.data and (set(new_data.addons) - set(self.data.addons)):
+        if (current_data := self.data_or_none) is not None and (
+            set(new_data.addons) - set(current_data.addons)
+        ):
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.entry_id)
             )
@@ -1601,7 +1609,11 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         finally:
             self._event_state_recorders.remove(event_states)
 
-        if info is not None and self.data and slug in self.data.addons:
+        if (
+            info is not None
+            and (current_data := self.data_or_none) is not None
+            and slug in current_data.addons
+        ):
             addon = _installed_addon_from_complete(info)
             # A state change event received while the info request was in
             # flight is at least as fresh as the fetched info
@@ -1610,10 +1622,10 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
             updated = AddonData(
                 addon=addon,
                 auto_update=info.auto_update,
-                repository=self.data.addons[slug].repository,
+                repository=current_data.addons[slug].repository,
             )
             self.async_set_updated_data(
-                HassioAddonData(addons={**self.data.addons, slug: updated})
+                HassioAddonData(addons={**current_data.addons, slug: updated})
             )
 
             # Update addon info cache in hass.data
@@ -1688,7 +1700,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
     @override
     async def _async_update_data(self) -> HassioMainData:
         """Update data via library."""
-        is_first_update = not self.data
+        is_first_update = self.data_or_none is None
         client = self.supervisor_client
 
         try:
@@ -1787,7 +1799,9 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         # If there are new mounts, we should reload the config entry so we can
         # create new devices and entities. We can return the new data because
         # coordinator will be recreated.
-        if self.data and (set(new_data.mounts) - set(self.data.mounts)):
+        if (current_data := self.data_or_none) is not None and (
+            set(new_data.mounts) - set(current_data.mounts)
+        ):
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.entry_id)
             )

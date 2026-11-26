@@ -4,7 +4,6 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING, cast
 
 import anthropic
-from anthropic.resources.messages.messages import DEPRECATED_MODELS
 import probatio
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
@@ -24,14 +23,16 @@ if TYPE_CHECKING:
 class ModelDeprecatedRepairFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
+    _entry_id: str
     _subentry_iter: Iterator[tuple[str, str]] | None
     _current_entry_id: str | None
     _current_subentry_id: str | None
     _model_list_cache: dict[str, list[anthropic.types.ModelInfo]] | None
 
-    def __init__(self) -> None:
+    def __init__(self, entry_id: str) -> None:
         """Initialize the flow."""
         super().__init__()
+        self._entry_id = entry_id
         self._subentry_iter = None
         self._current_entry_id = None
         self._current_subentry_id = None
@@ -89,17 +90,14 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             model
             for model in self._model_list_cache[entry.entry_id]
             if model.lifecycle == "active"
-            and model_alias(model.id) not in DEPRECATED_MODELS
-            and model.id not in DEPRECATED_MODELS
         ]
         model_list: list[SelectOptionDict] = [
-            {"label": model.display_name, "value": model_alias(model.id)}
-            for model in active_models
+            {"label": model.display_name, "value": model.id} for model in active_models
         ]
 
         suggested_model = next(
             (
-                model_alias(model.id)
+                model.id
                 for model in active_models
                 if model_info.line is not None and model.line == model_info.line
             ),
@@ -140,16 +138,18 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
 
     def _iter_deprecated_subentries(self) -> Iterator[tuple[str, str]]:
         """Yield entry/subentry pairs that use deprecated models."""
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.state is not ConfigEntryState.LOADED:
+        entry: AnthropicConfigEntry | None = self.hass.config_entries.async_get_entry(
+            self._entry_id
+        )
+        if entry is None or entry.state is not ConfigEntryState.LOADED:
+            return
+        for subentry in entry.subentries.values():
+            model = subentry.data.get(CONF_CHAT_MODEL)
+            if not model:
                 continue
-            for subentry in entry.subentries.values():
-                model = subentry.data.get(CONF_CHAT_MODEL)
-                if not model:
-                    continue
-                model_info, found = entry.runtime_data.get_model_info(model)
-                if found and model_info.lifecycle in ("deprecated", "retired"):
-                    yield entry.entry_id, subentry.subentry_id
+            model_info, found = entry.runtime_data.get_model_info(model)
+            if found and model_info.lifecycle in ("deprecated", "retired"):
+                yield entry.entry_id, subentry.subentry_id
 
     async def _async_next_target(
         self,
@@ -202,29 +202,23 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
                 translation_domain=DOMAIN, translation_key="subentry_not_found"
             )
 
+        model_id = user_input[CONF_CHAT_MODEL]
         updated_data = {
             **subentry.data,
-            CONF_CHAT_MODEL: user_input[CONF_CHAT_MODEL],
+            CONF_CHAT_MODEL: model_id,
         }
-        alias = model_alias(user_input[CONF_CHAT_MODEL])
-        model_info = next(
-            (
-                model
-                for model in (self._model_list_cache or {}).get(entry.entry_id, [])
-                if model_alias(model.id) == alias
-            ),
-            None,
-        )
+        models = (self._model_list_cache or {}).get(entry.entry_id, [])
+        model_info = next((model for model in models if model.id == model_id), None)
+        if model_info is None:
+            alias = model_alias(model_id)
+            model_info = next(
+                (model for model in models if model_alias(model.id) == alias), None
+            )
         if model_info is None:
             model_info = await entry.runtime_data.client.models.retrieve(
-                user_input[CONF_CHAT_MODEL], timeout=10.0
+                model_id, timeout=10.0
             )
-        if (
-            model_info.lifecycle != "active"
-            or user_input[CONF_CHAT_MODEL] in DEPRECATED_MODELS
-            or model_info.id in DEPRECATED_MODELS
-            or model_alias(model_info.id) in DEPRECATED_MODELS
-        ):
+        if model_info.lifecycle != "active":
             return False
         reconcile_model_options(updated_data, model_info)
 
@@ -250,8 +244,8 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
-    if issue_id == "model_deprecated":
-        return ModelDeprecatedRepairFlow()
+    if issue_id.startswith("model_deprecated_") and data is not None:
+        return ModelDeprecatedRepairFlow(cast(str, data["entry_id"]))
     raise HomeAssistantError(
         translation_domain=DOMAIN, translation_key="unknown_issue_id"
     )

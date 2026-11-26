@@ -38,10 +38,6 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SW_VERSION,
     CONF_DEVICES,
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -92,7 +88,11 @@ from .accessories import (
 )
 from .aidmanager import AccessoryAidStorage
 from .const import (
+    ATTR_HW_VERSION,
     ATTR_INTEGRATION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
@@ -535,18 +535,7 @@ class HomeKit:
     def _async_update_accessories_hash(self) -> bool:
         """Update the accessories hash."""
         assert self.driver is not None
-        driver = self.driver
-        old_hash = driver.state.accessories_hash
-        new_hash = driver.accessories_hash
-        if driver.state.set_accessories_hash(new_hash):
-            _LOGGER.debug(
-                "Updating HomeKit accessories hash from %s -> %s", old_hash, new_hash
-            )
-            driver.async_persist()
-            driver.async_update_advertisement()
-            return True
-        _LOGGER.debug("HomeKit accessories hash is unchanged: %s", new_hash)
-        return False
+        return self.driver.async_update_accessories_hash()
 
     def add_bridge_accessory(self, state: State) -> HomeAccessory | None:
         """Try adding accessory to bridge if configured beforehand."""

@@ -13,6 +13,10 @@
     {
       "name": "wac*",
       "type": "_easylink._tcp.local."
+    },
+    {
+      "name": "mf_fan*",
+      "type": "_easylink._tcp.local."
     }
   ]
 }

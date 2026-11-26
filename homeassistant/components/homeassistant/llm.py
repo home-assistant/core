@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
     async_rounded_state,
 )
 from homeassistant.const import EntityStateAttribute
-from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.core import HomeAssistant, State, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -35,6 +35,8 @@ from homeassistant.helpers.llm import (
     ToolAnnotations,
     ToolInput,
     ToolResult,
+    rank_name_match,
+    substitute_translation_placeholders,
 )
 from homeassistant.helpers.service import (
     async_get_all_descriptions,
@@ -205,6 +207,25 @@ def async_get_exposed_entities(
     return entities
 
 
+def _search_name_matches(
+    hass: HomeAssistant, name_filter: str, states: list[State]
+) -> list[State]:
+    """Return the states whose name, alias or entity ID contains the filter."""
+    if not (query := name_filter.strip().casefold()):
+        return []
+    entity_registry = er.async_get(hass)
+    found = []
+    for state in states:
+        entry = entity_registry.async_get(state.entity_id)
+        aliases = er.async_get_entity_aliases(hass, entry) if entry else ()
+        if (
+            rank_name_match(query, (state.name,), aliases, (state.entity_id,))
+            is not None
+        ):
+            found.append(state)
+    return found
+
+
 def _live_context_match_error(
     match_result: intent.MatchTargetsResult,
     name_filter: str | None,
@@ -258,7 +279,11 @@ class GetLiveContextTool(Tool):
         {
             probatio.Optional(
                 "name",
-                description="Filter entities by name or alias (case-insensitive).",
+                description=(
+                    "Filter entities by name or alias (case-insensitive)."
+                    " Without an exact match, returns the entities whose name,"
+                    " alias or entity ID contains it."
+                ),
             ): cv.string,
             probatio.Optional(
                 "domain",
@@ -322,6 +347,30 @@ class GetLiveContextTool(Tool):
                 ),
                 states=exposed_states,
             )
+
+            if name_filter and match_result.no_match_reason in (
+                intent.MatchFailedReason.NAME,
+                intent.MatchFailedReason.AREA,
+                intent.MatchFailedReason.DOMAIN,
+            ):
+                # No exact name match, or only outside the area or domain
+                # filters: fall back to the entities whose names contain the
+                # filter. Only the entities the other filters allow are
+                # searched, and without a hit the original error is kept.
+                candidates = exposed_states
+                if area_filter or domain_filter:
+                    candidates = intent.async_match_targets(
+                        hass,
+                        intent.MatchTargetsConstraints(
+                            area_name=area_filter,
+                            domains=domain_filter,
+                        ),
+                        states=exposed_states,
+                    ).states
+                if found := _search_name_matches(hass, name_filter, candidates):
+                    match_result = intent.MatchTargetsResult(
+                        is_match=True, states=found
+                    )
 
             if not match_result.is_match:
                 return ToolResult(
@@ -434,9 +483,7 @@ def _describe_action(
     def text(config: dict[str, Any], item: str, translation_key: str) -> str:
         """Return a text of the description, else its translation."""
         value = config.get(item) or translations.get(translation_key, "")
-        for placeholder, replacement in placeholders.items():
-            value = value.replace(f"{{{placeholder}}}", replacement)
-        return value
+        return substitute_translation_placeholders(value, placeholders) or ""
 
     fields: dict[str, dict[str, Any]] = {}
     for field, config in _action_fields(action_description["fields"]):

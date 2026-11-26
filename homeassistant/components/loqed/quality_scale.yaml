@@ -49,15 +49,15 @@ rules:
     comment: >-
       Depends on entity-unavailable. Lock.online is available from the
       library, but it is not yet used for availability or logged.
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery-update-info: todo
-  discovery: todo
+  discovery: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

@@ -17,19 +17,15 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz import switch as fritz_switch
 from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -40,6 +36,7 @@ from .conftest import FritzConnectionMock, wifi_services_with_ssids
 from .const import (
     MOCK_CALL_DEFLECTION_DATA,
     MOCK_FB_SERVICES,
+    MOCK_FB_SERVICES_GUEST_WIFI_NOT_ACCESSIBLE,
     MOCK_HOST_ATTRIBUTES_DATA,
     MOCK_MESH_MASTER_MAC,
     MOCK_SERIAL_NUMBER,
@@ -886,8 +883,8 @@ async def test_switch_turn_on_off(
     ) as mock_set_action:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_set_action.assert_called_once()
@@ -900,8 +897,8 @@ async def test_switch_turn_on_off(
     ) as mock_set_action_2:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_set_action_2.assert_called_once()
@@ -937,6 +934,35 @@ async def test_switch_wifi_coordinator_update(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize("fc_data", [MOCK_FB_SERVICES_GUEST_WIFI_NOT_ACCESSIBLE])
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock")
+async def test_switch_guest_wifi_not_accessible(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the guest Wi-Fi switch is skipped when the guest Wi-Fi is not accessible."""
+    entity_id = "switch.mock_title_wi_fi_main_2_4ghz"
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert [
+        e for e in entity_registry.entities if e.startswith("switch.mock_title_wi_fi")
+    ] == [entity_id]
+
+    # Coordinator updates must not poll the inaccessible guest Wi-Fi
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
 
 
 async def test_switch_port_coordinator_update(

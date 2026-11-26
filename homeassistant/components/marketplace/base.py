@@ -50,7 +50,6 @@ from .const import (
     DOMAIN,
     LEGACY_HACS_INTEGRATION_REPOSITORY,
     RESTART_ISSUE_PREFIX,
-    TV,
     WARNING_VERSION,
 )
 from .coordinator import MarketplaceUpdateCoordinator
@@ -328,6 +327,16 @@ class Repositories:
             return
 
         self._default_repositories.add(repo_id)
+
+    def unmark_unlisted_defaults(
+        self, category: RepositoryCategory, listed: set[str]
+    ) -> None:
+        """Unmark the defaults of a category the catalog no longer lists."""
+        self._default_repositories -= {
+            repository.data.id
+            for repository in self._repositories
+            if repository.data.category == category and repository.data.id not in listed
+        }
 
     def set_repository_id(self, repository: Repository, repo_id: str) -> None:
         """Update a repository id."""
@@ -634,30 +643,30 @@ class MarketplaceManager:
         return 0
 
     @overload
-    async def async_github_api_method(
+    async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[TV]],
+        method: Callable[..., Awaitable[T]],
         *args: Any,
         raise_exception: Literal[True] = True,
         **kwargs: Any,
-    ) -> TV: ...
+    ) -> T: ...
 
     @overload
-    async def async_github_api_method(
+    async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[TV]],
+        method: Callable[..., Awaitable[T]],
         *args: Any,
         raise_exception: bool,
         **kwargs: Any,
-    ) -> TV | None: ...
+    ) -> T | None: ...
 
-    async def async_github_api_method(
+    async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[TV]],
+        method: Callable[..., Awaitable[T]],
         *args: Any,
         raise_exception: bool = True,
         **kwargs: Any,
-    ) -> Any:
+    ) -> T | None:
         """Call a GitHub API method.
 
         Without a connected account the call is anonymous, a refusal then only
@@ -978,7 +987,7 @@ class MarketplaceManager:
     ) -> bytes | None:
         """Download a file, from the first endpoint of the profile that has it.
 
-        A mirror can be down or lag behind, any failure tries the next
+        A relay can be down or lag behind, any failure tries the next
         endpoint. Only the last one retries, and reports what went wrong.
         """
         if remote_file is None:
@@ -1137,7 +1146,11 @@ class MarketplaceManager:
         LOGGER.info("The catalog of %s can not be reached: %s", category, exception)
         self.unreachable_categories.add(category)
         self.coordinators[category].async_update_listeners()
-        async_suggest_profile(self.hass, self.configuration.profile)
+        async_suggest_profile(
+            self.hass,
+            self.configuration.config_entry.entry_id,
+            self.configuration.profile,
+        )
 
     @callback
     def _async_catalog_reached(self, category: RepositoryCategory) -> None:
@@ -1202,6 +1215,9 @@ class MarketplaceManager:
 
         # An answer without one usable entry says nothing about what is stale
         if self.stage == MarketplaceStage.STARTUP and category_data:
+            # Restored from storage, a repository stays default until the
+            # catalog no longer lists it
+            self.repositories.unmark_unlisted_defaults(category, set(category_data))
             self._async_unregister_stale_custom_repositories(category)
 
         self.async_dispatch(MarketplaceSignal.REPOSITORY, {})
@@ -1388,6 +1404,7 @@ class MarketplaceManager:
             hass=self.hass,
             domain=DOMAIN,
             issue_id=f"removed_{repository.data.id}",
+            config_entry_id=self.configuration.config_entry.entry_id,
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,

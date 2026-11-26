@@ -23,11 +23,9 @@ from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
-from homeassistant.util.ulid import ulid_now
 
 from .const import (
     CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
@@ -36,9 +34,10 @@ from .const import (
     SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
     SIGNAL_KNX_TELEGRAM,
     SUPPORTED_PLATFORMS_UI,
-    UI_DEVICE_ID_PREFIX,
 )
+from .device import async_create_ui_device
 from .dpt import get_supported_dpts
+from .project import async_set_project
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
 from .storage.entity_store_schema import (
@@ -50,6 +49,8 @@ from .storage.entity_store_validation import (
     EntityStoreValidationSuccess,
     validate_entity_data,
 )
+from .storage.entity_suggestions import async_get_entity_suggestions
+from .storage.entity_suggestions.const import SuggestionFilter
 from .storage.expose_controller import validate_expose_data
 from .storage.serialize import get_serialized_schema
 from .storage.time_server import validate_time_server_data
@@ -74,6 +75,8 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_query_telegrams)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
     websocket_api.async_register_command(hass, ws_get_knx_project)
+    websocket_api.async_register_command(hass, ws_set_knx_project)
+    websocket_api.async_register_command(hass, ws_get_entity_suggestions)
     websocket_api.async_register_command(hass, ws_validate_entity)
     websocket_api.async_register_command(hass, ws_create_entity)
     websocket_api.async_register_command(hass, ws_update_entity)
@@ -260,6 +263,59 @@ async def ws_get_knx_project(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
+        probatio.Required("type"): "knx/set_knx_project",
+        probatio.Required("project"): dict,
+    }
+)
+@websocket_api.async_response
+async def ws_set_knx_project(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Replace the KNX project with project data in the format of xknxproject.
+
+    The whole project is one message, so it is limited by the maximum message
+    size of the WebSocket API (4 MiB): a larger message closes the connection.
+    Larger project data can be set with `async_set_project` from Python.
+    """
+    await async_set_project(hass, msg["project"])
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "knx/get_entity_suggestions",
+        probatio.Optional("platform"): probatio.In(SUPPORTED_PLATFORMS_UI),
+        probatio.Optional("group_id"): str,
+        probatio.Optional("include_configured", default=True): bool,
+    }
+)
+@websocket_api.async_response
+@provide_knx
+async def ws_get_entity_suggestions(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get entity suggestions."""
+    result = await async_get_entity_suggestions(
+        hass,
+        knx,
+        SuggestionFilter(
+            platform=msg.get("platform"),
+            group_id=msg.get("group_id"),
+            include_configured=msg["include_configured"],
+        ),
+    )
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
         probatio.Required("type"): "knx/project_file_process",
         probatio.Required("file_id"): str,
         probatio.Required("password"): str,
@@ -276,7 +332,6 @@ async def ws_project_file_process(
     """Handle get info command."""
     try:
         await knx.project.process_project_file(
-            xknx=knx.xknx,
             file_id=msg["file_id"],
             password=msg["password"],
         )
@@ -727,20 +782,14 @@ def ws_create_device(
     msg: dict,
 ) -> None:
     """Create a new KNX device."""
-    identifier = f"{UI_DEVICE_ID_PREFIX}{ulid_now()}"
-    device_registry = dr.async_get(hass)
-    _device = device_registry.async_get_or_create(
-        config_entry_id=knx.entry.entry_id,
-        manufacturer="KNX",
-        name=msg["name"],
-        identifiers={(DOMAIN, identifier)},
-    )
-    device_registry.async_update_device(
-        _device.id,
-        area_id=msg.get("area_id") or UNDEFINED,
-        configuration_url=f"homeassistant://knx/entities/view?device_id={_device.id}",
-    )
-    connection.send_result(msg["id"], _device.dict_repr)
+    try:
+        device = async_create_ui_device(
+            hass, knx.entry, msg["name"], msg.get("area_id")
+        )
+    except ValueError as err:
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, str(err))
+        return
+    connection.send_result(msg["id"], device.dict_repr)
 
 
 ########

@@ -34,6 +34,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
+from homeassistant.util import slugify
 
 from .conftest import FakeDevice, MockDeviceManagerContext
 from .mock_data import ROBOROCK_RRUID, USER_EMAIL
@@ -492,6 +493,10 @@ async def test_cloud_api_repair(
         for issue in issue_registry.issues.values()
     }
     assert names == {"Roborock S7 MaxV"}
+    assert (
+        DOMAIN,
+        f"cloud_api_used_{mock_roborock_entry.entry_id}_{slugify(fake_vacuum.duid)}",
+    ) in issue_registry.issues
     await hass.config_entries.async_unload(mock_roborock_entry.entry_id)
 
     # Now fake that the device is reachable locally again
@@ -502,6 +507,72 @@ async def test_cloud_api_repair(
     await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_cloud_api_repair_per_config_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_roborock_entry: MockConfigEntry,
+    config_entry_data: dict[str, Any],
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test a vacuum seen by two config entries gets one repair per entry."""
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="second@example.com",
+        data=config_entry_data,
+        unique_id="second-rruid",
+        version=1,
+        minor_version=2,
+    )
+    duid_slug = slugify(fake_vacuum.duid)
+    first_issue_id = f"cloud_api_used_{mock_roborock_entry.entry_id}_{duid_slug}"
+    second_issue_id = f"cloud_api_used_{second_entry.entry_id}_{duid_slug}"
+
+    # The first entry connects locally before the vacuum becomes cloud only
+    await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 0
+
+    fake_vacuum.is_connected = True
+    fake_vacuum.is_local_connected = False
+    second_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, second_issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == second_entry.entry_id
+    assert len(issue_registry.issues) == 1
+
+    # The battery sensor is the first entry's, since the second entry's duplicate
+    # unique_ids are rejected. Refreshing it updates only the first coordinator,
+    # which has connected locally and so deletes only its own issue.
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "sensor.roborock_s7_maxv_battery"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, second_issue_id) is not None
+
+    # Reloading the first entry while cloud only gives it its own issue
+    await hass.config_entries.async_reload(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, first_issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == mock_roborock_entry.entry_id
+    assert len(issue_registry.issues) == 2
+
+    await hass.config_entries.async_remove(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, second_issue_id) is None
+    assert issue_registry.async_get_issue(DOMAIN, first_issue_id) is not None
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])

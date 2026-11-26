@@ -5,7 +5,6 @@ from collections.abc import Awaitable, Callable
 import copy
 from datetime import timedelta
 import json
-import logging
 from pathlib import Path
 import re
 from typing import Any
@@ -2622,8 +2621,11 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_WS_HEADERS",
     "CONF_WILL_MESSAGE",
     "CONF_CERTIFICATE",
+    "CONF_CERTIFICATE_FILE",
     "CONF_CLIENT_KEY",
+    "CONF_CLIENT_KEY_FILE",
     "CONF_CLIENT_CERT",
+    "CONF_CLIENT_CERT_FILE",
     "CONF_TLS_INSECURE",
 ]
 
@@ -2851,13 +2853,10 @@ async def test_mqtt_discovery_flow_starts_once(
         assert mqtt_data_flow_calls[0].payload == "initial message"
 
         # Test we can ignore updates if they are the same
-        with caplog.at_level(logging.DEBUG):
-            async_fire_mqtt_message(
-                hass, "comp/discovery/bla/config1", "initial message"
-            )
-            await hass.async_block_till_done(wait_background_tasks=True)
-            assert "Ignoring already processed discovery message" in caplog.text
-            assert len(mqtt_data_flow_calls) == 1
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config1", "initial message")
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert "Ignoring already processed discovery message" in caplog.text
+        assert len(mqtt_data_flow_calls) == 1
 
         # Test we can apply updates
         async_fire_mqtt_message(hass, "comp/discovery/bla/config1", "update message")

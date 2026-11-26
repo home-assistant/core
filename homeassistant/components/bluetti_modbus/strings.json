@@ -2,7 +2,12 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "unique_id_mismatch": "The power station at this address has a different serial number than expected. Make sure you enter the address for the correct power station."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_serial": "[%key:component::bluetti_modbus::config::error::invalid_serial%]",
+      "link_settings_in_use": "[%key:component::bluetti_modbus::config::error::link_settings_in_use%]",
+      "unique_id_mismatch": "The power station at this address has a different serial number than expected. Make sure you enter the address for the correct power station.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_device": "[%key:component::bluetti_modbus::config::error::unsupported_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -11,6 +16,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "unsupported_device": "The device at this address does not report itself as a BLUETTI Balco 260, the only supported model."
     },
+    "flow_title": "{name} ({host})",
     "step": {
       "reconfigure": {
         "data": {
@@ -37,10 +43,26 @@
           "unit_id": "The Modbus device ID of the power station. The BLUETTI default is 1."
         },
         "description": "Connect to your BLUETTI power station over Modbus to monitor it locally."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the {name} found at {host}?"
       }
     }
   },
+  "device": {
+    "built_in_battery": {
+      "name": "Built-in battery"
+    }
+  },
   "entity": {
+    "number": {
+      "battery_soc_high": {
+        "name": "Charge limit"
+      },
+      "battery_soc_low": {
+        "name": "Discharge limit"
+      }
+    },
     "sensor": {
       "ac_output_current": {
         "name": "AC output current"
@@ -51,23 +73,11 @@
       "ac_output_voltage": {
         "name": "AC output voltage"
       },
-      "battery_current": {
-        "name": "Battery current"
-      },
-      "battery_cycle_count": {
-        "name": "Battery cycle count"
-      },
-      "battery_soc": {
-        "name": "Battery SoC"
-      },
-      "battery_soh": {
-        "name": "Battery SoH"
-      },
-      "battery_voltage": {
-        "name": "Battery voltage"
-      },
       "cell_count": {
         "name": "Cell count"
+      },
+      "cycle_count": {
+        "name": "Cycle count"
       },
       "dc_pv_input_count": {
         "name": "DC PV input count"
@@ -132,17 +142,23 @@
       "pv_input_voltage": {
         "name": "PV {input} input voltage"
       },
+      "soc": {
+        "name": "SoC"
+      },
+      "soh": {
+        "name": "SoH"
+      },
       "temperature_sensor_count": {
         "name": "Temperature sensor count"
       },
       "total_ac_output_energy": {
         "name": "Total AC output energy"
       },
-      "total_battery_charged_energy": {
-        "name": "Total battery charged energy"
+      "total_charged_energy": {
+        "name": "Total charged energy"
       },
-      "total_battery_discharged_energy": {
-        "name": "Total battery discharged energy"
+      "total_discharged_energy": {
+        "name": "Total discharged energy"
       },
       "total_grid_export_energy": {
         "name": "Total grid export energy"
@@ -162,11 +178,17 @@
     }
   },
   "exceptions": {
+    "battery_firmware_unreadable": {
+      "message": "The firmware version of the built-in battery could not be read from the BLUETTI power station."
+    },
     "communication_error": {
-      "message": "An error occurred while communicating with the BLUETTI power station: {error}"
+      "message": "An error occurred while communicating with the BLUETTI power station."
     },
     "link_settings_in_use": {
       "message": "The device cannot be set up with these link settings: {error}"
+    },
+    "write_failed": {
+      "message": "The setting could not be written to the BLUETTI power station."
     },
     "wrong_device": {
       "message": "The device at this address is a different device than the one this entry was set up for."

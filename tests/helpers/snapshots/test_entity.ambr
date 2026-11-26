@@ -205,14 +205,14 @@
     'has_entity_name': False,
     'icon': None,
     'key': 'blah',
-    'name': <UndefinedType._singleton: 0>,
+    'name': Undefined,
     'translation_key': None,
     'translation_placeholders': None,
     'unit_of_measurement': None,
   })
 # ---
 # name: test_entity_description_as_dataclass.1
-  "EntityDescription(key='blah', device_class='test', entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name=<UndefinedType._singleton: 0>, translation_key=None, translation_placeholders=None, unit_of_measurement=None)"
+  "EntityDescription(key='blah', device_class='test', entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name=Undefined, translation_key=None, translation_placeholders=None, unit_of_measurement=None)"
 # ---
 # name: test_extending_entity_description
   dict({

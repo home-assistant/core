@@ -11,7 +11,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_MODEL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -144,6 +144,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
+    @callback
     @override
     def async_get_options_flow(
         config_entry: ElevenLabsConfigEntry,
@@ -184,9 +185,10 @@ class ElevenLabsOptionsFlow(OptionsFlow):
             configure_voice = user_input.pop(CONF_CONFIGURE_VOICE)
             if configure_voice:
                 return await self.async_step_voice_settings()
+            # Keep the stored voice settings, which this step doesn't show.
             return self.async_create_entry(
                 title="ElevenLabs",
-                data=user_input,
+                data={**self.config_entry.options, **user_input},
             )
 
         schema = self.elevenlabs_config_option_schema()

@@ -9,7 +9,10 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.components.event import (
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
+)
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -83,7 +86,7 @@ async def test_supported_button_values_update(
         hass.states.get("event.livingroom_smart_switch_button1").state == STATE_UNKNOWN
     )
     assert hass.states.get("event.livingroom_smart_switch_button1").attributes[
-        ATTR_EVENT_TYPES
+        EventEntityCapabilityAttribute.EVENT_TYPES
     ] == ["pushed", "held", "down_hold"]
 
     await trigger_update(
@@ -100,7 +103,7 @@ async def test_supported_button_values_update(
         hass.states.get("event.livingroom_smart_switch_button1").state == STATE_UNKNOWN
     )
     assert hass.states.get("event.livingroom_smart_switch_button1").attributes[
-        ATTR_EVENT_TYPES
+        EventEntityCapabilityAttribute.EVENT_TYPES
     ] == ["pushed", "held", "down_hold", "pushed_2x"]
 
 
@@ -137,8 +140,8 @@ async def test_no_supported_button_values(
 
     state = hass.states.get("event.livingroom_smart_switch_button1")
     assert state.state == "2023-10-21T00:00:00.000+00:00"
-    assert state.attributes[ATTR_EVENT_TYPE] == "pushed"
-    assert "pushed_6x" in state.attributes[ATTR_EVENT_TYPES]
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "pushed"
+    assert "pushed_6x" in state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES]
 
 
 @pytest.mark.parametrize("device_fixture", ["heatit_zpushwall"])

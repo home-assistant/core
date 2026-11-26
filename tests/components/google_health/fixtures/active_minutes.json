@@ -1,0 +1,24 @@
+{
+  "rollupDataPoints": [
+    {
+      "activeMinutes": {
+        "activeMinutesRollupByActivityLevel": [
+          {
+            "activityLevel": "LIGHT",
+            "activeMinutesSum": 180
+          },
+          {
+            "activityLevel": "MODERATE",
+            "activeMinutesSum": 30
+          },
+          {
+            "activityLevel": "VIGOROUS",
+            "activeMinutesSum": 15
+          }
+        ]
+      },
+      "civilStartTime": { "date": { "year": 2026, "month": 6, "day": 28 } },
+      "civilEndTime": { "date": { "year": 2026, "month": 6, "day": 29 } }
+    }
+  ]
+}

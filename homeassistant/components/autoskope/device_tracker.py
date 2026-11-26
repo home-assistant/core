@@ -108,27 +108,26 @@ class AutoskopeDeviceTracker(
     @override
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        if (vehicle := self._vehicle_data) and vehicle.position:
-            return float(vehicle.position.latitude)
+        if position := self._vehicle_data.position:
+            return float(position.latitude)
         return None
 
     @property
     @override
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        if (vehicle := self._vehicle_data) and vehicle.position:
-            return float(vehicle.position.longitude)
+        if position := self._vehicle_data.position:
+            return float(position.longitude)
         return None
 
     @property
     @override
     def location_accuracy(self) -> float:
         """Return the location accuracy of the device in meters."""
-        if (vehicle := self._vehicle_data) and vehicle.gps_quality:
-            if vehicle.gps_quality > 0:
-                # HDOP to estimated accuracy in meters
-                # HDOP of 1-2 = good (5-10m), 2-5 = moderate (10-25m), >5 = poor (>25m)
-                return float(max(5, int(vehicle.gps_quality * 5.0)))
+        if (gps_quality := self._vehicle_data.gps_quality) and gps_quality > 0:
+            # HDOP to estimated accuracy in meters
+            # HDOP of 1-2 = good (5-10m), 2-5 = moderate (10-25m), >5 = poor (>25m)
+            return float(max(5, int(gps_quality * 5.0)))
         return 0.0
 
     @property

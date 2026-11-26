@@ -12,12 +12,8 @@ from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import devices
 from .const import (
@@ -50,16 +46,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 DEFAULT_ICON_LEVEL = "mdi:battery"
 DEFAULT_ICON_STATE = "mdi:power-plug"
-
-
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the iOS sensor."""
-    # Leave here for if someone accidentally adds platform: ios to config
 
 
 async def async_setup_entry(
