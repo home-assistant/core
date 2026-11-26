@@ -36,7 +36,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
 from .api import AsyncConfigEntryAuth
-from .const import CONF_WEBRTC_SNAPSHOTS
+from .const import CONF_WEBRTC_SNAPSHOTS, DOMAIN
 from .device_info import NestDeviceInfo
 from .types import NestConfigEntry
 
@@ -353,7 +353,8 @@ class NestWebRTCEntity(NestCameraBaseEntity):
 
         Without snapshots over WebRTC this is a placeholder. Otherwise the
         image is fetched through the WebRTC provider at full size, and the
-        camera platform scales it.
+        camera platform scales it. A failure raises an error, also while the
+        next fetch waits, so that a snapshot action doesn't keep an old file.
         """
         if self._snapshot_auth is None:
             return await self.hass.async_add_executor_job(self.placeholder_image)
@@ -365,12 +366,14 @@ class NestWebRTCEntity(NestCameraBaseEntity):
                     "supports Nest sources, such as the go2rtc integration",
                     self.entity_id,
                 )
-            return None
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="snapshot_provider_missing"
+            )
         if (
             self._snapshot_expires_at is not None
             and utcnow() < self._snapshot_expires_at
         ):
-            return self._snapshot
+            return self._snapshot_or_raise(self._snapshot)
         if (task := self._snapshot_task) is None or task.done():
             assert self.platform.config_entry
             task = self._snapshot_task = (
@@ -383,14 +386,24 @@ class NestWebRTCEntity(NestCameraBaseEntity):
         # Shielded, so a caller that times out doesn't cancel the fetch that
         # other callers are waiting for and that fills the cache
         try:
-            return await asyncio.shield(task)
+            image = await asyncio.shield(task)
         except asyncio.CancelledError:
             # The fetch is cancelled when the config entry is unloaded. Only a
             # caller that is being cancelled itself should see the cancellation.
             caller = cast(asyncio.Task[Any], asyncio.current_task())
-            if task.cancelled() and not caller.cancelling():
-                return None
-            raise
+            if not task.cancelled() or caller.cancelling():
+                raise
+            image = None
+        return self._snapshot_or_raise(image)
+
+    @staticmethod
+    def _snapshot_or_raise(image: bytes | None) -> bytes:
+        """Return the snapshot, or raise when there is none."""
+        if image is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="snapshot_unavailable"
+            )
+        return image
 
     async def _async_fetch_snapshot(
         self, provider: CameraWebRTCProvider

@@ -137,6 +137,12 @@
     "reauth_required": {
       "message": "Reauthentication is required, please follow the instructions in the UI to reauthenticate your account."
     },
+    "snapshot_provider_missing": {
+      "message": "Camera snapshots over WebRTC need a WebRTC provider that supports Nest sources, such as the go2rtc integration."
+    },
+    "snapshot_unavailable": {
+      "message": "Unable to get a snapshot from the camera."
+    },
     "subscriber_configuration_error": {
       "message": "Configuration error in the Nest subscriber"
     },
@@ -164,7 +170,7 @@
           "webrtc_snapshots": "Camera snapshots over WebRTC"
         },
         "data_description": {
-          "webrtc_snapshots": "For cameras that only support WebRTC, get snapshots through go2rtc instead of a placeholder. A snapshot is reused for two minutes. Each new one opens a short WebRTC session to the camera, which may wake a battery camera. Google limits commands per camera (100 an hour for Sandbox projects), shared with any other app that uses the camera through Google's Device Access API. Requires the go2rtc integration, which receives your Nest OAuth client ID, client secret, and refresh token."
+          "webrtc_snapshots": "For cameras that only support WebRTC, get snapshots through go2rtc instead of a placeholder. A snapshot is reused for two minutes. Each new one opens a short WebRTC session to the camera, which may wake a battery camera. Google limits commands per camera (100 an hour for Sandbox projects), shared with any other app that uses the camera through Google's Device Access API. Requires the go2rtc integration, which receives your Nest OAuth client ID, client secret, and refresh token. An external go2rtc server receives them in the request URL, unencrypted unless its URL uses HTTPS, and keeps them in its config even after you turn this off."
         },
         "title": "Google Nest options"
       }

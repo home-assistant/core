@@ -1109,12 +1109,22 @@ def get_camera(hass: HomeAssistant) -> Camera:
     return hass.data[camera.DATA_COMPONENT].get_entity("camera.my_camera")
 
 
-def hanging_image(started: asyncio.Event, release: asyncio.Event, image: bytes):
-    """Return a side effect that blocks until released."""
+def hanging_image(
+    started: asyncio.Event,
+    release: asyncio.Event,
+    image: bytes,
+    cancelled: asyncio.Event | None = None,
+):
+    """Return a side effect that blocks until released, and notes a cancel."""
 
     async def get_image(*args: Any, **kwargs: Any) -> bytes:
         started.set()
-        await release.wait()
+        try:
+            await release.wait()
+        except asyncio.CancelledError:
+            if cancelled is not None:
+                cancelled.set()
+            raise
         return image
 
     return get_image
@@ -1243,10 +1253,10 @@ async def test_webrtc_snapshots_failure(
     await setup_platform()
 
     snapshot_provider.async_get_image.side_effect = image_side_effect
-    with pytest.raises(HomeAssistantError, match="Unable to get image"):
+    with pytest.raises(HomeAssistantError, match="Unable to get a snapshot"):
         await async_get_image(hass)
     freezer.tick(SNAPSHOT_MIN_RETRY_INTERVAL - dt.timedelta(seconds=1))
-    with pytest.raises(HomeAssistantError, match="Unable to get image"):
+    with pytest.raises(HomeAssistantError, match="Unable to get a snapshot"):
         await async_get_image(hass)
     assert snapshot_provider.async_get_image.call_count == 1
 
@@ -1272,15 +1282,15 @@ async def test_webrtc_snapshots_failure_backoff(
         """Return the fetch count after waiting, with no fetch just before."""
         count = snapshot_provider.async_get_image.call_count
         freezer.tick(wait - dt.timedelta(seconds=1))
-        with pytest.raises(HomeAssistantError, match="Unable to get image"):
+        with pytest.raises(HomeAssistantError, match="Unable to get a snapshot"):
             await async_get_image(hass)
         assert snapshot_provider.async_get_image.call_count == count
         freezer.tick(dt.timedelta(seconds=1))
-        with pytest.raises(HomeAssistantError, match="Unable to get image"):
+        with pytest.raises(HomeAssistantError, match="Unable to get a snapshot"):
             await async_get_image(hass)
         return snapshot_provider.async_get_image.call_count
 
-    with pytest.raises(HomeAssistantError, match="Unable to get image"):
+    with pytest.raises(HomeAssistantError, match="Unable to get a snapshot"):
         await async_get_image(hass)
     assert snapshot_provider.async_get_image.call_count == 1
     wait = SNAPSHOT_MIN_RETRY_INTERVAL
@@ -1295,7 +1305,7 @@ async def test_webrtc_snapshots_failure_backoff(
     assert await async_get_image(hass) == SNAPSHOT_BYTES
     snapshot_provider.async_get_image.return_value = None
     freezer.tick(SNAPSHOT_CACHE_DURATION)
-    with pytest.raises(HomeAssistantError, match="Unable to get image"):
+    with pytest.raises(HomeAssistantError, match="Unable to get a snapshot"):
         await async_get_image(hass)
     assert await attempts_after(SNAPSHOT_MIN_RETRY_INTERVAL) == 10
 
@@ -1343,18 +1353,17 @@ async def test_webrtc_snapshots_fetch_timeout(
     await setup_platform()
 
     started = asyncio.Event()
+    cancelled = asyncio.Event()
     snapshot_provider.async_get_image.side_effect = hanging_image(
-        started, asyncio.Event(), SNAPSHOT_BYTES
+        started, asyncio.Event(), SNAPSHOT_BYTES, cancelled
     )
     with (
         patch("homeassistant.components.nest.camera.SNAPSHOT_FETCH_TIMEOUT", 0.01),
-        pytest.raises(HomeAssistantError, match="Unable to get image"),
+        pytest.raises(HomeAssistantError, match="Unable to get a snapshot"),
     ):
         await async_get_image(hass)
     assert started.is_set()
-    task = get_camera(hass)._snapshot_task
-    assert task is not None
-    assert task.done()
+    assert cancelled.is_set()
 
 
 @pytest.mark.usefixtures("webrtc_camera_device")
@@ -1371,24 +1380,28 @@ async def test_webrtc_snapshots_without_provider(
     assert (await cam.async_webrtc_provider_stream_source() or "").startswith("nest:?")
     assert cam.webrtc_provider is None
     for _ in range(2):
-        with pytest.raises(HomeAssistantError, match="Unable to get image"):
+        with pytest.raises(HomeAssistantError, match="need a WebRTC provider"):
             await async_get_image(hass)
     assert caplog.text.count("need a WebRTC provider that supports Nest") == 1
 
 
 @pytest.mark.usefixtures("webrtc_camera_device")
 @SNAPSHOT_OPTIONS
+@pytest.mark.parametrize("device_id", ["devices/device-id"])
 async def test_webrtc_snapshots_unexpected_device_name(
     hass: HomeAssistant,
     setup_platform: PlatformSetup,
+    snapshot_provider: FakeSnapshotProvider,
 ) -> None:
-    """Test there is no provider source for a device name in another format."""
+    """Test a device name in another format gets no provider and no snapshot."""
     await setup_platform()
 
     cam = get_camera(hass)
-    with patch.object(cam, "_device", Mock()) as device:
-        device.name = "devices/device-id"
-        assert await cam.async_webrtc_provider_stream_source() is None
+    assert await cam.async_webrtc_provider_stream_source() is None
+    assert cam.webrtc_provider is None
+    assert snapshot_provider.stream_sources == []
+    with pytest.raises(HomeAssistantError, match="need a WebRTC provider"):
+        await async_get_image(hass)
 
 
 @pytest.mark.usefixtures("webrtc_camera_device")
@@ -1408,7 +1421,7 @@ async def test_webrtc_snapshots_provider_removed(
     await hass.async_block_till_done()
     cam = get_camera(hass)
     assert cam.webrtc_provider is None
-    with pytest.raises(HomeAssistantError, match="Unable to get image"):
+    with pytest.raises(HomeAssistantError, match="need a WebRTC provider"):
         await async_get_image(hass)
     assert snapshot_provider.async_get_image.call_count == 1
 
@@ -1425,18 +1438,17 @@ async def test_webrtc_snapshots_fetch_cancelled_on_unload(
     await setup_platform()
 
     started = asyncio.Event()
+    cancelled = asyncio.Event()
     snapshot_provider.async_get_image.side_effect = hanging_image(
-        started, asyncio.Event(), SNAPSHOT_BYTES
+        started, asyncio.Event(), SNAPSHOT_BYTES, cancelled
     )
     request = asyncio.create_task(async_get_image(hass))
     await started.wait()
-    task = get_camera(hass)._snapshot_task
-    assert task is not None
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert task.cancelled()
-    # The waiting request wasn't cancelled itself, so it gets no image rather
+    assert cancelled.is_set()
+    # The waiting request wasn't cancelled itself, so it gets an error rather
     # than the fetch's cancellation
-    with pytest.raises(HomeAssistantError, match="Unable to get image"):
+    with pytest.raises(HomeAssistantError, match="Unable to get a snapshot"):
         await request
