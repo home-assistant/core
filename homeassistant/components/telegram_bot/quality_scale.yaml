@@ -69,9 +69,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: exempt
-    comment: There is always one device per config entry.
+  dynamic-devices: done
   entity-category:
     status: exempt
     comment: Entities do not require a specific category.
@@ -88,9 +86,7 @@ rules:
   repair-issues:
     status: exempt
     comment: Integration does not raise repair issues.
-  stale-devices:
-    status: exempt
-    comment: only one device per entry, is deleted with the entry.
+  stale-devices: done
 
   # Platinum
   async-dependency: done
