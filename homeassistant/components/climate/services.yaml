@@ -95,6 +95,7 @@ set_hvac_mode:
       domain: climate
   fields:
     hvac_mode:
+      required: true
       selector:
         state:
           hide_states:

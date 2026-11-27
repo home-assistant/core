@@ -22,13 +22,19 @@
         "data_description": {
           "api_key": "The Volvo developers API key"
         },
-        "description": "Get your API key from the [Volvo developer portal]({volvo_dev_portal})."
+        "description": "Get your API key from the [Volvo developer portal]({volvo_dev_portal}). If you created a new Volvo API application, enter its VCC API key."
       },
       "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
-        "description": "The Volvo integration needs to re-authenticate your account.",
+        "description": "The Volvo integration needs to re-authenticate your account. When you sign in, check **Remember me** (if you have that option) to stay signed in.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "vin": {
@@ -367,6 +373,25 @@
     },
     "update_failed": {
       "message": "Unable to update data."
+    }
+  },
+  "issues": {
+    "volvoid_migration": {
+      "fix_flow": {
+        "abort": {
+          "reauth_started": "Re-authentication started. Sign in with the new credentials to finish the migration."
+        },
+        "error": {
+          "no_new_credential": "No new Volvo application credentials found. Add the credentials of your new Volvo API application, with a client ID starting with `vid-dc-`, first."
+        },
+        "step": {
+          "confirm": {
+            "description": "Volvo is migrating to a new Volvo ID system. Your current Volvo API application stops working after 31 January 2027.\n\n1. On the [Volvo developer portal]({volvo_dev_portal}), create a new API application and select all scopes. Its client ID starts with `vid-dc-`.\n2. In Home Assistant, go to **Settings** > **Devices & services** > **Application credentials** and add the client ID and secret of the new application for Volvo.\n3. Select **Submit** to start re-authentication. Choose the new credentials, sign in, and check **Remember me** (if possible).\n4. Enter the VCC API key of the new application.\n5. Repeat the migration for every Volvo integration entry that uses the old application. Only after all of those entries have migrated successfully, delete the old application on the Volvo developer portal and the old application credentials in Home Assistant.",
+            "title": "Migrate {name} to the new Volvo ID"
+          }
+        }
+      },
+      "title": "Volvo ID migration required for {name}"
     }
   },
   "selector": {

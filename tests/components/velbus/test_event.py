@@ -10,16 +10,16 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.event import (
-    ATTR_EVENT_TYPE,
-    ATTR_EVENT_TYPES,
     EventDeviceClass,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
 )
 from homeassistant.components.velbus.event import (
     EVENT_LONG_PRESS,
     EVENT_SHORT_PRESS,
     EVENT_TYPES,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_ON, STATE_UNKNOWN, EntityStateAttribute, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
@@ -78,7 +78,7 @@ def _assert_no_completed_event(hass: HomeAssistant) -> None:
     """Assert no completed press event has been emitted."""
     state = _event_state(hass)
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_EVENT_TYPE] is None
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -96,8 +96,10 @@ async def test_entities(
 
     state = _event_state(hass)
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_DEVICE_CLASS] == EventDeviceClass.BUTTON
-    assert state.attributes[ATTR_EVENT_TYPES] == EVENT_TYPES
+    assert (
+        state.attributes[EntityStateAttribute.DEVICE_CLASS] == EventDeviceClass.BUTTON
+    )
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == EVENT_TYPES
 
     binary_sensor_state = hass.states.get(BINARY_SENSOR_ENTITY_ID)
     assert binary_sensor_state is not None
@@ -129,13 +131,13 @@ async def test_normal_press(
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=False, long_pressed=False)
     state = _event_state(hass)
-    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_SHORT_PRESS
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == EVENT_SHORT_PRESS
     event_state = state.state
 
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=False, long_pressed=False)
     state = _event_state(hass)
-    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_SHORT_PRESS
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == EVENT_SHORT_PRESS
     assert state.state == event_state
 
 
@@ -154,13 +156,13 @@ async def test_long_press(
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=True, long_pressed=True)
     state = _event_state(hass)
-    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_LONG_PRESS
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == EVENT_LONG_PRESS
     event_state = state.state
 
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=False, long_pressed=False)
     state = _event_state(hass)
-    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_LONG_PRESS
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == EVENT_LONG_PRESS
     assert state.state == event_state
 
 
@@ -178,25 +180,25 @@ async def test_repeated_long_status(
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=True, long_pressed=True)
     state = _event_state(hass)
-    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_LONG_PRESS
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == EVENT_LONG_PRESS
     event_state = state.state
 
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=True, long_pressed=True)
     state = _event_state(hass)
-    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_LONG_PRESS
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == EVENT_LONG_PRESS
     assert state.state == event_state
 
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=True, long_pressed=True)
     state = _event_state(hass)
-    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_LONG_PRESS
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == EVENT_LONG_PRESS
     assert state.state == event_state
 
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=False, long_pressed=False)
     state = _event_state(hass)
-    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_LONG_PRESS
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == EVENT_LONG_PRESS
     assert state.state == event_state
 
 
@@ -236,20 +238,20 @@ async def test_state_reset_after_long_press(
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=False, long_pressed=False)
     state = _event_state(hass)
-    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_LONG_PRESS
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == EVENT_LONG_PRESS
     long_event_state = state.state
 
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=True, long_pressed=False)
     state = _event_state(hass)
     assert state.state == long_event_state
-    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_LONG_PRESS
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == EVENT_LONG_PRESS
 
     freezer.tick(timedelta(milliseconds=1))
     await _update_button(hass, mock_button, callback, closed=False, long_pressed=False)
     state = _event_state(hass)
     assert state.state != long_event_state
-    assert state.attributes[ATTR_EVENT_TYPE] == EVENT_SHORT_PRESS
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == EVENT_SHORT_PRESS
 
 
 async def test_unload_removes_callback(

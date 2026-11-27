@@ -7,15 +7,13 @@ import pytest
 from sonos_websocket import CLIP_ID_KEY
 from sonos_websocket.exception import SonosWebsocketError
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ANNOUNCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -28,12 +26,12 @@ async def _announce_clip(hass: HomeAssistant, content_id: str) -> None:
     """Play an announcement clip to set the active clip id."""
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "music",
-            ATTR_MEDIA_CONTENT_ID: content_id,
-            ATTR_MEDIA_ANNOUNCE: True,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "music",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: content_id,
+            MediaPlayerServiceArgument.ANNOUNCE: True,
         },
         blocking=True,
     )
@@ -49,8 +47,8 @@ async def test_cancel_announcement_no_prior(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
             blocking=True,
         )
 
@@ -71,8 +69,8 @@ async def test_cancel_announcement(
     sonos_websocket.cancel_clip = AsyncMock(return_value=[{"success": 1}, {}])
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
         blocking=True,
     )
     sonos_websocket.cancel_clip.assert_called_once_with("clip-123")
@@ -93,8 +91,8 @@ async def test_cancel_announcement_no_clip_id_from_announce_response(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
             blocking=True,
         )
 
@@ -139,7 +137,7 @@ async def test_cancel_announcement_errors(
     with pytest.raises(HomeAssistantError, match=error_match):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: CANCEL_ANNOUNCEMENT_BUTTON},
             blocking=True,
         )

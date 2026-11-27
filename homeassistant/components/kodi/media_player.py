@@ -147,6 +147,7 @@ class KodiEntity(MediaPlayerEntity):
         self._kodi = kodi
         self._attr_unique_id = uid
         self._device_id = None
+        self._state_generation = 0
         self._players = None
         self._properties = {}
         self._item = {}
@@ -162,6 +163,7 @@ class KodiEntity(MediaPlayerEntity):
         )
 
     def _reset_state(self, players=None):
+        self._state_generation += 1
         self._players = players
         self._properties = {}
         self._item = {}
@@ -242,7 +244,7 @@ class KodiEntity(MediaPlayerEntity):
         if self._no_active_players:
             return MediaPlayerState.IDLE
 
-        if self._properties["speed"] == 0:
+        if self._properties.get("speed") == 0:
             return MediaPlayerState.PAUSED
 
         return MediaPlayerState.PLAYING
@@ -345,50 +347,65 @@ class KodiEntity(MediaPlayerEntity):
             self._reset_state()
             return
 
+        # A notification or the watchdog can reset the state while a request
+        # is pending.
+        # The replies of a refresh that started before the reset are dropped.
+        generation = self._state_generation
+
         try:
-            self._players = await self._kodi.get_players()
+            players = await self._kodi.get_players()
         except TransportError, ProtocolError:
             if not self._connection.can_subscribe:
                 self._reset_state()
                 return
             raise
 
-        if self._kodi_is_off:
-            self._reset_state()
+        if generation != self._state_generation:
             return
 
-        if self._players:
-            self._app_properties = await self._kodi.get_application_properties(
-                ["volume", "muted"]
-            )
+        if not players:
+            self._reset_state(players)
+            return
 
-            self._properties = await self._kodi.get_player_properties(
-                self._players[0], ["time", "totaltime", "speed", "live"]
-            )
+        self._players = players
 
-            position = self._properties["time"]
-            if self._media_position != position:
-                self._media_position_updated_at = dt_util.utcnow()
-                self._media_position = position
+        app_properties = await self._kodi.get_application_properties(
+            ["volume", "muted"]
+        )
+        if generation != self._state_generation:
+            return
+        self._app_properties = app_properties
 
-            self._item = await self._kodi.get_playing_item_properties(
-                self._players[0],
-                [
-                    "title",
-                    "file",
-                    "uniqueid",
-                    "thumbnail",
-                    "artist",
-                    "albumartist",
-                    "showtitle",
-                    "album",
-                    "season",
-                    "episode",
-                    "streamdetails",
-                ],
-            )
-        else:
-            self._reset_state([])
+        properties = await self._kodi.get_player_properties(
+            players[0], ["time", "totaltime", "speed", "live"]
+        )
+        if generation != self._state_generation:
+            return
+        self._properties = properties
+
+        position = properties["time"]
+        if self._media_position != position:
+            self._media_position_updated_at = dt_util.utcnow()
+            self._media_position = position
+
+        item = await self._kodi.get_playing_item_properties(
+            players[0],
+            [
+                "title",
+                "file",
+                "uniqueid",
+                "thumbnail",
+                "artist",
+                "albumartist",
+                "showtitle",
+                "album",
+                "season",
+                "episode",
+                "streamdetails",
+            ],
+        )
+        if generation == self._state_generation:
+            self._item = item
 
     @property
     @override
@@ -480,25 +497,33 @@ class KodiEntity(MediaPlayerEntity):
     @override
     def media_series_title(self):
         """Title of series of current playing media, TV show only."""
-        return self._item.get("showtitle")
+        # Kodi reports an empty string when the item has none
+        return self._item.get("showtitle") or None
 
     @property
     @override
     def media_season(self):
         """Season of current playing media, TV show only."""
-        return self._item.get("season")
+        # Kodi reports a negative number (-1) when the item has none
+        if (season := self._item.get("season", -1)) < 0:
+            return None
+        return season
 
     @property
     @override
     def media_episode(self):
         """Episode of current playing media, TV show only."""
-        return self._item.get("episode")
+        # Kodi reports a negative number (-1) when the item has none
+        if (episode := self._item.get("episode", -1)) < 0:
+            return None
+        return episode
 
     @property
     @override
     def media_album_name(self):
         """Album name of current playing media, music track only."""
-        return self._item.get("album")
+        # Kodi reports an empty string when the item has none
+        return self._item.get("album") or None
 
     @property
     @override

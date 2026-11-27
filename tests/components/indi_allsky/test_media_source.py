@@ -17,6 +17,7 @@ from homeassistant.components.indi_allsky.const import DOMAIN
 from homeassistant.components.media_player import BrowseError, MediaType
 from homeassistant.components.media_source import (
     URI_SCHEME,
+    BrowseMediaSource,
     PlayMedia,
     Unresolvable,
     async_browse_media,
@@ -25,7 +26,7 @@ from homeassistant.components.media_source import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.setup import async_setup_component
 
 
@@ -265,8 +266,13 @@ async def test_async_resolve_media_redirect_resolution(
         data={**mock_config_entry.data, CONF_VERIFY_SSL: False},
     )
     entry_no_verify.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry_no_verify.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.indi_allsky.coordinator.async_create_clientsession",
+        wraps=async_create_clientsession,
+    ) as mock_create_session:
+        await hass.config_entries.async_setup(entry_no_verify.entry_id)
+        await hass.async_block_till_done()
+    assert mock_create_session.call_args.kwargs["verify_ssl"] is False
 
     mock_indi_allsky_client.get_media_url.return_value = (
         "https://127.0.0.1:443/indi-allsky/lateststartrail"
@@ -276,16 +282,11 @@ async def test_async_resolve_media_redirect_resolution(
         status=302,
         headers={"Location": "/indi-allsky/images/startrail_1234.jpg"},
     )
-    with patch(
-        "homeassistant.components.indi_allsky.media_source.async_get_clientsession",
-        wraps=async_get_clientsession,
-    ) as mock_get_session:
-        resolved_no_verify = await async_resolve_media(
-            hass,
-            f"{URI_SCHEME}{DOMAIN}/{entry_no_verify.entry_id}#media#lateststartrail",
-            None,
-        )
-        assert mock_get_session.call_args.kwargs["verify_ssl"] is False
+    resolved_no_verify = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{entry_no_verify.entry_id}#media#lateststartrail",
+        None,
+    )
 
     assert resolved_no_verify == PlayMedia(
         f"/api/indi_allsky/media/{entry_no_verify.entry_id}/bGF0ZXN0c3RhcnRyYWls",
@@ -352,18 +353,27 @@ async def test_async_browse_media_root(
     assert res_root.domain == DOMAIN
     assert res_root.identifier == ""
     assert res_root.title == "INDI Allsky"
+    assert res_root.children is not None
     assert len(res_root.children) == 1
+    assert isinstance(res_root.children[0], BrowseMediaSource)
     assert res_root.children[0].identifier == mock_config_entry.entry_id
 
-    # Instance level: Lists 3 categories (Latest Media, Videos, Images)
+    # Instance level: Lists 3 categories (Latest media, Videos, Images)
     res_instance = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}"
     )
+    assert res_instance.children is not None
     assert len(res_instance.children) == 3
-    cat_ids = [c.identifier for c in res_instance.children]
-    assert f"{mock_config_entry.entry_id}#latest" in cat_ids
-    assert f"{mock_config_entry.entry_id}#videos" in cat_ids
-    assert f"{mock_config_entry.entry_id}#images" in cat_ids
+    actual_categories: dict[str, str] = {}
+    for child in res_instance.children:
+        assert isinstance(child, BrowseMediaSource)
+        assert child.identifier is not None
+        actual_categories[child.identifier] = child.title
+    assert actual_categories == {
+        f"{mock_config_entry.entry_id}#latest": "Latest media",
+        f"{mock_config_entry.entry_id}#videos": "Timelapses & generated media",
+        f"{mock_config_entry.entry_id}#images": "Captured images history",
+    }
 
     # Invalid category raises BrowseError
     with pytest.raises(BrowseError):
@@ -436,12 +446,13 @@ async def test_async_browse_latest_media(
     res_latest = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#latest"
     )
+    assert res_latest.children is not None
     assert len(res_latest.children) == 4
     titles = [c.title for c in res_latest.children]
-    assert "Latest Snapshot" in titles
-    assert "Latest Keogram" in titles
-    assert "Latest Star Trail" in titles
-    assert "Latest Timelapse" in titles
+    assert "Latest snapshot" in titles
+    assert "Latest keogram" in titles
+    assert "Latest star trail" in titles
+    assert "Latest timelapse" in titles
     assert (
         res_latest.children[0].thumbnail
         == f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0aW1hZ2U="
@@ -500,6 +511,7 @@ async def test_async_browse_videos_hierarchy(
     res_years = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#videos"
     )
+    assert res_years.children is not None
     assert len(res_years.children) == 2
     assert res_years.children[0].title == "2026"
     assert res_years.children[1].title == "2025"
@@ -507,20 +519,22 @@ async def test_async_browse_videos_hierarchy(
     res_months = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#videos#2026"
     )
+    assert res_months.children is not None
     assert len(res_months.children) == 2
     assert res_months.children[0].title == "October"
 
     res_videos = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#videos#2026#10"
     )
+    assert res_videos.children is not None
     assert len(res_videos.children) == 5
     titles = [c.title for c in res_videos.children]
-    assert "Night Timelapse - October 11, 2026" in titles
-    assert "Night Keogram - October 11, 2026" in titles
-    assert "Night Star Trail - October 11, 2026" in titles
-    assert "Day Timelapse - October 11, 2026" not in titles
-    assert "Day Keogram - October 11, 2026" in titles
-    assert "Day Star Trail - October 11, 2026" in titles
+    assert "Night timelapse - October 11, 2026" in titles
+    assert "Night keogram - October 11, 2026" in titles
+    assert "Night star trail - October 11, 2026" in titles
+    assert "Day timelapse - October 11, 2026" not in titles
+    assert "Day keogram - October 11, 2026" in titles
+    assert "Day star trail - October 11, 2026" in titles
     assert (
         res_videos.children[1].thumbnail
         == f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL2tlb2dyYW0yMDI2MTAxMS5qcGc="
@@ -564,30 +578,35 @@ async def test_async_browse_images_hierarchy(
     res_years = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images"
     )
+    assert res_years.children is not None
     assert len(res_years.children) == 1
     assert res_years.children[0].title == "2026"
 
     res_months = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026"
     )
+    assert res_months.children is not None
     assert len(res_months.children) == 1
     assert res_months.children[0].title == "October"
 
     res_days = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026#10"
     )
+    assert res_days.children is not None
     assert len(res_days.children) == 2
     assert res_days.children[0].title == "Day 11"
 
     res_hours = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026#10#11"
     )
+    assert res_hours.children is not None
     assert len(res_hours.children) == 2
     assert res_hours.children[0].title == "20:00 - 20:59"
 
     res_images = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026#10#11#20"
     )
+    assert res_images.children is not None
     assert len(res_images.children) == 1
     assert "20:00:00 (4056x3140)" in res_images.children[0].title
     assert res_images.children[0].media_content_type == MediaType.IMAGE
@@ -1035,13 +1054,10 @@ async def test_proxy_view_streaming_error_mid_stream(
     upstream_url = "https://127.0.0.1:443/indi-allsky/images/failing.jpg"
     mock_indi_allsky_client.get_media_url.return_value = upstream_url
 
-    with patch(
-        "homeassistant.components.indi_allsky.media_source.async_get_clientsession"
-    ) as mock_session_getter:
-        mock_session = MagicMock()
-        mock_session.get = MagicMock(side_effect=mock_get)
-        mock_session_getter.return_value = mock_session
+    mock_session = MagicMock()
+    mock_session.get = MagicMock(side_effect=mock_get)
 
+    with patch.object(mock_config_entry.runtime_data, "session", mock_session):
         # b64 for "images/failing.jpg" is "aW1hZ2VzL2ZhaWxpbmcuanBn"
         resp = await client.get(
             f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL2ZhaWxpbmcuanBn"

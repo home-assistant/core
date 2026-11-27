@@ -66,8 +66,8 @@
     "device_off": {
       "message": "Error calling {func} for device {name}: Device is off and cannot be controlled."
     },
-    "device_unavailable": {
-      "message": "Device {device} is unavailable"
+    "device_unreachable": {
+      "message": "TV is off or unreachable and no turn on action is configured"
     },
     "invalid_entity_id": {
       "message": "Entity {entity_id} is not a valid webOS TV entity."
@@ -93,8 +93,7 @@
   },
   "options": {
     "error": {
-      "cannot_connect": "[%key:component::webostv::config::error::cannot_connect%]",
-      "error_pairing": "[%key:component::webostv::config::error::error_pairing%]"
+      "cannot_connect": "[%key:component::webostv::config::error::cannot_connect%]"
     },
     "step": {
       "init": {

@@ -5,7 +5,8 @@
       "api_rate_limit_reached": "Tado API rate limit reached. Please wait and try again later.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "could_not_authenticate": "Could not authenticate with Tado.",
-      "no_homes": "There are no homes linked to this Tado account."
+      "no_homes": "There are no homes linked to this Tado account.",
+      "tado_x_unsupported": "Tado X devices are not supported by this integration. Tado X uses a different API that Tado does not allow third parties to access. To use these devices with Home Assistant, set them up via the Matter integration with a Thread border router instead."
     },
     "progress": {
       "wait_for_device": "To authenticate, open the following URL and login at Tado:\n{url}\nIf the code is not automatically copied, paste the following code to authorize the integration:\n\n```{code}```\n\n\nThe login attempt will time out after five minutes."
@@ -85,6 +86,11 @@
       "child_lock": {
         "name": "Child lock"
       }
+    }
+  },
+  "exceptions": {
+    "tado_x_unsupported": {
+      "message": "The home \"{home}\" uses Tado X devices, which are not supported by this integration. Tado X uses a different API that Tado does not allow third parties to access. To use these devices with Home Assistant, set them up via the Matter integration with a Thread border router instead."
     }
   },
   "issues": {

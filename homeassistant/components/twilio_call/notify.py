@@ -24,10 +24,18 @@ DOMAIN = "twilio_call"
 
 CONF_FROM_NUMBER = "from_number"
 
+
+def _restore_yaml_plus(value: Any) -> Any:
+    """Restore the plus YAML drops when it reads an unquoted +<digits> as an int."""
+    if isinstance(value, int) and not isinstance(value, bool):
+        return f"+{value}"
+    return value
+
+
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_FROM_NUMBER): probatio.All(
-            cv.string, probatio.E164(normalize=False)
+            _restore_yaml_plus, cv.string, probatio.E164(normalize=False)
         )
     }
 )

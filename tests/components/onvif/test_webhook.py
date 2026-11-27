@@ -269,3 +269,19 @@ async def test_webhook_external_url_fallback(
     url = _subscribed_url(mock_onvif_camera)
     assert str(url.origin()) == "https://example.com"
     assert url.path.startswith("/api/webhook/onvif")
+
+
+async def test_webhook_not_subscribed_without_url(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onvif_camera: MagicMock,
+) -> None:
+    """Test no webhook subscription is created when no URL is available."""
+    assert await async_setup_component(hass, "webhook", {})
+    # Home Assistant serving TLS itself disables the local IP fallback URL.
+    hass.config.api.use_ssl = True
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    mock_onvif_camera.create_notification_manager.assert_not_called()

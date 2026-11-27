@@ -1,9 +1,16 @@
 """Weather platform for the Foreca integration."""
 
-from collections.abc import Callable
-from typing import override
+from collections.abc import Awaitable, Callable
+from typing import cast, override
 
-from pyforeca import DailyForecast, HourlyForecast
+from pyforeca import (
+    AirQualityDailyForecast,
+    AirQualityForecast,
+    DailyForecast,
+    FifteenMinuteForecast,
+    ForecaError,
+    HourlyForecast,
+)
 
 from homeassistant.components.weather import (
     ATTR_WEATHER_PRECIPITATION_UNIT,
@@ -22,11 +29,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
-from .const import symbol_to_condition
+from .const import DOMAIN, POLLUTANTS, symbol_to_condition
 from .coordinator import ForecaConfigEntry, ForecaUpdateCoordinator
 from .entity import ForecaEntity
 
@@ -34,6 +42,10 @@ PARALLEL_UPDATES = 0
 
 _CONFIDENCE = {"g": "good", "y": "normal", "o": "low"}
 _ROUNDING_PRECISION = 2
+_FIFTEEN_MINUTE_PERIODS = 12
+_THREE_HOUR_PERIODS = 112
+_AIR_QUALITY_HOURLY_PERIODS = 85
+_AIR_QUALITY_DAILY_PERIODS = 4
 
 
 async def async_setup_entry(
@@ -42,9 +54,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a Foreca weather entity for every configured location."""
-    for subentry_id, coordinator in entry.runtime_data.items():
+    for subentry_id, coordinators in entry.runtime_data.items():
         async_add_entities(
-            [ForecaWeather(coordinator, subentry_id)],
+            [ForecaWeather(coordinators.weather, subentry_id)],
             config_subentry_id=subentry_id,
         )
 
@@ -96,8 +108,57 @@ def _hourly_to_forecast(hour: HourlyForecast) -> Forecast | None:
     )
 
 
+def _fifteen_minute_to_forecast(step: FifteenMinuteForecast) -> Forecast | None:
+    """Convert a Foreca 15-minute forecast to a Home Assistant forecast."""
+    if (timestamp := dt_util.parse_datetime(step.time or "")) is None:
+        return None
+    return Forecast(
+        datetime=timestamp.isoformat(),
+        condition=symbol_to_condition(step.symbol),
+        native_temperature=step.temperature,
+        native_apparent_temperature=step.feels_like_temp,
+        native_dew_point=step.dew_point,
+        humidity=step.rel_humidity,
+        native_pressure=step.pressure,
+        native_wind_speed=step.wind_speed,
+        native_wind_gust_speed=step.wind_gust,
+        wind_bearing=step.wind_dir,
+        precipitation_probability=step.precip_prob,
+        cloud_coverage=step.cloudiness,
+        uv_index=step.uv_index,
+    )
+
+
+def _air_quality_values(
+    air_quality: AirQualityForecast | AirQualityDailyForecast,
+) -> dict[str, JsonValueType]:
+    """Return the indexes of an air quality forecast step."""
+    return {
+        "aqi": air_quality.aqi,
+        "dominant_pollutant": POLLUTANTS.get(air_quality.pollutant or ""),
+        "aqi_co": air_quality.aqi_co,
+        "aqi_no2": air_quality.aqi_no2,
+        "aqi_o3": air_quality.aqi_o3,
+        "aqi_so2": air_quality.aqi_so2,
+        "aqi_pm10": air_quality.aqi_pm10,
+        "aqi_pm25": air_quality.aqi_pm2p5,
+    }
+
+
+async def _fetch_air_quality[T](request: Awaitable[T]) -> T:
+    """Await an air quality request, raising translated errors."""
+    try:
+        return await request
+    except ForecaError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="air_quality_forecast_error",
+        ) from err
+
+
 class ForecaWeather(
-    SingleCoordinatorWeatherEntity[ForecaUpdateCoordinator], ForecaEntity
+    SingleCoordinatorWeatherEntity[ForecaUpdateCoordinator],
+    ForecaEntity[ForecaUpdateCoordinator],
 ):
     """Define a Foreca weather entity."""
 
@@ -231,8 +292,11 @@ class ForecaWeather(
         """Return an hour's values that a Home Assistant forecast cannot hold."""
         if (timestamp := dt_util.parse_datetime(hour.time or "")) is None:
             return None
+        return {"datetime": timestamp.isoformat(), **self._hourly_extra_values(hour)}
+
+    def _hourly_extra_values(self, hour: HourlyForecast) -> dict[str, JsonValueType]:
+        """Return the values of an hourly step that a forecast cannot hold."""
         return {
-            "datetime": timestamp.isoformat(),
             "precipitation_type": hour.precip_type,
             "snow_accumulation": self._snow(hour.snow_accum),
             "snow_depth": self._snow(hour.snow_depth),
@@ -266,6 +330,36 @@ class ForecaWeather(
             "precipitation_ensemble": _percentiles(
                 day.precip_accum_ensemble, self._precipitation
             ),
+        }
+
+    async def async_get_3_hour_forecast(self) -> ServiceResponse:
+        """Return the forecast in 3-hour steps for the next 14 days."""
+        try:
+            steps = await self.coordinator.client.forecast_3hourly(
+                self.coordinator.location,
+                periods=_THREE_HOUR_PERIODS,
+                dataset="full",
+                rounding=0,
+            )
+        except ForecaError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="three_hour_forecast_error",
+            ) from err
+        dated = [
+            (step, forecast)
+            for step in steps
+            if (forecast := _hourly_to_forecast(step)) is not None
+        ]
+        converted = self._convert_forecast([forecast for _, forecast in dated])
+        return {
+            "forecast": [
+                {
+                    **cast(dict[str, JsonValueType], entry),
+                    **self._hourly_extra_values(step),
+                }
+                for (step, _), entry in zip(dated, converted, strict=True)
+            ]
         }
 
     def _temperature(self, value: float | None) -> float | None:
@@ -311,6 +405,111 @@ class ForecaWeather(
             ),
             _ROUNDING_PRECISION,
         )
+
+    async def async_get_15_minute_forecast(self) -> ServiceResponse:
+        """Return the forecast in 15-minute steps for the next three hours."""
+        try:
+            steps = await self.coordinator.client.forecast_15minutely(
+                self.coordinator.location,
+                periods=_FIFTEEN_MINUTE_PERIODS,
+                dataset="full",
+                rounding=0,
+            )
+        except ForecaError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="fifteen_minute_forecast_error",
+            ) from err
+        dated = [
+            (step, forecast)
+            for step in steps
+            if (forecast := _fifteen_minute_to_forecast(step)) is not None
+        ]
+        converted = self._convert_forecast([forecast for _, forecast in dated])
+        return {
+            "forecast": [
+                {
+                    **cast(dict[str, JsonValueType], entry),
+                    "precipitation_rate": self._convert_precipitation(step.precip_rate),
+                    "snow_rate": self._convert_precipitation(
+                        step.snow_rate, UnitOfPrecipitationDepth.CENTIMETERS
+                    ),
+                    "precipitation_type": step.precip_type,
+                    "thunderstorm_probability": step.thunder_prob,
+                    "visibility": self._visibility(step.visibility),
+                }
+                for (step, _), entry in zip(dated, converted, strict=True)
+            ]
+        }
+
+    async def async_get_minute_forecast(self) -> ServiceResponse:
+        """Return the precipitation rate for each minute of the next hour."""
+        try:
+            minutes = await self.coordinator.client.forecast_minutely(
+                self.coordinator.location
+            )
+        except ForecaError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="minute_forecast_error",
+            ) from err
+        return {
+            "resolution": minutes.resolution,
+            "forecast": [
+                {
+                    "datetime": timestamp.isoformat(),
+                    "precipitation": self._convert_precipitation(minute.precip_rate),
+                }
+                for minute in minutes
+                if (timestamp := dt_util.parse_datetime(minute.time or "")) is not None
+            ],
+        }
+
+    def _convert_precipitation(
+        self,
+        rate: float | None,
+        unit: UnitOfPrecipitationDepth = UnitOfPrecipitationDepth.MILLIMETERS,
+    ) -> float | None:
+        """Convert a rate per hour to the entity's precipitation unit per hour.
+
+        Not rounded like the other forecast values: at two decimals in inches,
+        light rain below about 0.13 mm/h would read as 0.
+        """
+        if rate is None:
+            return None
+        return UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
+            rate, unit, self._precipitation_unit
+        )
+
+    async def async_get_air_quality_forecast(self, type: str) -> ServiceResponse:
+        """Return the hourly or daily air quality forecast."""
+        client = self.coordinator.client
+        location = self.coordinator.location
+        if type == "hourly":
+            hours = await _fetch_air_quality(
+                client.air_quality_hourly(location, periods=_AIR_QUALITY_HOURLY_PERIODS)
+            )
+            return {
+                "forecast": [
+                    {"datetime": timestamp.isoformat(), **_air_quality_values(hour)}
+                    for hour in hours
+                    if (timestamp := dt_util.parse_datetime(hour.time or ""))
+                    is not None
+                ]
+            }
+        days = await _fetch_air_quality(
+            client.air_quality_daily(location, periods=_AIR_QUALITY_DAILY_PERIODS)
+        )
+        return {
+            "forecast": [
+                {
+                    "datetime": dt_util.start_of_local_day(date).isoformat(),
+                    **_air_quality_values(day),
+                }
+                for day in days
+                if (date := dt_util.parse_date(day.date or "")) is not None
+            ]
+        }
 
 
 def _percentiles(

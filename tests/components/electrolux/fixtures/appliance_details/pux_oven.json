@@ -1,0 +1,874 @@
+{
+  "applianceInfo": {
+    "serialNumber": "11112225",
+    "pnc": "949288049",
+    "brand": "AEG",
+    "deviceType": "BUILT-IN OVEN",
+    "model": "NBX7P631SB",
+    "variant": "PIZZA-HOTAIRFAN+RING",
+    "colour": "BLACK"
+  },
+  "capabilities": {
+    "alerts": {
+      "access": "read",
+      "type": "alert",
+      "values": {
+        "AD_CONVERTER_REFERENCE_ALARM": {},
+        "BACKLIGHT_ALARM": {},
+        "BOARD_TEMPERATURE_ALARM": {},
+        "COMMUNICATION_ALARM_BETWEEN_TWO_CONTROLLERS": {},
+        "COMMUNICATION_ALARM_OUI_OC": {},
+        "CONFIGURATION_CHECKSUM_ALARM": {},
+        "CONFIGURATION_COHERENT_ALARM": {},
+        "CONFIGURATION_COMPATIBILITY_ALARM": {},
+        "COOKING_FAN_CONFIG_ALARM": {},
+        "DATA_FLASH_ALARM_UI": {},
+        "DOOR_LOCK_ACTUATOR": {},
+        "DOOR_LOCK_CONFIGURATION_ALARM": {},
+        "DOOR_LOCK_SENSOR_ALARM": {},
+        "ELECTRONIC_CLIXON_ALARM": {},
+        "FIX_SENSOR_DETECTION_ALARM": {},
+        "FOOD_PROBE_COMMUNICATION_ALARM": {},
+        "FOOD_PROBE_CONFIGURATION_ALARM": {},
+        "FUNCTION_SELECTOR_NOT_CONNECTED": {},
+        "HMI-TOUCH_BOARD_FMEA_ALARM": {},
+        "HMI-TOUCH_BOARD_SERIAL_COMMUNICATION_ALARM": {},
+        "HOB_OVEN_COMMUNICATION_ALARM": {},
+        "HOB_OVEN_POWER_MANAGEMENT_ALARM": {},
+        "HUMIDITY_SENSOR_OUT_OF_RANGE_ALARM": {},
+        "INTERNAL_ERROR": {},
+        "LIB_FMEA_ALARM_ROTARY_GRAB": {},
+        "MACS_COMMNUNICATION_ERROR": {},
+        "MEAT_PROBE_OUT_OF_RANGE_ALARM": {},
+        "NETVM_COMMUNICATION_ALARM": {},
+        "NIUX_COMMUNICATION_ALARM": {},
+        "NIUX_ONBOARDING_FAILED_ALARM": {},
+        "NTC_OUT_OF_RANGE_ALARM": {},
+        "OTA_FAILURE": {},
+        "PERIPHERAL_INIT_ALARM_ROTARY_SERIAL_COMMUNICATION_ALARM": {},
+        "PERIPHERAL_RUNTIME_ALARM_ROTARY_BIT_ENCODER_ALARM": {},
+        "POWER_ALARM": {},
+        "PT500_OUT_OF_RANGE_ALARM": {},
+        "PT500_STEAM_OUT_OF_RANGE_ALARM": {},
+        "PTO_COMMUNICATION_ALARM_OUI_PTO": {},
+        "PTO_CONFIGURATION_CHECKSUM_ALARM": {},
+        "PTO_KEY_ALARM": {},
+        "PTO_LIB_FMEA_ALARM": {},
+        "PYR_HOB_ALARM": {},
+        "ROTARY_TOUCH_ALARM": {},
+        "RTC_ALARM": {},
+        "RTC_OUT_OF_RANGE_ALARM": {},
+        "SMART_AD_CALIBRATION_RUNNING_ERROR": {},
+        "SMART_ERROR_UNKNOWN": {},
+        "SMART_INVALID_CONFIGURATION_ERROR": {},
+        "SMART_NO_START_TEMPERATURE": {},
+        "SMART_READ_FLASH_ERROR": {},
+        "SOFTWARE_COMPATIBILITY_CODE_ALARM": {},
+        "STEAM_MAGNETRON_NTC": {},
+        "TOO_HIGH_TEMPERATURE_ALARM": {},
+        "TOUCHSCREEN_DRIVER_ALARM": {},
+        "TOUCH_KEY_1_ALARM": {},
+        "TOUCH_KEY_ALARM": {},
+        "TRIAC_ALARM": {},
+        "UNKNOWN_STATE_ERROR": {},
+        "USB_CAMERA_DISCONNECTED_ALARM": {},
+        "WATER_LEVEL_SENSOR_IN_STEAMER_OUT_OF_RANGE_ALARM": {},
+        "WATER_LEVEL_SENSOR_IN_STEAM_TANK_DRAWER_OUT_OF_RANGE_ALARM": {},
+        "WIFI_SIGNAL_MISS_ALARM": {}
+      }
+    },
+    "applianceState": {
+      "access": "read",
+      "triggers": [
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "STOPRESET": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "RUNNING",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "STOPRESET": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "PAUSED",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "START": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "READY_TO_START",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "$self": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "ALARM",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "STOPRESET": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "DELAYED_START",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "access": "write",
+              "values": {
+                "START": {}
+              }
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "END_OF_CYCLE",
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "ALARM": {},
+        "DELAYED_START": {},
+        "END_OF_CYCLE": {},
+        "IDLE": {},
+        "OFF": {},
+        "PAUSED": {},
+        "READY_TO_START": {},
+        "RUNNING": {}
+      }
+    },
+    "cavityLight": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    },
+    "displayTemperatureC": {
+      "access": "read",
+      "type": "temperature"
+    },
+    "doorState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "CLOSED": {},
+        "OPEN": {}
+      }
+    },
+    "executeCommand": {
+      "access": "write",
+      "type": "string",
+      "values": {
+        "START": {},
+        "STOPRESET": {}
+      }
+    },
+    "hideExecuteCommand": {
+      "access": "constant",
+      "default": 0,
+      "triggers": [
+        {
+          "action": {
+            "executeCommand": {
+              "disabled": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": 0,
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "executeCommand": {
+              "disabled": true
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": 1,
+            "operator": "eq"
+          }
+        }
+      ],
+      "type": "int"
+    },
+    "keyModel": {
+      "access": "constant",
+      "default": "PUX_SP_PYR_PE_A++",
+      "type": "string"
+    },
+    "networkInterface": {
+      "command": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "ABORT": {},
+          "APPLIANCE_AUTHORIZE": {},
+          "DOWNLOAD": {},
+          "START": {},
+          "USER_AUTHORIZE": {},
+          "USER_NOT_AUTHORIZE": {}
+        }
+      },
+      "linkQualityIndicator": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "EXCELLENT": {},
+          "GOOD": {},
+          "POOR": {},
+          "UNDEFINED": {},
+          "VERY_GOOD": {},
+          "VERY_POOR": {}
+        }
+      },
+      "niuSwUpdateCurrentDescription": {
+        "access": "read",
+        "type": "string"
+      },
+      "otaState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "DESCRIPTION_AVAILABLE": {},
+          "DESCRIPTION_DOWNLOADING": {},
+          "DESCRIPTION_READY": {},
+          "FW_DOWNLOADING": {},
+          "FW_DOWNLOAD_START": {},
+          "FW_SIGNATURE_CHECK": {},
+          "FW_UPDATE_IN_PROGRESS": {},
+          "IDLE": {},
+          "READY_TO_UPDATE": {},
+          "UPDATE_ABORT": {},
+          "UPDATE_CHECK": {},
+          "UPDATE_ERROR": {},
+          "UPDATE_OK": {},
+          "WAITINGFORAUTHORIZATION": {}
+        }
+      },
+      "startUpCommand": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "UNINSTALL": {}
+        }
+      },
+      "swAncAndRevision": {
+        "access": "read",
+        "type": "string"
+      },
+      "swVersion": {
+        "access": "read",
+        "type": "string"
+      }
+    },
+    "pizzaShieldState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "INSERTED_COLD": {},
+        "INSERTED_HOT": {},
+        "NOT_INSERTED": {},
+        "UNKNOWN": {}
+      }
+    },
+    "preheatComplete": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "OFF": {},
+        "PRE_HEAT_COMPLETED": {},
+        "PRE_HEAT_RUNNING": {},
+        "RE_HEAT_COMPLETED": {},
+        "RE_HEAT_RUNNING": {}
+      }
+    },
+    "program": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "ASSIST_PIZZA_EXPERT_REHEAT": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 180,
+            "min": 150,
+            "step": 1
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 340,
+            "disabled": false,
+            "max": 340,
+            "min": 320,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "AUGRATIN": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 300,
+            "disabled": false,
+            "max": 300,
+            "min": 80,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "BAKE_TRUE_FAN": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 200,
+            "disabled": false,
+            "max": 300,
+            "min": 80,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "BOTTOM": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 150,
+            "disabled": false,
+            "max": 300,
+            "min": 80,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "BREAD_BAKING": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 220,
+            "disabled": false,
+            "max": 300,
+            "min": 80,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "CONVENTIONAL_COOKING": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 200,
+            "disabled": false,
+            "max": 300,
+            "min": 30,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "DEFROST": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 30,
+            "disabled": false,
+            "max": 30,
+            "min": 30,
+            "step": 0,
+            "type": "temperature"
+          }
+        },
+        "DOUGH_PROVING": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 300,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 40,
+            "disabled": false,
+            "max": 40,
+            "min": 40,
+            "step": 0,
+            "type": "temperature"
+          }
+        },
+        "DRYING": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 60,
+            "disabled": false,
+            "max": 100,
+            "min": 50,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "FROZEN_FOOD": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 220,
+            "disabled": false,
+            "max": 300,
+            "min": 80,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "GRILL": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 300,
+            "disabled": false,
+            "max": 300,
+            "min": 80,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "GRILL_FAN": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 180,
+            "disabled": false,
+            "max": 300,
+            "min": 80,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "KEEP_WARM": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 80,
+            "disabled": false,
+            "max": 80,
+            "min": 80,
+            "step": 0,
+            "type": "temperature"
+          }
+        },
+        "MOIST_FAN_BAKING": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 160,
+            "disabled": false,
+            "max": 230,
+            "min": 90,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "PIZZA_EXPERT_EXTENSION": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 15,
+            "min": 15,
+            "step": 0
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 340,
+            "disabled": false,
+            "max": 340,
+            "min": 320,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "PIZZA_EXPERT_MAIN": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 180,
+            "min": 150,
+            "step": 1
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 340,
+            "disabled": false,
+            "max": 340,
+            "min": 320,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "PIZZA_EXPERT_PREHEAT": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 60,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 340,
+            "disabled": false,
+            "max": 340,
+            "min": 320,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "PLATE_WARMING": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 70,
+            "disabled": false,
+            "max": 70,
+            "min": 70,
+            "step": 0,
+            "type": "temperature"
+          }
+        },
+        "PRESERVING": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 160,
+            "disabled": false,
+            "max": 170,
+            "min": 100,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "PYRO_CLEAN_INTENSE": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 1,
+            "disabled": true
+          }
+        },
+        "PYRO_CLEAN_LIGHT": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 1,
+            "disabled": true
+          }
+        },
+        "PYRO_CLEAN_NORMAL": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 1,
+            "disabled": true
+          }
+        },
+        "SLOW_COOK": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 90,
+            "disabled": false,
+            "max": 150,
+            "min": 80,
+            "step": 5,
+            "type": "temperature"
+          }
+        },
+        "TRUE_FAN": {
+          "hideExecuteCommand": {
+            "access": "readwrite",
+            "default": 0,
+            "disabled": true
+          },
+          "targetDuration": {
+            "access": "readwrite",
+            "disabled": false,
+            "max": 86340,
+            "min": 0,
+            "step": 60
+          },
+          "targetTemperatureC": {
+            "access": "readwrite",
+            "default": 150,
+            "disabled": false,
+            "max": 300,
+            "min": 30,
+            "step": 5,
+            "type": "temperature"
+          }
+        }
+      }
+    },
+    "remoteControl": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "DISABLED": {},
+        "ENABLED": {},
+        "NOT_SAFETY_RELEVANT_ENABLED": {},
+        "TEMPORARY_LOCKED": {}
+      }
+    },
+    "runningTime": {
+      "access": "read",
+      "default": 0,
+      "type": "number"
+    },
+    "targetDuration": {
+      "access": "readwrite",
+      "max": 86340,
+      "min": 0,
+      "step": 60,
+      "type": "number"
+    },
+    "targetTemperatureC": {
+      "access": "readwrite",
+      "type": "temperature"
+    },
+    "timeToEnd": {
+      "access": "read",
+      "type": "number"
+    }
+  }
+}

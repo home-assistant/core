@@ -32,13 +32,13 @@ from homeassistant.components.water_heater import (
     WaterHeaterCapabilityAttribute,
 )
 from homeassistant.components.weather import (
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_TEMPERATURE_UNIT,
+    WeatherEntityCapabilityAttribute,
+    WeatherEntityStateAttribute,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ENTITY_ID,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -53,7 +53,7 @@ _WATER_HEATER_UNIT_ATTRIBUTES = {
     WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
 }
 _WEATHER_UNIT_ATTRIBUTES = {
-    ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+    WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
 }
 
 
@@ -524,7 +524,7 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_all(
         *parametrize_numerical_attribute_changed_trigger_states(
             "temperature.changed",
             "sunny",
-            ATTR_WEATHER_TEMPERATURE,
+            WeatherEntityStateAttribute.TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
             attribute_required=True,
@@ -532,7 +532,7 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_all(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "temperature.crossed_threshold",
             "sunny",
-            ATTR_WEATHER_TEMPERATURE,
+            WeatherEntityStateAttribute.TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
             attribute_required=True,
@@ -572,7 +572,7 @@ async def test_temperature_trigger_weather_behavior_each(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "temperature.crossed_threshold",
             "sunny",
-            ATTR_WEATHER_TEMPERATURE,
+            WeatherEntityStateAttribute.TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
             attribute_required=True,
@@ -612,7 +612,7 @@ async def test_temperature_trigger_weather_crossed_threshold_behavior_first(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "temperature.crossed_threshold",
             "sunny",
-            ATTR_WEATHER_TEMPERATURE,
+            WeatherEntityStateAttribute.TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
             attribute_required=True,
@@ -672,7 +672,7 @@ async def test_temperature_trigger_unit_conversion_sensor_celsius_to_fahrenheit(
                 "value": {"number": 70, "unit_of_measurement": "°F"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 
@@ -729,7 +729,7 @@ async def test_temperature_trigger_unit_conversion_sensor_fahrenheit_to_celsius(
                 "value": {"number": 25, "unit_of_measurement": "°C"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 
@@ -788,7 +788,7 @@ async def test_temperature_trigger_unit_conversion_changed(
                 "value_max": {"number": 77, "unit_of_measurement": "°F"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 
@@ -843,8 +843,8 @@ async def test_temperature_trigger_unit_conversion_weather(
         entity_id,
         "sunny",
         {
-            ATTR_WEATHER_TEMPERATURE: 70,
-            ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            WeatherEntityStateAttribute.TEMPERATURE: 70,
+            WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -858,7 +858,7 @@ async def test_temperature_trigger_unit_conversion_weather(
                 "value": {"number": 25, "unit_of_measurement": "°C"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 
@@ -867,8 +867,8 @@ async def test_temperature_trigger_unit_conversion_weather(
         entity_id,
         "sunny",
         {
-            ATTR_WEATHER_TEMPERATURE: 70,
-            ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            WeatherEntityStateAttribute.TEMPERATURE: 70,
+            WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -879,8 +879,8 @@ async def test_temperature_trigger_unit_conversion_weather(
         entity_id,
         "sunny",
         {
-            ATTR_WEATHER_TEMPERATURE: 80,
-            ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            WeatherEntityStateAttribute.TEMPERATURE: 80,
+            WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -937,7 +937,7 @@ async def test_temperature_trigger_unit_conversion_temperature_unit_attribute(
                 "value": {"number": 25, "unit_of_measurement": "°C"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 

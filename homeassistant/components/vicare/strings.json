@@ -28,6 +28,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "boiler_internal_pump": {
+        "name": "Internal pump"
+      },
       "burner": {
         "name": "Burner"
       },
@@ -201,6 +204,12 @@
       },
       "boiler_circuit_pump_power": {
         "name": "Boiler circuit pump"
+      },
+      "boiler_internal_pump_modulation": {
+        "name": "Internal pump modulation"
+      },
+      "boiler_internal_pump_target_modulation": {
+        "name": "Internal pump target modulation"
       },
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"
@@ -386,6 +395,12 @@
         "state": {
           "charge": "[%key:common::state::charging%]",
           "discharge": "[%key:common::state::discharging%]",
+          "initialization": "Initializing",
+          "off": "[%key:common::state::off%]",
+          "precharge": "Precharging",
+          "ready": "Ready",
+          "safetycheck": "Safety check",
+          "shutdown": "Shutting down",
           "standby": "[%key:common::state::standby%]"
         }
       },
@@ -466,6 +481,15 @@
       },
       "gas_summary_consumption_heating_lastsevendays": {
         "name": "Heating gas consumption last seven days"
+      },
+      "heat_production_current": {
+        "name": "Heat production"
+      },
+      "heat_production_dhw_today": {
+        "name": "DHW heat production today"
+      },
+      "heat_production_heating_today": {
+        "name": "Heating heat production today"
       },
       "heating_rod_hours": {
         "name": "Heating rod hours"
@@ -624,6 +648,9 @@
       "return_temperature": {
         "name": "Return temperature"
       },
+      "salt_supply": {
+        "name": "Salt supply"
+      },
       "secondary_circuit_return_temperature": {
         "name": "Secondary circuit return temperature"
       },
@@ -711,6 +738,15 @@
       },
       "volumetric_flow": {
         "name": "Volumetric flow"
+      },
+      "water_consumption_today": {
+        "name": "Water consumption today"
+      },
+      "water_consumption_total": {
+        "name": "Water consumption"
+      },
+      "water_flow": {
+        "name": "Water flow"
       },
       "zigbee_signal_strength": {
         "name": "[%key:component::sensor::entity_component::signal_strength::name%]"

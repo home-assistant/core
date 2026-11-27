@@ -181,6 +181,60 @@
     'state': '0.529722222222222',
   })
 # ---
+# name: test_all_entities[sensor.henk_apnea_hypopnea_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('withings', '12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_apnea_hypopnea_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Apnea-hypopnea index',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Apnea-hypopnea index',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'apnea_hypopnea_index',
+    'unique_id': 'withings_12345_sleep_apnea_hypopnea_index',
+    'unit_of_measurement': 'events/h',
+  })
+# ---
+# name: test_all_entities[sensor.henk_apnea_hypopnea_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'henk Apnea-hypopnea index',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'events/h',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_apnea_hypopnea_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9',
+  })
+# ---
 # name: test_all_entities[sensor.henk_average_heart_rate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -287,6 +341,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14',
+  })
+# ---
+# name: test_all_entities[sensor.henk_awake_after_sleep_onset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('withings', '12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_awake_after_sleep_onset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Awake after sleep onset',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Awake after sleep onset',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'awake_after_sleep_onset',
+    'unique_id': 'withings_12345_sleep_awake_during_sleep_seconds',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_awake_after_sleep_onset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'henk Awake after sleep onset',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_awake_after_sleep_onset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.383333333333333',
   })
 # ---
 # name: test_all_entities[sensor.henk_basal_metabolic_rate-entry]
@@ -1940,6 +2055,114 @@
     'state': '60',
   })
 # ---
+# name: test_all_entities[sensor.henk_heart_rate_variability_at_sleep_end-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('withings', '12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_heart_rate_variability_at_sleep_end',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heart rate variability at sleep end',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heart rate variability at sleep end',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heart_rate_variability_end',
+    'unique_id': 'withings_12345_sleep_hrv_end_ms',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_heart_rate_variability_at_sleep_end-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'henk Heart rate variability at sleep end',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_heart_rate_variability_at_sleep_end',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '48.2',
+  })
+# ---
+# name: test_all_entities[sensor.henk_heart_rate_variability_at_sleep_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('withings', '12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_heart_rate_variability_at_sleep_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heart rate variability at sleep start',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heart rate variability at sleep start',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heart_rate_variability_start',
+    'unique_id': 'withings_12345_sleep_hrv_start_ms',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_heart_rate_variability_at_sleep_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'henk Heart rate variability at sleep start',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_heart_rate_variability_at_sleep_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '41.5',
+  })
+# ---
 # name: test_all_entities[sensor.henk_height-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2308,7 +2531,7 @@
         'squash',
         'badminton',
         'lift_weights',
-        'calisthenics',
+        'fitness',
         'elliptical',
         'pilates',
         'basket_ball',
@@ -2341,6 +2564,116 @@
         'indoor_walk',
         'indoor_running',
         'indoor_cycling',
+        'standup_paddleboarding',
+        'padel',
+        'gaming',
+        'beach_volleyball',
+        'stair_stepper',
+        'skateboarding',
+        'parkour',
+        'kayaking',
+        'canoeing',
+        'sailing',
+        'fishing',
+        'trail_running',
+        'snowshoeing',
+        'paintball',
+        'archery',
+        'scuba_diving',
+        'baseball_training',
+        'biathlon',
+        'bocce',
+        'petanque',
+        'paragliding',
+        'frisbee',
+        'skydiving',
+        'pickleball',
+        'cornhole',
+        'dodgeball',
+        'ultimate',
+        'teqball',
+        'pushing_a_wheelchair_running_pace',
+        'pushing_a_wheelchair_walking_pace',
+        'athletics',
+        'track_cycling',
+        'pentathlon',
+        'sport_shooting',
+        'triathlon',
+        'diving',
+        'mountain_biking',
+        'gravel_biking',
+        'e_biking',
+        'e_mountain_biking',
+        'handcycling',
+        'velomobile',
+        'backcountry_skiing',
+        'nordic_skiing',
+        'roller_skiing',
+        'racquetball',
+        'hip_hop',
+        'muaythai',
+        'taekwondo',
+        'judo',
+        'trampoline',
+        'standing_frame',
+        'seated_strength',
+        'seated_cardio',
+        'walk_with_walker',
+        'walk_with_cane',
+        'breaking',
+        'chores',
+        'crossfit',
+        'spinclass',
+        'cricket',
+        'flamenco_dancing',
+        'hiit',
+        'meditation',
+        'stretching',
+        'yard_work_gardening',
+        'cleaning',
+        'public_speaking',
+        'spikeball',
+        'lacrosse',
+        'baby_wearing',
+        'dog_walking',
+        'breathing_exercises',
+        'balance_drills',
+        'pushing_a_stroller',
+        'toddler_wearing',
+        'bowling',
+        'lasertag',
+        'nordic_walking',
+        'sumo_wrestling',
+        'cooking',
+        'match_day',
+        'jump_rope',
+        'calisthenics',
+        'barre',
+        'aqua_aerobics',
+        'gymnastics',
+        'aerobics',
+        'cheerleading',
+        'tai_chi',
+        'qigong',
+        'sauna',
+        'cold_plunge',
+        'karate',
+        'kickboxing',
+        'netball',
+        'softball',
+        'futsal',
+        'darts',
+        'billiards',
+        'mountaineering',
+        'bouldering',
+        'disc_golf',
+        'wakeboarding',
+        'water_skiing',
+        'hunting',
+        'rucking',
+        'indoor_rowing',
+        'resistance_band_training',
+        'australian_rules_football',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2395,7 +2728,7 @@
         'squash',
         'badminton',
         'lift_weights',
-        'calisthenics',
+        'fitness',
         'elliptical',
         'pilates',
         'basket_ball',
@@ -2428,6 +2761,116 @@
         'indoor_walk',
         'indoor_running',
         'indoor_cycling',
+        'standup_paddleboarding',
+        'padel',
+        'gaming',
+        'beach_volleyball',
+        'stair_stepper',
+        'skateboarding',
+        'parkour',
+        'kayaking',
+        'canoeing',
+        'sailing',
+        'fishing',
+        'trail_running',
+        'snowshoeing',
+        'paintball',
+        'archery',
+        'scuba_diving',
+        'baseball_training',
+        'biathlon',
+        'bocce',
+        'petanque',
+        'paragliding',
+        'frisbee',
+        'skydiving',
+        'pickleball',
+        'cornhole',
+        'dodgeball',
+        'ultimate',
+        'teqball',
+        'pushing_a_wheelchair_running_pace',
+        'pushing_a_wheelchair_walking_pace',
+        'athletics',
+        'track_cycling',
+        'pentathlon',
+        'sport_shooting',
+        'triathlon',
+        'diving',
+        'mountain_biking',
+        'gravel_biking',
+        'e_biking',
+        'e_mountain_biking',
+        'handcycling',
+        'velomobile',
+        'backcountry_skiing',
+        'nordic_skiing',
+        'roller_skiing',
+        'racquetball',
+        'hip_hop',
+        'muaythai',
+        'taekwondo',
+        'judo',
+        'trampoline',
+        'standing_frame',
+        'seated_strength',
+        'seated_cardio',
+        'walk_with_walker',
+        'walk_with_cane',
+        'breaking',
+        'chores',
+        'crossfit',
+        'spinclass',
+        'cricket',
+        'flamenco_dancing',
+        'hiit',
+        'meditation',
+        'stretching',
+        'yard_work_gardening',
+        'cleaning',
+        'public_speaking',
+        'spikeball',
+        'lacrosse',
+        'baby_wearing',
+        'dog_walking',
+        'breathing_exercises',
+        'balance_drills',
+        'pushing_a_stroller',
+        'toddler_wearing',
+        'bowling',
+        'lasertag',
+        'nordic_walking',
+        'sumo_wrestling',
+        'cooking',
+        'match_day',
+        'jump_rope',
+        'calisthenics',
+        'barre',
+        'aqua_aerobics',
+        'gymnastics',
+        'aerobics',
+        'cheerleading',
+        'tai_chi',
+        'qigong',
+        'sauna',
+        'cold_plunge',
+        'karate',
+        'kickboxing',
+        'netball',
+        'softball',
+        'futsal',
+        'darts',
+        'billiards',
+        'mountaineering',
+        'bouldering',
+        'disc_golf',
+        'wakeboarding',
+        'water_skiing',
+        'hunting',
+        'rucking',
+        'indoor_rowing',
+        'resistance_band_training',
+        'australian_rules_football',
       ]),
     }),
     'context': <ANY>,
@@ -3178,6 +3621,60 @@
     'state': '38.7',
   })
 # ---
+# name: test_all_entities[sensor.henk_out_of_bed_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('withings', '12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_out_of_bed_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Out of bed count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Out of bed count',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'out_of_bed_count',
+    'unique_id': 'withings_12345_sleep_out_of_bed_count',
+    'unit_of_measurement': 'times',
+  })
+# ---
+# name: test_all_entities[sensor.henk_out_of_bed_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'henk Out of bed count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'times',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_out_of_bed_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_all_entities[sensor.henk_pause_during_last_workout-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3355,6 +3852,60 @@
     'state': '0.666666666666667',
   })
 # ---
+# name: test_all_entities[sensor.henk_rem_sleep_phases-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('withings', '12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_rem_sleep_phases',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'REM sleep phases',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'REM sleep phases',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rem_sleep_phase_count',
+    'unique_id': 'withings_12345_sleep_rem_phase_count',
+    'unit_of_measurement': 'times',
+  })
+# ---
+# name: test_all_entities[sensor.henk_rem_sleep_phases-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'henk REM sleep phases',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'times',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_rem_sleep_phases',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_all_entities[sensor.henk_skin_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3411,6 +3962,60 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
+  })
+# ---
+# name: test_all_entities[sensor.henk_sleep_efficiency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('withings', '12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_sleep_efficiency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep efficiency',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep efficiency',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_efficiency',
+    'unique_id': 'withings_12345_sleep_efficiency',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.henk_sleep_efficiency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'henk Sleep efficiency',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_sleep_efficiency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '86',
   })
 # ---
 # name: test_all_entities[sensor.henk_sleep_goal-entry]
@@ -3983,6 +4588,67 @@
     'state': '40',
   })
 # ---
+# name: test_all_entities[sensor.henk_time_in_bed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('withings', '12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_time_in_bed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Time in bed',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Time in bed',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'time_in_bed',
+    'unique_id': 'withings_12345_sleep_total_time_in_bed_seconds',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_time_in_bed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'henk Time in bed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_time_in_bed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.13333333333333',
+  })
+# ---
 # name: test_all_entities[sensor.henk_time_to_sleep-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4161,6 +4827,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2444.149',
+  })
+# ---
+# name: test_all_entities[sensor.henk_total_sleep_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('withings', '12345')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_total_sleep_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total sleep time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Total sleep time',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_sleep_time',
+    'unique_id': 'withings_12345_sleep_total_sleep_time_seconds',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_total_sleep_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'henk Total sleep time',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_total_sleep_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.18333333333333',
   })
 # ---
 # name: test_all_entities[sensor.henk_vascular_age-entry]

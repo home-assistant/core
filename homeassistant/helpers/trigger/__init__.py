@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 import functools
 import inspect
 import logging
-from typing import Any, Literal, Protocol, TypedDict, cast
+from typing import Any, Protocol, TypedDict, cast
 
 import probatio
 
@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_VARIABLES,
     CONF_ZONE,
+    TargetKey,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -506,25 +507,34 @@ async def async_validate_trigger_config(
 ) -> list[ConfigType]:
     """Validate triggers."""
     config = []
-    for conf in trigger_config:
-        trigger_key: str = conf[CONF_PLATFORM]
-        platform_domain, platform = await _async_get_trigger_platform(hass, trigger_key)
-        if not await _async_is_legacy_trigger(hass, platform, trigger_key):
-            trigger_descriptors = await platform.async_get_triggers(hass)
-            relative_trigger_key = get_relative_description_key(
-                platform_domain, trigger_key
-            )
-            if not (trigger := trigger_descriptors.get(relative_trigger_key)):
-                raise probatio.Invalid(f"Invalid trigger '{trigger_key}' specified")
-            conf = await trigger.async_validate_complete_config(hass, conf)
-        elif hasattr(platform, "async_validate_trigger_config"):
-            conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
-            conf = await platform.async_validate_trigger_config(hass, conf)
-        else:
-            conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
-            conf = platform.TRIGGER_SCHEMA(conf)
-        config.append(conf)
+    for index, conf in enumerate(trigger_config):
+        try:
+            config.append(await _async_validate_trigger(hass, conf))
+        except probatio.Invalid as err:
+            err.prepend([index])
+            raise
     return config
+
+
+async def _async_validate_trigger(hass: HomeAssistant, conf: ConfigType) -> ConfigType:
+    """Validate a trigger."""
+    trigger_key: str = conf[CONF_PLATFORM]
+    platform_domain, platform = await _async_get_trigger_platform(hass, trigger_key)
+    if not await _async_is_legacy_trigger(hass, platform, trigger_key):
+        trigger_descriptors = await platform.async_get_triggers(hass)
+        relative_trigger_key = get_relative_description_key(
+            platform_domain, trigger_key
+        )
+        if not (trigger := trigger_descriptors.get(relative_trigger_key)):
+            raise probatio.Invalid(f"Invalid trigger '{trigger_key}' specified")
+        conf = await trigger.async_validate_complete_config(hass, conf)
+    elif hasattr(platform, "async_validate_trigger_config"):
+        conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
+        conf = await platform.async_validate_trigger_config(hass, conf)
+    else:
+        conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
+        conf = platform.TRIGGER_SCHEMA(conf)
+    return conf
 
 
 def _trigger_action_wrapper(
@@ -784,7 +794,14 @@ def async_extract_devices(trigger_conf: dict) -> list[str]:
     if trigger_conf[CONF_PLATFORM] == "tag" and CONF_DEVICE_ID in trigger_conf:
         return trigger_conf[CONF_DEVICE_ID]  # type: ignore[no-any-return]
 
-    if target_devices := async_extract_targets(trigger_conf, CONF_DEVICE_ID):
+    if options := trigger_conf.get(CONF_OPTIONS):
+        if device_ids := options.get(CONF_DEVICE_ID):
+            return [
+                *([device_ids] if isinstance(device_ids, str) else device_ids),
+                *async_extract_targets(trigger_conf, TargetKey.DEVICE_ID),
+            ]
+
+    if target_devices := async_extract_targets(trigger_conf, TargetKey.DEVICE_ID):
         return target_devices
 
     return []
@@ -825,9 +842,16 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
 
     if trigger_conf[CONF_PLATFORM] in ("zone.entered", "zone.left"):
         return [
-            *async_extract_targets(trigger_conf, CONF_ENTITY_ID),
+            *async_extract_targets(trigger_conf, TargetKey.ENTITY_ID),
             trigger_conf[CONF_OPTIONS][CONF_ZONE],
         ]
+
+    if options := trigger_conf.get(CONF_OPTIONS):
+        if entity_ids := options.get(CONF_ENTITY_ID):
+            return [
+                *([entity_ids] if isinstance(entity_ids, str) else entity_ids),
+                *async_extract_targets(trigger_conf, TargetKey.ENTITY_ID),
+            ]
 
     if trigger_conf[CONF_PLATFORM] == "geo_location":
         return [trigger_conf[CONF_ZONE]]
@@ -844,7 +868,7 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
     ):
         return [trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID]]
 
-    if target_entities := async_extract_targets(trigger_conf, CONF_ENTITY_ID):
+    if target_entities := async_extract_targets(trigger_conf, TargetKey.ENTITY_ID):
         return target_entities
 
     return []
@@ -853,7 +877,7 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
 @callback
 def async_extract_targets(
     config: dict,
-    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+    target: TargetKey,
 ) -> list[str]:
     """Extract targets from a target config, including the exclude block."""
     if not (target_conf := config.get(CONF_TARGET)):

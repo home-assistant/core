@@ -7,7 +7,7 @@ import probatio
 from homeassistant.components import websocket_api
 from homeassistant.components.homeassistant import (
     DOMAIN as HASS_DOMAIN,
-    SERVICE_HOMEASSISTANT_RESTART,
+    HomeAssistantService,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -17,12 +17,21 @@ from .const import (
     ATTR_CONFIG,
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
+    CONF_SSL_CERTIFICATE,
+    CONF_SSL_PEER_CERTIFICATE,
+    CONF_SSL_PEER_CERTIFICATE_REMOTE,
     CONF_TRUSTED_PROXIES,
     CONF_USE_X_FORWARDED_FOR,
 )
-from .server import DEFAULT_BIND, async_verify_can_bind, async_verify_hosts_distinct
+from .server import (
+    DEFAULT_BIND,
+    async_verify_can_bind,
+    async_verify_hosts_distinct,
+    async_verify_peer_certificate,
+)
 
 ERR_BIND_FAILED: Final = "bind_failed"
+ERR_INVALID_SSL_PEER_CERTIFICATE: Final = "invalid_ssl_peer_certificate"
 ERR_NOT_RUNNING: Final = "not_running"
 
 
@@ -36,6 +45,19 @@ def _validate_trusted_proxies(config: ConfData) -> ConfData:
         raise probatio.Invalid(
             "at least one trusted proxy is required to use X-Forwarded-For",
             path=[CONF_TRUSTED_PROXIES],
+        )
+
+    return config
+
+
+def _validate_ssl_peer_certificate_remote(config: ConfData) -> ConfData:
+    """Reject requiring the peer certificate remotely without one configured."""
+    if config.get(CONF_SSL_PEER_CERTIFICATE_REMOTE) and not config.get(
+        CONF_SSL_PEER_CERTIFICATE
+    ):
+        raise probatio.Invalid(
+            "an SSL peer certificate is required to require it on remote access",
+            path=[CONF_SSL_PEER_CERTIFICATE],
         )
 
     return config
@@ -86,7 +108,12 @@ async def websocket_get_config(
     {
         probatio.Required("type"): "http/config/configure",
         probatio.Required(ATTR_CONFIG): probatio.Any(
-            None, probatio.All(HTTP_STORAGE_SCHEMA, _validate_trusted_proxies)
+            None,
+            probatio.All(
+                HTTP_STORAGE_SCHEMA,
+                _validate_trusted_proxies,
+                _validate_ssl_peer_certificate_remote,
+            ),
         ),
     }
 )
@@ -136,6 +163,18 @@ async def websocket_set_config(
         except HomeAssistantError as err:
             connection.send_error(msg["id"], ERR_BIND_FAILED, str(err))
             return
+        if (
+            ssl_peer_certificate := config.get(CONF_SSL_PEER_CERTIFICATE)
+        ) is not None and (
+            CONF_SSL_CERTIFICATE in config or config[CONF_SSL_PEER_CERTIFICATE_REMOTE]
+        ):
+            try:
+                await async_verify_peer_certificate(hass, ssl_peer_certificate)
+            except HomeAssistantError as err:
+                connection.send_error(
+                    msg["id"], ERR_INVALID_SSL_PEER_CERTIFICATE, str(err)
+                )
+                return
 
     store = await async_get_and_load_store(hass)
     previous_pending = store.pending
@@ -144,7 +183,7 @@ async def websocket_set_config(
     connection.send_result(msg["id"], {"restart": restart})
 
     if restart:
-        await hass.services.async_call(HASS_DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
+        await hass.services.async_call(HASS_DOMAIN, HomeAssistantService.RESTART)
 
 
 @websocket_api.require_admin

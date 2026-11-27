@@ -134,10 +134,9 @@ def _process_integration_platforms(
     return [
         future
         for platform_name, platform in platforms.items()
-        if (integration_platform := integration_platforms_by_name[platform_name])
-        and (
+        if (
             future := hass.async_run_hass_job(
-                integration_platform.process_job,
+                integration_platforms_by_name[platform_name].process_job,
                 hass,
                 integration.domain,
                 platform,

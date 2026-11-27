@@ -7,23 +7,17 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_FLASH,
-    ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
     FLASH_LONG,
     FLASH_SHORT,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration
+from . import get_entity_id, init_integration
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -44,33 +38,38 @@ async def test_dimmer_actions(
     hass: HomeAssistant,
     mock_dimmer: AsyncMock,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test every supported dimmer action."""
     await init_integration(hass, config_entry)
+    entity_id = get_entity_id(entity_registry, LIGHT_DOMAIN, "a1b2c3d4e5f6g7-10")
     # turn off
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.dimmer_full_name_dimmer"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_dimmer.set_dimmer_state.assert_called_once_with(0, 0)
     # turn on without brightness == restore previous brightness
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.dimmer_full_name_dimmer", ATTR_TRANSITION: 1},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            LightServiceArgument.TRANSITION: 1,
+        },
         blocking=True,
     )
     mock_dimmer.restore_dimmer_state.assert_called_once_with(1)
     # turn on with brightness == 0
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.dimmer_full_name_dimmer",
-            ATTR_BRIGHTNESS: 0,
-            ATTR_TRANSITION: 1,
+            TargetKey.ENTITY_ID: entity_id,
+            LightServiceArgument.BRIGHTNESS: 0,
+            LightServiceArgument.TRANSITION: 1,
         },
         blocking=True,
     )
@@ -79,8 +78,11 @@ async def test_dimmer_actions(
     # turn on with brightness == 33
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.dimmer_full_name_dimmer", ATTR_BRIGHTNESS: 33},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            LightServiceArgument.BRIGHTNESS: 33,
+        },
         blocking=True,
     )
     mock_dimmer.set_dimmer_state.assert_called_with(12, 0)
@@ -98,16 +100,16 @@ async def test_led_actions(
     # turn off
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.bedroom_kid_1_led_buttonon"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.bedroom_kid_1_led_buttonon"},
         blocking=True,
     )
     mock_button.set_led_state.assert_called_once_with("off")
     # turn on
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.bedroom_kid_1_led_buttonon"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.bedroom_kid_1_led_buttonon"},
         blocking=True,
     )
     mock_button.set_led_state.assert_called_with("on")
@@ -115,8 +117,11 @@ async def test_led_actions(
     # turn on with FLASH_LONG
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.bedroom_kid_1_led_buttonon", ATTR_FLASH: FLASH_LONG},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.bedroom_kid_1_led_buttonon",
+            LightServiceArgument.FLASH: FLASH_LONG,
+        },
         blocking=True,
     )
     mock_button.set_led_state.assert_called_with("slow")
@@ -124,8 +129,11 @@ async def test_led_actions(
     # turn on with FLASH_SHORT
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.bedroom_kid_1_led_buttonon", ATTR_FLASH: FLASH_SHORT},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.bedroom_kid_1_led_buttonon",
+            LightServiceArgument.FLASH: FLASH_SHORT,
+        },
         blocking=True,
     )
     mock_button.set_led_state.assert_called_with("fast")
@@ -133,8 +141,11 @@ async def test_led_actions(
     # turn on with UNKNOWN flash option
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.bedroom_kid_1_led_buttonon", ATTR_FLASH: FLASH_SHORT},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.bedroom_kid_1_led_buttonon",
+            LightServiceArgument.FLASH: FLASH_SHORT,
+        },
         blocking=True,
     )
     mock_button.set_led_state.assert_called_with("fast")

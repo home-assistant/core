@@ -1,0 +1,88 @@
+{
+  "applianceId": "999008105_00:99010299-443E074B7A6E",
+  "connectionState": "connected",
+  "status": "enabled",
+  "properties": {
+    "reported": {
+      "applianceInfo": {
+        "applianceType": "HD",
+        "capabilityHash": "5ac0f7e099cfaa217c694cb69edd604d94c31892c11f183049e10d1eebc91a1f"
+      },
+      "hoodCharcFilterTimer": 457200,
+      "hoodFilterCharcEnable": "ON",
+      "humanCentricLightEventState": "OFF",
+      "hoodFanLevel": "OFF",
+      "tvocFilterTime": 918000,
+      "remoteControl": "ENABLED",
+      "cpv": "00",
+      "humanCentricLightEventSettings": {
+        "0": {
+          "lightIntensityPrc": 62,
+          "startTimeMinutes": 5,
+          "lightColorPrc": 100,
+          "startTimeHour": 10
+        },
+        "1": {
+          "lightIntensityPrc": 100,
+          "startTimeMinutes": 20,
+          "lightColorPrc": 40,
+          "startTimeHour": 10
+        },
+        "2": {
+          "lightIntensityPrc": 100,
+          "startTimeMinutes": 35,
+          "lightColorPrc": 100,
+          "startTimeHour": 10
+        },
+        "3": {
+          "lightIntensityPrc": 50,
+          "startTimeMinutes": 0,
+          "lightColorPrc": 30,
+          "startTimeHour": 11
+        },
+        "4": {
+          "lightIntensityPrc": 70,
+          "startTimeMinutes": 0,
+          "lightColorPrc": 70,
+          "startTimeHour": 13
+        },
+        "5": {
+          "lightIntensityPrc": 69,
+          "startTimeMinutes": 30,
+          "lightColorPrc": 40,
+          "startTimeHour": 13
+        },
+        "6": {
+          "lightIntensityPrc": 50,
+          "startTimeMinutes": 0,
+          "lightColorPrc": 69,
+          "startTimeHour": 14
+        }
+      },
+      "applianceState": "IDLE",
+      "applianceMode": "NORMAL",
+      "applianceLocalTimeOffset": 7200,
+      "hoodGreaseFilterTimer": 424800,
+      "lightIntensity": 0,
+      "localTimeAutomaticMode": "AUTOMATIC",
+      "alerts": [],
+      "lightColorTemperature": 0,
+      "soundVolume": 0,
+      "hoodFilterCharcIndication": false,
+      "networkInterface": {
+        "swVersion": "v4.0.0S_argo",
+        "otaState": "IDLE",
+        "autoLocalTimeOffset": 7200,
+        "niuSwUpdateCurrentDescription": "A23642205A-S00008458A",
+        "timeZoneDatabaseName": "Europe/Stockholm",
+        "swAncAndRevision": "S00008458A",
+        "linkQualityIndicator": "EXCELLENT"
+      },
+      "targetDuration": 0,
+      "hoodFilterGreaseIndication": "TRUE",
+      "connectivityState": "connected",
+      "hoodAutoSwitchOffEvent": false,
+      "timeToEnd": 0
+    }
+  }
+}

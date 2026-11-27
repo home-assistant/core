@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Generator
-import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
 
@@ -19,6 +18,7 @@ from webrtc_models import RTCIceCandidate, RTCIceCandidateInit
 from homeassistant.components import camera
 from homeassistant.components.alexa import smart_home, state_report
 from homeassistant.components.alexa.handlers import RTC_MAX_SESSION_DURATION
+from homeassistant.components.camera import CameraService
 from homeassistant.components.climate import (
     ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
@@ -29,12 +29,10 @@ from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.components.valve import SERVICE_STOP_VALVE, ValveEntityFeature
 from homeassistant.components.water_heater import WaterHeaterCapabilityAttribute
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_UNKNOWN,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import Context, Event, HomeAssistant
@@ -6004,8 +6002,8 @@ async def test_camera_discovery_webrtc_camera_off(hass: HomeAssistant) -> None:
     """Test the RTC session controller is advertised for a switched off camera."""
     await hass.services.async_call(
         camera.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "camera.demo_camera"},
+        CameraService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "camera.demo_camera"},
         blocking=True,
     )
     request = get_new_request("Alexa.Discovery", "Discover")
@@ -6037,7 +6035,6 @@ async def test_initiate_session_with_offer(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test InitiateSessionWithOffer returns an answer with gathered candidates."""
-    caplog.set_level(logging.DEBUG)
     request = get_new_request(
         "Alexa.RTCSessionController",
         "InitiateSessionWithOffer",
@@ -6129,7 +6126,6 @@ async def test_initiate_session_with_offer_candidate_timeout(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the answer is returned when no end of candidates is signalled."""
-    caplog.set_level(logging.DEBUG)
     request = get_new_request(
         "Alexa.RTCSessionController",
         "InitiateSessionWithOffer",
@@ -6464,7 +6460,6 @@ async def test_rtc_session_connected(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test SessionConnected is acknowledged."""
-    caplog.set_level(logging.DEBUG)
     request = get_new_request(
         "Alexa.RTCSessionController", "SessionConnected", DEMO_CAMERA_ENDPOINT
     )
@@ -6489,11 +6484,10 @@ async def test_rtc_session_disconnected(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, camera_on: bool
 ) -> None:
     """Test SessionDisconnected closes the WebRTC session, even for a camera that is off."""
-    caplog.set_level(logging.DEBUG)
     await hass.services.async_call(
         camera.DOMAIN,
-        SERVICE_TURN_ON if camera_on else SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "camera.demo_camera"},
+        CameraService.TURN_ON if camera_on else CameraService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "camera.demo_camera"},
         blocking=True,
     )
     request = get_new_request(
@@ -6579,7 +6573,6 @@ async def test_rtc_session_expires(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a session is closed when Alexa never sends SessionDisconnected."""
-    caplog.set_level(logging.DEBUG)
     with patch(
         "homeassistant.components.camera.Camera.close_webrtc_session"
     ) as mock_close:
