@@ -83,15 +83,23 @@ async def test_discovery_remote(
 async def test_discovery_climate_power_controller_opt_out(
     hass: HomeAssistant,
 ) -> None:
-    """Test hiding the climate PowerController preserves other interfaces."""
+    """Test hiding climate power preserves thermostat capabilities."""
     request = get_new_request("Alexa.Discovery", "Discover")
     climate_attributes = {
         ClimateEntityCapabilityAttribute.HVAC_MODES: [HVACMode.OFF, HVACMode.HEAT],
         ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_CURRENT_TEMPERATURE: 21,
     }
+    climate_feature_attributes = {
+        **climate_attributes,
+        ClimateEntityCapabilityAttribute.HVAC_MODES: [HVACMode.HEAT],
+        "supported_features": ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF,
+    }
     hass.states.async_set("climate.default", HVACMode.OFF, climate_attributes)
     hass.states.async_set("climate.opt_out", HVACMode.OFF, climate_attributes)
+    hass.states.async_set("climate.explicit_true", HVACMode.OFF, climate_attributes)
+    hass.states.async_set("climate.feature_default", HVACMode.HEAT, climate_feature_attributes)
+    hass.states.async_set("climate.feature_opt_out", HVACMode.HEAT, climate_feature_attributes)
     hass.states.async_set(
         "water_heater.boiler",
         STATE_OFF,
@@ -99,7 +107,12 @@ async def test_discovery_climate_power_controller_opt_out(
     )
 
     config = get_default_config(hass)
-    config.entity_config = {"climate.opt_out": {"expose_power_controller": False}}
+    config.entity_config = {
+        "climate.opt_out": {"expose_power_controller": False},
+        "climate.explicit_true": {"expose_power_controller": True},
+        "climate.feature_opt_out": {"expose_power_controller": False},
+        "water_heater.boiler": {"expose_power_controller": False},
+    }
     msg = await smart_home.async_handle_message(hass, config, request)
     endpoints = {
         endpoint["endpointId"]: {
@@ -112,6 +125,11 @@ async def test_discovery_climate_power_controller_opt_out(
     assert "Alexa.PowerController" not in endpoints["climate#opt_out"]
     assert "Alexa.ThermostatController" in endpoints["climate#opt_out"]
     assert "Alexa.TemperatureSensor" in endpoints["climate#opt_out"]
+    assert "Alexa.PowerController" in endpoints["climate#explicit_true"]
+    assert "Alexa.PowerController" in endpoints["climate#feature_default"]
+    assert "Alexa.PowerController" not in endpoints["climate#feature_opt_out"]
+    assert "Alexa.ThermostatController" in endpoints["climate#feature_opt_out"]
+    assert "Alexa.TemperatureSensor" in endpoints["climate#feature_opt_out"]
     assert "Alexa.PowerController" in endpoints["water_heater#boiler"]
 
 
