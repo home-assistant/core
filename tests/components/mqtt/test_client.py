@@ -27,7 +27,10 @@ from pytest_homeassistant.typing import (
 )
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt.client import RECONNECT_INTERVAL_SECONDS
+from homeassistant.components.mqtt.client import (
+    RECONNECT_INTERVAL_SECONDS,
+    SubscribePayloadType,
+)
 from homeassistant.components.mqtt.const import (
     CONF_CERTIFICATE_FILE,
     CONF_CLIENT_CERT_FILE,
@@ -329,6 +332,37 @@ async def test_all_subscriptions_run_when_decode_fails(
 
     await hass.async_block_till_done()
     assert len(recorded_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "encodings",
+    [
+        pytest.param(("utf-8", None), id="text_first"),
+        pytest.param((None, "utf-8"), id="raw_first"),
+    ],
+)
+async def test_subscriptions_with_different_encodings(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    encodings: tuple[str | None, str | None],
+) -> None:
+    """Test each subscription gets the payload decoded with its own encoding."""
+    await mqtt_mock_entry()
+    payloads: dict[str | None, list[SubscribePayloadType]] = {
+        encoding: [] for encoding in encodings
+    }
+    for encoding in encodings:
+        await mqtt.async_subscribe(
+            hass,
+            "test-topic",
+            lambda msg, encoding=encoding: payloads[encoding].append(msg.payload),
+            encoding=encoding,
+        )
+
+    async_fire_mqtt_message(hass, "test-topic", b"up_double")
+    await hass.async_block_till_done()
+
+    assert payloads == {"utf-8": ["up_double"], None: [b"up_double"]}
 
 
 async def test_subscribe_topic(

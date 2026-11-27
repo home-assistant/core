@@ -44,7 +44,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Foreca"
+    assert result["title"] == "Foreca Weather"
     assert result["data"] == {CONF_API_KEY: "test-key"}
     # A new entry starts with the Home Assistant home location, so setting the
     # integration up produces a weather entity without a second step.
@@ -185,7 +185,7 @@ async def test_entry_title_falls_back_without_location_name(
         result["flow_id"], SECOND_LOCATION_INPUT
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Foreca"
+    assert result["title"] == "Foreca Weather"
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_foreca_client")

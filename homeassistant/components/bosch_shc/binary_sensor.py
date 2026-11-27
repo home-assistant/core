@@ -13,10 +13,12 @@ from boschshcpy import (
     SHCMotionDetector2,
     SHCOutdoorSiren,
     SHCShutterContact,
+    SHCShutterContact2Plus,
     SHCSmokeDetectionSystem,
     SHCTwinguard,
     ShutterContactService,
     SurveillanceAlarmService,
+    VibrationSensorService,
 )
 from boschshcpy.device import SHCDevice
 
@@ -170,6 +172,16 @@ MOTION_DETECTOR2_DESCRIPTIONS: tuple[
     ),
 )
 
+SHUTTER_CONTACT2_PLUS_DESCRIPTION: SHCBinarySensorEntityDescription[
+    SHCShutterContact2Plus
+] = SHCBinarySensorEntityDescription(
+    key="vibration",
+    device_class=BinarySensorDeviceClass.VIBRATION,
+    is_on_fn=lambda device: (
+        device.vibrationsensor is VibrationSensorService.State.VIBRATION_DETECTED
+    ),
+)
+
 SHUTTER_CONTACT_DESCRIPTION = SHCShutterContactSensorEntityDescription(
     key="shutter_contact",
     is_on_fn=lambda device: device.state is ShutterContactService.State.OPEN,
@@ -220,6 +232,18 @@ async def async_setup_entry(
             *session.device_helper.wallthermostats,
             *session.device_helper.water_leakage_detectors,
         )
+    )
+
+    entities.extend(
+        SHCBinarySensor(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            entity_description=SHUTTER_CONTACT2_PLUS_DESCRIPTION,
+        )
+        for device in session.device_helper.shutter_contacts2
+        if isinstance(device, SHCShutterContact2Plus)
     )
 
     if (
