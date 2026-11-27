@@ -36,6 +36,35 @@ async def test_switch_setup(
         assert entry.original_name == "Room 1 Test switch"
 
 
+async def test_switch_push_update(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_switch: Mock,
+    mock_room: Mock,
+) -> None:
+    """Test that a push update refreshes the switch state."""
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [mock_switch]
+
+    with (
+        patch("homeassistant.components.fibaro.PLATFORMS", [Platform.SWITCH]),
+        patch(
+            "homeassistant.components.fibaro.FibaroController.register",
+            return_value=lambda: None,
+        ) as register,
+    ):
+        await init_integration(hass, mock_config_entry)
+
+        assert hass.states.get("switch.test_switch_room_1_test_switch").state == "on"
+
+        mock_switch.value.bool_value.return_value = False
+        register.call_args.args[1](mock_switch)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_switch_room_1_test_switch").state == "off"
+
+
 async def test_switch_turn_on(
     hass: HomeAssistant,
     mock_fibaro_client: Mock,

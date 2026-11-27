@@ -542,7 +542,7 @@ def mock_switch() -> Mock:
     }
     value_mock = Mock()
     value_mock.has_value = True
-    value_mock.int_value.return_value = True
+    value_mock.bool_value.return_value = True
     switch.value = value_mock
     return switch
 
