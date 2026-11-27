@@ -188,7 +188,12 @@ async def test_file_url_signed_by_system_bridge(
 
 @pytest.mark.parametrize(
     "side_effect",
-    [AuthenticationException, BadRequestException, ConnectionErrorException],
+    [
+        AuthenticationException,
+        BadRequestException,
+        ConnectionErrorException,
+        TimeoutError,
+    ],
 )
 async def test_file_url_failed(
     hass: HomeAssistant,

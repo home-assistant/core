@@ -402,7 +402,7 @@
       "message": "No media player named {name}"
     },
     "media_url_failed": {
-      "message": "System Bridge couldn't make a link to {path}"
+      "message": "System Bridge couldn't create a link for {path}"
     },
     "no_data_received": {
       "message": "No data received from {host}"

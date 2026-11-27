@@ -164,6 +164,7 @@ async def _async_build_file_url(
         AuthenticationException,
         BadRequestException,
         ConnectionErrorException,
+        TimeoutError,
     ) as exception:
         raise Unresolvable(
             translation_domain=DOMAIN,

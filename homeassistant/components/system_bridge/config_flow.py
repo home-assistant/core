@@ -63,14 +63,20 @@ async def async_get_key_client(hass: HomeAssistant) -> KeyClient:
     """
     return KeyClient(
         id=await instance_id.async_get(hass),
-        name=hass.config.location_name,
+        # System Bridge turns a blank name away
+        name=hass.config.location_name.strip() or "Home Assistant",
         kind="home-assistant",
     )
 
 
 def _pairing_code(text: str) -> str:
-    """Return the pairing code from what was entered, the code or its link."""
-    return URL(text).query.get("pair") or text
+    """Return the pairing code from what was entered, the code or its link.
+
+    System Bridge takes the code in any case and grouped with dashes or
+    spaces, so it's normalised the same way.
+    """
+    code = URL(text).query.get("pair") or text
+    return code.upper().replace("-", "").replace(" ", "")
 
 
 async def _async_pair(hass: HomeAssistant, data: dict[str, Any], code: str) -> str:
@@ -94,16 +100,16 @@ async def _validate_input(
     hass: HomeAssistant,
     data: dict[str, Any],
     *,
-    paired_keys: dict[str, str] | None = None,
+    paired_keys: dict[tuple[str, str, str], str] | None = None,
 ) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     With paired_keys, the token field takes a key, or a pairing code that is
-    traded for one. Each key is kept against its code, as a code works once and
-    a retry after a failed connection needs the same key. Without paired_keys,
-    the stored key or old token is used as it is, and setup swaps an old token
-    later.
+    traded for one. Each key is kept against its host, port and code, as a code
+    works once and a retry after a failed connection needs the same key, but
+    only for the computer that gave it. Without paired_keys, the stored key or
+    old token is used as it is, and setup swaps an old token later.
     """
     session = async_get_clientsession(hass)
     version = Version(data[CONF_HOST], data[CONF_PORT], "", session=session)
@@ -120,9 +126,10 @@ async def _validate_input(
     key = data[CONF_TOKEN].strip()
     if paired_keys is not None and not is_client_key(key):
         code = _pairing_code(key)
-        if code not in paired_keys:
-            paired_keys[code] = await _async_pair(hass, data, code)
-        key = paired_keys[code]
+        target = (data[CONF_HOST], data[CONF_PORT], code)
+        if target not in paired_keys:
+            paired_keys[target] = await _async_pair(hass, data, code)
+        key = paired_keys[target]
 
     websocket_client = WebSocketClient(
         data[CONF_HOST],
@@ -175,7 +182,7 @@ async def _async_get_info(
     hass: HomeAssistant,
     user_input: dict[str, Any],
     *,
-    paired_keys: dict[str, str] | None = None,
+    paired_keys: dict[tuple[str, str, str], str] | None = None,
 ) -> tuple[dict[str, str], dict[str, str] | None]:
     errors = {}
 
@@ -212,7 +219,7 @@ class SystemBridgeConfigFlow(
     def __init__(self) -> None:
         """Initialize flow."""
         self._input: dict[str, Any] = {}
-        self._paired_keys: dict[str, str] = {}
+        self._paired_keys: dict[tuple[str, str, str], str] = {}
 
     @override
     async def async_step_user(
