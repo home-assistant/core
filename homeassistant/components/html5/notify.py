@@ -17,8 +17,6 @@ from jwt.warnings import InsecureKeyLengthWarning
 from pywebpush import WebPushException, webpush_async
 
 from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_TARGET,
     ATTR_TITLE_DEFAULT,
     NotifyEntity,
     NotifyEntityFeature,
@@ -32,8 +30,10 @@ from homeassistant.helpers.json import save_json
 from homeassistant.util.json import load_json_object
 
 from .const import (
+    ATTR_DATA,
     ATTR_REQUIRE_INTERACTION,
     ATTR_TAG,
+    ATTR_TARGET,
     ATTR_TIMESTAMP,
     ATTR_VAPID_EMAIL,
     ATTR_VAPID_PRV_KEY,

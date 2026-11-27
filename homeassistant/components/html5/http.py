@@ -14,7 +14,6 @@ import probatio
 from probatio.humanize import humanize_error
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.components.notify import ATTR_DATA, ATTR_TARGET
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -23,7 +22,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.json import save_json
 from homeassistant.util import ensure_unique_string
 
-from .const import ATTR_ACTION, ATTR_ENDPOINT, ATTR_SUBSCRIPTION, ATTR_TAG, DOMAIN
+from .const import (
+    ATTR_ACTION,
+    ATTR_DATA,
+    ATTR_ENDPOINT,
+    ATTR_SUBSCRIPTION,
+    ATTR_TAG,
+    ATTR_TARGET,
+    DOMAIN,
+)
 from .entity import Registration
 from .issue import deprecated_event_bus
 
