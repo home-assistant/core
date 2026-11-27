@@ -2136,7 +2136,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'MyHome36',
+    'state': 'TestNetwork',
   })
 # ---
 # name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_thread_routing_role-entry]
