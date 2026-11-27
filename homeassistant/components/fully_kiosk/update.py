@@ -21,7 +21,6 @@ from fullykiosk.releases import (
 )
 
 from homeassistant.components.update import (
-    MANUAL_ACTION_CONFIRM_ON_DEVICE,
     UpdateEntity,
     UpdateEntityFeature,
     UpdateInstallPhase,
@@ -51,6 +50,10 @@ INSTALL_PHASES = {
     INSTALL_STATUS_AWAITING_CONFIRMATION: UpdateInstallPhase.WAITING_FOR_USER,
     INSTALL_STATUS_RESTARTING: UpdateInstallPhase.RESTARTING,
 }
+
+MANUAL_ACTION_CONFIRM_UPDATE = UpdateManualAction(
+    translation_domain=DOMAIN, translation_key="confirm_update"
+)
 
 
 async def async_setup_entry(
@@ -125,17 +128,13 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
     @property
     @override
     def release_notes_messages(self) -> tuple[UpdateReleaseNotesMessage, ...]:
-        """Explain how the latest release is installed."""
+        """Link the APK of the latest release."""
         if (release := self._get_release()) is None:
             return ()
         return (
             UpdateReleaseNotesMessage(
                 translation_domain=DOMAIN,
-                translation_key=(
-                    "install_without_confirmation"
-                    if canInstallApkSilently(self.coordinator.data)
-                    else "install_with_confirmation"
-                ),
+                translation_key="install",
                 translation_placeholders={
                     "version": release.versionName,
                     "apk_url": release.url,
@@ -146,12 +145,12 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
     @property
     @override
     def manual_action(self) -> UpdateManualAction | None:
-        """Ask to confirm the installation on devices that can't skip it."""
+        """Ask to confirm the update on devices that can't install silently."""
         if UpdateEntityFeature.INSTALL not in self.supported_features or (
             canInstallApkSilently(self.coordinator.data)
         ):
             return None
-        return MANUAL_ACTION_CONFIRM_ON_DEVICE
+        return MANUAL_ACTION_CONFIRM_UPDATE
 
     @override
     async def async_release_notes(self) -> str | None:
