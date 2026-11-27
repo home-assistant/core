@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, override
 
 import probatio
 
-from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
@@ -54,6 +53,7 @@ from .const import (
     SIGNAL_CLIENTS_UPDATED,
 )
 from .coordinator import UbusConfigEntry, UbusDataUpdateCoordinator
+from .helpers import referencing_automations
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -171,20 +171,21 @@ async def _async_migrate_unique_ids(
                 # Storage persons are re-pointed at the survivor; YAML
                 # persons and device automations live in configuration
                 # which cannot be updated, so the removal is deferred
-                # behind a repair while either holds the duplicate or
-                # its disappearing device.
+                # behind a repair while either still references the
+                # duplicate or its dying device.
                 await _async_repoint_person_trackers(
                     hass, entry.entity_id, survivor.entity_id
                 )
                 yaml_persons = _async_yaml_person_names(hass, entry.entity_id)
-                automations = (
-                    _async_referencing_automations(hass, entry.device_id)
-                    if (
-                        entry.device_id is not None
-                        and survivor.device_id is not None
-                        and entry.device_id != survivor.device_id
-                    )
-                    else []
+                device_dies = (
+                    entry.device_id is not None
+                    and survivor.device_id is not None
+                    and entry.device_id != survivor.device_id
+                )
+                automations = referencing_automations(
+                    hass,
+                    entry.device_id if device_dies else None,
+                    entry.entity_id,
                 )
                 if yaml_persons or automations:
                     ir.async_create_issue(
@@ -312,18 +313,6 @@ def _async_yaml_person_names(hass: HomeAssistant, entity_id: str) -> list[str]:
         person[CONF_NAME]
         for person in person_data.yaml_collection.async_items()
         if entity_id in person.get(PERSON_TRACKERS, [])
-    ]
-
-
-@callback
-def _async_referencing_automations(hass: HomeAssistant, device_id: str) -> list[str]:
-    """Return the names of the loaded automations referencing a device."""
-    if (component := hass.data.get(AUTOMATION_DOMAIN)) is None:
-        return []
-    return [
-        entity.name or entity.entity_id
-        for entity in component.entities
-        if device_id in entity.referenced_devices
     ]
 
 

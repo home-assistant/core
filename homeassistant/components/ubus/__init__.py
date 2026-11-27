@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 from .config_flow import UbusConfigFlow
 from .const import DOMAIN, SUBENTRY_TYPE_ROUTER
 from .coordinator import UbusConfigEntry, UbusDataUpdateCoordinator
-from .device_tracker import _async_referencing_automations
+from .helpers import referencing_automations
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -394,7 +394,7 @@ def _async_reparent(
         # The removal below breaks device automations targeting the
         # merged device, which live in the YAML configuration and
         # cannot be re-pointed.
-        if referencing := _async_referencing_automations(hass, loser.id):
+        if referencing := referencing_automations(hass, loser.id, None):
             ir.async_create_issue(
                 hass,
                 DOMAIN,
