@@ -99,9 +99,7 @@ async def test_discovery_climate_power_controller_opt_out(
     )
 
     config = get_default_config(hass)
-    config.entity_config = {
-        "climate.opt_out": {"expose_power_controller": False}
-    }
+    config.entity_config = {"climate.opt_out": {"expose_power_controller": False}}
     msg = await smart_home.async_handle_message(hass, config, request)
     endpoints = {
         endpoint["endpointId"]: {
