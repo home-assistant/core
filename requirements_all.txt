@@ -1541,7 +1541,7 @@ krakenex==2.2.2
 lacrosse-view==1.1.2
 
 # homeassistant.components.laifen
-laifen-ble==0.4.0
+laifen-ble==0.4.1
 
 # homeassistant.components.eufy
 lakeside==0.13
