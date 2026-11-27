@@ -6,7 +6,7 @@ Support for the start and end times of firewall policy schedules.
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import time
-from typing import TYPE_CHECKING, Any, Literal, override
+from typing import TYPE_CHECKING, Any, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
@@ -35,27 +35,6 @@ if TYPE_CHECKING:
 
 PARALLEL_UPDATES = 1
 
-type ScheduleTime = Literal["start", "end"]
-
-
-@callback
-def async_firewall_policy_schedule_time_fn(
-    which: ScheduleTime, hub: UnifiHub, policy: FirewallPolicy
-) -> time | None:
-    """Return a firewall policy schedule's start or end time."""
-    settings = policy.schedule_settings
-    return settings.start_time if which == "start" else settings.end_time
-
-
-async def async_firewall_policy_schedule_time_control_fn(
-    which: ScheduleTime, hub: UnifiHub, obj_id: str, value: time
-) -> None:
-    """Change a firewall policy schedule's start or end time."""
-    if which == "start":
-        await async_save_firewall_policy_schedule(hub, obj_id, start_time=value)
-    else:
-        await async_save_firewall_policy_schedule(hub, obj_id, end_time=value)
-
 
 @dataclass(frozen=True, kw_only=True)
 class UnifiTimeEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
@@ -67,36 +46,37 @@ class UnifiTimeEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     set_value_fn: Callable[[UnifiHub, str, time], Coroutine[Any, Any, None]]
 
 
-def _schedule_time_description(
-    which: ScheduleTime,
-) -> UnifiTimeEntityDescription[FirewallPolicies, FirewallPolicy]:
-    """Describe the start or end time of a firewall policy schedule."""
-
-    @callback
-    def value_fn(hub: UnifiHub, policy: FirewallPolicy) -> time | None:
-        return async_firewall_policy_schedule_time_fn(which, hub, policy)
-
-    async def set_value_fn(hub: UnifiHub, obj_id: str, value: time) -> None:
-        await async_firewall_policy_schedule_time_control_fn(which, hub, obj_id, value)
-
-    return UnifiTimeEntityDescription[FirewallPolicies, FirewallPolicy](
-        key=f"Firewall policy schedule {which}",
-        translation_key=f"firewall_policy_schedule_{which}",
+ENTITY_DESCRIPTIONS: tuple[UnifiTimeEntityDescription, ...] = (
+    UnifiTimeEntityDescription[FirewallPolicies, FirewallPolicy](
+        key="Firewall policy schedule start",
+        translation_key="firewall_policy_schedule_start",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         api_handler_fn=lambda api: api.firewall_policies,
         device_info_fn=async_firewall_policy_device_info_fn,
         object_fn=lambda api, obj_id: api.firewall_policies[obj_id],
-        set_value_fn=set_value_fn,
+        set_value_fn=lambda hub, obj_id, value: async_save_firewall_policy_schedule(
+            hub, obj_id, start_time=value
+        ),
         supported_fn=async_firewall_policy_supported_fn,
-        unique_id_fn=lambda hub, obj_id: f"firewall_policy_schedule_{which}-{obj_id}",
-        value_fn=value_fn,
-    )
-
-
-ENTITY_DESCRIPTIONS: tuple[UnifiTimeEntityDescription, ...] = (
-    _schedule_time_description("start"),
-    _schedule_time_description("end"),
+        unique_id_fn=lambda hub, obj_id: f"firewall_policy_schedule_start-{obj_id}",
+        value_fn=lambda hub, policy: policy.schedule_settings.start_time,
+    ),
+    UnifiTimeEntityDescription[FirewallPolicies, FirewallPolicy](
+        key="Firewall policy schedule end",
+        translation_key="firewall_policy_schedule_end",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        api_handler_fn=lambda api: api.firewall_policies,
+        device_info_fn=async_firewall_policy_device_info_fn,
+        object_fn=lambda api, obj_id: api.firewall_policies[obj_id],
+        set_value_fn=lambda hub, obj_id, value: async_save_firewall_policy_schedule(
+            hub, obj_id, end_time=value
+        ),
+        supported_fn=async_firewall_policy_supported_fn,
+        unique_id_fn=lambda hub, obj_id: f"firewall_policy_schedule_end-{obj_id}",
+        value_fn=lambda hub, policy: policy.schedule_settings.end_time,
+    ),
 )
 
 
