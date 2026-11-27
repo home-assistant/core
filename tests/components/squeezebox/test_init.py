@@ -291,5 +291,6 @@ async def test_discovery_stopped(
 
     # Call the scheduled discovery callback after discovery_stopped is True
     # This should return early without processing players
-    if scheduled_callbacks:
+    with patch("homeassistant.components.squeezebox.async_call_later") as call_later:
         await scheduled_callbacks[0]()
+        call_later.assert_not_called()
