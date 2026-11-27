@@ -19,11 +19,9 @@ CONF_KEEP_MAIN_LIGHT = "keep_master_light"
 DEFAULT_KEEP_MAIN_LIGHT = False
 
 # Attributes
-ATTR_BRIGHTNESS = "brightness"
 ATTR_CCT = "cct"
 ATTR_COLOR_PRIMARY = "color_primary"
 ATTR_DURATION = "duration"
-ATTR_EFFECT = "effect"
 ATTR_FADE = "fade"
 ATTR_INTENSITY = "intensity"
 ATTR_ON = "on"
@@ -31,7 +29,6 @@ ATTR_SEGMENT_ID = "segment_id"
 ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_SPEED = "speed"
 ATTR_TARGET_BRIGHTNESS = "target_brightness"
-ATTR_TRANSITION = "transition"
 ATTR_UDP_PORT = "udp_port"
 
 # Static values
