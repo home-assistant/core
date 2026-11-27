@@ -1760,7 +1760,7 @@ mvg==1.6.0
 my-pv==0.0.17
 
 # homeassistant.components.myuplink
-myuplink==0.7.0
+myuplink==0.8.0
 
 # homeassistant.components.nad
 nad-receiver==0.4.0
