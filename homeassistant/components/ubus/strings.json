@@ -83,12 +83,16 @@
       "title": "Disabled router {host} was migrated"
     },
     "migration_failed": {
-      "description": "The OpenWrt (ubus) entry for `{host}` could not be migrated to the main entry. To complete the migration: 1. Delete the OpenWrt (ubus) entry for `{host}`. 2. Use **Add router** on the OpenWrt (ubus) entry to add the router again. Its client trackers are recovered automatically.",
+      "description": "The OpenWrt (ubus) entry for `{host}` could not be migrated to the main entry, so it was left in place. It keeps tracking its router on its own entry, and the migration is retried when Home Assistant restarts.",
       "title": "Failed to migrate router {host}"
     },
     "migration_host_collision": {
       "description": "The OpenWrt (ubus) entry for `{host}` was removed because a router with the same host is already configured on the main entry. The router continues to be tracked through the existing subentry; check its settings to confirm they are the ones you want, then dismiss this notice.",
       "title": "Duplicate router {host} was removed"
+    },
+    "migration_removal_failed": {
+      "description": "The OpenWrt (ubus) entry for `{host}` was moved to the main entry, but the old entry could not be deleted. It has been emptied, so it no longer polls the router; its client trackers are kept on the main entry. To complete the migration:\n\n1. Confirm the router is tracked on the main OpenWrt (ubus) entry.\n2. Delete the OpenWrt (ubus) entry for `{host}`.",
+      "title": "Failed to remove old entry for router {host}"
     },
     "persistent_invalid_credentials": {
       "description": "The username and password for `{host}` are no longer valid, so the router cannot be queried. Use \"Change router\" on the `{host}` subentry to update the credentials.",

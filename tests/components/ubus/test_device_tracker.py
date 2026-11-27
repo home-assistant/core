@@ -2782,13 +2782,13 @@ async def test_migration_idempotent_on_second_setup(
     }
 
 
-async def test_migration_failure_leaves_entry_and_reports(
+async def test_migration_failure_after_transfer_empties_leftover_entry(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test an un-migratable entry is left in place with a repair issue."""
-    _mock, _ubus = mock_ubus_by_host
+    """Test a failed removal after the transfer leaves a shell entry."""
+    _mock, ubus = mock_ubus_by_host
     hub_entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
@@ -2811,29 +2811,41 @@ async def test_migration_failure_leaves_entry_and_reports(
     await hass.async_block_till_done()
 
     assert hub_entry.state is ConfigEntryState.LOADED
-    # The legacy entry was left in place with a repair issue.
-    assert legacy_entry in hass.config_entries.async_entries(DOMAIN)
+    # The transfer completed: the hub owns the router subentry. The
+    # leftover entry was emptied before the failed removal, so it is a
+    # shell which cannot poll the router again.
+    assert MOCK_HOST_B in {sub.unique_id for sub in hub_entry.subentries.values()}
+    assert legacy_entry.state is ConfigEntryState.LOADED
+    assert legacy_entry.disabled_by is None
+    assert legacy_entry.version == 2
+    assert legacy_entry.data == {}
+    assert legacy_entry.subentries == {}
+    # The hub is the only poller: setting up the shell added no second
+    # poll of the router.
+    assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 1
     issue = issue_registry.async_get_issue(
-        DOMAIN, f"migration_failed_{legacy_entry.entry_id}"
+        DOMAIN, f"migration_removal_failed_{legacy_entry.entry_id}"
     )
     assert issue is not None
-    assert issue.translation_key == "migration_failed"
+    assert issue.translation_key == "migration_removal_failed"
     assert issue.translation_placeholders == {"host": MOCK_HOST_B}
     assert issue.config_entry_id == legacy_entry.entry_id
-    # The hub stays configured after a failed migration, so the repair
-    # must recover through the hub's Add router action, not a new entry.
+    # The leftover is empty, so the repair can ask for its deletion, in
+    # separate numbered steps.
     translations = await async_get_translations(hass, "en", "issues", {DOMAIN})
-    assert (
-        "Add router"
-        in translations[f"component.{DOMAIN}.issues.migration_failed.description"]
-    )
+    description = translations[
+        f"component.{DOMAIN}.issues.migration_removal_failed.description"
+    ]
+    assert "delete" in description.lower()
+    assert "\n\n1. " in description
+    assert "\n2. " in description
 
-    # Removing the entry clears its repair.
+    # Deleting the shell finishes the migration and clears its repair.
     assert await hass.config_entries.async_remove(legacy_entry.entry_id)
     await hass.async_block_till_done()
     assert (
         issue_registry.async_get_issue(
-            DOMAIN, f"migration_failed_{legacy_entry.entry_id}"
+            DOMAIN, f"migration_removal_failed_{legacy_entry.entry_id}"
         )
         is None
     )
@@ -2897,7 +2909,7 @@ async def test_migration_unload_failure_keeps_entry(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a legacy entry which cannot be unloaded is left in place."""
-    _mock, _ubus = mock_ubus_by_host
+    _mock, ubus = mock_ubus_by_host
     hub_entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
@@ -2930,11 +2942,24 @@ async def test_migration_unload_failure_keeps_entry(
     assert legacy_entry.version == 2
     assert legacy_entry.data == {}
     assert {sub.unique_id for sub in legacy_entry.subentries.values()} == {MOCK_HOST_B}
+    # Nothing was transferred: the hub has no subentry for the router, the
+    # entry is not isolated, and it keeps polling its own router.
+    assert legacy_entry.disabled_by is None
+    assert MOCK_HOST_B not in {sub.unique_id for sub in hub_entry.subentries.values()}
+    assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 1
     issue = issue_registry.async_get_issue(
         DOMAIN, f"migration_failed_{legacy_entry.entry_id}"
     )
     assert issue is not None
     assert issue.translation_key == "migration_failed"
+    # Deleting the entry would drop its tracker references, which a
+    # re-added router cannot restore, so the repair must not ask for it.
+    translations = await async_get_translations(hass, "en", "issues", {DOMAIN})
+    description = translations[
+        f"component.{DOMAIN}.issues.migration_failed.description"
+    ]
+    assert "delete" not in description.lower()
+    assert "restart" in description.lower()
 
 
 async def test_migration_host_collision_keeps_remaining_routers(

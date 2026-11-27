@@ -154,12 +154,14 @@ async def _async_migrate_other(
 ) -> None:
     """Re-parent a legacy entry into subentries of the hub and remove it.
 
-    The entry is unloaded before its trackers move; a failed unload leaves
-    it in place with a repair issue, so its routers keep polling on their
-    own entry. A host collision only skips the colliding router; the
-    remaining routers are still transferred. Any other failure raises a
-    repair issue and leaves the entry in place; the hub setup is never
-    blocked by one un-migratable entry.
+    An entry which cannot be unloaded is left in place, untouched, so its
+    router keeps polling on its own entry. Once its routers are tracked
+    on the hub, the entry is emptied before removal, so a failed removal
+    leaves a shell which cannot poll the same routers again and is
+    removed by the next migration; its repair points at deleting it. A
+    host collision only skips the colliding router; the remaining
+    routers are still transferred. The hub setup is never blocked by
+    one un-migratable entry.
     """
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
@@ -172,6 +174,7 @@ async def _async_migrate_other(
             if entry.subentries
             else entry.entry_id
         )
+    transferred = False
     try:
         # Hold the entry's setup lock so it is never removed mid-setup and
         # no setup can start while it is unloaded.
@@ -263,6 +266,13 @@ async def _async_migrate_other(
                     translation_key="migration_disabled_entry",
                     translation_placeholders={"host": host},
                 )
+        # The entry is a shell now: its routers are tracked on the hub,
+        # so clearing its subentries and data means a failed removal
+        # below cannot leave a duplicate poller behind.
+        for subentry in list(entry.subentries.values()):
+            hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
+        hass.config_entries.async_update_entry(entry, data={}, version=2)
+        transferred = True
         # The entry was unloaded above, so the removal cannot leave live
         # trackers behind.
         await hass.config_entries.async_remove(entry.entry_id)
@@ -288,15 +298,23 @@ async def _async_migrate_other(
             entry.entry_id,
             hub.entry_id,
         )
+        if transferred:
+            # The leftover entry is an empty shell now, so the repair
+            # can point at deleting it.
+            translation_key = "migration_removal_failed"
+            issue_id = f"migration_removal_failed_{entry.entry_id}"
+        else:
+            translation_key = "migration_failed"
+            issue_id = f"migration_failed_{entry.entry_id}"
         ir.async_create_issue(
             hass,
             DOMAIN,
-            f"migration_failed_{entry.entry_id}",
+            issue_id,
             config_entry_id=entry.entry_id,
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.ERROR,
-            translation_key="migration_failed",
+            translation_key=translation_key,
             translation_placeholders={"host": host},
         )
 
