@@ -129,18 +129,6 @@ async def test_update_entity(
     read.return_value = data_home_get_values_changed
     read.reset_mock()
 
-    # No polling on top of the router update: one read per home sensor every 30 s
-    home_sensors = [
-        state.entity_id
-        for state in hass.states.async_all(BINARY_SENSOR_DOMAIN)
-        if "raid" not in state.entity_id
-    ]
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert read.call_count == len(home_sensors)
-    read.reset_mock()
-
     read.return_value = DATA_HOME_PIR_GET_VALUE
     await _update_entity(hass, entity_id)
     assert read.call_count == 1
@@ -148,6 +136,14 @@ async def test_update_entity(
     read.return_value = data_home_get_values_changed
     await _update_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == "off"
+    endpoint = read.call_args.args
+
+    # No polling on top of the router update: this sensor is read once every 30 s
+    read.reset_mock()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert [call.args for call in read.call_args_list].count(endpoint) == 1
 
     # A failed read keeps the last known state
     for error in (HttpRequestError("failed"), AuthorizationError("failed")):
