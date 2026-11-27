@@ -1188,7 +1188,7 @@ getmac==0.9.6
 gios==7.1.1
 
 # homeassistant.components.glances
-glances-api==0.10.0
+glances-api==0.11.0
 
 # homeassistant.components.go2rtc
 go2rtc-client==0.4.0
