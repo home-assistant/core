@@ -70,10 +70,7 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices:
-    status: exempt
-    comment: |
-      Service integration, no devices.
+  dynamic-devices: todo
   entity-category: todo
   entity-device-class:
     status: exempt
@@ -88,10 +85,7 @@ rules:
   icon-translations: todo
   reconfiguration-flow: done
   repair-issues: todo
-  stale-devices:
-    status: exempt
-    comment: |
-      Service integration, no devices.
+  stale-devices: todo
 
   # Platinum
   async-dependency: done
