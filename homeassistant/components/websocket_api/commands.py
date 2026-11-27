@@ -43,6 +43,10 @@ from homeassistant.helpers import (
     template,
     trace,
 )
+from homeassistant.helpers.bootstrap_progress import (
+    BootstrapProgress,
+    async_subscribe_bootstrap_progress,
+)
 from homeassistant.helpers.condition import (
     async_from_config as async_condition_from_config,
     async_get_all_descriptions as async_get_all_condition_descriptions,
@@ -86,10 +90,8 @@ from homeassistant.loader import (
     async_get_integrations,
 )
 from homeassistant.setup import (
-    BootstrapProgress,
     async_get_loaded_integrations,
     async_get_setup_timings,
-    async_subscribe_bootstrap_progress,
     async_wait_component,
 )
 from homeassistant.util import slugify

@@ -1,6 +1,6 @@
 {
   "domain": "foreca",
-  "name": "Foreca",
+  "name": "Foreca Weather",
   "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@EetuPelkonen", "@hyvatti-foreca"],
   "config_flow": true,

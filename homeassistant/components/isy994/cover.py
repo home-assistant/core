@@ -5,9 +5,9 @@ from typing import Any, cast, override
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -81,7 +81,7 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs[ATTR_POSITION]
+        position = kwargs[CoverServiceArgument.POSITION]
         if self._node.uom == UOM_8_BIT_RANGE:
             position = round(position * 255.0 / 100.0)
         if not await self._node.turn_on(val=position):

@@ -270,6 +270,9 @@ MODELS_ALL_DEVICES = (
 )
 MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
 
+# Humidifier and sensor data
+ATTR_HUMIDITY = "humidity"
+
 # Light data
 ATTR_SCENE = "scene"
 
