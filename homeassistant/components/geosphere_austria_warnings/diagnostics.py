@@ -26,7 +26,6 @@ async def async_get_config_entry_diagnostics(
     if entry.state is ConfigEntryState.LOADED:
         coordinator = entry.runtime_data
         diagnostics["last_update_success"] = coordinator.last_update_success
-        if (data := coordinator.data) is not None:
-            diagnostics["location_warnings"] = asdict(data.location_warnings)
+        diagnostics["location_warnings"] = asdict(coordinator.data.location_warnings)
 
     return diagnostics

@@ -14,7 +14,6 @@ from . import setup_integration
 pytestmark = pytest.mark.usefixtures("mock_client")
 
 
-@pytest.mark.freeze_time("2023-03-27 12:00:00+02:00")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
