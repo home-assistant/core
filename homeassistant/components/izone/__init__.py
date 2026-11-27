@@ -64,16 +64,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await _async_resolve_legacy_entry(hass, entry)
 
     if conf := config.get(DOMAIN):
-        if conf[CONF_EXCLUDE]:
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                "yaml_exclude_unused",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="yaml_exclude_unused",
-            )
-
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version="2027.7.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=(
+                "deprecated_yaml_exclude" if conf[CONF_EXCLUDE] else "deprecated_yaml"
+            ),
+        )
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_IMPORT}

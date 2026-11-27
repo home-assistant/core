@@ -137,13 +137,17 @@
       "description": "The `{action}` action is deprecated and will be removed in Home Assistant 2027.6. Use the **Damper minimum** and **Damper maximum** number entities of each zone with the `number.set_value` action instead, and update any automations or scripts that use `{action}`.",
       "title": "The `{action}` action is being removed"
     },
+    "deprecated_yaml": {
+      "description": "The `izone:` section in your `configuration.yaml` file is no longer needed and will stop working in Home Assistant 2027.7. iZone controllers are set up from the UI: they show up as discovered devices, or you can add the iZone integration and search for them.\n\nRemove the `izone:` section from your `configuration.yaml` file and restart Home Assistant to fix this issue.",
+      "title": "The iZone YAML configuration is being removed"
+    },
+    "deprecated_yaml_exclude": {
+      "description": "The `izone:` section in your `configuration.yaml` file is no longer needed and will stop working in Home Assistant 2027.7. iZone controllers are set up from the UI: they show up as discovered devices, or you can add the iZone integration and search for them.\n\nThe `exclude` option already has no effect: the controllers listed in it show up as discovered devices. To hide one you don't use, select **Ignore** on it.\n\nRemove the `izone:` section from your `configuration.yaml` file and restart Home Assistant to fix this issue.",
+      "title": "[%key:component::izone::issues::deprecated_yaml::title%]"
+    },
     "legacy_entry_removed": {
       "description": "Your iZone entry from before Home Assistant 2026.8 was set up for more than one controller ({uids}), so it couldn't be updated and was removed. This can happen when a controller was replaced and the old one is still registered. To set up your controller again, go to **Settings** > **Devices & services** and add it from the discovered devices, or add the iZone integration if it isn't listed. If you add it within 30 days, its entities keep their previous names and areas.\n\nThis issue clears once one of these controllers is set up.",
       "title": "Your old iZone entry was removed"
-    },
-    "yaml_exclude_unused": {
-      "description": "iZone now sets up each controller as its own entry, so the `exclude` option in the `izone:` section of your `configuration.yaml` file is no longer needed and has no effect. Controllers that were listed in it now show up as discovered devices. Add them, or select **Ignore** to hide them.\n\nRemove `exclude` from your `configuration.yaml` file and restart Home Assistant to fix this issue.",
-      "title": "The iZone `exclude` option no longer has any effect"
     }
   },
   "services": {

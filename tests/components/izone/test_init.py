@@ -37,7 +37,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import create_mock_controller, create_mock_zone
 
-EXCLUDE_ISSUE_ID = "yaml_exclude_unused"
+YAML_ISSUE_ID = "deprecated_yaml"
 LEGACY_ISSUE_ID = "legacy_entry_removed"
 
 
@@ -538,26 +538,43 @@ async def test_legacy_repair_kept_when_unlisted_controller_set_up(
 
 @pytest.mark.usefixtures("mock_create_discovery")
 @pytest.mark.parametrize(
-    ("config", "issue_expected"),
+    ("config", "translation_key"),
     [
-        pytest.param({DOMAIN: {CONF_EXCLUDE: ["000000002"]}}, True, id="exclude"),
-        pytest.param({DOMAIN: {CONF_EXCLUDE: []}}, False, id="empty_exclude"),
-        pytest.param({DOMAIN: {}}, False, id="no_exclude"),
-        pytest.param({}, False, id="no_yaml"),
+        pytest.param(
+            {DOMAIN: {CONF_EXCLUDE: ["000000002"]}},
+            "deprecated_yaml_exclude",
+            id="exclude",
+        ),
+        pytest.param(
+            {DOMAIN: {CONF_EXCLUDE: []}}, "deprecated_yaml", id="empty_exclude"
+        ),
+        pytest.param({DOMAIN: {}}, "deprecated_yaml", id="no_exclude"),
     ],
 )
-async def test_yaml_exclude_raises_issue(
+async def test_yaml_raises_deprecation_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     config: ConfigType,
-    issue_expected: bool,
+    translation_key: str,
 ) -> None:
-    """A non-empty YAML exclude raises a repair saying it has no effect."""
+    """Any izone: YAML section raises the deprecation repair; exclude adds a note."""
     await _async_setup_yaml(hass, config)
 
-    assert (
-        issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID) is not None
-    ) is issue_expected
+    issue = issue_registry.async_get_issue(DOMAIN, YAML_ISSUE_ID)
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.7.0"
+    assert issue.translation_key == translation_key
+
+
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_no_yaml_raises_no_deprecation_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Without an izone: YAML section there is no deprecation repair."""
+    await _async_setup_yaml(hass, {})
+
+    assert issue_registry.async_get_issue(DOMAIN, YAML_ISSUE_ID) is None
 
 
 @pytest.mark.usefixtures("mock_create_discovery")
@@ -586,7 +603,7 @@ async def test_setup_removes_ignored_legacy_entry(
 
     assert hass.config_entries.async_get_entry(ignored.entry_id) is None
     assert hass.config_entries.async_get_entry(kept.entry_id) is kept
-    assert issue_registry.async_get_issue(DOMAIN, EXCLUDE_ISSUE_ID)
+    assert issue_registry.async_get_issue(DOMAIN, YAML_ISSUE_ID)
 
 
 @pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
