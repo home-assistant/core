@@ -56,7 +56,7 @@ def _setup_entities(
     )
 
 
-class VeSyncDeviceUpdate(VeSyncBaseEntity, UpdateEntity):
+class VeSyncDeviceUpdate(VeSyncBaseEntity[VeSyncBaseDevice], UpdateEntity):
     """Representation of a VeSync device update entity."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
