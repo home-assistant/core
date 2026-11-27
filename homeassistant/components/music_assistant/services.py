@@ -37,7 +37,6 @@ from .const import (
     ATTR_RADIO,
     ATTR_TRACKS,
     DOMAIN,
-    SLEEP_TIMER_OFF,
 )
 from .helpers import catch_user_not_found, get_music_assistant_client, user_from_context
 from .schemas import (
@@ -77,6 +76,7 @@ class MusicAssistantService(StrEnum):
     GET_LIBRARY = "get_library"
     PLAY_QUEUE_ITEM = "play_queue_item"
     SET_SLEEP_TIMER = "set_sleep_timer"
+    CLEAR_SLEEP_TIMER = "clear_sleep_timer"
 
 
 class MusicAssistantServiceArgument(StrEnum):
@@ -283,13 +283,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema={
             probatio.Optional(
                 MusicAssistantServiceArgument.MODE, default=SleepTimerMode.DURATION
-            ): probatio.In(
-                [
-                    SLEEP_TIMER_OFF,
-                    SleepTimerMode.DURATION,
-                    SleepTimerMode.END_OF_ITEM,
-                    SleepTimerMode.END_OF_CHAPTER,
-                ]
+            ): probatio.All(
+                probatio.In(
+                    [
+                        SleepTimerMode.DURATION,
+                        SleepTimerMode.END_OF_ITEM,
+                        SleepTimerMode.END_OF_CHAPTER,
+                    ]
+                ),
+                probatio.Coerce(SleepTimerMode),
             ),
             # the server counts whole seconds and needs at least one
             probatio.Optional(MusicAssistantServiceArgument.DURATION): probatio.All(
@@ -298,6 +300,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
             probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
         },
         func="_async_handle_set_sleep_timer",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        MusicAssistantService.CLEAR_SLEEP_TIMER,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
+        schema={
+            probatio.Optional(MusicAssistantServiceArgument.USERNAME): cv.string,
+        },
+        func="_async_handle_clear_sleep_timer",
     )
 
 

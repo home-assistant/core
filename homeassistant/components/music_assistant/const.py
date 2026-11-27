@@ -16,9 +16,6 @@ HASSIO_DISCOVERY_SCHEMA_VERSION = 28
 APP_SLUG = "d5369777_music_assistant"
 APP_NAME = "Music Assistant"
 
-# The sleep timer mode of the set_sleep_timer action that clears the timer
-SLEEP_TIMER_OFF = "off"
-
 ATTR_IS_GROUP = "is_group"
 ATTR_GROUP_MEMBERS = "group_members"
 ATTR_GROUP_PARENTS = "group_parents"
