@@ -7,7 +7,7 @@ import probatio
 from homeassistant.components import websocket_api
 from homeassistant.components.homeassistant import (
     DOMAIN as HASS_DOMAIN,
-    SERVICE_HOMEASSISTANT_RESTART,
+    HomeAssistantService,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -183,7 +183,7 @@ async def websocket_set_config(
     connection.send_result(msg["id"], {"restart": restart})
 
     if restart:
-        await hass.services.async_call(HASS_DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
+        await hass.services.async_call(HASS_DOMAIN, HomeAssistantService.RESTART)
 
 
 @websocket_api.require_admin

@@ -55,6 +55,7 @@ get_zwave_parameter:
       integration: isy994
   fields:
     parameter:
+      required: true
       example: 8
       selector:
         number:

@@ -32,6 +32,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import AUTHORITIES, CONF_LOCATIONS, DOMAIN, INTEGRATION_TITLE, SCAN_INTERVAL
 
+type LondonAirConfigEntry = ConfigEntry[APIData]
+
 BREAKS_IN_HA_VERSION = "2027.6.0"
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,7 +104,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry[APIData],
+    entry: LondonAirConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up London Air sensors from a config entry."""

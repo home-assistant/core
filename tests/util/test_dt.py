@@ -153,6 +153,25 @@ def test_as_timestamp() -> None:
     assert delta == 1
 
 
+@pytest.mark.parametrize(
+    ("time_zone", "expected"),
+    [
+        pytest.param("America/New_York", 1704128400.0, id="new_york"),
+        pytest.param("Asia/Kolkata", 1704090600.0, id="kolkata"),
+        pytest.param("Pacific/Chatham", 1704060900.0, id="chatham"),
+    ],
+)
+def test_as_timestamp_naive_uses_default_time_zone(
+    time_zone: str, expected: float
+) -> None:
+    """Test as_timestamp reads naive date/times in the default time zone."""
+    dt_util.set_default_time_zone(dt_util.get_time_zone(time_zone))
+
+    assert dt_util.as_timestamp(datetime(2024, 1, 1, 12)) == expected
+    assert dt_util.as_timestamp("2024-01-01 12:00:00") == expected
+    assert dt_util.as_timestamp("2024-01-01T12:00:00Z") == 1704110400.0
+
+
 def test_parse_datetime_converts_correctly() -> None:
     """Test parse_datetime converts strings."""
     assert datetime(1986, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC) == dt_util.parse_datetime(
