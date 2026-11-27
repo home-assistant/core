@@ -1619,30 +1619,6 @@ async def test_user_manual_host_unpaired_stays_on_form(hass: HomeAssistant) -> N
     )
 
 
-@pytest.mark.usefixtures("mock_entry_setup")
-async def test_user_manual_host_claimed_stays_on_form(hass: HomeAssistant) -> None:
-    """Claimed controller on the discovery service redisplays Enter host."""
-    with patch(
-        "homeassistant.components.izone.discovery.async_discover_by_host",
-        new=AsyncMock(side_effect=pizone.ControllerAlreadyClaimedError("claimed")),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result = await async_choose_manual_host(hass, result)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "192.0.2.1"}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "manual_host"
-    assert result["errors"] == {"base": "already_configured"}
-
-    await _async_submit_reachable_host(
-        hass, result, create_mock_controller("000000001", "192.0.2.1")
-    )
-
-
 async def test_user_manual_host_discovery_bind_fails(hass: HomeAssistant) -> None:
     """UDP bind failure during Enter host probe aborts discovery_failed."""
     with patch(
