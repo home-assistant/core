@@ -11,14 +11,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import (
-    ProxmoxCoordinator,
     ProxmoxNodeData,
+    ProxmoxStatusCoordinator,
     node_device_info,
     proxmox_base_url,
 )
 
 
-class ProxmoxCoordinatorEntity(CoordinatorEntity[ProxmoxCoordinator]):
+class ProxmoxCoordinatorEntity(CoordinatorEntity[ProxmoxStatusCoordinator]):
     """Base class for Proxmox entities."""
 
     _attr_has_entity_name = True
@@ -29,7 +29,7 @@ class ProxmoxNodeEntity(ProxmoxCoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: ProxmoxCoordinator,
+        coordinator: ProxmoxStatusCoordinator,
         entity_description: EntityDescription,
         node_data: ProxmoxNodeData,
     ) -> None:
@@ -59,7 +59,7 @@ class ProxmoxStorageEntity(ProxmoxCoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: ProxmoxCoordinator,
+        coordinator: ProxmoxStatusCoordinator,
         entity_description: EntityDescription,
         storage_data: NodeStorageResource,
         node_data: ProxmoxNodeData,
@@ -122,7 +122,7 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: ProxmoxCoordinator,
+        coordinator: ProxmoxStatusCoordinator,
         entity_description: EntityDescription,
         vm_data: QemuResource,
         node_data: ProxmoxNodeData,
@@ -181,7 +181,7 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: ProxmoxCoordinator,
+        coordinator: ProxmoxStatusCoordinator,
         entity_description: EntityDescription,
         container_data: ContainerResource,
         node_data: ProxmoxNodeData,

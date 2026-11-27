@@ -490,7 +490,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Proxmox VE sensors."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.status
 
     def _async_add_new_nodes(nodes: list[ProxmoxNodeData]) -> None:
         """Add new node sensors."""

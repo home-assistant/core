@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, ProxmoxPermission
-from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, ProxmoxNodeData
+from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData, ProxmoxStatusCoordinator
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
 
 PARALLEL_UPDATES = 1
@@ -36,7 +36,7 @@ PARALLEL_UPDATES = 1
 class ProxmoxNodeButtonNodeEntityDescription(ButtonEntityDescription):
     """Class to hold Proxmox node button description."""
 
-    press_action: Callable[[ProxmoxCoordinator, str], Coroutine[Any, Any, Any]]
+    press_action: Callable[[ProxmoxStatusCoordinator, str], Coroutine[Any, Any, Any]]
     permission: ProxmoxPermission = ProxmoxPermission.SYSPOWER
     permission_target: str = "nodes"
 
@@ -45,7 +45,9 @@ class ProxmoxNodeButtonNodeEntityDescription(ButtonEntityDescription):
 class ProxmoxVMButtonEntityDescription(ButtonEntityDescription):
     """Class to hold Proxmox VM button description."""
 
-    press_action: Callable[[ProxmoxCoordinator, str, int], Coroutine[Any, Any, Any]]
+    press_action: Callable[
+        [ProxmoxStatusCoordinator, str, int], Coroutine[Any, Any, Any]
+    ]
     permission: ProxmoxPermission = ProxmoxPermission.POWER
 
 
@@ -53,7 +55,9 @@ class ProxmoxVMButtonEntityDescription(ButtonEntityDescription):
 class ProxmoxContainerButtonEntityDescription(ButtonEntityDescription):
     """Class to hold Proxmox container button description."""
 
-    press_action: Callable[[ProxmoxCoordinator, str, int], Coroutine[Any, Any, Any]]
+    press_action: Callable[
+        [ProxmoxStatusCoordinator, str, int], Coroutine[Any, Any, Any]
+    ]
     permission: ProxmoxPermission = ProxmoxPermission.POWER
 
 
@@ -232,7 +236,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ProxmoxVE buttons."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.status
 
     def _async_add_new_nodes(nodes: list[ProxmoxNodeData]) -> None:
         """Add new node buttons."""
@@ -312,7 +316,7 @@ class ProxmoxBaseButton(ButtonEntity):
     """
 
     entity_description: ButtonEntityDescription
-    coordinator: ProxmoxCoordinator
+    coordinator: ProxmoxStatusCoordinator
 
     @abstractmethod
     async def _async_press_call(self) -> None:
