@@ -27,7 +27,6 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_MODEL,
     CONF_TOKEN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -72,15 +71,9 @@ def setup_device(model_code: str) -> Generator[MagicMock]:
     """Mock the heater device."""
     mock_heater = MagicMock(spec=HeaterMiot)
     mock_heater.status.return_value = HeaterMiotStatus(_STATUS[model_code], model_code)
-    with (
-        patch(
-            "homeassistant.components.xiaomi_miio.get_platforms",
-            return_value=[Platform.CLIMATE],
-        ),
-        patch(
-            "homeassistant.components.xiaomi_miio.HeaterMiot",
-            return_value=mock_heater,
-        ),
+    with patch(
+        "homeassistant.components.xiaomi_miio.HeaterMiot",
+        return_value=mock_heater,
     ):
         yield mock_heater
 
@@ -214,10 +207,11 @@ async def test_command_error(
     """Test an error sending a command to the heater."""
     await setup_component(hass, model_code)
     mock_heater.set_target_temperature.side_effect = DeviceException("timeout")
-    with pytest.raises(HomeAssistantError, match="timeout"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 24},
             blocking=True,
         )
+    assert exc_info.value.translation_key == "heater_command_failed"

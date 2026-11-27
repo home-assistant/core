@@ -325,7 +325,7 @@
   },
   "exceptions": {
     "heater_command_failed": {
-      "message": "Failed to send the command to the heater: {error}"
+      "message": "Failed to send the command to the heater."
     },
     "invalid_fan_speed": {
       "message": "Fan speed {fan_speed} is not recognized. Valid speeds are: {fan_speeds}."
