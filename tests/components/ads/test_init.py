@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
-import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
@@ -615,7 +614,6 @@ async def test_no_write_after_shutdown(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a write is not sent to the PLC once the connection is shut down."""
-    caplog.set_level(logging.DEBUG)
     mock_ads_device.values["GVL.pump"] = b"\x00"
     assert await setup_ads_platform(
         hass,
@@ -645,7 +643,6 @@ async def test_no_subscription_after_shutdown(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test entities set up once the connection is shut down do not subscribe."""
-    caplog.set_level(logging.DEBUG)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: ADS_CONFIG})
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)

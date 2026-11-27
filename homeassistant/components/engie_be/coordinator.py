@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from itertools import pairwise
 from typing import TYPE_CHECKING, override
@@ -107,7 +107,7 @@ class EngieBePricesData:
 
     slots: dict[tuple[str, str, str], PriceSlot]
     eans: tuple[str, ...]
-    gas_conversion_coefficients: dict[str, float] = field(default_factory=dict)
+    gas_conversion_coefficients: dict[str, float]
 
 
 class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreement]]):

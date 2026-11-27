@@ -48,6 +48,7 @@ async def _setup(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> Non
         ("charge", "clean", VacuumActivity.DOCKED),
         ("hmMidMsn", "clean", VacuumActivity.CLEANING),
         ("hmPostMsn", "clean", VacuumActivity.RETURNING),
+        ("refill", "clean", VacuumActivity.CLEANING),
         ("run", "clean", VacuumActivity.CLEANING),
         ("pause", "clean", VacuumActivity.PAUSED),
         # Stopped on the floor mid-mission is a paused state.

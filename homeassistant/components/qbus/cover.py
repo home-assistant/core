@@ -10,11 +10,10 @@ from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.state import QbusMqttShutterState, StateType
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -58,8 +57,8 @@ class QbusCover(QbusEntity, CoverEntity):
     _attr_name = None
     _attr_supported_features: CoverEntityFeature
     _attr_device_class = CoverDeviceClass.BLIND
-    _attr_open_tilt_position = OPEN_TILT_POSITION
-    _attr_closed_tilt_positions = [0, 100]
+    _attr_tilt_start_angle = -90
+    _attr_tilt_end_angle = 90
 
     def __init__(self, mqtt_output: QbusMqttOutput) -> None:
         """Initialize cover entity."""
@@ -132,7 +131,7 @@ class QbusCover(QbusEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         state = QbusMqttShutterState(id=self._mqtt_output.id, type=StateType.STATE)
-        state.write_position(int(kwargs[ATTR_POSITION]))
+        state.write_position(int(kwargs[CoverServiceArgument.POSITION]))
         await self._async_publish_output_state(state)
 
     @override
@@ -153,7 +152,7 @@ class QbusCover(QbusEntity, CoverEntity):
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         state = QbusMqttShutterState(id=self._mqtt_output.id, type=StateType.STATE)
-        state.write_slat_position(int(kwargs[ATTR_TILT_POSITION]))
+        state.write_slat_position(int(kwargs[CoverServiceArgument.TILT_POSITION]))
         await self._async_publish_output_state(state)
 
     @override

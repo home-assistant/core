@@ -445,7 +445,8 @@ def _get_option_locations(
         ):
             entity_locations.update(
                 {
-                    key: (key.__config_file__, key.__line__)
+                    # Nested options can share their name with top-level options
+                    deprecation.option_name(key): (key.__config_file__, key.__line__)
                     for key in deprecation.options_config(entity_config)
                     if key in deprecation.options and hasattr(key, "__config_file__")
                 }

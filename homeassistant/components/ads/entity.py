@@ -144,10 +144,9 @@ class AdsEntity(Entity):
         self._removed = True
         handles = self._notification_handles
         self._notification_handles = []
-        for handle in handles:
-            await self.hass.async_add_executor_job(
-                self._ads_hub.delete_device_notification, handle
-            )
+        await self.hass.async_add_executor_job(
+            self._ads_hub.delete_device_notifications, handles
+        )
 
     def mark_unavailable(self) -> None:
         """Mark the entity unavailable after its hub connection is closed."""

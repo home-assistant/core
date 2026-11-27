@@ -141,6 +141,7 @@ homeassistant.components.browser.*
 homeassistant.components.bryant_evolution.*
 homeassistant.components.bsblan.*
 homeassistant.components.bthome.*
+homeassistant.components.busybar.*
 homeassistant.components.button.*
 homeassistant.components.calendar.*
 homeassistant.components.cambridge_audio.*
@@ -603,6 +604,7 @@ homeassistant.components.solaredge_modbus.*
 homeassistant.components.solarlog.*
 homeassistant.components.solyx_energy_cloud.*
 homeassistant.components.sonarr.*
+homeassistant.components.sony_tv_rs232.*
 homeassistant.components.spaceapi.*
 homeassistant.components.specialized_turbo.*
 homeassistant.components.speedtestdotnet.*

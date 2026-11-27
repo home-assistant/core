@@ -146,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> No
     async_delete_issue(hass, DOMAIN, "server_version_version_too_old")
     async_delete_issue(hass, DOMAIN, "server_version_version_too_new")
 
-    await _async_check_ipv6_enabled(hass)
+    await _async_check_ipv6_enabled(hass, entry)
 
     ble_proxy: MatterBleProxy | None = None
 
@@ -306,7 +306,9 @@ def _derive_ble_proxy_url(matter_ws_url: str) -> str | None:
     return str(parsed.with_path(new_path))
 
 
-async def _async_check_ipv6_enabled(hass: HomeAssistant) -> None:
+async def _async_check_ipv6_enabled(
+    hass: HomeAssistant, entry: MatterConfigEntry
+) -> None:
     """Raise a repair issue when IPv6 is disabled in Supervisor network settings.
 
     Matter relies on IPv6 to communicate with devices. On Supervised/HAOS
@@ -346,6 +348,7 @@ async def _async_check_ipv6_enabled(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         "ipv6_disabled",
+        config_entry_id=entry.entry_id,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="ipv6_disabled",

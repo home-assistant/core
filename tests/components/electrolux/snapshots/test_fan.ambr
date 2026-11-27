@@ -9,7 +9,7 @@
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'manual',
         'quiet',
-        'smart',
+        'auto',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -52,7 +52,7 @@
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'manual',
         'quiet',
-        'smart',
+        'auto',
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),

@@ -7,6 +7,7 @@ from pytest_homeassistant.common import (
 
 MOCK_HOST = "myrouter.freeboxos.fr"
 MOCK_PORT = 1234
+MOCK_REGISTRATION_NAME = "my-home-assistant"
 
 # router
 DATA_SYSTEM_GET_CONFIG = load_json_object_fixture("freebox/system_get_config.json")

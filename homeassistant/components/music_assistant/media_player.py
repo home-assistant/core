@@ -750,6 +750,26 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         )
         return response
 
+    @catch_musicassistant_error
+    async def _async_handle_play_queue_item(
+        self, queue_item_id: str, username: str | None = None
+    ) -> None:
+        """Play an item of the active queue."""
+        if not self.active_queue:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="no_active_queue"
+            )
+        with catch_user_not_found(username):
+            await self.mass.player_queues.play_index(
+                self.active_queue.queue_id,
+                queue_item_id,
+                user=(
+                    username
+                    if username is not None
+                    else user_from_context(self._context)
+                ),
+            )
+
     @override
     async def async_browse_media(
         self,

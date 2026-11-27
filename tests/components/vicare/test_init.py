@@ -739,7 +739,9 @@ async def test_per_gateway_failure_isolation(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    sensor_device0 = "sensor.model0_temperature"
+    # The first room sensor is named "Office" in the ViCare app, the second
+    # has no name there and falls back to its model.
+    sensor_device0 = "sensor.office_temperature"
     sensor_device1 = "sensor.model1_temperature"
 
     assert hass.states.get(sensor_device0) is not None, f"{sensor_device0} not found"
@@ -789,7 +791,7 @@ async def test_devices_on_same_gateway_share_coordinator(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        sensor_device0 = "sensor.model0_temperature"
+        sensor_device0 = "sensor.office_temperature"
         sensor_device1 = "sensor.model1_temperature"
         assert hass.states.get(sensor_device0).state != STATE_UNAVAILABLE
         assert hass.states.get(sensor_device1).state != STATE_UNAVAILABLE
@@ -948,7 +950,7 @@ async def test_setup_runs_pyvicare_init_and_fetches_once_per_gateway(
     # service, so the second device is served without a fetch of its own.
     assert client.services["gwA"].fetch_all_features.call_count == 1
     assert client.services["gwB"].fetch_all_features.call_count == 1
-    assert hass.states.get("sensor.model0_temperature").state == "17.5"
+    assert hass.states.get("sensor.office_temperature").state == "17.5"
     assert hass.states.get("sensor.model1_temperature").state == "16.9"
 
 

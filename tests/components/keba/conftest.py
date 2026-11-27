@@ -28,9 +28,15 @@ def expected_lingering_tasks() -> bool:
 
 
 @pytest.fixture
-def keba_data() -> dict[str, Any]:
-    """Return the data the library reports for an idle P30."""
-    return load_json_object_fixture("p30.json", DOMAIN)
+def keba_fixture() -> str:
+    """Return the fixture file with the station's data, an idle P30 by default."""
+    return "p30.json"
+
+
+@pytest.fixture
+def keba_data(keba_fixture: str) -> dict[str, Any]:
+    """Return the data the library reports for the station."""
+    return load_json_object_fixture(keba_fixture, DOMAIN)
 
 
 @pytest.fixture
@@ -43,6 +49,11 @@ def mock_keba(
     client.get_value = MagicMock(side_effect=keba_data.get)
     client.set_failsafe = AsyncMock()
     client.enable = AsyncMock()
+    client.start = AsyncMock()
+    client.stop = AsyncMock()
+    client.set_text = AsyncMock()
+    client.set_energy = AsyncMock()
+    client.set_current = AsyncMock()
     with (
         patch.multiple(
             KebaKeContact,
@@ -50,6 +61,11 @@ def mock_keba(
             get_value=client.get_value,
             set_failsafe=client.set_failsafe,
             enable=client.enable,
+            start=client.start,
+            stop=client.stop,
+            set_text=client.set_text,
+            set_energy=client.set_energy,
+            set_current=client.set_current,
         ),
         # With autospec the mock gets the handler, and reports the data to it.
         patch.object(

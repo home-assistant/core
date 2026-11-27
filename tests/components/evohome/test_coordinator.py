@@ -2,6 +2,7 @@
 
 from contextlib import AbstractContextManager
 import logging
+from typing import Any, Final
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import evohomeasync as ec1
@@ -16,10 +17,12 @@ from homeassistant.components.climate import (
     ClimateServiceArgument,
 )
 from homeassistant.components.evohome.const import (
+    DOMAIN,
     EVOHOME_DATA,
     SCAN_INTERVAL_DEFAULT,
     SCHEDULE_MAX_AGE,
 )
+from homeassistant.components.evohome.coordinator import EvoAccountCoordinator
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     WaterHeaterService,
@@ -32,6 +35,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
     UpdateFailedUnreachable,
 )
+from homeassistant.setup import async_setup_component
 
 from .conftest import setup_evohome
 from .const import TEST_INSTALLS
@@ -68,6 +72,12 @@ async def test_setup_platform(
     # if coordinator is working, the state will be restored
     state = hass.states.get("climate.my_home")
     assert state is not None and state.state != STATE_UNAVAILABLE
+
+
+_MSG_HP_TEMPS_AVAILABLE: Final = "High-precision temperatures are available again"
+_MSG_HP_TEMPS_UNAVAILABLE: Final = (
+    "Standard-precision temperatures will be used until they are available again"
+)
 
 
 def _v1_location_by_id(
@@ -148,7 +158,7 @@ async def test_update_intervals(
     config: ConfigType,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test scan_interval applies to the location and to high-precision temps."""
+    """Test scan_interval applies to the location, but not to high-precision temps."""
 
     config[CONF_SCAN_INTERVAL] = 600
 
@@ -161,12 +171,12 @@ async def test_update_intervals(
             await _poll(hass, freezer)  # 300 seconds
 
             mock_v2.assert_not_awaited()
-            mock_v1.assert_not_awaited()
+            mock_v1.assert_awaited_once_with()
 
             await _poll(hass, freezer)  # 600 seconds
 
             mock_v2.assert_awaited_once_with()
-            mock_v1.assert_awaited_once_with()
+            assert mock_v1.await_count == 2
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -199,14 +209,63 @@ async def test_high_precision_temps_multiple_locations(
     ],
 )
 @pytest.mark.usefixtures("evohome")
-async def test_high_precision_temps_failed_poll(
+async def test_high_precision_temps_grace_period(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     zone_id: str,
     exception: Exception,
 ) -> None:
-    """Test a failed v1 poll drops the high-precision temps, rather than keep them."""
+    """Test failed v1 polls keep the high-precision temps, but only for 10 minutes."""
+
+    def current_temperature() -> float | None:
+        state = hass.states.get(zone_id)
+        assert state is not None
+        assert state.state != STATE_UNAVAILABLE
+        return state.attributes["current_temperature"]
+
+    with (
+        patch("evohomeasync.EvohomeClient.get_status"),
+        _v1_location_by_id({"3432521": 99.9}),
+    ):
+        await _poll(hass, freezer)
+
+    assert current_temperature() == 99.9
+
+    with patch("evohomeasync.EvohomeClient.get_status", side_effect=exception):
+        for _ in range(2):  # 10 minutes
+            await _poll(hass, freezer)
+            assert current_temperature() == 99.9
+
+        assert _MSG_HP_TEMPS_UNAVAILABLE not in caplog.text
+
+        await _poll(hass, freezer)
+        assert current_temperature() is None
+        await _poll(hass, freezer)
+
+    # the zone uses its v2 temperature (it has none in this fixture), warned only once
+    assert current_temperature() is None
+    assert caplog.text.count(_MSG_HP_TEMPS_UNAVAILABLE) == 1
+
+    with (
+        patch("evohomeasync.EvohomeClient.get_status"),
+        _v1_location_by_id({"3432521": 19.8}),
+    ):
+        await _poll(hass, freezer)
+
+    assert current_temperature() == 19.8
+    assert _MSG_HP_TEMPS_AVAILABLE in caplog.text
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_high_precision_temps_bad_credentials(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    zone_id: str,
+) -> None:
+    """Test the v1 API refusing the credentials drops the high-precision temps."""
 
     with (
         patch("evohomeasync.EvohomeClient.get_status"),
@@ -218,16 +277,25 @@ async def test_high_precision_temps_failed_poll(
     assert state is not None
     assert state.attributes["current_temperature"] == 99.9
 
-    with patch("evohomeasync.EvohomeClient.get_status", side_effect=exception):
+    with patch(
+        "evohomeasync.EvohomeClient.get_status",
+        side_effect=ec1.BadUserCredentialsError("Authentication failed"),
+    ):
         await _poll(hass, freezer)
 
-    assert "They will be ignored this refresh cycle" in caplog.text
+    assert "The feature will be disabled until next restart" in caplog.text
+    assert hass.data[EVOHOME_DATA].account.client_v1 is None
 
-    # the zone falls back to its v2 temperature (it has none in this fixture)
+    # there is no grace period, the zone uses its v2 temperature straight away
     state = hass.states.get(zone_id)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
     assert state.attributes["current_temperature"] is None
+
+    with patch("evohomeasync.EvohomeClient.get_status") as mock_get_status:
+        await _poll(hass, freezer)
+
+    mock_get_status.assert_not_awaited()  # until the next restart
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
@@ -391,66 +459,131 @@ async def test_action_api_call_failed_reason(
     assert exc_info.value.translation_key == translation_key
 
 
-@pytest.mark.parametrize("install", ["default"])
+# a failed API call, at account setup or a location poll
+_API_CALL_FAILED_TESTS: Final = [
+    pytest.param(
+        evo_exc.ApiConnectionFailedError("API call failed"),
+        UpdateFailedUnreachable,
+        "api_connection_failed",
+        None,
+        id="connection_failed",
+    ),
+    pytest.param(
+        evo_exc.ApiRateLimitExceededError("Rate limit exceeded", retry_after=900),
+        UpdateFailed,
+        "api_rate_limited",
+        900,
+        id="rate_limited",
+    ),
+    pytest.param(
+        evo_exc.ApiCallFailedError(
+            "API call failed",
+            reason=evo_exc.ApiCallErrorReason.SERVER_ERROR,
+        ),
+        UpdateFailed,
+        "api_server_error",
+        None,
+        id="server_error",
+    ),
+    pytest.param(
+        evo_exc.ApiCallFailedError(
+            "API call failed",
+            status=503,
+            reason=evo_exc.ApiCallErrorReason.SERVER_ERROR,
+            retry_after=120,
+        ),
+        UpdateFailed,
+        "api_server_error",
+        120,
+        id="server_error_retry_after",
+    ),
+]
+
+
 @pytest.mark.parametrize(
     ("exception", "error_type", "translation_key", "retry_after"),
     [
+        *_API_CALL_FAILED_TESTS,
         pytest.param(
-            evo_exc.ApiConnectionFailedError("API call failed"),
-            UpdateFailedUnreachable,
-            "api_connection_failed",
+            evo_exc.BadApiResponseError("Invalid response"),
+            UpdateFailed,
+            "api_response_invalid",
             None,
-            id="connection_failed",
-        ),
-        pytest.param(
-            evo_exc.ApiRateLimitExceededError("Rate limit exceeded", retry_after=900),
-            UpdateFailed,
-            "api_rate_limited",
-            900,
-            id="rate_limited",
-        ),
-        pytest.param(
-            evo_exc.ApiCallFailedError(
-                "API call failed",
-                reason=evo_exc.ApiCallErrorReason.SERVER_ERROR,
-            ),
-            UpdateFailed,
-            "api_server_error",
-            None,
-            id="server_error",
-        ),
-        pytest.param(
-            evo_exc.ApiCallFailedError(
-                "API call failed",
-                status=503,
-                reason=evo_exc.ApiCallErrorReason.SERVER_ERROR,
-                retry_after=120,
-            ),
-            UpdateFailed,
-            "api_server_error",
-            120,
-            id="server_error_retry_after",
+            id="response_invalid",
         ),
     ],
 )
-@pytest.mark.usefixtures("evohome")
-async def test_poll_api_call_failed(
+async def test_setup_failed(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    exception: evo_exc.ApiCallFailedError,
+    config: ConfigType,
+    exception: evo_exc.EvohomeError,
     error_type: type[UpdateFailed],
     translation_key: str,
     retry_after: float | None,
 ) -> None:
-    """Test a failed poll of a location raises UpdateFailed, by the error's reason."""
+    """Test a failed setup of the account raises a translated UpdateFailed."""
 
-    coordinator = hass.data[EVOHOME_DATA].coordinator
+    coordinators: list[EvoAccountCoordinator] = []
+
+    def account_coordinator(*args: Any, **kwargs: Any) -> EvoAccountCoordinator:
+        coordinators.append(EvoAccountCoordinator(*args, **kwargs))
+        return coordinators[0]
+
+    with (
+        patch(
+            "homeassistant.components.evohome.EvoAccountCoordinator",
+            side_effect=account_coordinator,
+        ),
+        patch("evohomeasync2.EvohomeClient.setup", side_effect=exception),
+    ):
+        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+
+    assert isinstance(coordinators[0].last_exception, error_type)
+    assert type(coordinators[0].last_exception) is error_type
+    assert coordinators[0].last_exception.translation_key == translation_key
+    assert coordinators[0].last_exception.retry_after == retry_after
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("exception", "error_type", "translation_key", "retry_after"),
+    [
+        *_API_CALL_FAILED_TESTS,
+        pytest.param(
+            evo_exc.BadApiResponseError("Invalid response"),
+            UpdateFailed,
+            "api_response_invalid",
+            None,
+            id="response_invalid",
+        ),
+        pytest.param(
+            evo_exc.StaleConfigError("Location is no longer accessible"),
+            UpdateFailed,
+            "config_stale",
+            None,
+            id="config_stale",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_poll_failed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    exception: evo_exc.EvohomeError,
+    error_type: type[UpdateFailed],
+    translation_key: str,
+    retry_after: float | None,
+) -> None:
+    """Test a failed poll of a location raises a translated UpdateFailed."""
+
+    coordinator = hass.data[EVOHOME_DATA].locations[0]
 
     with patch("evohomeasync2.location.Location.get_status", side_effect=exception):
         freezer.tick(SCAN_INTERVAL_DEFAULT)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
+    assert isinstance(coordinator.last_exception, error_type)
     assert type(coordinator.last_exception) is error_type
     assert coordinator.last_exception.translation_key == translation_key
     assert coordinator.last_exception.retry_after == retry_after
@@ -495,7 +628,7 @@ async def test_failed_schedule_poll_keeps_entities_available(
 ) -> None:
     """Test a failed background schedule GET is logged (and retried), not a failure."""
 
-    coordinator = hass.data[EVOHOME_DATA].coordinator
+    coordinator = hass.data[EVOHOME_DATA].locations[0]
     update_interval = SCAN_INTERVAL_DEFAULT
 
     with patch.object(Zone, "get_schedule", side_effect=exception) as mock_fcn:

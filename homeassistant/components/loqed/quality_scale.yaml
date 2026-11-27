@@ -40,16 +40,10 @@ rules:
     status: exempt
     comment: This integration does not provide an options flow.
   docs-installation-parameters: done
-  entity-unavailable:
-    status: todo
-    comment: The integration does not yet expose Lock.online as entity availability.
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: todo
-    comment: >-
-      Depends on entity-unavailable. Lock.online is available from the
-      library, but it is not yet used for availability or logged.
-  parallel-updates: todo
+  log-when-unavailable: done
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 

@@ -24,6 +24,28 @@
   },
   "entity": {
     "sensor": {
+      "glucose_change": {
+        "name": "Glucose change"
+      },
+      "glucose_reading_time": {
+        "name": "Glucose reading time"
+      },
+      "glucose_trend": {
+        "name": "Glucose trend",
+        "state": {
+          "falling": "Falling",
+          "falling_quickly": "Falling quickly",
+          "falling_slightly": "Falling slightly",
+          "falling_very_quickly": "Falling very quickly",
+          "not_computable": "Not computable",
+          "rate_out_of_range": "Rate out of range",
+          "rising": "Rising",
+          "rising_quickly": "Rising quickly",
+          "rising_slightly": "Rising slightly",
+          "rising_very_quickly": "Rising very quickly",
+          "steady": "Steady"
+        }
+      },
       "target_range_bottom": {
         "name": "Target range bottom"
       },

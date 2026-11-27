@@ -9,6 +9,7 @@ from electrolux_group_developer_sdk.client.appliances.appliance_data import (
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -16,6 +17,7 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
+from .const import DOMAIN
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
 from .entity_helper import async_setup_entities_helper
@@ -139,7 +141,7 @@ class AirPurifierFanEntity(ElectroluxBaseEntity[APAppliance], FanEntity):
         min_range = self._appliance_data.get_supported_min_fan_speed()
         max_range = self._appliance_data.get_supported_max_fan_speed()
 
-        if not min_range or not max_range:
+        if min_range is None or max_range is None:
             return (0, 0)
 
         if min_range == 0:
@@ -162,16 +164,18 @@ class AirPurifierFanEntity(ElectroluxBaseEntity[APAppliance], FanEntity):
     @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Send set fan speed command. If fan speed percentage is 0 turn off the appliance."""
-        fan_speed = round(
-            percentage_to_ranged_value(
-                percentage=percentage, low_high_range=self._speed_range
-            )
-        )
-        if fan_speed == 0:
+        if percentage == 0:
             await self.async_turn_off()
-        else:
-            command = self._appliance_data.get_fan_speed_command(fan_speed)
-            await self.coordinator.send_command(command)
+            return
+
+        if self._get_current_mode() in ["smart", "auto"]:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="fan_speed_not_available"
+            )
+        command = self._appliance_data.get_fan_speed_command(
+            self._percentage_to_fan_speed(percentage)
+        )
+        await self.coordinator.send_command(command)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -187,5 +191,29 @@ class AirPurifierFanEntity(ElectroluxBaseEntity[APAppliance], FanEntity):
         **kwargs: Any,
     ) -> None:
         """Send turn on command."""
-        command = self._appliance_data.get_turn_on_command()
-        await self.coordinator.send_command(command)
+        commands = []
+        if preset_mode is not None:
+            commands.append(
+                self._appliance_data.get_mode_command(self._modes_mapping[preset_mode])
+            )
+        else:
+            commands.append(self._appliance_data.get_turn_on_command())
+        if percentage is not None:
+            if preset_mode not in ["smart", "auto"]:
+                commands.append(
+                    self._appliance_data.get_fan_speed_command(
+                        self._percentage_to_fan_speed(percentage)
+                    )
+                )
+        for command in commands:
+            await self.coordinator.send_command(command, refresh=False)
+        await self.coordinator.async_refresh()
+
+    def _percentage_to_fan_speed(self, percentage: int) -> int:
+        """Convert percentage to fan speed within the supported range. Clamps to the minimum supported speed."""
+        fan_speed = round(
+            percentage_to_ranged_value(
+                percentage=percentage, low_high_range=self._speed_range
+            )
+        )
+        return max(fan_speed, self._speed_range[0])

@@ -21,6 +21,7 @@ from homeassistant.components.hyperion.const import (
     HYPERION_MODEL_NAME,
     TYPE_HYPERION_CAMERA,
 )
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -31,6 +32,7 @@ from . import (
     TEST_INSTANCE_1,
     TEST_SYSINFO_ID,
     async_call_registered_callback,
+    call_registered_callback,
     create_mock_client,
     register_test_entity,
     setup_test_config_entry,
@@ -209,3 +211,23 @@ async def test_device_info(
         for entry in er.async_entries_for_device(entity_registry, device.id)
     ]
     assert TEST_CAMERA_ENTITY_ID in entities_from_device
+
+
+async def test_camera_availability_follows_connection(hass: HomeAssistant) -> None:
+    """Test the camera becomes unavailable when the connection is lost."""
+    client = create_mock_client()
+    await setup_test_config_entry(hass, hyperion_client=client)
+
+    client.has_loaded_state = False
+    call_registered_callback(client, "client-update", {"loaded-state": False})
+
+    entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
+
+    client.has_loaded_state = True
+    call_registered_callback(client, "client-update", {"loaded-state": True})
+
+    entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
+    assert entity_state
+    assert entity_state.state == "idle"
