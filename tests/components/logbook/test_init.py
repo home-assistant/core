@@ -11,6 +11,7 @@ import probatio
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
+    MockUser,
     async_capture_events,
     mock_platform,
 )
@@ -3396,3 +3397,25 @@ async def test_parent_user_attribution_does_not_use_origin_event_fallback(
     # The parent context is unknown — no user should be attributed.
     # If get_context's origin_event fallback is used, wrong_user_id leaks in.
     assert "context_user_id" not in heater_entries[0]
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_logbook_view_rejects_non_admin_users(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test logbook API rejects all non-admin users."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy(
+        {"entities": {"entity_ids": {"light.kitchen": True}}}
+    )
+    await async_setup_component(hass, DOMAIN, {})
+
+    client = await hass_client(hass_read_only_access_token)
+
+    response = await client.get(f"/api/logbook/{dt_util.utcnow().isoformat()}")
+
+    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert await response.text() == "401: Unauthorized"

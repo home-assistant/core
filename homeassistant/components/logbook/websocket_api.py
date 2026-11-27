@@ -244,6 +244,7 @@ async def _async_events_consumer(
             )
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "logbook/event_stream",
@@ -450,6 +451,7 @@ def _ws_formatted_get_events(
     )
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "logbook/get_events",

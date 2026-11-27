@@ -14,6 +14,7 @@ from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistant
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, valid_entity_id
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA
 from homeassistant.helpers.recorder import session_scope
@@ -64,6 +65,8 @@ class HistoryPeriodView(HomeAssistantView):
         self, request: web.Request, datetime: str | None = None
     ) -> web.Response:
         """Return history over a period of time."""
+        if not request[KEY_HASS_USER].is_admin:
+            raise Unauthorized
         datetime_ = None
         query = request.query
 

@@ -4117,3 +4117,24 @@ async def test_get_action_calls_requires_admin(
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "unauthorized"
+
+
+@pytest.mark.parametrize("command_type", ["logbook/get_events", "logbook/event_stream"])
+async def test_websocket_requires_admin(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+    command_type: str,
+) -> None:
+    """Test logbook websocket commands reject non-admin users."""
+    assert await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+    await client.send_json_auto_id(
+        {"type": command_type, "start_time": dt_util.utcnow().isoformat()}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
