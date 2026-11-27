@@ -8,7 +8,7 @@
     }
   ],
   "categories": ["health_wellbeing"],
-  "codeowners": ["@bzumik1"],
+  "codeowners": ["@bzumik1", "@UrbanTechIO"],
   "config_flow": true,
   "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
