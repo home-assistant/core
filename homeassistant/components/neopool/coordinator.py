@@ -12,6 +12,7 @@ from neopool_modbus.exceptions import NeoPoolError
 from neopool_modbus.registers import (
     MAX_RELAY_GPIO,
     TIMER_BLOCKS,
+    aux_relay_available,
     find_corrupted_gpio_registers,
     is_valid_relay_gpio,
 )
@@ -185,6 +186,12 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 data.get("MBF_PAR_LIGHTING_GPIO", 0) or 0
             ):
                 continue
+            # AUX relay occupied: the time entities gate the same check, so
+            # the timer block would have no consumer.
+            if key.startswith("relay_aux"):
+                aux_number = int(key.removeprefix("relay_aux").rstrip("b"))
+                if not aux_relay_available(aux_number, data):
+                    continue
             enabled.append(key)
         enabled += [ft for ft in _FILT_TIMERS if ft in active]
         return enabled

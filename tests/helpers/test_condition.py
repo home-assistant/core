@@ -40,12 +40,9 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.const import (
-    ATTR_AREA_ID,
-    ATTR_LABEL_ID,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
-    CONF_ENTITY_ID,
     CONF_EXCLUDE,
     CONF_FOR,
     CONF_OPTIONS,
@@ -2422,6 +2419,10 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
                             "entity_id": "sensor.temperature_4",
                             "below": 110,
                         },
+                        {
+                            "condition": "test.modern",
+                            "options": {"entity_id": "sensor.options_not"},
+                        },
                     ],
                 },
                 {
@@ -2477,6 +2478,18 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
                     "condition": "time",
                     "after": "08:00:00",
                 },
+                {
+                    "condition": "test.modern",
+                    "options": {"entity_id": ["sensor.options_1", "sensor.options_2"]},
+                },
+                {
+                    "condition": "test.modern",
+                    "options": {"entity_id": "sensor.options_single"},
+                },
+                {
+                    "condition": "test.modern",
+                    "options": {},
+                },
                 Template("{{ is_state('light.example', 'on') }}", hass),
             ],
         }
@@ -2486,6 +2499,10 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
         "input_datetime.start",
         "person.paulus",
         "sensor.end",
+        "sensor.options_1",
+        "sensor.options_2",
+        "sensor.options_not",
+        "sensor.options_single",
         "sensor.temperature",
         "sensor.temperature_2",
         "sensor.temperature_3",
@@ -2536,6 +2553,10 @@ async def test_extract_devices(hass: HomeAssistant) -> None:
                     "state": "100",
                 },
                 {
+                    "condition": "test.modern",
+                    "options": {"device_id": ["abcd_options", "qwer_options"]},
+                },
+                {
                     "condition": "not",
                     "conditions": [
                         {
@@ -2547,6 +2568,10 @@ async def test_extract_devices(hass: HomeAssistant) -> None:
                             "condition": "device",
                             "device_id": "qwer_not",
                             "domain": "switch",
+                        },
+                        {
+                            "condition": "test.modern",
+                            "options": {"device_id": "abcd_not_options"},
                         },
                     ],
                 },
@@ -2568,7 +2593,17 @@ async def test_extract_devices(hass: HomeAssistant) -> None:
                 Template("{{ is_state('light.example', 'on') }}", hass),
             ],
         }
-    ) == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
+    ) == {
+        "abcd",
+        "qwer",
+        "abcd_not",
+        "qwer_not",
+        "abcd_or",
+        "qwer_or",
+        "abcd_options",
+        "qwer_options",
+        "abcd_not_options",
+    }
 
 
 async def test_condition_template_error(hass: HomeAssistant) -> None:
@@ -3732,7 +3767,7 @@ async def test_numerical_condition_thresholds(
     test = await _setup_numerical_condition(
         hass,
         condition_options=condition_options,
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
     )
 
     hass.states.async_set("test.entity_1", state_value)
@@ -3750,7 +3785,7 @@ async def test_numerical_condition_invalid_state(
     test = await _setup_numerical_condition(
         hass,
         condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
     )
 
     hass.states.async_set("test.entity_1", state_value)
@@ -3765,7 +3800,7 @@ async def test_numerical_condition_attribute_value_source(
         hass,
         domain_specs={"test": DomainSpec(value_source="brightness")},
         condition_options={"threshold": {"type": "above", "value": {"number": 100}}},
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
     )
 
     # Attribute above threshold -> True
@@ -3794,7 +3829,7 @@ async def test_numerical_condition_attribute_value_source_skips_unit_check(
         hass,
         domain_specs={"test": DomainSpec(value_source="humidity")},
         condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         valid_unit="%",
     )
 
@@ -3833,7 +3868,7 @@ async def test_numerical_condition_valid_unit(
     test = await _setup_numerical_condition(
         hass,
         condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         valid_unit=valid_unit,
     )
 
@@ -3863,7 +3898,7 @@ async def test_numerical_condition_behavior(
             "threshold": {"type": "above", "value": {"number": 50}},
             ATTR_BEHAVIOR: behavior,
         },
-        target_config={CONF_ENTITY_ID: ["test.entity_1", "test.entity_2"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1", "test.entity_2"]},
     )
 
     # Both above -> True for any and all
@@ -4507,7 +4542,7 @@ async def _setup_state_condition(
 async def test_state_condition_single_entity(hass: HomeAssistant) -> None:
     """Test state condition with a single entity."""
     test = await _setup_state_condition(
-        hass, target_config={CONF_ENTITY_ID: ["test.entity_1"]}, states=STATE_ON
+        hass, target_config={TargetKey.ENTITY_ID: ["test.entity_1"]}, states=STATE_ON
     )
 
     hass.states.async_set("test.entity_1", STATE_ON)
@@ -4520,7 +4555,9 @@ async def test_state_condition_single_entity(hass: HomeAssistant) -> None:
 async def test_state_condition_multiple_target_states(hass: HomeAssistant) -> None:
     """Test state condition matching any of multiple target states."""
     test = await _setup_state_condition(
-        hass, target_config={CONF_ENTITY_ID: ["test.entity_1"]}, states={"on", "heat"}
+        hass,
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
+        states={"on", "heat"},
     )
 
     hass.states.async_set("test.entity_1", "on")
@@ -4550,7 +4587,7 @@ async def test_state_condition_unavailable_unknown(
     """
     # Single entity: unavailable/unknown → False
     test_single = await _setup_state_condition(
-        hass, target_config={CONF_ENTITY_ID: ["test.entity_1"]}, states=STATE_ON
+        hass, target_config={TargetKey.ENTITY_ID: ["test.entity_1"]}, states=STATE_ON
     )
     hass.states.async_set("test.entity_1", state_value)
     assert test_single.async_check() is False
@@ -4560,7 +4597,7 @@ async def test_state_condition_unavailable_unknown(
     test_any = await _setup_state_condition(
         hass,
         target_config={
-            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+            TargetKey.ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
         },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ANY},
@@ -4580,7 +4617,7 @@ async def test_state_condition_unavailable_unknown(
     test_all = await _setup_state_condition(
         hass,
         target_config={
-            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+            TargetKey.ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
         },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},
@@ -4599,7 +4636,7 @@ async def test_state_condition_unavailable_unknown(
 async def test_state_condition_entity_not_found(hass: HomeAssistant) -> None:
     """Test state condition when entity does not exist."""
     test = await _setup_state_condition(
-        hass, target_config={CONF_ENTITY_ID: ["test.nonexistent"]}, states=STATE_ON
+        hass, target_config={TargetKey.ENTITY_ID: ["test.nonexistent"]}, states=STATE_ON
     )
 
     # Entity doesn't exist — condition should be false
@@ -4610,7 +4647,7 @@ async def test_state_condition_attribute_value_source(hass: HomeAssistant) -> No
     """Test state condition reads from attribute when value_source is set."""
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         states="heat",
         domain_specs={"test": DomainSpec(value_source="hvac_action")},
     )
@@ -4636,7 +4673,7 @@ async def test_state_condition_behavior(
     """Test state condition with behavior any/all."""
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1", "test.entity_2"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1", "test.entity_2"]},
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: behavior},
     )
@@ -4661,7 +4698,7 @@ async def test_state_condition_duration_not_met(
     """Test state condition with duration: entity hasn't been in state long enough."""
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
     )
@@ -4683,7 +4720,7 @@ async def test_state_condition_duration_met(
     """Test state condition with duration: entity has been in state long enough."""
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
     )
@@ -4707,7 +4744,7 @@ async def test_state_condition_duration_zero_behaves_like_no_duration(
     """
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 0}},
     )
@@ -4725,7 +4762,7 @@ async def test_state_condition_duration_wrong_state(
     """Test state condition with duration: entity in wrong state even after duration."""
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
     )
@@ -4743,7 +4780,7 @@ async def test_state_condition_duration_reset_on_state_change(
     """Test state condition with duration: timer resets when state changes."""
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
     )
@@ -4780,7 +4817,7 @@ async def test_state_condition_duration_behavior(
     """Test state condition with duration and behavior any/all."""
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1", "test.entity_2"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1", "test.entity_2"]},
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: behavior, CONF_FOR: {"seconds": 10}},
     )
@@ -4823,7 +4860,7 @@ async def test_state_condition_duration_unavailable_unknown(
     test_any = await _setup_state_condition(
         hass,
         target_config={
-            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+            TargetKey.ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
         },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ANY, CONF_FOR: {"seconds": 10}},
@@ -4841,7 +4878,7 @@ async def test_state_condition_duration_unavailable_unknown(
     test_all = await _setup_state_condition(
         hass,
         target_config={
-            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+            TargetKey.ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
         },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL, CONF_FOR: {"seconds": 10}},
@@ -6666,7 +6703,7 @@ async def test_state_condition_multi_state_duration_uses_history(
         test = await _setup_state_condition(
             hass,
             states={STATE_ON, STATE_OFF},
-            target_config={CONF_ENTITY_ID: [entity_id]},
+            target_config={TargetKey.ENTITY_ID: [entity_id]},
             condition_options={CONF_FOR: {"seconds": 5}},
         )
 
@@ -6695,7 +6732,7 @@ async def test_state_condition_single_state_duration_skips_history(
         test = await _setup_state_condition(
             hass,
             states=STATE_ON,
-            target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+            target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
             condition_options={CONF_FOR: {"seconds": 5}},
         )
 
@@ -6807,7 +6844,7 @@ async def test_state_condition_primary_entities_only(
 
     test = await _setup_state_condition(
         hass,
-        target_config={ATTR_AREA_ID: area_id},
+        target_config={TargetKey.AREA_ID: area_id},
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},
         primary_entities_only=primary_entities_only,
@@ -6842,7 +6879,7 @@ async def test_numerical_condition_primary_entities_only(
 
     test = await _setup_numerical_condition(
         hass,
-        target_config={ATTR_AREA_ID: area_id},
+        target_config={TargetKey.AREA_ID: area_id},
         condition_options={
             "threshold": {"type": "above", "value": {"number": 50}},
             ATTR_BEHAVIOR: BEHAVIOR_ALL,
@@ -6886,7 +6923,7 @@ async def test_state_condition_primary_entities_only_with_duration(
 
     test = await _setup_state_condition(
         hass,
-        target_config={ATTR_AREA_ID: area_id},
+        target_config={TargetKey.AREA_ID: area_id},
         states={True},
         domain_specs={"test": DomainSpec(value_source="test_attr")},
         condition_options={
@@ -6959,8 +6996,8 @@ _EXCLUDED_ENTITY_ID = "test.excluded"
 @pytest.mark.parametrize(
     "exclude",
     [
-        pytest.param({CONF_ENTITY_ID: _EXCLUDED_ENTITY_ID}, id="exclude_entity"),
-        pytest.param({ATTR_LABEL_ID: "excluded"}, id="exclude_label"),
+        pytest.param({TargetKey.ENTITY_ID: _EXCLUDED_ENTITY_ID}, id="exclude_entity"),
+        pytest.param({TargetKey.LABEL_ID: "excluded"}, id="exclude_label"),
     ],
 )
 @pytest.mark.parametrize(
@@ -6994,7 +7031,7 @@ async def test_state_condition_target_exclude(
 
     test = await _setup_state_condition(
         hass,
-        target_config={ATTR_LABEL_ID: label.label_id, CONF_EXCLUDE: exclude},
+        target_config={TargetKey.LABEL_ID: label.label_id, CONF_EXCLUDE: exclude},
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: behavior},
     )

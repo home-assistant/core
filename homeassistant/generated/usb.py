@@ -21,6 +21,7 @@ SERIAL_PORT_SELECTOR_INTEGRATIONS = [
     "samsung_exlink",
     "sofar",
     "solaredge_modbus",
+    "sony_tv_rs232",
     "tonewinner",
     "upb",
     "velbus",

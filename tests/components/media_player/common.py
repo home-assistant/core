@@ -5,44 +5,21 @@ components. Instead call the service directly.
 """
 
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_SEEK_POSITION,
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
-    SERVICE_CLEAR_PLAYLIST,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ENTITY_MATCH_ALL,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PLAY_PAUSE,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
-)
+from homeassistant.const import ENTITY_MATCH_ALL, TargetKey
 from homeassistant.core import HomeAssistant
 
 
 async def async_turn_on(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
     """Turn on specified media player or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(
+        DOMAIN, MediaPlayerService.TURN_ON, data, blocking=True
+    )
 
 
 def turn_on(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
@@ -54,8 +31,10 @@ async def async_turn_off(
     hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Turn off specified media player or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(
+        DOMAIN, MediaPlayerService.TURN_OFF, data, blocking=True
+    )
 
 
 def turn_off(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
@@ -65,8 +44,10 @@ def turn_off(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
 
 async def async_toggle(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
     """Toggle specified media player or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_TOGGLE, data, blocking=True)
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(
+        DOMAIN, MediaPlayerService.TOGGLE, data, blocking=True
+    )
 
 
 def toggle(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
@@ -78,8 +59,10 @@ async def async_volume_up(
     hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command for volume up."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_VOLUME_UP, data, blocking=True)
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(
+        DOMAIN, MediaPlayerService.VOLUME_UP, data, blocking=True
+    )
 
 
 def volume_up(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
@@ -91,8 +74,10 @@ async def async_volume_down(
     hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command for volume down."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_VOLUME_DOWN, data, blocking=True)
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(
+        DOMAIN, MediaPlayerService.VOLUME_DOWN, data, blocking=True
+    )
 
 
 def volume_down(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
@@ -104,12 +89,14 @@ async def async_mute_volume(
     hass: HomeAssistant, mute: bool, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command for muting the volume."""
-    data = {ATTR_MEDIA_VOLUME_MUTED: mute}
+    data = {MediaPlayerServiceArgument.IS_VOLUME_MUTED: mute}
 
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_VOLUME_MUTE, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, MediaPlayerService.VOLUME_MUTE, data, blocking=True
+    )
 
 
 def mute_volume(
@@ -123,12 +110,14 @@ async def async_set_volume_level(
     hass: HomeAssistant, volume: float, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command for setting the volume."""
-    data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
+    data = {MediaPlayerServiceArgument.VOLUME_LEVEL: volume}
 
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_VOLUME_SET, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, MediaPlayerService.VOLUME_SET, data, blocking=True
+    )
 
 
 def set_volume_level(
@@ -142,9 +131,9 @@ async def async_media_play_pause(
     hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command for play/pause."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else {}
     await hass.services.async_call(
-        DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data, blocking=True
+        DOMAIN, MediaPlayerService.MEDIA_PLAY_PAUSE, data, blocking=True
     )
 
 
@@ -157,8 +146,10 @@ async def async_media_play(
     hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command for play/pause."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_MEDIA_PLAY, data, blocking=True)
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(
+        DOMAIN, MediaPlayerService.MEDIA_PLAY, data, blocking=True
+    )
 
 
 def media_play(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
@@ -170,8 +161,10 @@ async def async_media_pause(
     hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command for pause."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_MEDIA_PAUSE, data, blocking=True)
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(
+        DOMAIN, MediaPlayerService.MEDIA_PAUSE, data, blocking=True
+    )
 
 
 def media_pause(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
@@ -183,8 +176,10 @@ async def async_media_stop(
     hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command for stop."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_MEDIA_STOP, data, blocking=True)
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(
+        DOMAIN, MediaPlayerService.MEDIA_STOP, data, blocking=True
+    )
 
 
 def media_stop(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
@@ -196,9 +191,9 @@ async def async_media_next_track(
     hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command for next track."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else {}
     await hass.services.async_call(
-        DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data, blocking=True
+        DOMAIN, MediaPlayerService.MEDIA_NEXT_TRACK, data, blocking=True
     )
 
 
@@ -211,9 +206,9 @@ async def async_media_previous_track(
     hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command for prev track."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else {}
     await hass.services.async_call(
-        DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data, blocking=True
+        DOMAIN, MediaPlayerService.MEDIA_PREVIOUS_TRACK, data, blocking=True
     )
 
 
@@ -228,9 +223,11 @@ async def async_media_seek(
     hass: HomeAssistant, position: float, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command to seek in current playing media."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    data[ATTR_MEDIA_SEEK_POSITION] = position
-    await hass.services.async_call(DOMAIN, SERVICE_MEDIA_SEEK, data, blocking=True)
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else {}
+    data[MediaPlayerServiceArgument.SEEK_POSITION] = position
+    await hass.services.async_call(
+        DOMAIN, MediaPlayerService.MEDIA_SEEK, data, blocking=True
+    )
 
 
 def media_seek(
@@ -248,15 +245,20 @@ async def async_play_media(
     enqueue: MediaPlayerEnqueue | bool | None = None,
 ) -> None:
     """Send the media player the command for playing media."""
-    data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
+    data = {
+        MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
+        MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_id,
+    }
 
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
     if enqueue:
-        data[ATTR_MEDIA_ENQUEUE] = enqueue
+        data[MediaPlayerServiceArgument.ENQUEUE] = enqueue
 
-    await hass.services.async_call(DOMAIN, SERVICE_PLAY_MEDIA, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, MediaPlayerService.PLAY_MEDIA, data, blocking=True
+    )
 
 
 def play_media(
@@ -274,12 +276,14 @@ async def async_select_source(
     hass: HomeAssistant, source: str, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command to select input source."""
-    data = {ATTR_INPUT_SOURCE: source}
+    data = {MediaPlayerServiceArgument.SOURCE: source}
 
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_SELECT_SOURCE, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, MediaPlayerService.SELECT_SOURCE, data, blocking=True
+    )
 
 
 def select_source(
@@ -293,8 +297,10 @@ async def async_clear_playlist(
     hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command for clear playlist."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data, blocking=True)
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(
+        DOMAIN, MediaPlayerService.CLEAR_PLAYLIST, data, blocking=True
+    )
 
 
 def clear_playlist(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:

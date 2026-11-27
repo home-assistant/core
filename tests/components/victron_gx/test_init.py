@@ -11,7 +11,7 @@ from victron_mqtt import (
     Hub as VictronVenusHub,
     MetricKind,
 )
-from victron_mqtt.testing import finalize_injection, inject_message
+from victron_mqtt.testing import create_mocked_hub, finalize_injection, inject_message
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
@@ -208,6 +208,47 @@ async def test_load_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_discovery_during_disconnect_does_not_survive_reload(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
+    """Test late discovery cannot attach entities to an unloaded platform."""
+    victron_hub, config_entry = init_integration
+    topic = f"N/{MOCK_INSTALLATION_ID}/battery/0/Dc/0/Current"
+    entity_id = "sensor.battery_dc_bus_current"
+    hub_disconnect = victron_hub.disconnect
+
+    async def disconnect() -> None:
+        await inject_message(victron_hub, topic, '{"value": 10.5}')
+        await finalize_injection(victron_hub, disconnect=False)
+        await hass.async_block_till_done()
+        await hub_disconnect()
+
+    with patch.object(victron_hub, "disconnect", side_effect=disconnect):
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
+
+    new_hub = await create_mocked_hub()
+    with patch(
+        "homeassistant.components.victron_gx.hub.VictronVenusHub",
+        return_value=new_hub,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await inject_message(new_hub, topic, '{"value": 11.2}')
+    await finalize_injection(new_hub, disconnect=False)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "11.2"
+
+    await inject_message(new_hub, topic, '{"value": 12.3}')
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "12.3"
+
+
 @pytest.mark.usefixtures("mock_victron_hub_library")
 async def test_unload_entry_does_not_cleanup_on_platform_unload_failure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
@@ -219,7 +260,10 @@ async def test_unload_entry_does_not_cleanup_on_platform_unload_failure(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_config_entry.runtime_data.new_metric_callbacks[MetricKind.SENSOR] = MagicMock()
+    discovery_callback = MagicMock()
+    mock_config_entry.runtime_data.new_metric_callbacks[MetricKind.SENSOR] = (
+        discovery_callback
+    )
     hub_disconnect = mock_config_entry.runtime_data._hub.disconnect
 
     with patch(
@@ -231,6 +275,10 @@ async def test_unload_entry_does_not_cleanup_on_platform_unload_failure(
 
     assert mock_config_entry.state is ConfigEntryState.FAILED_UNLOAD
     hub_disconnect.assert_not_awaited()
+    assert (
+        mock_config_entry.runtime_data.new_metric_callbacks[MetricKind.SENSOR]
+        is discovery_callback
+    )
 
 
 @pytest.mark.usefixtures("mock_victron_hub_library")

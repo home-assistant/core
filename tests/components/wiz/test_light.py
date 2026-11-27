@@ -26,6 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
     TargetKey,
 )
 from homeassistant.core import HomeAssistant
@@ -304,9 +305,19 @@ async def test_light_without_any_color_state(hass: HomeAssistant) -> None:
     # A bulb can report being on without any of the values the color mode is
     # otherwise picked from, and there is no color mode to fall back on for a
     # bulb that supports more than one.
-    bulb.state = PilotParser({"mac": FAKE_MAC, "state": True, "dimming": 100})
+    bulb.state = [PilotParser({"mac": FAKE_MAC, "state": True, "dimming": 100})]
     await async_setup_integration(hass, wizlight=bulb, bulb_type=FAKE_RGBWW_BULB)
 
     state = hass.states.get("light.mock_title")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.UNKNOWN
+
+
+async def test_light_without_state(hass: HomeAssistant) -> None:
+    """Test a light that has not reported its state yet."""
+    bulb = _mocked_wizlight(None, None, FAKE_RGBWW_BULB)
+    bulb.state = []
+    bulb.status = None
+    await async_setup_integration(hass, wizlight=bulb, bulb_type=FAKE_RGBWW_BULB)
+
+    assert hass.states.get("light.mock_title").state == STATE_UNKNOWN

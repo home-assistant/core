@@ -368,19 +368,35 @@ async def test_fixtures_valid(hass: HomeAssistant) -> None:
                     )
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(
+            requests.exceptions.ConnectionError("Failed to resolve 'apigw.tuyaeu.com'"),
+            id="connection_error",
+        ),
+        pytest.param(
+            requests.exceptions.ReadTimeout(
+                "HTTPSConnectionPool(host='apigw.tuyaeu.com', port=443):"
+                " Read timed out. (read timeout=60)"
+            ),
+            id="read_timeout",
+        ),
+    ],
+)
 async def test_network_error_retries_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    exception: requests.RequestException,
 ) -> None:
     """Test a network error during setup results in a setup retry."""
     manager = create_manager()
-    manager.update_device_cache.side_effect = requests.exceptions.ConnectionError(
-        "Failed to resolve 'apigw.tuyaeu.com'"
-    )
+    manager.update_device_cache.side_effect = exception
 
     await initialize_entry(hass, manager, mock_config_entry, [])
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
 
 
 async def test_mq_stopped_on_home_assistant_stop(

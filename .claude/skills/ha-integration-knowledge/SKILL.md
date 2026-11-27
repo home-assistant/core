@@ -18,6 +18,7 @@ description: Everything you need to know to build, test and review Home Assistan
 - Integrations should not implement fixes or workarounds for limitations in libraries. Instead, the library should be updated to fix the issue.
 - Do not add entities for data that Home Assistant intentionally only exposes through an action, for example weather forecasts (`weather.get_forecasts`).
 - In config flows, map known failures to the matching standard error (for example `invalid_auth`, `cannot_connect`) without logging them. If unexpected exceptions are caught, log them with `_LOGGER.exception()` and map them to `unknown`. Do not mix translated and untranslated text in an error shown to the user.
+- Options flows read their config entry from the inherited `config_entry` property. `async_get_options_flow(config_entry)` receives the entry, but returns the handler without passing it on, as in the [options flow docs](https://developers.home-assistant.io/docs/config_entries_options_flow_handler/). Do not suggest assigning `self.config_entry` (the setter was removed in 2025.12) or using `OptionsFlowWithConfigEntry` in core. To type `runtime_data`, declare `config_entry: <Domain>ConfigEntry` on the options flow class.
 - Bump dependencies in a standalone PR that contains only the compatibility adjustments the bump requires. Features that need the new version go in a follow-up PR.
 
 The following platforms have extra guidelines:
@@ -54,6 +55,7 @@ Template scale file: `./script/scaffold/templates/integration/integration/qualit
    - `done`: Rule implemented
    - `exempt`: Rule doesn't apply (with reason in comment)
    - `todo`: Rule needs implementation
+5. **Rule comments**: A comment describes what is missing or why the rule is exempt, never a pull request. Hassfest rejects pull request references like URLs, `owner/repo#123` or `PR #123`. When work is split into a follow-up pull request, keep the rule `todo` with a description of the gap; the follow-up sets it to `done` and removes the comment. Also flag vaguer variants that hassfest cannot catch, like "PR already raised to fix this".
 
 
 ## Testing Requirements

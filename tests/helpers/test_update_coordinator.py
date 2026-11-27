@@ -902,6 +902,69 @@ async def test_async_config_entry_first_refresh_not_ready(
             None,
             id="plain_exception_no_translation_attrs",
         ),
+        pytest.param(
+            update_coordinator.UpdateFailed("boom"),
+            None,
+            None,
+            None,
+            id="update_failed_without_translation_attrs",
+        ),
+        pytest.param(
+            TimeoutError(),
+            "homeassistant",
+            "update_failed_timeout",
+            None,
+            id="timeout",
+        ),
+        pytest.param(
+            requests.exceptions.Timeout(),
+            "homeassistant",
+            "update_failed_timeout",
+            None,
+            id="requests_timeout",
+        ),
+        pytest.param(
+            urllib.error.URLError("timed out"),
+            "homeassistant",
+            "update_failed_timeout",
+            None,
+            id="urllib_timeout",
+        ),
+        pytest.param(
+            urllib.error.URLError(TimeoutError("timed out")),
+            "homeassistant",
+            "update_failed_timeout",
+            None,
+            id="urllib_wrapped_timeout",
+        ),
+        pytest.param(
+            aiohttp.ServerTimeoutError(),
+            "homeassistant",
+            "update_failed_timeout",
+            None,
+            id="aiohttp_timeout",
+        ),
+        pytest.param(
+            aiohttp.ClientError(),
+            "homeassistant",
+            "update_failed",
+            None,
+            id="aiohttp_client_error",
+        ),
+        pytest.param(
+            requests.exceptions.RequestException(),
+            "homeassistant",
+            "update_failed",
+            None,
+            id="requests_error",
+        ),
+        pytest.param(
+            urllib.error.URLError("something"),
+            "homeassistant",
+            "update_failed",
+            None,
+            id="urllib_error",
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -916,7 +979,10 @@ async def test_async_config_entry_first_refresh_translation_key_propagation(
     expected_translation_placeholders: dict[str, str] | None,
     method: str,
 ) -> None:
-    """Test that translation attributes from the cause are propagated to ConfigEntryNotReady."""
+    """Test the translation attributes of the ConfigEntryNotReady raised on failure.
+
+    They come from the cause, or from core for errors the coordinator handles.
+    """
     entry = MockConfigEntry()
     entry._async_set_state(
         hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None

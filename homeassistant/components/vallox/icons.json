@@ -26,6 +26,17 @@
         }
       }
     },
+    "number": {
+      "fan_speed_away": {
+        "default": "mdi:fan"
+      },
+      "fan_speed_boost": {
+        "default": "mdi:fan"
+      },
+      "fan_speed_home": {
+        "default": "mdi:fan"
+      }
+    },
     "sensor": {
       "cell_state": {
         "default": "mdi:swap-horizontal-bold"

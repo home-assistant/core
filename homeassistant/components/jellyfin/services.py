@@ -6,7 +6,6 @@ from typing import Any
 import probatio
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_ID,
     DOMAIN as MP_DOMAIN,
     MediaPlayerEntityFeature,
 )
@@ -47,9 +46,9 @@ def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
             )
         media_data = data[JellyfinServiceArgument.MEDIA]
 
-        if ATTR_MEDIA_CONTENT_ID in media_data:
+        if JellyfinServiceArgument.MEDIA_CONTENT_ID in media_data:
             data[JellyfinServiceArgument.MEDIA_CONTENT_ID] = media_data[
-                ATTR_MEDIA_CONTENT_ID
+                JellyfinServiceArgument.MEDIA_CONTENT_ID
             ]
 
         del data[JellyfinServiceArgument.MEDIA]

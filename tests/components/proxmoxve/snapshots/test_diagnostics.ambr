@@ -133,11 +133,6 @@
             'used_fraction': 0.73,
           }),
         }),
-        'version': dict({
-          'release': '9.1',
-          'repoid': 'abcdefghijklmnop',
-          'version': '9.1.6',
-        }),
         'vms': dict({
           '100': dict({
             'cpu': 0.15,
@@ -173,6 +168,16 @@
             'uptime': 86400,
             'vmid': 101,
           }),
+        }),
+      }),
+    }),
+    'software': dict({
+      'pve1': dict({
+        'pending_updates': 5,
+        'version': dict({
+          'release': '9.1',
+          'repoid': 'abcdefghijklmnop',
+          'version': '9.1.6',
         }),
       }),
     }),

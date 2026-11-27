@@ -21,6 +21,8 @@ SIGNIFICANT_ATTRIBUTES: set[MediaPlayerEntityStateAttribute] = {
     *PROP_TO_ATTR.values(),
 } - INSIGNIFICANT_ATTRIBUTES
 
+_MISSING = object()
+
 
 @callback
 def async_check_significant_change(
@@ -35,13 +37,12 @@ def async_check_significant_change(
     if old_state != new_state:
         return True
 
-    old_attrs_s = set(
-        {k: v for k, v in old_attrs.items() if k in SIGNIFICANT_ATTRIBUTES}.items()
-    )
-    new_attrs_s = set(
-        {k: v for k, v in new_attrs.items() if k in SIGNIFICANT_ATTRIBUTES}.items()
-    )
-    changed_attrs: set[str] = {item[0] for item in old_attrs_s ^ new_attrs_s}
+    # Compare by equality, as values can be unhashable (a dict media_content_id)
+    changed_attrs: set[str] = {
+        attr_name
+        for attr_name in (old_attrs.keys() | new_attrs.keys()) & SIGNIFICANT_ATTRIBUTES
+        if old_attrs.get(attr_name, _MISSING) != new_attrs.get(attr_name, _MISSING)
+    }
 
     for attr_name in changed_attrs:
         if attr_name != MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL:

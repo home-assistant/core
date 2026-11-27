@@ -1,7 +1,10 @@
 """Support for Vallox ventilation unit switches."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
+
+from vallox_websocket_api import MetricData, Vallox
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import CONF_NAME, EntityCategory
@@ -35,26 +38,21 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
     @override
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
-        if (
-            value := self.coordinator.data.get(self.entity_description.metric_key)
-        ) is None:
-            return None
-        return value == 1
+        return self.entity_description.is_on_fn(self.coordinator.data)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
-        await self._set_value(True)
+        await self._async_set(True)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
-        await self._set_value(False)
+        await self._async_set(False)
 
-    async def _set_value(self, value: bool) -> None:
+    async def _async_set(self, on: bool) -> None:
         """Update the current value."""
-        metric_key = self.entity_description.metric_key
-        await self.coordinator.client.set_values({metric_key: 1 if value else 0})
+        await self.entity_description.set_fn(self.coordinator.client, on)
         await self.coordinator.async_request_refresh()
 
 
@@ -62,14 +60,16 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
 class ValloxSwitchEntityDescription(SwitchEntityDescription):
     """Describes Vallox switch entity."""
 
-    metric_key: str
+    is_on_fn: Callable[[MetricData], bool | None]
+    set_fn: Callable[[Vallox, bool], Awaitable[None]]
 
 
 SWITCH_ENTITIES: tuple[ValloxSwitchEntityDescription, ...] = (
     ValloxSwitchEntityDescription(
         key="bypass_locked",
         translation_key="bypass_locked",
-        metric_key="A_CYC_BYPASS_LOCKED",
+        is_on_fn=lambda data: data.is_bypass_locked,
+        set_fn=lambda client, on: client.set_bypass_locked(on),
     ),
 )
 

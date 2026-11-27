@@ -11,9 +11,8 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_REFRESH_TOKEN
+from .const import BRUSSELS_TIME_ZONE, CONF_REFRESH_TOKEN
 from .coordinator import (
-    BRUSSELS_TIME_ZONE,
     EngieBeEpexCoordinator,
     EngieBePeaksCoordinator,
     EngieBePricesData,

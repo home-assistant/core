@@ -138,6 +138,6 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_DATA_SCHEMA,
-            description_placeholders={CONF_EMAIL: email},
+            description_placeholders={"email": email},
             errors=errors,
         )

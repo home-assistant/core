@@ -36,13 +36,17 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
-from homeassistant.components.tts import DOMAIN, TextToSpeechCommonOption
+from homeassistant.components.tts import (
+    DOMAIN,
+    TextToSpeechCommonOption,
+    TextToSpeechService,
+)
 from homeassistant.components.tts.const import (
     DEFAULT_TIME_MEMORY,
     TextToSpeechServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, TargetKey
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -96,9 +100,9 @@ async def test_config_entry_unload(
         tts.DOMAIN,
         "speak",
         {
-            ATTR_ENTITY_ID: entity_id,
-            tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-            tts.ATTR_MESSAGE: "There is someone at the door.",
+            TargetKey.ENTITY_ID: entity_id,
+            TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+            TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
         },
         blocking=True,
     )
@@ -150,8 +154,8 @@ async def test_setup_component_no_access_cache_folder(
             "mock_setup",
             "test_say",
             {
-                ATTR_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
+                CommonServiceArgument.ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
             },
             "test",
         ),
@@ -159,9 +163,9 @@ async def test_setup_component_no_access_cache_folder(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.test",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
+                TargetKey.ENTITY_ID: "tts.test",
+                TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
             },
             "tts.test",
         ),
@@ -216,8 +220,8 @@ async def test_service(
             "mock_setup",
             "test_say",
             {
-                ATTR_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
+                CommonServiceArgument.ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
             },
             "test",
         ),
@@ -225,9 +229,9 @@ async def test_service(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.test",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
+                TargetKey.ENTITY_ID: "tts.test",
+                TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
             },
             "tts.test",
         ),
@@ -280,8 +284,8 @@ async def test_service_default_language(
             "mock_setup",
             "test_say",
             {
-                ATTR_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
+                CommonServiceArgument.ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
             },
             "test",
         ),
@@ -289,9 +293,9 @@ async def test_service_default_language(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.test",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
+                TargetKey.ENTITY_ID: "tts.test",
+                TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
             },
             "tts.test",
         ),
@@ -341,9 +345,9 @@ async def test_service_default_special_language(
             "mock_setup",
             "test_say",
             {
-                ATTR_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de_DE",
+                CommonServiceArgument.ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
+                TextToSpeechServiceArgument.LANGUAGE: "de_DE",
             },
             "test",
         ),
@@ -351,10 +355,10 @@ async def test_service_default_special_language(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.test",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de_DE",
+                TargetKey.ENTITY_ID: "tts.test",
+                TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
+                TextToSpeechServiceArgument.LANGUAGE: "de_DE",
             },
             "tts.test",
         ),
@@ -404,9 +408,9 @@ async def test_service_language(
             "mock_setup",
             "test_say",
             {
-                ATTR_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "lang",
+                CommonServiceArgument.ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
+                TextToSpeechServiceArgument.LANGUAGE: "lang",
             },
             "test",
         ),
@@ -414,10 +418,10 @@ async def test_service_language(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.test",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "lang",
+                TargetKey.ENTITY_ID: "tts.test",
+                TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
+                TextToSpeechServiceArgument.LANGUAGE: "lang",
             },
             "tts.test",
         ),
@@ -456,10 +460,10 @@ async def test_service_wrong_language(
             "mock_setup",
             "test_say",
             {
-                ATTR_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de_DE",
-                tts.ATTR_OPTIONS: {"voice": "alex", "age": 5},
+                CommonServiceArgument.ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
+                TextToSpeechServiceArgument.LANGUAGE: "de_DE",
+                TextToSpeechServiceArgument.OPTIONS: {"voice": "alex", "age": 5},
             },
             "test",
         ),
@@ -467,11 +471,11 @@ async def test_service_wrong_language(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.test",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de_DE",
-                tts.ATTR_OPTIONS: {"voice": "alex", "age": 5},
+                TargetKey.ENTITY_ID: "tts.test",
+                TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
+                TextToSpeechServiceArgument.LANGUAGE: "de_DE",
+                TextToSpeechServiceArgument.OPTIONS: {"voice": "alex", "age": 5},
             },
             "tts.test",
         ),
@@ -542,9 +546,9 @@ class MockEntityWithDefaults(MockTTSEntity):
             "mock_setup",
             "test_say",
             {
-                ATTR_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de_DE",
+                CommonServiceArgument.ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
+                TextToSpeechServiceArgument.LANGUAGE: "de_DE",
             },
             "test",
         ),
@@ -552,10 +556,10 @@ class MockEntityWithDefaults(MockTTSEntity):
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.test",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de_DE",
+                TargetKey.ENTITY_ID: "tts.test",
+                TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
+                TextToSpeechServiceArgument.LANGUAGE: "de_DE",
             },
             "tts.test",
         ),
@@ -611,10 +615,10 @@ async def test_service_default_options(
             "mock_setup",
             "test_say",
             {
-                ATTR_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de_DE",
-                tts.ATTR_OPTIONS: {"age": 5},
+                CommonServiceArgument.ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
+                TextToSpeechServiceArgument.LANGUAGE: "de_DE",
+                TextToSpeechServiceArgument.OPTIONS: {"age": 5},
             },
             "test",
         ),
@@ -622,11 +626,11 @@ async def test_service_default_options(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.test",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de_DE",
-                tts.ATTR_OPTIONS: {"age": 5},
+                TargetKey.ENTITY_ID: "tts.test",
+                TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
+                TextToSpeechServiceArgument.LANGUAGE: "de_DE",
+                TextToSpeechServiceArgument.OPTIONS: {"age": 5},
             },
             "tts.test",
         ),
@@ -681,10 +685,10 @@ async def test_merge_default_service_options(
             "mock_setup",
             "test_say",
             {
-                ATTR_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de_DE",
-                tts.ATTR_OPTIONS: {"speed": 1},
+                CommonServiceArgument.ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
+                TextToSpeechServiceArgument.LANGUAGE: "de_DE",
+                TextToSpeechServiceArgument.OPTIONS: {"speed": 1},
             },
             "test",
         ),
@@ -692,11 +696,11 @@ async def test_merge_default_service_options(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.test",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de_DE",
-                tts.ATTR_OPTIONS: {"speed": 1},
+                TargetKey.ENTITY_ID: "tts.test",
+                TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
+                TextToSpeechServiceArgument.LANGUAGE: "de_DE",
+                TextToSpeechServiceArgument.OPTIONS: {"speed": 1},
             },
             "tts.test",
         ),
@@ -741,8 +745,8 @@ async def test_service_wrong_options(
             "mock_setup",
             "test_say",
             {
-                ATTR_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
+                CommonServiceArgument.ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
             },
             "test",
         ),
@@ -750,9 +754,9 @@ async def test_service_wrong_options(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.test",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
+                TargetKey.ENTITY_ID: "tts.test",
+                TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
             },
             "tts.test",
         ),
@@ -786,7 +790,7 @@ async def test_service_clear_cache(
     ).is_file()
 
     await hass.services.async_call(
-        tts.DOMAIN, tts.SERVICE_CLEAR_CACHE, {}, blocking=True
+        tts.DOMAIN, TextToSpeechService.CLEAR_CACHE, {}, blocking=True
     )
 
     assert not (
@@ -820,9 +824,9 @@ async def _async_speak_from_cache(
         tts.DOMAIN,
         "speak",
         {
-            ATTR_ENTITY_ID: "tts.test",
-            tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-            tts.ATTR_MESSAGE: "There is someone at the door.",
+            TargetKey.ENTITY_ID: "tts.test",
+            TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+            TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
         },
         blocking=True,
     )
@@ -846,7 +850,7 @@ async def test_service_clear_cache_days(
 
     await hass.services.async_call(
         tts.DOMAIN,
-        tts.SERVICE_CLEAR_CACHE,
+        TextToSpeechService.CLEAR_CACHE,
         {TextToSpeechServiceArgument.DAYS: 30},
         blocking=True,
     )
@@ -872,7 +876,7 @@ async def test_service_clear_cache_days_missing_file(
 
     await hass.services.async_call(
         tts.DOMAIN,
-        tts.SERVICE_CLEAR_CACHE,
+        TextToSpeechService.CLEAR_CACHE,
         {TextToSpeechServiceArgument.DAYS: 30},
         blocking=True,
     )
@@ -907,7 +911,7 @@ async def test_service_clear_cache_days_file_error(
     ):
         await hass.services.async_call(
             tts.DOMAIN,
-            tts.SERVICE_CLEAR_CACHE,
+            TextToSpeechService.CLEAR_CACHE,
             {TextToSpeechServiceArgument.DAYS: 30},
             blocking=True,
         )
@@ -918,7 +922,7 @@ async def test_service_clear_cache_days_file_error(
 
     await hass.services.async_call(
         tts.DOMAIN,
-        tts.SERVICE_CLEAR_CACHE,
+        TextToSpeechService.CLEAR_CACHE,
         {TextToSpeechServiceArgument.DAYS: 30},
         blocking=True,
     )
@@ -934,8 +938,8 @@ async def test_service_clear_cache_days_file_error(
             "mock_setup",
             "test_say",
             {
-                ATTR_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
+                CommonServiceArgument.ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
             },
             "test",
         ),
@@ -943,9 +947,9 @@ async def test_service_clear_cache_days_file_error(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.test",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
+                TargetKey.ENTITY_ID: "tts.test",
+                TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
             },
             "tts.test",
         ),
@@ -981,7 +985,7 @@ async def test_service_receive_voice(
         f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3",
         tts_data,
         "Test",
-        service_data[tts.ATTR_MESSAGE],
+        service_data[TextToSpeechServiceArgument.MESSAGE],
         "en",
         None,
     )
@@ -1005,8 +1009,8 @@ async def test_service_receive_voice(
             "mock_setup",
             "test_say",
             {
-                ATTR_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
+                CommonServiceArgument.ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
             },
             "test",
         ),
@@ -1014,9 +1018,9 @@ async def test_service_receive_voice(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.test",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
+                TargetKey.ENTITY_ID: "tts.test",
+                TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
             },
             "tts.test",
         ),
@@ -1135,9 +1139,9 @@ async def test_web_view_wrong_filename(
             "mock_setup",
             "test_say",
             {
-                ATTR_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_CACHE: False,
+                CommonServiceArgument.ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
+                TextToSpeechServiceArgument.CACHE: False,
             },
             "test",
         ),
@@ -1145,10 +1149,10 @@ async def test_web_view_wrong_filename(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.test",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_CACHE: False,
+                TargetKey.ENTITY_ID: "tts.test",
+                TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
+                TextToSpeechServiceArgument.CACHE: False,
             },
             "tts.test",
         ),
@@ -1223,8 +1227,8 @@ async def test_setup_legacy_cache_dir(
         tts.DOMAIN,
         "test_say",
         {
-            ATTR_ENTITY_ID: "media_player.something",
-            tts.ATTR_MESSAGE: "There is someone at the door.",
+            CommonServiceArgument.ENTITY_ID: "media_player.something",
+            TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
         },
         blocking=True,
     )
@@ -1261,9 +1265,9 @@ async def test_setup_cache_dir(
         tts.DOMAIN,
         "speak",
         {
-            ATTR_ENTITY_ID: "tts.test",
-            tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-            tts.ATTR_MESSAGE: "There is someone at the door.",
+            TargetKey.ENTITY_ID: "tts.test",
+            TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+            TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
         },
         blocking=True,
     )
@@ -1318,7 +1322,7 @@ async def test_service_clear_cache_days_keeps_memory_cached(
 
     await hass.services.async_call(
         tts.DOMAIN,
-        tts.SERVICE_CLEAR_CACHE,
+        TextToSpeechService.CLEAR_CACHE,
         {TextToSpeechServiceArgument.DAYS: 30},
         blocking=True,
     )
@@ -1386,7 +1390,7 @@ async def test_service_clear_cache_days_concurrent_load(
     with patch.object(hass, "async_add_executor_job", side_effect=add_job):
         await hass.services.async_call(
             tts.DOMAIN,
-            tts.SERVICE_CLEAR_CACHE,
+            TextToSpeechService.CLEAR_CACHE,
             {TextToSpeechServiceArgument.DAYS: 30},
             blocking=True,
         )
@@ -1431,7 +1435,7 @@ async def test_service_clear_cache_days_concurrent_regenerate(
     with patch.object(hass, "async_add_executor_job", side_effect=add_job):
         await hass.services.async_call(
             tts.DOMAIN,
-            tts.SERVICE_CLEAR_CACHE,
+            TextToSpeechService.CLEAR_CACHE,
             {TextToSpeechServiceArgument.DAYS: 30},
             blocking=True,
         )
@@ -1474,17 +1478,17 @@ class MockEntityEmpty(MockTTSEntity):
             "mock_setup",
             "test_say",
             {
-                ATTR_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
+                CommonServiceArgument.ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
             },
         ),
         (
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.test",
-                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
-                tts.ATTR_MESSAGE: "There is someone at the door.",
+                TargetKey.ENTITY_ID: "tts.test",
+                TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
             },
         ),
     ],

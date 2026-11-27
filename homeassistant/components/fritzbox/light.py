@@ -2,13 +2,7 @@
 
 from typing import Any, cast, override
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_HS_COLOR,
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -125,14 +119,14 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if kwargs.get(ATTR_BRIGHTNESS) is not None:
-            level = kwargs[ATTR_BRIGHTNESS]
+        if kwargs.get(LightServiceArgument.BRIGHTNESS) is not None:
+            level = kwargs[LightServiceArgument.BRIGHTNESS]
             await self.hass.async_add_executor_job(self.data.set_level, level, True)
-        if kwargs.get(ATTR_HS_COLOR) is not None:
+        if kwargs.get(LightServiceArgument.HS_COLOR) is not None:
             # HA gives 0..360 for hue, fritz light only supports 0..359
-            unmapped_hue = int(kwargs[ATTR_HS_COLOR][0] % 360)
+            unmapped_hue = int(kwargs[LightServiceArgument.HS_COLOR][0] % 360)
             unmapped_saturation = round(
-                cast(float, kwargs[ATTR_HS_COLOR][1]) * 255.0 / 100.0
+                cast(float, kwargs[LightServiceArgument.HS_COLOR][1]) * 255.0 / 100.0
             )
             if self.data.fullcolorsupport:
                 LOGGER.debug("device has fullcolorsupport, using 'setunmappedcolor'")
@@ -159,9 +153,12 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
                     self.data.set_color, (hue, saturation), 0, True
                 )
 
-        if kwargs.get(ATTR_COLOR_TEMP_KELVIN) is not None:
+        if kwargs.get(LightServiceArgument.COLOR_TEMP_KELVIN) is not None:
             await self.hass.async_add_executor_job(
-                self.data.set_color_temp, kwargs[ATTR_COLOR_TEMP_KELVIN], 0, True
+                self.data.set_color_temp,
+                kwargs[LightServiceArgument.COLOR_TEMP_KELVIN],
+                0,
+                True,
             )
 
         await self.hass.async_add_executor_job(self.data.set_state_on, True)

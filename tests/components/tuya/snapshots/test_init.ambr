@@ -5679,6 +5679,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Multi-Circuit Energy Meter',
+    'model_id': 't88mk4nfhu7ejp4k',
+    'name': 'Multi-Circuit Energy Meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[kaapnqxkvzaqd6uaqdjnz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -11163,6 +11193,36 @@
     'model': 'Aubess Smart\xa0Socket EM',
     'model_id': 'ik9sbig3mthx9hjz',
     'name': 'Aubess Washing Machine',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[zjzmgd1axvjwgvnupsm]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'zjzmgd1axvjwgvnupsm',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart Litter Box',
+    'model_id': 'unvgwjvxa1dgmzjz',
+    'name': 'Smart Litter Box',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,

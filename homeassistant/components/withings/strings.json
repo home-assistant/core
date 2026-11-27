@@ -76,11 +76,17 @@
       "activity_total_calories_burnt_today": {
         "name": "Total calories burnt today"
       },
+      "apnea_hypopnea_index": {
+        "name": "Apnea-hypopnea index"
+      },
       "average_heart_rate": {
         "name": "Average heart rate"
       },
       "average_respiratory_rate": {
         "name": "Average respiratory rate"
+      },
+      "awake_after_sleep_onset": {
+        "name": "Awake after sleep onset"
       },
       "basal_metabolic_rate": {
         "name": "Basal metabolic rate"
@@ -162,6 +168,12 @@
       "heart_pulse": {
         "name": "Heart pulse"
       },
+      "heart_rate_variability_end": {
+        "name": "Heart rate variability at sleep end"
+      },
+      "heart_rate_variability_start": {
+        "name": "Heart rate variability at sleep start"
+      },
       "height": {
         "name": "Height"
       },
@@ -207,14 +219,23 @@
       "muscle_mass_for_segments_torso": {
         "name": "Muscle mass in torso"
       },
+      "out_of_bed_count": {
+        "name": "Out of bed count"
+      },
       "pulse_wave_velocity": {
         "name": "Pulse wave velocity"
       },
       "rem_sleep": {
         "name": "REM sleep"
       },
+      "rem_sleep_phase_count": {
+        "name": "REM sleep phases"
+      },
       "skin_temperature": {
         "name": "Skin temperature"
+      },
+      "sleep_efficiency": {
+        "name": "Sleep efficiency"
       },
       "sleep_goal": {
         "name": "Sleep goal"
@@ -237,11 +258,17 @@
       "systolic_blood_pressure": {
         "name": "Systolic blood pressure"
       },
+      "time_in_bed": {
+        "name": "Time in bed"
+      },
       "time_to_sleep": {
         "name": "Time to sleep"
       },
       "time_to_wakeup": {
         "name": "Time to wakeup"
+      },
+      "total_sleep_time": {
+        "name": "Total sleep time"
       },
       "vascular_age": {
         "name": "Vascular age"

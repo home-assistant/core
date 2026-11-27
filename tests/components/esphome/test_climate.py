@@ -666,12 +666,12 @@ async def test_climate_set_temperature_with_range_in_any_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.test_my_climate",
-            ATTR_TEMPERATURE: 21,
-            ATTR_TARGET_TEMP_LOW: 20,
-            ATTR_TARGET_TEMP_HIGH: 23,
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.TEMPERATURE: 21,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 20,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 23,
         },
         blocking=True,
     )

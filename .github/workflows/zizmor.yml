@@ -49,7 +49,7 @@ jobs:
 
       - name: Run Zizmor
         if: steps.changes.outputs.relevant == 'true' || github.event.pull_request.changed_files >= 3000
-        uses: j178/prek-action@v3.1.0
+        uses: j178/prek-action@v3.1.1
         with:
           extra-args: --all-files zizmor
 
