@@ -1,8 +1,9 @@
 """Support for sensor data from RainMachine."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast, override
+from typing import Any, NamedTuple, cast, override
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -11,13 +12,23 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfVolume
+from homeassistant.const import EntityCategory, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 from . import RainMachineConfigEntry, RainMachineData
-from .const import DATA_PROGRAMS, DATA_PROVISION_SETTINGS, DATA_ZONES
+from .const import (
+    CONF_USE_APP_RUN_TIMES,
+    DATA_PROGRAMS,
+    DATA_PROVISION_SETTINGS,
+    DATA_ZONES,
+    SLOPE_TYPE_MAP,
+    SOIL_TYPE_MAP,
+    SPRINKLER_TYPE_MAP,
+    SUN_EXPOSURE_MAP,
+    VEGETATION_MAP,
+)
 from .entity import RainMachineEntity, RainMachineEntityDescription
 from .util import RUN_STATE_MAP, RunStates, key_exists
 
@@ -51,6 +62,49 @@ class RainMachineSensorCompletionTimerDescription(
     """Describe a RainMachine completion timer sensor."""
 
     uid: int
+
+
+@dataclass(frozen=True, kw_only=True)
+class RainMachineZoneSensorDescription(
+    SensorEntityDescription, RainMachineEntityDescription
+):
+    """Describe a zone measurement or configuration value."""
+
+    uid: int
+    data_key: str
+    value_map: Mapping[int, str] | None = None
+    water_sense: bool = False
+
+
+class ZoneSensorDefinition(NamedTuple):
+    """Define a value exposed from the zone API."""
+
+    key: str
+    data_key: str
+    value_map: Mapping[int, str] | None = None
+    water_sense: bool = False
+
+
+def _enum_values(values: Mapping[int, str]) -> dict[int, str]:
+    return {key: value.lower().replace(" ", "_") for key, value in values.items()}
+
+
+ZONE_SENSOR_DEFINITIONS = (
+    ZoneSensorDefinition("area", "area", water_sense=True),
+    ZoneSensorDefinition("current_cycle", "cycle"),
+    ZoneSensorDefinition("field_capacity", "fieldCapacity", water_sense=True),
+    ZoneSensorDefinition("id", "uid"),
+    ZoneSensorDefinition("number_of_cycles", "noOfCycles"),
+    ZoneSensorDefinition("precipitation_rate", "precipitationRate", water_sense=True),
+    ZoneSensorDefinition("slope", "slope", _enum_values(SLOPE_TYPE_MAP)),
+    ZoneSensorDefinition("soil_type", "soil", _enum_values(SOIL_TYPE_MAP)),
+    ZoneSensorDefinition(
+        "sprinkler_head_type", "group_id", _enum_values(SPRINKLER_TYPE_MAP)
+    ),
+    ZoneSensorDefinition("status", "state", _enum_values(RUN_STATE_MAP)),
+    ZoneSensorDefinition("sun_exposure", "sun", _enum_values(SUN_EXPOSURE_MAP)),
+    ZoneSensorDefinition("vegetation_type", "type", _enum_values(VEGETATION_MAP)),
+)
 
 
 SENSOR_DESCRIPTIONS = (
@@ -152,7 +206,7 @@ async def async_setup_entry(
         DATA_PROVISION_SETTINGS: ProvisionSettingsSensor,
     }
 
-    sensors: list[ProvisionSettingsSensor | TimeRemainingSensor] = [
+    sensors: list[ProvisionSettingsSensor | TimeRemainingSensor | ZoneSensor] = [
         api_category_sensor_map[description.api_category](entry, data, description)
         for description in SENSOR_DESCRIPTIONS
         if (
@@ -196,6 +250,69 @@ async def async_setup_entry(
                 ),
             )
         )
+
+    for uid, zone in zone_coordinator.data.items():
+        for definition in ZONE_SENSOR_DEFINITIONS:
+            values = (zone.get("waterSense") or {}) if definition.water_sense else zone
+            if definition.data_key not in values:
+                continue
+            sensors.append(
+                ZoneSensor(
+                    entry,
+                    data,
+                    RainMachineZoneSensorDescription(
+                        key=f"zone_{uid}_{definition.key}",
+                        translation_key=f"zone_{definition.key}",
+                        translation_placeholders={"zone_name": zone["name"]},
+                        api_category=DATA_ZONES,
+                        device_class=(
+                            SensorDeviceClass.ENUM if definition.value_map else None
+                        ),
+                        options=(
+                            list(dict.fromkeys(definition.value_map.values()))
+                            if definition.value_map
+                            else None
+                        ),
+                        entity_category=(
+                            None
+                            if definition.key == "status"
+                            else EntityCategory.DIAGNOSTIC
+                        ),
+                        entity_registry_enabled_default=False,
+                        uid=uid,
+                        data_key=definition.data_key,
+                        value_map=definition.value_map,
+                        water_sense=definition.water_sense,
+                    ),
+                )
+            )
+
+    if entry.options[CONF_USE_APP_RUN_TIMES]:
+        zone_durations = (
+            data.coordinators[DATA_PROVISION_SETTINGS]
+            .data.get("system", {})
+            .get("zoneDuration")
+        )
+        if zone_durations:
+            for uid, zone in zone_coordinator.data.items():
+                sensors.append(
+                    ZoneSensor(
+                        entry,
+                        data,
+                        RainMachineZoneSensorDescription(
+                            key=f"zone_{uid}_zone_run_time_from_app",
+                            translation_key="zone_run_time_from_app",
+                            translation_placeholders={"zone_name": zone["name"]},
+                            api_category=DATA_PROVISION_SETTINGS,
+                            entity_category=EntityCategory.DIAGNOSTIC,
+                            entity_registry_enabled_default=False,
+                            device_class=SensorDeviceClass.DURATION,
+                            native_unit_of_measurement=UnitOfTime.SECONDS,
+                            uid=uid,
+                            data_key="zoneDuration",
+                        ),
+                    )
+                )
 
     async_add_entities(sensors)
 
@@ -338,3 +455,36 @@ class ZoneTimeRemainingSensor(TimeRemainingSensor):
         return cast(
             int, self.coordinator.data[self.entity_description.uid]["remaining"]
         )
+
+
+class ZoneSensor(RainMachineEntity, SensorEntity):
+    """Expose an irrigation zone's metadata or water-sense value."""
+
+    entity_description: RainMachineZoneSensorDescription
+
+    @callback
+    @override
+    def update_from_latest_data(self) -> None:
+        """Read the configured value from the appropriate coordinator."""
+        description = self.entity_description
+        if description.api_category == DATA_PROVISION_SETTINGS:
+            durations = self.coordinator.data.get("system", {}).get(
+                description.data_key
+            )
+            # The API returns durations in zone order.
+            zone_ids = list(self._data.coordinators[DATA_ZONES].data)
+            value = None
+            if durations and description.uid in zone_ids:
+                index = zone_ids.index(description.uid)
+                if index < len(durations):
+                    value = durations[index]
+        else:
+            zone = self.coordinator.data[description.uid]
+            values = (zone.get("waterSense") or {}) if description.water_sense else zone
+            value = values.get(description.data_key)
+            if value is not None:
+                if description.water_sense:
+                    value = round(value, 2)
+                elif description.value_map is not None:
+                    value = description.value_map.get(value)
+        self._attr_native_value = value

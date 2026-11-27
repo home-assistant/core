@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_binary_sensors[binary_sensor.12345_flower_box_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_flower_box_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flower Box restrictions',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flower Box restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zone_restrictions',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_flower_box_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower Box restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_flower_box_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[binary_sensor.12345_freeze_restrictions-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -93,6 +143,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.12345_hourly_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_landscaping_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_landscaping_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Landscaping restrictions',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Landscaping restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zone_restrictions',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_landscaping_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_landscaping_restrictions',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -249,6 +349,56 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[binary_sensor.12345_test_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_test_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TEST restrictions',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TEST restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zone_restrictions',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_test_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 TEST restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_test_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[binary_sensor.12345_weekday_restrictions-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -293,6 +443,456 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.12345_weekday_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_10_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_zone_10_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 10 restrictions',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 10 restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zone_restrictions',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_10_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10 restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_zone_10_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_11_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_zone_11_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 11 restrictions',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 11 restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zone_restrictions',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_11_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11 restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_zone_11_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_12_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_zone_12_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 12 restrictions',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 12 restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zone_restrictions',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_12_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12 restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_zone_12_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_4_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_zone_4_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 4 restrictions',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 4 restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zone_restrictions',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_4_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4 restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_zone_4_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_5_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_zone_5_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 5 restrictions',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 5 restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zone_restrictions',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_5_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5 restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_zone_5_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_6_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_zone_6_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 6 restrictions',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 6 restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zone_restrictions',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_6_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6 restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_zone_6_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_7_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_zone_7_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 7 restrictions',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 7 restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zone_restrictions',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_7_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7 restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_zone_7_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_8_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_zone_8_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 8 restrictions',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 8 restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zone_restrictions',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_8_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8 restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_zone_8_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_9_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.12345_zone_9_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 9 restrictions',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 9 restrictions',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zone_restrictions',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.12345_zone_9_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9 restrictions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.12345_zone_9_restrictions',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
