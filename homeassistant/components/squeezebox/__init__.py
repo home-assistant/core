@@ -1,11 +1,11 @@
 """The Squeezebox integration."""
 
 import asyncio
+import logging
 from asyncio import timeout
 from dataclasses import dataclass, field
 from datetime import datetime
 from http import HTTPStatus
-import logging
 
 from pysqueezebox import Player, Server
 
@@ -24,7 +24,8 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
