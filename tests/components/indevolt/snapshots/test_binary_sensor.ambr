@@ -347,7 +347,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensor[2][binary_sensor.cms_sf2000_main_electric_heating-entry]
