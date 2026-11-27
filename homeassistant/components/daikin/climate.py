@@ -7,6 +7,10 @@ from typing import Any, override
 from pydaikin.daikin_base import Appliance
 
 from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
+    ATTR_HVAC_MODE,
+    ATTR_PRESET_MODE,
+    ATTR_SWING_MODE,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
@@ -74,10 +78,10 @@ HA_PRESET_TO_DAIKIN = {
 }
 
 HA_ATTR_TO_DAIKIN = {
-    ClimateServiceArgument.PRESET_MODE: "en_hol",
-    ClimateServiceArgument.HVAC_MODE: "mode",
-    ClimateServiceArgument.FAN_MODE: "f_rate",
-    ClimateServiceArgument.SWING_MODE: "f_dir",
+    ATTR_PRESET_MODE: "en_hol",
+    ATTR_HVAC_MODE: "mode",
+    ATTR_FAN_MODE: "f_rate",
+    ATTR_SWING_MODE: "f_dir",
     ATTR_INSIDE_TEMPERATURE: "htemp",
     ATTR_OUTSIDE_TEMPERATURE: "otemp",
     ATTR_TARGET_TEMPERATURE: "stemp",
@@ -288,9 +292,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
     @override
     def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
-        daikin_mode = self.device.represent(
-            HA_ATTR_TO_DAIKIN[ClimateServiceArgument.HVAC_MODE]
-        )[1]
+        daikin_mode = self.device.represent(HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE])[1]
         return DAIKIN_TO_HA_STATE.get(daikin_mode, HVACMode.HEAT_COOL)
 
     @override
@@ -302,9 +304,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
     @override
     def fan_mode(self) -> str:
         """Return the fan setting."""
-        return self.device.represent(
-            HA_ATTR_TO_DAIKIN[ClimateServiceArgument.FAN_MODE]
-        )[1].title()
+        return self.device.represent(HA_ATTR_TO_DAIKIN[ATTR_FAN_MODE])[1].title()
 
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -315,9 +315,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
     @override
     def swing_mode(self) -> str:
         """Return the fan setting."""
-        return self.device.represent(
-            HA_ATTR_TO_DAIKIN[ClimateServiceArgument.SWING_MODE]
-        )[1].title()
+        return self.device.represent(HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE])[1].title()
 
     @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
@@ -329,9 +327,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
     def preset_mode(self) -> str:
         """Return the preset_mode."""
         if (
-            self.device.represent(
-                HA_ATTR_TO_DAIKIN[ClimateServiceArgument.PRESET_MODE]
-            )[1]
+            self.device.represent(HA_ATTR_TO_DAIKIN[ATTR_PRESET_MODE])[1]
             == HA_PRESET_TO_DAIKIN[PRESET_AWAY]
         ):
             return PRESET_AWAY
@@ -396,11 +392,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
     async def async_turn_off(self) -> None:
         """Turn device off."""
         await self.device.set(
-            {
-                HA_ATTR_TO_DAIKIN[ClimateServiceArgument.HVAC_MODE]: HA_STATE_TO_DAIKIN[
-                    HVACMode.OFF
-                ]
-            }
+            {HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE]: HA_STATE_TO_DAIKIN[HVACMode.OFF]}
         )
         await self.coordinator.async_refresh()
 
@@ -428,9 +420,7 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
     @property
     def _main_hvac_mode(self) -> HVACMode:
         """Return the main unit HVAC mode."""
-        daikin_mode = self.device.represent(
-            HA_ATTR_TO_DAIKIN[ClimateServiceArgument.HVAC_MODE]
-        )[1]
+        daikin_mode = self.device.represent(HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE])[1]
         return DAIKIN_TO_HA_STATE.get(daikin_mode, HVACMode.HEAT_COOL)
 
     @property
