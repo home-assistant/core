@@ -18,9 +18,8 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME, CONF_SENSORS, CONF_TYPE
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import SerialPortSelector
 from homeassistant.helpers.typing import ConfigType
 
@@ -34,6 +33,7 @@ from .const import (
     CONF_TOGGLE_INTERVAL,
     CONF_TOGGLE_MASK,
     DEFAULT_BAUD,
+    DEFAULT_DEVICE,
     DOMAIN,
 )
 
@@ -180,25 +180,8 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: ConfigType) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml (sensor platform)."""
-        _LOGGER.warning(
-            "Importing LaCrosse from YAML is deprecated and will be removed"
-        )
-        async_create_issue(
-            self.hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2027.4.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "LaCrosse",
-            },
-        )
         resolved_device = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, import_config.get(CONF_DEVICE, "/dev/ttyUSB0")
+            usb.get_serial_by_id, import_config.get(CONF_DEVICE, DEFAULT_DEVICE)
         )
         entry_input: dict[str, Any] = {
             CONF_DEVICE: resolved_device,
@@ -212,20 +195,6 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(resolved_device)
         self._async_abort_entries_match({CONF_DEVICE: resolved_device})
         if error := await _async_test_connection(self.hass, entry_input):
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"deprecated_yaml_import_issue_cannot_connect_{resolved_device}",
-                breaks_in_ha_version="2027.4.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_yaml_import_issue_cannot_connect",
-                translation_placeholders={
-                    "device": resolved_device,
-                    "integration_title": "LaCrosse",
-                },
-            )
             return self.async_abort(reason=error)
 
         sensors: dict[str, dict[str, Any]] = {}

@@ -24,7 +24,13 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfTemperature,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    callback,
+)
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -33,6 +39,7 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -49,6 +56,7 @@ from .const import (
     CONF_TOGGLE_INTERVAL,
     CONF_TOGGLE_MASK,
     DEFAULT_BAUD,
+    DEFAULT_DEVICE,
     DOMAIN,
     TYPES,
     LaCrosseSensorType,
@@ -86,7 +94,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaCrosse sensors from a config entry."""
-    for subentry in entry.subentries.values():
+    for subentry in entry.get_subentries_of_type("sensor"):
         legacy_entity_keys = subentry.data.get(CONF_LEGACY_ENTITY_KEYS, {})
         legacy_configured_types = subentry.data.get(CONF_LEGACY_CONFIGURED_TYPES)
         sensors = {
@@ -122,17 +130,48 @@ async def async_setup_entry(
         )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the LaCrosse sensors through the legacy YAML import flow."""
-    hass.add_job(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    _LOGGER.warning("Importing LaCrosse from YAML is deprecated and will be removed")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    if result["type"] is FlowResultType.ABORT and result["reason"] not in (
+        "already_configured",
+        "already_in_progress",
+    ):
+        device = config.get(CONF_DEVICE, DEFAULT_DEVICE)
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_cannot_connect_{device}",
+            breaks_in_ha_version="2027.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue_cannot_connect",
+            translation_placeholders={
+                "device": device,
+                "integration_title": "LaCrosse",
+            },
         )
+        return
+
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.4.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={"domain": DOMAIN, "integration_title": "LaCrosse"},
     )
 
 

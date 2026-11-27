@@ -1,22 +1,24 @@
 """Tests for the LaCrosse sensor platform."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from serial import SerialException
 
 from homeassistant.components.lacrosse.const import DOMAIN, sensor_entity_key
 from homeassistant.components.lacrosse.sensor import (
-    PLATFORM_SCHEMA,
     LaCrosseBattery,
     LaCrosseHumidity,
     LaCrosseSensor,
     LaCrosseTemperature,
     _add_sensors,
-    setup_platform,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 
 @pytest.mark.parametrize(
@@ -86,19 +88,207 @@ async def test_import_creates_all_entities(
             assert hass.states.get(entity_id) is None
 
 
-async def test_setup_platform_imports_yaml_configuration(hass: HomeAssistant) -> None:
-    """Test YAML configuration is imported through a config flow."""
-    config = PLATFORM_SCHEMA({"platform": DOMAIN, "sensors": {}})
-    assert "device" not in config
+@pytest.mark.usefixtures("mock_lacrosse")
+async def test_yaml_import(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a successful YAML import creates only the deprecation issue."""
+    assert await async_setup_component(
+        hass, "sensor", {"sensor": {"platform": DOMAIN, "sensors": {}}}
+    )
+    await hass.async_block_till_done()
 
-    with patch.object(
-        hass.config_entries.flow, "async_init", new_callable=AsyncMock
-    ) as mock_async_init:
-        setup_platform(hass, config, MagicMock())
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect_/dev/ttyUSB0"
+    )
+
+
+@pytest.mark.usefixtures("mock_lacrosse", "mock_setup_entry")
+@pytest.mark.parametrize(
+    "unique_id",
+    [
+        pytest.param(None, id="without-unique-id"),
+        pytest.param("/dev/ttyUSB0", id="with-unique-id"),
+    ],
+)
+async def test_yaml_import_already_configured(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, unique_id: str | None
+) -> None:
+    """Test an existing receiver still creates only the deprecation issue."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"device": "/dev/ttyUSB0", "baud": 57600},
+        unique_id=unique_id,
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(
+        hass, "sensor", {"sensor": {"platform": DOMAIN, "sensors": {}}}
+    )
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect_/dev/ttyUSB0"
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("config", "device"),
+    [
+        pytest.param({}, "/dev/ttyUSB0", id="default-device"),
+        pytest.param({"device": "/dev/ttyUSB1"}, "/dev/ttyUSB1", id="explicit-device"),
+    ],
+)
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(SerialException, id="cannot-connect"),
+        pytest.param(RuntimeError, id="unexpected-error"),
+    ],
+)
+async def test_yaml_import_failure(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config: dict[str, str],
+    device: str,
+    exception: type[Exception],
+) -> None:
+    """Test a failed import creates only a failure issue using the YAML path."""
+    with (
+        patch(
+            "homeassistant.components.lacrosse.config_flow.usb.get_serial_by_id",
+            return_value="/dev/serial/by-id/receiver",
+        ),
+        patch(
+            "homeassistant.components.lacrosse.config_flow.pylacrosse.LaCrosse",
+            side_effect=exception("unavailable"),
+        ),
+    ):
+        assert await async_setup_component(
+            hass, "sensor", {"sensor": {"platform": DOMAIN, "sensors": {}, **config}}
+        )
         await hass.async_block_till_done()
 
-    mock_async_init.assert_awaited_once_with(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    assert not hass.config_entries.async_entries(DOMAIN)
+    assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_yaml_import_issue_cannot_connect_{device}"
+    )
+    assert issue is not None
+    assert [
+        entry
+        for entry in issue_registry.issues.values()
+        if entry.issue_domain == DOMAIN
+    ] == [issue]
+    assert issue.translation_key == "deprecated_yaml_import_issue_cannot_connect"
+    assert issue.translation_placeholders == {
+        "device": device,
+        "integration_title": "LaCrosse",
+    }
+
+
+async def test_yaml_import_already_in_progress(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test an overlapping import creates a deprecation issue, not a failure."""
+    with patch.object(
+        hass.config_entries.flow,
+        "async_init",
+        return_value={"type": FlowResultType.ABORT, "reason": "already_in_progress"},
+    ):
+        assert await async_setup_component(
+            hass, "sensor", {"sensor": {"platform": DOMAIN, "sensors": {}}}
+        )
+        await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect_/dev/ttyUSB0"
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_yaml_import_multiple_failures(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test failed imports for different receivers create separate issues."""
+    with patch(
+        "homeassistant.components.lacrosse.config_flow.pylacrosse.LaCrosse",
+        side_effect=SerialException("unavailable"),
+    ):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {"platform": DOMAIN, "device": "/dev/ttyUSB0", "sensors": {}},
+                    {"platform": DOMAIN, "device": "/dev/ttyUSB1", "sensors": {}},
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect_/dev/ttyUSB0"
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect_/dev/ttyUSB1"
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_yaml_import_mixed_outcomes(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a successful receiver and a failed receiver retain their own issues."""
+    receivers = {"/dev/ttyUSB0": MagicMock(), "/dev/ttyUSB1": MagicMock()}
+    receivers["/dev/ttyUSB1"].open.side_effect = SerialException("unavailable")
+    with (
+        patch(
+            "homeassistant.components.lacrosse.config_flow.usb.get_serial_by_id",
+            side_effect=lambda device: device,
+        ),
+        patch(
+            "homeassistant.components.lacrosse.config_flow.pylacrosse.LaCrosse",
+            side_effect=lambda device, baud: receivers[device],
+        ),
+    ):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {"platform": DOMAIN, "device": "/dev/ttyUSB0", "sensors": {}},
+                    {"platform": DOMAIN, "device": "/dev/ttyUSB1", "sensors": {}},
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect_/dev/ttyUSB1"
+    )
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect_/dev/ttyUSB0"
     )
 
 

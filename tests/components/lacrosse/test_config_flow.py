@@ -19,13 +19,12 @@ from homeassistant.components.lacrosse.const import (
     sensor_entity_key,
 )
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
-    issue_registry as ir,
 )
 
 RECEIVER_DATA = {"device": "/dev/ttyUSB0", "baud": 57600}
@@ -263,7 +262,6 @@ async def test_overlapping_receiver_flows(
 )
 async def test_import_flow(
     hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
     receiver_data: dict[str, str | int],
     expected_device: str,
 ) -> None:
@@ -305,9 +303,6 @@ async def test_import_flow(
             "temperature": ["heating_temperature"],
         },
     }
-    assert issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
 
 
 @pytest.mark.parametrize(
@@ -317,13 +312,12 @@ async def test_import_flow(
         pytest.param("/dev/ttyUSB0", id="with-unique-id"),
     ],
 )
-async def test_import_existing_receiver_recreates_yaml_issue(
+async def test_import_existing_receiver(
     hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
     mock_setup_entry: AsyncMock,
     unique_id: str | None,
 ) -> None:
-    """Test YAML still raises a repair when its receiver is already configured."""
+    """Test importing an existing receiver does not create another entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=RECEIVER_DATA,
@@ -331,13 +325,6 @@ async def test_import_existing_receiver_recreates_yaml_issue(
         unique_id=unique_id,
     )
     entry.add_to_hass(hass)
-    assert (
-        issue_registry.async_get_issue(
-            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-        )
-        is None
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
@@ -348,9 +335,6 @@ async def test_import_existing_receiver_recreates_yaml_issue(
     assert result["reason"] == "already_configured"
     assert hass.config_entries.async_entries(DOMAIN) == [entry]
     mock_setup_entry.assert_not_called()
-    assert issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
 
 
 @pytest.mark.parametrize(
@@ -362,12 +346,11 @@ async def test_import_existing_receiver_recreates_yaml_issue(
 )
 async def test_import_flow_receiver_error(
     hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
     mock_setup_entry: AsyncMock,
     exception: type[Exception],
     reason: str,
 ) -> None:
-    """Test failed YAML imports create a repair issue without creating an entry."""
+    """Test failed YAML imports abort without creating an entry."""
     with patch(
         "homeassistant.components.lacrosse.config_flow.pylacrosse.LaCrosse.return_value.open",
         side_effect=exception("unavailable"),
@@ -382,16 +365,6 @@ async def test_import_flow_receiver_error(
     assert result["reason"] == reason
     assert not hass.config_entries.async_entries(DOMAIN)
     mock_setup_entry.assert_not_called()
-    issue = issue_registry.async_get_issue(
-        DOMAIN,
-        f"deprecated_yaml_import_issue_cannot_connect_{RECEIVER_DATA['device']}",
-    )
-    assert issue is not None
-    assert issue.translation_key == "deprecated_yaml_import_issue_cannot_connect"
-    assert issue.translation_placeholders == {
-        "device": RECEIVER_DATA["device"],
-        "integration_title": "LaCrosse",
-    }
 
 
 @pytest.mark.parametrize(
