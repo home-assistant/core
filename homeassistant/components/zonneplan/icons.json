@@ -164,6 +164,9 @@
   "services": {
     "get_electricity_prices": {
       "service": "mdi:cash-clock"
+    },
+    "get_gas_prices": {
+      "service": "mdi:fire"
     }
   }
 }

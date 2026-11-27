@@ -14,3 +14,11 @@ get_electricity_prices:
           options:
             - hour
             - quarter
+
+get_gas_prices:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: zonneplan
