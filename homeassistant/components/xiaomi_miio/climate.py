@@ -7,6 +7,7 @@ from miio import DeviceException, HeaterMiot
 from miio.heater_miot import HEATER_PROPERTIES, HeaterMiotStatus
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -30,16 +31,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the heater from a config entry."""
-    unique_id = config_entry.unique_id
     device = config_entry.runtime_data.device
-    assert unique_id is not None
     assert isinstance(device, HeaterMiot)
     async_add_entities(
         [
             XiaomiHeater(
                 device,
                 config_entry,
-                unique_id,
+                config_entry.unique_id,
                 config_entry.runtime_data.device_coordinator,
             )
         ]
@@ -67,7 +66,7 @@ class XiaomiHeater(
         self,
         device: HeaterMiot,
         entry: XiaomiMiioConfigEntry,
-        unique_id: str,
+        unique_id: str | None,
         coordinator: DataUpdateCoordinator[HeaterMiotStatus],
     ) -> None:
         """Initialize the heater."""
@@ -107,9 +106,12 @@ class XiaomiHeater(
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
-        await self._async_send_command(
-            self._device.set_target_temperature, int(kwargs[ATTR_TEMPERATURE])
-        )
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            await self.async_handle_set_hvac_mode_service(hvac_mode)
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            await self._async_send_command(
+                self._device.set_target_temperature, round(temperature)
+            )
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

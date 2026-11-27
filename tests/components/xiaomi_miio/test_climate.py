@@ -32,6 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import TEST_MAC
 
@@ -84,11 +85,13 @@ def setup_device(model_code: str) -> Generator[MagicMock]:
         yield mock_heater
 
 
-async def setup_component(hass: HomeAssistant, model_code: str) -> MockConfigEntry:
+async def setup_component(
+    hass: HomeAssistant, model_code: str, unique_id: str | None = "123456"
+) -> MockConfigEntry:
     """Set up the climate component."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="123456",
+        unique_id=unique_id,
         title="Test heater",
         data={
             CONF_FLOW_TYPE: CONF_DEVICE,
@@ -128,6 +131,53 @@ async def test_set_temperature(
         blocking=True,
     )
     mock_heater.set_target_temperature.assert_called_once_with(24)
+
+
+async def test_set_temperature_fahrenheit(
+    hass: HomeAssistant, mock_heater: MagicMock, model_code: str
+) -> None:
+    """Test a Fahrenheit target temperature is rounded to the nearest degree."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await setup_component(hass, model_code)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 75},
+        blocking=True,
+    )
+    # 75 °F is 23.9 °C
+    mock_heater.set_target_temperature.assert_called_once_with(24)
+
+
+@pytest.mark.parametrize(
+    ("hvac_mode", "method"),
+    [(HVACMode.HEAT, "on"), (HVACMode.OFF, "off")],
+)
+async def test_set_temperature_with_hvac_mode(
+    hass: HomeAssistant,
+    mock_heater: MagicMock,
+    model_code: str,
+    hvac_mode: HVACMode,
+    method: str,
+) -> None:
+    """Test setting the target temperature together with the HVAC mode."""
+    await setup_component(hass, model_code)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 24, ATTR_HVAC_MODE: hvac_mode},
+        blocking=True,
+    )
+    getattr(mock_heater, method).assert_called_once_with()
+    mock_heater.set_target_temperature.assert_called_once_with(24)
+
+
+async def test_setup_without_unique_id(
+    hass: HomeAssistant, mock_heater: MagicMock, model_code: str
+) -> None:
+    """Test the heater is set up when the config entry has no unique ID."""
+    await setup_component(hass, model_code, unique_id=None)
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
 
 
 @pytest.mark.parametrize(
