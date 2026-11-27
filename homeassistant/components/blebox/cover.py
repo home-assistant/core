@@ -6,11 +6,10 @@ import blebox_uniapi.cover
 from blebox_uniapi.cover import BleboxCoverState, UnifiedCoverType
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.core import HomeAssistant
@@ -192,7 +191,7 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
-        position = kwargs[ATTR_POSITION]
+        position = kwargs[CoverServiceArgument.POSITION]
         await self._feature.async_set_position(100 - position)
 
     @blebox_command
@@ -205,7 +204,7 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Set the tilt position."""
-        position = kwargs[ATTR_TILT_POSITION]
+        position = kwargs[CoverServiceArgument.TILT_POSITION]
         await self._feature.async_set_tilt_position(100 - position)
 
     def _is_state(self, state_name) -> bool | None:
