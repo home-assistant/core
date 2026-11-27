@@ -71,12 +71,7 @@ def _async_keep_polling() -> None:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> None:
-    """Unload a config entry.
-
-    The platforms are unloaded first, so the entry's trackers are gone
-    before its coordinator is shut down. The coordinator's presence data
-    lives on the coordinator, which dies with the entry.
-    """
+    """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
@@ -237,28 +232,30 @@ async def _async_migrate_other(
                     collision_hosts.append(data[CONF_HOST])
                 else:
                     created_subentries.append(new_subentry)
-            if entry.disabled_by is not None:
+            if (
+                entry.disabled_by is not None
+                and (
+                    disabled_subentry := next(
+                        (
+                            created
+                            for created in created_subentries
+                            if created.unique_id == host
+                        ),
+                        None,
+                    )
+                )
+                is not None
+            ):
                 # Subentries cannot be disabled; deleting the subentry
                 # reproduces the old "off" behavior, and clears the
-                # warning which is linked to it.
-                disabled_subentry = next(
-                    (
-                        created
-                        for created in created_subentries
-                        if created.unique_id == host
-                    ),
-                    None,
-                )
+                # warning which is linked to it. A colliding host has no
+                # new subentry, so there is nothing to delete.
                 ir.async_create_issue(
                     hass,
                     DOMAIN,
                     f"migration_disabled_entry_{entry.entry_id}",
                     config_entry_id=hub.entry_id,
-                    config_subentry_id=(
-                        disabled_subentry.subentry_id
-                        if disabled_subentry is not None
-                        else None
-                    ),
+                    config_subentry_id=disabled_subentry.subentry_id,
                     is_fixable=False,
                     is_persistent=True,
                     issue_domain=DOMAIN,

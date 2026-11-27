@@ -2703,6 +2703,47 @@ async def test_migration_disabled_entry_becomes_subentry(
     )
 
 
+async def test_migration_disabled_entry_collision_skips_warning(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    hub_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a colliding disabled entry gets no delete-the-router warning."""
+    _mock, _ubus = mock_ubus_by_host
+    disabled_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=MOCK_HOST,
+        entry_id="00000000000000000000000000B",
+    )
+    disabled_entry.disabled_by = ConfigEntryDisabler.USER
+    disabled_entry.add_to_hass(hass)
+    hub_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The colliding disabled entry was removed; its router stays active
+    # through the hub's existing subentry, so there is no subentry to
+    # delete to restore the old off state.
+    assert hass.config_entries.async_entries(DOMAIN) == [hub_entry]
+    assert len(hub_entry.subentries) == 1
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"migration_disabled_entry_{disabled_entry.entry_id}"
+        )
+        is None
+    )
+    # The collision itself is still reported.
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"migration_host_collision_{disabled_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "migration_host_collision"
+    assert issue.translation_placeholders == {"host": MOCK_HOST}
+
+
 async def test_migration_idempotent_on_second_setup(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
@@ -2761,7 +2802,8 @@ async def test_migration_failure_leaves_entry_and_reports(
     legacy_entry.add_to_hass(hass)
     hub_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.ubus._async_reparent", side_effect=RuntimeError
+        "homeassistant.config_entries.ConfigEntries.async_remove",
+        side_effect=RuntimeError,
     ):
         assert await hass.config_entries.async_setup(hub_entry.entry_id)
     await hass.async_block_till_done()
