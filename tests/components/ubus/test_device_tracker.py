@@ -1730,6 +1730,83 @@ async def test_timed_out_tick_reuses_in_flight_poll(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_reobserved_poll_stamped_at_completion(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a re-observed poll is stamped when it finished, not the later tick.
+
+    After a tick times out the in-flight poll keeps running; when a later
+    tick re-observes it the sighting must be stamped at the poll's own
+    completion, or the client would get a fresh consider_home window from
+    the later refresh and outlive its absence.
+    """
+    _mock, ubus = mock_ubus_by_host
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_CONSIDER_HOME: 5}
+    )
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_HOME
+
+    release = threading.Event()
+
+    def _blocked_clients(interface: str) -> dict:
+        release.wait()
+        return {"clients": {MAC_PHONE: {"authorized": True}}}
+
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = _blocked_clients
+
+    async def _run_tick() -> None:
+        """Fire the next tick and await its refresh task.
+
+        Awaiting the entry's tasks, rather than all of them, keeps the
+        wait from blocking on the in-flight executor poll, which is only
+        released later. The ticks are 31 s apart, as the refresh timers
+        are staggered up to half a second past the 30 s interval and must
+        always be due.
+        """
+        freezer.tick(timedelta(seconds=31))
+        async_fire_time_changed(hass)
+        await asyncio.wait(mock_config_entry._background_tasks)
+
+    try:
+        with patch(
+            "homeassistant.components.ubus.coordinator.REQUEST_TIMEOUT",
+            timedelta(),
+        ):
+            # The tick times out while the poll keeps running in the
+            # executor; the failed tick marks the router unhealthy.
+            await _run_tick()
+            assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+            # The poll settles four seconds after the tick started; the
+            # next tick re-observes it and must stamp that completion.
+            freezer.tick(timedelta(seconds=4))
+            release.set()
+            await hass.async_block_till_done(wait_background_tasks=True)
+            await _run_tick()
+    finally:
+        release.set()
+
+    # The client was last seen four seconds after the timed-out tick; the
+    # re-observing tick ran 31 s after that sighting, past the keep-home
+    # window. A stamp at the re-observing tick would keep it home.
+    assert hass.states.get(entity_id).state == STATE_NOT_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_away_client_reports_not_home_after_restart(
     hass: HomeAssistant,
     mock_ubus: MagicMock,

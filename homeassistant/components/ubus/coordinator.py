@@ -56,17 +56,27 @@ def _poll_exception_retrieved(poll: asyncio.Future) -> None:
         poll.exception()
 
 
-async def _poll_observed(poll: asyncio.Future[Any]) -> tuple[datetime, Any]:
-    """Await one router's poll, returning its result and when it was observed.
+def _settled_poll(host: _UbusHost) -> tuple[datetime, Any]:
+    """Fetch one router's client view, stamped with the time it settled.
 
-    The time is taken as this poll's wait returns, so a slow router does
-    not stretch the sighting times of the clients the fast routers saw.
+    The stamp is taken the moment the fetch returns in the worker, so a
+    poll which outlives a timed-out tick is stamped when it finished, not
+    when a later tick consumes it; each poll is stamped at its own
+    completion, so a slow router does not stretch the sighting times of
+    the clients the fast routers saw.
     """
-    result = await asyncio.wait_for(
+    view = host.poll()
+    return dt_util.utcnow(), view
+
+
+async def _poll_observed(
+    poll: asyncio.Future[tuple[datetime, Any]],
+) -> tuple[datetime, Any]:
+    """Await one router's poll, returning its view and settle time."""
+    return await asyncio.wait_for(
         asyncio.shield(poll),
         timeout=REQUEST_TIMEOUT.total_seconds(),
     )
-    return dt_util.utcnow(), result
 
 
 class InvalidCredentialsError(UpdateFailed):
@@ -309,7 +319,7 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         # The poll running in the executor for each router; a tick which
         # times out re-awaits the same poll on the next tick, so two polls
         # never mutate a router's session and lease state at once.
-        self._inflight: dict[_UbusHost, asyncio.Future[Any]] = {}
+        self._inflight: dict[_UbusHost, asyncio.Future[tuple[datetime, Any]]] = {}
         self._tick_start: float | None = None
         self._last_signature: tuple | None = None
         self._seq = 0
@@ -342,11 +352,11 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
             # be verified while their last known router is unmonitored.
             self._ungrounded |= set(self.data_or_none or {})
             return {}
-        polls: list[asyncio.Future[Any]] = []
+        polls: list[asyncio.Future[tuple[datetime, Any]]] = []
         for host in hosts.values():
             poll = self._inflight.get(host)
             if poll is None:
-                poll = self.hass.async_add_executor_job(host.poll)
+                poll = self.hass.async_add_executor_job(_settled_poll, host)
                 poll.add_done_callback(_poll_exception_retrieved)
                 self._inflight[host] = poll
             polls.append(poll)
