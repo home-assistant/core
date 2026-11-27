@@ -2207,7 +2207,7 @@ class SetAutomationConfigTool(Tool):
         "previous_config, the stored configuration from before the change (null "
         "for a new automation), and loaded, which is false when the stored "
         "configuration is not running, for example because the automation is "
-        "disabled or the reload failed."
+        "disabled, the reload failed or its blueprint could not be loaded."
     )
     annotations = ToolAnnotations(
         read_only=False, destructive=True, idempotent=False, open_world=False
@@ -2279,7 +2279,7 @@ class SetAutomationConfigTool(Tool):
                 "result": {
                     "automation_id": automation_id,
                     "previous_config": previous,
-                    "loaded": async_is_loaded(hass, automation_id, stored),
+                    "loaded": await async_is_loaded(hass, automation_id, stored),
                 }
             }
         )
@@ -2316,7 +2316,11 @@ class DeleteAutomationTool(Tool):
             hass, self.parameters(tool_input.tool_args)["automation_id"]
         )
         view = hass.data[DATA_AUTOMATION_VIEW]
-        if (deleted := await view.async_delete_value(hass, automation_id)) is None:
+        if (
+            deleted := await view.async_delete_value(
+                hass, automation_id, wait_for_hook=True
+            )
+        ) is None:
             raise HomeAssistantError(f"Automation '{automation_id}' not found.")
         return ToolResult(
             data={"result": {"automation_id": automation_id, "deleted_config": deleted}}

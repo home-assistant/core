@@ -19,7 +19,9 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import config as config_component
+from homeassistant.components import automation, config as config_component
+from homeassistant.components.blueprint import Blueprint, DomainBlueprints
+from homeassistant.components.config.automation import EditAutomationConfigView
 from homeassistant.components.config.llm import (
     ConfigureFlowTool,
     CreateAreaTool,
@@ -62,6 +64,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
     SubentryFlowResult,
 )
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryError,
@@ -5178,6 +5181,66 @@ async def test_automation_tools_blueprint(
     )
 
     assert result.data["result"]["loaded"] is True
+
+
+async def test_automation_tools_blueprint_without_inputs(
+    automation_api: llm.APIInstance,
+    hass_config_store: dict[str, Any],
+) -> None:
+    """Test a blueprint automation without inputs is reported as loaded."""
+    hass_config_store["automations.yaml"] = []
+    blueprint_data = {
+        "blueprint": {"name": "No inputs", "domain": "automation"},
+        **AUTOMATION_CONFIG,
+    }
+
+    def mock_load_blueprint(
+        domain_blueprints: DomainBlueprints, path: str
+    ) -> Blueprint:
+        return Blueprint(
+            blueprint_data,
+            expected_domain="automation",
+            path=path,
+            schema=automation.config.AUTOMATION_BLUEPRINT_SCHEMA,
+        )
+
+    with patch.object(DomainBlueprints, "_load_blueprint", mock_load_blueprint):
+        result = await automation_api.async_call_tool(
+            llm.ToolInput(
+                "config__set_automation_config",
+                {
+                    "config": {
+                        "alias": "No inputs",
+                        "use_blueprint": {"path": "no_inputs.yaml"},
+                    }
+                },
+            )
+        )
+
+    assert result.data["result"]["loaded"] is True
+
+
+async def test_automation_tools_unavailable(
+    hass: HomeAssistant,
+    automation_api: llm.APIInstance,
+    hass_config_store: dict[str, Any],
+) -> None:
+    """Test an automation which fails to load is not reported as loaded."""
+    hass_config_store["automations.yaml"] = []
+    config = {**AUTOMATION_CONFIG, "triggers": [{"trigger": "not_a_platform"}]}
+
+    # Simulate a config which only fails when it is reloaded
+    with patch.object(EditAutomationConfigView, "async_validate"):
+        result = await automation_api.async_call_tool(
+            llm.ToolInput("config__set_automation_config", {"config": config})
+        )
+
+    assert result.data["result"]["loaded"] is False
+    automation_id = result.data["result"]["automation_id"]
+    state = hass.states.get("automation.morning_lights")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert hass_config_store["automations.yaml"] == [{"id": automation_id, **config}]
 
 
 async def test_automation_tools_integration_not_loaded(

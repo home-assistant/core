@@ -196,7 +196,7 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
         return previous
 
     async def async_delete_value(
-        self, hass: HomeAssistant, config_key: str
+        self, hass: HomeAssistant, config_key: str, *, wait_for_hook: bool = False
     ) -> dict[str, Any] | None:
         """Delete the config for a key.
 
@@ -214,7 +214,11 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
             await hass.async_add_executor_job(_write, path, current)
 
         if self.post_write_hook is not None:
-            hass.async_create_task(self.post_write_hook(ACTION_DELETE, config_key))
+            hook = self.post_write_hook(ACTION_DELETE, config_key)
+            if wait_for_hook:
+                await hook
+            else:
+                hass.async_create_task(hook)
 
         return value
 

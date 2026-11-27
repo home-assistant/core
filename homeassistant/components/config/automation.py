@@ -1,7 +1,10 @@
 """Provide configuration end points for Automations."""
 
+import copy
 from typing import Any, override
 import uuid
+
+import probatio
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.automation.config import async_validate_config_item  # pylint: disable=home-assistant-component-root-import
@@ -9,6 +12,7 @@ from homeassistant.components.automation.const import DATA_COMPONENT  # pylint: 
 from homeassistant.config import AUTOMATION_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.util.hass_dict import HassKey
 
@@ -59,23 +63,32 @@ def async_setup(hass: HomeAssistant) -> bool:
     return True
 
 
-@callback
-def async_is_loaded(
+async def async_is_loaded(
     hass: HomeAssistant, config_key: str, config: dict[str, Any] | None
 ) -> bool:
     """Return if the automation is running with the given config."""
+    if config is None or (component := hass.data.get(DATA_COMPONENT)) is None:
+        return False
     entity_id = er.async_get(hass).async_get_entity_id(
         AUTOMATION_DOMAIN, AUTOMATION_DOMAIN, config_key
     )
-    if entity_id is None:
+    if (
+        entity_id is None
+        or (entity := component.get_entity(entity_id)) is None
+        or not entity.available
+    ):
         return False
-    if (component := hass.data.get(DATA_COMPONENT)) is None:
+    # Validate like the reload did, so both configs are normalized the same way
+    try:
+        validated = await async_validate_config_item(
+            hass, config_key, copy.deepcopy(config)
+        )
+    except probatio.Invalid, HomeAssistantError:
         return False
-    entity = component.get_entity(entity_id)
-    # For a blueprint automation raw_config is the config generated from it
     return (
-        entity is not None
-        and (entity.raw_blueprint_inputs or entity.raw_config) == config
+        validated is not None
+        and entity.raw_config == validated.raw_config
+        and entity.raw_blueprint_inputs == validated.raw_blueprint_inputs
     )
 
 
