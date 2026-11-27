@@ -11,9 +11,6 @@ from typing import Any, override
 from aiohttp import ClientError, ClientSession
 
 from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
     NotifyEntity,
@@ -40,6 +37,9 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
     ATTR_OS_VERSION,
+    ATTR_PAYLOAD_DATA,
+    ATTR_PAYLOAD_MESSAGE,
+    ATTR_PAYLOAD_TITLE,
     ATTR_PUSH_RATE_LIMITS,
     ATTR_PUSH_RATE_LIMITS_ERRORS,
     ATTR_PUSH_RATE_LIMITS_MAXIMUM,
@@ -96,9 +96,9 @@ class MobileAppNotifyEntity(NotifyEntity):
         """Send a message via notify.send_message action."""
 
         data: dict[str, Any] = {}
-        data[ATTR_MESSAGE] = message
+        data[ATTR_PAYLOAD_MESSAGE] = message
         if title is not None:
-            data[ATTR_TITLE] = title
+            data[ATTR_PAYLOAD_TITLE] = title
 
         # The app may register again before a queued notification is sent
         device_name = self._config_entry.title
@@ -202,18 +202,18 @@ class MobileAppNotificationService(BaseNotificationService):
     @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the Lambda APNS gateway."""
-        data = {ATTR_MESSAGE: message}
+        data = {ATTR_PAYLOAD_MESSAGE: message}
 
         # Remove default title from notifications.
         if (
             title_arg := kwargs.get(NotifyServiceArgument.TITLE)
         ) is not None and title_arg != ATTR_TITLE_DEFAULT:
-            data[ATTR_TITLE] = title_arg
+            data[ATTR_PAYLOAD_TITLE] = title_arg
         if not (targets := kwargs.get(NotifyServiceArgument.TARGET)):
             targets = push_registrations(self.hass).values()
 
         if (data_arg := kwargs.get(NotifyServiceArgument.DATA)) is not None:
-            data[ATTR_DATA] = data_arg
+            data[ATTR_PAYLOAD_DATA] = data_arg
 
         local_push_channels: dict[str, PushChannel] = self.hass.data[DOMAIN][
             DATA_PUSH_CHANNEL
