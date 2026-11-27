@@ -570,13 +570,16 @@ def list_or_template(
 ) -> Callable[[Any], list[Any] | Template]:
     """Validate a static list or a template that renders a list.
 
-    wrap_plain_string turns a string without a template into a single item list.
+    wrap_plain_string turns a string without a template into a single item list
+    and an empty value into an empty list.
     """
     validate_list = probatio.Schema([item_validator])
 
     def validate(value: Any) -> list[Any] | Template:
         if isinstance(value, list):
             return validate_list(value)
+        if wrap_plain_string and value is None:
+            return []
         if (
             wrap_plain_string
             and isinstance(value, str)

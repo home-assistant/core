@@ -191,7 +191,7 @@ class FanExtraStoredData(ExtraStoredData):
                 is_on=restored["is_on"],
                 percentage=restored["percentage"],
                 preset_mode=restored["preset_mode"],
-                # Not stored before preset_modes became a template
+                # Older saved data has no preset_modes
                 preset_modes=restored.get("preset_modes"),
                 oscillating=restored["oscillating"],
                 direction=restored["direction"],
@@ -240,7 +240,11 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
             CONF_PRESET_MODE,
             "_attr_preset_mode",
             tcv.item_in_list(
-                self, CONF_PRESET_MODE, "_attr_preset_modes", CONF_PRESET_MODES
+                self,
+                CONF_PRESET_MODE,
+                "_attr_preset_modes",
+                CONF_PRESET_MODES,
+                stringify_result=True,
             ),
         )
 
@@ -413,7 +417,9 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
         self._attr_is_on = extra_data.is_on
         self._attr_percentage = extra_data.percentage
         self._attr_preset_mode = extra_data.preset_mode
-        self._attr_preset_modes = extra_data.preset_modes
+        # Only restore a configured list that has not rendered yet
+        if self._attr_preset_modes is None and CONF_PRESET_MODES in self._config:
+            self._attr_preset_modes = extra_data.preset_modes
         self._attr_oscillating = extra_data.oscillating
         self._attr_current_direction = extra_data.direction
 

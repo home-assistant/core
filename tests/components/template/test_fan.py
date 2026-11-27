@@ -29,6 +29,7 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import async_setup_component
 
 from .conftest import (
     ConfigurationStyle,
@@ -438,6 +439,51 @@ async def test_preset_modes_template(
 
     state = hass.states.get(TEST_FAN.entity_id)
     assert state.attributes.get("preset_modes") == expected
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute", "attribute_template"),
+    [(1, "{{ 1 == 1 }}", "preset_mode", "{{ 2 }}")],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    "extra_config",
+    [
+        {"preset_modes": [1, 2], **PRESET_MODE_ACTION},
+        {"preset_modes": "{{ [1, 2] }}", **PRESET_MODE_ACTION},
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_fan")
+async def test_numeric_preset_mode(hass: HomeAssistant) -> None:
+    """Test a numeric preset_mode matches the preset_modes stored as strings."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+    _verify(hass, STATE_ON, None, None, None, "2")
+
+
+@pytest.mark.parametrize(
+    ("count", "config", "extra_config"),
+    [
+        (
+            1,
+            {"state": "{{ true }}", "preset_modes": None, **PRESET_MODE_ACTION},
+            OPTIMISTIC_ON_OFF_ACTIONS,
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_fan")
+async def test_empty_preset_modes(hass: HomeAssistant) -> None:
+    """Test an empty preset_modes option is an empty list."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_FAN.entity_id)
+    assert state.attributes["preset_modes"] == []
 
 
 @pytest.mark.parametrize(
@@ -1699,6 +1745,61 @@ async def test_restore_state(
     assert state.attributes["preset_mode"] == "low"
     assert state.attributes["oscillating"] is True
     assert state.attributes["direction"] == DIRECTION_REVERSE
+
+
+SAVED_PRESET_MODES_EXTRA_DATA = {
+    "is_on": True,
+    "percentage": None,
+    "preset_mode": None,
+    "preset_modes": ["old"],
+    "oscillating": None,
+    "direction": None,
+}
+
+
+async def test_restore_state_removed_preset_modes(hass: HomeAssistant) -> None:
+    """Test saved preset_modes are not restored once the option is removed."""
+    setup_mock_template_entity_restore_state(
+        hass, TEST_FAN, STATE_ON, saved_extra_data=SAVED_PRESET_MODES_EXTRA_DATA
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_FAN,
+        ConfigurationStyle.TRIGGER,
+        {**OPTIMISTIC_PRESET_MODE_CONFIG, "state": "{{ true }}"},
+    )
+
+    assert_state_and_attributes(hass, TEST_FAN, STATE_ON, {"preset_modes": None})
+
+
+async def test_restore_state_keeps_rendered_preset_modes(hass: HomeAssistant) -> None:
+    """Test a live reload keeps preset_modes that rendered before the restore."""
+    setup_mock_template_entity_restore_state(
+        hass, TEST_FAN, STATE_ON, saved_extra_data=SAVED_PRESET_MODES_EXTRA_DATA
+    )
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        template.DOMAIN,
+        {
+            "template": {
+                "fan": {
+                    "name": TEST_FAN.object_id,
+                    "default_entity_id": TEST_FAN.entity_id,
+                    **OPTIMISTIC_PRESET_MODE_CONFIG,
+                    "preset_modes": "{{ ['auto', 'smart'] }}",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert_state_and_attributes(
+        hass, TEST_FAN, STATE_ON, {"preset_modes": ["auto", "smart"]}
+    )
 
 
 async def test_restore_state_static_preset_modes(hass: HomeAssistant) -> None:

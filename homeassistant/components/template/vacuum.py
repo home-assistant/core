@@ -283,7 +283,7 @@ class VacuumExtraStoredData(ExtraStoredData):
             return cls(
                 activity=activity,
                 fan_speed=restored["fan_speed"],
-                # Not stored before fan_speeds became a template
+                # Older saved data has no fan_speed_list
                 fan_speed_list=restored.get("fan_speed_list"),
             )
         except KeyError, ValueError:
@@ -321,7 +321,11 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
             CONF_FAN_SPEED,
             "_attr_fan_speed",
             tcv.item_in_list(
-                self, CONF_FAN_SPEED, "_attr_fan_speed_list", CONF_FAN_SPEED_LIST
+                self,
+                CONF_FAN_SPEED,
+                "_attr_fan_speed_list",
+                CONF_FAN_SPEED_LIST,
+                stringify_result=True,
             ),
         )
         self.add_assumed_attribute(
@@ -476,7 +480,9 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         """Restore the extra data."""
         self._attr_activity = extra_data.activity
         self._attr_fan_speed = extra_data.fan_speed
-        self._attr_fan_speed_list = extra_data.fan_speed_list or []
+        # Only restore a configured list that has not rendered yet
+        if not self._attr_fan_speed_list and CONF_FAN_SPEED_LIST in self._config:
+            self._attr_fan_speed_list = extra_data.fan_speed_list or []
 
 
 class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):
