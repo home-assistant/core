@@ -135,6 +135,7 @@ async def async_setup_entry(
     def _check_robots() -> None:
         all_robots = coordinator.all_robots()
         current_robots = {robot.serial for robot in all_robots}
+        known_robots.intersection_update(current_robots)
         new_robots = current_robots - known_robots
         if new_robots:
             known_robots.update(new_robots)

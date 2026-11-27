@@ -295,15 +295,16 @@ async def test_removed_robot_is_ignored(
     assert response["success"]
 
 
-async def test_robot_removed_from_account_removes_device(
+async def test_robot_removed_and_onboarded_again(
     hass: HomeAssistant,
     mock_account: MagicMock,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the device is removed once the robot is no longer onboarded."""
+    """Test a robot's device is removed and recreated as its onboarding changes."""
     entry = await setup_integration(hass, mock_account)
     assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1
+    assert hass.states.get(VACUUM_ENTITY_ID)
 
     mock_account.robots[0] = LitterRobot3(
         data={**ROBOT_DATA, "isOnboarded": False}, account=mock_account
@@ -313,6 +314,15 @@ async def test_robot_removed_from_account_removes_device(
     await hass.async_block_till_done()
 
     assert not dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert not hass.states.get(VACUUM_ENTITY_ID)
+
+    mock_account.robots[0] = LitterRobot3(data=ROBOT_DATA, account=mock_account)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1
+    assert hass.states.get(VACUUM_ENTITY_ID)
 
 
 async def test_update_auth_error_triggers_reauth(
