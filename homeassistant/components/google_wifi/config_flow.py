@@ -39,13 +39,7 @@ class GoogleWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            host: str | None = user_input[CONF_HOST]
-            if host is None:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=CONFIG_SCHEMA,
-                    errors={"host": "invalid_host"},
-                )
+            host: str = user_input[CONF_HOST]
             if (errors := await _validate_host(self, host)) == {}:
                 self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
                 return self.async_create_entry(title="Google Wifi", data=user_input)
@@ -77,11 +71,11 @@ class GoogleWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = import_data[CONF_HOST]
         name = import_data.get(CONF_NAME, "Google Wifi")
 
+        self._async_abort_entries_match({CONF_HOST: host})
         errors = await _validate_host(self, host)
-        if errors != {}:
+        if errors and errors["base"] != "cannot_connect":
             return self.async_abort(reason=errors["base"])
 
-        self._async_abort_entries_match({CONF_HOST: host})
         return self.async_create_entry(
             title=name,
             data={

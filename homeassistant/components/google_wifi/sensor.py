@@ -124,7 +124,6 @@ async def async_setup_entry(
         GoogleWifiSensor(coordinator, description)
         for key, description in SENSOR_TYPES.items()
         if key in entry.data.get(CONF_MONITORED_CONDITIONS, SENSOR_KEYS)
-        if description.value_fn(coordinator.data) is not None
     )
 
 
@@ -138,7 +137,10 @@ async def async_setup_platform(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
     )
-    if result.get("type") is FlowResultType.ABORT:
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
         return
 
     ir.async_create_issue(
@@ -175,9 +177,9 @@ class GoogleWifiSensor(CoordinatorEntity[GoogleWifiCoordinator], SensorEntity):
             f"{coordinator.config_entry.title} "
             f"{description.key.replace('_', ' ').title()}"
         )
-        self._attr_unique_id = f"{data.system.hardware_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, data.system.hardware_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name=self.coordinator.config_entry.title,
             manufacturer="Google",
             model_id=data.system.model_id,
