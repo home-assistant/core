@@ -294,6 +294,49 @@ async def test_new_node_fetches_software(
     assert hass.states.get(NEW_NODE_ENTITY_ID).state == STATE_ON
 
 
+async def test_new_node_failed_software_retried_on_interval(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed software fetch for a new node is retried on the software interval."""
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    node = mock_proxmox_client._node_mock
+    node.version.side_effect = ProxmoxConnectionError
+    mock_proxmox_client.cluster_resources.resources = [
+        node_resource
+        for node_resource in mock_proxmox_client._all_cluster_resources
+        if node_resource.node in ("pve1", "pve2")
+    ]
+    freezer.tick(STATUS_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert node.version.call_count == 2
+    assert hass.states.get(NEW_NODE_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # A failed software refresh must not be retried on every status update
+    freezer.tick(STATUS_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert node.version.call_count == 2
+
+    node.version.side_effect = None
+    freezer.tick(SOFTWARE_UPDATE_INTERVAL - STATUS_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert node.version.call_count == 4
+    assert hass.states.get(NEW_NODE_ENTITY_ID).state == STATE_ON
+
+
 async def test_update_up_to_date(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
