@@ -8,10 +8,8 @@ from datetime import timedelta
 from typing import Any, override
 
 from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
+    NotifyServiceArgument,
 )
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_ON
 from homeassistant.core import Event, EventStateChangedData, HassJob, HomeAssistant
@@ -183,13 +181,13 @@ class AlertEntity(Entity):
         if not self._notifiers:
             return
 
-        msg_payload = {ATTR_MESSAGE: message}
+        msg_payload: dict[str, Any] = {NotifyServiceArgument.MESSAGE: message}
 
         if self._title_template is not None:
             title = self._title_template.async_render(parse_result=False)
-            msg_payload[ATTR_TITLE] = title
+            msg_payload[NotifyServiceArgument.TITLE] = title
         if self._data:
-            msg_payload[ATTR_DATA] = self._data
+            msg_payload[NotifyServiceArgument.DATA] = self._data
 
         LOGGER.debug(msg_payload)
 

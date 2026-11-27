@@ -5,13 +5,10 @@ from typing import TYPE_CHECKING, Any, cast, override
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_HS_COLOR,
-    ATTR_TRANSITION,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
     filter_supported_color_modes,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -155,8 +152,8 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         # This allows transitioning to off, but resets the brightness
         # to 1 for the next set_state(True) command
         transition_time = None
-        if ATTR_TRANSITION in kwargs:
-            transition_time = int(kwargs[ATTR_TRANSITION] * 10)
+        if LightServiceArgument.TRANSITION in kwargs:
+            transition_time = int(kwargs[LightServiceArgument.TRANSITION] * 10)
 
             await self._api(
                 self._device_control.set_dimmer(
@@ -170,12 +167,12 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         transition_time = None
-        if ATTR_TRANSITION in kwargs:
-            transition_time = int(kwargs[ATTR_TRANSITION] * 10)
+        if LightServiceArgument.TRANSITION in kwargs:
+            transition_time = int(kwargs[LightServiceArgument.TRANSITION] * 10)
 
         dimmer_command = None
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            brightness = kwargs[LightServiceArgument.BRIGHTNESS]
             brightness = min(brightness, 254)
             dimmer_data = {
                 "dimmer": brightness,
@@ -187,10 +184,14 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
             dimmer_command = self._device_control.set_state(True)
 
         color_command = None
-        if ATTR_HS_COLOR in kwargs and self._supports_hs_color:
-            hue = int(kwargs[ATTR_HS_COLOR][0] * (self._device_control.max_hue / 360))
+        if LightServiceArgument.HS_COLOR in kwargs and self._supports_hs_color:
+            hue = int(
+                kwargs[LightServiceArgument.HS_COLOR][0]
+                * (self._device_control.max_hue / 360)
+            )
             sat = int(
-                kwargs[ATTR_HS_COLOR][1] * (self._device_control.max_saturation / 100)
+                kwargs[LightServiceArgument.HS_COLOR][1]
+                * (self._device_control.max_saturation / 100)
             )
             color_command = self._device_control.set_hsb(
                 hue=hue, saturation=sat, transition_time=transition_time
@@ -198,10 +199,10 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
             transition_time = None
 
         temp_command = None
-        if ATTR_COLOR_TEMP_KELVIN in kwargs and (
+        if LightServiceArgument.COLOR_TEMP_KELVIN in kwargs and (
             self._device_data.supports_color_temp or self._supports_hs_color
         ):
-            temp_k = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            temp_k = kwargs[LightServiceArgument.COLOR_TEMP_KELVIN]
             # White Spectrum bulb
             if self._device_data.supports_color_temp:
                 temp = color_util.color_temperature_kelvin_to_mired(temp_k)
