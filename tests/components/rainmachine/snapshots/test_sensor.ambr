@@ -74,8 +74,11 @@
     'name': None,
     'object_id_base': 'Flower Box area',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Flower Box area',
     'platform': 'rainmachine',
@@ -84,13 +87,15 @@
     'supported_features': 0,
     'translation_key': 'zone_area',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2_area',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[sensor.12345_flower_box_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower Box area',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_flower_box_area',
@@ -324,8 +329,11 @@
     'name': None,
     'object_id_base': 'Flower Box precipitation rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Flower Box precipitation rate',
     'platform': 'rainmachine',
@@ -334,13 +342,15 @@
     'supported_features': 0,
     'translation_key': 'zone_precipitation_rate',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2_precipitation_rate',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
 # name: test_sensors[sensor.12345_flower_box_precipitation_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower Box precipitation rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_flower_box_precipitation_rate',
@@ -847,8 +857,11 @@
     'name': None,
     'object_id_base': 'Landscaping area',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Landscaping area',
     'platform': 'rainmachine',
@@ -857,13 +870,15 @@
     'supported_features': 0,
     'translation_key': 'zone_area',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1_area',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[sensor.12345_landscaping_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping area',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_landscaping_area',
@@ -1097,8 +1112,11 @@
     'name': None,
     'object_id_base': 'Landscaping precipitation rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Landscaping precipitation rate',
     'platform': 'rainmachine',
@@ -1107,13 +1125,15 @@
     'supported_features': 0,
     'translation_key': 'zone_precipitation_rate',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1_precipitation_rate',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
 # name: test_sensors[sensor.12345_landscaping_precipitation_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping precipitation rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_landscaping_precipitation_rate',
@@ -1723,8 +1743,11 @@
     'name': None,
     'object_id_base': 'TEST area',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'TEST area',
     'platform': 'rainmachine',
@@ -1733,13 +1756,15 @@
     'supported_features': 0,
     'translation_key': 'zone_area',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3_area',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[sensor.12345_test_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 TEST area',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_test_area',
@@ -1973,8 +1998,11 @@
     'name': None,
     'object_id_base': 'TEST precipitation rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'TEST precipitation rate',
     'platform': 'rainmachine',
@@ -1983,13 +2011,15 @@
     'supported_features': 0,
     'translation_key': 'zone_precipitation_rate',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3_precipitation_rate',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
 # name: test_sensors[sensor.12345_test_precipitation_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 TEST precipitation rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_test_precipitation_rate',
@@ -2496,8 +2526,11 @@
     'name': None,
     'object_id_base': 'Zone 10 area',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Zone 10 area',
     'platform': 'rainmachine',
@@ -2506,13 +2539,15 @@
     'supported_features': 0,
     'translation_key': 'zone_area',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10_area',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_10_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10 area',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_10_area',
@@ -2746,8 +2781,11 @@
     'name': None,
     'object_id_base': 'Zone 10 precipitation rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Zone 10 precipitation rate',
     'platform': 'rainmachine',
@@ -2756,13 +2794,15 @@
     'supported_features': 0,
     'translation_key': 'zone_precipitation_rate',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10_precipitation_rate',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_10_precipitation_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10 precipitation rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_10_precipitation_rate',
@@ -3269,8 +3309,11 @@
     'name': None,
     'object_id_base': 'Zone 11 area',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Zone 11 area',
     'platform': 'rainmachine',
@@ -3279,13 +3322,15 @@
     'supported_features': 0,
     'translation_key': 'zone_area',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11_area',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_11_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11 area',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_11_area',
@@ -3519,8 +3564,11 @@
     'name': None,
     'object_id_base': 'Zone 11 precipitation rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Zone 11 precipitation rate',
     'platform': 'rainmachine',
@@ -3529,13 +3577,15 @@
     'supported_features': 0,
     'translation_key': 'zone_precipitation_rate',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11_precipitation_rate',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_11_precipitation_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11 precipitation rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_11_precipitation_rate',
@@ -4042,8 +4092,11 @@
     'name': None,
     'object_id_base': 'Zone 12 area',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Zone 12 area',
     'platform': 'rainmachine',
@@ -4052,13 +4105,15 @@
     'supported_features': 0,
     'translation_key': 'zone_area',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12_area',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_12_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12 area',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_12_area',
@@ -4292,8 +4347,11 @@
     'name': None,
     'object_id_base': 'Zone 12 precipitation rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Zone 12 precipitation rate',
     'platform': 'rainmachine',
@@ -4302,13 +4360,15 @@
     'supported_features': 0,
     'translation_key': 'zone_precipitation_rate',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12_precipitation_rate',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_12_precipitation_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12 precipitation rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_12_precipitation_rate',
@@ -4815,8 +4875,11 @@
     'name': None,
     'object_id_base': 'Zone 4 area',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Zone 4 area',
     'platform': 'rainmachine',
@@ -4825,13 +4888,15 @@
     'supported_features': 0,
     'translation_key': 'zone_area',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4_area',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_4_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4 area',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_4_area',
@@ -5065,8 +5130,11 @@
     'name': None,
     'object_id_base': 'Zone 4 precipitation rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Zone 4 precipitation rate',
     'platform': 'rainmachine',
@@ -5075,13 +5143,15 @@
     'supported_features': 0,
     'translation_key': 'zone_precipitation_rate',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4_precipitation_rate',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_4_precipitation_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4 precipitation rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_4_precipitation_rate',
@@ -5588,8 +5658,11 @@
     'name': None,
     'object_id_base': 'Zone 5 area',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Zone 5 area',
     'platform': 'rainmachine',
@@ -5598,13 +5671,15 @@
     'supported_features': 0,
     'translation_key': 'zone_area',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5_area',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_5_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5 area',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_5_area',
@@ -5838,8 +5913,11 @@
     'name': None,
     'object_id_base': 'Zone 5 precipitation rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Zone 5 precipitation rate',
     'platform': 'rainmachine',
@@ -5848,13 +5926,15 @@
     'supported_features': 0,
     'translation_key': 'zone_precipitation_rate',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5_precipitation_rate',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_5_precipitation_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5 precipitation rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_5_precipitation_rate',
@@ -6361,8 +6441,11 @@
     'name': None,
     'object_id_base': 'Zone 6 area',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Zone 6 area',
     'platform': 'rainmachine',
@@ -6371,13 +6454,15 @@
     'supported_features': 0,
     'translation_key': 'zone_area',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6_area',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_6_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6 area',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_6_area',
@@ -6611,8 +6696,11 @@
     'name': None,
     'object_id_base': 'Zone 6 precipitation rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Zone 6 precipitation rate',
     'platform': 'rainmachine',
@@ -6621,13 +6709,15 @@
     'supported_features': 0,
     'translation_key': 'zone_precipitation_rate',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6_precipitation_rate',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_6_precipitation_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6 precipitation rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_6_precipitation_rate',
@@ -7134,8 +7224,11 @@
     'name': None,
     'object_id_base': 'Zone 7 area',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Zone 7 area',
     'platform': 'rainmachine',
@@ -7144,13 +7237,15 @@
     'supported_features': 0,
     'translation_key': 'zone_area',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7_area',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_7_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7 area',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_7_area',
@@ -7384,8 +7479,11 @@
     'name': None,
     'object_id_base': 'Zone 7 precipitation rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Zone 7 precipitation rate',
     'platform': 'rainmachine',
@@ -7394,13 +7492,15 @@
     'supported_features': 0,
     'translation_key': 'zone_precipitation_rate',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7_precipitation_rate',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_7_precipitation_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7 precipitation rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_7_precipitation_rate',
@@ -7907,8 +8007,11 @@
     'name': None,
     'object_id_base': 'Zone 8 area',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Zone 8 area',
     'platform': 'rainmachine',
@@ -7917,13 +8020,15 @@
     'supported_features': 0,
     'translation_key': 'zone_area',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8_area',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_8_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8 area',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_8_area',
@@ -8157,8 +8262,11 @@
     'name': None,
     'object_id_base': 'Zone 8 precipitation rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Zone 8 precipitation rate',
     'platform': 'rainmachine',
@@ -8167,13 +8275,15 @@
     'supported_features': 0,
     'translation_key': 'zone_precipitation_rate',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8_precipitation_rate',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_8_precipitation_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8 precipitation rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_8_precipitation_rate',
@@ -8680,8 +8790,11 @@
     'name': None,
     'object_id_base': 'Zone 9 area',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Zone 9 area',
     'platform': 'rainmachine',
@@ -8690,13 +8803,15 @@
     'supported_features': 0,
     'translation_key': 'zone_area',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9_area',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_9_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9 area',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_9_area',
@@ -8930,8 +9045,11 @@
     'name': None,
     'object_id_base': 'Zone 9 precipitation rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Zone 9 precipitation rate',
     'platform': 'rainmachine',
@@ -8940,13 +9058,15 @@
     'supported_features': 0,
     'translation_key': 'zone_precipitation_rate',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9_precipitation_rate',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
 # name: test_sensors[sensor.12345_zone_9_precipitation_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9 precipitation rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.12345_zone_9_precipitation_rate',

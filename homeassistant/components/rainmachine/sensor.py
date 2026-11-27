@@ -12,7 +12,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfTime, UnitOfVolume
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfArea,
+    UnitOfTime,
+    UnitOfVolume,
+    UnitOfVolumetricFlux,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
@@ -83,6 +89,8 @@ class ZoneSensorDefinition(NamedTuple):
     data_key: str
     value_map: Mapping[int, str] | None = None
     water_sense: bool = False
+    device_class: SensorDeviceClass | None = None
+    native_unit_of_measurement: str | None = None
 
 
 def _enum_values(values: Mapping[int, str]) -> dict[int, str]:
@@ -90,12 +98,24 @@ def _enum_values(values: Mapping[int, str]) -> dict[int, str]:
 
 
 ZONE_SENSOR_DEFINITIONS = (
-    ZoneSensorDefinition("area", "area", water_sense=True),
+    ZoneSensorDefinition(
+        "area",
+        "area",
+        water_sense=True,
+        device_class=SensorDeviceClass.AREA,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
+    ),
     ZoneSensorDefinition("current_cycle", "cycle"),
     ZoneSensorDefinition("field_capacity", "fieldCapacity", water_sense=True),
     ZoneSensorDefinition("id", "uid"),
     ZoneSensorDefinition("number_of_cycles", "noOfCycles"),
-    ZoneSensorDefinition("precipitation_rate", "precipitationRate", water_sense=True),
+    ZoneSensorDefinition(
+        "precipitation_rate",
+        "precipitationRate",
+        water_sense=True,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+    ),
     ZoneSensorDefinition("slope", "slope", _enum_values(SLOPE_TYPE_MAP)),
     ZoneSensorDefinition("soil_type", "soil", _enum_values(SOIL_TYPE_MAP)),
     ZoneSensorDefinition(
@@ -266,8 +286,11 @@ async def async_setup_entry(
                         translation_placeholders={"zone_name": zone["name"]},
                         api_category=DATA_ZONES,
                         device_class=(
-                            SensorDeviceClass.ENUM if definition.value_map else None
+                            SensorDeviceClass.ENUM
+                            if definition.value_map
+                            else definition.device_class
                         ),
+                        native_unit_of_measurement=definition.native_unit_of_measurement,
                         options=(
                             list(dict.fromkeys(definition.value_map.values()))
                             if definition.value_map
