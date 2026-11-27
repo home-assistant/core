@@ -3726,6 +3726,14 @@ async def test_migration_polling_disabled_entry_warns(
     assert issue.is_persistent
     assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.config_subentry_id == subentry.subentry_id
+    # Deleting only the subentry of a YAML-imported router would let
+    # the legacy scanner re-import it on the next restart, so the
+    # remediation covers the YAML configuration too.
+    translations = await async_get_translations(hass, "en", "issues", {DOMAIN})
+    description = translations[
+        f"component.{DOMAIN}.issues.migration_polling_enabled.description"
+    ]
+    assert "YAML" in description
 
     # Deleting the subentry clears the warning.
     hass.config_entries.async_remove_subentry(mock_config_entry, subentry.subentry_id)

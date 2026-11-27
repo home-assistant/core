@@ -95,7 +95,7 @@
       "title": "Failed to reload main entry for router {host}"
     },
     "migration_polling_enabled": {
-      "description": "The OpenWrt (ubus) entry for `{host}` had polling disabled, but the main entry polls every router on it, so `{host}` is polled now. Subentries cannot carry a polling setting; delete the `{host}` subentry if the router should not be polled.",
+      "description": "The OpenWrt (ubus) entry for `{host}` had polling disabled, but the main entry polls every router on it, so `{host}` is polled now. Subentries cannot carry a polling setting; if the router should not be polled, delete the `{host}` subentry and remove the router's `device_tracker` YAML configuration, as the legacy scanner re-imports it on the next restart.",
       "title": "Router {host} is now polled"
     },
     "migration_removal_failed": {
