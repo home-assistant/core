@@ -21,16 +21,6 @@
         },
         "description": "The meter format could not be detected from the telegram."
       },
-      "reconfigure": {
-        "data": {
-          "dsmr_version": "[%key:component::homey_energy_dongle::config::step::dsmr_version::data::dsmr_version%]",
-          "host": "[%key:common::config_flow::data::host%]"
-        },
-        "data_description": {
-          "dsmr_version": "[%key:component::homey_energy_dongle::config::step::dsmr_version::data_description::dsmr_version%]",
-          "host": "[%key:component::homey_energy_dongle::config::step::user::data_description::host%]"
-        }
-      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"

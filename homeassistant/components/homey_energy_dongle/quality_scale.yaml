@@ -72,7 +72,9 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow:
+    status: todo
+    comment: Reconfigure is added in a follow-up to keep the first pull request small.
   repair-issues: done
   stale-devices: done
 

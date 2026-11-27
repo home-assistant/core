@@ -65,9 +65,6 @@ _VERSION_FIELD = {
 }
 STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 STEP_VERSION_SCHEMA = probatio.Schema(_VERSION_FIELD)
-STEP_RECONFIGURE_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_HOST): str, **_VERSION_FIELD}
-)
 
 
 class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -259,38 +256,5 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="zeroconf_meter",
             description_placeholders={"name": self._title},
-            errors=errors,
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Change the IP address or DSMR version of a configured dongle."""
-        entry = self._get_reconfigure_entry()
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            data = {**entry.data, **user_input}
-            error = await self._async_read_telegram(data) or self._version_error(
-                data[CONF_DSMR_VERSION]
-            )
-            if error is None:
-                # Only discovery tells which dongle answers on a new address.
-                return self.async_update_reload_and_abort(
-                    entry,
-                    unique_id=(
-                        entry.unique_id
-                        if user_input[CONF_HOST] == entry.data[CONF_HOST]
-                        else None
-                    ),
-                    data_updates=user_input,
-                )
-            errors["base"] = error
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_RECONFIGURE_SCHEMA, user_input or entry.data
-            ),
             errors=errors,
         )
