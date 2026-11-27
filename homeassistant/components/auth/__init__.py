@@ -42,11 +42,13 @@ Request a new access token using a refresh token.
 }
 
 Return value will be a new access token. The access token will have
-a limited expiration.
+a limited expiration. The response also has the refresh token to use for the
+next request. Clients must store it.
 
 {
     "access_token": "ABCDEFGH",
     "expires_in": 1800,
+    "refresh_token": "IJKLMNOPQRST",
     "token_type": "Bearer"
 }
 
