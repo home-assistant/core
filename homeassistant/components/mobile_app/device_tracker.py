@@ -10,7 +10,6 @@ import probatio
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
-    ATTR_IN_ZONES,
     ATTR_LOCATION_NAME,
     TrackerEntity,
     TrackerEntityStateAttribute,
@@ -40,6 +39,7 @@ from .const import (
     ATTR_ALTITUDE,
     ATTR_COURSE,
     ATTR_DEVICE_NAME,
+    ATTR_IN_ZONES,
     ATTR_RAW_GPS,
     ATTR_RAW_GPS_ACCURACY,
     ATTR_SPEED,
