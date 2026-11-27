@@ -59,7 +59,7 @@ class SwitchBotCloudCover(SwitchBotCloudEntity, CoverEntity):
 
 
 class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
-    """Representation of a SwitchBot Curtain & Curtain3."""
+    """Representation of a SwitchBot Curtain & Curtain2. ps:Curtain and Curtain2 has same device model."""
 
     _attr_device_class = CoverDeviceClass.CURTAIN
     _attr_supported_features: CoverEntityFeature = (
@@ -67,7 +67,6 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
-        | CoverEntityFeature.SPEED
     )
     _attr_supported_speeds = list(CURTAIN_MODE_MAP)
 
@@ -123,6 +122,18 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
         """Stop the cover."""
         await self.send_api_command(CurtainCommands.PAUSE)
         await self.coordinator.async_request_refresh()
+
+
+class SwitchBotCloudCoverCurtainN(SwitchBotCloudCoverCurtain):
+    """Representation of a SwitchBot Curtain3 and Curtain4."""
+
+    _attr_supported_features: CoverEntityFeature = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.SPEED
+    )
 
 
 class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
@@ -258,6 +269,7 @@ def _async_make_entity(
     | SwitchBotCloudCoverRollerShade
     | SwitchBotCloudCoverCurtain
     | SwitchBotCloudCoverGarageDoorOpener
+    | SwitchBotCloudCoverCurtainN
 ):
     """Make a SwitchBotCloudCover device."""
     if device.device_type == "Blind Tilt":
@@ -266,4 +278,6 @@ def _async_make_entity(
         return SwitchBotCloudCoverRollerShade(api, device, coordinator)
     if device.device_type == "Garage Door Opener":
         return SwitchBotCloudCoverGarageDoorOpener(api, device, coordinator)
-    return SwitchBotCloudCoverCurtain(api, device, coordinator)
+    if device.device_type == "Curtain":
+        return SwitchBotCloudCoverCurtain(api, device, coordinator)
+    return SwitchBotCloudCoverCurtainN(api, device, coordinator)

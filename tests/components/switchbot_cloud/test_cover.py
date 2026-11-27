@@ -14,7 +14,6 @@ from switchbot_api import (
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverService
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.components.switchbot_cloud.const import (
-    CURTAIN_MODE_DEFAULT,
     CURTAIN_MODE_NORMAL,
     CURTAIN_MODE_SILENT,
 )
@@ -112,54 +111,62 @@ async def test_cover_set_attributes_coordinator_is_none(
 
 
 @pytest.mark.parametrize(
-    ("service", "command", "args", "param"),
+    ("deviceType", "service", "command", "args", "param"),
     [
-        (SERVICE_OPEN_COVER, CommonCommands.ON, {}, "default"),
-        (SERVICE_CLOSE_COVER, CommonCommands.OFF, {}, "default"),
-        (SERVICE_STOP_COVER, CurtainCommands.PAUSE, {}, "default"),
+        ("Curtain4", SERVICE_OPEN_COVER, CommonCommands.ON, {}, "default"),
+        ("Curtain4", SERVICE_CLOSE_COVER, CommonCommands.OFF, {}, "default"),
+        ("Curtain4", SERVICE_STOP_COVER, CurtainCommands.PAUSE, {}, "default"),
         (
+            "Curtain4",
             SERVICE_OPEN_COVER,
             CurtainCommands.SET_POSITION,
             {"speed": CURTAIN_MODE_NORMAL},
             "0,0,0",
         ),
         (
+            "Curtain4",
             SERVICE_OPEN_COVER,
             CurtainCommands.SET_POSITION,
             {"speed": CURTAIN_MODE_SILENT},
             "0,1,0",
         ),
         (
-            SERVICE_OPEN_COVER,
-            CurtainCommands.SET_POSITION,
-            {"speed": CURTAIN_MODE_DEFAULT},
-            "0,ff,0",
-        ),
-        (
+            "Curtain4",
             SERVICE_CLOSE_COVER,
             CurtainCommands.SET_POSITION,
             {"speed": CURTAIN_MODE_NORMAL},
             "0,0,100",
         ),
         (
+            "Curtain4",
             SERVICE_CLOSE_COVER,
             CurtainCommands.SET_POSITION,
             {"speed": CURTAIN_MODE_SILENT},
             "0,1,100",
         ),
         (
-            SERVICE_CLOSE_COVER,
-            CurtainCommands.SET_POSITION,
-            {"speed": CURTAIN_MODE_DEFAULT},
-            "0,ff,100",
-        ),
-        (
+            "Curtain4",
             SERVICE_SET_COVER_POSITION,
             CurtainCommands.SET_POSITION,
-            {"speed": CURTAIN_MODE_DEFAULT, "position": 50},
+            {"position": 50},
             "0,ff,50",
         ),
         (
+            "Curtain4",
+            SERVICE_SET_COVER_POSITION,
+            CurtainCommands.SET_POSITION,
+            {"position": 50, "speed": CURTAIN_MODE_SILENT},
+            "0,1,50",
+        ),
+        (
+            "Curtain4",
+            SERVICE_SET_COVER_POSITION,
+            CurtainCommands.SET_POSITION,
+            {"position": 50, "speed": CURTAIN_MODE_NORMAL},
+            "0,0,50",
+        ),
+        (
+            "Curtain",
             SERVICE_SET_COVER_POSITION,
             CurtainCommands.SET_POSITION,
             {"position": 50},
@@ -171,6 +178,7 @@ async def test_curtain_features(
     hass: HomeAssistant,
     mock_list_devices,
     mock_get_status,
+    device_type,
     service,
     command,
     args,
@@ -182,7 +190,7 @@ async def test_curtain_features(
             version="V1.0",
             deviceId="cover-id-1",
             deviceName="cover-1",
-            deviceType="Curtain",
+            deviceType=device_type,
             hubDeviceId="test-hub-id",
         ),
     ]
