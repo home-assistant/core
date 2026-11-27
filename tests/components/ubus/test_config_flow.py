@@ -620,18 +620,6 @@ async def test_import_flow_legacy_entries_join_lowest(
                 title=MOCK_HOST,
                 disabled_by=ConfigEntryDisabler.USER,
             ),
-            MOCK_CONFIG,
-            {MOCK_HOST},
-            1,
-            id="disabled-data-same-host",
-        ),
-        pytest.param(
-            MockConfigEntry(
-                domain=DOMAIN,
-                data=MOCK_CONFIG,
-                title=MOCK_HOST,
-                disabled_by=ConfigEntryDisabler.USER,
-            ),
             MOCK_HOST_CONFIG_B,
             {MOCK_HOST, MOCK_HOST_B},
             1,
@@ -666,19 +654,6 @@ async def test_import_flow_legacy_entries_join_lowest(
                 domain=DOMAIN,
                 data={},
                 title=HUB_TITLE,
-                subentries_data=[router_subentry_data(MOCK_CONFIG)],
-                disabled_by=ConfigEntryDisabler.USER,
-            ),
-            MOCK_CONFIG,
-            {MOCK_HOST},
-            1,
-            id="disabled-subentry-same-host",
-        ),
-        pytest.param(
-            MockConfigEntry(
-                domain=DOMAIN,
-                data={},
-                title=HUB_TITLE,
                 version=3,
             ),
             MOCK_HOST_CONFIG_B,
@@ -700,11 +675,13 @@ async def test_import_flow_skips_ineligible_entries(
     """Test an import creates the hub instead of joining an entry which cannot poll.
 
     A disabled entry is off, and an entry on a schema newer than the
-    config flow's version is refused by this release; both are excluded
-    from the hub selection and from the host dedup, as a router added
-    to either would never be polled. The disabled entry is consolidated
-    into the new hub at setup, as by the migration; the newer-schema
-    entry is left in place for the release which owns its schema.
+    config flow's version is refused by this release; a router added to
+    either would never be polled, so both are excluded from the hub
+    selection. Only the newer-schema entry's hosts are skipped by the
+    host dedup, as this release cannot read its data. The disabled entry
+    is consolidated into the new hub at setup, as by the migration; the
+    newer-schema entry is left in place for the release which owns its
+    schema.
     """
     existing.add_to_hass(hass)
 
@@ -721,6 +698,56 @@ async def test_import_flow_skips_ineligible_entries(
     assert len(entries) == entry_count
     hub = next(entry for entry in entries if entry is not existing)
     assert {subentry.unique_id for subentry in hub.subentries.values()} == hub_hosts
+
+
+@pytest.mark.parametrize(
+    ("existing", "import_config"),
+    [
+        pytest.param(
+            MockConfigEntry(
+                domain=DOMAIN,
+                data=MOCK_CONFIG,
+                title=MOCK_HOST,
+                disabled_by=ConfigEntryDisabler.USER,
+            ),
+            MOCK_CONFIG,
+            id="disabled-data-same-host",
+        ),
+        pytest.param(
+            MockConfigEntry(
+                domain=DOMAIN,
+                data={},
+                title=HUB_TITLE,
+                subentries_data=[router_subentry_data(MOCK_CONFIG)],
+                disabled_by=ConfigEntryDisabler.USER,
+            ),
+            MOCK_CONFIG,
+            id="disabled-subentry-same-host",
+        ),
+    ],
+)
+async def test_import_flow_disabled_same_host_aborts(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_ubus: MagicMock,
+    existing: MockConfigEntry,
+    import_config: dict[str, Any],
+) -> None:
+    """Test importing the host of a disabled entry aborts as already configured.
+
+    The disabled entry is off, but its host is still configured, and a
+    new entry for the same host would only be consolidated into it at
+    setup; the import aborts instead of creating it.
+    """
+    existing.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_config
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [existing]
 
 
 async def test_import_flow_preserves_dhcp_software(

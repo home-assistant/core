@@ -112,6 +112,20 @@ def _router_subentry_data(data: dict[str, Any]) -> ConfigSubentryData:
     )
 
 
+def _async_supported_entries(hass: HomeAssistant) -> list[ConfigEntry]:
+    """Return the entries this release can still read.
+
+    An entry on a schema newer than the config flow's version is refused
+    by this release, as its hosts cannot be deduped; a disabled entry
+    still counts, as its hosts remain configured while it is off.
+    """
+    return [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.version <= UbusConfigFlow.VERSION
+    ]
+
+
 def _async_hub_candidates(hass: HomeAssistant) -> list[ConfigEntry]:
     """Return the entries eligible to become the hub.
 
@@ -120,9 +134,7 @@ def _async_hub_candidates(hass: HomeAssistant) -> list[ConfigEntry]:
     either would never be polled, as in the migration's eligibility.
     """
     return [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.version <= UbusConfigFlow.VERSION and entry.disabled_by is None
+        entry for entry in _async_supported_entries(hass) if entry.disabled_by is None
     ]
 
 
@@ -199,7 +211,7 @@ class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a configuration from configuration.yaml."""
-        entries = _async_hub_candidates(self.hass)
+        entries = _async_supported_entries(self.hass)
         hosts = {entry.data[CONF_HOST] for entry in entries if entry.data} | {
             subentry.unique_id
             for entry in entries
