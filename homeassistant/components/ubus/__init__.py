@@ -91,6 +91,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> None
     entry.async_on_unload(entry.add_update_listener(_async_entry_updated))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    issue_registry = ir.async_get(hass)
+    for issue in list(issue_registry.issues.values()):
+        if (
+            issue.domain == DOMAIN
+            and issue.config_entry_id == entry.entry_id
+            and issue.translation_key == "migration_hub_reload_failed"
+        ):
+            ir.async_delete_issue(hass, DOMAIN, issue.issue_id)
 
 
 def _async_keep_polling() -> None:
