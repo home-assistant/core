@@ -204,6 +204,37 @@ async def test_corrupt_database_files_keep(
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine")
 @pytest.mark.parametrize("persistent_database", [True])
+async def test_corrupt_database_files_keep_issue_removed(
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test keeping the files after the issue was removed while the menu was open."""
+    db_file = Path(recorder_db_url.removeprefix("sqlite:///"))
+    corrupt_files = await hass.async_add_executor_job(_write_corrupt_files, db_file)
+    await async_setup_recorder_instance(hass)
+    await hass.async_block_till_done()
+
+    issue_id = _issue_id(corrupt_files)
+    assert await async_setup_component(hass, "repairs", {})
+    client = await hass_client()
+    flow = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+    result = await process_repair_fix_flow(
+        client, flow["flow_id"], json={"next_step_id": "keep"}
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "files_kept"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.parametrize(
     ("corrupt_file_times", "expected_issue_times"),
     [

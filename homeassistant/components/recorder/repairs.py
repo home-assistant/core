@@ -50,7 +50,8 @@ class CorruptDatabaseFilesRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
         """Keep the files and ignore the issue."""
-        ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
+        if ir.async_get(self.hass).async_get_issue(DOMAIN, self.issue_id):
+            ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
         return self.async_abort(reason="files_kept")
 
 
