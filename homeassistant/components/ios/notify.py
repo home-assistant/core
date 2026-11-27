@@ -8,7 +8,6 @@ import requests
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    ATTR_MESSAGE,
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
@@ -79,27 +78,27 @@ class iOSNotificationService(BaseNotificationService):
     @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the Lambda APNS gateway."""
-        data: dict[str, Any] = {ATTR_MESSAGE: message}
+        data: dict[str, Any] = {"message": message}
 
         # Remove default title from notifications.
         if (
             kwargs.get(ATTR_TITLE) is not None
             and kwargs.get(ATTR_TITLE) != ATTR_TITLE_DEFAULT
         ):
-            data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
+            data["title"] = kwargs.get(ATTR_TITLE)
 
         if not (targets := kwargs.get(ATTR_TARGET)):
             targets = enabled_push_ids(self.hass)
 
         if kwargs.get(ATTR_DATA) is not None:
-            data[ATTR_DATA] = kwargs.get(ATTR_DATA)
+            data["data"] = kwargs.get(ATTR_DATA)
 
         for target in targets:
             if target not in enabled_push_ids(self.hass):
                 _LOGGER.error("The target (%s) does not exist in .ios.conf", targets)
                 return
 
-            data[ATTR_TARGET] = target
+            data["target"] = target
 
             req = requests.post(PUSH_URL, json=data, timeout=10)
 
