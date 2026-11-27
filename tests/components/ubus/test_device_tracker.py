@@ -492,6 +492,249 @@ async def test_enabled_tracker_wins_over_disabled_duplicate(
     assert state.state == STATE_HOME
 
 
+async def test_unique_id_normalization_defers_when_other_entry_owns_the_id(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a raw-case tracker is not renamed while another entry owns the id.
+
+    A failed migration or a newer-schema entry may hold the normalized
+    unique id; the registry would raise on the rename and abort the
+    whole platform, so the tracker keeps its raw-case id then.
+    """
+    _mock, _ = mock_ubus_by_host
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=HUB_TITLE,
+        subentries_data=[router_subentry_data(MOCK_CONFIG)],
+    )
+    entry.add_to_hass(hass)
+    # A newer-schema entry which the consolidation leaves in place.
+    other = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_B,
+        title=MOCK_HOST_B,
+        version=3,
+        entry_id="00000000000000000000000000B",
+    )
+    other.add_to_hass(hass)
+    # The other entry already owns the normalized unique id; this
+    # entry's tracker was created before MACs were normalized.
+    other_tracker = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE,
+        config_entry=other,
+    )
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE.upper())},
+    )
+    raw_entry = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE.upper(),
+        config_entry=entry,
+        device_id=device.id,
+    )
+
+    router = _mock(f"http://{MOCK_HOST}/ubus", "root", "password", verify=True)
+    router.get_hostapd_clients.return_value = {"clients": {}}
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The rename was deferred: the tracker keeps the raw-case unique id
+    # and its platform loaded, while the other entry's tracker is
+    # untouched. The state proves the platform completed; a failed
+    # rename aborts it and leaves no tracker state behind.
+    assert entry.state is ConfigEntryState.LOADED
+    assert entity_registry.async_get(raw_entry.entity_id) is not None
+    assert entity_registry.async_get(raw_entry.entity_id).unique_id == MAC_PHONE.upper()
+    assert entity_registry.async_get(other_tracker.entity_id) is not None
+    assert hass.states.get(raw_entry.entity_id) is not None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_duplicate_tracker_removal_repoints_person_references(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a removed duplicate tracker's references follow the survivor.
+
+    Deleting the duplicate drops it from person configurations and
+    removes its device, so the person references and the device
+    automations are re-pointed at the surviving tracker and device.
+    """
+    _mock, _ = mock_ubus_by_host
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=HUB_TITLE,
+        subentries_data=[router_subentry_data(MOCK_CONFIG)],
+    )
+    entry.add_to_hass(hass)
+
+    # The established tracker exists in both the raw case and the
+    # normalized form, as before and after MAC normalization, on its
+    # own device; the duplicate holds a second device for the client.
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
+    )
+    established = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE.upper(),
+        config_entry=entry,
+        device_id=device.id,
+    )
+    # The duplicate tracker was created on a device identified without
+    # the MAC connection, so it does not collapse into the survivor's.
+    duplicate_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MAC_PHONE)},
+    )
+    duplicate = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE,
+        config_entry=entry,
+        device_id=duplicate_device.id,
+    )
+    person = MockConfigEntry(
+        domain="person",
+        data={"name": "Phone", "device_trackers": [duplicate.entity_id]},
+        title="Phone",
+    )
+    person.add_to_hass(hass)
+    automation = MockConfigEntry(
+        domain="automation",
+        data={
+            "trigger": [
+                {
+                    "platform": "device",
+                    "device_id": duplicate_device.id,
+                    "domain": DOMAIN,
+                }
+            ],
+            "action": [{"action": "homeassistant.turn_on"}],
+        },
+        title="Duplicate device automation",
+    )
+    automation.add_to_hass(hass)
+
+    router = _mock(f"http://{MOCK_HOST}/ubus", "root", "password", verify=True)
+    router.get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The duplicate is gone, with its device; the person reference was
+    # re-pointed at the surviving tracker, and the device automation at
+    # the surviving device.
+    assert entity_registry.async_get(duplicate.entity_id) is None
+    assert person.data["device_trackers"] == [established.entity_id]
+    assert device_registry.async_get(duplicate_device.id) is None
+    assert automation.data["trigger"][0]["device_id"] == device.id
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_migration_device_merge_repoints_device_references(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a merged legacy device's references follow the survivor device.
+
+    Moving the legacy device's entities does not update the device id in
+    existing device automations, so their references are re-pointed at
+    the surviving device.
+    """
+    _mock, ubus = mock_ubus_by_host
+    hub = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=MOCK_HOST,
+        entry_id="00000000000000000000000000A",
+    )
+    hub.add_to_hass(hass)
+    # A legacy entry tracking the same client, with its own device and a
+    # user-disabled tracker which survives the migration unload.
+    legacy = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_B,
+        title=MOCK_HOST_B,
+        entry_id="00000000000000000000000000B",
+    )
+    legacy.add_to_hass(hass)
+    hub_device = device_registry.async_get_or_create(
+        config_entry_id=hub.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
+    )
+    device_registry.async_update_device(hub_device.id, name_by_user="Phone")
+    entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE,
+        config_entry=hub,
+        device_id=hub_device.id,
+    )
+    legacy_device = device_registry.async_get_or_create(
+        config_entry_id=legacy.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
+    )
+    entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE,
+        config_entry=legacy,
+        device_id=legacy_device.id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    automation = MockConfigEntry(
+        domain="automation",
+        data={
+            "trigger": [
+                {
+                    "platform": "device",
+                    "device_id": legacy_device.id,
+                    "domain": DOMAIN,
+                }
+            ],
+            "action": [{"action": "homeassistant.turn_on"}],
+        },
+        title="Legacy device automation",
+    )
+    automation.add_to_hass(hass)
+
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    assert await hass.config_entries.async_setup(hub.entry_id)
+    await hass.async_block_till_done()
+
+    # The legacy device was merged into the established one; the
+    # automation targets the surviving device.
+    assert hub.state is ConfigEntryState.LOADED
+    assert device_registry.async_get(legacy_device.id) is None
+    assert automation.data["trigger"][0]["device_id"] == hub_device.id
+    trackers = [
+        registry_entry
+        for registry_entry in entity_registry.entities.values()
+        if registry_entry.domain == DEVICE_TRACKER_DOMAIN
+        and registry_entry.platform == DOMAIN
+    ]
+    assert len(trackers) == 1
+    assert trackers[0].config_entry_id == hub.entry_id
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_derived_disabled_tracker_wins_over_disabled_duplicate(
     hass: HomeAssistant,

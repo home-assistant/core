@@ -20,6 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 from .config_flow import UbusConfigFlow
 from .const import DOMAIN, SUBENTRY_TYPE_ROUTER
 from .coordinator import UbusConfigEntry, UbusDataUpdateCoordinator
+from .device_tracker import _async_repoint_device_references
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -390,6 +391,11 @@ def _async_reparent(
             entity_registry.async_update_entity(
                 device_entry.entity_id, device_id=survivor.id
             )
+        # The removal below orphans device references, such as device
+        # automations; they follow the surviving device.
+        hass.async_create_task(
+            _async_repoint_device_references(hass, loser.id, survivor.id)
+        )
         device_registry.async_remove_device(loser.id)
         if survivor is device:
             # The entry removal would delete the device otherwise.

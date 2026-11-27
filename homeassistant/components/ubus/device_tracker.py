@@ -1,7 +1,7 @@
 """Support for OpenWrt (ubus) routers as a device tracker."""
 
 from functools import partial
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 import probatio
 
@@ -115,6 +115,7 @@ async def async_setup_scanner(
 
 @callback
 def _async_migrate_unique_ids(
+    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry_id: str,
@@ -124,7 +125,9 @@ def _async_migrate_unique_ids(
     Trackers created before MACs were normalized keep the router's raw
     case; re-pointing the unique id reuses the entity, with its entity
     id and customizations, instead of creating a duplicate. Duplicate
-    devices for the same client are merged into the survivor's device.
+    trackers' person references and devices are preserved: references
+    follow the surviving tracker, and duplicate devices are merged into
+    the survivor's device, with their references following it.
     """
     by_mac: dict[str, list[er.RegistryEntry]] = {}
     for registry_entry in er.async_entries_for_config_entry(
@@ -157,12 +160,39 @@ def _async_migrate_unique_ids(
         survivor = min(candidates, key=lambda entry: entry.created_at)
         for entry in entries:
             if entry is not survivor:
+                # The duplicate's tracker and, with it, its device are
+                # gone now; the references to them follow the survivor.
+                hass.async_create_task(
+                    _async_repoint_tracker_references(
+                        hass, entry.entity_id, survivor.entity_id
+                    )
+                )
+                if (
+                    entry.device_id is not None
+                    and survivor.device_id is not None
+                    and entry.device_id != survivor.device_id
+                ):
+                    hass.async_create_task(
+                        _async_repoint_device_references(
+                            hass, entry.device_id, survivor.device_id
+                        )
+                    )
                 entity_registry.async_remove(entry.entity_id)
                 _async_merge_device(device_registry, entity_registry, entry, survivor)
         if survivor.unique_id != survivor.unique_id.lower():
-            entity_registry.async_update_entity(
-                survivor.entity_id, new_unique_id=survivor.unique_id.lower()
-            )
+            # Another entry may own the normalized unique id already,
+            # such as a failed migration or a newer-schema entry which
+            # the consolidation leaves in place; the registry would
+            # raise on the rename and abort the whole platform.
+            if (
+                entity_registry.async_get_entity_id(
+                    DEVICE_TRACKER_DOMAIN, DOMAIN, survivor.unique_id.lower()
+                )
+                is None
+            ):
+                entity_registry.async_update_entity(
+                    survivor.entity_id, new_unique_id=survivor.unique_id.lower()
+                )
 
 
 @callback
@@ -206,6 +236,67 @@ def _async_merge_device(
     device_registry.async_remove_device(dup_device.id)
 
 
+async def _async_repoint_tracker_references(
+    hass: HomeAssistant,
+    removed_entity_id: str,
+    survivor_entity_id: str,
+) -> None:
+    """Re-point references at the surviving tracker after a duplicate is removed.
+
+    Entry data holding device tracker entity ids, such as person
+    configurations, is left pointing at the removed tracker, so the
+    references move to the tracker that keeps the client.
+    """
+    for config_entry in hass.config_entries.async_entries():
+        device_trackers = config_entry.data.get("device_trackers")
+        if (
+            not isinstance(device_trackers, list)
+            or removed_entity_id not in device_trackers
+        ):
+            continue
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                "device_trackers": [
+                    survivor_entity_id if entity_id == removed_entity_id else entity_id
+                    for entity_id in device_trackers
+                ],
+            },
+        )
+
+
+async def _async_repoint_device_references(
+    hass: HomeAssistant,
+    removed_device_id: str,
+    survivor_device_id: str,
+) -> None:
+    """Re-point device references at the surviving device after a merge.
+
+    Entry data holding device ids, such as device automations, is left
+    pointing at the removed device, which would fail validation, so the
+    references move to the device that survives the merge.
+    """
+    for config_entry in hass.config_entries.async_entries():
+        triggers = config_entry.data.get("trigger")
+        if not isinstance(triggers, list):
+            continue
+        new_triggers: list[dict[str, Any]] = []
+        changed = False
+        for trigger in triggers:
+            if (
+                isinstance(trigger, dict)
+                and trigger.get("device_id") == removed_device_id
+            ):
+                trigger = {**trigger, "device_id": survivor_device_id}
+                changed = True
+            new_triggers.append(trigger)
+        if changed:
+            hass.config_entries.async_update_entry(
+                config_entry, data={**config_entry.data, "trigger": new_triggers}
+            )
+
+
 @callback
 def _async_rename_devices(
     coordinator: UbusDataUpdateCoordinator,
@@ -243,7 +334,9 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
     coordinator: UbusDataUpdateCoordinator = config_entry.runtime_data
 
-    _async_migrate_unique_ids(device_registry, entity_registry, config_entry.entry_id)
+    _async_migrate_unique_ids(
+        hass, device_registry, entity_registry, config_entry.entry_id
+    )
 
     @callback
     def _async_update_devices() -> None:
