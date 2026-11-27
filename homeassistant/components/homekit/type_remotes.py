@@ -17,6 +17,8 @@ from homeassistant.components.remote import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     EntityStateAttribute,
     TargetKey,
 )
@@ -241,6 +243,10 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         """Update input state after state changed."""
         # Set active input
         if not self.support_select_source or not self.sources:
+            return
+        # A failed command re-syncs without the availability filter, and an
+        # unavailable entity may no longer write its source list
+        if new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return
         if self._async_update_sources(new_state):
             return
