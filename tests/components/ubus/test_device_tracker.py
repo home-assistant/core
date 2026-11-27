@@ -3625,6 +3625,70 @@ async def test_migration_failure_after_transfer_empties_leftover_entry(
     )
 
 
+async def test_late_hub_merge_removal_failure_creates_repair(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a failed deferred removal after a late hub merge gets a repair.
+
+    The removal of a merged entry runs in a deferred task, so its
+    failure cannot reach the migration handler and must create its own
+    repair, or the empty entry would be left behind silently.
+    """
+    _mock, _ubus = mock_ubus_by_host
+    hub = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=HUB_TITLE,
+        subentries_data=[router_subentry_data(MOCK_CONFIG)],
+    )
+    hub.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub.entry_id)
+    await hass.async_block_till_done()
+
+    legacy = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_B,
+        title=MOCK_HOST_B,
+        entry_id="00000000000000000000000000B",
+    )
+    legacy.add_to_hass(hass)
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_remove",
+        side_effect=RuntimeError,
+    ):
+        assert await hass.config_entries.async_setup(legacy.entry_id)
+        await hass.async_block_till_done()
+
+    # The transfer completed and the entry was emptied before the
+    # failed deferred removal, so it is a shell which cannot poll
+    # again.
+    assert hub.state is ConfigEntryState.LOADED
+    assert MOCK_HOST_B in {sub.unique_id for sub in hub.subentries.values()}
+    assert legacy.state is ConfigEntryState.LOADED
+    assert legacy.version == 2
+    assert legacy.data == {}
+    assert legacy.subentries == {}
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"migration_removal_failed_{legacy.entry_id}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "migration_removal_failed"
+    assert issue.translation_placeholders == {"host": MOCK_HOST_B}
+    assert issue.config_entry_id == legacy.entry_id
+
+    # Deleting the shell finishes the migration and clears its repair.
+    assert await hass.config_entries.async_remove(legacy.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"migration_removal_failed_{legacy.entry_id}"
+        )
+        is None
+    )
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_migration_host_collision(
     hass: HomeAssistant,

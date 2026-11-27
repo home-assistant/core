@@ -304,7 +304,7 @@ async def _async_migrate_other(
             await hass.config_entries.async_reload(hub.entry_id)
             # The removal needs the setup lock, which is held for the
             # rest of the setup, so it runs in a deferred task.
-            hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+            hass.async_create_task(_async_deferred_removal(hass, hub, entry, host))
         else:
             # Hold the entry's setup lock so it is never removed mid-setup and
             # no setup can start while it is unloaded.
@@ -360,26 +360,63 @@ async def _async_migrate_other(
             hub.entry_id,
         )
         if transferred:
-            # The leftover entry is an empty shell now, so the repair
-            # can point at deleting it.
-            translation_key = "migration_removal_failed"
-            issue_id = f"migration_removal_failed_{entry.entry_id}"
+            _async_create_removal_failed_issue(hass, entry, host)
         else:
-            translation_key = "migration_failed"
-            issue_id = f"migration_failed_{entry.entry_id}"
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            config_entry_id=entry.entry_id,
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key=translation_key,
-            translation_placeholders={"host": host},
-        )
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"migration_failed_{entry.entry_id}",
+                config_entry_id=entry.entry_id,
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="migration_failed",
+                translation_placeholders={"host": host},
+            )
         return False
     return True
+
+
+@callback
+def _async_create_removal_failed_issue(
+    hass: HomeAssistant, entry: ConfigEntry, host: str
+) -> None:
+    """Create the repair for a merged entry which could not be removed.
+
+    The leftover entry is an empty shell now, so the repair can point
+    at deleting it.
+    """
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"migration_removal_failed_{entry.entry_id}",
+        config_entry_id=entry.entry_id,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="migration_removal_failed",
+        translation_placeholders={"host": host},
+    )
+
+
+async def _async_deferred_removal(
+    hass: HomeAssistant, hub: ConfigEntry, entry: ConfigEntry, host: str
+) -> None:
+    """Remove a merged entry once its setup lock is released.
+
+    The removal runs in a task because the setup lock is held for the
+    rest of the setup; a failure cannot reach the migration handler,
+    so the task reports its own repair.
+    """
+    try:
+        await hass.config_entries.async_remove(entry.entry_id)
+    except Exception:
+        _LOGGER.exception(
+            "Failed to remove ubus entry %s after migrating it to the hub %s",
+            entry.entry_id,
+            hub.entry_id,
+        )
+        _async_create_removal_failed_issue(hass, entry, host)
 
 
 def _merge_device_survivors(
