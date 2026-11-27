@@ -111,6 +111,7 @@ from .const import (
     CONF_TURN_OFF,
     CONF_TURN_ON,
     DOMAIN,
+    LIST_OR_TEMPLATE_OPTIONS,
 )
 from .cover import (
     CLOSE_ACTION,
@@ -221,16 +222,6 @@ _REQUIRED_OPTIONS: dict[str, tuple[tuple[str, str, str], ...]] = {
     ),
 }
 
-# Options that take a list of items or a template rendering one
-_LIST_OR_TEMPLATE_OPTIONS: dict[str, tuple[str, ...]] = {
-    Platform.CLIMATE: (CONF_HVAC_MODES,),
-    Platform.EVENT: (CONF_EVENT_TYPES,),
-    Platform.MEDIA_PLAYER: (CONF_SOURCE_LIST,),
-    Platform.SELECT: (CONF_OPTIONS,),
-    Platform.VACUUM: (CONF_FAN_SPEED_LIST,),
-    Platform.WATER_HEATER: (CONF_OPERATION_LIST,),
-}
-
 # Optional list options are unset when the frontend sends an empty list
 _OPTIONAL_LIST_OPTIONS: dict[str, tuple[str, ...]] = {
     Platform.MEDIA_PLAYER: (CONF_SOURCE_LIST,),
@@ -277,7 +268,7 @@ def _invalid_list_templates(domain: str, user_input: dict[str, Any]) -> list[str
     """Return the list options set to a string that is not a template."""
     return [
         option
-        for option in _LIST_OR_TEMPLATE_OPTIONS.get(domain, ())
+        for option in LIST_OR_TEMPLATE_OPTIONS.get(domain, ())
         if isinstance(value := user_input.get(option), str)
         and not is_template_string(value)
     ]
@@ -1078,6 +1069,7 @@ class TemplateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow_reloads = True
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     @callback
     @override

@@ -98,7 +98,7 @@ class AbstractTemplateEntity(Entity):
         self._attr_extra_state_attributes = {}
         self._assumed_attributes: dict[str, str] = {}
         self._rendered_list_items: dict[str, Any] = {}
-        self._static_values: dict[str, Any] = {}
+        self._static_values: dict[str, tuple[Any, Callable[[Any], None] | None]] = {}
 
         self._attribute_templates: dict[str, Template] | None = None
         self._attributes_template: Template | None = None
@@ -213,14 +213,20 @@ class AbstractTemplateEntity(Entity):
         validation fails, and an unchanged item template does not re-render,
         so the cache is needed to revalidate the item when only the list changes.
         """
+        # A static list never changes, so the item never needs revalidation
+        on_list_update = (
+            None
+            if isinstance(self._config.get(list_option), list)
+            else partial(
+                self._update_list, option, list_attribute, attribute, item_validator
+            )
+        )
         # The list template must be set up first, the item validator reads it.
         self.setup_template(
             list_option,
             list_attribute,
             list_validator,
-            partial(
-                self._update_list, option, list_attribute, attribute, item_validator
-            ),
+            on_list_update,
             none_on_template_error=False,
         )
         self.setup_template(
@@ -274,11 +280,8 @@ class AbstractTemplateEntity(Entity):
         """Add a template."""
         if isinstance(value := self._config.get(option), list):
             result = validator(value) if validator else value
-            if on_update:
-                on_update(result)
-            else:
-                setattr(self, attribute, result)
-            self._static_values[attribute] = getattr(self, attribute)
+            self._static_values[attribute] = (result, on_update)
+            self._apply_static_value(attribute, result, on_update)
             return None
 
         if isinstance(value, Template):
@@ -293,6 +296,15 @@ class AbstractTemplateEntity(Entity):
             return value
 
         return None
+
+    def _apply_static_value(
+        self, attribute: str, result: Any, on_update: Callable[[Any], None] | None
+    ) -> None:
+        """Store a validated static list like a rendered template result."""
+        if on_update:
+            on_update(result)
+        else:
+            setattr(self, attribute, result)
 
     def add_script(
         self,
@@ -428,8 +440,8 @@ class AbstractTemplateEntity(Entity):
         if extra_data is not _SENTINEL:
             self.restore_extra_data(extra_data)
             # Static lists come from the config and must win over restored data
-            for attribute, value in self._static_values.items():
-                setattr(self, attribute, value)
+            for attribute, (result, on_update) in self._static_values.items():
+                self._apply_static_value(attribute, result, on_update)
 
     def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""

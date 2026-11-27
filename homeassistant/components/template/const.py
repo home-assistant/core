@@ -28,6 +28,16 @@ DOMAIN = "template"
 
 PLATFORM_STORAGE_KEY = "template_platforms"
 
+# Config entry options that take a list of items or a template rendering one
+LIST_OR_TEMPLATE_OPTIONS: dict[str, tuple[str, ...]] = {
+    Platform.CLIMATE: ("hvac_modes",),
+    Platform.EVENT: ("event_types",),
+    Platform.MEDIA_PLAYER: ("source_list",),
+    Platform.SELECT: ("options",),
+    Platform.VACUUM: ("fan_speeds",),
+    Platform.WATER_HEATER: ("operation_list",),
+}
+
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,

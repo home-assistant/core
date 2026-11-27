@@ -16,7 +16,7 @@ from homeassistant.components.template.vacuum import (
     DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
@@ -3371,6 +3371,34 @@ async def test_config_flow_preview_list_or_template(
     msg = await client.receive_json()
     assert msg["event"]["state"] == "a"
     assert msg["event"]["attributes"]["options"] == expected
+
+
+async def test_config_flow_preview_without_templates(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the preview sends a state when no option is a template."""
+    client = await hass_ws_client(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "select"}
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {"name": "My template", "options": ["a", "b"]},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == STATE_UNKNOWN
+    assert msg["event"]["attributes"]["options"] == ["a", "b"]
 
 
 async def test_config_flow_preview_list_without_template(

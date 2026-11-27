@@ -2242,6 +2242,52 @@ async def test_restore_state(
     assert_state_and_attributes(hass, TEST_CLIMATE, HVACMode.HEAT)
 
 
+async def test_restore_state_static_hvac_modes(hass: HomeAssistant) -> None:
+    """Test static hvac_modes replace the restored list and its features."""
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_CLIMATE,
+        HVACMode.HEAT,
+        saved_extra_data={
+            "current_humidity": None,
+            "current_temperature": None,
+            "fan_mode": None,
+            "fan_modes": None,
+            "hvac_action": None,
+            "hvac_mode": HVACMode.HEAT,
+            "hvac_modes": [HVACMode.HEAT],
+            "preset_mode": None,
+            "preset_modes": None,
+            "swing_mode": None,
+            "swing_modes": None,
+            "swing_horizontal_mode": None,
+            "swing_horizontal_modes": None,
+            "target_humidity": None,
+            "target_temperature_high": None,
+            "target_temperature_low": None,
+            "target_temperature": None,
+        },
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_CLIMATE,
+        ConfigurationStyle.TRIGGER,
+        {"hvac_modes": ["off", "heat"], **SET_HVAC_MODE_ACTION},
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_CLIMATE,
+        HVACMode.HEAT,
+        {
+            "hvac_modes": [HVACMode.OFF, HVACMode.HEAT],
+            "supported_features": ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON,
+        },
+    )
+
+
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
