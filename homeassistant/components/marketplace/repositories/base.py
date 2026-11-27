@@ -87,9 +87,10 @@ README_FILENAMES = (
 )
 
 # A README in another language next to README.md, such as README.de.md or
-# README.pt-BR.md, named with the language tags of the translations
+# README.pt-BR.md or README.pt_BR.md, named with the language tags of the
+# translations
 TRANSLATED_README = re.compile(
-    r"readme\.([a-z]{2,3}(?:-[a-z0-9]+)*)\.md", re.IGNORECASE
+    r"readme\.([a-z]{2,3}(?:[-_][a-z0-9]+)*)\.md", re.IGNORECASE
 )
 
 TOPIC_FILTER = (
@@ -507,6 +508,13 @@ class Repository:
         self._installed_treefiles: tuple[str, list[str] | None] | None = None
         # Pages asked for at once fetch the installed files only once
         self._installed_treefiles_lock = Lock()
+        # The READMEs in other languages of one version, by version, commit of a
+        # branch and filename
+        self._translated_readmes: dict[tuple[str, str | None, str], str] = {}
+        # Pages asked for at once share one download, also when it fails
+        self._translated_readme_downloads: dict[
+            tuple[str, str | None, str], asyncio.Task[str | None]
+        ] = {}
         self.ref: str | None = None
         self.logger = LOGGER
         # Two installs of one repository would write over each other's files
@@ -1014,8 +1022,8 @@ class Repository:
         costs no request. An installed version that is not the one of the tree
         costs one request for its files, once per version. The best match of the
         language wins, as for the languages of conversation agents. It is fetched
-        for every page, like the README after a restart, so it always matches the
-        version to install.
+        once per version and filename, for a branch once per commit, so it always
+        matches the version to install without a download on every page.
         """
         treefiles = self.treefiles
         installed = self.data.installed_version or self.data.installed_commit
@@ -1039,10 +1047,61 @@ class Repository:
             return ""
 
         filename = readmes[languages[0]]
-        try:
-            return (
-                await self.get_documentation(filename=filename, version=version) or ""
+        if version is None:
+            return await self._async_download_translated_readme(filename, None) or ""
+
+        # A branch moves with every commit, a tag or commit stays the same. An
+        # installed branch is the commit that was installed.
+        revision: str | None = None
+        if self.data.installed:
+            revision = self.data.installed_commit
+        elif version == self.data.default_branch:
+            revision = self.data.last_commit
+        key = (version, revision, filename)
+        if (content := self._translated_readmes.get(key)) is not None:
+            return content
+
+        if (download := self._translated_readme_downloads.get(key)) is None:
+            # Not started at once, so it is known before it finishes
+            download = self.marketplace.hass.async_create_background_task(
+                self._async_fetch_translated_readme(key),
+                f"{self.string} {filename}",
+                eager_start=False,
             )
+            self._translated_readme_downloads[key] = download
+        # A page that is closed does not cancel the download of the others
+        return await asyncio.shield(download) or ""
+
+    async def _async_fetch_translated_readme(
+        self, key: tuple[str, str | None, str]
+    ) -> str | None:
+        """Download a translated README and keep it, None when that failed.
+
+        It is kept before the pages waiting for it continue, also when every
+        one of them was closed.
+        """
+        version, _, filename = key
+        try:
+            content = await self._async_download_translated_readme(filename, version)
+        finally:
+            # A failed download is tried again on the next page
+            del self._translated_readme_downloads[key]
+        if content is not None:
+            # Only the version shown is kept, the others are not shown again
+            self._translated_readmes = {
+                cached: readme
+                for cached, readme in self._translated_readmes.items()
+                if cached[:2] == key[:2]
+            }
+            self._translated_readmes[key] = content
+        return content
+
+    async def _async_download_translated_readme(
+        self, filename: str, version: str | None
+    ) -> str | None:
+        """Download a translated README, None when the download failed."""
+        try:
+            return await self.get_documentation(filename=filename, version=version)
         except UnicodeDecodeError:
             # README.md is still there to show
             self.logger.warning("%s %s is not UTF-8", self.string, filename)

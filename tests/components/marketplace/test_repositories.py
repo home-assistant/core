@@ -1,6 +1,6 @@
 """Tests for the Marketplace repositories."""
 
-from asyncio import CancelledError, Future, gather, sleep
+from asyncio import CancelledError, Future, create_task, gather, sleep
 from collections.abc import AsyncIterator
 from http import HTTPStatus
 import io
@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 import sys
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 import zipfile
 
 from aiogithubapi import GitHubAuthenticationException, GitHubReleaseAssetModel
@@ -926,6 +926,7 @@ async def test_repository_page_ignores_info_file(
         pytest.param("de-CH", "README.de.md", id="region"),
         pytest.param("pt-BR", "README.pt-BR.md", id="region_file"),
         pytest.param("pt", "README.pt-BR.md", id="language_of_region_file"),
+        pytest.param("zh-TW", "README.zh_TW.md", id="underscore_file"),
     ],
 )
 async def test_translated_readme(
@@ -940,6 +941,7 @@ async def test_translated_readme(
         "README.md",
         "README.de.md",
         "README.pt-BR.md",
+        "README.zh_TW.md",
         "docs/README.fr.md",
     ]
 
@@ -968,6 +970,289 @@ async def test_translated_readme_from_the_version_of_the_tree(
     response_mocker.add(url, mocked_response(url, content=b"1.0.0"))
 
     assert await repository.async_get_translated_readme("de") == "1.0.0"
+
+
+async def test_translated_readme_fetched_once_per_version(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a translated README is downloaded once per version and filename."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md", "README.fr.md"]
+    repository.tree_ref = "1.0.0"
+
+    with patch.object(
+        repository, "get_documentation", return_value="Translated"
+    ) as get_documentation:
+        assert await repository.async_get_translated_readme("de") == "Translated"
+        assert await repository.async_get_translated_readme("de") == "Translated"
+        assert await repository.async_get_translated_readme("fr") == "Translated"
+        assert await repository.async_get_translated_readme("fr") == "Translated"
+        repository.tree_ref = "2.0.0"
+        assert await repository.async_get_translated_readme("de") == "Translated"
+        assert await repository.async_get_translated_readme("de") == "Translated"
+
+    assert get_documentation.call_args_list == [
+        call(filename="README.de.md", version="1.0.0"),
+        call(filename="README.fr.md", version="1.0.0"),
+        call(filename="README.de.md", version="2.0.0"),
+    ]
+    # Only the README of the version shown is kept
+    assert list(repository._translated_readmes) == [("2.0.0", None, "README.de.md")]
+
+
+async def test_translated_readme_of_a_branch_fetched_once_per_commit(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a translated README of a branch is downloaded again after a commit."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    # A repository without releases shows its default branch
+    repository.data.default_branch = "main"
+    repository.data.last_commit = "1234567"
+    repository.tree_ref = "main"
+
+    with patch.object(
+        repository, "get_documentation", side_effect=["First", "Second"]
+    ) as get_documentation:
+        assert await repository.async_get_translated_readme("de") == "First"
+        assert await repository.async_get_translated_readme("de") == "First"
+        # A new commit on the branch, found by the refresh of the repository
+        repository.data.last_commit = "89abcde"
+        assert await repository.async_get_translated_readme("de") == "Second"
+        assert await repository.async_get_translated_readme("de") == "Second"
+
+    assert get_documentation.call_args_list == [
+        call(filename="README.de.md", version="main"),
+        call(filename="README.de.md", version="main"),
+    ]
+    # Only the README of the commit shown is kept
+    assert list(repository._translated_readmes) == [("main", "89abcde", "README.de.md")]
+
+
+async def test_translated_readme_fetched_once_at_a_time(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test pages asked for at once download a translated README once."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.tree_ref = "1.0.0"
+    content: Future[str] = Future()
+
+    async def get_documentation_later(**_: str) -> str:
+        return await content
+
+    with patch.object(
+        repository, "get_documentation", side_effect=get_documentation_later
+    ) as get_documentation:
+        pages = gather(
+            repository.async_get_translated_readme("de"),
+            repository.async_get_translated_readme("de"),
+        )
+        await sleep(0)
+        content.set_result("Translated")
+        assert await pages == ["Translated", "Translated"]
+
+    get_documentation.assert_called_once_with(filename="README.de.md", version="1.0.0")
+
+
+async def test_translated_readme_failed_download_shared(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test pages asked for at once share a failed download of a translated README."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.tree_ref = "1.0.0"
+    content: Future[str | None] = Future()
+
+    async def get_documentation_later(**_: str) -> str | None:
+        return await content
+
+    with patch.object(
+        repository, "get_documentation", side_effect=get_documentation_later
+    ) as get_documentation:
+        pages = gather(
+            repository.async_get_translated_readme("de"),
+            repository.async_get_translated_readme("de"),
+        )
+        await sleep(0)
+        content.set_result(None)
+        assert await pages == ["", ""]
+
+    get_documentation.assert_called_once_with(filename="README.de.md", version="1.0.0")
+    assert not repository._translated_readme_downloads
+
+
+async def test_translated_readme_cached_while_another_downloads(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a cached translated README is not held up by another download."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md", "README.fr.md"]
+    repository.tree_ref = "1.0.0"
+    french: Future[str] = Future()
+
+    async def get_documentation(*, filename: str, version: str) -> str:
+        if filename == "README.fr.md":
+            return await french
+        return "Deutsch"
+
+    with patch.object(repository, "get_documentation", side_effect=get_documentation):
+        assert await repository.async_get_translated_readme("de") == "Deutsch"
+        page = create_task(repository.async_get_translated_readme("fr"))
+        await sleep(0)
+        assert await repository.async_get_translated_readme("de") == "Deutsch"
+        assert not page.done()
+        french.set_result("Français")
+        assert await page == "Français"
+
+
+async def test_translated_readme_closed_page_keeps_the_download(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a closed page does not cancel the download another page waits for."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.tree_ref = "1.0.0"
+    content: Future[str] = Future()
+
+    async def get_documentation_later(**_: str) -> str:
+        return await content
+
+    with patch.object(
+        repository, "get_documentation", side_effect=get_documentation_later
+    ) as get_documentation:
+        closed = create_task(repository.async_get_translated_readme("de"))
+        waiting = create_task(repository.async_get_translated_readme("de"))
+        await sleep(0)
+        closed.cancel()
+        with pytest.raises(CancelledError):
+            await closed
+        content.set_result("Translated")
+        assert await waiting == "Translated"
+
+    get_documentation.assert_called_once_with(filename="README.de.md", version="1.0.0")
+
+
+async def test_translated_readme_kept_when_every_page_closed(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a translated README is kept when every page waiting for it closed."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.tree_ref = "1.0.0"
+    content: Future[str] = Future()
+
+    async def get_documentation_later(**_: str) -> str:
+        return await content
+
+    with patch.object(
+        repository, "get_documentation", side_effect=get_documentation_later
+    ) as get_documentation:
+        closed = create_task(repository.async_get_translated_readme("de"))
+        await sleep(0)
+        closed.cancel()
+        with pytest.raises(CancelledError):
+            await closed
+        content.set_result("Translated")
+        await sleep(0)
+        await sleep(0)
+        assert await repository.async_get_translated_readme("de") == "Translated"
+
+    get_documentation.assert_called_once_with(filename="README.de.md", version="1.0.0")
+    assert not repository._translated_readme_downloads
+
+
+async def test_translated_readme_of_an_installed_branch_per_commit(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a translated README of an installed branch is fetched per commit."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.data.default_branch = "main"
+    # A branch other than the default branch was installed
+    repository.data.installed = True
+    repository.data.installed_version = "dev"
+    repository.data.installed_commit = "1234567"
+
+    with patch.object(
+        repository, "get_documentation", side_effect=["First", "Second"]
+    ) as get_documentation:
+        assert await repository.async_get_translated_readme("de") == "First"
+        assert await repository.async_get_translated_readme("de") == "First"
+        # The update of the branch installed a new commit
+        repository.data.installed_commit = "89abcde"
+        assert await repository.async_get_translated_readme("de") == "Second"
+
+    assert get_documentation.call_args_list == [
+        call(filename="README.de.md", version="dev"),
+        call(filename="README.de.md", version="dev"),
+    ]
+
+
+async def test_translated_readme_download_error_not_kept(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test an error of the download reaches the page and is tried again."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.tree_ref = "1.0.0"
+
+    with patch.object(
+        repository, "get_documentation", side_effect=[OSError, "Translated"]
+    ) as get_documentation:
+        with pytest.raises(OSError):
+            await repository.async_get_translated_readme("de")
+        assert await repository.async_get_translated_readme("de") == "Translated"
+
+    assert get_documentation.call_count == 2
+
+
+async def test_translated_readme_failed_download_not_kept(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a failed download of a translated README is tried again."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.tree_ref = "1.0.0"
+
+    with patch.object(
+        repository, "get_documentation", side_effect=[None, "Translated"]
+    ) as get_documentation:
+        assert await repository.async_get_translated_readme("de") == ""
+        assert await repository.async_get_translated_readme("de") == "Translated"
+        assert await repository.async_get_translated_readme("de") == "Translated"
+
+    assert get_documentation.call_count == 2
+
+
+async def test_translated_readme_not_utf8_kept(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a translated README that is not UTF-8 is not downloaded again."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.tree_ref = "1.0.0"
+
+    with patch.object(
+        repository,
+        "get_documentation",
+        side_effect=UnicodeDecodeError("utf-8", b"\xf6", 0, 1, "invalid start byte"),
+    ) as get_documentation:
+        assert await repository.async_get_translated_readme("de") == ""
+        assert await repository.async_get_translated_readme("de") == ""
+
+    get_documentation.assert_called_once_with(filename="README.de.md", version="1.0.0")
 
 
 async def test_translated_readme_not_utf8(
