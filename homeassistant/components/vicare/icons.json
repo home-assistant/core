@@ -98,6 +98,48 @@
       "burner_starts": {
         "default": "mdi:counter"
       },
+      "burner_stops_flame_loss_during_operation": {
+        "default": "mdi:counter"
+      },
+      "burner_stops_flue_gas_temperature_sensor": {
+        "default": "mdi:counter"
+      },
+      "burner_stops_ionization_alignment": {
+        "default": "mdi:counter"
+      },
+      "burner_stops_no_gas_at_start": {
+        "default": "mdi:counter"
+      },
+      "burner_stops_no_ignition_at_start": {
+        "default": "mdi:counter"
+      },
+      "burner_stops_no_ionization_at_start": {
+        "default": "mdi:counter"
+      },
+      "burner_stops_normal_stop": {
+        "default": "mdi:counter"
+      },
+      "burner_stops_safety_shutdown": {
+        "default": "mdi:counter"
+      },
+      "burner_stops_safety_shutdown_error_shutdown": {
+        "default": "mdi:counter"
+      },
+      "burner_stops_safety_time": {
+        "default": "mdi:counter"
+      },
+      "burner_stops_stabilisation_process": {
+        "default": "mdi:counter"
+      },
+      "burner_stops_temperature_monitor": {
+        "default": "mdi:counter"
+      },
+      "burner_stops_temperature_monitor_ionization_comparison": {
+        "default": "mdi:counter"
+      },
+      "burner_stops_undervoltage": {
+        "default": "mdi:counter"
+      },
       "compressor_hours": {
         "default": "mdi:counter"
       },
