@@ -9,11 +9,7 @@ from aioharmony.hubconnector_websocket import HubConnector
 import aiohttp
 import probatio
 
-from homeassistant.components.remote import (
-    ATTR_ACTIVITY,
-    ATTR_DELAY_SECS,
-    DEFAULT_DELAY_SECS,
-)
+from homeassistant.components.remote import DEFAULT_DELAY_SECS
 from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlow,
@@ -28,7 +24,13 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
-from .const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
+from .const import (
+    CONF_ACTIVITY,
+    CONF_DELAY_SECS,
+    DOMAIN,
+    PREVIOUS_ACTIVE_ACTIVITY,
+    UNIQUE_ID,
+)
 from .data import HarmonyConfigEntry
 from .util import (
     find_best_name_for_remote,
@@ -219,10 +221,10 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
 
 def _options_from_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
     options: dict[str, Any] = {}
-    if ATTR_ACTIVITY in user_input:
-        options[ATTR_ACTIVITY] = user_input[ATTR_ACTIVITY]
-    if ATTR_DELAY_SECS in user_input:
-        options[ATTR_DELAY_SECS] = user_input[ATTR_DELAY_SECS]
+    if CONF_ACTIVITY in user_input:
+        options[CONF_ACTIVITY] = user_input[CONF_ACTIVITY]
+    if CONF_DELAY_SECS in user_input:
+        options[CONF_DELAY_SECS] = user_input[CONF_DELAY_SECS]
     return options
 
 
@@ -243,15 +245,15 @@ class OptionsFlowHandler(OptionsFlow):
         data_schema = probatio.Schema(
             {
                 probatio.Optional(
-                    ATTR_DELAY_SECS,
+                    CONF_DELAY_SECS,
                     default=self.config_entry.options.get(
-                        ATTR_DELAY_SECS, DEFAULT_DELAY_SECS
+                        CONF_DELAY_SECS, DEFAULT_DELAY_SECS
                     ),
                 ): probatio.Coerce(float),
                 probatio.Optional(
-                    ATTR_ACTIVITY,
+                    CONF_ACTIVITY,
                     default=self.config_entry.options.get(
-                        ATTR_ACTIVITY, PREVIOUS_ACTIVE_ACTIVITY
+                        CONF_ACTIVITY, PREVIOUS_ACTIVE_ACTIVITY
                     ),
                 ): probatio.In([PREVIOUS_ACTIVE_ACTIVITY, *remote.activity_names]),
             }
