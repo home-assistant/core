@@ -1,7 +1,6 @@
 """Test for Template helper."""
 
 from datetime import timedelta
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -736,7 +735,7 @@ async def test_migration_1_1(
     assert template_entity_entry.device_id == device_entry.id
 
     assert template_config_entry.version == 2
-    assert template_config_entry.minor_version == 2
+    assert template_config_entry.minor_version == 1
 
 
 async def test_migration_1_2(
@@ -769,92 +768,7 @@ async def test_migration_1_2(
     }
 
     assert template_config_entry.version == 2
-    assert template_config_entry.minor_version == 2
-
-
-@pytest.mark.parametrize(
-    ("template_type", "config", "option", "stored", "expected"),
-    [
-        pytest.param(
-            "select",
-            {"state": "{{ 'a' }}"},
-            "options",
-            "['a', 'b']",
-            ["a", "b"],
-            id="static_list_string",
-        ),
-        pytest.param(
-            "select",
-            {"state": "{{ 'a' }}"},
-            "options",
-            " [1, 'b'] ",
-            ["1", "b"],
-            id="static_list_string_with_numbers",
-        ),
-        pytest.param(
-            "climate",
-            {"set_hvac_mode": []},
-            "hvac_modes",
-            "['off', 'heat']",
-            ["off", "heat"],
-            id="climate_static_list_string",
-        ),
-        pytest.param(
-            "select",
-            {"state": "{{ 'a' }}"},
-            "options",
-            "{{ ['a', 'b'] }}",
-            "{{ ['a', 'b'] }}",
-            id="template",
-        ),
-        pytest.param(
-            "select",
-            {"state": "{{ 'a' }}"},
-            "options",
-            "a, b",
-            "a, b",
-            id="not_a_list",
-        ),
-        pytest.param(
-            "vacuum",
-            {"start": [], "set_fan_speed": []},
-            "fan_speeds",
-            ["low", "high"],
-            ["low", "high"],
-            id="list",
-        ),
-    ],
-)
-async def test_migration_2_1(
-    hass: HomeAssistant,
-    template_type: str,
-    config: dict[str, Any],
-    option: str,
-    stored: str | list[str],
-    expected: str | list[str],
-) -> None:
-    """Test migration from v2.1 turns static list strings into lists."""
-    template_config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            "name": "My template",
-            "template_type": template_type,
-            **config,
-            option: stored,
-        },
-        title="My template",
-        version=2,
-        minor_version=1,
-    )
-    template_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(template_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert template_config_entry.options[option] == expected
-    assert template_config_entry.version == 2
-    assert template_config_entry.minor_version == 2
+    assert template_config_entry.minor_version == 1
 
 
 async def test_migration_from_future_version(

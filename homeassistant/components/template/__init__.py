@@ -1,8 +1,6 @@
 """The template component."""
 
-import ast
 import logging
-from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
@@ -10,17 +8,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.helper_integration import async_remove_helper_devices
-from homeassistant.helpers.template import is_template_string
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_ADDITIONAL_OPTIONS,
-    CONF_MAX,
-    CONF_MIN,
-    CONF_STEP,
-    DOMAIN,
-    LIST_OR_TEMPLATE_OPTIONS,
-)
+from .const import CONF_ADDITIONAL_OPTIONS, CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
 from .helpers import async_get_blueprints, process_config
 from .repairs import async_update_deprecated_template_options_issues
 from .services import async_setup_services
@@ -117,19 +107,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     )
 
 
-def _static_list(value: Any) -> list[str] | None:
-    """Return the list a string without a template renders, if it is one."""
-    if not isinstance(value, str) or is_template_string(value):
-        return None
-    try:
-        result = ast.literal_eval(value.strip())
-    except ValueError, TypeError, SyntaxError, MemoryError, RecursionError:
-        return None
-    if not isinstance(result, list):
-        return None
-    return [str(item) for item in result]
-
-
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
 
@@ -158,16 +135,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             options[CONF_ADDITIONAL_OPTIONS] = additional
         hass.config_entries.async_update_entry(
             config_entry, options=options, version=2, minor_version=1
-        )
-
-    if config_entry.version == 2 and config_entry.minor_version < 2:
-        options = {**config_entry.options}
-        # List options were a template text field, the flow now edits lists
-        for option in LIST_OR_TEMPLATE_OPTIONS.get(options["template_type"], ()):
-            if (items := _static_list(options.get(option))) is not None:
-                options[option] = items
-        hass.config_entries.async_update_entry(
-            config_entry, options=options, minor_version=2
         )
 
     _LOGGER.debug(
