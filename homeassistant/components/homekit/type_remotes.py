@@ -5,6 +5,7 @@ import logging
 from typing import Any, override
 
 from pyhap.const import CATEGORY_TELEVISION
+from pyhap.service import Service
 
 from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
@@ -59,6 +60,9 @@ MAXIMUM_SOURCES = (
 
 _LOGGER = logging.getLogger(__name__)
 
+INPUT_SOURCE_TYPE_OTHER = 0
+INPUT_SOURCE_TYPE_HDMI = 3
+
 REMOTE_KEYS = {
     0: KEY_REWIND,
     1: KEY_FAST_FORWARD,
@@ -74,6 +78,18 @@ REMOTE_KEYS = {
     11: KEY_PLAY_PAUSE,
     15: KEY_INFORMATION,
 }
+
+
+def _input_source_type(source: str) -> int:
+    """Return the HomeKit input source type for a source name."""
+    if "hdmi" in source.lower():
+        return INPUT_SOURCE_TYPE_HDMI
+    return INPUT_SOURCE_TYPE_OTHER
+
+
+def _map_sources(source_list: list[str]) -> dict[str, str]:
+    """Return a dict of sources mapped to their homekit safe name."""
+    return {cleanup_name_for_homekit(source): source for source in source_list}
 
 
 class RemoteInputSelectAccessory(HomeAccessory, ABC):
@@ -93,7 +109,6 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         state = self.hass.states.get(self.entity_id)
         assert state
         features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
-        self._reload_on_change_attrs.extend((source_list_key,))
         self._mapped_sources_list: list[str] = []
         self._mapped_sources: dict[str, str] = {}
         self.source_key = source_key
@@ -111,6 +126,11 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
             self.sources = sources[:MAXIMUM_SOURCES]
             if self.sources:
                 self.support_select_source = True
+        if not self.support_select_source:
+            # Without inputs to rename, new sources need a new accessory
+            self._reload_on_change_attrs.append(source_list_key)
+        self._input_services: list[Service] = []
+        self._reload_requested = False
 
         self.chars_tv = [CHAR_REMOTE_KEY]
         serv_tv = self.serv_tv = self.add_preload_service(
@@ -137,22 +157,62 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
                 SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME], unique_id=source
             )
             serv_tv.add_linked_service(serv_input)
+            self._input_services.append(serv_input)
             serv_input.configure_char(CHAR_CONFIGURED_NAME, value=source)
             serv_input.configure_char(CHAR_NAME, value=source)
             serv_input.configure_char(CHAR_IDENTIFIER, value=index)
             serv_input.configure_char(CHAR_IS_CONFIGURED, value=True)
-            input_type = 3 if "hdmi" in source.lower() else 0
-            serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE, value=input_type)
+            serv_input.configure_char(
+                CHAR_INPUT_SOURCE_TYPE, value=_input_source_type(source)
+            )
             serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
             _LOGGER.debug("%s: Added source %s", self.entity_id, source)
+
+    @callback
+    def _async_update_sources(self, new_state: State) -> bool:
+        """Rename the inputs in place, or rebuild when their number changes.
+
+        Rebuilding the accessory changes its configuration number, and the
+        Home app may keep showing the old inputs until it is restarted.
+        Return True when the accessory is being rebuilt.
+        """
+        # Keep the current mapping until the inputs match the new sources, so
+        # an input selected in HomeKit until then still maps to its source
+        mapped_sources = _map_sources(
+            new_state.attributes.get(self.source_list_key, [])
+        )
+        sources = list(mapped_sources)[:MAXIMUM_SOURCES]
+        if len(sources) != len(self.sources):
+            if not self._reload_requested:
+                self._reload_requested = True
+                _LOGGER.debug(
+                    "%s: Number of sources changed. Rebuilding Accessory",
+                    self.entity_id,
+                )
+                self.async_reload()
+            return True
+        for serv_input, old_source, source in zip(
+            self._input_services, self.sources, sources, strict=True
+        ):
+            if source == old_source:
+                continue
+            serv_input.get_characteristic(CHAR_CONFIGURED_NAME).set_value(source)
+            serv_input.get_characteristic(CHAR_NAME).set_value(source)
+            serv_input.get_characteristic(CHAR_INPUT_SOURCE_TYPE).set_value(
+                _input_source_type(source)
+            )
+            _LOGGER.debug(
+                "%s: Renamed source %s to %s", self.entity_id, old_source, source
+            )
+        self.sources = sources
+        self._mapped_sources = mapped_sources
+        return False
 
     def _get_mapped_sources(self, state: State) -> dict[str, str]:
         """Return a dict of sources mapped to their homekit safe name."""
         source_list = state.attributes.get(self.source_list_key, [])
         if self._mapped_sources_list != source_list:
-            self._mapped_sources = {
-                cleanup_name_for_homekit(source): source for source in source_list
-            }
+            self._mapped_sources = _map_sources(source_list)
         return self._mapped_sources
 
     def _get_ordered_source_list_from_state(self, state: State) -> list[str]:
@@ -182,6 +242,8 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         # Set active input
         if not self.support_select_source or not self.sources:
             return
+        if self._async_update_sources(new_state):
+            return
         source = new_state.attributes.get(self.source_key)
         source_name = cleanup_name_for_homekit(source)
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, source_name)
@@ -192,19 +254,12 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
 
         possible_sources = self._get_ordered_source_list_from_state(new_state)
         if source_name in possible_sources:
-            index = possible_sources.index(source_name)
-            if index >= MAXIMUM_SOURCES:
-                _LOGGER.debug(
-                    "%s: Source %s and above are not supported",
-                    self.entity_id,
-                    MAXIMUM_SOURCES,
-                )
-            else:
-                _LOGGER.debug(
-                    "%s: Sources out of sync. Rebuilding Accessory",
-                    self.entity_id,
-                )
-                return
+            # The sources were just synced, so only those above the maximum are left
+            _LOGGER.debug(
+                "%s: Source %s and above are not supported",
+                self.entity_id,
+                MAXIMUM_SOURCES,
+            )
 
         _LOGGER.debug(
             "%s: Source %s does not exist the source list: %s",
