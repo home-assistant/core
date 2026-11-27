@@ -102,9 +102,6 @@
     "firmware": {
       "name": "Firmware"
     },
-    "manual_actions": {
-      "confirm_on_device": "Confirm the update on the device."
-    },
     "release_notes_messages": {
       "do_not_interrupt": "Do not restart, remove power from, or otherwise interrupt the device while the update is in progress."
     }

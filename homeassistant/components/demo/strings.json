@@ -100,7 +100,10 @@
     },
     "update": {
       "manual_actions": {
-        "power_cycle": "Turn {device_name} off and on again to finish the update."
+        "confirm_on_device": {
+          "description": "During the update, someone has to confirm it on the device's screen.",
+          "instruction": "Confirm the update on the device's screen."
+        }
       }
     },
     "vacuum": {

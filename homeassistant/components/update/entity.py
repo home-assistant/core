@@ -226,6 +226,8 @@ class UpdateEntity(
         For example, confirm the update on the device. Set it as soon as it is
         known, ideally before the install starts, and report the
         waiting_for_user install phase while the install waits for it.
+        Its translation has a description, shown before it is needed, and an
+        instruction, shown while the install waits for it.
         Only reported while an update is available or an install is in progress.
         """
         return self._attr_manual_action
