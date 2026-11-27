@@ -67,6 +67,8 @@ ATTR_UUID = "uuid"
 ATTR_WS_EVENT = "event"
 
 X_AUTH_TOKEN = "X-Supervisor-Token"
+X_FORWARDED_PREFIX = "X-Forwarded-Prefix"
+# Deprecated in favor of X-Forwarded-Prefix, will be removed in Home Assistant 2027.12
 X_INGRESS_PATH = "X-Ingress-Path"
 X_HASS_SOURCE = "X-Hass-Source"
 
@@ -197,11 +199,11 @@ ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
 ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING = "issue_addon_detached_addon_missing"
 ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED = "issue_addon_detached_addon_removed"
 ISSUE_KEY_ADDON_PWNED = "issue_addon_pwned"
+ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST = "issue_core_deprecated_tcp_api_request"
 ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
 ISSUE_KEY_SYSTEM_REBOOT_REQUIRED = "issue_system_reboot_required"
 ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
 ISSUE_KEY_ADDON_DEPRECATED_ARCH = "issue_addon_deprecated_arch_addon"
-ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER = "legacy_homeassistant_folder"
 
 ISSUE_MOUNT_MOUNT_FAILED = "issue_mount_mount_failed"
 
@@ -232,6 +234,19 @@ EXTRA_PLACEHOLDERS = {
     },
     ISSUE_KEY_ADDON_DEPRECATED: APP_REMOVE_URLS,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH: APP_REMOVE_URLS,
+    ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST: {
+        "supervisor_token": ENV_SUPERVISOR_TOKEN,
+        "command_line_url": "https://www.home-assistant.io/integrations/command_line/",
+        "shell_command_url": "https://www.home-assistant.io/integrations/shell_command/",
+    },
+}
+
+ISSUE_LEARN_MORE_URLS = {
+    ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST: "https://www.home-assistant.io/more-info/supervisor-token",
+}
+
+ISSUE_BREAKS_IN_HA_VERSION = {
+    ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST: "2027.6.0",
 }
 
 

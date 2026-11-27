@@ -15,8 +15,9 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.color import brightness_to_value
 
-from .const import DEV_LED_PROFILE, DEV_PROFILE_RGB, DEV_PROFILE_RGBW
+from .const import BRIGHTNESS_SCALE, DEV_LED_PROFILE, DEV_PROFILE_RGB, DEV_PROFILE_RGBW
 from .coordinator import TwinklyConfigEntry, TwinklyCoordinator
 from .entity import TwinklyEntity
 
@@ -93,15 +94,14 @@ class TwinklyLight(TwinklyEntity, LightEntity):
         current_mode = self.coordinator.data.current_mode
 
         if ATTR_BRIGHTNESS in kwargs:
-            brightness = int(int(kwargs[ATTR_BRIGHTNESS]) / 2.55)
-
-            # If brightness is 0, the twinkly will only "disable" the brightness,
-            # which means that it will be 100%.
-            if brightness == 0:
-                await self.client.turn_off()
-                return
-
-            await self.client.set_brightness(brightness)
+            await self.client.set_brightness(
+                max(
+                    1,
+                    round(
+                        brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
+                    ),
+                )
+            )
 
         if (
             ATTR_RGBW_COLOR in kwargs

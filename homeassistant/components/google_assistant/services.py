@@ -3,12 +3,11 @@
 from enum import StrEnum
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import service
 
 from .const import CONF_SERVICE_ACCOUNT, DATA_CONFIG, DOMAIN
-from .http import GoogleConfig
+from .http import GoogleConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,9 +43,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             )
             return
 
-        entry: ConfigEntry[GoogleConfig] = service.async_get_config_entry(
-            hass, DOMAIN, None
-        )
+        entry: GoogleConfigEntry = service.async_get_config_entry(hass, DOMAIN, None)
         await entry.runtime_data.async_sync_entities(agent_user_id)
 
     if CONF_SERVICE_ACCOUNT in hass.data[DATA_CONFIG]:
@@ -56,9 +53,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def reload_service_handler(call: ServiceCall) -> None:
         """Reload the YAML configuration and sync the entities to Google."""
-        entry: ConfigEntry[GoogleConfig] = service.async_get_config_entry(
-            hass, DOMAIN, None
-        )
+        entry: GoogleConfigEntry = service.async_get_config_entry(hass, DOMAIN, None)
         if await entry.runtime_data.async_reload_yaml():
             await entry.runtime_data.async_sync_entities_all()
 

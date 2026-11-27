@@ -12,17 +12,12 @@ from homeassistant.components.shelly.const import (
 )
 from homeassistant.components.valve import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as VALVE_DOMAIN,
+    ValveService,
+    ValveServiceArgument,
     ValveState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_SET_VALVE_POSITION,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -58,8 +53,8 @@ async def test_block_device_gas_valve(
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_OPEN_VALVE,
-        {ATTR_ENTITY_ID: entity_id},
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -75,8 +70,8 @@ async def test_block_device_gas_valve(
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_CLOSE_VALVE,
-        {ATTR_ENTITY_ID: entity_id},
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -124,8 +119,8 @@ async def test_rpc_water_valve(
     # Open valve
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_OPEN_VALVE,
-        {ATTR_ENTITY_ID: entity_id},
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -143,8 +138,8 @@ async def test_rpc_water_valve(
     mock_rpc_device.number_set.reset_mock()
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_CLOSE_VALVE,
-        {ATTR_ENTITY_ID: entity_id},
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -162,8 +157,8 @@ async def test_rpc_water_valve(
     mock_rpc_device.number_set.reset_mock()
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_SET_VALVE_POSITION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
+        ValveService.SET_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, ValveServiceArgument.POSITION: 50},
         blocking=True,
     )
 
@@ -210,8 +205,8 @@ async def test_rpc_neo_water_valve(
     # Open valve
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_OPEN_VALVE,
-        {ATTR_ENTITY_ID: entity_id},
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -229,8 +224,8 @@ async def test_rpc_neo_water_valve(
     mock_rpc_device.boolean_set.reset_mock()
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_CLOSE_VALVE,
-        {ATTR_ENTITY_ID: entity_id},
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 

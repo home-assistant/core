@@ -245,9 +245,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         device_uid = model.split(" ", 1)[1]
 
-        if device_uid in izone_discovery.yaml_excluded_uids(self.hass):
-            return self.async_abort(reason="no_devices_found")
-
         # async_set_unique_id + _abort_if_unique_id_configured handles both existing
         # entries (including SOURCE_IGNORE) and stale in-progress flows for this UID.
         # A direct async_entry_for_domain_unique_id pre-check would miss the
@@ -294,9 +291,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle fan-out, YAML import secondaries, and runtime discovery."""
         uid = self.context["unique_id"]
         host = discovery_info[CONF_HOST]
-        if uid in izone_discovery.yaml_excluded_uids(self.hass):
-            return self.async_abort(reason="no_devices_found")
-
         await self.async_set_unique_id(uid)
         self._abort_if_unique_id_configured()
         # Persist through confirm into entry data as CONF_HOST.
@@ -422,18 +416,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         except pizone.ControllerAlreadyClaimedError:
             return self._async_show_manual_host_form(
                 errors={"base": "already_configured"},
-                suggested_values={CONF_HOST: host},
-            )
-
-        if endpoint is None:
-            return self._async_show_manual_host_form(
-                errors={"base": "cannot_connect"},
-                suggested_values={CONF_HOST: host},
-            )
-
-        if endpoint.uid in izone_discovery.yaml_excluded_uids(self.hass):
-            return self._async_show_manual_host_form(
-                errors={"base": "no_devices_found"},
                 suggested_values={CONF_HOST: host},
             )
 

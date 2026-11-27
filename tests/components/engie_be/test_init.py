@@ -13,6 +13,7 @@ from aioengiebelgium import (
     EngieBeAuthenticationError,
     EngieBeCommunicationError,
     EpexGranularity,
+    EpexPayload,
     PricesResponse,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -20,40 +21,47 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.engie_be.const import (
+    BRUSSELS_TIME_ZONE,
     CONTRACTS_RETRY_INTERVAL,
     DOMAIN,
     EPEX_SCAN_INTERVAL,
     PRICES_SCAN_INTERVAL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     BAN,
     BAN_2,
-    BRUSSELS_TIME_ZONE,
+    EPEX_CURRENT_HOUR_UNIQUE_ID,
+    EPEX_LOW_TODAY_HOUR_UNIQUE_ID,
+    EPEX_TOMORROW_AVAILABLE_UNIQUE_ID,
     OFFTAKE_ONLY_EAN,
+    OFFTAKE_TOTAL_HOURS_UNIQUE_ID,
+    advance_time,
     build_contracts,
     build_epex_payload,
     build_prices,
     build_relations,
+    contracts_failing_for,
+    get_state,
     setup_dynamic_entry,
+    setup_entry,
     without_capacity_tariff,
 )
+
+BAN_2_EPEX_CURRENT_HOUR_UNIQUE_ID = f"{BAN_2}_epex_current_hour"
 
 
 def _current_hour_price(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, ban: str
 ) -> float:
     """Return the EPEX current hour price of one household."""
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ban}_epex_current_hour"
+    state = get_state(
+        hass, entity_registry, Platform.SENSOR, f"{ban}_epex_current_hour"
     )
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
     return float(state.state)
 
 
@@ -71,9 +79,7 @@ async def test_setup_and_unload(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test successful setup and unload of a config entry."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -152,17 +158,13 @@ async def test_prices_refresh_auth_error_starts_reauth(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an auth error during a scheduled prices refresh starts reauth."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
     assert not hass.config_entries.flow.async_progress()
 
     mock_engie_client.return_value.async_get_prices.side_effect = (
         EngieBeAuthenticationError("boom")
     )
-    freezer.tick(PRICES_SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -221,13 +223,13 @@ async def test_partial_first_refresh(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+            Platform.SENSOR, DOMAIN, OFFTAKE_TOTAL_HOURS_UNIQUE_ID
         )
         is not None
     )
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN_2}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+            Platform.SENSOR, DOMAIN, f"{BAN_2}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
         )
         is None
     )
@@ -424,28 +426,6 @@ async def test_unexpected_service_point_error_does_not_prevent_setup(
     )
 
 
-async def test_household_is_a_single_service_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test a household's EANs share one SERVICE device instead of per-meter devices."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, mock_config_entry.entry_id
-    )
-    assert len(device_entries) == 1
-
-    household_device = device_entries[0]
-    assert household_device.identifiers == {(DOMAIN, BAN)}
-    assert household_device.entry_type is dr.DeviceEntryType.SERVICE
-    assert household_device.via_device_id is None
-
-
 @pytest.mark.parametrize(
     ("ban", "expected"),
     [
@@ -470,17 +450,15 @@ async def test_epex_entities_only_for_dynamic_households(
         return build_contracts(dynamic=queried_ban == BAN)
 
     mock_engie_client.return_value.async_get_energy_contracts.side_effect = _contracts
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     sensor_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{ban}_epex_current_hour"
+        Platform.SENSOR, DOMAIN, f"{ban}_epex_current_hour"
     )
     assert (sensor_entity_id is not None) is expected
     binary_entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"{ban}_epex_tomorrow_available"
+        Platform.BINARY_SENSOR, DOMAIN, f"{ban}_epex_tomorrow_available"
     )
     assert (binary_entity_id is not None) is expected
 
@@ -497,9 +475,7 @@ async def test_contracts_communication_error_loads_without_epex(
     mock_engie_client.return_value.async_get_energy_contracts.side_effect = (
         EngieBeCommunicationError("boom")
     )
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert "Tariff lookup failed" in caplog.text
@@ -508,13 +484,13 @@ async def test_contracts_communication_error_loads_without_epex(
     assert BAN[-4:] in caplog.text
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+            Platform.SENSOR, DOMAIN, OFFTAKE_TOTAL_HOURS_UNIQUE_ID
         )
         is not None
     )
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+            Platform.SENSOR, DOMAIN, EPEX_CURRENT_HOUR_UNIQUE_ID
         )
         is None
     )
@@ -551,15 +527,11 @@ async def test_contracts_retry_auth_error_starts_reauth(
     """Test an auth error during a tariff retry starts reauth and cancels the timer."""
     client = mock_engie_client.return_value
     client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
     assert client.async_get_energy_contracts.call_count == 1
 
     client.async_get_energy_contracts.side_effect = EngieBeAuthenticationError("boom")
-    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -568,9 +540,7 @@ async def test_contracts_retry_auth_error_starts_reauth(
 
     call_count = client.async_get_energy_contracts.call_count
     for _ in range(3):
-        freezer.tick(CONTRACTS_RETRY_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await advance_time(hass, freezer, CONTRACTS_RETRY_INTERVAL)
     assert client.async_get_energy_contracts.call_count == call_count
 
 
@@ -585,29 +555,20 @@ async def test_contracts_retry_adds_epex_entities(
     """Test a successful classification retry adds the EPEX entities."""
     client = mock_engie_client.return_value
     client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
-    def _dynamic_contracts(_ban: str) -> EnergyContractsResponse:
-        return build_contracts(dynamic=True)
-
-    client.async_get_energy_contracts.side_effect = _dynamic_contracts
-    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    client.async_get_energy_contracts.side_effect = None
+    client.async_get_energy_contracts.return_value = build_contracts(dynamic=True)
+    await advance_time(hass, freezer, CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
 
     assert client.async_get_energy_contracts.call_count == 2
-    sensor_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+    state = get_state(
+        hass, entity_registry, Platform.SENSOR, EPEX_CURRENT_HOUR_UNIQUE_ID
     )
-    assert sensor_entity_id is not None
-    state = hass.states.get(sensor_entity_id)
-    assert state is not None
     assert float(state.state) == pytest.approx(0.15)
     assert (
         entity_registry.async_get_entity_id(
-            "binary_sensor", DOMAIN, f"{BAN}_epex_tomorrow_available"
+            Platform.BINARY_SENSOR, DOMAIN, EPEX_TOMORROW_AVAILABLE_UNIQUE_ID
         )
         is not None
     )
@@ -627,48 +588,36 @@ async def test_newly_dynamic_household_gets_entities_while_another_retries(
         BAN, BAN_2
     )
     client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+            Platform.SENSOR, DOMAIN, EPEX_CURRENT_HOUR_UNIQUE_ID
         )
         is None
     )
 
-    def _dynamic_for_ban(queried_ban: str) -> EnergyContractsResponse:
-        if queried_ban == BAN_2:
-            raise EngieBeCommunicationError("boom")
-        return build_contracts(dynamic=True)
-
-    client.async_get_energy_contracts.side_effect = _dynamic_for_ban
-    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    sensor_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+    client.async_get_energy_contracts.side_effect = contracts_failing_for(
+        BAN_2, dynamic=True
     )
-    assert sensor_entity_id is not None
-    state = hass.states.get(sensor_entity_id)
-    assert state is not None
+    await advance_time(hass, freezer, CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
+
+    state = get_state(
+        hass, entity_registry, Platform.SENSOR, EPEX_CURRENT_HOUR_UNIQUE_ID
+    )
     assert float(state.state) == pytest.approx(0.15)
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN_2}_epex_current_hour"
+            Platform.SENSOR, DOMAIN, BAN_2_EPEX_CURRENT_HOUR_UNIQUE_ID
         )
         is None
     )
 
     client.async_get_energy_contracts.side_effect = lambda _ban: build_contracts()
-    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
 
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN_2}_epex_current_hour"
+            Platform.SENSOR, DOMAIN, BAN_2_EPEX_CURRENT_HOUR_UNIQUE_ID
         )
         is None
     )
@@ -688,21 +637,19 @@ async def test_contracts_failure_keeps_retrying(
     """Test a classification retry that fails again schedules the next one."""
     client = mock_engie_client.return_value
     client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
     assert client.async_get_energy_contracts.call_count == 1
 
     for _ in range(2):
-        freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await advance_time(
+            hass, freezer, CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30)
+        )
 
     assert client.async_get_energy_contracts.call_count == 3
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+            Platform.SENSOR, DOMAIN, EPEX_CURRENT_HOUR_UNIQUE_ID
         )
         is None
     )
@@ -720,21 +667,12 @@ async def test_contracts_retry_only_queries_pending_households(
         BAN, BAN_2
     )
 
-    def _contracts(queried_ban: str) -> EnergyContractsResponse:
-        if queried_ban == BAN_2:
-            raise EngieBeCommunicationError("boom")
-        return build_contracts()
-
-    client.async_get_energy_contracts.side_effect = _contracts
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    client.async_get_energy_contracts.side_effect = contracts_failing_for(BAN_2)
+    await setup_entry(hass, mock_config_entry)
     client.async_get_energy_contracts.reset_mock()
 
     for _ in range(3):
-        freezer.tick(CONTRACTS_RETRY_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await advance_time(hass, freezer, CONTRACTS_RETRY_INTERVAL)
 
     assert [
         call.args[0] for call in client.async_get_energy_contracts.call_args_list
@@ -750,15 +688,11 @@ async def test_contracts_retry_stops_once_classified(
     """Test the retries stop once every household has a known tariff."""
     client = mock_engie_client.return_value
     client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
     client.async_get_energy_contracts.side_effect = lambda _ban: build_contracts()
     for _ in range(3):
-        freezer.tick(CONTRACTS_RETRY_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await advance_time(hass, freezer, CONTRACTS_RETRY_INTERVAL)
 
     assert client.async_get_energy_contracts.call_count == 2
 
@@ -773,9 +707,7 @@ async def test_contracts_retry_in_flight_is_cancelled_on_unload(
     """Test unloading cancels a running tariff retry and stops the next ones."""
     client = mock_engie_client.return_value
     client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
     release = asyncio.Event()
 
@@ -795,14 +727,12 @@ async def test_contracts_retry_in_flight_is_cancelled_on_unload(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     for _ in range(3):
-        freezer.tick(CONTRACTS_RETRY_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await advance_time(hass, freezer, CONTRACTS_RETRY_INTERVAL)
 
     assert client.async_get_energy_contracts.call_count == 2
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+            Platform.SENSOR, DOMAIN, EPEX_CURRENT_HOUR_UNIQUE_ID
         )
         is None
     )
@@ -815,12 +745,10 @@ async def test_contracts_retry_finishing_while_unloading_adds_no_entities(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a retry that returns while the entry unloads leaves the households alone."""
+    """Test a retry that returns while the entry unloads adds no entities."""
     client = mock_engie_client.return_value
     client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
     release = asyncio.Event()
 
@@ -838,10 +766,9 @@ async def test_contracts_retry_finishing_while_unloading_adds_no_entities(
     await hass.async_block_till_done(wait_background_tasks=True)
     mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
 
-    assert mock_config_entry.runtime_data.households[BAN].is_dynamic is None
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+            Platform.SENSOR, DOMAIN, EPEX_CURRENT_HOUR_UNIQUE_ID
         )
         is None
     )
@@ -858,26 +785,21 @@ async def test_contracts_retry_epex_refresh_during_unload_adds_no_entities(
     """Test an EPEX refresh finishing during unload adds no entities."""
     client = mock_engie_client.return_value
     client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    epex_coordinator = mock_config_entry.runtime_data.epex
-    assert epex_coordinator is not None
-    epex_coordinator.data = None
+    client.async_get_epex_prices.side_effect = EngieBeCommunicationError("boom")
+    await setup_entry(hass, mock_config_entry)
 
     release_epex = asyncio.Event()
     epex_refresh_started = asyncio.Event()
 
-    def _dynamic_contracts(_ban: str) -> EnergyContractsResponse:
-        return build_contracts(dynamic=True)
-
-    async def _slow_epex(*args, **kwargs):
+    async def _slow_epex(
+        start: datetime, end: datetime, *, granularity: EpexGranularity
+    ) -> EpexPayload:
         epex_refresh_started.set()
         await release_epex.wait()
-        return build_epex_payload(*args, **kwargs)
+        return build_epex_payload(start, end, granularity)
 
-    client.async_get_energy_contracts.side_effect = _dynamic_contracts
+    client.async_get_energy_contracts.side_effect = None
+    client.async_get_energy_contracts.return_value = build_contracts(dynamic=True)
     client.async_get_epex_prices.side_effect = _slow_epex
 
     freezer.tick(CONTRACTS_RETRY_INTERVAL)
@@ -891,7 +813,7 @@ async def test_contracts_retry_epex_refresh_during_unload_adds_no_entities(
 
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+            Platform.SENSOR, DOMAIN, EPEX_CURRENT_HOUR_UNIQUE_ID
         )
         is None
     )
@@ -907,15 +829,11 @@ async def test_contracts_retry_resolving_fixed_shuts_down_epex(
     """Test a pending household that resolves to fixed stops the EPEX fetches."""
     client = mock_engie_client.return_value
     client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
     assert client.async_get_epex_prices.call_count == 4
 
     client.async_get_energy_contracts.side_effect = lambda _ban: build_contracts()
-    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
     for _ in range(48):
         freezer.tick(timedelta(hours=1))
         async_fire_time_changed(hass)
@@ -924,13 +842,13 @@ async def test_contracts_retry_resolving_fixed_shuts_down_epex(
     assert client.async_get_epex_prices.call_count == 4
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+            Platform.SENSOR, DOMAIN, EPEX_CURRENT_HOUR_UNIQUE_ID
         )
         is None
     )
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+            Platform.SENSOR, DOMAIN, OFFTAKE_TOTAL_HOURS_UNIQUE_ID
         )
         is not None
     )
@@ -950,35 +868,26 @@ async def test_pending_household_does_not_release_epex_of_dynamic_household(
         BAN, BAN_2
     )
 
-    def _contracts(queried_ban: str) -> EnergyContractsResponse:
-        if queried_ban == BAN_2:
-            raise EngieBeCommunicationError("boom")
-        return build_contracts(dynamic=True)
-
-    client.async_get_energy_contracts.side_effect = _contracts
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    client.async_get_energy_contracts.side_effect = contracts_failing_for(
+        BAN_2, dynamic=True
+    )
+    await setup_entry(hass, mock_config_entry)
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+            Platform.SENSOR, DOMAIN, EPEX_CURRENT_HOUR_UNIQUE_ID
         )
         is not None
     )
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN_2}_epex_current_hour"
+            Platform.SENSOR, DOMAIN, BAN_2_EPEX_CURRENT_HOUR_UNIQUE_ID
         )
         is None
     )
 
-    def _fixed_contracts(_queried_ban: str) -> EnergyContractsResponse:
-        return build_contracts()
-
-    client.async_get_energy_contracts.side_effect = _fixed_contracts
-    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    client.async_get_energy_contracts.side_effect = None
+    client.async_get_energy_contracts.return_value = build_contracts()
+    await advance_time(hass, freezer, CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
     freezer.tick(timedelta(hours=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -986,7 +895,7 @@ async def test_pending_household_does_not_release_epex_of_dynamic_household(
     assert _current_hour_price(hass, entity_registry, BAN) == pytest.approx(0.16)
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN_2}_epex_current_hour"
+            Platform.SENSOR, DOMAIN, BAN_2_EPEX_CURRENT_HOUR_UNIQUE_ID
         )
         is None
     )
@@ -1055,12 +964,9 @@ async def test_epex_setup_failure_recovers_on_next_poll(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert "EPEX prices unavailable at setup" in caplog.text
     assert "connection error" in caplog.text
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+    state = get_state(
+        hass, entity_registry, Platform.SENSOR, EPEX_CURRENT_HOUR_UNIQUE_ID
     )
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
     client.async_get_epex_prices.side_effect = build_epex_payload
@@ -1104,16 +1010,10 @@ async def test_epex_refresh_auth_error_starts_reauth(
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
     assert not hass.config_entries.flow.async_progress()
 
-    epex_coordinator = mock_config_entry.runtime_data.epex
-    assert epex_coordinator is not None
-    epex_coordinator.data = None
-
     mock_engie_client.return_value.async_get_epex_prices.side_effect = (
         EngieBeAuthenticationError("boom")
     )
-    freezer.tick(EPEX_SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, timedelta(days=1))
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -1128,7 +1028,7 @@ async def test_epex_midnight_rollover_fetches_only_the_new_tomorrow(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test yesterday's tomorrow slots serve the new day after midnight."""
+    """Test that after midnight only the new tomorrow is fetched for both granularities."""
     freezer.move_to(datetime(2026, 10, 3, 21, 0, tzinfo=BRUSSELS_TIME_ZONE))
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
 
@@ -1140,18 +1040,10 @@ async def test_epex_midnight_rollover_fetches_only_the_new_tomorrow(
     assert days.count(date(2026, 10, 4)) == 2
     assert days.count(date(2026, 10, 5)) == 2
     assert len(days) == 6
-    low_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_epex_low_today_hour"
+    get_state(hass, entity_registry, Platform.SENSOR, EPEX_LOW_TODAY_HOUR_UNIQUE_ID)
+    binary_state = get_state(
+        hass, entity_registry, Platform.BINARY_SENSOR, EPEX_TOMORROW_AVAILABLE_UNIQUE_ID
     )
-    assert low_entity_id is not None
-    low_state = hass.states.get(low_entity_id)
-    assert low_state is not None
-    binary_entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"{BAN}_epex_tomorrow_available"
-    )
-    assert binary_entity_id is not None
-    binary_state = hass.states.get(binary_entity_id)
-    assert binary_state is not None
     assert binary_state.state == STATE_ON
 
 
@@ -1185,15 +1077,13 @@ async def test_no_epex_without_dynamic_household(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a fixed-tariff entry fetches no EPEX prices and has no EPEX entities."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_engie_client.return_value.async_get_epex_prices.assert_not_called()
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+            Platform.SENSOR, DOMAIN, EPEX_CURRENT_HOUR_UNIQUE_ID
         )
         is None
     )

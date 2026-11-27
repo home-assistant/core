@@ -48,6 +48,7 @@ from homeassistant.util import dt as dt_util
 
 from . import VacuumCoordinatorData, VacuumCoordinatorDataAttributes
 from .const import (
+    ATTR_HUMIDITY,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
@@ -113,7 +114,6 @@ ATTR_DUST_FILTER_LIFE_REMAINING_DAYS = "dust_filter_life_remaining_days"
 ATTR_UPPER_FILTER_LIFE_REMAINING = "upper_filter_life_remaining"
 ATTR_UPPER_FILTER_LIFE_REMAINING_DAYS = "upper_filter_life_remaining_days"
 ATTR_FILTER_USE = "filter_use"
-ATTR_HUMIDITY = "humidity"
 ATTR_ILLUMINANCE = "illuminance"
 ATTR_ILLUMINANCE_LUX = "illuminance_lux"
 ATTR_LOAD_POWER = "load_power"

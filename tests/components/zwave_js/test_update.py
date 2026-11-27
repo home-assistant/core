@@ -30,16 +30,16 @@ from homeassistant.components.update import (
     ATTR_SKIPPED_VERSION,
     ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
-    SERVICE_SKIP,
+    UpdateService,
 )
-from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
+from homeassistant.components.zwave_js.const import DOMAIN, ZWaveJSService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -196,7 +196,7 @@ async def test_update_entity_states(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] is None
+    assert result["result"] == {"release_notes": None, "messages": []}
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
@@ -222,14 +222,14 @@ async def test_update_entity_states(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] == "blah 2"
+    assert result["result"] == {"release_notes": "blah 2", "messages": []}
 
     # Refresh value should not be supported by this entity
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_VALUE,
+        ZWaveJSService.REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            CommonServiceArgument.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -289,8 +289,20 @@ async def test_update_entity_release_notes_sleeping_device(
     hass_ws_client: WebSocketGenerator,
     expected_message: str,
 ) -> None:
-    """Test release notes of a sleeping device start with a wake-up alert."""
+    """Test release notes of a sleeping device come with a wake-up message."""
     ws_client = await hass_ws_client(hass)
+
+    # No messages while no update is available
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": SLEEPING_NODE_UPDATE_ENTITY,
+        }
+    )
+    result = await ws_client.receive_json()
+    assert result["result"] == {"release_notes": None, "messages": []}
+
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
@@ -302,15 +314,16 @@ async def test_update_entity_release_notes_sleeping_device(
 
     await ws_client.send_json(
         {
-            "id": 1,
+            "id": 2,
             "type": "update/release_notes",
             "entity_id": SLEEPING_NODE_UPDATE_ENTITY,
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] == (
-        f"<ha-alert alert-type='info'>\n\n{expected_message}\n\n</ha-alert>\n\nblah 2"
-    )
+    assert result["result"] == {
+        "release_notes": "blah 2",
+        "messages": [{"severity": "info", "message": expected_message}],
+    }
 
 
 @pytest.mark.parametrize(
@@ -336,9 +349,9 @@ async def test_update_entity_install_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -591,9 +604,9 @@ async def test_update_entity_progress(
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -630,6 +643,249 @@ async def test_update_entity_progress(
     assert state.state == STATE_OFF
 
     await install_task
+
+
+async def test_update_entity_install_multiple_nodes_in_parallel(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_radio_thermostat_ct100_plus_different_endpoints: Node,
+    zooz_zse43: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test installs on different nodes run at the same time."""
+    client.async_send_command.return_value = FIRMWARE_UPDATES
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
+    await hass.async_block_till_done()
+
+    entity_ids = (NODE_UPDATE_ENTITY, SLEEPING_NODE_UPDATE_ENTITY)
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_ON
+
+    installing_node_ids: set[int] = set()
+    both_installs_started = asyncio.Event()
+
+    async def send_command(message: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        installing_node_ids.add(message["nodeId"])
+        if len(installing_node_ids) == 2:
+            both_installs_started.set()
+        return {"result": {"status": 254, "success": True, "reInterview": False}}
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.side_effect = send_command
+
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: list(entity_ids)},
+            blocking=True,
+        )
+    )
+
+    # Both install commands must be sent before either node reports the update as
+    # finished
+    async with asyncio.timeout(5):
+        await both_installs_started.wait()
+
+    assert installing_node_ids == {
+        climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
+        zooz_zse43.node_id,
+    }
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.attributes[ATTR_IN_PROGRESS] is True
+
+    def finished_event(node: Node) -> Event:
+        return Event(
+            type="firmware update finished",
+            data={
+                "source": "node",
+                "event": "firmware update finished",
+                "nodeId": node.node_id,
+                "result": {
+                    "status": NodeFirmwareUpdateStatus.OK_NO_RESTART,
+                    "success": True,
+                    "reInterview": False,
+                },
+            },
+        )
+
+    client.driver.receive_event(
+        finished_event(climate_radio_thermostat_ct100_plus_different_endpoints)
+    )
+    # Let the thermostat's install task finish
+    await asyncio.sleep(0)
+
+    state = hass.states.get(NODE_UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "11.2.4"
+
+    state = hass.states.get(SLEEPING_NODE_UPDATE_ENTITY)
+    assert state
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+
+    client.driver.receive_event(finished_event(zooz_zse43))
+    await install_task
+
+    state = hass.states.get(SLEEPING_NODE_UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "11.2.4"
+
+
+CONTROLLER_UPDATE_FINISHED_EVENT = Event(
+    type="firmware update finished",
+    data={
+        "source": "driver",
+        "event": "firmware update finished",
+        "result": {"status": DriverFirmwareUpdateStatus.OK, "success": True},
+    },
+)
+
+
+async def test_update_entity_controller_install_waits_for_node_installs(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_radio_thermostat_ct100_plus_different_endpoints: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the controller install starts after the node installs of the same call."""
+    client.async_send_command.return_value = FIRMWARE_UPDATES
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
+    await hass.async_block_till_done()
+
+    sent_commands: list[str] = []
+    command_sent = asyncio.Event()
+
+    async def send_command(
+        message: dict[str, Any], *args: Any, **kwargs: Any
+    ) -> dict[str, Any]:
+        sent_commands.append(message["command"])
+        command_sent.set()
+        if message["command"] == "driver.firmware_update_otw":
+            return {
+                "result": {"status": DriverFirmwareUpdateStatus.OK, "success": True}
+            }
+        return {"result": {"status": 254, "success": True, "reInterview": False}}
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.side_effect = send_command
+
+    # The controller comes first in the call, but must still wait for the node
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {
+                TargetKey.ENTITY_ID: [
+                    CONTROLLER_UPDATE_ENTITY,
+                    NODE_UPDATE_ENTITY,
+                ]
+            },
+            blocking=True,
+        )
+    )
+    async with asyncio.timeout(5):
+        await command_sent.wait()
+
+    assert sent_commands == ["controller.firmware_update_ota"]
+    for entity_id in (CONTROLLER_UPDATE_ENTITY, NODE_UPDATE_ENTITY):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.attributes[ATTR_IN_PROGRESS] is True
+
+    command_sent.clear()
+    client.driver.receive_event(
+        Event(
+            type="firmware update finished",
+            data={
+                "source": "node",
+                "event": "firmware update finished",
+                "nodeId": climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
+                "result": {
+                    "status": NodeFirmwareUpdateStatus.OK_NO_RESTART,
+                    "success": True,
+                    "reInterview": False,
+                },
+            },
+        )
+    )
+    async with asyncio.timeout(5):
+        await command_sent.wait()
+
+    assert sent_commands == [
+        "controller.firmware_update_ota",
+        "driver.firmware_update_otw",
+    ]
+
+    client.driver.receive_event(CONTROLLER_UPDATE_FINISHED_EVENT)
+    await install_task
+
+    for entity_id in (CONTROLLER_UPDATE_ENTITY, NODE_UPDATE_ENTITY):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_OFF
+        assert state.attributes[ATTR_IN_PROGRESS] is False
+        assert state.attributes[ATTR_INSTALLED_VERSION] == "11.2.4"
+
+
+async def test_update_entity_node_install_during_controller_install_raises(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_radio_thermostat_ct100_plus_different_endpoints: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test a node install fails while the controller firmware is being updated."""
+    client.async_send_command.return_value = FIRMWARE_UPDATES
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
+    await hass.async_block_till_done()
+
+    client.async_send_command.reset_mock()
+    install_started = _mock_install_command(
+        client, {"status": DriverFirmwareUpdateStatus.OK, "success": True}
+    )
+
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: CONTROLLER_UPDATE_ENTITY},
+            blocking=True,
+        )
+    )
+    async with asyncio.timeout(5):
+        await install_started.wait()
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: NODE_UPDATE_ENTITY},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "controller_firmware_update_in_progress"
+    assert client.async_send_command.call_count == 1
+
+    state = hass.states.get(NODE_UPDATE_ENTITY)
+    assert state
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+
+    client.driver.receive_event(CONTROLLER_UPDATE_FINISHED_EVENT)
+    await install_task
+
+    state = hass.states.get(CONTROLLER_UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "11.2.4"
 
 
 @pytest.mark.parametrize(
@@ -737,9 +993,9 @@ async def test_update_entity_install_failed(
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -819,9 +1075,9 @@ async def test_update_entity_reload(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_SKIP,
+        UpdateService.SKIP,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -1093,9 +1349,9 @@ async def test_update_entity_full_restore_data_update_available(
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )

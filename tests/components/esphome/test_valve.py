@@ -11,15 +11,12 @@ from aioesphomeapi import (
 
 from homeassistant.components.valve import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as VALVE_DOMAIN,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_SET_VALVE_POSITION,
-    SERVICE_STOP_VALVE,
+    ValveService,
+    ValveServiceArgument,
     ValveState,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockESPHomeDeviceType
@@ -61,8 +58,8 @@ async def test_valve_entity(
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_CLOSE_VALVE,
-        {ATTR_ENTITY_ID: "valve.test_my_valve"},
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: "valve.test_my_valve"},
         blocking=True,
     )
     mock_client.valve_command.assert_has_calls([call(key=1, position=0.0, device_id=0)])
@@ -70,8 +67,8 @@ async def test_valve_entity(
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_OPEN_VALVE,
-        {ATTR_ENTITY_ID: "valve.test_my_valve"},
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: "valve.test_my_valve"},
         blocking=True,
     )
     mock_client.valve_command.assert_has_calls([call(key=1, position=1.0, device_id=0)])
@@ -79,8 +76,8 @@ async def test_valve_entity(
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_SET_VALVE_POSITION,
-        {ATTR_ENTITY_ID: "valve.test_my_valve", ATTR_POSITION: 50},
+        ValveService.SET_POSITION,
+        {TargetKey.ENTITY_ID: "valve.test_my_valve", ValveServiceArgument.POSITION: 50},
         blocking=True,
     )
     mock_client.valve_command.assert_has_calls([call(key=1, position=0.5, device_id=0)])
@@ -88,8 +85,8 @@ async def test_valve_entity(
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_STOP_VALVE,
-        {ATTR_ENTITY_ID: "valve.test_my_valve"},
+        ValveService.STOP,
+        {TargetKey.ENTITY_ID: "valve.test_my_valve"},
         blocking=True,
     )
     mock_client.valve_command.assert_has_calls([call(key=1, stop=True, device_id=0)])
@@ -158,8 +155,8 @@ async def test_valve_entity_without_position(
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_CLOSE_VALVE,
-        {ATTR_ENTITY_ID: "valve.test_my_valve"},
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: "valve.test_my_valve"},
         blocking=True,
     )
     mock_client.valve_command.assert_has_calls([call(key=1, position=0.0, device_id=0)])
@@ -167,8 +164,8 @@ async def test_valve_entity_without_position(
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_OPEN_VALVE,
-        {ATTR_ENTITY_ID: "valve.test_my_valve"},
+        ValveService.OPEN,
+        {TargetKey.ENTITY_ID: "valve.test_my_valve"},
         blocking=True,
     )
     mock_client.valve_command.assert_has_calls([call(key=1, position=1.0, device_id=0)])

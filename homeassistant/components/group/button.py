@@ -12,11 +12,11 @@ from homeassistant.components.button import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -120,7 +120,7 @@ class ButtonGroup(GroupEntity, ButtonEntity):
         await self.hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {ATTR_ENTITY_ID: self._entity_ids},
+            {TargetKey.ENTITY_ID: self._entity_ids},
             blocking=True,
             context=self._context,
         )

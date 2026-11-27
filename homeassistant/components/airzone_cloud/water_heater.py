@@ -24,8 +24,9 @@ from homeassistant.components.water_heater import (
     STATE_PERFORMANCE,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
+    WaterHeaterServiceArgument,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
+from homeassistant.const import STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -139,9 +140,10 @@ class AirzoneWaterHeater(AirzoneHotWaterEntity, WaterHeaterEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         params: dict[str, Any] = {}
-        if ATTR_TEMPERATURE in kwargs:
+        setpoint = kwargs.get(WaterHeaterServiceArgument.TEMPERATURE)
+        if setpoint is not None:
             params[API_SETPOINT] = {
-                API_VALUE: kwargs[ATTR_TEMPERATURE],
+                API_VALUE: setpoint,
                 API_OPTS: {
                     API_UNITS: TemperatureUnit.CELSIUS.value,
                 },

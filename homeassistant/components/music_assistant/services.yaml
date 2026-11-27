@@ -130,6 +130,27 @@ get_queue:
       device_class: speaker
       supported_features:
         - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
+  fields:
+    limit:
+      example: 25
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 500
+          step: 1
+    offset:
+      example: 25
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 1000000
+          step: 1
+    username:
+      example: "john"
+      selector:
+        text:
 
 search:
   fields:
@@ -273,6 +294,25 @@ get_library:
       default: false
       selector:
         boolean:
+    username:
+      example: "john"
+      selector:
+        text:
+
+play_queue_item:
+  target:
+    entity:
+      domain: media_player
+      integration: music_assistant
+      device_class: speaker
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
+  fields:
+    queue_item_id:
+      required: true
+      example: "5d95dc5be77e4f7eb4939f62cfef527b"
+      selector:
+        text:
     username:
       example: "john"
       selector:

@@ -12,18 +12,12 @@ from aioesphomeapi import (
 )
 
 from homeassistant.components.alarm_control_panel import (
-    ATTR_CODE,
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_ARM_VACATION,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockGenericDeviceEntryType
@@ -64,10 +58,10 @@ async def test_generic_alarm_control_panel_requires_code(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
-            ATTR_CODE: 1234,
+            TargetKey.ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
+            AlarmControlPanelServiceArgument.CODE: 1234,
         },
         blocking=True,
     )
@@ -78,10 +72,10 @@ async def test_generic_alarm_control_panel_requires_code(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        AlarmControlPanelService.ARM_CUSTOM_BYPASS,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
-            ATTR_CODE: 1234,
+            TargetKey.ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
+            AlarmControlPanelServiceArgument.CODE: 1234,
         },
         blocking=True,
     )
@@ -92,10 +86,10 @@ async def test_generic_alarm_control_panel_requires_code(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
-            ATTR_CODE: 1234,
+            TargetKey.ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
+            AlarmControlPanelServiceArgument.CODE: 1234,
         },
         blocking=True,
     )
@@ -106,10 +100,10 @@ async def test_generic_alarm_control_panel_requires_code(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelService.ARM_NIGHT,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
-            ATTR_CODE: 1234,
+            TargetKey.ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
+            AlarmControlPanelServiceArgument.CODE: 1234,
         },
         blocking=True,
     )
@@ -120,10 +114,10 @@ async def test_generic_alarm_control_panel_requires_code(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_ARM_VACATION,
+        AlarmControlPanelService.ARM_VACATION,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
-            ATTR_CODE: 1234,
+            TargetKey.ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
+            AlarmControlPanelServiceArgument.CODE: 1234,
         },
         blocking=True,
     )
@@ -134,10 +128,10 @@ async def test_generic_alarm_control_panel_requires_code(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_TRIGGER,
+        AlarmControlPanelService.TRIGGER,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
-            ATTR_CODE: 1234,
+            TargetKey.ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
+            AlarmControlPanelServiceArgument.CODE: 1234,
         },
         blocking=True,
     )
@@ -148,10 +142,10 @@ async def test_generic_alarm_control_panel_requires_code(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
-            ATTR_CODE: 1234,
+            TargetKey.ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
+            AlarmControlPanelServiceArgument.CODE: 1234,
         },
         blocking=True,
     )
@@ -196,8 +190,8 @@ async def test_generic_alarm_control_panel_no_code(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel"},
+        AlarmControlPanelService.DISARM,
+        {TargetKey.ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel"},
         blocking=True,
     )
     mock_client.alarm_control_panel_command.assert_has_calls(

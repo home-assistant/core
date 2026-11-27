@@ -5,7 +5,7 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 
 from .const import DOMAIN, TextService, TextServiceArgument
@@ -30,8 +30,8 @@ async def _async_reproduce_state(
         return
 
     service = TextService.SET_VALUE
-    service_data = {
-        ATTR_ENTITY_ID: state.entity_id,
+    service_data: dict[str, Any] = {
+        TargetKey.ENTITY_ID: state.entity_id,
         TextServiceArgument.VALUE: state.state,
     }
 

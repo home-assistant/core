@@ -17,27 +17,16 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
-    ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
-    ATTR_PRESET_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.components.plugwise.climate import PlugwiseClimateExtraStoredData
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -66,8 +55,11 @@ async def test_adam_climate_entity_climate_changes(
     """Test handling of user requests in adam climate device environment."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.woonkamer", ATTR_TEMPERATURE: 25},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.woonkamer",
+            ClimateServiceArgument.TEMPERATURE: 25,
+        },
         blocking=True,
     )
     assert mock_smile_adam.set_temperature.call_count == 1
@@ -77,11 +69,11 @@ async def test_adam_climate_entity_climate_changes(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.woonkamer",
-            ATTR_HVAC_MODE: HVACMode.HEAT,
-            ATTR_TEMPERATURE: 25,
+            TargetKey.ENTITY_ID: "climate.woonkamer",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+            ClimateServiceArgument.TEMPERATURE: 25,
         },
         blocking=True,
     )
@@ -93,15 +85,21 @@ async def test_adam_climate_entity_climate_changes(
     with pytest.raises(ServiceValidationError, match="Accepted range"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.woonkamer", ATTR_TEMPERATURE: 150},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: "climate.woonkamer",
+                ClimateServiceArgument.TEMPERATURE: 150,
+            },
             blocking=True,
         )
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.woonkamer", ATTR_PRESET_MODE: PRESET_AWAY},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.woonkamer",
+            ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+        },
         blocking=True,
     )
     assert mock_smile_adam.set_preset.call_count == 1
@@ -111,8 +109,11 @@ async def test_adam_climate_entity_climate_changes(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.woonkamer", ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.woonkamer",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     assert mock_smile_adam.set_schedule_state.call_count == 2
@@ -128,10 +129,10 @@ async def test_adam_climate_entity_climate_changes(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.jessie",
-                ATTR_HVAC_MODE: HVACMode.DRY,
+                TargetKey.ENTITY_ID: "climate.jessie",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.DRY,
             },
             blocking=True,
         )
@@ -146,8 +147,11 @@ async def test_adam_climate_adjust_negative_testing(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.woonkamer", ATTR_TEMPERATURE: 25},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: "climate.woonkamer",
+                ClimateServiceArgument.TEMPERATURE: 25,
+            },
             blocking=True,
         )
 
@@ -192,8 +196,11 @@ async def test_adam_restore_state_climate(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.AUTO},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.living_room",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+            },
             blocking=True,
         )
 
@@ -211,8 +218,11 @@ async def test_adam_restore_state_climate(
         # Verify restoration of previous_action_mode = heating
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.HEAT},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.living_room",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+            },
             blocking=True,
         )
         mock_smile_adam_heat_cool.set_regulation_mode.assert_called_with(
@@ -233,8 +243,11 @@ async def test_adam_restore_state_climate(
         # Verify restoration is used when setting the schedule, from "off"
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.bathroom", ATTR_HVAC_MODE: HVACMode.AUTO},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.bathroom",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+            },
             blocking=True,
         )
         # Verify set_schedule_state was called with the restored schedule
@@ -259,8 +272,11 @@ async def test_adam_restore_state_climate(
         # Verify the active schedule is used
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.bathroom", ATTR_HVAC_MODE: HVACMode.AUTO},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.bathroom",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+            },
             blocking=True,
         )
         assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 2
@@ -318,8 +334,11 @@ async def test_adam_none_restore(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.AUTO},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.living_room",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+            },
             blocking=True,
         )
 
@@ -363,8 +382,11 @@ async def test_adam_off_regulation_mode_change(
     # Verify that the active schedule is turned off when transitioning from regulation-off-mode to a manual mode
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.bathroom", ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.bathroom",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
@@ -488,8 +510,11 @@ async def test_adam_climate_entity_attributes(
         # ignoring the restored previous_action_mode
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.living_room",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
         # Verify set_regulation_mode was called with the user-selected HVACMode
@@ -520,8 +545,11 @@ async def test_adam_climate_entity_attributes(
         # Test setting to AUTO, from OFF
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.bathroom", ATTR_HVAC_MODE: HVACMode.AUTO},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.bathroom",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+            },
             blocking=True,
         )
         # Verify set_regulation_mode was called with the user-selected HVACMode
@@ -547,10 +575,10 @@ async def test_adam_climate_off_mode_change(
     assert state.state == HVACMode.OFF
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.slaapkamer",
-            ATTR_HVAC_MODE: HVACMode.HEAT,
+            TargetKey.ENTITY_ID: "climate.slaapkamer",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
     )
@@ -563,10 +591,10 @@ async def test_adam_climate_off_mode_change(
     assert state.state == HVACMode.HEAT
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.kinderkamer",
-            ATTR_HVAC_MODE: HVACMode.OFF,
+            TargetKey.ENTITY_ID: "climate.kinderkamer",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
         },
         blocking=True,
     )
@@ -579,10 +607,10 @@ async def test_adam_climate_off_mode_change(
     assert state.state == HVACMode.HEAT
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.logeerkamer",
-            ATTR_HVAC_MODE: HVACMode.HEAT,
+            TargetKey.ENTITY_ID: "climate.logeerkamer",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
     )
@@ -616,11 +644,11 @@ async def test_anna_climate_entity_climate_changes(
     """Test handling of user requests in anna climate device environment."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.anna",
-            ATTR_TARGET_TEMP_HIGH: 30,
-            ATTR_TARGET_TEMP_LOW: 20,
+            TargetKey.ENTITY_ID: "climate.anna",
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 30,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 20,
         },
         blocking=True,
     )
@@ -632,8 +660,11 @@ async def test_anna_climate_entity_climate_changes(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.anna", ATTR_PRESET_MODE: PRESET_AWAY},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.anna",
+            ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+        },
         blocking=True,
     )
     assert mock_smile_anna.set_preset.call_count == 1
@@ -643,8 +674,11 @@ async def test_anna_climate_entity_climate_changes(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.anna", ATTR_HVAC_MODE: HVACMode.AUTO},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.anna",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+        },
         blocking=True,
     )
     # hvac_mode is already auto so not called.
@@ -652,8 +686,11 @@ async def test_anna_climate_entity_climate_changes(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.anna", ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.anna",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+        },
         blocking=True,
     )
     assert mock_smile_anna.set_schedule_state.call_count == 1
@@ -672,8 +709,11 @@ async def test_anna_climate_entity_climate_changes(
 
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.anna", ATTR_HVAC_MODE: HVACMode.AUTO},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.anna",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+            },
             blocking=True,
         )
         assert mock_smile_anna.set_schedule_state.call_count == 2
@@ -754,7 +794,10 @@ async def test_legacy_anna_no_schedule(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.anna", ATTR_HVAC_MODE: HVACMode.AUTO},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.anna",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+            },
             blocking=True,
         )

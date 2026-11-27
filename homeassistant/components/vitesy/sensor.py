@@ -1,6 +1,6 @@
 """Sensor platform for the Vitesy integration."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from typing import override
@@ -29,7 +29,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import LOGGER
 from .coordinator import VitesyConfigEntry, VitesyDataUpdateCoordinator
-from .entity import VitesyEntity
+from .entity import VitesyEntity, async_add_device_entities
 
 PARALLEL_UPDATES = 0
 
@@ -292,16 +292,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Vitesy sensors from a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        VitesySensor(coordinator, device_id, description)
-        for device_id, device in coordinator.data.items()
-        for description in SENSORS
-        if (
-            description.exists_fn(device)
-            if description.exists_fn
-            else description.value_fn(device) is not None
+
+    def _entities(device_id: str, device: VitesyDevice) -> Iterable[VitesySensor]:
+        return (
+            VitesySensor(coordinator, device_id, description)
+            for description in SENSORS
+            if (
+                description.exists_fn(device)
+                if description.exists_fn
+                else description.value_fn(device) is not None
+            )
         )
-    )
+
+    async_add_device_entities(coordinator, async_add_entities, _entities)
 
 
 class VitesySensor(VitesyEntity, SensorEntity):

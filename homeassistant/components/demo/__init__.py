@@ -6,9 +6,9 @@ from homeassistant import config_entries, core as ha, setup
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
     Platform,
+    TargetKey,
     UnitOfSoundPressure,
 )
 from homeassistant.core import Event, HomeAssistant
@@ -47,6 +47,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.SWITCH,
     Platform.TEXT,
     Platform.TIME,
+    Platform.TTS,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.VALVE,
@@ -55,7 +56,6 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
 ]
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
-    Platform.TTS,
     Platform.IMAGE_PROCESSING,
     Platform.DEVICE_TRACKER,
 ]
@@ -228,17 +228,17 @@ async def finish_setup(hass: HomeAssistant, config: ConfigType) -> None:
                     "sequence": [
                         {
                             "service": "light.turn_off",
-                            "data": {ATTR_ENTITY_ID: lights[0]},
+                            "data": {TargetKey.ENTITY_ID: lights[0]},
                         },
                         {"delay": {"seconds": 5}},
                         {
                             "service": "light.turn_on",
-                            "data": {ATTR_ENTITY_ID: lights[0]},
+                            "data": {TargetKey.ENTITY_ID: lights[0]},
                         },
                         {"delay": {"seconds": 5}},
                         {
                             "service": "light.turn_off",
-                            "data": {ATTR_ENTITY_ID: lights[0]},
+                            "data": {TargetKey.ENTITY_ID: lights[0]},
                         },
                     ],
                 }

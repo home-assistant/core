@@ -5,6 +5,14 @@
         "default": "mdi:chat-processing"
       }
     },
+    "number": {
+      "active_brightness": {
+        "default": "mdi:brightness-7"
+      },
+      "inactive_brightness": {
+        "default": "mdi:brightness-5"
+      }
+    },
     "select": {
       "dropin": {
         "default": "mdi:account-multiple-plus",

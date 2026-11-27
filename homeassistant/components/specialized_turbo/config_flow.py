@@ -16,6 +16,7 @@ from specialized_turbo import (
     EncryptionKeyProviderError,
     EncryptionKeyRequiredError,
     IdentificationError,
+    IncompleteBikeInfoError,
     ProtocolEncryptionMethod,
     SpecializedConnection,
     WrappedKeyError,
@@ -27,9 +28,11 @@ from specialized_turbo import (
 from specialized_turbo.cloud import CloudAuthenticationError, SpecializedCloudClient
 
 from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
     async_discovered_service_info,
+    async_process_advertisements,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_EMAIL, CONF_PASSWORD
@@ -45,6 +48,8 @@ from .const import (
     KEY_SOURCE_ACCOUNT,
     KEY_SOURCE_MANUAL,
 )
+
+_ADVERTISEMENT_TIMEOUT = 5
 
 
 class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -68,7 +73,10 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_encrypted_connection(self, wrapped_key: str) -> bool:
         """Run the encrypted identification handshake before saving an entry."""
-        return await self._async_validate_connection(wrapped_key)
+        try:
+            return await self._async_validate_connection(wrapped_key)
+        except IncompleteBikeInfoError:
+            return False
 
     async def _async_validate_connection(
         self,
@@ -111,6 +119,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
             DecryptionError,
             EncryptionKeyProviderError,
             EncryptionKeyRequiredError,
+            IncompleteBikeInfoError,
         ):
             raise
         except (
@@ -194,10 +203,13 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
+            await self._async_refresh_device_metadata()
             if self._requires_encryption:
                 return await self.async_step_key_source()
             try:
                 valid = await self._async_test_connection()
+            except IncompleteBikeInfoError:
+                errors["base"] = "incomplete_advertisement"
             except EncryptionKeyRequiredError:
                 errors["base"] = "key_unavailable"
             else:
@@ -214,6 +226,25 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
             },
             errors=errors,
         )
+
+    async def _async_refresh_device_metadata(self) -> None:
+        """Wait for a complete advertisement from the selected bike."""
+        discovery_info = self._discovery_info
+        if discovery_info is None or _has_complete_advertisement(discovery_info):
+            return
+
+        try:
+            service_info = await async_process_advertisements(
+                self.hass,
+                _has_complete_advertisement,
+                {"address": discovery_info.address},
+                BluetoothScanningMode.ACTIVE,
+                _ADVERTISEMENT_TIMEOUT,
+            )
+        except TimeoutError:
+            # Legacy bikes can identify themselves through their GATT services.
+            return
+        self._set_device(service_info)
 
     async def async_step_key_source(
         self,
@@ -365,11 +396,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info = info
         self._address = info.address
         self._title = info.name or "Specialized Turbo"
-        self._advertisement = parse_bike_advertisement(
-            info.manufacturer_data,
-            local_name=info.name,
-            service_uuids=info.service_uuids,
-        )
+        self._advertisement = _parse_advertisement(info)
         self._bike_info = parse_bike_info(
             info.name or "",
             info.manufacturer_data,
@@ -414,6 +441,27 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(entry, data_updates=data)
 
         return self.async_create_entry(title=self._title, data=data)
+
+
+def _parse_advertisement(info: BluetoothServiceInfoBleak) -> BikeAdvertisement | None:
+    """Decode the bike advertisement for setup."""
+    return parse_bike_advertisement(
+        info.manufacturer_data, local_name=info.name, service_uuids=info.service_uuids
+    )
+
+
+def _has_complete_advertisement(info: BluetoothServiceInfoBleak) -> bool:
+    """Return whether the advertisement is usable for identification and key lookup."""
+    if not parse_bike_info(info.name or "", info.manufacturer_data).complete:
+        return False
+    advertisement = _parse_advertisement(info)
+    return advertisement is not None and (
+        advertisement.generation == BLEProfile.TCU1
+        or (
+            advertisement.hmi_hardware is not None
+            and advertisement.hmi_serial is not None
+        )
+    )
 
 
 def _is_specialized_service_info(info: BluetoothServiceInfoBleak) -> bool:

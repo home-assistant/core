@@ -58,7 +58,8 @@ async def test_diagnostics_for_config_entry(
 ) -> None:
     """Test diagnostics for config entry."""
 
-    await setup_zha()
+    # Blocked devices are IEEE addresses, so they're redacted
+    await setup_zha({"zigpy_config": {"blocked_devices": ["aa:bb:cc:dd:ee:ff:00:11"]}})
     gateway = get_zha_gateway(hass)
 
     zigpy_device = zigpy_device_mock(

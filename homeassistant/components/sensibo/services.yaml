@@ -20,7 +20,7 @@ enable_timer:
       domain: climate
   fields:
     minutes:
-      required: false
+      required: true
       example: 30
       selector:
         number:

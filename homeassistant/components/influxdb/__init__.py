@@ -12,7 +12,7 @@ from typing import Any, override
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
-from influxdb_client.client.write_api import ASYNCHRONOUS, SYNCHRONOUS
+from influxdb_client.client.write_api import SYNCHRONOUS
 from influxdb_client.rest import ApiException
 import probatio
 import requests.exceptions
@@ -37,6 +37,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -391,8 +392,8 @@ def get_influx_connection(  # noqa: C901
         bucket = conf.get(CONF_BUCKET)
         influx = InfluxDBClientV2(**kwargs)
         query_api = influx.query_api()
-        initial_write_mode = SYNCHRONOUS if test_write else ASYNCHRONOUS
-        write_api = influx.write_api(write_options=initial_write_mode)
+        # Asynchronous writes hide errors from the retry logic of InfluxThread
+        write_api = influx.write_api(write_options=SYNCHRONOUS)
 
         def write_v2(json):
             """Write data to V2 influx."""
@@ -431,7 +432,6 @@ def get_influx_connection(  # noqa: C901
             # Then invalid inputs is returned. Anything else is a broken config
             with suppress(ValueError):
                 write_v2(b"")
-            write_api = influx.write_api(write_options=ASYNCHRONOUS)
 
         if test_read:
             tables = query_v2(TEST_QUERY_V2)
@@ -560,6 +560,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> 
 
     entry.runtime_data = influx_thread
 
+    # Config entries are not unloaded when Home Assistant stops
+    async def _async_shutdown(event: Event) -> None:
+        await hass.async_add_executor_job(influx_thread.shutdown)
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
+    )
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> None:
     """Unload a config entry."""
@@ -617,6 +625,7 @@ class InfluxThread(threading.Thread):
 
         count = 0
         json = []
+        done_events: list[threading.Event] = []
 
         dropped = 0
 
@@ -638,12 +647,12 @@ class InfluxThread(threading.Thread):
                     else:
                         dropped += 1
                 elif isinstance(item, threading.Event):
-                    item.set()
+                    done_events.append(item)
 
         if dropped:
             _LOGGER.warning(CATCHING_UP_MESSAGE, dropped)
 
-        return count, json
+        return count, json, done_events
 
     def write_to_influxdb(self, json):
         """Write preprocessed events to influxdb, with retry."""
@@ -672,9 +681,14 @@ class InfluxThread(threading.Thread):
     def run(self):
         """Process incoming events."""
         while not self._shutdown:
-            _, json = self.get_events_json()
-            if json:
-                self.write_to_influxdb(json)
+            _, json, done_events = self.get_events_json()
+            try:
+                if json:
+                    self.write_to_influxdb(json)
+            finally:
+                # Set the events of block_till_done only after the batch is written
+                for done_event in done_events:
+                    done_event.set()
 
     def block_till_done(self):
         """Block till all events processed.
