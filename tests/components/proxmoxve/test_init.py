@@ -33,7 +33,7 @@ from homeassistant.components.proxmoxve.const import (
     CONF_REALM,
     DOMAIN,
 )
-from homeassistant.components.proxmoxve.coordinator import DEFAULT_UPDATE_INTERVAL
+from homeassistant.components.proxmoxve.coordinator import STATUS_UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -374,7 +374,7 @@ async def test_new_vm_creates_entity(
         )
     ]
 
-    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    freezer.tick(STATUS_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -409,7 +409,7 @@ async def test_new_container_creates_entity(
         for guest in await async_load_json_array_fixture(hass, "nodes/lxc.json", DOMAIN)
     ]
 
-    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    freezer.tick(STATUS_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -477,7 +477,7 @@ async def test_new_node_registers_device_before_children(
     # setup_integration enables disabled-by-default entities, which schedules a
     # debounced config entry reload; let it settle so it doesn't coincide with
     # (and mask, via a fresh setup) the refresh that discovers the new node.
-    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    freezer.tick(STATUS_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -503,7 +503,7 @@ async def test_new_node_registers_device_before_children(
         if node.node in ("pve1", "pve2")
     ]
 
-    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    freezer.tick(STATUS_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -551,7 +551,7 @@ async def test_stale_devices_removed(
         if vm["vmid"] != 100
     ]
 
-    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    freezer.tick(STATUS_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
