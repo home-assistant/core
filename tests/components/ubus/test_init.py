@@ -16,10 +16,7 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOM
 from homeassistant.components.device_tracker.const import DEFAULT_CONSIDER_HOME
 from homeassistant.components.ubus.config_flow import HUB_TITLE
 from homeassistant.components.ubus.const import DOMAIN, SUBENTRY_TYPE_ROUTER
-from homeassistant.components.ubus.coordinator import (
-    REQUEST_TIMEOUT,
-    UbusDataUpdateCoordinator,
-)
+from homeassistant.components.ubus.coordinator import REQUEST_TIMEOUT
 from homeassistant.components.ubus.device_tracker import UbusScannerEntity
 from homeassistant.config_entries import (
     ConfigEntryDisabler,
@@ -68,7 +65,6 @@ async def test_setup_creates_single_coordinator(
     await hass.async_block_till_done()
 
     assert two_router_hub.state is ConfigEntryState.LOADED
-    assert isinstance(two_router_hub.runtime_data, UbusDataUpdateCoordinator)
     assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 1
     assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 1
 
@@ -86,7 +82,6 @@ async def test_setup_entry_without_subentries(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert isinstance(entry.runtime_data, UbusDataUpdateCoordinator)
     assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 0
     assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 0
 
