@@ -1,12 +1,9 @@
 """Provides device actions for Mobile App."""
 
-from typing import Any
-
 import probatio
 
 from homeassistant.components import notify
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
-from homeassistant.components.notify import NotifyServiceArgument
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import TemplateError
@@ -57,7 +54,7 @@ async def async_call_action_from_config(
             "Unable to find notify service for webhook ID"
         )
 
-    service_data: dict[str, Any] = {NotifyServiceArgument.TARGET: webhook_id}
+    service_data = {notify.ATTR_TARGET: webhook_id}
 
     # Render it here because we have access to variables here.
     for key, field in (
