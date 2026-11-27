@@ -3417,5 +3417,5 @@ async def test_logbook_view_rejects_non_admin_users(
 
     response = await client.get(f"/api/logbook/{dt_util.utcnow().isoformat()}")
 
-    assert response.status == HTTPStatus.UNAUTHORIZED
-    assert await response.text() == "401: Unauthorized"
+    assert response.status == HTTPStatus.FORBIDDEN
+    assert await response.text() == "403: Forbidden"

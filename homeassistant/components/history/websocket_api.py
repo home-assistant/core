@@ -94,7 +94,6 @@ def _ws_get_significant_states(
     )
 
 
-@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "history/history_during_period",
@@ -420,7 +419,6 @@ def _async_subscribe_events(
     )
 
 
-@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "history/stream",

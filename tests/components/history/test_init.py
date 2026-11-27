@@ -799,5 +799,5 @@ async def test_fetch_period_api_rejects_non_admin_users(
         params={"filter_entity_id": "light.kitchen,light.cow"},
     )
 
-    assert response.status == HTTPStatus.UNAUTHORIZED
-    assert await response.text() == "401: Unauthorized"
+    assert response.status == HTTPStatus.FORBIDDEN
+    assert await response.text() == "403: Forbidden"

@@ -12,7 +12,7 @@ from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistant
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import InvalidEntityFormatError, Unauthorized
+from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -55,7 +55,7 @@ class LogbookView(HomeAssistantView):
     ) -> web.Response:
         """Retrieve logbook entries."""
         if not request[KEY_HASS_USER].is_admin:
-            raise Unauthorized
+            raise web.HTTPForbidden
         if datetime:
             if (datetime_dt := dt_util.parse_datetime(datetime)) is None:
                 return self.json_message("Invalid datetime", HTTPStatus.BAD_REQUEST)
