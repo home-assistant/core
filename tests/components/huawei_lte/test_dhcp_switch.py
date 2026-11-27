@@ -17,7 +17,13 @@ from requests import ConnectTimeout
 from homeassistant.components.huawei_lte.const import DOMAIN
 from homeassistant.components.huawei_lte.switch import HuaweiLteDhcpSwitch
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import ATTR_ENTITY_ID, CONF_URL, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_URL,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -99,8 +105,9 @@ async def test_entity_created(
     [
         ResponseErrorNotSupportedException("not supported", 100002),
         TypeError("invalid settings"),
+        ConnectTimeout(),
     ],
-    ids=["unsupported", "unparsable"],
+    ids=["unsupported", "unparsable", "request-error"],
 )
 async def test_entity_not_created(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, error: Exception
@@ -164,6 +171,28 @@ async def test_entity_tracks_router_changes(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert hass.states.is_state(SWITCH_DHCP, STATE_ON)
+
+
+async def test_entity_unavailable_and_recovers(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Become unavailable when a poll fails and recover after a successful one."""
+    client, router = make_client(SETTINGS)
+    await setup_entry(hass, client)
+    assert hass.states.is_state(SWITCH_DHCP, STATE_OFF)
+
+    client.dhcp.settings.side_effect = ConnectTimeout()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.is_state(SWITCH_DHCP, STATE_UNAVAILABLE)
+
+    router["settings"] = replace(router["settings"], dhcp_status=True)
+    client.dhcp.settings.side_effect = lambda: replace(router["settings"])
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.is_state(SWITCH_DHCP, STATE_ON)
 
 

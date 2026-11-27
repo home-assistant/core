@@ -17,7 +17,7 @@ from huawei_lte_api.exceptions import (
     ResponseErrorLoginRequiredException,
     ResponseErrorNotSupportedException,
 )
-from requests.exceptions import Timeout
+from requests.exceptions import RequestException, Timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -155,6 +155,9 @@ class Router:
         """Return the DHCP settings as a dictionary."""
         try:
             return self.client.dhcp.settings().to_dict()
+        except RequestException as err:
+            _LOGGER.debug("Could not read DHCP settings: %s", err)
+            return {}
         except (KeyError, TypeError, ValueError) as err:
             _LOGGER.debug("Could not parse DHCP settings: %s", err)
             return {}
