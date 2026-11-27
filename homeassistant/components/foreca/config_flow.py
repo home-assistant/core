@@ -77,7 +77,7 @@ class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if not errors:
                 return self.async_create_entry(
-                    title="Foreca",
+                    title="Foreca Weather",
                     data={CONF_API_KEY: user_input[CONF_API_KEY]},
                     subentries=[
                         ConfigSubentryData(
@@ -86,7 +86,7 @@ class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_LONGITUDE: self.hass.config.longitude,
                             },
                             subentry_type=SUBENTRY_TYPE_LOCATION,
-                            title=(info.name if info else None) or "Foreca",
+                            title=(info.name if info else None) or "Foreca Weather",
                             unique_id=(
                                 f"{self.hass.config.latitude}-"
                                 f"{self.hass.config.longitude}"
@@ -183,7 +183,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             )
             if not errors:
                 return self.async_create_entry(
-                    title=(info.name if info else None) or "Foreca",
+                    title=(info.name if info else None) or "Foreca Weather",
                     data={CONF_LATITUDE: latitude, CONF_LONGITUDE: longitude},
                     unique_id=unique,
                 )

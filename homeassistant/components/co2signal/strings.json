@@ -19,7 +19,11 @@
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
-        }
+        },
+        "data_description": {
+          "api_key": "When you create the key, choose the same location you picked when setting up this integration."
+        },
+        "description": "Your Electricity Maps API key is no longer valid. Request a new one from the [Electricity Maps app]({register_link}) and enter it below."
       },
       "reconfigure": {
         "data": {
@@ -56,6 +60,9 @@
     }
   },
   "exceptions": {
+    "auth_error_retrying": {
+      "message": "Electricity Maps rejected the API key, retrying before requesting reauthentication"
+    },
     "update_error": {
       "message": "An error occurred while retrieving data from Electricity Maps: {error}"
     }

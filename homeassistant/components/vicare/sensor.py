@@ -171,6 +171,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
+        key="boiler_target_temperature",
+        translation_key="boiler_target_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getBoilerTargetTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
         key="primary_circuit_supply_temperature",
         translation_key="primary_circuit_supply_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,

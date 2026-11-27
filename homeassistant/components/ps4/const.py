@@ -9,7 +9,9 @@ if TYPE_CHECKING:
 
 PS4_DOCS_URL = "https://www.home-assistant.io/components/ps4/"
 
+ATTR_MEDIA_CONTENT_TYPE = "media_content_type"
 ATTR_MEDIA_IMAGE_URL = "media_image_url"
+ATTR_MEDIA_TITLE = "media_title"
 CONFIG_ENTRY_VERSION = 3
 DEFAULT_NAME = "PlayStation 4"
 DEFAULT_REGION = "United States"

@@ -2,7 +2,7 @@
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Awaitable, Callable, Generator, Mapping
+from collections.abc import Awaitable, Callable, Generator, Iterable, Mapping
 import contextlib
 import contextvars
 from enum import StrEnum
@@ -135,17 +135,22 @@ def async_notify_setup_error(
 
 
 @callback
-def _async_get_domains_pending_setup(hass: core.HomeAssistant) -> set[str]:
-    """Return domains scheduled by bootstrap whose setup has not finished."""
-    return set(hass.data.get(_DATA_SETUP_DONE, ()))
-
-
-@callback
-def _async_get_setup_done_futures(
-    hass: core.HomeAssistant,
-) -> dict[str, asyncio.Future[bool]]:
-    """Return the setup done futures of domains scheduled by bootstrap."""
-    return hass.data.get(_DATA_SETUP_DONE, {})
+def _async_get_setup_results(
+    hass: core.HomeAssistant, domains: Iterable[str]
+) -> dict[str, bool | None]:
+    """Return if each domain was set up, or None while its setup is pending."""
+    setup_futures = hass.data.get(_DATA_SETUP, {})
+    setup_done_futures = hass.data.get(_DATA_SETUP_DONE, {})
+    results: dict[str, bool | None] = {}
+    for domain in domains:
+        if domain in setup_done_futures:
+            results[domain] = None
+        elif (setup_future := setup_futures.get(domain)) is not None:
+            # A finished setup is only kept if it failed.
+            results[domain] = False if setup_future.done() else None
+        else:
+            results[domain] = domain in hass.config.components
+    return results
 
 
 @core.callback
