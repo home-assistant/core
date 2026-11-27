@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import threading
+from types import MappingProxyType
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -12,7 +13,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.const import DEFAULT_CONSIDER_HOME
 from homeassistant.components.ubus.config_flow import HUB_TITLE
-from homeassistant.components.ubus.const import DOMAIN
+from homeassistant.components.ubus.const import DOMAIN, SUBENTRY_TYPE_ROUTER
 from homeassistant.components.ubus.coordinator import LEASE_REREAD_INTERVAL
 from homeassistant.components.ubus.device_tracker import UbusScannerEntity
 from homeassistant.config_entries import (
@@ -21,6 +22,7 @@ from homeassistant.config_entries import (
     ConfigEntryDisabler,
     ConfigEntryError,
     ConfigEntryState,
+    ConfigSubentry,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -1072,6 +1074,54 @@ async def test_away_client_unavailable_after_restart_while_router_down(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(laptop_id).state == STATE_NOT_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_last_router_removal_keeps_clients_ungrounded(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    hub_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test removing the only router keeps its clients unavailable."""
+    _mock, ubus = mock_ubus_by_host
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    hub_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_HOME
+
+    # Removing the only router leaves no monitor; the state is
+    # unverifiable.
+    subentry = next(iter(hub_entry.subentries.values()))
+    hass.config_entries.async_remove_subentry(hub_entry, subentry.subentry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # A healthy replacement router sees no clients; the phone was last
+    # seen on a router which is no longer monitored, so it stays
+    # unavailable.
+    hass.config_entries.async_add_subentry(
+        hub_entry,
+        ConfigSubentry(
+            data=MappingProxyType(MOCK_HOST_CONFIG_B),
+            subentry_type=SUBENTRY_TYPE_ROUTER,
+            title=MOCK_HOST_B,
+            unique_id=MOCK_HOST_B,
+        ),
+    )
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

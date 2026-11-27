@@ -300,6 +300,9 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         hosts = self._reconcile_hosts()
         if not hosts:
             # No routers configured yet; nothing to fetch.
+            # The clients lose every stamp here, and their absence cannot
+            # be verified while their last known router is unmonitored.
+            self._ungrounded |= set(self.data_or_none or {})
             return {}
         results = await asyncio.gather(
             *(
