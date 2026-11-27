@@ -27,15 +27,10 @@ from homeassistant.components.water_heater import (
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
     WaterHeaterCapabilityAttribute,
+    WaterHeaterStateAttribute,
 )
 from homeassistant.components.water_heater.trigger import TRIGGERS
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    UnitOfTemperature,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
 ALL_ON_STATES = [
@@ -195,7 +190,7 @@ async def test_water_heater_state_trigger_behavior_each(
         *parametrize_numerical_attribute_changed_trigger_states(
             "water_heater.target_temperature_changed",
             STATE_ECO,
-            ATTR_TEMPERATURE,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
@@ -203,7 +198,7 @@ async def test_water_heater_state_trigger_behavior_each(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "water_heater.target_temperature_crossed_threshold",
             STATE_ECO,
-            ATTR_TEMPERATURE,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
@@ -303,7 +298,7 @@ async def test_water_heater_state_trigger_behavior_first(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "water_heater.target_temperature_crossed_threshold",
             STATE_ECO,
-            ATTR_TEMPERATURE,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
@@ -403,7 +398,7 @@ async def test_water_heater_state_trigger_behavior_all(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "water_heater.target_temperature_crossed_threshold",
             STATE_ECO,
-            ATTR_TEMPERATURE,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
@@ -445,7 +440,7 @@ async def test_water_heater_target_temperature_trigger_temperature_unit(
         entity_id,
         STATE_ECO,
         {
-            ATTR_TEMPERATURE: 70,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE: 70,
             WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
@@ -460,7 +455,7 @@ async def test_water_heater_target_temperature_trigger_temperature_unit(
                 "value": {"number": 25, "unit_of_measurement": "°C"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 
@@ -469,7 +464,7 @@ async def test_water_heater_target_temperature_trigger_temperature_unit(
         entity_id,
         STATE_ECO,
         {
-            ATTR_TEMPERATURE: 72,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE: 72,
             WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
@@ -481,7 +476,7 @@ async def test_water_heater_target_temperature_trigger_temperature_unit(
         entity_id,
         STATE_ECO,
         {
-            ATTR_TEMPERATURE: 80,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE: 80,
             WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )

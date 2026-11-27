@@ -232,16 +232,27 @@ def add_parts_to_segment(segment, source):
     ]
 
 
+@pytest.mark.parametrize(
+    "segment_2_stream_id",
+    [
+        pytest.param(1, id="discontinuity"),
+        # Same stream with repeated timestamps, so every dts goes backwards
+        pytest.param(0, id="non_monotonic_dts"),
+    ],
+)
 async def test_recorder_discontinuity(
-    hass: HomeAssistant, filename, h264_video
+    hass: HomeAssistant,
+    filename: str,
+    h264_video: BytesIO,
+    segment_2_stream_id: int,
 ) -> None:
-    """Test recorder save across a discontinuity."""
+    """Test recorder save across a discontinuity or non monotonic timestamps."""
 
     # Run
     segment_1 = Segment(sequence=1, stream_id=0)
     add_parts_to_segment(segment_1, h264_video)
     segment_1.duration = 4
-    segment_2 = Segment(sequence=2, stream_id=1)
+    segment_2 = Segment(sequence=2, stream_id=segment_2_stream_id)
     add_parts_to_segment(segment_2, h264_video)
     segment_2.duration = 4
 

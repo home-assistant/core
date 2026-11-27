@@ -16,7 +16,6 @@ import pytest
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_CONDITION,
-    CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
@@ -2746,7 +2745,7 @@ async def assert_trigger_ignores_limit_entities_with_wrong_unit(
     await hass.async_block_till_done()
 
     await arm_trigger(
-        hass, trigger, trigger_options, {CONF_ENTITY_ID: [entity_id]}, calls
+        hass, trigger, trigger_options, {TargetKey.ENTITY_ID: [entity_id]}, calls
     )
 
     # Cycle entity state - should NOT fire (all limit entities have wrong unit)

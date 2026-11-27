@@ -6,9 +6,11 @@ from unittest.mock import patch
 from aiounifi.models.message import MessageKey
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, flush_store
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import unifi
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -19,7 +21,13 @@ from homeassistant.components.unifi.const import (
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.update import ATTR_INSTALLED_VERSION
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    CONF_HOST,
+    STATE_UNKNOWN,
+    Platform,
+    TargetKey,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -29,6 +37,7 @@ from .conftest import (
     ConfigEntryFactoryType,
     WebsocketMessageMock,
 )
+from .test_sensor import FIREWALL_POLICY
 
 
 async def test_setup_entry_fails_config_entry_not_ready(
@@ -244,6 +253,31 @@ async def test_remove_config_entry_device_rejects_child_device(
     assert device_registry.async_get(child_device.id)
 
 
+async def test_remove_config_entry_device_rejects_child_device_when_unloaded(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Test removing a child device is rejected while the entry is unloaded."""
+    config_entry = await config_entry_factory()
+    assert await async_setup_component(hass, "config", {})
+    child_device = _add_firewall_policy_device(
+        device_registry, config_entry, DELETED_POLICY_ID
+    )
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+    assert not response["success"]
+    assert (
+        response["error"]["message"]
+        == "Failed to remove device entry, rejected by integration"
+    )
+    assert device_registry.async_get(child_device.id)
+
+
 ADOPTED_MAC = "00:00:00:00:01:01"
 PENDING_MAC = "00:00:00:00:01:02"
 
@@ -293,6 +327,18 @@ ADOPTED_PENDING_DEVICE = {
     "state": 1,
 }
 
+DEVICE_WITH_CHILDREN = {
+    **ADOPTED_PENDING_DEVICE,
+    "outlet_table": [
+        {
+            "index": 1,
+            "name": "Outlet 1",
+            "has_relay": False,
+            "has_metering": False,
+        }
+    ],
+}
+
 # Entities of a device loaded by default, disabled by the user in the test below
 DISABLED_ENTITIES = (
     (Platform.UPDATE, f"device_update-{ADOPTED_MAC}"),
@@ -301,6 +347,404 @@ DISABLED_ENTITIES = (
     (Platform.SENSOR, f"device_uptime-{ADOPTED_MAC}"),
     (Platform.SENSOR, f"device_state-{ADOPTED_MAC}"),
 )
+
+
+@pytest.mark.parametrize("device_payload", [[DEVICE_WITH_CHILDREN]])
+async def test_child_devices_and_entity_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Create child devices and move existing enabled and disabled entities."""
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, PENDING_MAC)},
+    )
+    button = entity_registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        f"power_cycle-{PENDING_MAC}_1",
+        config_entry=config_entry,
+        device_id=parent.id,
+        suggested_object_id="custom_power_cycle",
+    )
+    sensor = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"poe_power-{PENDING_MAC}_1",
+        config_entry=config_entry,
+        device_id=parent.id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+        suggested_object_id="custom_power",
+    )
+    entity_registry.async_update_entity(button.entity_id, name="Custom power cycle")
+
+    await config_entry_factory()
+
+    port = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"port-{PENDING_MAC}_1"), config_entry.entry_id
+    )
+    outlet = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"outlet-{PENDING_MAC}_1"), config_entry.entry_id
+    )
+    assert port is not None
+    assert outlet is None
+    assert port.parent_device_id == parent.id
+    assert port.name == "Port 1"
+
+    migrated_button = entity_registry.async_get(button.entity_id)
+    assert migrated_button is not None
+    assert migrated_button.device_id == port.id
+    assert migrated_button.name == "Custom power cycle"
+    assert hass.states.get(button.entity_id) is not None
+    migrated_sensor = entity_registry.async_get(sensor.entity_id)
+    assert migrated_sensor is not None
+    assert migrated_sensor.device_id == port.id
+    assert migrated_sensor.disabled_by is er.RegistryEntryDisabler.USER
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                **ADOPTED_DEVICE,
+                "outlet_overrides": [
+                    {"index": 1, "name": "Outlet 1", "relay_state": True}
+                ],
+                "outlet_table": [
+                    {
+                        "index": 1,
+                        "name": "Outlet 1",
+                        "has_relay": True,
+                        "has_metering": True,
+                        "relay_state": True,
+                        "outlet_power": 42,
+                    }
+                ],
+            }
+        ]
+    ],
+)
+async def test_outlet_entities_move_to_child_device(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Move existing outlet controls and measurements to the same child."""
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, ADOPTED_MAC)},
+    )
+    switch = entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        f"outlet-{ADOPTED_MAC}_1",
+        config_entry=config_entry,
+        device_id=parent.id,
+        suggested_object_id="custom_outlet",
+    )
+    sensor = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"outlet_power-{ADOPTED_MAC}_1",
+        config_entry=config_entry,
+        device_id=parent.id,
+        suggested_object_id="custom_outlet_power",
+    )
+
+    await config_entry_factory()
+
+    child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"outlet-{ADOPTED_MAC}_1"), config_entry.entry_id
+    )
+    assert child is not None
+    assert child.parent_device_id == parent.id
+    assert entity_registry.async_get(switch.entity_id).device_id == child.id
+    assert entity_registry.async_get(sensor.entity_id).device_id == child.id
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.put(
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        f"/api/s/site_id/rest/device/{ADOPTED_DEVICE['device_id']}",
+    )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {TargetKey.DEVICE_ID: parent.id},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "outlet_overrides": [{"index": 1, "name": "Outlet 1", "relay_state": False}]
+    }
+
+
+@pytest.mark.parametrize(
+    ("device_payload", "expected_name"),
+    [
+        pytest.param(
+            [
+                {
+                    **ADOPTED_DEVICE,
+                    "outlet_table": [
+                        {
+                            "index": 7,
+                            "name": "",
+                            "has_relay": True,
+                            "has_metering": True,
+                            "relay_state": True,
+                            "outlet_power": 42,
+                        }
+                    ],
+                }
+            ],
+            "Outlet 7",
+            id="empty-name",
+        ),
+        pytest.param(
+            [
+                {
+                    **ADOPTED_DEVICE,
+                    "outlet_table": [
+                        {
+                            "index": 7,
+                            "name": "Desk",
+                            "has_relay": True,
+                            "has_metering": True,
+                            "relay_state": True,
+                            "outlet_power": 42,
+                        }
+                    ],
+                }
+            ],
+            "Desk",
+            id="named-outlet",
+        ),
+    ],
+)
+async def test_outlet_child_device_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    expected_name: str,
+) -> None:
+    """Name an unnamed outlet by its index while preserving reported names."""
+    config_entry = await config_entry_factory()
+    child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"outlet-{ADOPTED_MAC}_7"), config_entry.entry_id
+    )
+    assert child is not None
+    assert child.name == expected_name
+
+    switch_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, f"outlet-{ADOPTED_MAC}_7"
+    )
+    sensor_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"outlet_power-{ADOPTED_MAC}_7"
+    )
+    assert switch_id is not None
+    assert sensor_id is not None
+    assert entity_registry.async_get(switch_id).device_id == child.id
+    assert entity_registry.async_get(sensor_id).device_id == child.id
+    assert hass.states.get(switch_id).attributes[ATTR_FRIENDLY_NAME] == expected_name
+    assert (
+        hass.states.get(sensor_id).attributes[ATTR_FRIENDLY_NAME]
+        == f"{expected_name} Outlet power"
+    )
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                **ADOPTED_DEVICE,
+                "port_table": [
+                    {
+                        "port_idx": 1,
+                        "name": "Port 1",
+                        "port_poe": True,
+                        "poe_enable": True,
+                    }
+                ],
+                "outlet_table": [
+                    {
+                        "index": 1,
+                        "name": "Outlet 1",
+                        "has_relay": True,
+                        "has_metering": False,
+                        "relay_state": True,
+                    }
+                ],
+            }
+        ]
+    ],
+)
+async def test_child_devices_retained_on_device_updates(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Keep children when updated device data is incomplete or renamed."""
+    config_entry = await config_entry_factory()
+    updated = device_payload[0]
+
+    port = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"port-{ADOPTED_MAC}_1"), config_entry.entry_id
+    )
+    outlet = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"outlet-{ADOPTED_MAC}_1"), config_entry.entry_id
+    )
+    assert port is not None
+    assert outlet is not None
+    assert port.name == "Port 1"
+    assert outlet.name == "Outlet 1"
+    button_id = entity_registry.async_get_entity_id(
+        Platform.BUTTON, DOMAIN, f"power_cycle-{ADOPTED_MAC}_1"
+    )
+    assert button_id is not None
+    assert entity_registry.async_get(button_id).device_id == port.id
+    assert hass.states.get(button_id) is not None
+
+    parent = device_registry.async_get(port.parent_device_id)
+    assert isinstance(parent, dr.DeviceEntry)
+    assert parent.hw_version == "3"
+    incomplete = updated.copy()
+    incomplete.pop("board_rev")
+    mock_websocket_message(message=MessageKey.DEVICE, data=incomplete)
+    await hass.async_block_till_done()
+    parent = device_registry.async_get(parent.id)
+    assert isinstance(parent, dr.DeviceEntry)
+    assert parent.hw_version == "3"
+
+    mock_websocket_message(
+        message=MessageKey.DEVICE,
+        data={
+            **updated,
+            "port_table": [
+                {"port_idx": 1, "name": "Office", "port_poe": True, "poe_enable": True}
+            ],
+            "outlet_table": [
+                {
+                    "index": 1,
+                    "name": "Desk",
+                    "has_relay": True,
+                    "has_metering": False,
+                    "relay_state": True,
+                }
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    assert device_registry.async_get(port.id).name == "Port 1"
+    assert device_registry.async_get(outlet.id).name == "Outlet 1"
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=ADOPTED_DEVICE)
+    await hass.async_block_till_done()
+    assert device_registry.async_get(port.id)
+    assert device_registry.async_get(outlet.id)
+
+
+@pytest.mark.parametrize(
+    "site_payload",
+    [[{"desc": "Site name", "name": "site_id", "role": "readonly", "_id": "1"}]],
+)
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                **ADOPTED_DEVICE,
+                "port_table": [{"port_idx": 1, "name": "Port 1", "port_poe": False}],
+                "outlet_table": [
+                    {
+                        "index": 1,
+                        "name": "Outlet 1",
+                        "has_relay": False,
+                        "has_metering": False,
+                    }
+                ],
+            }
+        ]
+    ],
+)
+async def test_no_child_devices_without_entities(
+    device_registry: dr.DeviceRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Do not create children when no entities are eligible."""
+    config_entry = await config_entry_factory()
+    for kind in ("port", "outlet"):
+        assert not device_registry.async_get_child_device_by_identifier(
+            (DOMAIN, f"{kind}-{ADOPTED_MAC}_1"), config_entry.entry_id
+        )
+
+
+@pytest.mark.parametrize(
+    "site_payload",
+    [[{"desc": "Site name", "name": "site_id", "role": "readonly", "_id": "1"}]],
+)
+@pytest.mark.parametrize("device_payload", [[ADOPTED_PENDING_DEVICE]])
+async def test_migrate_entities_when_they_become_eligible(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Move an entity once its option permits it to be loaded."""
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, PENDING_MAC)},
+    )
+    button = entity_registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        f"power_cycle-{PENDING_MAC}_1",
+        config_entry=config_entry,
+        device_id=parent.id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    sensor = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"port_rx-{PENDING_MAC}_1",
+        config_entry=config_entry,
+        device_id=parent.id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await config_entry_factory()
+
+    child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"port-{PENDING_MAC}_1"), config_entry.entry_id
+    )
+    assert child is not None
+    assert entity_registry.async_get(button.entity_id).device_id == parent.id
+    assert entity_registry.async_get(sensor.entity_id).device_id == parent.id
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_ALLOW_BANDWIDTH_SENSORS: True}
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(button.entity_id).device_id == parent.id
+    assert entity_registry.async_get(sensor.entity_id).device_id == child.id
+    assert (
+        entity_registry.async_get(button.entity_id).disabled_by
+        is er.RegistryEntryDisabler.USER
+    )
+    assert (
+        entity_registry.async_get(sensor.entity_id).disabled_by
+        is er.RegistryEntryDisabler.USER
+    )
 
 
 @pytest.mark.parametrize("device_payload", [[ADOPTED_DEVICE, PENDING_DEVICE]])
@@ -336,6 +780,9 @@ async def test_device_pending_adoption(
     assert entity_ids(ADOPTED_MAC)[0]
     assert not device_entry(PENDING_MAC)
     assert not any(entity_ids(PENDING_MAC))
+    assert not device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"port-{PENDING_MAC}_1"), config_entry.entry_id
+    )
 
     # Updates of a device still pending adoption change nothing
     mock_websocket_message(
@@ -353,6 +800,9 @@ async def test_device_pending_adoption(
 
     assert (pending_device_entry := device_entry(PENDING_MAC))
     assert all(entity_ids(PENDING_MAC))
+    assert device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"port-{PENDING_MAC}_1"), config_entry.entry_id
+    )
 
     # Forgetting the device in the controller removes its loaded entities,
     # the registry entries of its disabled entities are kept
@@ -534,3 +984,138 @@ async def test_entity_not_added_retried(
         hass.states.get(entity_id).attributes[ATTR_INSTALLED_VERSION]
         == ADOPTED_PENDING_DEVICE["version"]
     )
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+async def test_firewall_policy_entities_move_to_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Move firewall policy entities to a child device of UniFi Network."""
+    assert config_entry.unique_id is not None
+    network = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(SWITCH_DOMAIN, config_entry.unique_id)},
+    )
+    switch = entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        f"firewall_policy-{FIREWALL_POLICY['_id']}",
+        config_entry=config_entry,
+        device_id=network.id,
+        suggested_object_id="custom_firewall_policy",
+    )
+
+    await config_entry_factory()
+
+    policy_device = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"firewall_policy-{FIREWALL_POLICY['_id']}"), config_entry.entry_id
+    )
+    assert policy_device is not None
+    assert policy_device.parent_device_id == network.id
+    assert policy_device.name == FIREWALL_POLICY["name"]
+
+    migrated_switch = entity_registry.async_get(switch.entity_id)
+    assert migrated_switch is not None
+    assert migrated_switch.entity_id == "switch.custom_firewall_policy"
+    assert migrated_switch.device_id == policy_device.id
+    assert hass.states.get(switch.entity_id) is not None
+
+
+DELETED_POLICY_ID = "6800000000000000000000ff"
+
+
+def _add_firewall_policy_device(
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    policy_id: str,
+) -> dr.ChildDeviceEntry:
+    """Register a firewall policy's child device under UniFi Network."""
+    assert config_entry.unique_id is not None
+    network = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(SWITCH_DOMAIN, config_entry.unique_id)},
+    )
+    return device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"firewall_policy-{policy_id}")},
+        parent_device_id=network.id,
+    )
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+async def test_devices_of_deleted_firewall_policies_pruned(
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Remove the device and entities of a policy that is no longer listed."""
+    deleted = _add_firewall_policy_device(
+        device_registry, config_entry, DELETED_POLICY_ID
+    )
+    disabled_entity = entity_registry.async_get_or_create(
+        Platform.SELECT,
+        DOMAIN,
+        f"firewall_policy_schedule_mode-{DELETED_POLICY_ID}",
+        config_entry=config_entry,
+        device_id=deleted.id,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+    listed = _add_firewall_policy_device(
+        device_registry, config_entry, FIREWALL_POLICY["_id"]
+    )
+
+    await config_entry_factory()
+
+    assert device_registry.async_get(deleted.id) is None
+    assert entity_registry.async_get(disabled_entity.entity_id) is None
+    assert device_registry.async_get(listed.id) is not None
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[]])
+async def test_firewall_policy_devices_kept_without_listed_policies(
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Keep policy devices when no policies were loaded."""
+    device = _add_firewall_policy_device(
+        device_registry, config_entry, DELETED_POLICY_ID
+    )
+
+    await config_entry_factory()
+
+    assert device_registry.async_get(device.id) is not None
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+async def test_remove_device_of_deleted_firewall_policy(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Allow removing the device of a policy only once it is no longer listed."""
+    await config_entry_factory()
+    assert await async_setup_component(hass, "config", {})
+    listed = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"firewall_policy-{FIREWALL_POLICY['_id']}"), config_entry.entry_id
+    )
+    assert listed is not None
+    deleted = _add_firewall_policy_device(
+        device_registry, config_entry, DELETED_POLICY_ID
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(listed.id)
+    assert not response["success"]
+    assert device_registry.async_get(listed.id) is not None
+
+    response = await client.remove_device(deleted.id)
+    assert response["success"]
+    assert device_registry.async_get(deleted.id) is None

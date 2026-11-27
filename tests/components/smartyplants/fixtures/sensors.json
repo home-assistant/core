@@ -2,7 +2,7 @@
   {
     "id": "sensor-1",
     "identifier": "device-12345",
-    "name": "Sensor-device-12345",
+    "name": "SmartyPlant Sensor-device-12345",
     "isOnline": true,
     "batteryPercentage": 87,
     "lastDataReceived": "2026-08-19T10:00:00.000Z",

@@ -323,11 +323,9 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         # supervisor handle as much as possible.
         # Therefore, we split the locations into two lists: encrypted and decrypted.
         # The backup will be created in the first location in the list sent to
-        # supervisor, and if that location is not available, the backup will
-        # fail.
-        # To make it less likely that the backup fails, we prefer to create the
-        # backup in the local storage location if included in the list of
-        # locations.
+        # supervisor, or in the next one if that location is not usable.
+        # We prefer to create the backup in the local storage location if
+        # included in the list of locations.
         # Hence, we send the list of locations to supervisor in this priority order:
         # 1. The list which has local storage
         # 2. The longest list of locations
@@ -501,9 +499,16 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 f"Error getting backup details: {err}"
             ) from err
 
+        created_location = next(
+            (loc for loc in locations if loc in details.location_attributes), None
+        )
+        if created_location is None:
+            raise BackupReaderWriterError(
+                f"Backup {backup_id} was not created in any of {locations}"
+            )
         return WrittenBackup(
             addon_errors=addon_errors,
-            backup=_backup_details_to_agent_backup(details, locations[0]),
+            backup=_backup_details_to_agent_backup(details, created_location),
             folder_errors=folder_errors,
             open_stream=open_backup,
             release_stream=remove_backup,

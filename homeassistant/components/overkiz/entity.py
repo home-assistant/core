@@ -151,3 +151,27 @@ class OverkizDescriptiveEntity(OverkizEntity):
         else:
             # Fall back to the device name, not the device class name.
             self._attr_name = None
+
+
+class OverkizExecutableEntity(OverkizDescriptiveEntity):
+    """Descriptive entity unavailable while the device blocks remote control."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not super().available:
+            return False
+
+        if features := self.device.states.get(OverkizState.OGP_UNAVAILABLE_FEATURES):
+            value = features.value
+            if isinstance(value, list):
+                for entry in value:
+                    if (
+                        isinstance(entry, dict)
+                        and entry.get("feature") == "*"
+                        and "*" in (entry.get("commands") or [])
+                    ):
+                        return False
+
+        return True

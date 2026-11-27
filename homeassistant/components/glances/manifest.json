@@ -9,5 +9,5 @@
   "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["glances_api"],
-  "requirements": ["glances-api==0.10.0"]
+  "requirements": ["glances-api==0.11.0"]
 }

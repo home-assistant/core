@@ -9,5 +9,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["dwdwfsapi"],
-  "requirements": ["dwdwfsapi==1.1.0"]
+  "requirements": ["dwdwfsapi==1.2.0"]
 }

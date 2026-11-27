@@ -12,7 +12,8 @@
     "maxcpu": 2,
     "cpu": 0.15,
     "uptime": 86400,
-    "template": 0
+    "template": 0,
+    "maxdisk": 34359738368
   },
   {
     "id": "qemu/101",
@@ -26,7 +27,8 @@
     "maxcpu": 2,
     "cpu": 0,
     "uptime": 0,
-    "template": 0
+    "template": 0,
+    "maxdisk": 34359738368
   },
   {
     "id": "lxc/200",
@@ -40,6 +42,7 @@
     "maxcpu": 1,
     "cpu": 0.05,
     "uptime": 43200,
-    "template": 0
+    "template": 0,
+    "maxdisk": 8589934592
   }
 ]

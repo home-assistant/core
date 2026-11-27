@@ -8,7 +8,7 @@ from pytest_homeassistant.components.recorder.common import async_wait_recording
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -32,7 +32,7 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("calendar.calendar_1")
     assert state
-    assert ATTR_FRIENDLY_NAME in state.attributes
+    assert EntityStateAttribute.FRIENDLY_NAME in state.attributes
     assert "description" in state.attributes
 
     # calendar.calendar_1
@@ -46,5 +46,5 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
     assert len(states) > 1
     for entity_states in states.values():
         for state in entity_states:
-            assert ATTR_FRIENDLY_NAME in state.attributes
+            assert EntityStateAttribute.FRIENDLY_NAME in state.attributes
             assert "description" not in state.attributes

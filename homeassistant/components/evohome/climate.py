@@ -1,19 +1,15 @@
 """Support for Climate entities of the Evohome integration."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import Any, override
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
-    SZ_CAN_BE_TEMPORARY,
-    SZ_DURATION,
-    SZ_PERIOD,
     SZ_SETPOINT_STATUS,
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
     SZ_TEMPERATURE_STATUS,
-    SZ_TIMING_MODE,
     SZ_UNTIL,
     SystemMode as EvoSystemMode,
     ZoneMode as EvoZoneMode,
@@ -26,11 +22,12 @@ from homeassistant.components.climate import (
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -72,43 +69,47 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    coordinator = hass.data[EVOHOME_DATA].coordinator
-    tcs = hass.data[EVOHOME_DATA].tcs
+    entities: list[EvoController | EvoZone] = []
 
-    _LOGGER.debug(
-        "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
-        tcs.model,
-        tcs.id,
-        tcs.location.name,
-        coordinator.loc_idx,
-    )
+    for coordinator in hass.data[EVOHOME_DATA].locations:
+        tcs = coordinator.tcs
 
-    entities: list[EvoController | EvoZone] = [EvoController(coordinator, tcs)]
+        _LOGGER.debug(
+            "Adding: Controller (%s), id=%s, name=%s, location_id=%s",
+            tcs.model,
+            tcs.id,
+            tcs.location.name,
+            coordinator.loc.id,
+        )
 
-    for zone in tcs.zones:
-        if is_valid_zone(zone):
-            _LOGGER.debug(
-                "Adding: %s (%s), id=%s, name=%s",
-                zone.type,
-                zone.model,
-                zone.id,
-                zone.name,
-            )
+        entities.append(EvoController(coordinator, tcs))
 
-            new_entity = EvoZone(coordinator, zone)
-            entities.append(new_entity)
+        for zone in tcs.zones:
+            if is_valid_zone(zone):
+                _LOGGER.debug(
+                    "Adding: %s (%s), id=%s, name=%s, location_id=%s",
+                    zone.type,
+                    zone.model,
+                    zone.id,
+                    zone.name,
+                    coordinator.loc.id,
+                )
 
-        else:
-            _LOGGER.warning(
-                (
-                    "Ignoring: %s (%s), id=%s, name=%s: unknown/invalid zone type, "
-                    "report as an issue if you feel this zone type should be supported"
-                ),
-                zone.type,
-                zone.model,
-                zone.id,
-                zone.name,
-            )
+                entities.append(EvoZone(coordinator, zone))
+
+            else:
+                _LOGGER.warning(
+                    (
+                        "Ignoring: %s (%s), id=%s, name=%s, location_id=%s: "
+                        "unknown/invalid zone type, report as an issue if you feel "
+                        "this zone type should be supported"
+                    ),
+                    zone.type,
+                    zone.model,
+                    zone.id,
+                    zone.name,
+                    coordinator.loc.id,
+                )
 
     async_add_entities(entities)
 
@@ -251,7 +252,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
 
-        temperature = kwargs[ATTR_TEMPERATURE]
+        temperature = kwargs[ClimateServiceArgument.TEMPERATURE]
 
         if (until := kwargs.get(SZ_UNTIL)) is None:
             if self._evo_device.mode == EvoZoneMode.TEMPORARY_OVERRIDE:
@@ -322,7 +323,7 @@ class EvoController(EvoClimateEntity):
     It is assumed there is only one TCS per location, and they are thus synonymous.
     """
 
-    _attr_icon = "mdi:thermostat-box"
+    _attr_translation_key = "controller"
     _attr_precision = PRECISION_TENTHS
 
     _evo_device: evo.ControlSystem
@@ -339,9 +340,6 @@ class EvoController(EvoClimateEntity):
         self._attr_unique_id = evo_device.id
         self._attr_name = evo_device.location.name
 
-        self._evo_modes = {
-            m[SZ_SYSTEM_MODE].value: m for m in evo_device.allowed_system_modes
-        }
         self._attr_preset_modes = [
             TCS_PRESET_TO_HA[mode]
             for m in evo_device.allowed_system_modes
@@ -362,54 +360,16 @@ class EvoController(EvoClimateEntity):
     ) -> None:
         """Set the system mode, either indefinitely or for a duration/period."""
 
-        # check the requested mode; not all systems support all modes...
-        if (mode_info := self._evo_modes.get(as_snake_case(mode))) is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="mode_not_supported",
-                translation_placeholders={"mode": mode},
-            )
-
-        timing_mode: str | None = None
-        until: datetime | None = None
+        # the client checks the mode is allowed, and works out when it ends
+        evo_mode = as_snake_case(mode)
 
         # service schema makes duration & period mutually exclusive (can be neither)
         if period is not None:
-            timing_mode, until = SZ_PERIOD, dt_util.start_of_local_day() + period
-        elif duration is not None:
-            timing_mode, until = SZ_DURATION, dt_util.utcnow() + duration
+            client_api = self._evo_device.set_mode(evo_mode, period=period)
+        else:
+            client_api = self._evo_device.set_mode(evo_mode, duration=duration)
 
-        if timing_mode is not None:
-            if not mode_info[SZ_CAN_BE_TEMPORARY]:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="mode_cant_be_temporary",
-                    translation_placeholders={"mode": mode},
-                )
-            if mode_info.get(SZ_TIMING_MODE) != timing_mode:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key=f"mode_cant_have_{timing_mode}",
-                    translation_placeholders={"mode": mode},
-                )
-
-        await self._set_tcs_mode(mode_info[SZ_SYSTEM_MODE], until=until)
-
-    async def _set_tcs_mode(
-        self, mode: EvoSystemMode, until: datetime | None = None
-    ) -> None:
-        """Set a Controller to any of its native operating modes."""
-        until = dt_util.as_utc(until) if until else None
-        try:
-            await self.coordinator.call_client_api(
-                self._evo_device.set_mode(mode, until=until)
-            )
-        except evo.InvalidModeRequestError as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_system_mode",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        await self.coordinator.call_client_api(client_api)
 
     @property
     @override
@@ -449,28 +409,18 @@ class EvoController(EvoClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set an operating mode for a Controller."""
 
-        evo_mode: EvoSystemMode
-
-        if hvac_mode == HVACMode.HEAT:
-            evo_mode = (
-                EvoSystemMode.AUTO
-                if EvoSystemMode.AUTO in self._evo_modes
-                else EvoSystemMode.HEAT
-            )
-        elif hvac_mode == HVACMode.OFF:
-            evo_mode = (
-                EvoSystemMode.HEATING_OFF
-                if EvoSystemMode.HEATING_OFF in self._evo_modes
-                else EvoSystemMode.OFF
-            )
-        else:
-            raise HomeAssistantError(f"Invalid hvac_mode: {hvac_mode}")
-        await self._set_tcs_mode(evo_mode)
+        # the client falls back to Off/Heat, if HeatingOff/Auto aren't allowed
+        if hvac_mode == HVACMode.OFF:
+            client_api = self._evo_device.set_heatingoff()
+        else:  # HA limits hvac_mode to hvac_modes, i.e. off or heat
+            client_api = self._evo_device.set_auto()
+        await self.coordinator.call_client_api(client_api)
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode; if None, then revert to 'Auto' mode."""
-        await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode, EvoSystemMode.AUTO))
+        evo_mode = HA_PRESET_TO_TCS.get(preset_mode, EvoSystemMode.AUTO)
+        await self.coordinator.call_client_api(self._evo_device.set_mode(evo_mode))
 
     @callback
     @override

@@ -1,4 +1,4 @@
-"""Base entity for Intesis Modbus gateways."""
+"""Base entity for Intesis Modbus gateways and the air conditioner behind them."""
 
 from collections.abc import Awaitable, Callable
 from typing import override
@@ -6,47 +6,50 @@ from typing import override
 from modbus_connection import ModbusError
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MODEL, DOMAIN
-from .coordinator import IntesisCoordinator
-
-MANUFACTURER = "Intesis (HMS Networks)"
+from .const import DOMAIN
+from .coordinator import IntesisCoordinator, IntesisUnitCoordinator
 
 
-class IntesisEntity(CoordinatorEntity[IntesisCoordinator]):
+class IntesisEntity(CoordinatorEntity[IntesisCoordinator | IntesisUnitCoordinator]):
     """Defines a base Intesis entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: IntesisCoordinator, key: str, report_name: str
+        self,
+        coordinator: IntesisCoordinator | IntesisUnitCoordinator,
+        key: str,
+        report_name: str | None,
     ) -> None:
-        """Place the entity on the gateway.
+        """Place the entity on the device its coordinator follows.
 
-        report_name is the gateway sub-system the entity's value is read from.
+        That is the gateway, or the air conditioner behind it. report_name is
+        the gateway sub-system the entity's value is read from; an entity that
+        reads no value, such as a button, has none.
         """
         super().__init__(coordinator)
-        entry = coordinator.config_entry
         self._report_name = report_name
-        self._attr_unique_id = f"{entry.entry_id}_{key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer=MANUFACTURER,
-            model=entry.data[CONF_MODEL],
-            name=entry.title,
-            sw_version=coordinator.device.software_version,
-        )
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{key}"
+        self._attr_device_info = coordinator.device_info
 
     @property
     @override
     def available(self) -> bool:
         """Whether this entity's value was read in the most recent poll."""
-        return super().available and self._report_name in self.coordinator.data.updated
+        return super().available and (
+            self._report_name is None
+            or self._report_name in self.coordinator.data.updated
+        )
 
     async def _async_write(self, write: Callable[[], Awaitable[None]]) -> None:
-        """Run one write against the gateway, then ask for a refresh."""
+        """Run one write against the gateway, then read back what it took.
+
+        The gateway is polled at once, also after a write that failed: a
+        debounced refresh would leave the state from before the write in place
+        until the next poll, and a failed write may have been applied in part.
+        """
         try:
             await write()
         except ModbusError as err:
@@ -54,4 +57,5 @@ class IntesisEntity(CoordinatorEntity[IntesisCoordinator]):
                 translation_domain=DOMAIN,
                 translation_key="write_failed",
             ) from err
-        await self.coordinator.async_request_refresh()
+        finally:
+            await self.coordinator.config_entry.runtime_data.gateway.async_refresh()

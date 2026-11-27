@@ -6,6 +6,7 @@ Entity to be updated with new values.
 """
 
 import asyncio
+from collections.abc import Callable
 import datetime as dt
 from decimal import Decimal
 from itertools import chain, repeat
@@ -39,6 +40,7 @@ from homeassistant.components.dsmr.sensor import (
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
+    DATA_COMPONENT as SENSOR_DATA_COMPONENT,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -54,6 +56,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import Entity
 
 
 async def test_default_setup(
@@ -202,6 +205,88 @@ async def test_default_setup(
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == UnitOfVolume.CUBIC_METERS
     )
+
+
+POWER_CONSUMPTION = "sensor.electricity_meter_power_consumption"
+
+
+def _power_telegram(value: str) -> Telegram:
+    """Return a telegram with only the current electricity usage."""
+    telegram = Telegram()
+    telegram.add(
+        CURRENT_ELECTRICITY_USAGE,
+        CosemObject((0, 0), [{"value": Decimal(value), "unit": UnitOfPower.WATT}]),
+        "CURRENT_ELECTRICITY_USAGE",
+    )
+    return telegram
+
+
+async def _async_setup_power_entry(
+    hass: HomeAssistant, connection_factory: MagicMock
+) -> Callable[[Telegram], None]:
+    """Set up an entry with electricity sensors and return its telegram callback."""
+    mock_entry = MockConfigEntry(
+        domain="dsmr",
+        unique_id="/dev/ttyUSB0",
+        data={"port": "/dev/ttyUSB0", "dsmr_version": "2.2", "serial_id": "1234"},
+        options={"time_between_update": 0},
+    )
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return connection_factory.call_args_list[0][0][2]
+
+
+async def test_entity_added_after_newer_telegram(
+    hass: HomeAssistant,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test an entity added after a newer telegram arrived uses that telegram."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+    telegram_callback = await _async_setup_power_entry(hass, connection_factory)
+
+    original_added_to_hass = Entity.async_added_to_hass
+    added = asyncio.Event()
+
+    async def _wait_while_adding(entity: Entity) -> None:
+        await added.wait()
+        await original_added_to_hass(entity)
+
+    # Hold the entities in async_added_to_hass, so the second telegram arrives
+    # after they were created from the first one, but before they subscribe.
+    with patch.object(Entity, "async_added_to_hass", _wait_while_adding):
+        telegram_callback(_power_telegram("10.0"))
+        telegram_callback(_power_telegram("35.0"))
+        added.set()
+        await hass.async_block_till_done()
+
+    assert hass.states.get(POWER_CONSUMPTION).state == "35.0"
+
+
+async def test_removed_entity_stops_receiving_telegrams(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test a removed entity is no longer updated by new telegrams."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+    telegram_callback = await _async_setup_power_entry(hass, connection_factory)
+
+    telegram_callback(_power_telegram("10.0"))
+    await hass.async_block_till_done()
+    entity = hass.data[SENSOR_DATA_COMPONENT].get_entity(POWER_CONSUMPTION)
+    assert entity is not None
+
+    entity_registry.async_remove(POWER_CONSUMPTION)
+    await hass.async_block_till_done()
+    assert hass.states.get(POWER_CONSUMPTION) is None
+
+    telegram_callback(_power_telegram("35.0"))
+    await hass.async_block_till_done()
+
+    assert entity.native_value == Decimal("10.0")
 
 
 async def test_setup_only_energy(

@@ -5,17 +5,28 @@ import logging
 from irm_kmi_api import IrmKmiApiClientHa
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
-from .const import IRM_KMI_TO_HA_CONDITION_MAP, PLATFORMS, USER_AGENT
+from .const import DOMAIN, IRM_KMI_TO_HA_CONDITION_MAP, PLATFORMS, USER_AGENT
 from .coordinator import (
     IrmKmiConfigEntry,
     IrmKmiCoordinator,
     IrmKmiPollenCoordinator,
     IrmKmiRuntimeData,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the IRM KMI integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> None:

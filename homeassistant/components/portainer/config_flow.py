@@ -34,7 +34,12 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_ENDPOINT_ID, DOMAIN, SUBENTRY_TYPE_ENVIRONMENT
+from .const import (
+    CONF_ENDPOINT_ID,
+    DOCKER_ENDPOINT_TYPES,
+    DOMAIN,
+    SUBENTRY_TYPE_ENVIRONMENT,
+)
 from .coordinator import PortainerConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,6 +127,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                             unique_id=str(endpoint.id),
                         )
                         for endpoint in endpoints
+                        if endpoint.type in DOCKER_ENDPOINT_TYPES
                     ],
                 )
 
@@ -259,6 +265,7 @@ class EnvironmentSubentryFlowHandler(ConfigSubentryFlow):
             str(endpoint.id): endpoint.name or f"Endpoint {endpoint.id}"
             for endpoint in endpoints
             if str(endpoint.id) not in configured_endpoint_ids
+            and endpoint.type in DOCKER_ENDPOINT_TYPES
         }
         if not available_endpoints:
             return self.async_abort(reason="no_new_environments")

@@ -1,5 +1,6 @@
 """Config flow for the RainbowMiner integration."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 import probatio
@@ -23,6 +24,12 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_USERNAME): str,
         probatio.Optional(CONF_PASSWORD): str,
+    }
+)
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -75,6 +82,40 @@ class RainbowMinerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle rejected API credentials."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for new API credentials."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        if user_input is not None:
+            try:
+                await validate_input(self.hass, {**reauth_entry.data, **user_input})
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_REAUTH_DATA_SCHEMA,
+                {CONF_USERNAME: (user_input or reauth_entry.data).get(CONF_USERNAME)},
+            ),
+            description_placeholders={"name": reauth_entry.title},
+            errors=errors,
         )
 
 

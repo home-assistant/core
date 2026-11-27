@@ -4,7 +4,7 @@ from typing import Any, override
 
 from pyvlx import DimmableDevice, Intensity, Light, OnOffLight
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -75,8 +75,8 @@ class VeluxDimmableLight(VeluxOnOffLight):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            intensity_percent = int(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            intensity_percent = int(kwargs[LightServiceArgument.BRIGHTNESS] / 255 * 100)
             await self.node.set_intensity(
                 Intensity(intensity_percent=intensity_percent),
                 wait_for_completion=True,

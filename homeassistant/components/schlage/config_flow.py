@@ -98,6 +98,35 @@ class SchlageConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the account credentials."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        username = reconfigure_entry.data[CONF_USERNAME]
+        if user_input is not None:
+            username = user_input[CONF_USERNAME].lower()
+            password = user_input[CONF_PASSWORD]
+            user_id, errors = await self.hass.async_add_executor_job(
+                _authenticate, username, password
+            )
+            if user_id is not None:
+                await self.async_set_unique_id(user_id)
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data={CONF_USERNAME: username, CONF_PASSWORD: password},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, {CONF_USERNAME: username}
+            ),
+            errors=errors,
+        )
+
 
 def _authenticate(username: str, password: str) -> tuple[str | None, dict[str, str]]:
     """Authenticate with the Schlage API."""

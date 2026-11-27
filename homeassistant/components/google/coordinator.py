@@ -44,6 +44,13 @@ def _truncate_timeline(timeline: Timeline, max_events: int) -> Timeline:
     )
 
 
+def _get_overlapping_events(
+    timeline: Timeline, start_date: datetime, end_date: datetime
+) -> list[Event]:
+    """Return all events overlapping the given time frame."""
+    return list(timeline.overlapping(start_date, end_date))
+
+
 class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
     """Coordinator for calendar RPC calls that use an efficient sync."""
 
@@ -78,7 +85,9 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
         timeline = await self.sync.store_service.async_get_timeline(
             dt_util.get_default_time_zone()
         )
-        self._upcoming_timeline = _truncate_timeline(timeline, MAX_UPCOMING_EVENTS)
+        self._upcoming_timeline = await self.hass.async_add_executor_job(
+            _truncate_timeline, timeline, MAX_UPCOMING_EVENTS
+        )
         return timeline
 
     async def async_get_events(
@@ -89,9 +98,8 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
             raise HomeAssistantError(
                 "Unable to get events: Sync from server has not completed"
             )
-        return timeline.overlapping(
-            start_date,
-            end_date,
+        return await self.hass.async_add_executor_job(
+            _get_overlapping_events, timeline, start_date, end_date
         )
 
     @property

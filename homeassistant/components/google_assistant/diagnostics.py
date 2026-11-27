@@ -6,8 +6,8 @@ from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from . import GoogleConfigEntry
 from .const import CONF_SECURE_DEVICES_PIN, CONF_SERVICE_ACCOUNT, DATA_CONFIG
+from .http import GoogleConfigEntry
 from .smart_home import (
     async_devices_query_response,
     async_devices_sync_response,
