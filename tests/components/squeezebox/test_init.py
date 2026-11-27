@@ -299,17 +299,17 @@ async def test_discovery_stopped(
                 await cancel_callbacks[-1]()
                 await hass.async_block_till_done()
 
-    # Multiple discovery cycles should have been scheduled
-    assert len(reschedules) >= 3  # Initial + 2 reschedules
-    reschedule_count_before_unload = len(reschedules)
+        # Multiple discovery cycles should have been scheduled
+        assert len(reschedules) >= 3  # Initial + 2 reschedules
+        reschedule_count_before_unload = len(reschedules)
 
-    # Unload should cancel only the latest timer
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert len(was_cancelled) == 1  # Only the latest timer's cancel was called
+        # Unload should cancel only the latest timer
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        assert len(was_cancelled) == 1  # Only the latest timer's cancel was called
 
-    # Invoke the latest callback after discovery_stopped is True
-    # It should return early without rescheduling
-    await cancel_callbacks[-1]()
+        # Invoke the latest callback after discovery_stopped is True
+        # It should return early without rescheduling
+        await cancel_callbacks[-1]()
 
-    # Verify no new reschedule was scheduled (guard prevents async_call_later)
-    assert len(reschedules) == reschedule_count_before_unload
+        # Verify no new reschedule was scheduled (guard prevents async_call_later)
+        assert len(reschedules) == reschedule_count_before_unload
