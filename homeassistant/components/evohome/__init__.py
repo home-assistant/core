@@ -6,7 +6,6 @@ others.
 Note that the API used by this integration's client does not support cooling.
 """
 
-from dataclasses import dataclass
 import logging
 from typing import Final
 
@@ -34,7 +33,7 @@ from .const import (
     SCAN_INTERVAL_DEFAULT,
     SCAN_INTERVAL_MINIMUM,
 )
-from .coordinator import EvoAccountCoordinator, EvoLocationCoordinator
+from .coordinator import EvoAccountCoordinator, EvoData, EvoLocationCoordinator
 from .services import async_setup_services
 from .storage import TokenManager
 
@@ -57,14 +56,6 @@ CONFIG_SCHEMA: Final = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
-
-
-@dataclass
-class EvoData:
-    """Dataclass for storing evohome data."""
-
-    account: EvoAccountCoordinator
-    locations: list[EvoLocationCoordinator]
 
 
 async def _async_first_refresh(
