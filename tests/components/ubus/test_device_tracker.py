@@ -41,16 +41,16 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    event,
     issue_registry as ir,
 )
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from .conftest import (
     MAC_GUEST,
@@ -64,6 +64,21 @@ from .conftest import (
     MOCK_HOST_CONFIG_C,
     router_subentry_data,
 )
+
+
+async def _wait_for_tracker_change(hass: HomeAssistant, entity_id: str) -> None:
+    """Block until the tracker's state changes, i.e. the tick has finished."""
+    state_changed = asyncio.Event()
+
+    @callback
+    def _state_changed(_event: Event[EventStateChangedData]) -> None:
+        state_changed.set()
+
+    unsub = event.async_track_state_change_event(hass, entity_id, _state_changed)
+    try:
+        await asyncio.wait_for(state_changed.wait(), timeout=10)
+    finally:
+        unsub()
 
 
 @pytest.mark.parametrize(
@@ -1321,20 +1336,19 @@ async def test_slow_router_does_not_stretch_sighting_times(
     assert await hass.config_entries.async_setup(two_router_hub.entry_id)
     await hass.async_block_till_done()
 
-    slow_started = threading.Event()
     slow_release = threading.Event()
     fast_release = threading.Event()
     fast_observed = threading.Event()
 
     def slow_read(*args: Any, **kwargs: Any) -> dict[str, Any]:
         # Hold the response for twenty seconds, as a slow router.
-        slow_started.set()
         slow_release.wait()
         return {"clients": {MAC_PHONE: {"authorized": True}}}
 
     def fast_read(*args: Any, **kwargs: Any) -> dict[str, Any]:
         # Hold the response until the test releases it.
         fast_release.wait()
+        fast_observed.set()
         return {
             "clients": {
                 MAC_PHONE: {"authorized": True},
@@ -1346,51 +1360,55 @@ async def test_slow_router_does_not_stretch_sighting_times(
     ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = fast_read
 
     # Start the next tick and hold both routers in flight.
-    freezer.tick(timedelta(seconds=30))
+    freezer.tick(timedelta(seconds=31))
     async_fire_time_changed(hass)
-    assert await hass.async_add_executor_job(slow_started.wait, 10)
-
-    # Wait for the fast router's poll to be observed, so its sighting time
-    # is fixed before the clock advances again.
-    for host, poll in two_router_hub.runtime_data._inflight.items():
-        if host.host == MOCK_HOST_B:
-            poll.add_done_callback(lambda _: fast_observed.set())
+    # The fast router settles first; wait for its sighting before the
+    # clock advances again, so its observation time is fixed.
     freezer.tick(timedelta(seconds=10))
     fast_release.set()
     assert await hass.async_add_executor_job(fast_observed.wait, 10)
-    fast_seen = dt_util.utcnow()
-
+    # The slow router's late answer settles with the tick completing; it
+    # must not stretch the sighting times the fast router recorded.
     freezer.tick(timedelta(seconds=10))
     slow_release.set()
     await hass.async_block_till_done(wait_background_tasks=True)
-    slow_seen = dt_util.utcnow()
 
-    coordinator = two_router_hub.runtime_data
-    subentry_ids = {
-        subentry.data[CONF_HOST]: subentry.subentry_id
-        for subentry in two_router_hub.subentries.values()
-    }
-    phone = coordinator.data[MAC_PHONE]
-    # Each router's stamps carry its poll's own observation time.
-    assert phone[subentry_ids[MOCK_HOST]].last_seen == slow_seen
-    assert phone[subentry_ids[MOCK_HOST_B]].last_seen == fast_seen
-    # The newest observation reports the source, not the subentry order.
-    entity_id = entity_registry.async_get_entity_id(
+    phone_entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
     )
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
+    assert phone_entity_id is not None
+    state = hass.states.get(phone_entity_id)
     assert state is not None
+    assert state.state == STATE_HOME
+    # The newest observation reports the source, not the subentry order.
     assert state.attributes["source"] == MOCK_HOST
     # The laptop was last seen by the fast router only; the slow router's
     # late answer must not stretch its consider_home window.
-    entity_id = entity_registry.async_get_entity_id(
+    laptop_entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_LAPTOP
     )
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
+    assert laptop_entity_id is not None
+    state = hass.states.get(laptop_entity_id)
     assert state is not None
     assert state.state == STATE_NOT_HOME
+
+    # The next tick polls both routers fresh; the fast router's newer
+    # sighting must win the source over the slow router's earlier one.
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(phone_entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST_B
+    state = hass.states.get(laptop_entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    # One poll per router per tick; a second concurrent poll would have
+    # called the mocks again.
+    assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 3
+    assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 3
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -1658,9 +1676,11 @@ async def test_timed_out_tick_reuses_in_flight_poll(
     second poll for the same router would concurrently mutate its ubus
     session and lease state.
 
-    The request timeout is zero for the ticks, so their timeouts are
-    deterministic on the frozen clock: the poll is held in the executor
-    between ticks and released before the final one.
+    The request timeout is zero, so a tick times out as soon as it runs;
+    each tick is observed through the tracker's state, which only changes
+    once the tick has finished. The ticks are 31 s apart, as the refresh
+    timers are staggered up to half a second past the 30 s interval and
+    must always be due.
     """
     _mock, ubus = mock_ubus_by_host
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
@@ -1677,9 +1697,7 @@ async def test_timed_out_tick_reuses_in_flight_poll(
     assert hass.states.get(entity_id).state == STATE_HOME
     assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 1
 
-    # The next poll blocks in the executor until it is released; the
-    # request timeout is zero for the ticks, so their timeouts are
-    # deterministic on the frozen clock.
+    # The next poll blocks in the executor until it is released.
     release = threading.Event()
 
     def _blocked_clients(interface: str) -> dict:
@@ -1687,19 +1705,6 @@ async def test_timed_out_tick_reuses_in_flight_poll(
         return {"clients": {MAC_PHONE: {"authorized": True}}}
 
     ubus[MOCK_HOST].get_hostapd_clients.side_effect = _blocked_clients
-
-    async def _run_tick() -> None:
-        """Fire the next tick and await its refresh task.
-
-        The refresh is the entry's background task; awaiting the entry's
-        tasks, rather than all of them, keeps the wait from blocking on
-        the in-flight executor poll, which is only released later. The
-        ticks are 31 s apart, as the refresh timers are staggered up to
-        half a second past the 30 s interval and must always be due.
-        """
-        freezer.tick(timedelta(seconds=31))
-        async_fire_time_changed(hass)
-        await asyncio.wait(mock_config_entry._background_tasks)
 
     try:
         with patch(
@@ -1709,22 +1714,22 @@ async def test_timed_out_tick_reuses_in_flight_poll(
             # The tick times out while the poll keeps running in the
             # executor; the failed tick marks the router unhealthy, so the
             # client's stamps stop counting until the next tick succeeds.
-            await _run_tick()
-            assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-            # The next tick must re-await the in-flight poll rather than
-            # start a second one; it times out on the still-blocked poll.
-            await _run_tick()
+            freezer.tick(timedelta(seconds=31))
+            async_fire_time_changed(hass)
+            await _wait_for_tracker_change(hass, entity_id)
             assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
             # Releasing the poll settles it before the next tick runs,
-            # which then applies its result.
+            # which then re-awaits it rather than starting a second one.
             release.set()
             await hass.async_block_till_done(wait_background_tasks=True)
-            await _run_tick()
+            freezer.tick(timedelta(seconds=31))
+            async_fire_time_changed(hass)
+            await _wait_for_tracker_change(hass, entity_id)
     finally:
         release.set()
 
-    # One poll ran at setup and one blocked, re-awaited by the later
-    # ticks; a duplicate poll would have called the mock a third time.
+    # One poll ran at setup and one blocked, re-awaited by the timed-out
+    # tick; a duplicate poll would have called the mock a third time.
     assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 2
     assert hass.states.get(entity_id).state == STATE_HOME
 
@@ -1761,6 +1766,7 @@ async def test_reobserved_poll_stamped_at_completion(
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_HOME
 
+    # The next poll blocks in the executor until it is released.
     release = threading.Event()
 
     def _blocked_clients(interface: str) -> dict:
@@ -1769,19 +1775,6 @@ async def test_reobserved_poll_stamped_at_completion(
 
     ubus[MOCK_HOST].get_hostapd_clients.side_effect = _blocked_clients
 
-    async def _run_tick() -> None:
-        """Fire the next tick and await its refresh task.
-
-        Awaiting the entry's tasks, rather than all of them, keeps the
-        wait from blocking on the in-flight executor poll, which is only
-        released later. The ticks are 31 s apart, as the refresh timers
-        are staggered up to half a second past the 30 s interval and must
-        always be due.
-        """
-        freezer.tick(timedelta(seconds=31))
-        async_fire_time_changed(hass)
-        await asyncio.wait(mock_config_entry._background_tasks)
-
     try:
         with patch(
             "homeassistant.components.ubus.coordinator.REQUEST_TIMEOUT",
@@ -1789,14 +1782,18 @@ async def test_reobserved_poll_stamped_at_completion(
         ):
             # The tick times out while the poll keeps running in the
             # executor; the failed tick marks the router unhealthy.
-            await _run_tick()
+            freezer.tick(timedelta(seconds=31))
+            async_fire_time_changed(hass)
+            await _wait_for_tracker_change(hass, entity_id)
             assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
             # The poll settles four seconds after the tick started; the
             # next tick re-observes it and must stamp that completion.
             freezer.tick(timedelta(seconds=4))
             release.set()
             await hass.async_block_till_done(wait_background_tasks=True)
-            await _run_tick()
+            freezer.tick(timedelta(seconds=31))
+            async_fire_time_changed(hass)
+            await _wait_for_tracker_change(hass, entity_id)
     finally:
         release.set()
 
