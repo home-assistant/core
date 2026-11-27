@@ -36,6 +36,9 @@ class TodoItem:
     completed: dt.datetime | None = None
     """The date and time that a to-do item was marked completed."""
 
+    parent_uid: str | None = None
+    """The uid of the To-do item this item is a subtask of."""
+
 
 _TODO_ITEM_FIELD_NAMES: tuple[str, ...] = tuple(
     field.name for field in dataclasses.fields(TodoItem)
