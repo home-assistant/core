@@ -33,6 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.translation import async_get_translations
 
 from .conftest import (
     MAC_PHONE,
@@ -264,6 +265,13 @@ async def test_subentry_flow_existing_host_form_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "already_configured"}
     assert len(hub_entry.subentries) == 1
+    # The duplicate-host form error must have a renderable translation.
+    translations = await async_get_translations(
+        hass, "en", "config_subentries", {DOMAIN}
+    )
+    assert translations.get(
+        f"component.{DOMAIN}.config_subentries.router.error.already_configured"
+    )
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], user_input={**USER_INPUT, CONF_HOST: MOCK_HOST_B}

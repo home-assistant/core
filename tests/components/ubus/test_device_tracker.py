@@ -43,6 +43,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -2775,6 +2776,13 @@ async def test_migration_failure_leaves_entry_and_reports(
     assert issue.translation_key == "migration_failed"
     assert issue.translation_placeholders == {"host": MOCK_HOST_B}
     assert issue.config_entry_id == legacy_entry.entry_id
+    # The hub stays configured after a failed migration, so the repair
+    # must recover through the hub's Add router action, not a new entry.
+    translations = await async_get_translations(hass, "en", "issues", {DOMAIN})
+    assert (
+        "Add router"
+        in translations[f"component.{DOMAIN}.issues.migration_failed.description"]
+    )
 
     # Removing the entry clears its repair.
     assert await hass.config_entries.async_remove(legacy_entry.entry_id)

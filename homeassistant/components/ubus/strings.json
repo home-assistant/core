@@ -33,6 +33,7 @@
       },
       "entry_type": "Router",
       "error": {
+        "already_configured": "A router with this host is already configured on this entry.",
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
       },
@@ -82,7 +83,7 @@
       "title": "Disabled router {host} was migrated"
     },
     "migration_failed": {
-      "description": "The OpenWrt (ubus) entry for `{host}` could not be migrated to the main entry. Delete and re-add the entry to complete the migration; its client trackers are recovered automatically.",
+      "description": "The OpenWrt (ubus) entry for `{host}` could not be migrated to the main entry. To complete the migration: 1. Delete the OpenWrt (ubus) entry for `{host}`. 2. Use **Add router** on the OpenWrt (ubus) entry to add the router again. Its client trackers are recovered automatically.",
       "title": "Failed to migrate router {host}"
     },
     "migration_host_collision": {
