@@ -15,7 +15,6 @@ from homeassistant.components.button import (
 )
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
     CoverService,
@@ -426,7 +425,7 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
         super().__init__(
             intent.INTENT_SET_POSITION,
             required_slots={
-                ATTR_POSITION: probatio.All(probatio.Coerce(int), probatio.Percentage())
+                "position": probatio.All(probatio.Coerce(int), probatio.Percentage())
             },
             description="Sets the position of a device or entity",
             platforms={COVER_DOMAIN, VALVE_DOMAIN},
