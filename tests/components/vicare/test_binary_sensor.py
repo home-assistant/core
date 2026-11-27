@@ -126,6 +126,45 @@ async def test_boiler_internal_pump(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
+@pytest.mark.parametrize(
+    ("properties", "expected_state"),
+    [
+        pytest.param({"enabled": False}, STATE_OFF, id="disabled"),
+        pytest.param({"enabled": True, "active": False}, STATE_OFF, id="idle"),
+        pytest.param({"enabled": True, "active": True}, STATE_ON, id="running"),
+    ],
+)
+async def test_dhw_hygiene(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    properties: dict[str, bool],
+    expected_state: str,
+) -> None:
+    """Test the legionella protection of the domestic hot water."""
+    vicare = MockPyViCare([Fixture({"type:heatpump"}, "vicare/Vitocal250A.json")])
+    hygiene = next(
+        feature
+        for feature in vicare.services["gateway0"]._features["deviceId0"]
+        if feature["feature"] == "heating.dhw.hygiene"
+    )
+    hygiene["properties"] = {
+        name: {"type": "boolean", "value": value} for name, value in properties.items()
+    }
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=vicare),
+        patch(f"{MODULE}.PLATFORMS", [Platform.BINARY_SENSOR]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entity_id = "binary_sensor.model0_dhw_legionella_protection"
+    await async_update_entity(hass, entity_id)
+
+    assert hass.states.get(entity_id).state == expected_state
+
+
 async def test_room_window_and_condensation_risk(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

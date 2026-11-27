@@ -11,7 +11,6 @@
       "keyfile_invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
       "keyfile_no_backbone_key": "The `.knxkeys` file does not contain a backbone key for secure routing.",
       "keyfile_no_tunnel_for_host": "The `.knxkeys` file does not contain credentials for host `{host}`.",
-      "keyfile_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
       "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
       "no_tunnel_discovered": "Could not find a KNX tunneling server on your network.",
       "unsupported_tunnel_type": "Selected tunneling type not supported by gateway."
@@ -1788,6 +1787,16 @@
       "options": {
         "postgres": "PostgreSQL (External)",
         "sqlite": "Internal storage (Default)"
+      }
+    },
+    "tunnel_endpoint": {
+      "options": {
+        "automatic": "[%key:component::knx::selector::connection_type::options::automatic%]"
+      }
+    },
+    "tunnel_gateway": {
+      "options": {
+        "manual": "Manual configuration"
       }
     },
     "tunneling_type": {

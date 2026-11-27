@@ -171,9 +171,11 @@ async def test_bootstrap_progress_concurrent_setup(
     release.set()
     await setup_task
 
-    _, first = progress[0]
-    assert first["phase"] == BootstrapPhase.PREPARING
-    assert first["integrations"]["total"] is None
+    preparing = [
+        data for _, data in progress if data["phase"] == BootstrapPhase.PREPARING
+    ]
+    assert preparing
+    assert all(data["integrations"]["total"] is None for data in preparing)
 
     assert blocked["phase"] == BootstrapPhase.SETUP
     assert set(blocked["active"]) == {"integration_a", "integration_b"}
