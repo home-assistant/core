@@ -4880,6 +4880,21 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             self._async_orphan_deleted_device(deleted_device, domain, now_time)
 
     @callback
+    def async_get_deleted_devices(self) -> list[DeletedDeviceEntry]:
+        """Return the deleted devices the registry remembers for restoring."""
+        return list(self._deleted_devices.values())
+
+    @callback
+    @verify_event_loop_thread("device_registry.async_forget_deleted_device")
+    def async_forget_deleted_device(self, device_id: str) -> None:
+        """Forget a deleted device, so it is not restored when added again.
+
+        Raises KeyError if there is no deleted device with the id.
+        """
+        del self._deleted_devices[device_id]
+        self.async_schedule_save()
+
+    @callback
     def async_purge_expired_orphaned_devices(self) -> None:
         """Purge expired orphaned devices from the registry.
 

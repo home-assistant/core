@@ -8740,3 +8740,30 @@ async def test_move_to_child_device_unknown_own_area(
     assert entity_registry.async_get(entry.entity_id) == entry
     assert device_registry.async_get(child_device.id) == child_device
     assert not events
+
+
+async def test_forget_deleted_entity(entity_registry: er.EntityRegistry) -> None:
+    """Test a forgotten deleted entity is not restored when added again."""
+    entry = entity_registry.async_get_or_create("light", "hue", "5678")
+    entity_registry.async_update_entity(entry.entity_id, name="Kitchen")
+    entity_registry.async_remove(entry.entity_id)
+    deleted_entity = entity_registry.deleted_entities[("light", "hue", "5678")]
+    assert deleted_entity.id == entry.id
+
+    entity_registry.async_forget_deleted_entity(entry.id)
+
+    assert not entity_registry.deleted_entities
+    restored = entity_registry.async_get_or_create("light", "hue", "5678")
+    assert restored.id != entry.id
+    assert restored.name is None
+
+
+async def test_forget_unknown_deleted_entity(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test forgetting an unknown deleted entity raises."""
+    entry = entity_registry.async_get_or_create("light", "hue", "5678")
+
+    # An active entity is not a deleted entity
+    with pytest.raises(KeyError):
+        entity_registry.async_forget_deleted_entity(entry.id)

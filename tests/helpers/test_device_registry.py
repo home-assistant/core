@@ -13939,3 +13939,43 @@ async def test_update_child_device_unknown_area_or_label(
     with pytest.raises(ValueError, match="Labels not found: unknown"):
         device_registry.async_update_child_device(child.id, labels={"unknown"})
     assert device_registry.async_get(child.id) == child
+
+
+async def test_forget_deleted_device(
+    device_registry: dr.DeviceRegistry, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a forgotten deleted device is not restored when added again."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+    device_registry.async_update_device(device.id, name_by_user="Hallway")
+    device_registry.async_remove_device(device.id)
+    assert [
+        deleted_device.id
+        for deleted_device in device_registry.async_get_deleted_devices()
+    ] == [device.id]
+
+    device_registry.async_forget_deleted_device(device.id)
+
+    assert device_registry.async_get_deleted_devices() == []
+    restored = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+    assert restored.id != device.id
+    assert restored.name_by_user is None
+
+
+async def test_forget_unknown_deleted_device(
+    device_registry: dr.DeviceRegistry, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test forgetting an unknown deleted device raises."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+
+    # An active device is not a deleted device
+    with pytest.raises(KeyError):
+        device_registry.async_forget_deleted_device(device.id)

@@ -5,7 +5,12 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockUser,
+    mock_integration,
+)
 from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 from pytest_unordered import unordered
 
@@ -1360,3 +1365,92 @@ async def test_list_linked_devices_child_device(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"linked_devices": []}
+
+
+async def test_list_and_forget_deleted_devices(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test listing and forgetting deleted devices."""
+    created = datetime.fromisoformat("2024-02-14T12:00:00.0+00:00")
+    deleted = datetime.fromisoformat("2024-02-14T13:00:00.0+00:00")
+    freezer.move_to(created)
+    config_entry = MockConfigEntry(domain="hue")
+    config_entry.add_to_hass(hass)
+    area = area_registry.async_create("Kitchen")
+    label = label_registry.async_create("Lights")
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
+        identifiers={("hue", "0123")},
+    )
+    device_registry.async_update_device(
+        device.id, area_id=area.id, labels={label.label_id}, name_by_user="Hallway"
+    )
+    freezer.move_to(deleted)
+    device_registry.async_remove_device(device.id)
+
+    await client.send_json_auto_id({"type": "config/device_registry/list_deleted"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == [
+        {
+            "area_id": area.id,
+            "config_entry_id": config_entry.entry_id,
+            "config_subentry_id": None,
+            "connections": [[dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef"]],
+            "created_at": created.timestamp(),
+            "disabled_by": None,
+            "domain": "hue",
+            "id": device.id,
+            "identifiers": [["hue", "0123"]],
+            "labels": [label.label_id],
+            "modified_at": deleted.timestamp(),
+            "name_by_user": "Hallway",
+            "orphaned_timestamp": None,
+        }
+    ]
+
+    await client.send_json_auto_id(
+        {"type": "config/device_registry/forget_deleted", "deleted_id": device.id}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] is None
+    assert device_registry.async_get_deleted_devices() == []
+
+    await client.send_json_auto_id(
+        {"type": "config/device_registry/forget_deleted", "deleted_id": device.id}
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        {"type": "config/device_registry/list_deleted"},
+        {"type": "config/device_registry/forget_deleted", "deleted_id": "abc"},
+    ],
+)
+async def test_deleted_devices_requires_admin(
+    client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    command: dict[str, Any],
+) -> None:
+    """Test the deleted device commands require an admin."""
+    hass_admin_user.groups = []
+
+    await client.send_json_auto_id(command)
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"

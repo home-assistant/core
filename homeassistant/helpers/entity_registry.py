@@ -2754,6 +2754,26 @@ class EntityRegistry(BaseRegistry):
             self.async_schedule_save()
 
     @callback
+    @verify_event_loop_thread("entity_registry.async_forget_deleted_entity")
+    def async_forget_deleted_entity(self, deleted_entity_id: str) -> None:
+        """Forget a deleted entity, so it is not restored when added again.
+
+        Raises KeyError if there is no deleted entity with the id.
+        """
+        key = next(
+            (
+                key
+                for key, deleted_entity in self.deleted_entities.items()
+                if deleted_entity.id == deleted_entity_id
+            ),
+            None,
+        )
+        if key is None:
+            raise KeyError(deleted_entity_id)
+        del self.deleted_entities[key]
+        self.async_schedule_save()
+
+    @callback
     def async_purge_expired_orphaned_entities(self) -> None:
         """Purge expired orphaned entities from the registry.
 
