@@ -1423,19 +1423,19 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         # Status objects are shared between entities of the device, so another
         # listener may already have applied this event. Judge it from the event
         # alone: a value cached while available_fn failed stays stale until this
-        # attribute is reported again.
+        # attribute is reported again while available_fn passes.
         if self.entity_description.requires_fresh_value and (
             event.capability == self.capability
         ):
-            if event.attribute == self._attribute:
-                self._value_is_stale = False
-            elif not self._available_fn_passes(
+            if not self._available_fn_passes(
                 {
                     **self._internal_state[self.capability],
                     event.attribute: Status(event.value),
                 }
             ):
                 self._value_is_stale = True
+            elif event.attribute == self._attribute:
+                self._value_is_stale = False
         super()._update_handler(event)
 
     @property

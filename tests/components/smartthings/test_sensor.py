@@ -173,6 +173,15 @@ async def test_meat_probe_unavailable_when_disconnected(
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
+    # A reading reported while unplugged is the 0 °F sentinel, not a fresh one.
+    await trigger_update(
+        hass,
+        devices,
+        device_id,
+        Capability.SAMSUNG_CE_MEAT_PROBE,
+        Attribute.TEMPERATURE,
+        0,
+    )
     await trigger_update(
         hass,
         devices,
