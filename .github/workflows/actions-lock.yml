@@ -29,7 +29,7 @@ jobs:
     permissions:
       contents: read # To check out the repository and resolve the locked actions
     env:
-      GH_ACTIONS_LOCK_VERSION: v0.5.0
+      GH_ACTIONS_LOCK_VERSION: v0.5.1
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v7.0.1

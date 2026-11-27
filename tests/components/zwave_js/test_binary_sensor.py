@@ -246,6 +246,56 @@ def _add_water_alarm_notification_values(node_state: NodeDataType) -> NodeDataTy
     return updated_state
 
 
+def _add_home_security_notification_values(node_state: NodeDataType) -> NodeDataType:
+    """Return a node state with more Home Security notification values and states.
+
+    States 4, 5, 6 and 9 are synthetic: zwave-js reports them as events.
+    """
+    updated_state = copy.deepcopy(node_state)
+    cover_status_value = next(
+        value_data
+        for value_data in updated_state["values"]
+        if value_data.get("commandClass") == 113
+        and value_data.get("property") == "Home Security"
+        and value_data.get("propertyKey") == "Cover status"
+    )
+    for property_key, states in (
+        (
+            "Sensor status",
+            {
+                "0": "idle",
+                "1": "Intrusion (location provided)",
+                "2": "Intrusion",
+                "5": "Glass breakage (location provided)",
+                "6": "Glass breakage",
+            },
+        ),
+        (
+            "Magnetic interference status",
+            {"0": "idle", "11": "Magnetic field interference detected"},
+        ),
+    ):
+        value_data = copy.deepcopy(cover_status_value)
+        value_data["propertyKey"] = value_data["propertyKeyName"] = property_key
+        value_data["metadata"]["label"] = property_key
+        value_data["metadata"]["states"] = states
+        value_data["value"] = 0
+        updated_state["values"].append(value_data)
+    cover_status_value["metadata"]["states"]["4"] = "Tampering, invalid code"
+    cover_status_value["metadata"]["states"]["9"] = "Tampering, product moved"
+    motion_sensor_status_value = next(
+        value_data
+        for value_data in updated_state["values"]
+        if value_data.get("commandClass") == 113
+        and value_data.get("property") == "Home Security"
+        and value_data.get("propertyKey") == "Motion sensor status"
+    )
+    motion_sensor_status_value["metadata"]["states"]["7"] = (
+        "Motion detection (location provided)"
+    )
+    return updated_state
+
+
 def _set_opening_state_metadata_states(
     node_state: dict[str, Any], states: dict[str, str]
 ) -> dict[str, Any]:
@@ -1977,6 +2027,196 @@ async def test_water_alarm_notification_sensors_state_update(
                         "newValue": value,
                         "prevValue": prev_value,
                         "propertyName": "Water Alarm",
+                        "propertyKeyName": property_key,
+                    },
+                },
+            )
+        )
+        await hass.async_block_till_done()
+
+        assert (state := hass.states.get(entity_id))
+        assert state.state == expected_state
+
+
+@pytest.fixture(name="multisensor_6_home_security")
+def multisensor_6_home_security_fixture(
+    client: MagicMock, multisensor_6_state: NodeDataType
+) -> Node:
+    """Load Aeotec Multisensor 6 node with more Home Security values."""
+    node = Node(client, _add_home_security_notification_values(multisensor_6_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "device_class", "entity_category", "expected_state"),
+    [
+        pytest.param(
+            "binary_sensor.multisensor_6_intrusion_location_provided",
+            BinarySensorDeviceClass.SAFETY,
+            None,
+            STATE_OFF,
+            id="intrusion_location_provided",
+        ),
+        pytest.param(
+            "binary_sensor.multisensor_6_intrusion",
+            BinarySensorDeviceClass.SAFETY,
+            None,
+            STATE_OFF,
+            id="intrusion",
+        ),
+        pytest.param(
+            TAMPER_SENSOR,
+            BinarySensorDeviceClass.TAMPER,
+            EntityCategory.DIAGNOSTIC,
+            STATE_OFF,
+            id="tampering_product_cover_removed",
+        ),
+        pytest.param(
+            "binary_sensor.multisensor_6_tampering_invalid_code",
+            BinarySensorDeviceClass.TAMPER,
+            EntityCategory.DIAGNOSTIC,
+            STATE_OFF,
+            id="tampering_invalid_code",
+        ),
+        pytest.param(
+            "binary_sensor.multisensor_6_tampering_product_moved",
+            BinarySensorDeviceClass.TAMPER,
+            EntityCategory.DIAGNOSTIC,
+            STATE_OFF,
+            id="tampering_product_moved",
+        ),
+        pytest.param(
+            "binary_sensor.multisensor_6_glass_breakage_location_provided",
+            BinarySensorDeviceClass.GLASS_BREAK,
+            None,
+            STATE_OFF,
+            id="glass_breakage_location_provided",
+        ),
+        pytest.param(
+            "binary_sensor.multisensor_6_glass_breakage",
+            BinarySensorDeviceClass.GLASS_BREAK,
+            None,
+            STATE_OFF,
+            id="glass_breakage",
+        ),
+        pytest.param(
+            "binary_sensor.multisensor_6_motion_detection_location_provided",
+            BinarySensorDeviceClass.MOTION,
+            None,
+            STATE_OFF,
+            id="motion_detection_location_provided",
+        ),
+        pytest.param(
+            NOTIFICATION_MOTION_BINARY_SENSOR,
+            BinarySensorDeviceClass.MOTION,
+            None,
+            STATE_ON,
+            id="motion_detection",
+        ),
+        pytest.param(
+            "binary_sensor.multisensor_6_magnetic_field_interference_detected",
+            None,
+            None,
+            STATE_OFF,
+            id="magnetic_field_interference_detected",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("multisensor_6_home_security", "integration")
+async def test_home_security_notification_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    device_class: BinarySensorDeviceClass | None,
+    entity_category: EntityCategory | None,
+    expected_state: str,
+) -> None:
+    """Test Home Security notification sensors."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is entity_category
+    assert entity_entry.disabled_by is None
+
+
+@pytest.mark.usefixtures("multisensor_6_home_security", "integration")
+async def test_home_security_notification_sensors_count(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that only non-idle states create Home Security entities."""
+    assert sorted(
+        entry.unique_id.rpartition("-113-0-Home Security-")[2]
+        for entry in entity_registry.entities.values()
+        if entry.domain == BINARY_SENSOR_DOMAIN
+        and "-113-0-Home Security-" in entry.unique_id
+    ) == [
+        "Cover status.3",
+        "Cover status.4",
+        "Cover status.9",
+        "Magnetic interference status.11",
+        "Motion sensor status.7",
+        "Motion sensor status.8",
+        "Sensor status.1",
+        "Sensor status.2",
+        "Sensor status.5",
+        "Sensor status.6",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("property_key", "new_value", "entity_id"),
+    [
+        pytest.param(
+            "Sensor status",
+            2,
+            "binary_sensor.multisensor_6_intrusion",
+            id="intrusion",
+        ),
+        pytest.param(
+            "Magnetic interference status",
+            11,
+            "binary_sensor.multisensor_6_magnetic_field_interference_detected",
+            id="magnetic_field_interference_detected",
+        ),
+    ],
+)
+async def test_home_security_notification_sensors_state_update(
+    hass: HomeAssistant,
+    multisensor_6_home_security: Node,
+    integration: MockConfigEntry,
+    property_key: str,
+    new_value: int,
+    entity_id: str,
+) -> None:
+    """Test Home Security notification sensors turn on and off for their state."""
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    for prev_value, value, expected_state in (
+        (0, new_value, STATE_ON),
+        (new_value, 0, STATE_OFF),
+    ):
+        multisensor_6_home_security.receive_event(
+            Event(
+                type="value updated",
+                data={
+                    "source": "node",
+                    "event": "value updated",
+                    "nodeId": multisensor_6_home_security.node_id,
+                    "args": {
+                        "commandClassName": "Notification",
+                        "commandClass": 113,
+                        "endpoint": 0,
+                        "property": "Home Security",
+                        "propertyKey": property_key,
+                        "newValue": value,
+                        "prevValue": prev_value,
+                        "propertyName": "Home Security",
                         "propertyKeyName": property_key,
                     },
                 },

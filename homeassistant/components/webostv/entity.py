@@ -4,10 +4,12 @@ from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
 
+from aiowebostv import WebOsTvCommandError
+
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, WEBOSTV_EXCEPTIONS
+from .const import DOMAIN
 from .coordinator import WebOsTvConfigEntry, WebOsTvDataUpdateCoordinator
 
 
@@ -42,7 +44,7 @@ def cmd[_EntityT: WebOsTvEntity, _R, **_P](
             )
         try:
             return await func(self, *args, **kwargs)
-        except WEBOSTV_EXCEPTIONS as error:
+        except WebOsTvCommandError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",

@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 from collections.abc import Callable, Generator
+import logging
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -4050,6 +4051,37 @@ async def test_handle_failed_intents(
         assert response is not None and response.error_code == error_code
     else:
         assert response is None
+
+
+@pytest.mark.parametrize(
+    ("log_level", "has_traceback"),
+    [(logging.INFO, False), (logging.DEBUG, True)],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_intent_handle_error_logging(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    log_level: int,
+    has_traceback: bool,
+) -> None:
+    """Test a traceback for an intent handling error is only logged when debugging."""
+    caplog.set_level(log_level, logger=default_agent.__name__)
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.intent.async_handle",
+        side_effect=intent.IntentHandleError("Timer not found"),
+    ):
+        await conversation.async_converse(hass, "cancel the timer", None, Context())
+
+    [record] = [
+        record
+        for record in caplog.records
+        if record.name == default_agent.__name__
+        and record.getMessage().startswith("Intent handling error")
+    ]
+    assert record.levelno == logging.WARNING
+    assert record.getMessage() == "Intent handling error: Timer not found"
+    assert bool(record.exc_info) is has_traceback
 
 
 @pytest.mark.usefixtures("init_components")

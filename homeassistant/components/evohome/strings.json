@@ -15,8 +15,14 @@
     "api_request_rejected": {
       "message": "The vendor's API rejected the request"
     },
+    "api_response_invalid": {
+      "message": "The vendor's API returned an invalid response"
+    },
     "api_server_error": {
       "message": "The vendor's API returned a server error; try again later"
+    },
+    "config_stale": {
+      "message": "The configuration of the location has changed (has it been deleted, or unshared?); restart Home Assistant"
     },
     "controller_only_service": {
       "message": "Only Evohome controllers support the `{service}` action"

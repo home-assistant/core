@@ -7,9 +7,9 @@ from typing import Any, override
 from pylutron import Motor, Shade
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -80,8 +80,8 @@ class LutronCover(LutronDevice, CoverEntity):
     @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the shade to a specific position."""
-        if ATTR_POSITION in kwargs:
-            position = kwargs[ATTR_POSITION]
+        if CoverServiceArgument.POSITION in kwargs:
+            position = kwargs[CoverServiceArgument.POSITION]
             self._lutron_device.level = position
 
     @override

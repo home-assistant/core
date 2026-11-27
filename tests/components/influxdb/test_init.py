@@ -21,6 +21,7 @@ from homeassistant.components.influxdb.const import DEFAULT_BUCKET, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_PATH,
+    EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     STATE_OFF,
     STATE_ON,
@@ -354,6 +355,42 @@ async def _setup(
     # A call is made to the write API during setup to test the connection.
     # Therefore we reset the write API mock here before the test begins.
     get_write_api(mock_influx_client).reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "mock_client", "config_ext", "get_write_api"),
+    [
+        (
+            {"influxdb": BASE_OPTIONS},
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+        ),
+        (
+            {"influxdb": BASE_OPTIONS},
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_writer_stopped_on_homeassistant_stop(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    config_ext: dict[str, Any],
+    get_write_api: Callable[[MagicMock], MagicMock],
+) -> None:
+    """Test the writer thread is stopped when Home Assistant stops."""
+    await _setup(hass, mock_client, config_ext, get_write_api)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    influx_thread = entry.runtime_data
+    assert influx_thread.is_alive()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert not influx_thread.is_alive()
 
 
 @pytest.mark.parametrize(
