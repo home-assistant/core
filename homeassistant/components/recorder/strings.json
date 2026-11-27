@@ -21,16 +21,21 @@
     "corrupt_database_files": {
       "fix_flow": {
         "abort": {
-          "delete_failed": "The corrupt database files could not be deleted. Check the log for details and delete them manually."
+          "delete_failed": "The corrupt database files could not be deleted. Check the log for details and delete them manually.",
+          "files_kept": "The corrupt database files are kept and this repair is ignored."
         },
         "step": {
-          "confirm": {
-            "description": "The recorder found a corrupt database and moved it aside to start a new one. Corrupt database files still kept in `{path}`: {count} ({size} MB).\n\nThey may still contain history that can be recovered with SQLite tools. If you don't need them, select **Submit** to delete them. To keep them, close this dialog and ignore this issue.",
+          "init": {
+            "description": "The recorder last found a corrupt database on {date} and moved it aside to start a new one. The database in use now is not affected. The corrupt database files are still kept in `{path}` and use {size} MB of disk space.\n\nThey may still contain history that can be recovered with SQLite tools. If you don't need them, delete them to free up disk space.",
+            "menu_options": {
+              "delete": "Delete the files",
+              "keep": "Keep the files"
+            },
             "title": "[%key:component::recorder::issues::corrupt_database_files::title%]"
           }
         }
       },
-      "title": "Corrupt database files are kept"
+      "title": "Old corrupt database files use disk space"
     },
     "database_engine_not_supported_lts": {
       "description": "Version {server_version} of {database_engine} is not a supported long-term support (LTS) release. Support for short-term releases and end-of-life LTS releases will be removed; please upgrade to one of the supported LTS versions ({lts_versions}) and restart Home Assistant to continue using the recorder.",
