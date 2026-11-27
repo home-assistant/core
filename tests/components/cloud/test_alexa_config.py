@@ -57,6 +57,27 @@ def expose_entity(hass: HomeAssistant, entity_id: str, should_expose: bool) -> N
     async_expose_entity(hass, "cloud.alexa", entity_id, should_expose)
 
 
+@pytest.mark.parametrize("expose_power_controller", [False, True])
+def test_alexa_entity_config_expose_power_controller_schema(
+    expose_power_controller: bool,
+) -> None:
+    """Test Cloud Alexa schema accepts expose_power_controller."""
+    config = ALEXA_SCHEMA(
+        {
+            "entity_config": {
+                "climate.test": {
+                    "expose_power_controller": expose_power_controller,
+                }
+            }
+        }
+    )
+
+    assert (
+        config["entity_config"]["climate.test"]["expose_power_controller"]
+        is expose_power_controller
+    )
+
+
 async def test_alexa_config_expose_entity_prefs(
     hass: HomeAssistant,
     cloud_prefs: CloudPreferences,
