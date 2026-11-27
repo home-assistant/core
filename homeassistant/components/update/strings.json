@@ -72,7 +72,8 @@
             "installing": "Installing",
             "preparing": "Preparing",
             "restarting": "Restarting",
-            "waiting": "Waiting"
+            "waiting": "Waiting",
+            "waiting_for_user": "Waiting for user"
           }
         },
         "installed_version": {

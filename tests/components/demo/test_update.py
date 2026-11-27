@@ -37,9 +37,13 @@ CONFIRM_ON_DEVICE = {
     "translation_key": "confirm_on_device",
     "translation_placeholders": {},
 }
+POWER_CYCLE = {
+    "translation_domain": "demo",
+    "translation_key": "power_cycle",
+    "translation_placeholders": {"device_name": "Demo Hallway Bulb"},
+}
 DOWNLOADING = [
-    (UpdateInstallPhase.DOWNLOADING, percentage, None)
-    for percentage in range(0, 100, 10)
+    (UpdateInstallPhase.DOWNLOADING, percentage) for percentage in range(0, 100, 10)
 ]
 
 
@@ -235,51 +239,63 @@ async def test_update_with_progress_raising(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "backup", "expected_progress"),
+    ("entity_id", "backup", "manual_action", "expected_phases"),
     [
         pytest.param(
             "update.demo_update_with_install_phases",
             False,
+            None,
             [
-                (UpdateInstallPhase.PREPARING, None, None),
-                (UpdateInstallPhase.WAITING, None, None),
+                (UpdateInstallPhase.PREPARING, None),
+                (UpdateInstallPhase.WAITING, None),
                 *DOWNLOADING,
-                (UpdateInstallPhase.INSTALLING, None, None),
-                (UpdateInstallPhase.RESTARTING, None, None),
-                (UpdateInstallPhase.FINISHING, None, None),
-                (None, None, None),
+                (UpdateInstallPhase.INSTALLING, None),
+                (UpdateInstallPhase.RESTARTING, None),
+                (UpdateInstallPhase.FINISHING, None),
             ],
             id="install_phases",
         ),
         pytest.param(
             "update.demo_update_with_install_phases",
             True,
+            None,
             [
-                (UpdateInstallPhase.PREPARING, None, None),
-                (UpdateInstallPhase.BACKING_UP, None, None),
-                (UpdateInstallPhase.WAITING, None, None),
+                (UpdateInstallPhase.PREPARING, None),
+                (UpdateInstallPhase.BACKING_UP, None),
+                (UpdateInstallPhase.WAITING, None),
                 *DOWNLOADING,
-                (UpdateInstallPhase.INSTALLING, None, None),
-                (UpdateInstallPhase.RESTARTING, None, None),
-                (UpdateInstallPhase.FINISHING, None, None),
-                (None, None, None),
+                (UpdateInstallPhase.INSTALLING, None),
+                (UpdateInstallPhase.RESTARTING, None),
+                (UpdateInstallPhase.FINISHING, None),
             ],
             id="install_phases_with_backup",
         ),
         pytest.param(
             "update.demo_update_with_manual_action",
             False,
+            CONFIRM_ON_DEVICE,
             [
-                (UpdateInstallPhase.PREPARING, None, None),
-                (UpdateInstallPhase.WAITING, None, None),
+                (UpdateInstallPhase.PREPARING, None),
+                (UpdateInstallPhase.WAITING, None),
                 *DOWNLOADING,
-                (UpdateInstallPhase.INSTALLING, None, CONFIRM_ON_DEVICE),
-                (UpdateInstallPhase.INSTALLING, None, None),
-                (UpdateInstallPhase.RESTARTING, None, None),
-                (UpdateInstallPhase.FINISHING, None, None),
-                (None, None, None),
+                (UpdateInstallPhase.WAITING_FOR_USER, None),
+                (UpdateInstallPhase.INSTALLING, None),
+                (UpdateInstallPhase.RESTARTING, None),
+                (UpdateInstallPhase.FINISHING, None),
             ],
-            id="manual_action",
+            id="confirm_on_device",
+        ),
+        pytest.param(
+            "update.demo_hallway_bulb",
+            False,
+            POWER_CYCLE,
+            [
+                *DOWNLOADING,
+                (UpdateInstallPhase.INSTALLING, None),
+                (UpdateInstallPhase.WAITING_FOR_USER, None),
+                (UpdateInstallPhase.FINISHING, None),
+            ],
+            id="power_cycle",
         ),
     ],
 )
@@ -287,11 +303,29 @@ async def test_update_with_install_phases(
     hass: HomeAssistant,
     entity_id: str,
     backup: bool,
-    expected_progress: list[tuple[UpdateInstallPhase | None, int | None, Any]],
+    manual_action: dict[str, Any] | None,
+    expected_phases: list[tuple[UpdateInstallPhase, int | None]],
 ) -> None:
     """Test an update that reports its install phases and a manual action."""
-    events: list[Event[EventStateChangedData]] = []
-    async_track_state_change_event(hass, entity_id, events.append)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[UpdateEntityStateAttribute.MANUAL_ACTION] == manual_action
+
+    progress: list[tuple[UpdateInstallPhase | None, int | None, Any]] = []
+
+    @callback
+    def _record_progress(event: Event[EventStateChangedData]) -> None:
+        attributes = event.data["new_state"].attributes
+        progress.append(
+            (
+                attributes[UpdateEntityStateAttribute.INSTALL_PHASE],
+                attributes[ATTR_UPDATE_PERCENTAGE],
+                attributes[UpdateEntityStateAttribute.MANUAL_ACTION],
+            )
+        )
+
+    async_track_state_change_event(hass, entity_id, _record_progress)
 
     with patch("homeassistant.components.demo.update.FAKE_INSTALL_SLEEP_TIME", new=0):
         await hass.services.async_call(
@@ -301,29 +335,11 @@ async def test_update_with_install_phases(
             blocking=True,
         )
 
-    assert [
-        (
-            event.data["new_state"].attributes[
-                UpdateEntityStateAttribute.INSTALL_PHASE
-            ],
-            event.data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE],
-            event.data["new_state"].attributes[
-                UpdateEntityStateAttribute.MANUAL_ACTION
-            ],
-        )
-        for event in events
-    ] == expected_progress
-    assert events[-1].data["new_state"].state == STATE_OFF
-
-
-def test_manual_action_after_install(hass: HomeAssistant) -> None:
-    """Test an installed update that waits for a person to finish it."""
-    state = hass.states.get("update.demo_hallway_bulb")
+    # The manual action is no longer reported once the update is installed
+    assert progress == [
+        *((phase, percentage, manual_action) for phase, percentage in expected_phases),
+        (None, None, None),
+    ]
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_IN_PROGRESS] is False
-    assert state.attributes[UpdateEntityStateAttribute.MANUAL_ACTION] == {
-        "translation_domain": "demo",
-        "translation_key": "power_cycle",
-        "translation_placeholders": {"device_name": "Demo Hallway Bulb"},
-    }

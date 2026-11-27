@@ -1779,10 +1779,10 @@ async def test_manual_action(
     manual_action: UpdateManualAction | None,
     expected: dict[str, Any] | None,
 ) -> None:
-    """Test the manual action is reported, also when no install is in progress."""
+    """Test the manual action is reported with its translation."""
     entity = MockUpdateEntity(
         name="Update",
-        installed_version="1.0.1",
+        installed_version="1.0.0",
         latest_version="1.0.1",
         manual_action=manual_action,
     )
@@ -1792,7 +1792,60 @@ async def test_manual_action(
 
     state = hass.states.get("update.update")
     assert state is not None
-    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is False
+    assert state.attributes[UpdateEntityStateAttribute.MANUAL_ACTION] == expected
+
+
+@pytest.mark.parametrize(
+    ("installed_version", "latest_version", "in_progress", "expected"),
+    [
+        pytest.param(
+            "1.0.0",
+            "1.0.1",
+            False,
+            {
+                "translation_domain": DOMAIN,
+                "translation_key": "confirm_on_device",
+                "translation_placeholders": {},
+            },
+            id="update_available",
+        ),
+        pytest.param(
+            "1.0.1",
+            "1.0.1",
+            True,
+            {
+                "translation_domain": DOMAIN,
+                "translation_key": "confirm_on_device",
+                "translation_placeholders": {},
+            },
+            id="in_progress",
+        ),
+        pytest.param("1.0.1", "1.0.1", False, None, id="up_to_date"),
+        pytest.param("1.0.0", None, False, None, id="unknown"),
+    ],
+)
+async def test_manual_action_only_with_update(
+    hass: HomeAssistant,
+    installed_version: str,
+    latest_version: str | None,
+    in_progress: bool,
+    expected: dict[str, Any] | None,
+) -> None:
+    """Test the manual action is only reported with an update to install."""
+    entity = MockUpdateEntity(
+        name="Update",
+        installed_version=installed_version,
+        latest_version=latest_version,
+        supported_features=UpdateEntityFeature.PROGRESS,
+        in_progress=in_progress,
+        manual_action=MANUAL_ACTION_CONFIRM_ON_DEVICE,
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity])
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.update")
+    assert state is not None
     assert state.attributes[UpdateEntityStateAttribute.MANUAL_ACTION] == expected
 
 

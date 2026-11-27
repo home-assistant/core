@@ -20,7 +20,7 @@ from . import DOMAIN
 
 FAKE_INSTALL_SLEEP_TIME = 0.5
 # Long enough to see the manual action in the frontend
-FAKE_CONFIRM_ON_DEVICE_STEPS = 20
+FAKE_WAITING_FOR_USER_STEPS = 20
 
 
 async def async_setup_entry(
@@ -102,7 +102,15 @@ async def async_setup_entry(
                 latest_version="1.1.0",
                 support_progress=True,
                 update_steps=10,
-                install_phases=True,
+                install_phases=(
+                    UpdateInstallPhase.PREPARING,
+                    UpdateInstallPhase.BACKING_UP,
+                    UpdateInstallPhase.WAITING,
+                    UpdateInstallPhase.DOWNLOADING,
+                    UpdateInstallPhase.INSTALLING,
+                    UpdateInstallPhase.RESTARTING,
+                    UpdateInstallPhase.FINISHING,
+                ),
             ),
             DemoUpdate(
                 unique_id="update_manual_action",
@@ -112,16 +120,33 @@ async def async_setup_entry(
                 latest_version="1.1.0",
                 support_progress=True,
                 update_steps=10,
-                install_phases=True,
-                confirm_on_device=True,
+                install_phases=(
+                    UpdateInstallPhase.PREPARING,
+                    UpdateInstallPhase.BACKING_UP,
+                    UpdateInstallPhase.WAITING,
+                    UpdateInstallPhase.DOWNLOADING,
+                    UpdateInstallPhase.WAITING_FOR_USER,
+                    UpdateInstallPhase.INSTALLING,
+                    UpdateInstallPhase.RESTARTING,
+                    UpdateInstallPhase.FINISHING,
+                ),
+                manual_action=MANUAL_ACTION_CONFIRM_ON_DEVICE,
             ),
             DemoUpdate(
                 unique_id="update_power_cycle",
                 device_name="Demo Hallway Bulb",
                 title="Philips Lamps Firmware",
                 installed_version="1.94.2",
-                latest_version="1.94.2",
+                latest_version="1.95.0",
+                support_progress=True,
                 device_class=UpdateDeviceClass.FIRMWARE,
+                update_steps=10,
+                install_phases=(
+                    UpdateInstallPhase.DOWNLOADING,
+                    UpdateInstallPhase.INSTALLING,
+                    UpdateInstallPhase.WAITING_FOR_USER,
+                    UpdateInstallPhase.FINISHING,
+                ),
                 manual_action=UpdateManualAction(
                     translation_domain=DOMAIN,
                     translation_key="power_cycle",
@@ -160,8 +185,7 @@ class DemoUpdate(UpdateEntity):
         device_class: UpdateDeviceClass | None = None,
         display_precision: int = 0,
         update_steps: int = 100,
-        install_phases: bool = False,
-        confirm_on_device: bool = False,
+        install_phases: tuple[UpdateInstallPhase, ...] = (),
         manual_action: UpdateManualAction | None = None,
     ) -> None:
         """Initialize the Demo select entity."""
@@ -180,7 +204,6 @@ class DemoUpdate(UpdateEntity):
         self._attr_manual_action = manual_action
         self._update_steps = update_steps
         self._install_phases = install_phases
-        self._confirm_on_device = confirm_on_device
         if support_install:
             self._attr_supported_features |= (
                 UpdateEntityFeature.INSTALL
@@ -217,23 +240,18 @@ class DemoUpdate(UpdateEntity):
     async def _async_install_in_phases(self, backup: bool) -> None:
         """Fake an install that goes through the phases of a real one."""
         self._attr_in_progress = True
-        await self._async_fake_phase(UpdateInstallPhase.PREPARING)
-        if backup:
-            await self._async_fake_phase(UpdateInstallPhase.BACKING_UP)
-        await self._async_fake_phase(UpdateInstallPhase.WAITING)
-        for step in range(self._update_steps):
-            self._attr_update_percentage = step * 100 / self._update_steps
-            await self._async_fake_phase(UpdateInstallPhase.DOWNLOADING)
-        self._attr_update_percentage = None
-        if self._confirm_on_device:
-            self._attr_manual_action = MANUAL_ACTION_CONFIRM_ON_DEVICE
-            await self._async_fake_phase(
-                UpdateInstallPhase.INSTALLING, FAKE_CONFIRM_ON_DEVICE_STEPS
-            )
-            self._attr_manual_action = None
-        await self._async_fake_phase(UpdateInstallPhase.INSTALLING)
-        await self._async_fake_phase(UpdateInstallPhase.RESTARTING)
-        await self._async_fake_phase(UpdateInstallPhase.FINISHING)
+        for phase in self._install_phases:
+            if phase is UpdateInstallPhase.BACKING_UP and not backup:
+                continue
+            if phase is UpdateInstallPhase.DOWNLOADING:
+                for step in range(self._update_steps):
+                    self._attr_update_percentage = step * 100 / self._update_steps
+                    await self._async_fake_phase(phase)
+                self._attr_update_percentage = None
+            elif phase is UpdateInstallPhase.WAITING_FOR_USER:
+                await self._async_fake_phase(phase, FAKE_WAITING_FOR_USER_STEPS)
+            else:
+                await self._async_fake_phase(phase)
 
     async def _async_fake_phase(
         self, phase: UpdateInstallPhase, steps: int = 1
