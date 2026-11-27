@@ -2,7 +2,12 @@
 
 import pytest
 
-from homeassistant.components.open_meteo.const import CONF_FORECAST_DAYS, DOMAIN
+from homeassistant.components.open_meteo.const import (
+    CONF_FORECAST_DAYS,
+    DEFAULT_FORECAST_DAYS,
+    DOMAIN,
+    FORECAST_DAY_LIMITS,
+)
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ZONE
@@ -14,7 +19,7 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_user_flow(hass: HomeAssistant) -> None:
-    """Test the full user configuration flow."""
+    """Test the full user configuration flow with the default forecast limit."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -30,6 +35,57 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "test home"
     assert result2.get("data") == {CONF_ZONE: ENTITY_ID_HOME}
+    assert result2.get("options") == {CONF_FORECAST_DAYS: DEFAULT_FORECAST_DAYS}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize("forecast_days", list(FORECAST_DAY_LIMITS))
+async def test_user_flow_forecast_days(hass: HomeAssistant, forecast_days: str) -> None:
+    """Test the forecast limit chosen during setup is stored in options."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ZONE: ENTITY_ID_HOME, CONF_FORECAST_DAYS: forecast_days},
+    )
+
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    assert result2.get("data") == {CONF_ZONE: ENTITY_ID_HOME}
+    assert result2.get("options") == {CONF_FORECAST_DAYS: forecast_days}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "invalid_choice",
+    [
+        pytest.param("unsupported", id="unknown-choice"),
+        pytest.param("-1", id="negative-choice"),
+        pytest.param(3, id="wrong-type"),
+    ],
+)
+async def test_user_flow_invalid_forecast_days(
+    hass: HomeAssistant, invalid_choice: str | int
+) -> None:
+    """Test an unsupported setup choice is rejected and can be corrected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_ZONE: ENTITY_ID_HOME, CONF_FORECAST_DAYS: invalid_choice},
+        )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ZONE: ENTITY_ID_HOME, CONF_FORECAST_DAYS: "3"},
+    )
+
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    assert result2.get("options") == {CONF_FORECAST_DAYS: "3"}
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

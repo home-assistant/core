@@ -29,6 +29,17 @@ from .const import (
 )
 
 
+def _forecast_days_selector() -> SelectSelector:
+    """Return the selector for the daily forecast limit."""
+    return SelectSelector(
+        SelectSelectorConfig(
+            options=list(FORECAST_DAY_LIMITS),
+            mode=SelectSelectorMode.DROPDOWN,
+            translation_key=CONF_FORECAST_DAYS,
+        )
+    )
+
+
 class OpenMeteoFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for OpenMeteo."""
 
@@ -54,6 +65,7 @@ class OpenMeteoFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=state.name if state else "Open-Meteo",
                 data={CONF_ZONE: user_input[CONF_ZONE]},
+                options={CONF_FORECAST_DAYS: user_input[CONF_FORECAST_DAYS]},
             )
 
         return self.async_show_form(
@@ -63,6 +75,9 @@ class OpenMeteoFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_ZONE): EntitySelector(
                         EntitySelectorConfig(domain=ZONE_DOMAIN),
                     ),
+                    vol.Required(
+                        CONF_FORECAST_DAYS, default=DEFAULT_FORECAST_DAYS
+                    ): _forecast_days_selector(),
                 }
             ),
         )
@@ -95,13 +110,7 @@ class OpenMeteoOptionsFlow(OptionsFlowWithReload):
                 {
                     vol.Required(
                         CONF_FORECAST_DAYS, default=forecast_days
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=list(FORECAST_DAY_LIMITS),
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key=CONF_FORECAST_DAYS,
-                        )
-                    ),
+                    ): _forecast_days_selector(),
                 }
             ),
         )

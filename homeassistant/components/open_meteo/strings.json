@@ -6,9 +6,10 @@
     "step": {
       "user": {
         "data": {
+          "forecast_days": "Daily forecast limit",
           "zone": "Zone"
         },
-        "description": "Select location to use for weather forecasting"
+        "description": "Select location to use for weather forecasting and how many available daily forecast entries to return. This does not change the hourly forecast or the data downloaded from Open-Meteo."
       }
     }
   },
