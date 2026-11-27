@@ -125,7 +125,7 @@ from .capabilities import (
     AlexaTimeHoldController,
     AlexaToggleController,
 )
-from .const import CONF_DISPLAY_CATEGORIES
+from .const import CONF_DISPLAY_CATEGORIES, CONF_EXPOSE_POWER_CONTROLLER
 
 if TYPE_CHECKING:
     from .config import AbstractConfig
@@ -537,7 +537,11 @@ class ClimateCapabilities(AlexaEntity):
         supported_features = self.entity.attributes.get(
             EntityStateAttribute.SUPPORTED_FEATURES, 0
         )
-        if (
+        expose_power_controller = (
+            self.entity.domain != CLIMATE_DOMAIN
+            or self.entity_conf.get(CONF_EXPOSE_POWER_CONTROLLER, True)
+        )
+        if expose_power_controller and (
             (
                 self.entity.domain == CLIMATE_DOMAIN
                 and climate.HVACMode.OFF
