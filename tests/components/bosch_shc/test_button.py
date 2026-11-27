@@ -6,10 +6,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.bosch_shc.const import DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     micromodule_dimmer_device,
@@ -19,6 +20,7 @@ from .conftest import (
     smart_plug_compact_device,
     smart_plug_device,
     smoke_detector_device,
+    water_alarm_system_device,
 )
 
 ENTITY_ID = "button.smoke_detector_start_self_test"
@@ -253,3 +255,43 @@ async def test_dimmer_preview_buttons_disabled_by_default(
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("mock_session")
+async def test_no_water_alarm_mute_without_system(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Without a water alarm system there is no water alarm mute button."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert entity_registry.async_get("button.water_alarm_system_mute_alarm") is None
+
+
+async def test_water_alarm_mute_button(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """The mute button sits on the water alarm system's device and mutes it."""
+    mock_session.water_alarm_system = water_alarm_system_device()
+    await setup_integration(hass, mock_config_entry)
+
+    entry = entity_registry.async_get("button.water_alarm_system_mute_alarm")
+    assert entry is not None
+    assert entry.unique_id == "test-mac_com.bosch.tt.wateralarm.system_mute"
+    device = device_registry.async_get(entry.device_id)
+    assert device is not None
+    assert device.identifiers == {(DOMAIN, "com.bosch.tt.wateralarm.system")}
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: "button.water_alarm_system_mute_alarm"},
+        blocking=True,
+    )
+
+    mock_session.water_alarm_system.mute.assert_called_once_with()

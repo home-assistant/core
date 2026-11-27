@@ -45,6 +45,9 @@
   "device": {
     "intrusion_system": {
       "name": "Alarm system"
+    },
+    "water_alarm_system": {
+      "name": "Water alarm system"
     }
   },
   "entity": {
@@ -98,6 +101,9 @@
       },
       "smoke_test": {
         "name": "Start self-test"
+      },
+      "water_alarm_mute": {
+        "name": "Mute alarm"
       }
     },
     "event": {
