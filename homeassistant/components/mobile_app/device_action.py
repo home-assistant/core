@@ -13,15 +13,15 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from .const import DOMAIN
+from .const import CONF_DATA, CONF_MESSAGE, CONF_TITLE, DOMAIN
 from .util import get_notify_service, supports_push, webhook_id_from_device_id
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_TYPE): "notify",
-        probatio.Required(NotifyServiceArgument.MESSAGE): cv.template,
-        probatio.Optional(NotifyServiceArgument.TITLE): cv.template,
-        probatio.Optional(NotifyServiceArgument.DATA): cv.template_complex,
+        probatio.Required(CONF_MESSAGE): cv.template,
+        probatio.Optional(CONF_TITLE): cv.template,
+        probatio.Optional(CONF_DATA): cv.template_complex,
     }
 )
 
@@ -60,10 +60,10 @@ async def async_call_action_from_config(
     service_data: dict[str, Any] = {NotifyServiceArgument.TARGET: webhook_id}
 
     # Render it here because we have access to variables here.
-    for key in (
-        NotifyServiceArgument.MESSAGE,
-        NotifyServiceArgument.TITLE,
-        NotifyServiceArgument.DATA,
+    for key, field in (
+        (CONF_MESSAGE, NotifyServiceArgument.MESSAGE),
+        (CONF_TITLE, NotifyServiceArgument.TITLE),
+        (CONF_DATA, NotifyServiceArgument.DATA),
     ):
         if key not in config:
             continue
@@ -71,7 +71,7 @@ async def async_call_action_from_config(
         value_template = config[key]
 
         try:
-            service_data[key] = template.render_complex(value_template, variables)
+            service_data[field] = template.render_complex(value_template, variables)
         except TemplateError as err:
             raise InvalidDeviceAutomationConfig(
                 f"Error rendering {key}: {err}"
@@ -92,8 +92,8 @@ async def async_get_action_capabilities(
     return {
         "extra_fields": probatio.Schema(
             {
-                probatio.Required(NotifyServiceArgument.MESSAGE): str,
-                probatio.Optional(NotifyServiceArgument.TITLE): str,
+                probatio.Required(CONF_MESSAGE): str,
+                probatio.Optional(CONF_TITLE): str,
             }
         )
     }

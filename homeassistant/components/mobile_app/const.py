@@ -12,8 +12,11 @@ STORAGE_VERSION_MINOR = 2
 STORAGE_SAVE_DELAY_SECONDS = 10
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
+CONF_DATA = "data"
+CONF_MESSAGE = "message"
 CONF_REMOTE_UI_URL = "remote_ui_url"
 CONF_SECRET = "secret"
+CONF_TITLE = "title"
 CONF_USER_ID = "user_id"
 
 DATA_CONFIG_ENTRIES = "config_entries"
