@@ -261,6 +261,16 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         ),
     ),
     VeSyncSensorEntityDescription(
+        key="drying_time_remaining",
+        translation_key="drying_time_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        value_fn=lambda device: device.state.drying_mode_time_remain,
+        exists_fn=lambda device: (
+            is_humidifier(device) and "drying_mode" in device.features
+        ),
+    ),
+    VeSyncSensorEntityDescription(
         key="cook_status",
         translation_key="cook_status",
         device_class=SensorDeviceClass.ENUM,

@@ -6,6 +6,7 @@ import logging
 from typing import override
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.const import DryingModes
 from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.binary_sensor import (
@@ -17,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import is_air_fryer, rgetattr
+from .common import is_air_fryer, is_humidifier, rgetattr
 from .const import VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -57,6 +58,15 @@ SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
         translation_key="sync_chambers",
         is_on=lambda device: device.state.sync_chambers,
         exists_fn=lambda device: is_air_fryer(device) and device.is_dual_chamber,
+    ),
+    VeSyncBinarySensorEntityDescription(
+        key="drying",
+        translation_key="drying",
+        is_on=lambda device: device.state.drying_mode_status == DryingModes.RUNNING,
+        device_class=BinarySensorDeviceClass.RUNNING,
+        exists_fn=lambda device: (
+            is_humidifier(device) and "drying_mode" in device.features
+        ),
     ),
 )
 

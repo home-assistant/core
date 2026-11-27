@@ -613,6 +613,20 @@
     }),
   ])
 # ---
+# name: test_sensor_state[Humidifier 6000s][binary_sensor.humidifier_6000s_drying]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s Drying',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.humidifier_6000s_drying',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_sensor_state[Humidifier 6000s][binary_sensor.humidifier_6000s_low_water]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -743,6 +757,41 @@
       'supported_features': 0,
       'translation_key': 'water_tank_lifted',
       'unique_id': '6000s-details.water_tank_lifted',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', '6000s')]>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.humidifier_6000s_drying',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Drying',
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+      'original_icon': None,
+      'original_name': 'Drying',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'drying',
+      'unique_id': '6000s-drying',
       'unit_of_measurement': None,
     }),
   ])
@@ -881,6 +930,20 @@
     }),
   ])
 # ---
+# name: test_sensor_state[Humidifier Sprout][binary_sensor.humidifier_sprout_drying]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Sprout Drying',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.humidifier_sprout_drying',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_sensor_state[Humidifier Sprout][binary_sensor.humidifier_sprout_low_water]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -1011,6 +1074,41 @@
       'supported_features': 0,
       'translation_key': 'water_tank_lifted',
       'unique_id': 'sprout-humidifier-details.water_tank_lifted',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-humidifier')]>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.humidifier_sprout_drying',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Drying',
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+      'original_icon': None,
+      'original_name': 'Drying',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'drying',
+      'unique_id': 'sprout-humidifier-drying',
       'unit_of_measurement': None,
     }),
   ])
