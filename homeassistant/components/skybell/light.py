@@ -49,7 +49,7 @@ class SkybellLight(SkybellEntity, LightEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        await self._device.async_set_setting(ATTR_BRIGHTNESS, 0)
+        await self._device.async_set_setting(BRIGHTNESS, 0)
 
     @property
     @override

@@ -20,7 +20,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.proxmoxve.coordinator import DEFAULT_UPDATE_INTERVAL
+from homeassistant.components.proxmoxve.coordinator import STATUS_UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -90,7 +90,7 @@ async def test_refresh_exceptions(
 
     mock_proxmox_client.cluster.resources.side_effect = exception
 
-    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    freezer.tick(STATUS_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

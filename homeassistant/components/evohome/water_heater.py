@@ -51,22 +51,25 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    coordinator = hass.data[EVOHOME_DATA].coordinator
-    tcs = hass.data[EVOHOME_DATA].tcs
+    entities: list[EvoDHW] = []
 
-    assert tcs.hotwater is not None  # mypy check
+    for coordinator in hass.data[EVOHOME_DATA].locations:
+        if (dhw := coordinator.tcs.hotwater) is None:
+            continue
 
-    _LOGGER.debug(
-        "Adding: DhwController (%s), id=%s",
-        tcs.hotwater.type,
-        tcs.hotwater.id,
-    )
+        _LOGGER.debug(
+            "Adding: %s, id=%s, name=%s, location_id=%s",
+            dhw.type,
+            dhw.id,
+            f"{coordinator.loc.name} DHW",
+            coordinator.loc.id,
+        )
+        entities.append(EvoDHW(coordinator, dhw))
 
-    entity = EvoDHW(coordinator, tcs.hotwater)
+    async_add_entities(entities)
 
-    async_add_entities([entity])
-
-    await entity.update_attrs()
+    for entity in entities:
+        await entity.update_attrs()
 
 
 class EvoDHW(EvoChild, WaterHeaterEntity):

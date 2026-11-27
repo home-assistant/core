@@ -69,43 +69,47 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    coordinator = hass.data[EVOHOME_DATA].coordinator
-    tcs = hass.data[EVOHOME_DATA].tcs
+    entities: list[EvoController | EvoZone] = []
 
-    _LOGGER.debug(
-        "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
-        tcs.model,
-        tcs.id,
-        tcs.location.name,
-        hass.data[EVOHOME_DATA].loc_idx,
-    )
+    for coordinator in hass.data[EVOHOME_DATA].locations:
+        tcs = coordinator.tcs
 
-    entities: list[EvoController | EvoZone] = [EvoController(coordinator, tcs)]
+        _LOGGER.debug(
+            "Adding: Controller (%s), id=%s, name=%s, location_id=%s",
+            tcs.model,
+            tcs.id,
+            tcs.location.name,
+            coordinator.loc.id,
+        )
 
-    for zone in tcs.zones:
-        if is_valid_zone(zone):
-            _LOGGER.debug(
-                "Adding: %s (%s), id=%s, name=%s",
-                zone.type,
-                zone.model,
-                zone.id,
-                zone.name,
-            )
+        entities.append(EvoController(coordinator, tcs))
 
-            new_entity = EvoZone(coordinator, zone)
-            entities.append(new_entity)
+        for zone in tcs.zones:
+            if is_valid_zone(zone):
+                _LOGGER.debug(
+                    "Adding: %s (%s), id=%s, name=%s, location_id=%s",
+                    zone.type,
+                    zone.model,
+                    zone.id,
+                    zone.name,
+                    coordinator.loc.id,
+                )
 
-        else:
-            _LOGGER.warning(
-                (
-                    "Ignoring: %s (%s), id=%s, name=%s: unknown/invalid zone type, "
-                    "report as an issue if you feel this zone type should be supported"
-                ),
-                zone.type,
-                zone.model,
-                zone.id,
-                zone.name,
-            )
+                entities.append(EvoZone(coordinator, zone))
+
+            else:
+                _LOGGER.warning(
+                    (
+                        "Ignoring: %s (%s), id=%s, name=%s, location_id=%s: "
+                        "unknown/invalid zone type, report as an issue if you feel "
+                        "this zone type should be supported"
+                    ),
+                    zone.type,
+                    zone.model,
+                    zone.id,
+                    zone.name,
+                    coordinator.loc.id,
+                )
 
     async_add_entities(entities)
 

@@ -41,7 +41,7 @@ bluetooth = [
   "bluetooth-adapters==2.4.0",
   "bluetooth-auto-recovery==1.6.4",
   "bluetooth-data-tools==1.29.24",
-  "habluetooth==7.2.0",
+  "habluetooth==7.2.1",
   "serialx==1.15.1",
 ]
 infrared = ["infrared-protocols==10.8.0"]

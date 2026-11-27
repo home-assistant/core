@@ -17,6 +17,7 @@ from kasa import (
     KasaException,
 )
 from kasa.httpclient import get_cookie_jar
+from kasa.smartcam.smartcammodule import SmartCamModule
 
 from homeassistant import config_entries
 from homeassistant.components import network
@@ -60,6 +61,10 @@ from .coordinator import TPLinkConfigEntry, TPLinkData, TPLinkDataUpdateCoordina
 from .services import async_setup_services
 
 DISCOVERY_INTERVAL = timedelta(minutes=15)
+UPDATE_INTERVAL = timedelta(seconds=5)
+# Battery-powered cameras sleep between events and every poll wakes them up,
+# so poll them far less often to avoid draining the battery.
+UPDATE_INTERVAL_BATTERY_POWERED = timedelta(minutes=10)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
@@ -232,8 +237,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> No
             },
         )
 
+    update_interval = (
+        UPDATE_INTERVAL_BATTERY_POWERED
+        if SmartCamModule.SmartCamBattery in device.modules
+        else UPDATE_INTERVAL
+    )
     parent_coordinator = TPLinkDataUpdateCoordinator(
-        hass, device, timedelta(seconds=5), entry
+        hass, device, update_interval, entry
     )
 
     camera_creds: Credentials | None = None

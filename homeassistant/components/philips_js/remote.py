@@ -5,10 +5,9 @@ from collections.abc import Iterable
 from typing import Any, override
 
 from homeassistant.components.remote import (
-    ATTR_DELAY_SECS,
-    ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     RemoteEntity,
+    RemoteServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -92,8 +91,8 @@ class PhilipsTVRemote(PhilipsJsEntity, RemoteEntity):
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
-        num_repeats = kwargs[ATTR_NUM_REPEATS]
-        delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
+        num_repeats = kwargs[RemoteServiceArgument.NUM_REPEATS]
+        delay = kwargs.get(RemoteServiceArgument.DELAY_SECS, DEFAULT_DELAY_SECS)
 
         for _ in range(num_repeats):
             for single_command in command:

@@ -52,6 +52,9 @@
       "domestic_hot_water_circulation_pump": {
         "name": "DHW circulation pump"
       },
+      "domestic_hot_water_hygiene": {
+        "name": "DHW legionella protection"
+      },
       "domestic_hot_water_pump": {
         "name": "DHW pump"
       },
@@ -213,6 +216,9 @@
       },
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"
+      },
+      "boiler_target_temperature": {
+        "name": "Boiler target temperature"
       },
       "boiler_temperature": {
         "name": "Boiler temperature"

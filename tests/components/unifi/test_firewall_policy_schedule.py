@@ -14,12 +14,22 @@ from pytest_homeassistant.test_util.aiohttp import (
 )
 from yarl import URL
 
+from homeassistant.components.date import (
+    DOMAIN as DATE_DOMAIN,
+    DateService,
+    DateServiceArgument,
+)
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SelectService,
     SelectServiceArgument,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.components.time import (
+    DOMAIN as TIME_DOMAIN,
+    TimeService,
+    TimeServiceArgument,
+)
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
 from homeassistant.components.unifi.coordinator import POLL_INTERVAL
 from homeassistant.const import CONF_HOST, CONTENT_TYPE_JSON, TargetKey
@@ -39,6 +49,9 @@ CUSTOM = {
     "time_range_end": "06:00",
 }
 SELECT = "select.unifi_network_block_streaming_schedule"
+START_TIME = "time.unifi_network_block_streaming_schedule_start"
+END_TIME = "time.unifi_network_block_streaming_schedule_end"
+START_DATE = "date.unifi_network_block_streaming_schedule_start_date"
 SWITCH = "switch.unifi_network_block_streaming"
 
 
@@ -155,18 +168,44 @@ async def test_schedule_set_step_by_step(
         {SelectServiceArgument.OPTION: "one_time"},
     )
     assert hass.states.get(SELECT).state == "one_time"
+    # One time is dated today by the controller's clock, already the 16th.
+    assert hass.states.get(START_DATE).state == "2026-01-16"
+
+    await _call(
+        hass,
+        DATE_DOMAIN,
+        DateService.SET_VALUE,
+        START_DATE,
+        {DateServiceArgument.DATE: "2026-01-17"},
+    )
+    await _call(
+        hass,
+        TIME_DOMAIN,
+        TimeService.SET_VALUE,
+        START_TIME,
+        {TimeServiceArgument.TIME: "22:15:30"},
+    )
+    await _call(
+        hass,
+        TIME_DOMAIN,
+        TimeService.SET_VALUE,
+        END_TIME,
+        {TimeServiceArgument.TIME: "07:00:00"},
+    )
     await _call(hass, SWITCH_DOMAIN, SwitchService.TURN_ON, SWITCH)
 
-    # One time is dated today by the controller's clock, already the 16th.
-    assert len(controller.puts) == 2
+    assert len(controller.puts) == 5
     assert controller.policy["enabled"] is True
     assert controller.policy["schedule"] == {
         "mode": "ONE_TIME_ONLY",
-        "date": "2026-01-16",
-        "time_range_start": "21:00",
-        "time_range_end": "08:00",
+        "date": "2026-01-17",
+        "time_range_start": "22:15",
+        "time_range_end": "07:00",
     }
     assert hass.states.get(SELECT).state == "one_time"
+    assert hass.states.get(START_DATE).state == "2026-01-17"
+    assert hass.states.get(START_TIME).state == "22:15:00"
+    assert hass.states.get(END_TIME).state == "07:00:00"
     assert hass.states.get(SWITCH).state == "on"
 
 
@@ -197,6 +236,9 @@ async def test_schedule_entities_follow_polling(
     await hass.async_block_till_done()
 
     assert hass.states.get(SELECT).state == "one_time"
+    assert hass.states.get(START_DATE).state == "2026-02-01"
+    assert hass.states.get(START_TIME).state == "19:00:00"
+    assert hass.states.get(END_TIME).state == "06:30:00"
 
 
 @pytest.mark.parametrize("json_response", [True, False])
@@ -315,6 +357,18 @@ REJECTION = {
             SelectService.SELECT_OPTION,
             SELECT,
             {SelectServiceArgument.OPTION: "always"},
+        ),
+        (
+            TIME_DOMAIN,
+            TimeService.SET_VALUE,
+            START_TIME,
+            {TimeServiceArgument.TIME: "20:30:00"},
+        ),
+        (
+            DATE_DOMAIN,
+            DateService.SET_VALUE,
+            "date.unifi_network_block_streaming_schedule_end_date",
+            {DateServiceArgument.DATE: "2026-02-28"},
         ),
         (SWITCH_DOMAIN, SwitchService.TURN_OFF, SWITCH, {}),
     ],

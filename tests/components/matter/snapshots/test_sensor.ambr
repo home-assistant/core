@@ -1582,7 +1582,7 @@
     'state': '2024-12-01T02:48:06+00:00',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_active_current-entry]
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1594,7 +1594,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F6-MatterNodeDevice'), ('matter', 'serial_serial_1014')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000050-MatterNodeDevice'), ('matter', 'serial_serial_80')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1623,11 +1623,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current',
-    'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-0-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unique_id': '00000000000004D2-0000000000000050-MatterNodeDevice-0-ElectricalPowerMeasurementActiveCurrent-144-5',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_active_current-state]
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_active_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
@@ -1640,10 +1640,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.037',
+    'state': 'unknown',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_boot_reason-entry]
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_boot_reason-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1663,7 +1663,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F6-MatterNodeDevice'), ('matter', 'serial_serial_1014')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000050-MatterNodeDevice'), ('matter', 'serial_serial_80')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1686,11 +1686,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boot_reason',
-    'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-0-GeneralDiagnosticsBootReason-51-4',
+    'unique_id': '00000000000004D2-0000000000000050-MatterNodeDevice-0-GeneralDiagnosticsBootReason-51-4',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_boot_reason-state]
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_boot_reason-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -1713,7 +1713,7 @@
     'state': 'power_on_reboot',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_current_switch_position_4-entry]
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_current_switch_position_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1725,7 +1725,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F6-MatterNodeDevice'), ('matter', 'serial_serial_1014')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000050-MatterNodeDevice'), ('matter', 'serial_serial_80')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1748,11 +1748,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-4-SwitchCurrentPosition-59-1',
+    'unique_id': '00000000000004D2-0000000000000050-MatterNodeDevice-4-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_current_switch_position_4-state]
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_current_switch_position_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (4)',
@@ -1766,7 +1766,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_current_switch_position_5-entry]
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_current_switch_position_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1778,7 +1778,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F6-MatterNodeDevice'), ('matter', 'serial_serial_1014')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000050-MatterNodeDevice'), ('matter', 'serial_serial_80')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1801,11 +1801,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-5-SwitchCurrentPosition-59-1',
+    'unique_id': '00000000000004D2-0000000000000050-MatterNodeDevice-5-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_current_switch_position_5-state]
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_current_switch_position_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (5)',
@@ -1819,7 +1819,113 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_energy-entry]
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_current_switch_position_6-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000050-MatterNodeDevice'), ('matter', 'serial_serial_80')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_6',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current switch position (6)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (6)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000050-MatterNodeDevice-6-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_current_switch_position_6-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (6)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_6',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_current_switch_position_7-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000050-MatterNodeDevice'), ('matter', 'serial_serial_80')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_7',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current switch position (7)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (7)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000050-MatterNodeDevice-7-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_current_switch_position_7-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (7)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_7',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1831,7 +1937,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F6-MatterNodeDevice'), ('matter', 'serial_serial_1014')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000050-MatterNodeDevice'), ('matter', 'serial_serial_80')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1860,11 +1966,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-0-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
+    'unique_id': '00000000000004D2-0000000000000050-MatterNodeDevice-0-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_energy-state]
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
@@ -1874,6 +1980,580 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aqara_smart_wall_switch_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_reboot_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000050-MatterNodeDevice'), ('matter', 'serial_serial_80')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_reboot_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reboot count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reboot count',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reboot_count',
+    'unique_id': '00000000000004D2-0000000000000050-MatterNodeDevice-0-GeneralDiagnosticsRebootCount-51-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_reboot_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Reboot count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_reboot_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000050-MatterNodeDevice'), ('matter', 'serial_serial_80')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000050-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000050-MatterNodeDevice'), ('matter', 'serial_serial_80')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000050-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'TestNetwork',
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000050-MatterNodeDevice'), ('matter', 'serial_serial_80')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000050-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Thread routing role',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'router',
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000050-MatterNodeDevice'), ('matter', 'serial_serial_80')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Uptime',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uptime',
+    'unique_id': '00000000000004D2-0000000000000050-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_eu_4105][sensor.aqara_smart_wall_switch_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T13:50:26+00:00',
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_active_current_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F6-MatterNodeDevice'), ('matter', 'serial_serial_1014')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_active_current_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Active current',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_current',
+    'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-0-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_active_current_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Active current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_active_current_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.037',
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_boot_reason_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unspecified',
+        'power_on_reboot',
+        'brown_out_reset',
+        'software_watchdog_reset',
+        'hardware_watchdog_reset',
+        'software_update_completed',
+        'software_reset',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F6-MatterNodeDevice'), ('matter', 'serial_serial_1014')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_boot_reason_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Boot reason',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Boot reason',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'boot_reason',
+    'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-0-GeneralDiagnosticsBootReason-51-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_boot_reason_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Boot reason',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unspecified',
+        'power_on_reboot',
+        'brown_out_reset',
+        'software_watchdog_reset',
+        'hardware_watchdog_reset',
+        'software_update_completed',
+        'software_reset',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_boot_reason_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'power_on_reboot',
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_current_switch_position_4_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F6-MatterNodeDevice'), ('matter', 'serial_serial_1014')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_4_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current switch position (4)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (4)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-4-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_current_switch_position_4_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (4)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_4_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_current_switch_position_5_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F6-MatterNodeDevice'), ('matter', 'serial_serial_1014')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_5_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current switch position (5)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (5)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-5-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_current_switch_position_5_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (5)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_5_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_energy_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F6-MatterNodeDevice'), ('matter', 'serial_serial_1014')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aqara_smart_wall_switch_energy_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-0-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_energy_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_smart_wall_switch_energy_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1941,7 +2621,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_reboot_count-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_reboot_count_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1957,7 +2637,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_reboot_count',
+    'entity_id': 'sensor.aqara_smart_wall_switch_reboot_count_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1980,21 +2660,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_reboot_count-state]
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_reboot_count_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Reboot count',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_reboot_count',
+    'entity_id': 'sensor.aqara_smart_wall_switch_reboot_count_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_thread_channel-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_thread_channel_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2008,7 +2688,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_channel',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_channel_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2031,20 +2711,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_thread_channel-state]
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_thread_channel_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Thread channel',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_channel',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_channel_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_thread_network_name-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_thread_network_name_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2058,7 +2738,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_network_name',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_network_name_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2081,20 +2761,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_thread_network_name-state]
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_thread_network_name_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Thread network name',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_network_name',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_network_name_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'home-assistant',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_thread_routing_role-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_thread_routing_role_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2119,7 +2799,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_routing_role',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_routing_role_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2142,7 +2822,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_thread_routing_role-state]
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_thread_routing_role_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -2159,14 +2839,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_routing_role',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_routing_role_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'reed',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_uptime-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_uptime_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2180,7 +2860,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_uptime',
+    'entity_id': 'sensor.aqara_smart_wall_switch_uptime_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2203,21 +2883,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_uptime-state]
+# name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_uptime_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Uptime',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_uptime',
+    'entity_id': 'sensor.aqara_smart_wall_switch_uptime_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-12-06T19:32:31+00:00',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_active_current_2-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_active_current_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2233,7 +2913,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_active_current_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_active_current_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2262,7 +2942,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_active_current_2-state]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_active_current_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
@@ -2271,14 +2951,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_active_current_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_active_current_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.054',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_boot_reason_2-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_boot_reason_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2302,7 +2982,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_boot_reason_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_boot_reason_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2325,7 +3005,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_boot_reason_2-state]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_boot_reason_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -2341,14 +3021,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_boot_reason_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_boot_reason_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'software_reset',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_current_switch_position_4_2-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_current_switch_position_4_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2364,7 +3044,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_4_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_4_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2387,21 +3067,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_current_switch_position_4_2-state]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_current_switch_position_4_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (4)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_4_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_4_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_current_switch_position_5_2-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_current_switch_position_5_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2417,7 +3097,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_5_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_5_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2440,21 +3120,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_current_switch_position_5_2-state]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_current_switch_position_5_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (5)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_5_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_5_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_energy_2-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_energy_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2470,7 +3150,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.aqara_smart_wall_switch_energy_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_energy_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2499,7 +3179,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_energy_2-state]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_energy_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
@@ -2508,7 +3188,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_energy_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_energy_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2576,7 +3256,7 @@
     'state': '3.0',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_reboot_count_2-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_reboot_count_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2592,7 +3272,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_reboot_count_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_reboot_count_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2615,21 +3295,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_reboot_count_2-state]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_reboot_count_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Reboot count',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_reboot_count_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_reboot_count_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_thread_channel_2-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_thread_channel_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2643,7 +3323,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_channel_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_channel_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2666,20 +3346,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_thread_channel_2-state]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_thread_channel_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Thread channel',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_channel_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_channel_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_thread_network_name_2-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_thread_network_name_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2693,7 +3373,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_network_name_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_network_name_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2716,20 +3396,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_thread_network_name_2-state]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_thread_network_name_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Thread network name',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_network_name_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_network_name_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'home-assistant',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_thread_routing_role_2-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_thread_routing_role_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2754,7 +3434,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_routing_role_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_routing_role_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2777,7 +3457,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_thread_routing_role_2-state]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_thread_routing_role_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -2794,14 +3474,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_routing_role_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_routing_role_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'reed',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_uptime_2-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_uptime_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2815,7 +3495,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_uptime_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_uptime_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2838,21 +3518,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_uptime_2-state]
+# name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_uptime_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Uptime',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_uptime_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_uptime_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2025-01-01T13:55:50+00:00',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_active_current_3-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_active_current_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2868,7 +3548,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_active_current_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_active_current_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2897,7 +3577,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_active_current_3-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_active_current_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
@@ -2906,14 +3586,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_active_current_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_active_current_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.053',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_boot_reason_3-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_boot_reason_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2937,7 +3617,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_boot_reason_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_boot_reason_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2960,7 +3640,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_boot_reason_3-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_boot_reason_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -2976,14 +3656,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_boot_reason_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_boot_reason_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'software_reset',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_4_3-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_4_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2999,7 +3679,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_4_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_4_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3022,21 +3702,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_4_3-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_4_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (4)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_4_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_4_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_5_3-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_5_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3052,7 +3732,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_5_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_5_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3075,21 +3755,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_5_3-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_5_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (5)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_5_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_5_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_6-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_6_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3105,7 +3785,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_6',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_6_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3128,21 +3808,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_6-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_6_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (6)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_6',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_6_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_7-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_7_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3158,7 +3838,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_7',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_7_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3181,21 +3861,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_7-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_7_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (7)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_7',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_7_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_energy_3-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_energy_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3211,7 +3891,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.aqara_smart_wall_switch_energy_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_energy_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3240,7 +3920,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_energy_3-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_energy_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
@@ -3249,7 +3929,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_energy_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_energy_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3317,7 +3997,7 @@
     'state': '3.0',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_reboot_count_3-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_reboot_count_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3333,7 +4013,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_reboot_count_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_reboot_count_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3356,21 +4036,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_reboot_count_3-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_reboot_count_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Reboot count',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_reboot_count_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_reboot_count_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_thread_channel_3-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_thread_channel_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3384,7 +4064,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_channel_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_channel_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3407,20 +4087,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_thread_channel_3-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_thread_channel_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Thread channel',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_channel_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_channel_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_thread_network_name_3-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_thread_network_name_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3434,7 +4114,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_network_name_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_network_name_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3457,20 +4137,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_thread_network_name_3-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_thread_network_name_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Thread network name',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_network_name_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_network_name_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'home-assistant',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_thread_routing_role_3-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_thread_routing_role_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3495,7 +4175,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_routing_role_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_routing_role_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3518,7 +4198,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_thread_routing_role_3-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_thread_routing_role_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -3535,14 +4215,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_thread_routing_role_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_thread_routing_role_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'reed',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_uptime_3-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_uptime_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3556,7 +4236,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_uptime_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_uptime_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3579,14 +4259,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_uptime_3-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_uptime_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Uptime',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_uptime_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_uptime_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

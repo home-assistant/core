@@ -5,10 +5,9 @@ from typing import Any, cast, override
 from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -85,12 +84,12 @@ class PositionableFibaroCover(FibaroEntity, CoverEntity):
     @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        self.set_level(cast(int, kwargs.get(ATTR_POSITION)))
+        self.set_level(cast(int, kwargs.get(CoverServiceArgument.POSITION)))
 
     @override
     def set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the slats to a specific position."""
-        self.set_level2(cast(int, kwargs.get(ATTR_TILT_POSITION)))
+        self.set_level2(cast(int, kwargs.get(CoverServiceArgument.TILT_POSITION)))
 
     @override
     def open_cover(self, **kwargs: Any) -> None:

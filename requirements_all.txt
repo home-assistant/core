@@ -80,7 +80,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.sunricher_dali
-PySrDaliGateway==0.21.0
+PySrDaliGateway==0.21.1
 
 # homeassistant.components.switchbot
 PySwitchbot==3.8.4
@@ -353,7 +353,7 @@ aiokef==0.2.16
 aiokem==1.0.1
 
 # homeassistant.components.librenms
-aiolibrenms==0.0.4
+aiolibrenms==0.0.5
 
 # homeassistant.components.libresync
 aiolibresync==0.5.3
@@ -527,7 +527,7 @@ aiowatttime==2024.6.0
 aiowebdav2==1.0.3
 
 # homeassistant.components.webostv
-aiowebostv==1.1.1
+aiowebostv==2.0.0
 
 # homeassistant.components.withings
 aiowithings==4.0.1
@@ -765,7 +765,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.11
 
 # homeassistant.components.bosch_smart_camera
-bosch-shc-camera-client==0.7.0
+bosch-shc-camera-client==0.8.3
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.6.27
@@ -1188,7 +1188,7 @@ getmac==0.9.6
 gios==7.1.1
 
 # homeassistant.components.glances
-glances-api==0.10.0
+glances-api==0.11.0
 
 # homeassistant.components.go2rtc
 go2rtc-client==0.4.0
@@ -1301,7 +1301,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.8
 
 # homeassistant.components.bluetooth
-habluetooth==7.2.0
+habluetooth==7.2.1
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1904,7 +1904,7 @@ openai==3.26.0
 openerz-api==0.3.0
 
 # homeassistant.components.openhome
-openhomedevice==2.5
+openhomedevice==2.8
 
 # homeassistant.components.openrgb
 openrgb-python==0.3.8
@@ -2085,7 +2085,7 @@ py-schluter==0.1.7
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.12.0
+py-synologydsm-api==2.12.2
 
 # homeassistant.components.unifi_access
 py-unifi-access==1.6.2
@@ -2976,7 +2976,7 @@ pyvlx==0.2.36
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==1.2.4
+pywaze==1.2.6
 
 # homeassistant.components.weatherflow
 pyweatherflowudp==1.7.0
@@ -3655,7 +3655,7 @@ zeversolar==0.3.2
 zha-quirks==2.5.0
 
 # homeassistant.components.zha
-zha==2.5.0
+zha==2.5.1
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.21

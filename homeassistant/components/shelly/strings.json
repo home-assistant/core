@@ -1002,7 +1002,6 @@
     "coiot_unconfigured": {
       "fix_flow": {
         "abort": {
-          "cannot_configure": "Failed to configure CoIoT on the device. Ensure the device is powered on and reachable.",
           "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
           "issue_ignored": "Issue ignored"
         },

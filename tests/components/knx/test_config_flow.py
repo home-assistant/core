@@ -952,6 +952,8 @@ async def test_tunneling_setup_for_multiple_found_gateways(
     assert tunnel_flow["type"] is FlowResultType.FORM
     assert tunnel_flow["step_id"] == "tunnel"
     assert not tunnel_flow["errors"]
+    gateway_selector = tunnel_flow["data_schema"].schema[CONF_KNX_GATEWAY]
+    assert gateway_selector.config["translation_key"] == "tunnel_gateway"
 
     result = await hass.config_entries.flow.async_configure(
         tunnel_flow["flow_id"],
@@ -1056,6 +1058,8 @@ async def test_tunneling_setup_tcp_endpoint_select(
     assert endpoint_flow["type"] is FlowResultType.FORM
     assert endpoint_flow["step_id"] == "tcp_tunnel_endpoint"
     assert not endpoint_flow["errors"]
+    endpoint_selector = endpoint_flow["data_schema"].schema[CONF_KNX_TUNNEL_ENDPOINT_IA]
+    assert endpoint_selector.config["translation_key"] == "tunnel_endpoint"
 
     result = await hass.config_entries.flow.async_configure(
         endpoint_flow["flow_id"],
@@ -1318,6 +1322,10 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup) -> None:
         )
     assert secure_knxkeys["type"] is FlowResultType.FORM
     assert secure_knxkeys["step_id"] == "knxkeys_tunnel_select"
+    endpoint_selector = secure_knxkeys["data_schema"].schema[
+        CONF_KNX_TUNNEL_ENDPOINT_IA
+    ]
+    assert endpoint_selector.config["translation_key"] == "tunnel_endpoint"
     secure_knxkeys = await hass.config_entries.flow.async_configure(
         secure_knxkeys["flow_id"],
         {CONF_KNX_TUNNEL_ENDPOINT_IA: CONF_KNX_AUTOMATIC},

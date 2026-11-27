@@ -5,6 +5,14 @@
         "default": "mdi:form-textbox-password"
       }
     },
+    "date": {
+      "firewall_policy_schedule_end_date": {
+        "default": "mdi:calendar-end"
+      },
+      "firewall_policy_schedule_start_date": {
+        "default": "mdi:calendar-start"
+      }
+    },
     "image": {
       "wlan_qr_code": {
         "default": "mdi:qrcode"
@@ -94,6 +102,14 @@
         "state": {
           "off": "mdi:wifi-off"
         }
+      }
+    },
+    "time": {
+      "firewall_policy_schedule_end": {
+        "default": "mdi:clock-end"
+      },
+      "firewall_policy_schedule_start": {
+        "default": "mdi:clock-start"
       }
     }
   },
