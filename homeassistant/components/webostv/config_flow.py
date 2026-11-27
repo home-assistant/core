@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from typing import Any, Self, override
 from urllib.parse import urlparse
 
-from aiowebostv import WebOsClient, WebOsTvPairError
+from aiowebostv import WebOsClient, WebOsTvConnectionError, WebOsTvPairError
 import probatio
 
 from homeassistant.config_entries import (
@@ -24,7 +24,7 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
-from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
+from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN
 from .coordinator import WebOsTvConfigEntry
 from .helpers import get_sources
 
@@ -100,7 +100,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     model_name = client.tv_info.system.get("modelName")
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
-            except WEBOSTV_EXCEPTIONS:
+            except WebOsTvConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(uuid, raise_on_progress=False)
@@ -165,7 +165,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     client_key = client.client_key
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
-            except WEBOSTV_EXCEPTIONS:
+            except WebOsTvConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 reauth_entry = self._get_reauth_entry()
@@ -191,7 +191,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     client_key = client.client_key
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
-            except WEBOSTV_EXCEPTIONS:
+            except WebOsTvConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(uuid)
