@@ -7,13 +7,11 @@ from xknx.devices import Cover as XknxCover
 
 from homeassistant import config_entries
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
+    CoverServiceArgument,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -120,11 +118,17 @@ class _KnxCover(CoverEntity, RestoreEntity):
             last_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
             return
-        if (position := last_state.attributes.get(ATTR_CURRENT_POSITION)) is not None:
+        if (
+            position := last_state.attributes.get(
+                CoverEntityStateAttribute.CURRENT_POSITION
+            )
+        ) is not None:
             # In KNX 0 is open, 100 is closed.
             self._device.travelcalculator.set_position(100 - position)
         if (
-            tilt_position := last_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
+            tilt_position := last_state.attributes.get(
+                CoverEntityStateAttribute.CURRENT_TILT_POSITION
+            )
         ) is not None:
             self._device.angle.value = 100 - tilt_position
 
@@ -187,7 +191,7 @@ class _KnxCover(CoverEntity, RestoreEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        knx_position = 100 - kwargs[ATTR_POSITION]
+        knx_position = 100 - kwargs[CoverServiceArgument.POSITION]
         await self._device.set_position(knx_position)
 
     @override
@@ -206,7 +210,7 @@ class _KnxCover(CoverEntity, RestoreEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        knx_tilt_position = 100 - kwargs[ATTR_TILT_POSITION]
+        knx_tilt_position = 100 - kwargs[CoverServiceArgument.TILT_POSITION]
         await self._device.set_angle(knx_tilt_position)
 
     @override
