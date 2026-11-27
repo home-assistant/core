@@ -4,7 +4,7 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.components.infrared import InfraredConsumerReconfigureConfigFlow
+from homeassistant.components.infrared import InfraredConsumerConfigFlow
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
@@ -16,7 +16,7 @@ from homeassistant.helpers.selector import (
 from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN, AlphaBidetModel
 
 
-class AlphaBidetIrConfigFlow(InfraredConsumerReconfigureConfigFlow, domain=DOMAIN):
+class AlphaBidetIrConfigFlow(InfraredConsumerConfigFlow, domain=DOMAIN):
     """Handle config flow for Alpha Bidet IR."""
 
     VERSION = 1
