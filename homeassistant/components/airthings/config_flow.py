@@ -21,7 +21,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     }
 )
 
-URL_API_INTEGRATION = {"url": "https://consumer-api-doc.airthings.com/"}
+URL_API_INTEGRATION = {"url": "https://consumer-api-doc.airthings.com/dashboard"}
 
 
 class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
