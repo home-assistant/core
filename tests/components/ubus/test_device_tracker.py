@@ -1544,6 +1544,7 @@ async def test_timed_out_tick_reuses_in_flight_poll(
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a tick that times out re-awaits the in-flight poll on the next tick.
 
@@ -1551,71 +1552,75 @@ async def test_timed_out_tick_reuses_in_flight_poll(
     second poll for the same router would concurrently mutate its ubus
     session and lease state.
 
-    The intervals are shortened and the refreshes are driven by the
-    coordinator's own timers on the real clock, so the overlapping tick is
-    scheduled through Home Assistant rather than by calling the
-    coordinator.
+    The request timeout is zero for the ticks, so their timeouts are
+    deterministic on the frozen clock: the poll is held in the executor
+    between ticks and released before the final one.
     """
     _mock, ubus = mock_ubus_by_host
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    with (
-        patch(
-            "homeassistant.components.ubus.coordinator.UPDATE_INTERVAL",
-            timedelta(seconds=2),
-        ),
-        patch(
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_HOME
+    assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 1
+
+    # The next poll blocks in the executor until it is released; the
+    # request timeout is zero for the ticks, so their timeouts are
+    # deterministic on the frozen clock.
+    release = threading.Event()
+
+    def _blocked_clients(interface: str) -> dict:
+        release.wait()
+        return {"clients": {MAC_PHONE: {"authorized": True}}}
+
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = _blocked_clients
+
+    async def _run_tick() -> None:
+        """Fire the next tick and await its refresh task.
+
+        The refresh is the entry's background task; awaiting the entry's
+        tasks, rather than all of them, keeps the wait from blocking on
+        the in-flight executor poll, which is only released later. The
+        ticks are 31 s apart, as the refresh timers are staggered up to
+        half a second past the 30 s interval and must always be due.
+        """
+        freezer.tick(timedelta(seconds=31))
+        async_fire_time_changed(hass)
+        await asyncio.wait(mock_config_entry._background_tasks)
+
+    try:
+        with patch(
             "homeassistant.components.ubus.coordinator.REQUEST_TIMEOUT",
-            timedelta(seconds=1),
-        ),
-    ):
-        mock_config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        entity_id = entity_registry.async_get_entity_id(
-            DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
-        )
-        assert entity_id is not None
-        assert hass.states.get(entity_id).state == STATE_HOME
-        assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 1
-
-        # The next poll blocks in the executor until it is released.
-        poll_started = threading.Event()
-        release = threading.Event()
-
-        def _blocked_clients(interface: str) -> dict:
-            poll_started.set()
-            release.wait()
-            return {"clients": {MAC_PHONE: {"authorized": True}}}
-
-        ubus[MOCK_HOST].get_hostapd_clients.side_effect = _blocked_clients
-        try:
-            # The first tick starts a poll that blocks in the executor.
-            assert await hass.async_add_executor_job(poll_started.wait, 10)
+            timedelta(),
+        ):
             # The tick times out while the poll keeps running in the
             # executor; the failed tick marks the router unhealthy, so the
             # client's stamps stop counting until the next tick succeeds.
-            await asyncio.sleep(1.5)
-            await hass.async_block_till_done()
+            await _run_tick()
             assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
             # The next tick must re-await the in-flight poll rather than
-            # start a second one; releasing it lets that single poll
-            # complete and apply.
+            # start a second one; it times out on the still-blocked poll.
+            await _run_tick()
+            assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+            # Releasing the poll settles it before the next tick runs,
+            # which then applies its result.
             release.set()
-            # Wait past the next tick; the anchor calculation schedules it
-            # up to one interval after this release.
-            await asyncio.sleep(2.0)
             await hass.async_block_till_done(wait_background_tasks=True)
-        finally:
-            release.set()
+            await _run_tick()
+    finally:
+        release.set()
 
-        # One poll ran at setup and one blocked then was re-awaited by the
-        # second tick; a duplicate poll would have called the mock a third
-        # time.
-        assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 2
-        assert hass.states.get(entity_id).state == STATE_HOME
+    # One poll ran at setup and one blocked, re-awaited by the later
+    # ticks; a duplicate poll would have called the mock a third time.
+    assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 2
+    assert hass.states.get(entity_id).state == STATE_HOME
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
