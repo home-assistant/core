@@ -23,13 +23,9 @@ from sonos_websocket.exception import SonosWebsocketError
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ANNOUNCE,
-    ATTR_MEDIA_ARTIST,
-    ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_EXTRA,
-    ATTR_MEDIA_TITLE,
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEnqueue,
@@ -844,10 +840,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         queue: list[DidlMusicTrack] = self.coordinator.soco.get_queue(max_items=0)
         return [
             {
-                ATTR_MEDIA_TITLE: getattr(track, "title", None),
-                ATTR_MEDIA_ALBUM_NAME: getattr(track, "album", None),
-                ATTR_MEDIA_ARTIST: getattr(track, "creator", None),
-                ATTR_MEDIA_CONTENT_ID: track.get_uri(),
+                "media_title": getattr(track, "title", None),
+                "media_album_name": getattr(track, "album", None),
+                "media_artist": getattr(track, "creator", None),
+                "media_content_id": track.get_uri(),
             }
             for track in queue
         ]
