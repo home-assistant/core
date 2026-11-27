@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bosch_shc.const import DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import Platform, TargetKey
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -282,3 +282,31 @@ async def test_intrusion_alarm_mute_button(
     )
 
     mock_session.intrusion_system.mute.assert_called_once_with()
+
+
+@pytest.mark.usefixtures("mock_session")
+async def test_intrusion_alarm_mute_button_follows_availability(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The mute button is unavailable while the alarm system is unavailable."""
+    await setup_integration(hass, mock_config_entry)
+    system = mock_session.intrusion_system
+    entity_id = "button.alarm_system_mute_alarm"
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    callback = next(
+        call.args[1]
+        for call in system.subscribe_callback.call_args_list
+        if call.args[0].endswith("_mute")
+    )
+    system.system_availability = False
+    callback()
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    system.system_availability = True
+    callback()
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE

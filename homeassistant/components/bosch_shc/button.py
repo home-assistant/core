@@ -237,6 +237,28 @@ class SHCIntrusionAlarmMuteButton(ButtonEntity):
         self._attr_device_info = device_info
 
     @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to SHC events."""
+        await super().async_added_to_hass()
+
+        def on_state_changed() -> None:
+            self.schedule_update_ha_state()
+
+        self._device.subscribe_callback(self.unique_id, on_state_changed)
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from SHC events."""
+        await super().async_will_remove_from_hass()
+        self._device.unsubscribe_callback(self.unique_id)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return false if the system is unavailable."""
+        return bool(self._device.system_availability)
+
+    @override
     def press(self) -> None:
         """Mute the active alarm."""
         self._device.mute()
