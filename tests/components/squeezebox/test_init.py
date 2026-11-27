@@ -256,11 +256,8 @@ async def test_discovery_stopped(
     config_entry: MockConfigEntry,
     lms: MagicMock,
 ) -> None:
-    """Test that player discovery returns early when discovery is stopped.
+    """Test that player discovery returns early when discovery is stopped."""
 
-    Regression test verifying discovery_stopped guard on line 237 and that
-    multiple discovery cycles only retain one cancel callback on unload.
-    """
     discovery_calls = []
     reschedules = []
     was_cancelled = []
