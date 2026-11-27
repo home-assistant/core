@@ -64,7 +64,6 @@ from homeassistant.const import (
     CONF_WAIT_TEMPLATE,
     CONF_WHILE,
     EVENT_HOMEASSISTANT_STOP,
-    SERVICE_TURN_ON,
     TargetKey,
 )
 from homeassistant.core import (
@@ -1375,7 +1374,7 @@ class _ScriptRun:
         trace_set_result(scene=self._action[CONF_SCENE])
         await self._hass.services.async_call(
             scene.DOMAIN,
-            SERVICE_TURN_ON,
+            scene.SceneService.TURN_ON,
             {TargetKey.ENTITY_ID: self._action[CONF_SCENE]},
             blocking=True,
             context=self._context,
