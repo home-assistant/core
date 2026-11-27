@@ -1,5 +1,6 @@
 """Support for exposing Home Assistant via Zeroconf."""
 
+import asyncio
 from contextlib import suppress
 from ipaddress import IPv4Address, IPv6Address
 import logging
@@ -12,6 +13,7 @@ from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant.components import network
 from homeassistant.const import (
+    EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_STOP,
     __version__,
@@ -180,17 +182,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_DISCOVERY] = discovery
     websocket_api.async_setup(hass)
 
+    hass_zc_service: AsyncServiceInfo | None = None
+    hass_zc_lock = asyncio.Lock()
+
     async def _async_zeroconf_hass_start(hass: HomeAssistant, comp: str) -> None:
         """Expose Home Assistant on zeroconf when it starts.
 
         Wait till started or otherwise HTTP is not up and running.
         """
-        await _async_register_hass_zc_service(aio_zc, local_service_info)
+        nonlocal hass_zc_service
+        async with hass_zc_lock:
+            # Built again, as the config may have changed since setup
+            info = await _async_get_local_service_info(hass)
+            await _async_register_hass_zc_service(aio_zc, info)
+            hass_zc_service = info
+
+    async def _async_zeroconf_hass_config_update(_event: Event) -> None:
+        """Announce a changed location name or URL without a restart."""
+        nonlocal hass_zc_service
+        async with hass_zc_lock:
+            if hass_zc_service is None:
+                return
+            info = await _async_get_local_service_info(hass)
+            if info.properties == hass_zc_service.properties:
+                return
+            location_name = info.properties.get(b"location_name")
+            if location_name == hass_zc_service.properties.get(b"location_name"):
+                # Keep the name zeroconf may have changed to resolve a conflict
+                info.name = hass_zc_service.name
+                await aio_zc.async_update_service(info)
+            else:
+                await aio_zc.async_unregister_service(hass_zc_service)
+                await _async_register_hass_zc_service(aio_zc, info)
+            hass_zc_service = info
 
     async def _async_zeroconf_hass_stop(_event: Event) -> None:
         await discovery.async_stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_zeroconf_hass_stop)
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, _async_zeroconf_hass_config_update)
     async_when_setup_or_start(hass, "frontend", _async_zeroconf_hass_start)
 
     return True

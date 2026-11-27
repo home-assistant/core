@@ -1382,6 +1382,85 @@ async def test_start_with_frontend(
     mock_async_zeroconf.async_register_service.assert_called_once()
 
 
+async def _async_setup_and_start(hass: HomeAssistant) -> None:
+    """Set up zeroconf and start, so Home Assistant is announced."""
+    with patch("homeassistant.components.zeroconf.HaZeroconf"):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+
+async def test_url_change_updates_announcement(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test a changed external URL is announced without a restart."""
+    await _async_setup_and_start(hass)
+    registered = mock_async_zeroconf.async_register_service.mock_calls[-1].args[0]
+    # As zeroconf renames a service to resolve a conflict
+    registered.name = "Home-2._home-assistant._tcp.local."
+
+    await hass.config.async_update(external_url="https://example.com")
+    await hass.async_block_till_done()
+
+    mock_async_zeroconf.async_update_service.assert_called_once()
+    info = mock_async_zeroconf.async_update_service.mock_calls[-1].args[0]
+    assert info.name == "Home-2._home-assistant._tcp.local."
+    assert info.properties[b"external_url"] == b"https://example.com"
+    assert info.properties[b"base_url"] == b"https://example.com"
+    mock_async_zeroconf.async_unregister_service.assert_not_called()
+    mock_async_zeroconf.async_register_service.assert_called_once()
+
+
+async def test_location_name_change_reregisters(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test a changed location name replaces the announced service."""
+    await _async_setup_and_start(hass)
+    registered = mock_async_zeroconf.async_register_service.mock_calls[-1].args[0]
+
+    await hass.config.async_update(location_name="Cottage")
+    await hass.async_block_till_done()
+
+    mock_async_zeroconf.async_unregister_service.assert_called_once_with(registered)
+    assert len(mock_async_zeroconf.async_register_service.mock_calls) == 2
+    info = mock_async_zeroconf.async_register_service.mock_calls[-1].args[0]
+    assert info.name == "Cottage._home-assistant._tcp.local."
+    assert info.properties[b"location_name"] == b"Cottage"
+    mock_async_zeroconf.async_update_service.assert_not_called()
+
+
+async def test_unrelated_config_change_keeps_announcement(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test a config change that is not announced changes nothing."""
+    await _async_setup_and_start(hass)
+
+    await hass.config.async_update(time_zone="Europe/Athens")
+    await hass.async_block_till_done()
+
+    mock_async_zeroconf.async_update_service.assert_not_called()
+    mock_async_zeroconf.async_unregister_service.assert_not_called()
+    mock_async_zeroconf.async_register_service.assert_called_once()
+
+
+async def test_config_change_before_start_is_announced_at_start(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test a config change before start is in the announcement made at start."""
+    with patch("homeassistant.components.zeroconf.HaZeroconf"):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        await hass.config.async_update(external_url="https://example.com")
+        await hass.async_block_till_done()
+        mock_async_zeroconf.async_update_service.assert_not_called()
+        mock_async_zeroconf.async_register_service.assert_not_called()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+    info = mock_async_zeroconf.async_register_service.mock_calls[-1].args[0]
+    assert info.properties[b"external_url"] == b"https://example.com"
+
+
 @pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_zeroconf_removed(hass: HomeAssistant) -> None:
     """Test we dismiss flows when a PTR record is removed."""
