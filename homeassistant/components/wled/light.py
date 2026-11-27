@@ -6,26 +6,23 @@ from typing import Any, cast, override
 from wled import Device as WLEDDevice, LightCapability, combine_white, split_white
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
-    ATTR_RGB_COLOR,
-    ATTR_RGBW_COLOR,
-    ATTR_RGBWW_COLOR,
-    ATTR_TRANSITION,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.group import IntegrationSpecificGroup
 
 from .const import (
+    ATTR_BRIGHTNESS,
     ATTR_CCT,
     ATTR_COLOR_PRIMARY,
+    ATTR_EFFECT,
     ATTR_ON,
     ATTR_SEGMENT_ID,
+    ATTR_TRANSITION,
     COLOR_TEMP_K_MAX,
     COLOR_TEMP_K_MIN,
     LIGHT_CAPABILITIES_COLOR_MODE_MAPPING,
@@ -114,9 +111,9 @@ class WLEDMainLight(WLEDEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         transition = None
-        if ATTR_TRANSITION in kwargs:
+        if LightServiceArgument.TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
-            transition = round(kwargs[ATTR_TRANSITION] * 10)
+            transition = round(kwargs[LightServiceArgument.TRANSITION] * 10)
 
         await self.coordinator.wled.master(on=False, transition=transition)
 
@@ -125,12 +122,14 @@ class WLEDMainLight(WLEDEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         transition = None
-        if ATTR_TRANSITION in kwargs:
+        if LightServiceArgument.TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
-            transition = round(kwargs[ATTR_TRANSITION] * 10)
+            transition = round(kwargs[LightServiceArgument.TRANSITION] * 10)
 
         await self.coordinator.wled.master(
-            on=True, brightness=kwargs.get(ATTR_BRIGHTNESS), transition=transition
+            on=True,
+            brightness=kwargs.get(LightServiceArgument.BRIGHTNESS),
+            transition=transition,
         )
 
     @callback
@@ -336,9 +335,9 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         transition = None
-        if ATTR_TRANSITION in kwargs:
+        if LightServiceArgument.TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
-            transition = round(kwargs[ATTR_TRANSITION] * 10)
+            transition = round(kwargs[LightServiceArgument.TRANSITION] * 10)
 
         # If there is no main control, and only 1 segment, handle the main
         if not self.coordinator.has_main_light:
@@ -358,20 +357,22 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             ATTR_SEGMENT_ID: self._segment,
         }
 
-        if ATTR_RGB_COLOR in kwargs:
-            data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGB_COLOR]
+        if LightServiceArgument.RGB_COLOR in kwargs:
+            data[ATTR_COLOR_PRIMARY] = kwargs[LightServiceArgument.RGB_COLOR]
 
-        if ATTR_RGBW_COLOR in kwargs:
-            data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGBW_COLOR]
+        if LightServiceArgument.RGBW_COLOR in kwargs:
+            data[ATTR_COLOR_PRIMARY] = kwargs[LightServiceArgument.RGBW_COLOR]
 
-        if ATTR_RGBWW_COLOR in kwargs:
-            red, green, blue, cold, warm = kwargs[ATTR_RGBWW_COLOR]
+        if LightServiceArgument.RGBWW_COLOR in kwargs:
+            red, green, blue, cold, warm = kwargs[LightServiceArgument.RGBWW_COLOR]
             white, data[ATTR_CCT] = combine_white(warm, cold, cct_blend=self._cct_blend)
             data[ATTR_COLOR_PRIMARY] = (red, green, blue, white)
 
-        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+        if LightServiceArgument.COLOR_TEMP_KELVIN in kwargs:
             data[ATTR_CCT] = kelvin_to_255(
-                kwargs[ATTR_COLOR_TEMP_KELVIN], COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX
+                kwargs[LightServiceArgument.COLOR_TEMP_KELVIN],
+                COLOR_TEMP_K_MIN,
+                COLOR_TEMP_K_MAX,
             )
             # A color temperature only shows on white light: the white channel
             # where there is one, otherwise full white.
@@ -380,15 +381,15 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
                     (0, 0, 0, 255) if self._has_white_channel else (255, 255, 255)
                 )
 
-        if ATTR_TRANSITION in kwargs:
+        if LightServiceArgument.TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
-            data[ATTR_TRANSITION] = round(kwargs[ATTR_TRANSITION] * 10)
+            data[ATTR_TRANSITION] = round(kwargs[LightServiceArgument.TRANSITION] * 10)
 
-        if ATTR_BRIGHTNESS in kwargs:
-            data[ATTR_BRIGHTNESS] = kwargs[ATTR_BRIGHTNESS]
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            data[ATTR_BRIGHTNESS] = kwargs[LightServiceArgument.BRIGHTNESS]
 
-        if ATTR_EFFECT in kwargs:
-            data[ATTR_EFFECT] = kwargs[ATTR_EFFECT]
+        if LightServiceArgument.EFFECT in kwargs:
+            data[ATTR_EFFECT] = kwargs[LightServiceArgument.EFFECT]
 
         # If there is no main control, and only 1 segment, handle the main
         if not self.coordinator.has_main_light:
