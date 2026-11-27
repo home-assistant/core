@@ -995,6 +995,68 @@ async def test_late_refresh_after_subentry_removal_is_ignored(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("seen_on"),
+    [
+        pytest.param([MOCK_HOST, MOCK_HOST_B], id="seen_on_both_routers"),
+        pytest.param([MOCK_HOST_B], id="seen_only_on_removed_router"),
+    ],
+)
+async def test_removed_router_stamps_pruned_when_all_routers_fail(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_hub: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    seen_on: list[str],
+) -> None:
+    """Test removing a router prunes its stamps even when all polls fail.
+
+    A failed tick keeps the routers' old stamps, but the removed router's
+    stamps must go with it: its health entry is removed, and a missing
+    health defaults to healthy, which would keep its clients home.
+    """
+    _mock, ubus = mock_ubus_by_host
+    for host in seen_on:
+        ubus[host].get_hostapd_clients.return_value = {
+            "clients": {MAC_PHONE: {"authorized": True}}
+        }
+    two_router_hub.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(two_router_hub.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # Let router A's next poll fail and remove router B, so the tick is
+    # an all-routers failure.
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = ConnectionError
+    subentry_b = next(
+        subentry
+        for subentry in two_router_hub.subentries.values()
+        if subentry.data[CONF_HOST] == MOCK_HOST_B
+    )
+    hass.config_entries.async_remove_subentry(two_router_hub, subentry_b.subentry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Router A failed, so the phone's absence cannot be verified; the
+    # removed router's stamps must not keep it home.
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert "source" not in state.attributes
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_in_flight_poll_ignored_for_reconfigured_subentry(
     hass: HomeAssistant,
     hub_entry: MockConfigEntry,
@@ -1986,6 +2048,54 @@ async def test_device_renamed_when_hostname_appears(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert file_read.call_count == read_count
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_renamed_when_latest_stamp_has_no_hostname(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_hub: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a device is renamed from a hostname another router knows.
+
+    The latest stamp comes from a router with no lease for the client,
+    so the rename falls back to the hostname a previous stamp recorded.
+    """
+    _mock, ubus = mock_ubus_by_host
+    ubus[MOCK_HOST].file_read.return_value = {
+        "data": "1600000000 aa:bb:cc:dd:ee:ff 192.168.1.10 my-phone *\n"
+    }
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    two_router_hub.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(two_router_hub.entry_id)
+    await hass.async_block_till_done()
+
+    phone = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), two_router_hub.entry_id
+    )
+    assert phone is not None
+    assert phone.name == MAC_PHONE
+
+    # Router A also sees the phone and a new client, while the phone's
+    # latest stamp still comes from lease-less router B; the new client
+    # changes the notification signature, so the rename sweep runs.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {
+            MAC_PHONE: {"authorized": True},
+            MAC_LAPTOP: {"authorized": True},
+        }
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    phone = device_registry.async_get(phone.id)
+    assert phone is not None
+    assert phone.name == "my-phone"
 
 
 async def test_disabled_trackers_not_recreated(

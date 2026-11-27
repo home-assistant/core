@@ -398,8 +398,15 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
             for per_host in presence.values()
             for subentry_id in per_host
         }
+        # A client which loses every stamp in the merge was last seen on a
+        # router which is no longer monitored.
+        self._ungrounded = (self._ungrounded | set(old)) - set(presence)
         if failed and len(failed) == len(self._tick_results):
-            # Every router failed; the entry reports the failure.
+            # Every router failed; the entry reports the failure. The
+            # pruned presence stands in for the old data, as stamps of
+            # routers which are no longer polled would count as healthy
+            # with their health entry gone.
+            self.data = presence
             errors = [
                 result
                 for result in self._tick_results.values()
@@ -412,9 +419,6 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
                 "All routers failed to respond: "
                 + ", ".join(self.hosts[subentry_id].host for subentry_id in failed)
             )
-        # A client which loses every stamp in the merge was last seen on a
-        # router which is no longer monitored.
-        self._ungrounded = (self._ungrounded | set(old)) - set(presence)
         return presence
 
     def _reconcile_hosts(self) -> dict[str, _UbusHost]:

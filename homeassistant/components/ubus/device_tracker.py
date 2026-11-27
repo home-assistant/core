@@ -220,7 +220,7 @@ def _async_rename_devices(
         if (stamp := coordinator.latest_stamp(mac)) is None:
             continue
         if (
-            (hostname := stamp[1].hostname)
+            (hostname := stamp[1].hostname or coordinator.known_hostname(mac))
             and (
                 device_entry := device_registry.async_get_device_by_connection(
                     (dr.CONNECTION_NETWORK_MAC, mac), config_entry_id
