@@ -1,7 +1,6 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
 import asyncio
-from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
@@ -17,16 +16,12 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
 
 from .const import FreeboxHomeCategory
 from .entity import FreeboxHomeEntity
 from .router import FreeboxConfigEntry, FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
-
-# The Freebox does not push motion events, so the detector is read on its own timer
-PIR_SCAN_INTERVAL = timedelta(seconds=2)
 
 
 RAID_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
@@ -78,6 +73,8 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
     """Representation of a Freebox binary sensor."""
 
     _endpoint_name = "trigger"
+    # The router update refreshes the state; homeassistant.update_entity reads it on request
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -93,14 +90,32 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
         self._attr_is_on = self._edit_state(
             self.get_value("signal", self._endpoint_name)
         )
+        # One read at a time, so a slow response cannot overwrite a newer state
+        self._read_lock = asyncio.Lock()
 
     @override
     async def async_update_signal(self) -> None:
-        """Update name & state."""
-        self._attr_is_on = self._edit_state(
-            await self.get_home_endpoint_value(self._command_id)
-        )
-        await FreeboxHomeEntity.async_update_signal(self)
+        """Update name & state once any running read is done."""
+        async with self._read_lock:
+            self._attr_is_on = self._edit_state(
+                await self.get_home_endpoint_value(self._command_id)
+            )
+            await FreeboxHomeEntity.async_update_signal(self)
+
+    async def async_update(self) -> None:
+        """Read the sensor on request (homeassistant.update_entity)."""
+        async with self._read_lock:
+            try:
+                value = await self.get_home_endpoint_value(self._command_id)
+            except (
+                AuthorizationError,
+                HttpRequestError,
+                ClientError,
+                TimeoutError,
+                RuntimeError,
+            ):
+                return  # Keep the last known state, the router update still applies
+            self._attr_is_on = self._edit_state(value)
 
     def _edit_state(self, state: bool | None) -> bool | None:
         """Edit state depending on endpoint name."""
@@ -116,48 +131,6 @@ class FreeboxPirSensor(FreeboxHomeBinarySensor):
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
     _attr_name = None
-
-    def __init__(self, router: FreeboxRouter, node: dict[str, Any]) -> None:
-        """Initialize a Freebox motion binary sensor."""
-        super().__init__(router, node)
-        # One read at a time, so a slow response cannot overwrite a newer state
-        self._read_lock = asyncio.Lock()
-
-    @override
-    async def async_update_signal(self) -> None:
-        """Update name & state once any running read is done."""
-        async with self._read_lock:
-            await super().async_update_signal()
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register the motion poll."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            async_track_time_interval(
-                self.hass, self._async_poll_motion, PIR_SCAN_INTERVAL
-            )
-        )
-
-    async def _async_poll_motion(self, _now: datetime) -> None:
-        """Read the detector and write the state only when it changed."""
-        if self._read_lock.locked():
-            return
-        async with self._read_lock:
-            try:
-                value = await self.get_home_endpoint_value(self._command_id)
-            except (
-                AuthorizationError,
-                HttpRequestError,
-                ClientError,
-                TimeoutError,
-                RuntimeError,
-            ):
-                return  # The regular router update still applies
-            state = self._edit_state(value)
-            if state != self._attr_is_on:
-                self._attr_is_on = state
-                self.async_write_ha_state()
 
 
 class FreeboxDwsSensor(FreeboxHomeBinarySensor):
