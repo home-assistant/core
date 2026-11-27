@@ -134,9 +134,7 @@ def _log_failed_nodes(
 ) -> None:
     """Log nodes that started failing or recovered."""
     for node in failed.keys() - previous:
-        _LOGGER.warning(
-            "Failed to fetch the %s of node %s: %s", what, node, failed[node]
-        )
+        _LOGGER.info("Failed to fetch the %s of node %s: %s", what, node, failed[node])
     for node in previous & succeeded:
         _LOGGER.info("Fetching the %s of node %s works again", what, node)
 
