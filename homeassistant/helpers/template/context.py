@@ -39,6 +39,23 @@ def render_with_context(
     template_str: str, template: jinja2.Template, **kwargs: Any
 ) -> str:
     """Store template being rendered in a ContextVar to aid error handling."""
+    environment = template.environment
+    template_globals = template.globals
+
+    # A context never writes to its parent, but its dict methods need a real dict
+    if kwargs or not isinstance(template_globals, dict):
+        parent = {**template_globals, **kwargs}
+    else:
+        parent = template_globals
+
+    context = environment.context_class(
+        environment, parent, template.name, template.blocks
+    )
+
     with template_context_manager as cm:
         cm.set_template(template_str, "rendering")
-        return template.render(**kwargs)
+        try:
+            return environment.concat(template.root_render_func(context))
+        except Exception:  # noqa: BLE001
+            # Re-raises with the traceback pointing at the template line
+            environment.handle_exception()
