@@ -55,6 +55,31 @@ async def _async_entry_updated(hass: HomeAssistant, entry: UbusConfigEntry) -> N
 
 async def async_setup_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> None:
     """Set up the OpenWrt (ubus) hub from a config entry."""
+    # The startup consolidation may have run before a hub existed: a YAML
+    # import creates one with every entry disabled, so this entry would
+    # become a second poller unless it merges into the hub now. Only a
+    # loaded hub holding routers is a target: one being set up or removed
+    # may not stay and could merge in turn, and an empty shell left by a
+    # failed migration is meant to be deleted.
+    hub = next(
+        (
+            candidate
+            for candidate in hass.config_entries.async_entries(DOMAIN)
+            if (
+                candidate is not entry
+                and candidate.state is ConfigEntryState.LOADED
+                and candidate.disabled_by is None
+                and candidate.version <= UbusConfigFlow.VERSION
+                and not candidate.data
+                and candidate.subentries
+            )
+        ),
+        None,
+    )
+    if hub is not None and await _async_migrate_other(
+        hass, hub, entry, holding_setup_lock=True
+    ):
+        return
     coordinator = UbusDataUpdateCoordinator(hass, entry)
     # A coordinator only polls while it has a listener; the entity updates
     # are driven by the presence signal, not by it.
@@ -149,11 +174,99 @@ async def _async_migrate(hass: HomeAssistant) -> None:
         await _async_migrate_other(hass, hub, other)
 
 
+@callback
+def _async_transfer_to_hub(
+    hass: HomeAssistant,
+    hub: UbusConfigEntry,
+    entry: ConfigEntry,
+    host: str,
+) -> list[str]:
+    """Re-parent this entry's trackers and routers to the hub, then empty it.
+
+    A host collision only skips the colliding router; the remaining
+    routers are still transferred. Returns the colliding hosts.
+    """
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    _async_reparent(hub, entry, device_registry, entity_registry)
+    collision_hosts: list[str] = []
+    created_subentries: list[ConfigSubentry] = []
+    for subentry in entry.subentries.values():
+        new_subentry = ConfigSubentry(
+            data=MappingProxyType(dict(subentry.data)),
+            subentry_type=SUBENTRY_TYPE_ROUTER,
+            title=subentry.title,
+            unique_id=subentry.unique_id,
+        )
+        try:
+            hass.config_entries.async_add_subentry(hub, new_subentry)
+        except AbortFlow:
+            # A host collision: the hub keeps its copy of this
+            # router, and the remaining routers are still
+            # transferred below.
+            collision_hosts.append(subentry.title)
+        else:
+            created_subentries.append(new_subentry)
+    if entry.data:
+        data = dict(entry.data)
+        new_subentry = ConfigSubentry(
+            data=MappingProxyType(data),
+            subentry_type=SUBENTRY_TYPE_ROUTER,
+            title=data[CONF_HOST],
+            unique_id=data[CONF_HOST],
+        )
+        try:
+            hass.config_entries.async_add_subentry(hub, new_subentry)
+        except AbortFlow:
+            collision_hosts.append(data[CONF_HOST])
+        else:
+            created_subentries.append(new_subentry)
+    if (
+        entry.disabled_by is not None
+        and (
+            disabled_subentry := next(
+                (
+                    created
+                    for created in created_subentries
+                    if created.unique_id == host
+                ),
+                None,
+            )
+        )
+        is not None
+    ):
+        # Subentries cannot be disabled; deleting the subentry
+        # reproduces the old "off" behavior, and clears the
+        # warning which is linked to it. A colliding host has no
+        # new subentry, so there is nothing to delete.
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"migration_disabled_entry_{entry.entry_id}",
+            config_entry_id=hub.entry_id,
+            config_subentry_id=disabled_subentry.subentry_id,
+            is_fixable=False,
+            is_persistent=True,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="migration_disabled_entry",
+            translation_placeholders={"host": host},
+        )
+    # The entry is a shell now: its routers are tracked on the hub,
+    # so clearing its subentries and data means a failed removal
+    # cannot leave a duplicate poller behind.
+    for subentry in list(entry.subentries.values()):
+        hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
+    hass.config_entries.async_update_entry(entry, data={}, version=2)
+    return collision_hosts
+
+
 async def _async_migrate_other(
     hass: HomeAssistant,
     hub: UbusConfigEntry,
     entry: ConfigEntry,
-) -> None:
+    holding_setup_lock: bool = False,
+) -> bool:
     """Re-parent a legacy entry into subentries of the hub and remove it.
 
     An entry which cannot be unloaded is left in place, untouched, so its
@@ -164,9 +277,13 @@ async def _async_migrate_other(
     host collision only skips the colliding router; the remaining
     routers are still transferred. The hub setup is never blocked by
     one un-migratable entry.
+
+    With holding_setup_lock the entry is being set up under the core-held
+    setup lock and was never loaded, so it is transferred in place and
+    removed by a task which runs once the setup lock is released. Returns
+    whether the entry was merged; the caller sets the entry up normally
+    when it was not.
     """
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
     # An entry set up before the migration converted its own data into a
     # subentry, so the host lives in the subentry title then.
     host = entry.data.get(CONF_HOST)
@@ -178,106 +295,44 @@ async def _async_migrate_other(
         )
     transferred = False
     try:
-        # Hold the entry's setup lock so it is never removed mid-setup and
-        # no setup can start while it is unloaded.
-        async with entry.setup_lock:
-            if (
-                not entry.state.recoverable
-                or not await hass.config_entries.async_unload(
-                    entry.entry_id, _lock=False
-                )
-            ):
-                _LOGGER.warning(
-                    "Could not unload ubus entry %s; leaving it in place "
-                    "instead of migrating it to the hub",
-                    entry.entry_id,
-                )
-                ir.async_create_issue(
-                    hass,
-                    DOMAIN,
-                    f"migration_failed_{entry.entry_id}",
-                    config_entry_id=entry.entry_id,
-                    is_fixable=False,
-                    issue_domain=DOMAIN,
-                    severity=ir.IssueSeverity.ERROR,
-                    translation_key="migration_failed",
-                    translation_placeholders={"host": host},
-                )
-                return
-            _async_reparent(hub, entry, device_registry, entity_registry)
-            collision_hosts: list[str] = []
-            created_subentries: list[ConfigSubentry] = []
-            for subentry in entry.subentries.values():
-                new_subentry = ConfigSubentry(
-                    data=MappingProxyType(dict(subentry.data)),
-                    subentry_type=SUBENTRY_TYPE_ROUTER,
-                    title=subentry.title,
-                    unique_id=subentry.unique_id,
-                )
-                try:
-                    hass.config_entries.async_add_subentry(hub, new_subentry)
-                except AbortFlow:
-                    # A host collision: the hub keeps its copy of this
-                    # router, and the remaining routers are still
-                    # transferred below.
-                    collision_hosts.append(subentry.title)
-                else:
-                    created_subentries.append(new_subentry)
-            if entry.data:
-                data = dict(entry.data)
-                new_subentry = ConfigSubentry(
-                    data=MappingProxyType(data),
-                    subentry_type=SUBENTRY_TYPE_ROUTER,
-                    title=data[CONF_HOST],
-                    unique_id=data[CONF_HOST],
-                )
-                try:
-                    hass.config_entries.async_add_subentry(hub, new_subentry)
-                except AbortFlow:
-                    collision_hosts.append(data[CONF_HOST])
-                else:
-                    created_subentries.append(new_subentry)
-            if (
-                entry.disabled_by is not None
-                and (
-                    disabled_subentry := next(
-                        (
-                            created
-                            for created in created_subentries
-                            if created.unique_id == host
-                        ),
-                        None,
+        if holding_setup_lock:
+            collision_hosts = _async_transfer_to_hub(hass, hub, entry, host)
+            transferred = True
+            # The removal needs the setup lock, which is held for the
+            # rest of the setup, so it runs in a deferred task.
+            hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+        else:
+            # Hold the entry's setup lock so it is never removed mid-setup and
+            # no setup can start while it is unloaded.
+            async with entry.setup_lock:
+                if (
+                    not entry.state.recoverable
+                    or not await hass.config_entries.async_unload(
+                        entry.entry_id, _lock=False
                     )
-                )
-                is not None
-            ):
-                # Subentries cannot be disabled; deleting the subentry
-                # reproduces the old "off" behavior, and clears the
-                # warning which is linked to it. A colliding host has no
-                # new subentry, so there is nothing to delete.
-                ir.async_create_issue(
-                    hass,
-                    DOMAIN,
-                    f"migration_disabled_entry_{entry.entry_id}",
-                    config_entry_id=hub.entry_id,
-                    config_subentry_id=disabled_subentry.subentry_id,
-                    is_fixable=False,
-                    is_persistent=True,
-                    issue_domain=DOMAIN,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="migration_disabled_entry",
-                    translation_placeholders={"host": host},
-                )
-        # The entry is a shell now: its routers are tracked on the hub,
-        # so clearing its subentries and data means a failed removal
-        # below cannot leave a duplicate poller behind.
-        for subentry in list(entry.subentries.values()):
-            hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
-        hass.config_entries.async_update_entry(entry, data={}, version=2)
-        transferred = True
-        # The entry was unloaded above, so the removal cannot leave live
-        # trackers behind.
-        await hass.config_entries.async_remove(entry.entry_id)
+                ):
+                    _LOGGER.warning(
+                        "Could not unload ubus entry %s; leaving it in place "
+                        "instead of migrating it to the hub",
+                        entry.entry_id,
+                    )
+                    ir.async_create_issue(
+                        hass,
+                        DOMAIN,
+                        f"migration_failed_{entry.entry_id}",
+                        config_entry_id=entry.entry_id,
+                        is_fixable=False,
+                        issue_domain=DOMAIN,
+                        severity=ir.IssueSeverity.ERROR,
+                        translation_key="migration_failed",
+                        translation_placeholders={"host": host},
+                    )
+                    return False
+                collision_hosts = _async_transfer_to_hub(hass, hub, entry, host)
+            transferred = True
+            # The entry was unloaded above, so the removal cannot leave live
+            # trackers behind.
+            await hass.config_entries.async_remove(entry.entry_id)
         if collision_hosts:
             _LOGGER.warning(
                 "Host %s already exists on the hub; removing the duplicate ubus entry",
@@ -319,6 +374,8 @@ async def _async_migrate_other(
             translation_key=translation_key,
             translation_placeholders={"host": host},
         )
+        return False
+    return True
 
 
 def _merge_device_survivors(
