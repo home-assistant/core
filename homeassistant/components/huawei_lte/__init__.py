@@ -156,6 +156,8 @@ class Router:
         try:
             return self.client.dhcp.settings().to_dict()
         except RequestException as err:
+            if KEY_DHCP_SETTINGS not in self.data:
+                raise
             _LOGGER.debug("Could not read DHCP settings: %s", err)
             return {}
         except (KeyError, TypeError, ValueError) as err:
@@ -320,7 +322,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
     router = Router(hass, entry, connection, url)
 
     # Do initial data update
-    await hass.async_add_executor_job(router.update)
+    try:
+        await hass.async_add_executor_job(router.update)
+    except RequestException as ex:
+        raise ConfigEntryNotReady from ex
 
     # Check that we found required information
     router_info = router.data.get(KEY_DEVICE_INFORMATION)

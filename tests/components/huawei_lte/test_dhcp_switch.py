@@ -17,6 +17,7 @@ from requests import ConnectTimeout
 from homeassistant.components.huawei_lte.const import DOMAIN
 from homeassistant.components.huawei_lte.switch import HuaweiLteDhcpSwitch
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_URL,
     STATE_OFF,
@@ -105,9 +106,8 @@ async def test_entity_created(
     [
         ResponseErrorNotSupportedException("not supported", 100002),
         TypeError("invalid settings"),
-        ConnectTimeout(),
     ],
-    ids=["unsupported", "unparsable", "request-error"],
+    ids=["unsupported", "unparsable"],
 )
 async def test_entity_not_created(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, error: Exception
@@ -119,6 +119,23 @@ async def test_entity_not_created(
     await setup_entry(hass, client)
 
     assert not entity_registry.async_is_registered(SWITCH_DHCP)
+
+
+async def test_setup_retries_when_read_fails(hass: HomeAssistant) -> None:
+    """Retry setup when the DHCP settings cannot be read."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_URL: "http://huawei-lte"})
+    entry.add_to_hass(hass)
+    client = magic_client()
+    client.dhcp.settings.side_effect = ConnectTimeout()
+
+    with (
+        patch("homeassistant.components.huawei_lte.Connection", MagicMock()),
+        patch("homeassistant.components.huawei_lte.Client", return_value=client),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
