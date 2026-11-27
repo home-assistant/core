@@ -49,6 +49,8 @@ BINARY_SENSORS: Final = (
     IndevoltBinarySensorEntityDescription(
         key=IndevoltBattery.MAIN_HEATING_STATE,
         generation=(2,),
+        on_value=1,
+        off_value=0,
         translation_key="main_electric_heating_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -56,6 +58,8 @@ BINARY_SENSORS: Final = (
     IndevoltBinarySensorEntityDescription(
         key=IndevoltBattery.PACK_1_HEATING_STATE,
         generation=(2,),
+        on_value=1,
+        off_value=0,
         translation_key="battery_pack_1_electric_heating_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -63,6 +67,8 @@ BINARY_SENSORS: Final = (
     IndevoltBinarySensorEntityDescription(
         key=IndevoltBattery.PACK_2_HEATING_STATE,
         generation=(2,),
+        on_value=1,
+        off_value=0,
         translation_key="battery_pack_2_electric_heating_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -70,6 +76,8 @@ BINARY_SENSORS: Final = (
     IndevoltBinarySensorEntityDescription(
         key=IndevoltBattery.PACK_3_HEATING_STATE,
         generation=(2,),
+        on_value=1,
+        off_value=0,
         translation_key="battery_pack_3_electric_heating_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -77,6 +85,8 @@ BINARY_SENSORS: Final = (
     IndevoltBinarySensorEntityDescription(
         key=IndevoltBattery.PACK_4_HEATING_STATE,
         generation=(2,),
+        on_value=1,
+        off_value=0,
         translation_key="battery_pack_4_electric_heating_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -84,6 +94,8 @@ BINARY_SENSORS: Final = (
     IndevoltBinarySensorEntityDescription(
         key=IndevoltBattery.PACK_5_HEATING_STATE,
         generation=(2,),
+        on_value=1001,
+        off_value=1000,
         translation_key="battery_pack_5_electric_heating_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
