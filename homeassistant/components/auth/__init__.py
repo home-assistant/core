@@ -486,6 +486,9 @@ class TokenView(HomeAssistantView):
             {
                 "access_token": access_token,
                 "token_type": "Bearer",
+                # RFC 6749 section 6 lets the server name the refresh token
+                # to use for the next request.
+                "refresh_token": refresh_token.token,
                 "expires_in": int(
                     refresh_token.access_token_expiration.total_seconds()
                 ),
