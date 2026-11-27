@@ -386,16 +386,15 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
             observed_at[host.subentry_id] = result[0]
         old: ClientPresence = self.data_or_none or {}
         # Stamps of gone or rehosted routers are dropped; the rest are kept,
-        # as a client stays reported while its newest stamp is within consider_home.
-        active_ids = set(self._tick_results)
+        # as a client stays reported while its newest stamp is within
+        # consider_home. A reconfigured router's in-flight result is
+        # discarded above, but its stamps stand while the host is unchanged.
         presence: ClientPresence = {}
         for mac, per_host in old.items():
             for subentry_id, stamp in per_host.items():
-                if subentry_id not in active_ids:
-                    continue
-                if (
-                    self._stamp_hosts.get(subentry_id)
-                    != active[subentry_id].data[CONF_HOST]
+                subentry = active.get(subentry_id)
+                if subentry is None or (
+                    self._stamp_hosts.get(subentry_id) != subentry.data[CONF_HOST]
                 ):
                     continue
                 presence.setdefault(mac, {})[subentry_id] = stamp

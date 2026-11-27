@@ -511,6 +511,79 @@ async def test_credentials_change_preserves_sightings(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_credentials_change_during_tick_keeps_sightings(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a credentials change mid-tick keeps the sighting history.
+
+    The tick that started with the old credentials discards its in-flight
+    result, but the router still polls the same host, so the stamps stay
+    grounded; once polling resumes on the new configuration, the absent
+    client reports not_home rather than staying unavailable.
+    """
+    _mock, ubus = mock_ubus_by_host
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # The client disconnects, and the router keeps answering without it.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {"clients": {}}
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+
+    poll_started = threading.Event()
+    poll_release = threading.Event()
+
+    def gated_read(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        # Hold the response so the credentials change lands mid-tick.
+        poll_started.set()
+        poll_release.wait()
+        return {"clients": {}}
+
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = gated_read
+
+    # Start the next tick and hold it in flight.
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    assert await hass.async_add_executor_job(poll_started.wait, 10)
+
+    # The password changes on the same host while the tick is in flight.
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    data = dict(subentry.data)
+    data[CONF_PASSWORD] = "new-password"
+    hass.config_entries.async_update_subentry(mock_config_entry, subentry, data=data)
+
+    poll_release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The in-flight result was for the old configuration, so the tick drops
+    # it, but the stamps stand on the same host; the refresh it triggers
+    # polls successfully, so the client stays known away.
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_host_reconfiguration_publishes_new_source(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
