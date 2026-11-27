@@ -490,15 +490,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Proxmox VE sensors."""
-    coordinator = entry.runtime_data
+    status_coordinator = entry.runtime_data.status
 
     def _async_add_new_nodes(nodes: list[ProxmoxNodeData]) -> None:
         """Add new node sensors."""
         async_add_entities(
-            ProxmoxNodeSensor(coordinator, entity_description, node)
+            ProxmoxNodeSensor(status_coordinator, entity_description, node)
             for node in nodes
             for entity_description in NODE_SENSORS
-            if coordinator.permissions.has_permission(
+            if status_coordinator.permissions.has_permission(
                 f"/{entity_description.permission_target}/{node.node.node}",
                 entity_description.permission,
             )
@@ -509,7 +509,7 @@ async def async_setup_entry(
     ) -> None:
         """Add new VM sensors."""
         async_add_entities(
-            ProxmoxVMSensor(coordinator, entity_description, vm, node_data)
+            ProxmoxVMSensor(status_coordinator, entity_description, vm, node_data)
             for (node_data, vm) in vms
             for entity_description in VM_SENSORS
         )
@@ -520,7 +520,7 @@ async def async_setup_entry(
         """Add new container sensors."""
         async_add_entities(
             ProxmoxContainerSensor(
-                coordinator, entity_description, container, node_data
+                status_coordinator, entity_description, container, node_data
             )
             for (node_data, container) in containers
             for entity_description in CONTAINER_SENSORS
@@ -531,45 +531,47 @@ async def async_setup_entry(
     ) -> None:
         """Add new storage sensors."""
         async_add_entities(
-            ProxmoxStorageSensor(coordinator, entity_description, storage, node_data)
+            ProxmoxStorageSensor(
+                status_coordinator, entity_description, storage, node_data
+            )
             for (node_data, storage) in storages
             for entity_description in STORAGE_SENSORS
         )
 
-    coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
-    coordinator.new_vms_callbacks.append(_async_add_new_vms)
-    coordinator.new_containers_callbacks.append(_async_add_new_containers)
-    coordinator.new_storages_callbacks.append(_async_add_new_storages)
+    status_coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
+    status_coordinator.new_vms_callbacks.append(_async_add_new_vms)
+    status_coordinator.new_containers_callbacks.append(_async_add_new_containers)
+    status_coordinator.new_storages_callbacks.append(_async_add_new_storages)
 
     _async_add_new_nodes(
         [
             node_data
-            for node_data in coordinator.data.values()
-            if node_data.node.node in coordinator.known_nodes
+            for node_data in status_coordinator.data.values()
+            if node_data.node.node in status_coordinator.known_nodes
         ]
     )
     _async_add_new_vms(
         [
             (node_data, vm_data)
-            for node_data in coordinator.data.values()
+            for node_data in status_coordinator.data.values()
             for vmid, vm_data in node_data.vms.items()
-            if (node_data.node.node, vmid) in coordinator.known_vms
+            if (node_data.node.node, vmid) in status_coordinator.known_vms
         ]
     )
     _async_add_new_containers(
         [
             (node_data, container_data)
-            for node_data in coordinator.data.values()
+            for node_data in status_coordinator.data.values()
             for vmid, container_data in node_data.containers.items()
-            if (node_data.node.node, vmid) in coordinator.known_containers
+            if (node_data.node.node, vmid) in status_coordinator.known_containers
         ]
     )
     _async_add_new_storages(
         [
             (node_data, storage_data)
-            for node_data in coordinator.data.values()
+            for node_data in status_coordinator.data.values()
             for storage_name, storage_data in node_data.storages.items()
-            if (node_data.node.node, storage_name) in coordinator.known_storages
+            if (node_data.node.node, storage_name) in status_coordinator.known_storages
         ]
     )
 
