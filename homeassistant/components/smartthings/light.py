@@ -16,13 +16,13 @@ from pysmartthings import (
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightEntityStateAttribute,
     brightness_supported,
 )
 from homeassistant.core import HomeAssistant
@@ -151,8 +151,12 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        if (last_state := await self.async_get_last_extra_data()) is not None:
-            self._attr_color_mode = last_state.as_dict()[ATTR_COLOR_MODE]
+        if (last_state := await self.async_get_last_state()) is not None and (
+            color_mode := last_state.attributes.get(
+                LightEntityStateAttribute.COLOR_MODE
+            )
+        ) in self._attr_supported_color_modes:
+            self._attr_color_mode = ColorMode(color_mode)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
