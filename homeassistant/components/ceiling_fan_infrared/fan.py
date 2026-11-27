@@ -113,8 +113,7 @@ class CeilingFanIrFanEntity(
 
         The remote has no feedback, so the assumed state is what keeps
         ``turn_on`` from sending a second toggle. It is restored across a
-        reload, which happens when the emitter is renamed, and across a
-        restart.
+        reload and a restart.
 
         The state is read from the extra stored data first, because the entity
         state itself is ``unavailable`` whenever the emitter is, and the
