@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "over_temperature": {
+        "default": "mdi:thermometer-alert"
+      },
+      "overload": {
+        "default": "mdi:flash-alert"
+      }
+    },
     "button": {
       "art_frame_next_picture": {
         "default": "mdi:chevron-right-box"

@@ -11,6 +11,7 @@ from typing import Any, override
 from aiohttp import web
 from hyperion import client
 from hyperion.const import (
+    KEY_CLIENT,
     KEY_DATA,
     KEY_IMAGE,
     KEY_IMAGE_STREAM,
@@ -129,8 +130,9 @@ class HyperionCamera(Camera):
         # The number of open streams, when zero the stream is stopped.
         self._image_stream_clients = 0
 
-        self._client_callbacks = {
-            f"{KEY_LEDCOLORS}-{KEY_IMAGE_STREAM}-{KEY_UPDATE}": self._update_imagestream
+        self._client_callbacks: dict[str, Any] = {
+            f"{KEY_CLIENT}-{KEY_UPDATE}": self._update_client,
+            f"{KEY_LEDCOLORS}-{KEY_IMAGE_STREAM}-{KEY_UPDATE}": self._update_imagestream,
         }
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
@@ -151,6 +153,11 @@ class HyperionCamera(Camera):
     def available(self) -> bool:
         """Return server availability."""
         return bool(self._client.has_loaded_state)
+
+    @callback
+    def _update_client(self, _: dict[str, Any] | None = None) -> None:
+        """Update client connection state."""
+        self.async_write_ha_state()
 
     async def _update_imagestream(self, img: dict[str, Any] | None = None) -> None:
         """Update Hyperion components."""

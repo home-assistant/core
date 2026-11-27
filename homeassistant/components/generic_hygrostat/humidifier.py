@@ -2,10 +2,12 @@
 
 import asyncio
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import TYPE_CHECKING, Any, Self, cast, override
 
+from homeassistant.components.homeassistant import HomeAssistantService
 from homeassistant.components.humidifier import (
     MODE_AWAY,
     MODE_NORMAL,
@@ -18,17 +20,15 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_START,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -51,7 +51,7 @@ from homeassistant.helpers.event import (
     async_track_state_report_event,
     async_track_time_interval,
 )
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import HYGROSTAT_SCHEMA
@@ -165,6 +165,38 @@ async def _async_setup_config(
     )
 
 
+@dataclass
+class GenericHygrostatExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    target_humidity: float | None
+    saved_target_humidity: float | None
+    is_away: bool
+    is_on: bool | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return {
+            "target_humidity": self.target_humidity,
+            "saved_target_humidity": self.saved_target_humidity,
+            "is_away": self.is_away,
+            "is_on": self.is_on,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize extra stored data from a dict."""
+        try:
+            target_humidity = restored["target_humidity"]
+            saved_target_humidity = restored["saved_target_humidity"]
+            is_away = restored["is_away"]
+            is_on = restored["is_on"]
+        except KeyError:
+            return None
+        return cls(target_humidity, saved_target_humidity, is_away, is_on)
+
+
 class GenericHygrostat(HumidifierEntity, RestoreEntity):
     """Representation of a Generic Hygrostat device."""
 
@@ -219,6 +251,17 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._attr_action = HumidifierAction.IDLE
         self._attr_unique_id = unique_id
 
+    @property
+    @override
+    def extra_restore_state_data(self) -> GenericHygrostatExtraStoredData:
+        """Return generic_hygrostat specific state data to be restored."""
+        return GenericHygrostatExtraStoredData(
+            target_humidity=self._target_humidity,
+            saved_target_humidity=self._saved_target_humidity,
+            is_away=self._is_away,
+            is_on=self._state,
+        )
+
     @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -263,7 +306,22 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
 
-        if (old_state := await self.async_get_last_state()) is not None:
+        last_extra_data = await self.async_get_last_extra_data()
+        restored_data = (
+            GenericHygrostatExtraStoredData.from_dict(last_extra_data.as_dict())
+            if last_extra_data
+            else None
+        )
+
+        if restored_data is not None:
+            self._is_away = restored_data.is_away
+            if restored_data.target_humidity is not None:
+                self._target_humidity = restored_data.target_humidity
+            if restored_data.saved_target_humidity is not None:
+                self._saved_target_humidity = restored_data.saved_target_humidity
+            if restored_data.is_on is not None:
+                self._state = restored_data.is_on
+        elif (old_state := await self.async_get_last_state()) is not None:
             if (
                 old_state.attributes.get(HumidifierEntityStateAttribute.MODE)
                 == MODE_AWAY
@@ -283,7 +341,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                         GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY
                     ]
                 )
-            if old_state.state:
+            if old_state.state in (STATE_ON, STATE_OFF):
                 self._state = old_state.state == STATE_ON
         if self._target_humidity is None:
             if self._device_class == HumidifierDeviceClass.HUMIDIFIER:
@@ -575,14 +633,16 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
     async def _async_device_turn_on(self) -> None:
         """Turn humidifier toggleable device on."""
-        data = {ATTR_ENTITY_ID: self._switch_entity_id}
-        await self.hass.services.async_call(HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data)
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._switch_entity_id}
+        await self.hass.services.async_call(
+            HOMEASSISTANT_DOMAIN, HomeAssistantService.TURN_ON, data
+        )
 
     async def _async_device_turn_off(self) -> None:
         """Turn humidifier toggleable device off."""
-        data = {ATTR_ENTITY_ID: self._switch_entity_id}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: self._switch_entity_id}
         await self.hass.services.async_call(
-            HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data
+            HOMEASSISTANT_DOMAIN, HomeAssistantService.TURN_OFF, data
         )
 
     @override

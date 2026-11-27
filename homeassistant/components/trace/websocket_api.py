@@ -26,9 +26,8 @@ from homeassistant.helpers.script import (
     debug_stop,
 )
 
+from .const import TRACE_DOMAINS
 from .util import async_get_trace, async_list_contexts, async_list_traces
-
-TRACE_DOMAINS = ("automation", "script")
 
 
 @callback

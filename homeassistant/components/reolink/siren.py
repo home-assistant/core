@@ -4,11 +4,10 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from homeassistant.components.siren import (
-    ATTR_DURATION,
-    ATTR_VOLUME_LEVEL,
     SirenEntity,
     SirenEntityDescription,
     SirenEntityFeature,
+    SirenServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -109,9 +108,9 @@ class ReolinkSirenEntity(ReolinkChannelCoordinatorEntity, SirenEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the siren."""
-        if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
+        if (volume := kwargs.get(SirenServiceArgument.VOLUME_LEVEL)) is not None:
             await self._host.api.set_volume(self._channel, int(volume * 100))
-        duration = kwargs.get(ATTR_DURATION)
+        duration = kwargs.get(SirenServiceArgument.DURATION)
         await self._host.api.set_siren(self._channel, True, duration)
 
     @raise_translated_error
@@ -142,7 +141,7 @@ class ReolinkHostSirenEntity(ReolinkHostCoordinatorEntity, SirenEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the siren."""
-        if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
+        if (volume := kwargs.get(SirenServiceArgument.VOLUME_LEVEL)) is not None:
             await self._host.api.set_hub_audio(alarm_volume=int(volume * 100))
         else:
             await self._host.api.set_siren()

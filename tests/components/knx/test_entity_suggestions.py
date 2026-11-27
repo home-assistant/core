@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.knx.storage.entity_suggestions import SUGGESTION_PROVIDERS
 from homeassistant.components.knx.storage.entity_suggestions.base import (
     SuggestionProvider,
 )
@@ -84,6 +85,15 @@ def test_provider_requires_provider_id() -> None:
 
     with pytest.raises(TypeError):
         _IncompleteProvider()  # type: ignore[abstract]
+
+
+def test_provider_order() -> None:
+    """Test the providers are ordered from the most reliable source to the weakest."""
+    assert [provider.provider_id for provider in SUGGESTION_PROVIDERS] == [
+        "fb",
+        "cfg",
+        "fn",
+    ]
 
 
 async def test_ws_get_entity_suggestions(

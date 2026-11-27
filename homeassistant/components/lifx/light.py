@@ -27,14 +27,13 @@ from lifx import (
 from lifx.products import supports_sky_effect
 
 from homeassistant.components.light import (
-    ATTR_EFFECT,
-    ATTR_TRANSITION,
     ColorMode,
     LightEntity,
     LightEntityDescription,
     LightEntityFeature,
+    LightServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -305,13 +304,13 @@ class LIFXLight(LIFXEntity, LightEntity):
         except LifxError as err:
             raise device_error(err) from err
 
-        if ATTR_EFFECT in kwargs:
+        if LightServiceArgument.EFFECT in kwargs:
             await self.default_effect(**kwargs)
             return
 
         await self._async_set_deprecated_infrared(kwargs)
 
-        duration = kwargs.get(ATTR_TRANSITION, 0.0)
+        duration = kwargs.get(LightServiceArgument.TRANSITION, 0.0)
 
         self._resolve_brightness_step(kwargs)
 
@@ -324,6 +323,10 @@ class LIFXLight(LIFXEntity, LightEntity):
         fading_on = power_on and not self.is_on
 
         if new_hsbk:
+            # A firmware effect would draw over the new color
+            await self.manager.async_stop_firmware_effect(
+                self.device, self.coordinator.data
+            )
             await self.set_color(
                 new_hsbk,
                 kwargs,
@@ -405,8 +408,8 @@ class LIFXLight(LIFXEntity, LightEntity):
         """Start an effect with default parameters."""
         await self.hass.services.async_call(
             DOMAIN,
-            kwargs[ATTR_EFFECT],
-            {ATTR_ENTITY_ID: self.entity_id},
+            kwargs[LightServiceArgument.EFFECT],
+            {TargetKey.ENTITY_ID: self.entity_id},
             blocking=True,
             context=self._context,
         )
@@ -862,7 +865,7 @@ class LIFXComponentLight[
             await self.manager.async_stop_effects(self.device)
         except LifxError as err:
             raise device_error(err) from err
-        duration = kwargs.pop(ATTR_TRANSITION, 0.0)
+        duration = kwargs.pop(LightServiceArgument.TRANSITION, 0.0)
         resolve_brightness_step(
             kwargs, self.brightness if self.is_on and self.brightness else 0
         )
@@ -872,6 +875,8 @@ class LIFXComponentLight[
             # The library refuses a dark color, so zero brightness means off
             power = False
         elif requested(changes):
+            # A firmware effect would draw over the new colors
+            await self.manager.async_stop_firmware_effect(self.device, self._state)
             if not overwrites_existing_color(changes):
                 # Every zone is written back, so a zone changed outside Home
                 # Assistant has to be read before it is merged over
@@ -909,7 +914,7 @@ class LIFXComponentLight[
         """Carry out lifx.set_state on the component as far as it can."""
         if LIFXServiceArgument.INFRARED in kwargs:
             self.raise_no_infrared()
-        if (effect := kwargs.pop(ATTR_EFFECT, None)) is not None:
+        if (effect := kwargs.pop(LightServiceArgument.EFFECT, None)) is not None:
             await self._async_forward_effect(effect)
             return
         # Resolved here so a step counts towards whether anything was
@@ -942,7 +947,7 @@ class LIFXComponentLight[
         await self.hass.services.async_call(
             DOMAIN,
             effect,
-            {ATTR_ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
             context=self._context,
         )

@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    AlarmControlPanelService,
     AlarmControlPanelState,
     CodeFormat,
 )
@@ -15,7 +16,6 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -94,7 +94,7 @@ async def test_trigger_calls_panic(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_TRIGGER,
+        AlarmControlPanelService.TRIGGER,
         {"entity_id": ALARM_ENTITY},
         blocking=True,
     )

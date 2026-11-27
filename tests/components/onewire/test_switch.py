@@ -21,8 +21,8 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -101,7 +101,7 @@ async def test_switch_toggle(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TOGGLE,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -112,7 +112,7 @@ async def test_switch_toggle(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TOGGLE,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()

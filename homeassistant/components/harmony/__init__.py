@@ -108,6 +108,25 @@ async def _update_listener(hass: HomeAssistant, entry: HarmonyConfigEntry) -> No
     )
 
 
+def _move_legacy_config_file(hass: HomeAssistant, unique_id: str | None) -> None:
+    """Move the hub configuration file from the config root into .storage."""
+    old_file = Path(hass.config.path(f"harmony_{unique_id}.conf"))
+    if not old_file.exists():
+        return
+    new_file = Path(config_file_path(hass, unique_id))
+    new_file.parent.mkdir(parents=True, exist_ok=True)
+    old_file.replace(new_file)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> None:
+    """Migrate old entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        await hass.async_add_executor_job(
+            _move_legacy_config_file, hass, entry.unique_id
+        )
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> None:
     """Unload a config entry."""
     try:

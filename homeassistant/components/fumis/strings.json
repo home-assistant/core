@@ -12,7 +12,7 @@
     "step": {
       "dhcp_confirm": {
         "data": {
-          "pin": "[%key:component::fumis::config::step::user::data::pin%]"
+          "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
           "pin": "[%key:component::fumis::config::step::user::data_description::pin%]"
@@ -21,7 +21,7 @@
       },
       "reauth_confirm": {
         "data": {
-          "pin": "[%key:component::fumis::config::step::user::data::pin%]"
+          "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
           "pin": "[%key:component::fumis::config::step::user::data_description::pin%]"
@@ -30,7 +30,7 @@
       },
       "reconfigure": {
         "data": {
-          "pin": "[%key:component::fumis::config::step::user::data::pin%]"
+          "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
           "pin": "[%key:component::fumis::config::step::user::data_description::pin%]"
@@ -40,7 +40,7 @@
       "user": {
         "data": {
           "mac": "MAC address",
-          "pin": "PIN code"
+          "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
           "mac": "The MAC address is a unique code of letters and numbers that identifies your stove. You can find it on the label of the Fumis WiRCU Wi-Fi module connected to your stove.",

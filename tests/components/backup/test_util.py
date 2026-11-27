@@ -5,6 +5,8 @@ from collections.abc import AsyncGenerator, AsyncIterator
 import dataclasses
 import hashlib
 import inspect
+import io
+import json
 import os
 from pathlib import Path
 import tarfile
@@ -18,10 +20,13 @@ from pytest_homeassistant.common import get_fixture_path
 import securetar
 
 from homeassistant.components.backup import DOMAIN, AddonInfo, AgentBackup, Folder
+from homeassistant.components.backup.const import SECURETAR_CREATE_VERSION
 from homeassistant.components.backup.models import InvalidBackupFilename
 from homeassistant.components.backup.util import (
     DecryptedBackupStreamer,
     EncryptedBackupStreamer,
+    decrypt_backup,
+    encrypt_backup,
     read_backup,
     receive_file,
     suggested_filename,
@@ -306,6 +311,131 @@ def test_validate_password_no_homeassistant(caplog: pytest.LogCaptureFixture) ->
         assert validate_password(mock_path, "hunter2") is False
 
     assert "No homeassistant.tar or homeassistant.tar.gz found" in caplog.text
+
+
+@pytest.fixture
+def local_addons_backup() -> AgentBackup:
+    """Return metadata for a backup of local add-ons and the share folder."""
+    return AgentBackup(
+        addons=[],
+        backup_id="1234",
+        date="2024-12-02T07:23:58.261875-05:00",
+        database_included=False,
+        extra_metadata={},
+        folders=[Folder.ADDONS, Folder.SHARE],
+        homeassistant_included=False,
+        homeassistant_version=None,
+        name="test",
+        protected=False,
+        size=0,
+    )
+
+
+@pytest.fixture
+def local_addons_members() -> dict[str, bytes]:
+    """Create two inner tar archives with distinct contents."""
+    members = {}
+    for name, content in (
+        ("addons_local.tar", b"local add-on"),
+        ("share.tar", b"share"),
+    ):
+        with io.BytesIO() as stream:
+            with tarfile.open(fileobj=stream, mode="w") as archive:
+                member = tarfile.TarInfo("example.txt")
+                member.size = len(content)
+                archive.addfile(member, io.BytesIO(content))
+            members[name] = stream.getvalue()
+    return members
+
+
+def test_encrypt_backup_preserves_local_addons(
+    local_addons_backup: AgentBackup, local_addons_members: dict[str, bytes]
+) -> None:
+    """Encrypt both folders and mark the backup as protected."""
+    source = io.BytesIO()
+    with tarfile.open(fileobj=source, mode="w") as archive:
+        for name, data in {
+            "backup.json": b'{"protected":false}',
+            **local_addons_members,
+        }.items():
+            member = tarfile.TarInfo(name)
+            member.size = len(data)
+            archive.addfile(member, io.BytesIO(data))
+    source.seek(0)
+
+    destination = io.BytesIO()
+    errors: list[Exception | None] = []
+    encrypt_backup(
+        local_addons_backup,
+        source,
+        destination,
+        "hunter2",
+        errors.append,
+        0,
+        securetar.SecureTarRootKeyContext("hunter2"),
+    )
+    assert errors == [None]
+
+    destination.seek(0)
+    with securetar.SecureTarArchive(
+        fileobj=destination, mode="r", password="hunter2"
+    ) as archive:
+        metadata = archive.tar.extractfile("backup.json")
+        assert metadata is not None
+        assert json.load(metadata)["protected"] is True
+        for name in ("share.tar", "addons_local.tar"):
+            assert name in archive.tar.getnames()
+            expected = local_addons_members[name]
+            with archive.extract_tar(archive.tar.getmember(name)) as member:
+                assert member.plaintext_size == len(expected)
+                assert member.read(len(expected)) == expected
+
+
+def test_decrypt_backup_restores_local_addons(
+    local_addons_backup: AgentBackup, local_addons_members: dict[str, bytes]
+) -> None:
+    """Decrypt both folders and mark the backup as unprotected."""
+    source = io.BytesIO()
+    with securetar.SecureTarArchive(
+        fileobj=source,
+        mode="w",
+        root_key_context=securetar.SecureTarRootKeyContext("hunter2"),
+        create_version=SECURETAR_CREATE_VERSION,
+    ) as archive:
+        metadata = b'{"protected":true}'
+        member = tarfile.TarInfo("backup.json")
+        member.size = len(metadata)
+        archive.tar.addfile(member, io.BytesIO(metadata))
+        for key_id, (name, data) in enumerate(local_addons_members.items()):
+            member = tarfile.TarInfo(name)
+            member.size = len(data)
+            archive.import_tar(io.BytesIO(data), member, derived_key_id=key_id)
+    source.seek(0)
+
+    destination = io.BytesIO()
+    errors: list[Exception | None] = []
+    decrypt_backup(
+        dataclasses.replace(local_addons_backup, protected=True),
+        source,
+        destination,
+        "hunter2",
+        errors.append,
+        0,
+        securetar.SecureTarRootKeyContext("hunter2"),
+    )
+    assert errors == [None]
+
+    destination.seek(0)
+    with tarfile.open(fileobj=destination) as archive:
+        metadata_file = archive.extractfile("backup.json")
+        assert metadata_file is not None
+        assert json.load(metadata_file)["protected"] is False
+        share = archive.extractfile("share.tar")
+        assert share is not None
+        assert share.read() == local_addons_members["share.tar"]
+        local_addons = archive.extractfile("addons_local.tar")
+        assert local_addons is not None
+        assert local_addons.read() == local_addons_members["addons_local.tar"]
 
 
 @pytest.mark.parametrize(

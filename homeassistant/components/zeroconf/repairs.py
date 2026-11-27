@@ -2,7 +2,7 @@
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
-    SERVICE_HOMEASSISTANT_RESTART,
+    HomeAssistantService,
 )
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant, callback
@@ -32,7 +32,7 @@ class DuplicateInstanceIDRepairFlow(RepairsFlow):
         if user_input is not None:
             await instance_id.async_recreate(self.hass)
             await self.hass.services.async_call(
-                HOMEASSISTANT_DOMAIN, SERVICE_HOMEASSISTANT_RESTART
+                HOMEASSISTANT_DOMAIN, HomeAssistantService.RESTART
             )
 
             return self.async_create_entry(title="", data={})

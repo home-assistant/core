@@ -5,7 +5,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect to Green Planet Energy API",
-      "invalid_auth": "Invalid authentication",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "Unexpected error occurred"
     },
     "step": {

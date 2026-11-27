@@ -5,6 +5,7 @@ from typing import Any, override
 
 from hyperion import client
 from hyperion.const import (
+    KEY_CLIENT,
     KEY_COMPONENT,
     KEY_COMPONENTID_ALL,
     KEY_COMPONENTID_AUDIO,
@@ -153,7 +154,8 @@ class HyperionComponentSwitch(SwitchEntity):
         self._component_name = component_name
         self._client = hyperion_client
         self._client_callbacks = {
-            f"{KEY_COMPONENTS}-{KEY_UPDATE}": self._update_components
+            f"{KEY_CLIENT}-{KEY_UPDATE}": self._update_client,
+            f"{KEY_COMPONENTS}-{KEY_UPDATE}": self._update_components,
         }
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
@@ -198,6 +200,11 @@ class HyperionComponentSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._async_send_set_component(False)
+
+    @callback
+    def _update_client(self, _: dict[str, Any] | None = None) -> None:
+        """Update client connection state."""
+        self.async_write_ha_state()
 
     @callback
     def _update_components(self, _: dict[str, Any] | None = None) -> None:

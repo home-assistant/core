@@ -27,7 +27,21 @@ USER_INPUT_ZONE = {CONF_ZONE: "mock.com"}
 
 USER_INPUT_RECORDS = {CONF_RECORDS: ["ha.mock.com", "homeassistant.mock.com"]}
 
-MOCK_ZONE: pycfdns.ZoneModel = {"name": "mock.com", "id": "mock-zone-id"}
+MOCK_ZONE: pycfdns.ZoneModel = {
+    "name": "mock.com",
+    "id": "mock-zone-id",
+    "account": {"id": "mock-account-id", "name": "mock-account-name"},
+    "development_mode": 0,
+    "meta": {
+        "cdn_only": False,
+        "custom_certificate_quota": 0,
+        "dns_only": False,
+        "foundation_dns": False,
+        "page_rule_quota": 3,
+        "phishing_detected": False,
+        "step": 2,
+    },
+}
 MOCK_ZONE_RECORDS: list[pycfdns.RecordModel] = [
     {
         "id": "zone-record-id",

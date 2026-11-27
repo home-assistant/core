@@ -7,6 +7,7 @@ import logging
 from typing import override
 from zoneinfo import ZoneInfo
 
+import grpc
 from starlink_grpc import (
     AlertDict,
     ChannelContext,
@@ -14,6 +15,7 @@ from starlink_grpc import (
     LocationDict,
     ObstructionDict,
     PowerDict,
+    SoftwareUpdateDict,
     StatusDict,
     UsageDict,
     get_sleep_config,
@@ -37,15 +39,24 @@ _LOGGER = logging.getLogger(__name__)
 type StarlinkConfigEntry = ConfigEntry[StarlinkUpdateCoordinator]
 
 
+def _is_unimplemented(exc: GrpcError) -> bool:
+    """Return whether a GrpcError's cause was an Unimplemented grpc.Call status."""
+    cause = exc.__cause__
+    return (
+        isinstance(cause, grpc.Call) and cause.code() is grpc.StatusCode.UNIMPLEMENTED
+    )
+
+
 @dataclass
 class StarlinkData:
     """Contains data pulled from the Starlink system."""
 
-    location: LocationDict
-    sleep: tuple[int, int, bool]
+    location: LocationDict | None
+    sleep: tuple[int, int, bool] | None
     status: StatusDict
     obstruction: ObstructionDict
     alert: AlertDict
+    software_update: SoftwareUpdateDict
     usage: UsageDict
     consumption: PowerDict
 
@@ -60,6 +71,8 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         self.channel_context = ChannelContext(target=config_entry.data[CONF_IP_ADDRESS])
         self.history_stats_start = None
         self.timezone = ZoneInfo(hass.config.time_zone)
+        self._location_unsupported = False
+        self._sleep_unsupported = False
         super().__init__(
             hass,
             _LOGGER,
@@ -72,9 +85,31 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     def _get_starlink_data(self) -> StarlinkData:
         """Retrieve Starlink data."""
         context = self.channel_context
-        location = location_data(context)
-        sleep = get_sleep_config(context)
-        status, obstruction, alert = status_data(context)
+        location = None
+        if not self._location_unsupported:
+            try:
+                location = location_data(context)
+            except GrpcError as exc:
+                if not _is_unimplemented(exc):
+                    raise
+                _LOGGER.debug(
+                    "location_data unavailable, not supported on this plan/hardware",
+                    exc_info=True,
+                )
+                self._location_unsupported = True
+        sleep = None
+        if not self._sleep_unsupported:
+            try:
+                sleep = get_sleep_config(context)
+            except GrpcError as exc:
+                if not _is_unimplemented(exc):
+                    raise
+                _LOGGER.debug(
+                    "get_sleep_config unavailable, not supported on this plan/hardware",
+                    exc_info=True,
+                )
+                self._sleep_unsupported = True
+        status, obstruction, alert, software_update = status_data(context)
         index, _, _, _, _, usage, consumption, *_ = history_stats(
             parse_samples=-1 if self.history_stats_start is not None else 1,
             start=self.history_stats_start,
@@ -82,7 +117,14 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         )
         self.history_stats_start = index["end_counter"]
         return StarlinkData(
-            location, sleep, status, obstruction, alert, usage, consumption
+            location,
+            sleep,
+            status,
+            obstruction,
+            alert,
+            software_update,
+            usage,
+            consumption,
         )
 
     @override
@@ -123,6 +165,10 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
 
     async def async_set_sleep_schedule_enabled(self, sleep_schedule: bool) -> None:
         """Set whether Starlink system uses the configured sleep schedule."""
+        if self.data.sleep is None:
+            raise HomeAssistantError(
+                "Sleep configuration is not supported on this Starlink plan"
+            )
         async with asyncio.timeout(4):
             try:
                 await self.hass.async_add_executor_job(
@@ -137,6 +183,10 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
 
     async def async_set_sleep_start(self, start: int) -> None:
         """Set Starlink system sleep schedule start time."""
+        if self.data.sleep is None:
+            raise HomeAssistantError(
+                "Sleep configuration is not supported on this Starlink plan"
+            )
         async with asyncio.timeout(4):
             try:
                 await self.hass.async_add_executor_job(
@@ -151,6 +201,10 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
 
     async def async_set_sleep_duration(self, end: int) -> None:
         """Set Starlink system sleep schedule end time."""
+        if self.data.sleep is None:
+            raise HomeAssistantError(
+                "Sleep configuration is not supported on this Starlink plan"
+            )
         duration = end - self.data.sleep[0]
         if duration < 0:
             # If the duration pushed us into the next day,

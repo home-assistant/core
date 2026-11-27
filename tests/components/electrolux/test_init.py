@@ -1,0 +1,259 @@
+"""Unit test for Electrolux init flow."""
+
+from unittest.mock import AsyncMock
+
+from electrolux_group_developer_sdk.client.appliance_data_factory import (
+    appliance_data_factory,
+)
+from electrolux_group_developer_sdk.client.appliances.appliance_data import (
+    ApplianceData,
+)
+from electrolux_group_developer_sdk.client.bad_credentials_exception import (
+    BadCredentialsException,
+)
+from electrolux_group_developer_sdk.client.client_exception import (
+    ApplianceClientException,
+)
+from electrolux_group_developer_sdk.client.failed_connection_exception import (
+    FailedConnectionException,
+)
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.electrolux import ElectroluxData
+from homeassistant.components.electrolux.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
+from . import (
+    APPLIANCE_FIXTURES,
+    get_fixture_name,
+    load_appliance,
+    load_appliance_details,
+    load_appliance_state,
+    setup_integration,
+)
+
+
+async def test_async_setup_entry_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    appliances: AsyncMock,
+    mock_token_manager: AsyncMock,
+) -> None:
+    """Test successful setup of the Electrolux integration."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Check integration is loaded
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data is not None
+    assert isinstance(mock_config_entry.runtime_data, ElectroluxData)
+
+    # Unload the config entry
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+def test_appliance_fixture_data() -> None:
+    """Test that all appliance fixtures are configured correctly."""
+    appliance_id_set = set()
+    for appliance_fixture in APPLIANCE_FIXTURES:
+        appliance = load_appliance(appliance_fixture)
+        appliance_id = appliance.applianceId
+        assert appliance_id not in appliance_id_set, (
+            f"Duplicate appliance ID {appliance_id} detected in fixture {appliance_fixture}"
+        )
+
+        appliance_state = load_appliance_state(appliance_fixture)
+        assert appliance_id == appliance_state.applianceId, (
+            f"Appliance ID in state {appliance_state.applianceId} does not match appliance ID in appliance object {appliance_id}"
+        )
+
+        appliance_id_set.add(appliance_id)
+
+
+async def test_all_appliances(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    appliances: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test all entities for all appliance fixtures."""
+    await setup_integration(hass, mock_config_entry)
+
+    appliance_list: list[ApplianceData] = await appliances.get_appliance_data()
+    for appliance in appliance_list:
+        appliance_id = appliance.appliance.applianceId
+
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, appliance_id), mock_config_entry.entry_id
+        )
+
+        assert device is not None
+        assert device == snapshot(name=get_fixture_name(appliance_id))
+
+
+async def test_check_for_dynamic_devices(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that the integration adds and removes devices correctly."""
+    old_appliance_fixture = "fenix_oven"
+    old_appliance_id = "900412569_00:43319382-443E0748CCD4"
+
+    new_appliance_fixture = "pux_oven"
+    new_appliance_id = "949288049_00:11112225-443E076A37D6"
+
+    def set_appliance_fixture_mock(appliance_fixture: str):
+
+        appliance = load_appliance(appliance_fixture)
+        details = load_appliance_details(appliance_fixture)
+        state = load_appliance_state(appliance_fixture)
+
+        appliance_data = appliance_data_factory(
+            appliance=appliance,
+            details=details,
+            state=state,
+        )
+
+        mock_appliance_client.get_appliance_data.return_value = [appliance_data]
+
+    set_appliance_fixture_mock(old_appliance_fixture)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, old_appliance_id), mock_config_entry.entry_id
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, new_appliance_id), mock_config_entry.entry_id
+        )
+        is None
+    )
+
+    set_appliance_fixture_mock(new_appliance_fixture)
+
+    event_stream_call_args = mock_appliance_client.start_event_stream.call_args.args
+    assert event_stream_call_args is not None and len(event_stream_call_args) > 0, (
+        "start_event_stream method called without any callbacks specified"
+    )
+
+    callback_list = event_stream_call_args[0]
+    for callback in callback_list:
+        await callback()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, old_appliance_id), mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, new_appliance_id), mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+
+@pytest.mark.parametrize(
+    ("exception", "entry_state"),
+    [
+        (ApplianceClientException(), ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_appliance_client_exception(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    entry_state: ConfigEntryState,
+) -> None:
+    """Test for handling errors that occur while getting the data of all appliances."""
+    mock_appliance_client.get_appliance_data.side_effect = exception
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is entry_state
+
+
+async def test_appliance_client_test_connection_failed(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failed connection while testing the connection retries setup."""
+    mock_appliance_client.test_connection.side_effect = FailedConnectionException()
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_appliance_client_test_connection_bad_credentials(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test bad credentials while testing the connection start reauthentication."""
+    mock_appliance_client.test_connection.side_effect = BadCredentialsException()
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+async def test_incomplete_appliance_not_removed(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an appliance still listed without state is not removed on reconnect."""
+    appliance_fixture = "fenix_oven"
+    appliance_id = "900412569_00:43319382-443E0748CCD4"
+
+    def appliance_data(*, with_state: bool) -> ApplianceData:
+        return appliance_data_factory(
+            appliance=load_appliance(appliance_fixture),
+            details=load_appliance_details(appliance_fixture),
+            state=load_appliance_state(appliance_fixture) if with_state else None,
+        )
+
+    mock_appliance_client.get_appliance_data.return_value = [
+        appliance_data(with_state=True)
+    ]
+    await setup_integration(hass, mock_config_entry)
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance_id), mock_config_entry.entry_id
+    )
+
+    # The account still lists the appliance, but without its state
+    mock_appliance_client.get_appliance_data.return_value = [
+        appliance_data(with_state=False)
+    ]
+
+    callback_list = mock_appliance_client.start_event_stream.call_args.args[0]
+    for callback in callback_list:
+        await callback()
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance_id), mock_config_entry.entry_id
+    )
+    assert appliance_id in mock_config_entry.runtime_data.coordinators

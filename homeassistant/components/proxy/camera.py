@@ -271,8 +271,10 @@ class ProxyCamera(Camera):
             return self._last_image
 
         self._last_image_time = now
-        image = await async_get_image(self.hass, self._proxied_camera)
-        if not image:
+        try:
+            image = await async_get_image(self.hass, self._proxied_camera)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
+        except HomeAssistantError:
             _LOGGER.error("Error getting original camera image")
             return self._last_image
 

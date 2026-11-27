@@ -1,5 +1,6 @@
 """Test Govee light local config flow."""
 
+import asyncio
 from errno import EADDRINUSE, EADDRNOTAVAIL
 from ipaddress import IPv4Network
 from unittest.mock import AsyncMock, patch
@@ -8,7 +9,7 @@ from govee_local_api import GoveeDevice
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.govee_light_local.const import DOMAIN
+from homeassistant.components.govee_light_local.const import CLEANUP_TIMEOUT, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -56,6 +57,39 @@ async def test_creating_entry_has_no_devices(
 
         mock_govee_api.start.assert_awaited_once()
         mock_setup_entry.assert_not_called()
+        mock_govee_api.cleanup.assert_called_once_with(timeout=CLEANUP_TIMEOUT)
+
+
+async def test_discovery_releases_port_when_cancelled(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test the discovery controller releases the port when the flow is cancelled."""
+
+    mock_govee_api.devices = []
+    started = asyncio.Event()
+
+    async def _start(**kwargs: bool) -> None:
+        started.set()
+
+    mock_govee_api.start.side_effect = _start
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    task = hass.async_create_task(
+        hass.config_entries.flow.async_configure(result["flow_id"], {})
+    )
+    await started.wait()
+    # Yield once more so the flow parks in the discovery wait before we cancel it.
+    await asyncio.sleep(0)
+    task.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    mock_govee_api.cleanup.assert_called_once_with(timeout=CLEANUP_TIMEOUT)
 
 
 @pytest.mark.usefixtures("mock_network_adapters")

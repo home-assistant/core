@@ -33,17 +33,17 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
     FanEntityFeature,
+    FanService,
+    FanServiceArgument,
 )
 from homeassistant.components.home_connect.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -309,10 +309,10 @@ async def test_speed_percentage_functionality(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
+        FanService.SET_PERCENTAGE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PERCENTAGE: 50,
+            TargetKey.ENTITY_ID: entity_id,
+            FanServiceArgument.PERCENTAGE: 50,
         },
         blocking=True,
     )
@@ -342,10 +342,10 @@ async def test_set_speed_raises_home_assistant_error_on_api_errors(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
+            FanService.SET_PERCENTAGE,
             {
-                ATTR_ENTITY_ID: "fan.air_conditioner",
-                ATTR_PERCENTAGE: 50,
+                TargetKey.ENTITY_ID: "fan.air_conditioner",
+                FanServiceArgument.PERCENTAGE: 50,
             },
             blocking=True,
         )
@@ -451,10 +451,10 @@ async def test_preset_mode_functionality(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        FanService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: expected_fan_modes[0],
+            TargetKey.ENTITY_ID: entity_id,
+            FanServiceArgument.PRESET_MODE: expected_fan_modes[0],
         },
         blocking=True,
     )
@@ -489,10 +489,10 @@ async def test_set_preset_mode_raises_home_assistant_error_on_api_errors(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            FanService.SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: "fan.air_conditioner",
-                ATTR_PRESET_MODE: "auto",
+                TargetKey.ENTITY_ID: "fan.air_conditioner",
+                FanServiceArgument.PRESET_MODE: "auto",
             },
             blocking=True,
         )

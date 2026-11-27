@@ -6,6 +6,7 @@ from pybalboa import SpaControl
 from pybalboa.enums import LowHighRange
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -26,6 +27,7 @@ async def async_setup_entry(
 class BalboaTempRangeSelectEntity(BalboaEntity, SelectEntity):
     """Representation of a Temperature Range select."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "temperature_range"
     _attr_options = [
         LowHighRange.LOW.name.lower(),

@@ -8,7 +8,7 @@ from typing import cast
 from aiohomeconnect.model import EventKey
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -130,7 +130,6 @@ def _handle_paired_or_connected_appliance(
                             event_key,
                         )
                     )
-                    entry.async_on_unload(changed_options_listener_remove_callback)
                     callbacks_for_appliance.append(
                         changed_options_listener_remove_callback
                     )
@@ -175,6 +174,15 @@ def setup_home_connect_entry(
     changed_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]] = (
         defaultdict(list)
     )
+
+    @callback
+    def _remove_changed_options_listeners() -> None:
+        """Remove the option listeners of appliances that are still paired."""
+        for listeners in changed_options_listener_remove_callbacks.values():
+            for listener in listeners:
+                listener()
+
+    entry.async_on_unload(_remove_changed_options_listeners)
 
     entry.async_on_unload(
         entry.runtime_data.async_add_global_listener(

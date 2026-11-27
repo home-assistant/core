@@ -30,6 +30,7 @@ from aioesphomeapi import (
     SupportsResponseType,
     UserService,
     UserServiceArgType,
+    VoiceAssistantFeature,
     ZWaveProxyRequest,
     ZWaveProxyRequestType,
     parse_log_message,
@@ -101,6 +102,7 @@ from .const import (
     PROJECT_URLS,
     STABLE_BLE_VERSION,
     STABLE_BLE_VERSION_STR,
+    TIMER_LIST_KEY,
     VOICE_ASSISTANT_SELECT_KEYS,
 )
 from .dashboard import async_get_dashboard
@@ -823,7 +825,10 @@ class ESPHomeManager:
                 hass, device_info.bluetooth_mac_address or device_info.mac_address
             )
 
-        if device_info.voice_assistant_feature_flags_compat(api_version):
+        voice_assistant_flags = device_info.voice_assistant_feature_flags_compat(
+            api_version
+        )
+        if voice_assistant_flags:
             if Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms:
                 # Create assist satellite entity
                 await self.hass.config_entries.async_forward_entry_setups(
@@ -833,6 +838,17 @@ class ESPHomeManager:
         else:
             # Neither platform is reliably loaded here, so removal cannot live in them.
             _async_remove_voice_assistant_entities(hass, device_info.mac_address)
+
+        # Unlike the satellite, the timer list stays loaded across disconnects so
+        # that its timers keep running.
+        if voice_assistant_flags & VoiceAssistantFeature.TIMERS:
+            if Platform.TIMER_LIST not in entry_data.loaded_platforms:
+                await self.hass.config_entries.async_forward_entry_setups(
+                    self.entry, [Platform.TIMER_LIST]
+                )
+                entry_data.loaded_platforms.add(Platform.TIMER_LIST)
+        else:
+            await self._async_remove_timer_list(device_info.mac_address)
 
         # Setup can wait for this, so only after the platforms are forwarded
         entry_data.first_connect_done.set()
@@ -929,6 +945,20 @@ class ESPHomeManager:
             )
 
             self.entry_data.loaded_platforms.remove(Platform.ASSIST_SATELLITE)
+
+    async def _async_remove_timer_list(self, mac_address: str) -> None:
+        """Remove the timer list of a device that no longer offers timers."""
+        if Platform.TIMER_LIST in self.entry_data.loaded_platforms:
+            await self.hass.config_entries.async_unload_platforms(
+                self.entry, [Platform.TIMER_LIST]
+            )
+            self.entry_data.loaded_platforms.remove(Platform.TIMER_LIST)
+
+        ent_reg = er.async_get(self.hass)
+        if entity_id := ent_reg.async_get_entity_id(
+            Platform.TIMER_LIST, DOMAIN, f"{mac_address}-{TIMER_LIST_KEY}"
+        ):
+            ent_reg.async_remove(entity_id)
 
     async def on_connect_error(self, err: Exception) -> None:
         """Start reauth flow if appropriate connect error type."""

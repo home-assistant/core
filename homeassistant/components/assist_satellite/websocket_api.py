@@ -104,6 +104,7 @@ def websocket_get_configuration(
 
     config_dict["pipeline_entity_id"] = satellite.pipeline_entity_id
     config_dict["vad_entity_id"] = satellite.vad_sensitivity_entity_id
+    config_dict["timer_list_entity_id"] = satellite.timer_list_entity_id
 
     connection.send_result(msg["id"], config_dict)
 
@@ -193,7 +194,7 @@ async def websocket_test_connection(
 
     # Announce and wait for event
     connection_test_data = hass.data[CONNECTION_TEST_DATA]
-    connection_id = uuid_util.random_uuid_hex()
+    connection_id = uuid_util.secure_uuid_hex()
     connection_test_event = asyncio.Event()
     connection_test_data[connection_id] = connection_test_event
 

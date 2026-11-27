@@ -1,6 +1,6 @@
 {
   "domain": "xmpp",
-  "name": "Jabber (XMPP)",
+  "name": "XMPP",
   "categories": ["messaging_notifications.chat_apps"],
   "codeowners": ["@fabaff", "@flowolf"],
   "connectivity": ["cloud", "network"],

@@ -5,7 +5,7 @@ from enum import StrEnum
 
 from modbus_connection import ModbusError
 import probatio
-from sofar_modbus.modern.enums import FeedinLimitationMode, PassiveModeTimeoutAction
+from sofar_modbus import FeedInLimitationMode, PassiveModeTimeoutAction
 
 from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -59,7 +59,7 @@ _POWER_RANGE = probatio.All(int, probatio.Range(min=-100000, max=100000))
 SET_FEED_IN_LIMIT_SCHEMA = _ENTRY_SCHEMA.extend(
     {
         probatio.Required(SofarServiceArgument.MODE): probatio.In(
-            enum_options(FeedinLimitationMode)
+            enum_options(FeedInLimitationMode)
         ),
         # Not cv.positive_int: it would let 3000.9 pass as 3000.
         probatio.Required(SofarServiceArgument.MAX_POWER): probatio.All(
@@ -162,7 +162,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         await _write(
             entry,
             entry.runtime_data.readings.device.feed_in.async_write_limit(
-                enum_member(FeedinLimitationMode, call.data[SofarServiceArgument.MODE]),
+                enum_member(FeedInLimitationMode, call.data[SofarServiceArgument.MODE]),
                 int(max_power),
             ),
         )

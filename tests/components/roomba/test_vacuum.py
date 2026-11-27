@@ -21,8 +21,10 @@ from homeassistant.components.vacuum import (
     SERVICE_STOP,
     VacuumActivity,
     VacuumEntityFeature,
+    VacuumService,
+    VacuumServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -46,6 +48,7 @@ async def _setup(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> Non
         ("charge", "clean", VacuumActivity.DOCKED),
         ("hmMidMsn", "clean", VacuumActivity.CLEANING),
         ("hmPostMsn", "clean", VacuumActivity.RETURNING),
+        ("refill", "clean", VacuumActivity.CLEANING),
         ("run", "clean", VacuumActivity.CLEANING),
         ("pause", "clean", VacuumActivity.PAUSED),
         # Stopped on the floor mid-mission is a paused state.
@@ -146,8 +149,11 @@ async def test_braava_set_fan_speed_invalid(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_SPEED: fan_speed},
+            VacuumService.SET_FAN_SPEED,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                VacuumServiceArgument.FAN_SPEED: fan_speed,
+            },
             blocking=True,
         )
 
@@ -168,8 +174,8 @@ async def test_carpet_boost_set_fan_speed_invalid(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_SPEED: "Turbo"},
+            VacuumService.SET_FAN_SPEED,
+            {TargetKey.ENTITY_ID: ENTITY_ID, VacuumServiceArgument.FAN_SPEED: "Turbo"},
             blocking=True,
         )
 
@@ -189,8 +195,8 @@ async def test_carpet_boost_set_fan_speed_valid(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_SPEED: "eco"},
+        VacuumService.SET_FAN_SPEED,
+        {TargetKey.ENTITY_ID: ENTITY_ID, VacuumServiceArgument.FAN_SPEED: "eco"},
         blocking=True,
     )
 
@@ -212,8 +218,8 @@ async def test_braava_set_fan_speed_valid(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_SPEED: "deep-2"},
+        VacuumService.SET_FAN_SPEED,
+        {TargetKey.ENTITY_ID: ENTITY_ID, VacuumServiceArgument.FAN_SPEED: "deep-2"},
         blocking=True,
     )
 
@@ -355,11 +361,11 @@ async def test_send_command_with_empty_regions(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            VacuumService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_COMMAND: "start",
-                ATTR_PARAMS: {"regions": []},
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                VacuumServiceArgument.COMMAND: "start",
+                VacuumServiceArgument.PARAMS: {"regions": []},
             },
             blocking=True,
         )

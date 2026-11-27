@@ -21,7 +21,7 @@ async def async_setup_entry(
     entry.async_on_unload(receiver.disconnect)
 
     try:
-        await receiver.connect()
+        await receiver.connect(strict=False)
         await receiver.query_state()
         await receiver.query_multi_room_a()
     except ValueError as err:
