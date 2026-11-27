@@ -256,23 +256,33 @@ async def test_discovery_stopped(
     config_entry: MockConfigEntry,
     lms: MagicMock,
 ) -> None:
-    """Test that player discovery returns early when discovery is stopped."""
+    """Test that player discovery returns early when discovery is stopped.
 
-    discovery_cycles = []
-    cancel_callbacks = []
+    Regression test verifying discovery_stopped guard on line 237.
+    Ensures that after config entry unload, the discovery callback
+    returns early and does not reschedule or process players.
+    """
+    discovery_calls = []
+    reschedule_calls = []
 
     async def mock_get_players():
-        """Mock get_players and track discovery cycles."""
-        discovery_cycles.append(len(discovery_cycles))
+        """Mock get_players and track when called."""
+        discovery_calls.append(1)
         return []
 
     lms.async_get_players = mock_get_players
+    cancel_callbacks = []
+    was_cancelled = []
 
     def mock_call_later(hass_arg, delay, callback):
-        """Mock async_call_later to capture cancel callbacks and reschedule discovery."""
+        """Mock async_call_later to capture reschedule attempts."""
+        reschedule_calls.append(callback)
         cancel_callbacks.append(callback)
-        # Return a cancel callback
-        return lambda: None
+
+        def cancel_callback():
+            was_cancelled.append(True)
+
+        return cancel_callback
 
     with (
         patch("homeassistant.components.squeezebox.Server", return_value=lms),
@@ -280,26 +290,23 @@ async def test_discovery_stopped(
             "homeassistant.components.squeezebox.async_call_later",
             side_effect=mock_call_later,
         ),
-        patch("homeassistant.components.squeezebox.DISCOVERY_INTERVAL", 0.01),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        # Give background tasks time to run
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-        # Run multiple discovery cycles
-        for _ in range(2):
-            if cancel_callbacks:
-                await cancel_callbacks[-1]()
-            await hass.async_block_till_done()
+    # Initial discovery should have scheduled a callback
+    assert len(cancel_callbacks) >= 1
+    assert len(discovery_calls) >= 1
+    reschedule_count_at_setup = len(reschedule_calls)
 
-    # Should have multiple discovery cycles scheduled
-    initial_cancel_count = len(cancel_callbacks)
-    assert initial_cancel_count >= 2
-
-    # Unload to set discovery_stopped = True
+    # Unload cancels the latest timer
     assert await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
+    assert len(was_cancelled) > 0
 
-    # Call the latest scheduled discovery callback after discovery_stopped is True
-    # This should return early without processing players (line 237)
-    if cancel_callbacks:
-        await cancel_callbacks[-1]()
+    # Invoke the scheduled discovery callback after discovery_stopped is True
+    # It should return early at line 237 without rescheduling
+    await cancel_callbacks[-1]()
+
+    # Verify no new timer was scheduled (guard prevents rescheduling)
+    assert len(reschedule_calls) == reschedule_count_at_setup
