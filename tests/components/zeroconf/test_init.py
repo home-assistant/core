@@ -1,5 +1,6 @@
 """Test Zeroconf component setup process."""
 
+import asyncio
 from typing import Any
 from unittest.mock import MagicMock, call, patch
 
@@ -1459,6 +1460,57 @@ async def test_config_change_before_start_is_announced_at_start(
 
     info = mock_async_zeroconf.async_register_service.mock_calls[-1].args[0]
     assert info.properties[b"external_url"] == b"https://example.com"
+
+
+async def test_config_change_during_registration_is_announced(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test a config change while registration probes is announced after it."""
+    registering = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _register(*args: Any, **kwargs: Any) -> None:
+        registering.set()
+        await release.wait()
+
+    mock_async_zeroconf.async_register_service.side_effect = _register
+    with patch("homeassistant.components.zeroconf.HaZeroconf"):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await registering.wait()
+
+        await hass.config.async_update(external_url="https://example.com")
+        release.set()
+        await hass.async_block_till_done()
+
+    mock_async_zeroconf.async_register_service.assert_called_once()
+    mock_async_zeroconf.async_update_service.assert_called_once()
+    info = mock_async_zeroconf.async_update_service.mock_calls[-1].args[0]
+    assert info.properties[b"external_url"] == b"https://example.com"
+
+
+async def test_announcement_keeps_setup_addresses(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test the announcement keeps the addresses zeroconf was set up with."""
+    get_addresses = (
+        "homeassistant.components.zeroconf.network.async_get_announce_addresses"
+    )
+    with patch("homeassistant.components.zeroconf.HaZeroconf"):
+        with patch(get_addresses, return_value=["192.168.1.5"]):
+            assert await async_setup_component(
+                hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}}
+            )
+        with patch(get_addresses, return_value=["10.0.0.9"]):
+            hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+            await hass.async_block_till_done()
+            await hass.config.async_update(external_url="https://example.com")
+            await hass.async_block_till_done()
+
+    registered = mock_async_zeroconf.async_register_service.mock_calls[-1].args[0]
+    assert registered.parsed_addresses() == ["192.168.1.5"]
+    updated = mock_async_zeroconf.async_update_service.mock_calls[-1].args[0]
+    assert updated.parsed_addresses() == ["192.168.1.5"]
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")

@@ -169,7 +169,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     homekit_model_lookup, homekit_model_matchers = build_homekit_model_lookups(
         homekit_models
     )
-    local_service_info = await _async_get_local_service_info(hass)
+    # Zeroconf binds its interfaces at setup, so every announcement uses the
+    # addresses of that time, which discovery also knows as its own
+    announce_addresses = await network.async_get_announce_addresses(hass)
+    local_service_info = await _async_get_local_service_info(hass, announce_addresses)
     discovery = ZeroconfDiscovery(
         hass,
         zeroconf,
@@ -193,7 +196,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         nonlocal hass_zc_service
         async with hass_zc_lock:
             # Built again, as the config may have changed since setup
-            info = await _async_get_local_service_info(hass)
+            info = await _async_get_local_service_info(hass, announce_addresses)
             await _async_register_hass_zc_service(aio_zc, info)
             hass_zc_service = info
 
@@ -203,11 +206,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async with hass_zc_lock:
             if hass_zc_service is None:
                 return
-            info = await _async_get_local_service_info(hass)
+            info = await _async_get_local_service_info(hass, announce_addresses)
             if info.properties == hass_zc_service.properties:
                 return
-            location_name = info.properties.get(b"location_name")
-            if location_name == hass_zc_service.properties.get(b"location_name"):
+            location_name = info.properties[b"location_name"]
+            if location_name == hass_zc_service.properties[b"location_name"]:
                 # Keep the name zeroconf may have changed to resolve a conflict
                 info.name = hass_zc_service.name
                 await aio_zc.async_update_service(info)
@@ -279,7 +282,9 @@ def _truncate_location_name_to_valid(location_name: str) -> str:
     return location_name.encode("utf-8")[:MAX_NAME_LEN].decode("utf-8", "ignore")
 
 
-async def _async_get_local_service_info(hass: HomeAssistant) -> AsyncServiceInfo:
+async def _async_get_local_service_info(
+    hass: HomeAssistant, announce_addresses: list[str]
+) -> AsyncServiceInfo:
     """Return the zeroconf service info for the local Home Assistant instance."""
     valid_location_name = _truncate_location_name_to_valid(
         _filter_disallowed_characters(hass.config.location_name or "Home")
@@ -312,7 +317,7 @@ async def _async_get_local_service_info(hass: HomeAssistant) -> AsyncServiceInfo
         ZEROCONF_TYPE,
         name=f"{valid_location_name}.{ZEROCONF_TYPE}",
         server=f"{uuid}.local.",
-        parsed_addresses=await network.async_get_announce_addresses(hass),
+        parsed_addresses=announce_addresses,
         port=hass.http.server_port,
         properties=params,
     )
