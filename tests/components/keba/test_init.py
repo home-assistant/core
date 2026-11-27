@@ -72,22 +72,23 @@ async def test_setup_failsafe_rejected(
     assert hass.states.get("sensor.keba_p30_charging_power") is not None
 
 
-async def test_setup_unreachable_station_currently_raises(
+async def test_setup_unreachable_station(
     hass: HomeAssistant,
     mock_keba: MagicMock,
     freezer: FrozenDateTimeFactory,
     keba_config: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test an unreachable station fails setup with an unhandled error."""
+    """Test an unreachable station fails setup with an error, not a traceback."""
     mock_keba.setup.side_effect = ConnectionError("no reply")
 
     assert not await async_setup_component(hass, DOMAIN, keba_config)
     await hass.async_block_till_done()
 
-    assert "Error during setup of component keba" in caplog.text
-    assert "Could not find a charging station" not in caplog.text
-    mock_keba.request_data.assert_not_awaited()
+    assert f"Could not find a charging station at {HOST}" in caplog.text
+    assert "Error during setup of component keba" not in caplog.text
+    mock_keba.set_failsafe.assert_not_awaited()
+    assert not hass.services.has_service(DOMAIN, KebaService.REQUEST_DATA)
     await async_advance(hass, freezer, 60)
     mock_keba.request_data.assert_not_awaited()
 

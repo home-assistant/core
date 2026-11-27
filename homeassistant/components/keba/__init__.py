@@ -56,7 +56,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = keba
 
     # Wait for KebaHandler setup complete (initial values loaded)
-    if not await keba.setup():
+    try:
+        found = await keba.setup()
+    except ConnectionError:
+        found = False
+    if not found:
         _LOGGER.error("Could not find a charging station at %s", host)
         return False
 
