@@ -9,8 +9,6 @@ from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
 import pyps4_2ndscreen.ps4 as pyps4
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_TITLE,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -32,7 +30,9 @@ from homeassistant.util.json import JsonObjectType
 
 from . import format_unique_id, load_games, save_games
 from .const import (
+    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_IMAGE_URL,
+    ATTR_MEDIA_TITLE,
     DEFAULT_ALIAS,
     DOMAIN,
     PS4_DATA,

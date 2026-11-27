@@ -13,12 +13,12 @@ from aiohttp import ClientError, ClientSession
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
-    ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
     NotifyEntity,
     NotifyEntityFeature,
+    NotifyServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID
@@ -206,13 +206,13 @@ class MobileAppNotificationService(BaseNotificationService):
 
         # Remove default title from notifications.
         if (
-            title_arg := kwargs.get(ATTR_TITLE)
+            title_arg := kwargs.get(NotifyServiceArgument.TITLE)
         ) is not None and title_arg != ATTR_TITLE_DEFAULT:
             data[ATTR_TITLE] = title_arg
-        if not (targets := kwargs.get(ATTR_TARGET)):
+        if not (targets := kwargs.get(NotifyServiceArgument.TARGET)):
             targets = push_registrations(self.hass).values()
 
-        if (data_arg := kwargs.get(ATTR_DATA)) is not None:
+        if (data_arg := kwargs.get(NotifyServiceArgument.DATA)) is not None:
             data[ATTR_DATA] = data_arg
 
         local_push_channels: dict[str, PushChannel] = self.hass.data[DOMAIN][

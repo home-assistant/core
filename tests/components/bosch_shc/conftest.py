@@ -1035,6 +1035,8 @@ def motion_detector2_device(
     occupied: bool = False,
     was_tampered: bool = False,
     temperature: float = 21.5,
+    supports_walk_test: bool = False,
+    supports_detection_test: bool = False,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -1047,6 +1049,8 @@ def motion_detector2_device(
     device.device_services = [FakeLatestMotionService()]
     device.deleted = False
     device.status = "AVAILABLE"
+    device.supports_walk_test = supports_walk_test
+    device.supports_detection_test = supports_detection_test
     device.pet_immunity_enabled = pet_immunity_enabled
     device.tamper_protection_enabled = tamper_protection_enabled
     device.supports_smart_sensitivity = supports_smart_sensitivity

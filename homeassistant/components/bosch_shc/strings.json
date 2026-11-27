@@ -81,6 +81,12 @@
       }
     },
     "button": {
+      "function_test_start": {
+        "name": "Start function test"
+      },
+      "function_test_stop": {
+        "name": "Stop function test"
+      },
       "preview_max_brightness": {
         "name": "Preview max brightness"
       },

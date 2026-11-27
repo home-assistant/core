@@ -27,7 +27,6 @@ DEFAULT_TIMEOUT = 30.0
 DEFAULT_VERIFY_SSL = True
 TYPE_VM = 0
 TYPE_CONTAINER = 1
-UPDATE_INTERVAL = 60
 
 
 class ProxmoxPermission(StrEnum):
