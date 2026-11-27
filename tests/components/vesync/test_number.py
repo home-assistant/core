@@ -83,7 +83,11 @@ async def test_set_mist_level(
             "Device error",
             id="last_response",
         ),
-        pytest.param(None, "Failed to set value.", id="no_last_response"),
+        pytest.param(
+            None,
+            "Failed to send command to VeSync, no response received",
+            id="no_last_response",
+        ),
     ],
 )
 async def test_set_mist_level_failure(

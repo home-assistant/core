@@ -273,11 +273,14 @@
     "auto_preference_not_supported": {
       "message": "This device does not support auto mode preferences"
     },
+    "command_failed": {
+      "message": "Failed to send command to VeSync: {message}"
+    },
+    "command_failed_no_response": {
+      "message": "Failed to send command to VeSync, no response received"
+    },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
-    },
-    "nightlight_command_failed": {
-      "message": "Failed to control the night light"
     },
     "server_error": {
       "message": "Server error occurred while connecting to VeSync"

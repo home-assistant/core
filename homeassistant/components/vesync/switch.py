@@ -259,19 +259,13 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity[VeSyncBaseDevice]):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        if not await self.entity_description.off_fn(self.device):
-            if self.device.last_response:
-                raise HomeAssistantError(self.device.last_response.message)
-            raise HomeAssistantError("Unknown error turning off device, no response.")
+        await self._async_send_command(self.entity_description.off_fn(self.device))
 
         self.async_write_ha_state()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        if not await self.entity_description.on_fn(self.device):
-            if self.device.last_response:
-                raise HomeAssistantError(self.device.last_response.message)
-            raise HomeAssistantError("Unknown error turning on device, no response.")
+        await self._async_send_command(self.entity_description.on_fn(self.device))
 
         self.async_write_ha_state()

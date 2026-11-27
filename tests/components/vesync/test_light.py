@@ -479,7 +479,10 @@ async def test_rgb_nightlight_command_failure(
     entity_id = await _async_setup_rgb_nightlight(
         hass, config_entry, manager, entity_registry, rgb_humidifier
     )
-    with pytest.raises(HomeAssistantError, match="Failed to control the night light"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Failed to send command to VeSync, no response received",
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )

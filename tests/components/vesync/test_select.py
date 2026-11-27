@@ -1,6 +1,7 @@
 """Tests for the select platform."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -344,7 +345,7 @@ async def test_nightlight_select_option_unsupported(
         ),
         pytest.param(
             None,
-            "Unknown error selecting option, no response.",
+            "Failed to send command to VeSync, no response received",
             id="no_last_response",
         ),
     ],
@@ -357,8 +358,12 @@ async def test_select_option_device_failure(
     message: str,
 ) -> None:
     """Test an error is raised when the device rejects the option."""
-    humidifier_300s.set_nightlight_brightness.return_value = False
-    humidifier_300s.last_response = last_response
+
+    async def _set_nightlight_brightness(*args: Any) -> bool:
+        humidifier_300s.last_response = last_response
+        return False
+
+    humidifier_300s.set_nightlight_brightness.side_effect = _set_nightlight_brightness
 
     with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
