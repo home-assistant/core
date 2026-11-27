@@ -446,6 +446,7 @@ async def async_setup_entry(
             _NEXT_SETPOINT_DESCRIPTION,
             shc_info.unique_id,
             config_entry.entry_id,
+            room_name=session.room(device.room_id).name,
         )
         for device in session.device_helper.climate_controls
     )
@@ -624,9 +625,14 @@ class SHCSensor[_DeviceT: SHCDevice](SHCEntity, SensorEntity):
         entity_description: SHCSensorEntityDescription[_DeviceT],
         parent_id: str,
         entry_id: str,
+        room_name: str | None = None,
     ) -> None:
         """Initialize sensor."""
         super().__init__(hass, device, parent_id, entry_id)
+        if room_name is not None:
+            if TYPE_CHECKING:
+                assert self._attr_device_info is not None
+            self._attr_device_info.name = room_name
         self._device: _DeviceT = device
         self.entity_description = entity_description
         self._attr_unique_id = f"{device.serial}_{entity_description.key}"

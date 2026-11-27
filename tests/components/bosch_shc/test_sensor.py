@@ -494,12 +494,14 @@ async def test_battery_level_disabled_by_default(
 @pytest.mark.usefixtures("mock_session")
 async def test_next_setpoint_temperature(
     hass: HomeAssistant,
+    mock_session: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """The room climate reports its next scheduled setpoint and when it applies."""
+    mock_session.room.return_value.name = "Living Room"
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.room_climate_next_setpoint_temperature")
+    state = hass.states.get("sensor.living_room_next_setpoint_temperature")
     assert state is not None
     assert state.state == "18.5"
     assert state.attributes["next_change_at"] == "2026-11-25T22:00:00Z"
@@ -511,15 +513,16 @@ async def test_next_setpoint_temperature(
     [{"climate_controls": [climate_control_device()]}],
     indirect=True,
 )
-@pytest.mark.usefixtures("mock_session")
 async def test_next_setpoint_temperature_unknown(
     hass: HomeAssistant,
+    mock_session: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Without a scheduled change the sensor is unknown."""
+    mock_session.room.return_value.name = "Living Room"
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.room_climate_next_setpoint_temperature")
+    state = hass.states.get("sensor.living_room_next_setpoint_temperature")
     assert state is not None
     assert state.state == STATE_UNKNOWN
     assert state.attributes["next_operation_mode"] is None
