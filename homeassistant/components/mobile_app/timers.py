@@ -2,8 +2,8 @@
 
 from datetime import timedelta
 
+from homeassistant.components import notify
 from homeassistant.components.intent import TimerEventType, TimerInfo
-from homeassistant.components.notify import NotifyServiceArgument
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, callback
@@ -33,8 +33,8 @@ def async_handle_timer_event(
             hass,
             {
                 CONF_DEVICE_ID: timer_info.device_id,
-                NotifyServiceArgument.MESSAGE: message,
-                NotifyServiceArgument.DATA: {
+                notify.ATTR_MESSAGE: message,
+                notify.ATTR_DATA: {
                     "group": "timers",
                     # Android
                     "channel": "Timers",

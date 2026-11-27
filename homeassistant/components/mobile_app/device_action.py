@@ -1,12 +1,9 @@
 """Provides device actions for Mobile App."""
 
-from typing import Any
-
 import probatio
 
 from homeassistant.components import notify
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
-from homeassistant.components.notify import NotifyServiceArgument
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import TemplateError
@@ -19,9 +16,9 @@ from .util import get_notify_service, supports_push, webhook_id_from_device_id
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_TYPE): "notify",
-        probatio.Required(NotifyServiceArgument.MESSAGE): cv.template,
-        probatio.Optional(NotifyServiceArgument.TITLE): cv.template,
-        probatio.Optional(NotifyServiceArgument.DATA): cv.template_complex,
+        probatio.Required(notify.ATTR_MESSAGE): cv.template,
+        probatio.Optional(notify.ATTR_TITLE): cv.template,
+        probatio.Optional(notify.ATTR_DATA): cv.template_complex,
     }
 )
 
@@ -57,14 +54,10 @@ async def async_call_action_from_config(
             "Unable to find notify service for webhook ID"
         )
 
-    service_data: dict[str, Any] = {NotifyServiceArgument.TARGET: webhook_id}
+    service_data = {notify.ATTR_TARGET: webhook_id}
 
     # Render it here because we have access to variables here.
-    for key in (
-        NotifyServiceArgument.MESSAGE,
-        NotifyServiceArgument.TITLE,
-        NotifyServiceArgument.DATA,
-    ):
+    for key in (notify.ATTR_MESSAGE, notify.ATTR_TITLE, notify.ATTR_DATA):
         if key not in config:
             continue
 
@@ -92,8 +85,8 @@ async def async_get_action_capabilities(
     return {
         "extra_fields": probatio.Schema(
             {
-                probatio.Required(NotifyServiceArgument.MESSAGE): str,
-                probatio.Optional(NotifyServiceArgument.TITLE): str,
+                probatio.Required(notify.ATTR_MESSAGE): str,
+                probatio.Optional(notify.ATTR_TITLE): str,
             }
         )
     }
