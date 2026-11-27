@@ -1,6 +1,7 @@
 """Tests for the OpenWrt (ubus) config flow."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -18,6 +19,7 @@ from homeassistant.components.ubus.const import (
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     SOURCE_USER,
+    ConfigEntryDisabler,
     ConfigEntryState,
     ConfigSubentryData,
 )
@@ -606,6 +608,119 @@ async def test_import_flow_legacy_entries_join_lowest(
         MOCK_HOST_C
     }
     assert not legacy_b.subentries
+
+
+@pytest.mark.parametrize(
+    ("existing", "import_config", "hub_hosts", "entry_count"),
+    [
+        pytest.param(
+            MockConfigEntry(
+                domain=DOMAIN,
+                data=MOCK_CONFIG,
+                title=MOCK_HOST,
+                disabled_by=ConfigEntryDisabler.USER,
+            ),
+            MOCK_CONFIG,
+            {MOCK_HOST},
+            1,
+            id="disabled-data-same-host",
+        ),
+        pytest.param(
+            MockConfigEntry(
+                domain=DOMAIN,
+                data=MOCK_CONFIG,
+                title=MOCK_HOST,
+                disabled_by=ConfigEntryDisabler.USER,
+            ),
+            MOCK_HOST_CONFIG_B,
+            {MOCK_HOST, MOCK_HOST_B},
+            1,
+            id="disabled-data-other-host",
+        ),
+        pytest.param(
+            MockConfigEntry(
+                domain=DOMAIN,
+                data=MOCK_CONFIG,
+                title=MOCK_HOST,
+                version=3,
+            ),
+            MOCK_CONFIG,
+            {MOCK_HOST},
+            2,
+            id="newer-schema-data-same-host",
+        ),
+        pytest.param(
+            MockConfigEntry(
+                domain=DOMAIN,
+                data=MOCK_CONFIG,
+                title=MOCK_HOST,
+                version=3,
+            ),
+            MOCK_HOST_CONFIG_B,
+            {MOCK_HOST_B},
+            2,
+            id="newer-schema-data-other-host",
+        ),
+        pytest.param(
+            MockConfigEntry(
+                domain=DOMAIN,
+                data={},
+                title=HUB_TITLE,
+                subentries_data=[router_subentry_data(MOCK_CONFIG)],
+                disabled_by=ConfigEntryDisabler.USER,
+            ),
+            MOCK_CONFIG,
+            {MOCK_HOST},
+            1,
+            id="disabled-subentry-same-host",
+        ),
+        pytest.param(
+            MockConfigEntry(
+                domain=DOMAIN,
+                data={},
+                title=HUB_TITLE,
+                version=3,
+            ),
+            MOCK_HOST_CONFIG_B,
+            {MOCK_HOST_B},
+            2,
+            id="newer-schema-hub-other-host",
+        ),
+    ],
+)
+async def test_import_flow_skips_ineligible_entries(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_ubus: MagicMock,
+    existing: MockConfigEntry,
+    import_config: dict[str, Any],
+    hub_hosts: set[str],
+    entry_count: int,
+) -> None:
+    """Test an import creates the hub instead of joining an entry which cannot poll.
+
+    A disabled entry is off, and an entry on a schema newer than the
+    config flow's version is refused by this release; both are excluded
+    from the hub selection and from the host dedup, as a router added
+    to either would never be polled. The disabled entry is consolidated
+    into the new hub at setup, as by the migration; the newer-schema
+    entry is left in place for the release which owns its schema.
+    """
+    existing.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_config
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == HUB_TITLE
+    assert result["data"] == {}
+    assert result["subentries"] == [router_subentry_data(import_config)]
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == entry_count
+    hub = next(entry for entry in entries if entry is not existing)
+    assert {subentry.unique_id for subentry in hub.subentries.values()} == hub_hosts
 
 
 async def test_import_flow_preserves_dhcp_software(

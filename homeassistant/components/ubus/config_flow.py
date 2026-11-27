@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -112,6 +112,20 @@ def _router_subentry_data(data: dict[str, Any]) -> ConfigSubentryData:
     )
 
 
+def _async_hub_candidates(hass: HomeAssistant) -> list[ConfigEntry]:
+    """Return the entries eligible to become the hub.
+
+    A disabled entry is off, and an entry on a schema newer than the
+    config flow's version is refused by this release; a router added to
+    either would never be polled, as in the migration's eligibility.
+    """
+    return [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.version <= UbusConfigFlow.VERSION and entry.disabled_by is None
+    ]
+
+
 def _async_find_hub(entries: list[ConfigEntry]) -> ConfigEntry | None:
     """Return the entry which is, or becomes, the hub of the install.
 
@@ -185,8 +199,7 @@ class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a configuration from configuration.yaml."""
-        entries = self._async_current_entries()
-        hub = _async_find_hub(entries)
+        entries = _async_hub_candidates(self.hass)
         hosts = {entry.data[CONF_HOST] for entry in entries if entry.data} | {
             subentry.unique_id
             for entry in entries
@@ -205,7 +218,7 @@ class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # A concurrent import may have created or joined the hub while the
         # validation was in flight.
-        hub = _async_find_hub(self._async_current_entries())
+        hub = _async_find_hub(_async_hub_candidates(self.hass))
         if hub is None:
             return self.async_create_entry(
                 title=HUB_TITLE,
