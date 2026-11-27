@@ -178,10 +178,10 @@ async def test_user_flow_second_entry_aborts(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a second entry flow is rejected: routers are added as subentries."""
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -223,12 +223,12 @@ async def test_subentry_flow_adds_router(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the subentry user flow adds a router to the hub."""
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.subentries.async_init(
-        (hub_entry.entry_id, SUBENTRY_TYPE_ROUTER),
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_ROUTER),
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
@@ -240,7 +240,9 @@ async def test_subentry_flow_adds_router(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_HOST_B
     assert result["data"] == MOCK_HOST_CONFIG_B
-    assert {subentry.unique_id for subentry in hub_entry.subentries.values()} == {
+    assert {
+        subentry.unique_id for subentry in mock_config_entry.subentries.values()
+    } == {
         MOCK_HOST,
         MOCK_HOST_B,
     }
@@ -250,12 +252,12 @@ async def test_subentry_flow_existing_host_form_error(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test adding a host the hub already has is a form error, not a flow abort."""
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.subentries.async_init(
-        (hub_entry.entry_id, SUBENTRY_TYPE_ROUTER),
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_ROUTER),
         context={"source": SOURCE_USER},
     )
     result = await hass.config_entries.subentries.async_configure(
@@ -264,7 +266,7 @@ async def test_subentry_flow_existing_host_form_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "already_configured"}
-    assert len(hub_entry.subentries) == 1
+    assert len(mock_config_entry.subentries) == 1
     # The duplicate-host form error must have a renderable translation.
     translations = await async_get_translations(
         hass, "en", "config_subentries", {DOMAIN}
@@ -278,7 +280,9 @@ async def test_subentry_flow_existing_host_form_error(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_HOST_B
-    assert {subentry.unique_id for subentry in hub_entry.subentries.values()} == {
+    assert {
+        subentry.unique_id for subentry in mock_config_entry.subentries.values()
+    } == {
         MOCK_HOST,
         MOCK_HOST_B,
     }
@@ -308,16 +312,16 @@ async def test_subentry_flow_connect_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     connect: dict,
     reason: str,
 ) -> None:
     """Test the subentry flow reports connection failures as form errors."""
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     mock_ubus.return_value.connect.configure_mock(**connect)
 
     result = await hass.config_entries.subentries.async_init(
-        (hub_entry.entry_id, SUBENTRY_TYPE_ROUTER),
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_ROUTER),
         context={"source": SOURCE_USER},
     )
     result = await hass.config_entries.subentries.async_configure(
@@ -326,7 +330,7 @@ async def test_subentry_flow_connect_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": reason}
-    assert len(hub_entry.subentries) == 1
+    assert len(mock_config_entry.subentries) == 1
 
     def _connect() -> str:
         mock_ubus.return_value.session_id = "session-id"
@@ -342,18 +346,20 @@ async def test_subentry_flow_connect_errors(
 
 async def test_subentry_reconfigure_updates_data_and_repolls(
     hass: HomeAssistant,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
 ) -> None:
     """Test reconfiguring a router updates the subentry and repolls it."""
     _mock, _ubus = mock_ubus_by_host
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    subentry = next(iter(hub_entry.subentries.values()))
-    assert hub_entry.runtime_data.hosts[subentry.subentry_id].host == MOCK_HOST
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    assert mock_config_entry.runtime_data.hosts[subentry.subentry_id].host == MOCK_HOST
 
-    result = await hub_entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -367,39 +373,43 @@ async def test_subentry_reconfigure_updates_data_and_repolls(
 
     # The entry update listener repolled the hub, so the coordinator now
     # polls the new router.
-    assert hub_entry.state is ConfigEntryState.LOADED
-    updated = hub_entry.subentries[subentry.subentry_id]
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    updated = mock_config_entry.subentries[subentry.subentry_id]
     assert updated.data == MOCK_HOST_CONFIG_B
     assert updated.title == MOCK_HOST_B
-    assert hub_entry.runtime_data.hosts[subentry.subentry_id].host == MOCK_HOST_B
+    assert (
+        mock_config_entry.runtime_data.hosts[subentry.subentry_id].host == MOCK_HOST_B
+    )
 
 
 async def test_subentry_reconfigure_updates_unique_id(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfiguring a router moves its duplicate-host detection."""
     _mock, _ubus = mock_ubus_by_host
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    subentry = next(iter(hub_entry.subentries.values()))
+    subentry = next(iter(mock_config_entry.subentries.values()))
     assert subentry.unique_id == MOCK_HOST
 
-    result = await hub_entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], user_input=MOCK_HOST_CONFIG_B
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
-    assert hub_entry.subentries[subentry.subentry_id].unique_id == MOCK_HOST_B
+    assert mock_config_entry.subentries[subentry.subentry_id].unique_id == MOCK_HOST_B
 
     # The new host is taken and the old one is free: a router for the new
     # host is rejected, and the flow completes with the old host.
     result = await hass.config_entries.subentries.async_init(
-        (hub_entry.entry_id, SUBENTRY_TYPE_ROUTER),
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_ROUTER),
         context={"source": SOURCE_USER},
     )
     result = await hass.config_entries.subentries.async_configure(
@@ -466,10 +476,10 @@ async def test_import_flow_adds_subentry_to_hub(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test importing with an existing hub adds the router as a subentry."""
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_HOST_CONFIG_B
@@ -477,7 +487,9 @@ async def test_import_flow_adds_subentry_to_hub(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert {subentry.unique_id for subentry in hub_entry.subentries.values()} == {
+    assert {
+        subentry.unique_id for subentry in mock_config_entry.subentries.values()
+    } == {
         MOCK_HOST,
         MOCK_HOST_B,
     }
@@ -550,10 +562,10 @@ async def test_import_flow_host_as_subentry_aborts(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test importing a host which is already a subentry aborts without adding it."""
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_CONFIG
@@ -561,7 +573,7 @@ async def test_import_flow_host_as_subentry_aborts(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert len(hub_entry.subentries) == 1
+    assert len(mock_config_entry.subentries) == 1
 
 
 async def test_import_flow_legacy_entries_join_lowest(
@@ -673,7 +685,7 @@ async def test_import_flow_errors(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_options_flow_consider_home(
     hass: HomeAssistant,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
@@ -685,13 +697,13 @@ async def test_options_flow_consider_home(
     unset option keeps the default semantics.
     """
     _mock, ubus = mock_ubus_by_host
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    coordinator = hub_entry.runtime_data
+    coordinator = mock_config_entry.runtime_data
 
     # The phone is seen on the first poll, then leaves the router.
     freezer.tick(timedelta(seconds=30))
@@ -709,26 +721,26 @@ async def test_options_flow_consider_home(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(entity_id).state == STATE_NOT_HOME
 
-    result = await hass.config_entries.options.async_init(hub_entry.entry_id)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {CONF_CONSIDER_HOME: 300}
     )
     await hass.async_block_till_done()
     # The entry was not reloaded; the stamp is now within the 300 s window.
-    assert hub_entry.runtime_data is coordinator
+    assert mock_config_entry.runtime_data is coordinator
     assert hass.states.get(entity_id).state == STATE_HOME
 
-    result = await hass.config_entries.options.async_init(hub_entry.entry_id)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {CONF_CONSIDER_HOME: 150}
     )
     await hass.async_block_till_done()
-    assert hub_entry.runtime_data is coordinator
+    assert mock_config_entry.runtime_data is coordinator
     assert hass.states.get(entity_id).state == STATE_NOT_HOME
 
     # An unset option keeps the default window.
-    result = await hass.config_entries.options.async_init(hub_entry.entry_id)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
-    assert hub_entry.options == {}
+    assert mock_config_entry.options == {}
     assert hass.states.get(entity_id).state == STATE_NOT_HOME

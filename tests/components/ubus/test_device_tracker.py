@@ -75,18 +75,20 @@ from .conftest import (
 async def test_only_authorized_clients_are_tracked(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     expected_names: dict[str, str],
 ) -> None:
     """Test that authorized clients become entities and names resolve per backend."""
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entries = er.async_entries_for_config_entry(entity_registry, hub_entry.entry_id)
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
 
     assert {e.unique_id for e in entries} == {MAC_PHONE, MAC_LAPTOP}
     assert MAC_GUEST not in {e.unique_id for e in entries}
@@ -102,12 +104,12 @@ async def test_only_authorized_clients_are_tracked(
 async def test_client_present_when_authorized_on_one_interface(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a client appears to be "home" when authorized on at least one interface."""
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
@@ -121,13 +123,13 @@ async def test_client_present_when_authorized_on_one_interface(
 async def test_source_attribute_is_reporting_host(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the source attribute identifies the router the device is connected to."""
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     for mac in (MAC_PHONE, MAC_LAPTOP):
@@ -825,7 +827,7 @@ async def test_hostname_retained_when_router_has_no_lease(
 async def test_dropped_client_goes_not_home_after_consider_home(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -834,8 +836,8 @@ async def test_dropped_client_goes_not_home_after_consider_home(
     The dropping router keeps polling after the client drops, but its
     polls do not extend the client's last stamp.
     """
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
@@ -1060,7 +1062,7 @@ async def test_removed_router_stamps_pruned_when_all_routers_fail(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_in_flight_poll_ignored_for_reconfigured_subentry(
     hass: HomeAssistant,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
@@ -1074,8 +1076,8 @@ async def test_in_flight_poll_ignored_for_reconfigured_subentry(
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
@@ -1103,9 +1105,9 @@ async def test_in_flight_poll_ignored_for_reconfigured_subentry(
     # Wait for the poll to be in flight, then reconfigure the subentry.
     try:
         assert await hass.async_add_executor_job(poll_started.wait, 10)
-        subentry = next(iter(hub_entry.subentries.values()))
+        subentry = next(iter(mock_config_entry.subentries.values()))
         hass.config_entries.async_update_subentry(
-            hub_entry, subentry, data=MOCK_HOST_CONFIG_C, title=MOCK_HOST_C
+            mock_config_entry, subentry, data=MOCK_HOST_CONFIG_C, title=MOCK_HOST_C
         )
         await hass.async_block_till_done()
     finally:
@@ -1124,7 +1126,7 @@ async def test_in_flight_poll_ignored_for_reconfigured_subentry(
 async def test_timed_out_tick_reuses_in_flight_poll(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a tick that times out re-awaits the in-flight poll on the next tick.
@@ -1152,8 +1154,8 @@ async def test_timed_out_tick_reuses_in_flight_poll(
             timedelta(seconds=1),
         ),
     ):
-        hub_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(hub_entry.entry_id)
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
         entity_id = entity_registry.async_get_entity_id(
@@ -1181,7 +1183,7 @@ async def test_timed_out_tick_reuses_in_flight_poll(
             # client's stamps stop counting until the next tick succeeds.
             await asyncio.sleep(1.5)
             await hass.async_block_till_done()
-            assert hub_entry.runtime_data.last_update_success is False
+            assert mock_config_entry.runtime_data.last_update_success is False
             assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
             # The next tick must re-await the in-flight poll rather than
             # start a second one; releasing it lets that single poll
@@ -1199,14 +1201,14 @@ async def test_timed_out_tick_reuses_in_flight_poll(
         # time.
         assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 2
         assert hass.states.get(entity_id).state == STATE_HOME
-        assert hub_entry.runtime_data.last_update_success is True
+        assert mock_config_entry.runtime_data.last_update_success is True
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_away_client_reports_not_home_after_restart(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -1214,8 +1216,8 @@ async def test_away_client_reports_not_home_after_restart(
     mock_ubus.return_value.get_hostapd_clients.side_effect = lambda interface: {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
@@ -1235,7 +1237,7 @@ async def test_away_client_reports_not_home_after_restart(
 
     # The restart resets the presence; the restored tracker stays live and
     # the complete, healthy view establishes the client's absence.
-    assert await hass.config_entries.async_reload(hub_entry.entry_id)
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_NOT_HOME
 
@@ -1293,7 +1295,7 @@ async def test_away_client_unavailable_after_restart_while_router_down(
 async def test_last_router_removal_keeps_clients_ungrounded(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -1302,8 +1304,8 @@ async def test_last_router_removal_keeps_clients_ungrounded(
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
@@ -1314,8 +1316,8 @@ async def test_last_router_removal_keeps_clients_ungrounded(
 
     # Removing the only router leaves no monitor; the state is
     # unverifiable.
-    subentry = next(iter(hub_entry.subentries.values()))
-    hass.config_entries.async_remove_subentry(hub_entry, subentry.subentry_id)
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_remove_subentry(mock_config_entry, subentry.subentry_id)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
@@ -1323,7 +1325,7 @@ async def test_last_router_removal_keeps_clients_ungrounded(
     # seen on a router which is no longer monitored, so it stays
     # unavailable.
     hass.config_entries.async_add_subentry(
-        hub_entry,
+        mock_config_entry,
         ConfigSubentry(
             data=MappingProxyType(MOCK_HOST_CONFIG_B),
             subentry_type=SUBENTRY_TYPE_ROUTER,
@@ -1341,12 +1343,12 @@ async def test_last_router_removal_keeps_clients_ungrounded(
 async def test_failed_unload_keeps_client_reported(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a failed unload leaves the router reporting its clients."""
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
@@ -1362,7 +1364,7 @@ async def test_failed_unload_keeps_client_reported(
     with patch.object(
         ConfigEntries, "async_unload_platforms_or_raise", side_effect=ConfigEntryError
     ):
-        assert not await hass.config_entries.async_unload(hub_entry.entry_id)
+        assert not await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -1498,14 +1500,14 @@ async def test_tracker_rediscovered_after_entity_removal(
 async def test_removed_tracker_recreated_with_same_entity_id(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a removed tracker is recreated with its original entity ID."""
     _mock, ubus = mock_ubus_by_host
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
@@ -1921,27 +1923,27 @@ async def test_setup_scanner_creates_issue_on_cannot_connect(
 async def test_missing_leases_keep_existing_device_name(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     method: str,
 ) -> None:
     """Test an empty lease read names only new devices after their MAC."""
     getattr(mock_ubus.return_value, method).return_value = None
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     device_registry.async_get_or_create(
-        config_entry_id=hub_entry.entry_id,
+        config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
         name="my-phone",
     )
 
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     phone = device_registry.async_get_device_by_connection(
-        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), hub_entry.entry_id
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), mock_config_entry.entry_id
     )
     laptop = device_registry.async_get_device_by_connection(
-        (dr.CONNECTION_NETWORK_MAC, MAC_LAPTOP), hub_entry.entry_id
+        (dr.CONNECTION_NETWORK_MAC, MAC_LAPTOP), mock_config_entry.entry_id
     )
     assert phone is not None
     assert phone.name == "my-phone"
@@ -1952,23 +1954,23 @@ async def test_missing_leases_keep_existing_device_name(
 async def test_missing_uci_config_falls_back_to_mac_names(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test clients are named by MAC while the dnsmasq uci config is missing."""
     mock_ubus.return_value.get_uci_config.return_value = None
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     phone = device_registry.async_get_device_by_connection(
-        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), hub_entry.entry_id
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), mock_config_entry.entry_id
     )
     assert phone is not None
     assert phone.name == MAC_PHONE
     laptop = device_registry.async_get_device_by_connection(
-        (dr.CONNECTION_NETWORK_MAC, MAC_LAPTOP), hub_entry.entry_id
+        (dr.CONNECTION_NETWORK_MAC, MAC_LAPTOP), mock_config_entry.entry_id
     )
     assert laptop is not None
     assert laptop.name == MAC_LAPTOP
@@ -2002,7 +2004,7 @@ async def test_missing_uci_config_falls_back_to_mac_names(
 async def test_device_renamed_when_hostname_appears(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
@@ -2017,9 +2019,9 @@ async def test_device_renamed_when_hostname_appears(
     file_read = mock_ubus.return_value.file_read
     leases = file_read.return_value
     file_read.return_value = initial_leases
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
@@ -2028,7 +2030,7 @@ async def test_device_renamed_when_hostname_appears(
     assert entity_id is not None
     assert (hass.states.get(entity_id) is not None) is enabled
     phone = device_registry.async_get_device_by_connection(
-        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), hub_entry.entry_id
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), mock_config_entry.entry_id
     )
     assert phone is not None
     assert phone.name == MAC_PHONE
@@ -2099,7 +2101,7 @@ async def test_device_renamed_when_latest_stamp_has_no_hostname(
 async def test_update_entity_service_refreshes_the_routers(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test update_entity re-polls the routers, while the trackers do not poll."""
@@ -2107,8 +2109,8 @@ async def test_update_entity_service_refreshes_the_routers(
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     phone_entity_id = entity_registry.async_get_entity_id(
@@ -2156,7 +2158,7 @@ async def test_update_entity_service_refreshes_the_routers(
 async def test_tracker_recreated_when_client_returns_after_removal(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -2170,8 +2172,8 @@ async def test_tracker_recreated_when_client_returns_after_removal(
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
@@ -2204,19 +2206,19 @@ async def test_tracker_recreated_when_client_returns_after_removal(
 async def test_disabled_trackers_not_recreated(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test trackers which are disabled by default are only created once."""
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     with patch.object(
         UbusScannerEntity,
         "__init__",
         autospec=True,
         side_effect=UbusScannerEntity.__init__,
     ) as mock_init:
-        assert await hass.config_entries.async_setup(hub_entry.entry_id)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         for _ in range(3):
             freezer.tick(timedelta(seconds=30))
@@ -2224,19 +2226,21 @@ async def test_disabled_trackers_not_recreated(
             await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_init.call_count == 2
-    entries = er.async_entries_for_config_entry(entity_registry, hub_entry.entry_id)
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
     assert {e.disabled_by for e in entries} == {er.RegistryEntryDisabler.INTEGRATION}
 
 
 async def test_other_entry_device_removal_keeps_tracking(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test removing another entry's device for a tracked MAC is ignored."""
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     other_entry = MockConfigEntry(domain="other")
     other_entry.add_to_hass(hass)
     other_device = device_registry.async_get_or_create(
@@ -2249,7 +2253,7 @@ async def test_other_entry_device_removal_keeps_tracking(
         autospec=True,
         side_effect=UbusScannerEntity.__init__,
     ) as mock_init:
-        assert await hass.config_entries.async_setup(hub_entry.entry_id)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         device_registry.async_remove_device(other_device.id)
         freezer.tick(timedelta(seconds=30))
@@ -2262,7 +2266,7 @@ async def test_other_entry_device_removal_keeps_tracking(
 async def test_lease_reread_throttled_for_clients_without_hostname(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the leases are reread for new clients, else only periodically."""
@@ -2273,8 +2277,8 @@ async def test_lease_reread_throttled_for_clients_without_hostname(
             "1600000000 11:22:33:44:55:66 192.168.1.11 * *"
         )
     }
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert file_read.call_count == 1
 
@@ -2306,14 +2310,14 @@ async def test_lease_reread_throttled_for_clients_without_hostname(
 async def test_empty_lease_reread_keeps_known_hostnames(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a lease reread without a known client keeps its hostname."""
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # A new client without a hostname triggers a reread, which is empty.
@@ -2339,7 +2343,7 @@ async def test_empty_lease_reread_keeps_known_hostnames(
     assert state is not None
     assert state.attributes["host_name"] == "my-phone"
     phone = device_registry.async_get_device_by_connection(
-        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), hub_entry.entry_id
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), mock_config_entry.entry_id
     )
     assert phone is not None
     assert phone.name == "my-phone"
@@ -2706,7 +2710,7 @@ async def test_migration_disabled_entry_becomes_subentry(
 async def test_migration_disabled_entry_collision_skips_warning(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a colliding disabled entry gets no delete-the-router warning."""
@@ -2719,16 +2723,16 @@ async def test_migration_disabled_entry_collision_skips_warning(
     )
     disabled_entry.disabled_by = ConfigEntryDisabler.USER
     disabled_entry.add_to_hass(hass)
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # The colliding disabled entry was removed; its router stays active
     # through the hub's existing subentry, so there is no subentry to
     # delete to restore the old off state.
-    assert hass.config_entries.async_entries(DOMAIN) == [hub_entry]
-    assert len(hub_entry.subentries) == 1
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
+    assert len(mock_config_entry.subentries) == 1
     assert (
         issue_registry.async_get_issue(
             DOMAIN, f"migration_disabled_entry_{disabled_entry.entry_id}"

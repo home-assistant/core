@@ -423,9 +423,10 @@ class UbusScannerEntity(ScannerEntity):
     def available(self) -> bool:
         """Return whether the device's state is grounded on a reachable router."""
         coordinator: UbusDataUpdateCoordinator = self._config_entry.runtime_data
-        if coordinator.has_reportable_stamp(self._mac):
-            return True
-        return coordinator.known_away(self._mac)
+        return super().available and (
+            coordinator.has_reportable_stamp(self._mac)
+            or coordinator.known_away(self._mac)
+        )
 
     @property
     @override

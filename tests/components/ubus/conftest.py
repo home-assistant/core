@@ -69,7 +69,7 @@ def dhcp_software() -> str:
 
 
 @pytest.fixture
-def hub_entry(dhcp_software: str) -> MockConfigEntry:
+def mock_config_entry(dhcp_software: str) -> MockConfigEntry:
     """Return a mock hub entry with a single router subentry."""
     return MockConfigEntry(
         domain=DOMAIN,

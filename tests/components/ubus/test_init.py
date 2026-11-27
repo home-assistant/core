@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+import threading
 from types import MappingProxyType
 from typing import Any
 from unittest.mock import MagicMock
@@ -136,37 +137,37 @@ async def test_setup_entry_without_subentries(
 async def test_first_refresh_failure_does_not_fail_setup(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     method: str,
     behavior: dict[str, Any],
 ) -> None:
     """Test an unreadable router is marked unhealthy instead of failing setup."""
     getattr(mock_ubus.return_value, method).configure_mock(**behavior)
 
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hub_entry.state is ConfigEntryState.LOADED
-    coordinator = hub_entry.runtime_data
-    assert set(coordinator.host_health) == set(hub_entry.subentries)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    coordinator = mock_config_entry.runtime_data
+    assert set(coordinator.host_health) == set(mock_config_entry.subentries)
     assert not any(coordinator.host_health.values())
 
 
 async def test_persistent_invalid_credentials_issue(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test failing credentials open a repair issue, closed on recovery."""
     mock_ubus.return_value.connect.configure_mock(side_effect=None, return_value=None)
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    subentry_id = next(iter(hub_entry.subentries))
+    subentry_id = next(iter(mock_config_entry.subentries))
     assert any(
         issue.domain == DOMAIN
         and issue.translation_key == "persistent_invalid_credentials"
@@ -191,7 +192,7 @@ async def test_persistent_invalid_credentials_issue(
 async def test_login_permission_denial_creates_credentials_issue(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -199,11 +200,11 @@ async def test_login_permission_denial_creates_credentials_issue(
     mock_ubus.return_value.connect.configure_mock(
         side_effect=PermissionError("login denied")
     )
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    subentry_id = next(iter(hub_entry.subentries))
+    subentry_id = next(iter(mock_config_entry.subentries))
     assert any(
         issue.domain == DOMAIN
         and issue.translation_key == "persistent_invalid_credentials"
@@ -228,22 +229,22 @@ async def test_login_permission_denial_creates_credentials_issue(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_subentry_added_polls_new_router(
     hass: HomeAssistant,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test adding a router subentry is polled right away without a reload."""
     _mock, ubus = mock_ubus_by_host
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     hass.config_entries.async_add_subentry(
-        hub_entry,
+        mock_config_entry,
         ConfigSubentry(
             data=MappingProxyType(MOCK_HOST_CONFIG_B),
             subentry_type=SUBENTRY_TYPE_ROUTER,
@@ -254,8 +255,8 @@ async def test_subentry_added_polls_new_router(
     await hass.async_block_till_done()
 
     # No reload: the entry stays loaded and polls the new router.
-    assert hub_entry.state is ConfigEntryState.LOADED
-    coordinator = hub_entry.runtime_data
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    coordinator = mock_config_entry.runtime_data
     assert len(coordinator.hosts) == 2
 
     # The new router's clients are tracked.
@@ -433,7 +434,7 @@ async def test_all_routers_failing_fails_the_tick(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_router_reconfiguration_discards_stale_stamps(
     hass: HomeAssistant,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -446,11 +447,11 @@ async def test_router_reconfiguration_discards_stale_stamps(
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = hub_entry.runtime_data
+    coordinator = mock_config_entry.runtime_data
     entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
     )
@@ -461,9 +462,9 @@ async def test_router_reconfiguration_discards_stale_stamps(
     assert state.attributes["source"] == MOCK_HOST
 
     # Reconfigure the router to a different host.
-    subentry = next(iter(hub_entry.subentries.values()))
+    subentry = next(iter(mock_config_entry.subentries.values()))
     hass.config_entries.async_update_subentry(
-        hub_entry, subentry, data=MOCK_HOST_CONFIG_C, title=MOCK_HOST_C
+        mock_config_entry, subentry, data=MOCK_HOST_CONFIG_C, title=MOCK_HOST_C
     )
     await hass.async_block_till_done()
 
@@ -480,7 +481,7 @@ async def test_router_reconfiguration_discards_stale_stamps(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_credentials_change_preserves_sightings(
     hass: HomeAssistant,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
@@ -495,8 +496,8 @@ async def test_credentials_change_preserves_sightings(
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
@@ -518,10 +519,10 @@ async def test_credentials_change_preserves_sightings(
     assert state.state == STATE_NOT_HOME
 
     # Update the password on the same host.
-    subentry = next(iter(hub_entry.subentries.values()))
+    subentry = next(iter(mock_config_entry.subentries.values()))
     data = dict(subentry.data)
     data[CONF_PASSWORD] = "new-password"
-    hass.config_entries.async_update_subentry(hub_entry, subentry, data=data)
+    hass.config_entries.async_update_subentry(mock_config_entry, subentry, data=data)
     await hass.async_block_till_done()
 
     # The sightings survive the credentials change, as the same router
@@ -534,7 +535,7 @@ async def test_credentials_change_preserves_sightings(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_host_reconfiguration_publishes_new_source(
     hass: HomeAssistant,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -548,8 +549,8 @@ async def test_host_reconfiguration_publishes_new_source(
     clients = {"clients": {MAC_PHONE: {"authorized": True}}}
     ubus[MOCK_HOST].get_hostapd_clients.return_value = clients
     ubus[MOCK_HOST_B].get_hostapd_clients.return_value = clients
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
@@ -562,9 +563,9 @@ async def test_host_reconfiguration_publishes_new_source(
     assert state.attributes["source"] == MOCK_HOST
 
     # Reconfigure the router to a different host that sees the same client.
-    subentry = next(iter(hub_entry.subentries.values()))
+    subentry = next(iter(mock_config_entry.subentries.values()))
     hass.config_entries.async_update_subentry(
-        hub_entry, subentry, data=MOCK_HOST_CONFIG_B, title=MOCK_HOST_B
+        mock_config_entry, subentry, data=MOCK_HOST_CONFIG_B, title=MOCK_HOST_B
     )
     await hass.async_block_till_done()
 
@@ -578,39 +579,65 @@ async def test_slow_router_does_not_stretch_refresh_interval(
     hass: HomeAssistant,
     two_router_hub: MockConfigEntry,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
-    monkeypatch: pytest.MonkeyPatch,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a slow tick schedules the next tick from the tick's start.
 
     A router which takes twenty seconds to answer must not stretch the
-    thirty second period; the next tick is due ten seconds from now, not
-    thirty.
+    thirty second period; the next tick is due ten seconds after the
+    tick completes, not thirty.
     """
-    _mock, _ubus = mock_ubus_by_host
+    _mock, ubus = mock_ubus_by_host
     two_router_hub.add_to_hass(hass)
     assert await hass.config_entries.async_setup(two_router_hub.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = two_router_hub.runtime_data
+    # The first tick polled both routers.
+    assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 1
 
-    captured: dict[str, float] = {}
-    original_call_at = hass.loop.call_at
+    poll_started = threading.Event()
+    poll_release = threading.Event()
 
-    def spy_call_at(when: float, *args: Any, **kwargs: Any) -> Any:
-        captured["when"] = when
-        return original_call_at(when, *args, **kwargs)
+    def slow_read(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        # Hold the response until the test advances the clock, as a
+        # router which takes twenty seconds to answer.
+        poll_started.set()
+        poll_release.wait()
+        return {"clients": {}}
 
-    monkeypatch.setattr(hass.loop, "call_at", spy_call_at)
+    ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = slow_read
 
-    now = hass.loop.time()
-    # Simulate a tick which started twenty seconds ago and is still running.
-    coordinator._tick_start = now - 20
-    coordinator._schedule_refresh()
+    # Start the next tick on the period, and hold it in flight while
+    # the router takes twenty seconds to answer.
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    assert await hass.async_add_executor_job(poll_started.wait, 10)
+    freezer.tick(timedelta(seconds=20))
+    poll_release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 2
 
-    # The next tick is anchored to the tick's start (now - 20) + 30 = now + 10,
-    # not to the completion (now) + 30 = now + 30.
-    assert captured["when"] == pytest.approx(now + 10, abs=1.5)
-    assert captured["when"] < now + 20
+    # The next tick is due ten seconds after the slow tick completed
+    # (tick start plus the period), not thirty seconds after it finished.
+    # Tick deadlines carry up to a second of grid jitter and
+    # async_fire_time_changed covers a half second window, so the margins
+    # below are wider than that in both directions.
+    freezer.tick(timedelta(seconds=8))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 2
+    freezer.tick(timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 3
+    freezer.tick(timedelta(seconds=13))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 3
+    freezer.tick(timedelta(seconds=19))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 4
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -671,17 +698,17 @@ async def test_subentry_removed_releases_its_stamps(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_disabling_entry_disables_trackers(
     hass: HomeAssistant,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test disabling the hub disables all of its trackers."""
     _mock, ubus = mock_ubus_by_host
-    hub_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
@@ -689,11 +716,11 @@ async def test_disabling_entry_disables_trackers(
     assert entity_registry.async_get(entity_id).disabled_by is None
 
     await hass.config_entries.async_set_disabled_by(
-        hub_entry.entry_id, ConfigEntryDisabler.USER
+        mock_config_entry.entry_id, ConfigEntryDisabler.USER
     )
     await hass.async_block_till_done()
 
-    assert hub_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     assert (
         entity_registry.async_get(entity_id).disabled_by
         is er.RegistryEntryDisabler.CONFIG_ENTRY
@@ -741,16 +768,16 @@ async def test_ubus_client_construction(
 async def test_ubus_client_defaults_without_ssl_options(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a subentry without the SSL options defaults to HTTP and verification."""
-    subentry = next(iter(hub_entry.subentries.values()))
+    subentry = next(iter(mock_config_entry.subentries.values()))
     data = dict(subentry.data)
     del data[CONF_SSL]
     del data[CONF_VERIFY_SSL]
-    hub_entry.add_to_hass(hass)
-    hass.config_entries.async_update_subentry(hub_entry, subentry, data=data)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_subentry(mock_config_entry, subentry, data=data)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     mock_ubus.assert_called_once_with(
@@ -765,7 +792,7 @@ async def test_ubus_client_defaults_without_ssl_options(
 async def test_session_refreshed_after_permission_error(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a dropped session is re-authenticated and the scan retried."""
@@ -780,30 +807,32 @@ async def test_session_refreshed_after_permission_error(
         {"clients": {}},
     ]
 
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hub_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_ubus.return_value.connect.call_count == 2
-    entries = er.async_entries_for_config_entry(entity_registry, hub_entry.entry_id)
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
     assert {e.unique_id for e in entries} == {MAC_PHONE, MAC_LAPTOP}
 
 
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the config entry unloads cleanly."""
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert hub_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.config_entries.async_unload(hub_entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert hub_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -812,7 +841,7 @@ async def test_unload_entry(
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     hass_ws_client: WebSocketGenerator,
@@ -824,14 +853,14 @@ async def test_remove_config_entry_device(
     monkeypatch.setattr(
         UbusScannerEntity, "_attr_entity_registry_enabled_default", enabled
     )
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
     connection = (dr.CONNECTION_NETWORK_MAC, MAC_PHONE)
     device_entry = device_registry.async_get_device_by_connection(
-        connection, hub_entry.entry_id
+        connection, mock_config_entry.entry_id
     )
     assert device_entry is not None
 
@@ -862,7 +891,7 @@ async def test_remove_config_entry_device(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert device_registry.async_get_device_by_connection(
-        connection, hub_entry.entry_id
+        connection, mock_config_entry.entry_id
     )
     entity_id = entity_registry.async_get_entity_id("device_tracker", DOMAIN, MAC_PHONE)
     assert entity_id is not None
@@ -872,21 +901,21 @@ async def test_remove_config_entry_device(
 async def test_remove_config_entry_device_rejects_child_device(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test removing an unexpected child device is rejected."""
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert await async_setup_component(hass, "config", {})
     parent_device = device_registry.async_get_or_create(
-        config_entry_id=hub_entry.entry_id,
+        config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "parent")},
     )
     child_device = device_registry.async_get_or_create_child(
-        config_entry_id=hub_entry.entry_id,
+        config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "child")},
         parent_device_id=parent_device.id,
     )
@@ -901,19 +930,19 @@ async def test_remove_config_entry_device_rejects_child_device(
 async def test_remove_device_of_unloaded_entry(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
-    hub_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test a client device can be removed while the entry is not loaded."""
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert await hass.config_entries.async_unload(hub_entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert await async_setup_component(hass, "config", {})
     device_entry = device_registry.async_get_device_by_connection(
-        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), hub_entry.entry_id
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), mock_config_entry.entry_id
     )
     assert device_entry is not None
     ws_client = await hass_ws_client(hass)
