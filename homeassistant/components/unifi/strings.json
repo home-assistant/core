@@ -209,6 +209,14 @@
         "name": "Enabled"
       }
     },
+    "time": {
+      "firewall_policy_schedule_end": {
+        "name": "Schedule end"
+      },
+      "firewall_policy_schedule_start": {
+        "name": "Schedule start"
+      }
+    },
     "update": {
       "ips_engine": {
         "name": "IPS engine"
@@ -231,8 +239,14 @@
     "remove_clients_request_failed": {
       "message": "Failed to remove clients from UniFi Network"
     },
+    "schedule_dates_out_of_order": {
+      "message": "The schedule's start date must be before its end date"
+    },
     "schedule_mode_not_supported": {
       "message": "This schedule mode can only be set in UniFi Network"
+    },
+    "schedule_setting_unused_in_mode": {
+      "message": "The policy's current schedule mode doesn't use this setting"
     },
     "site_not_found": {
       "message": "The configured UniFi Network site no longer exists"
