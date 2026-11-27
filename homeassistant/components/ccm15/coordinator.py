@@ -18,7 +18,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailedUnreachable,
+)
 
 from .const import (
     CONST_FAN_CMD_MAP,
@@ -62,7 +65,9 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         try:
             return await self._fetch_data()
         except httpx2.RequestError as err:
-            raise UpdateFailed("Error communicating with the CCM15 controller") from err
+            raise UpdateFailedUnreachable(
+                "Error communicating with the CCM15 controller"
+            ) from err
 
     async def _fetch_data(self) -> CCM15DeviceState:
         """Get the current status of all AC devices."""

@@ -1,6 +1,7 @@
 """Unit test for CCM15 coordinator component."""
 
 from datetime import timedelta
+import logging
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -146,6 +147,7 @@ async def test_climate_unavailable_on_update_failure(
     mock_config_entry: MockConfigEntry,
     ccm15_device: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the climate entity becomes unavailable when the update fails."""
     mock_config_entry.add_to_hass(hass)
@@ -164,6 +166,12 @@ async def test_climate_unavailable_on_update_failure(
 
     assert (state := hass.states.get("climate.midea_0"))
     assert state.state == STATE_UNAVAILABLE
+    # An unreachable controller is logged once at info level, not as an error.
+    assert [
+        record.levelno
+        for record in caplog.records
+        if "is unavailable" in record.message
+    ] == [logging.INFO]
 
     ccm15_device.side_effect = None
 
