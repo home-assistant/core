@@ -7,7 +7,6 @@ from typing import Any, cast, override
 import probatio
 
 from homeassistant.components import websocket_api
-from homeassistant.components.media_player import SERVICE_SELECT_SOURCE
 from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
@@ -44,15 +43,6 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
     DEGREE,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
     Platform,
     UnitOfTemperature,
 )
@@ -145,8 +135,18 @@ from .light import (
 from .lock import CONF_LOCK, CONF_OPEN, CONF_UNLOCK, async_create_preview_lock
 from .media_player import (
     CONF_IS_VOLUME_MUTED,
+    CONF_MEDIA_NEXT_TRACK_ACTION,
+    CONF_MEDIA_PAUSE_ACTION,
+    CONF_MEDIA_PLAY_ACTION,
+    CONF_MEDIA_PREVIOUS_TRACK_ACTION,
+    CONF_MEDIA_STOP_ACTION,
+    CONF_SELECT_SOURCE_ACTION,
     CONF_SOURCE_LIST,
+    CONF_VOLUME_DOWN_ACTION,
     CONF_VOLUME_LEVEL,
+    CONF_VOLUME_MUTE_ACTION,
+    CONF_VOLUME_SET_ACTION,
+    CONF_VOLUME_UP_ACTION,
     async_create_preview_media_player,
 )
 from .number import CONF_SET_VALUE, async_create_preview_number
@@ -208,9 +208,9 @@ _REQUIRED_OPTIONS: dict[str, tuple[tuple[str, str, str], ...]] = {
     ),
     Platform.MEDIA_PLAYER: (
         (CONF_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
-        (SERVICE_SELECT_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
-        (SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, "volume_up_and_down_required"),
-        (SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP, "volume_up_and_down_required"),
+        (CONF_SELECT_SOURCE_ACTION, CONF_SOURCE_LIST, "source_list_required"),
+        (CONF_VOLUME_UP_ACTION, CONF_VOLUME_DOWN_ACTION, "volume_up_and_down_required"),
+        (CONF_VOLUME_DOWN_ACTION, CONF_VOLUME_UP_ACTION, "volume_up_and_down_required"),
     ),
     Platform.VACUUM: (
         (CONF_FAN_SPEED, CONF_FAN_SPEED_LIST, "fan_speeds_required"),
@@ -407,18 +407,20 @@ def generate_schema(
             probatio.Optional(CONF_TURN_OFF): selector.ActionSelector(),
             probatio.Optional(CONF_VOLUME_LEVEL): selector.TemplateSelector(),
             probatio.Optional(CONF_IS_VOLUME_MUTED): selector.TemplateSelector(),
-            probatio.Optional(SERVICE_VOLUME_SET): selector.ActionSelector(),
-            probatio.Optional(SERVICE_VOLUME_UP): selector.ActionSelector(),
-            probatio.Optional(SERVICE_VOLUME_DOWN): selector.ActionSelector(),
-            probatio.Optional(SERVICE_VOLUME_MUTE): selector.ActionSelector(),
-            probatio.Optional(SERVICE_MEDIA_PLAY): selector.ActionSelector(),
-            probatio.Optional(SERVICE_MEDIA_PAUSE): selector.ActionSelector(),
-            probatio.Optional(SERVICE_MEDIA_STOP): selector.ActionSelector(),
-            probatio.Optional(SERVICE_MEDIA_NEXT_TRACK): selector.ActionSelector(),
-            probatio.Optional(SERVICE_MEDIA_PREVIOUS_TRACK): selector.ActionSelector(),
+            probatio.Optional(CONF_VOLUME_SET_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_VOLUME_UP_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_VOLUME_DOWN_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_VOLUME_MUTE_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_MEDIA_PLAY_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_MEDIA_PAUSE_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_MEDIA_STOP_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_MEDIA_NEXT_TRACK_ACTION): selector.ActionSelector(),
+            probatio.Optional(
+                CONF_MEDIA_PREVIOUS_TRACK_ACTION
+            ): selector.ActionSelector(),
             probatio.Optional(CONF_SOURCE): selector.TemplateSelector(),
             probatio.Optional(CONF_SOURCE_LIST): selector.TemplateSelector(),
-            probatio.Optional(SERVICE_SELECT_SOURCE): selector.ActionSelector(),
+            probatio.Optional(CONF_SELECT_SOURCE_ACTION): selector.ActionSelector(),
         }
 
     if domain == Platform.NUMBER:

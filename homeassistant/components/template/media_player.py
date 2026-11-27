@@ -10,10 +10,6 @@ from homeassistant.components.media_player import (
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     ENTITY_ID_FORMAT,
-    SERVICE_CLEAR_PLAYLIST,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOUND_MODE,
-    SERVICE_SELECT_SOURCE,
     MediaPlayerEntity,
     MediaPlayerEntityCapabilityAttribute,
     MediaPlayerEntityFeature,
@@ -29,20 +25,6 @@ from homeassistant.const import (
     CONF_REPEAT,
     CONF_SOURCE,
     CONF_STATE,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_REPEAT_SET,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
     Platform,
 )
 from homeassistant.core import HomeAssistant, State, callback
@@ -56,7 +38,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import validators as tcv
-from .const import DEFAULT_NAMES, DOMAIN
+from .const import CONF_TURN_OFF, CONF_TURN_ON, DEFAULT_NAMES, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -95,29 +77,46 @@ CONF_SOUND_MODE = "sound_mode"
 CONF_SOUND_MODE_LIST = "sound_mode_list"
 CONF_SOURCE_LIST = "source_list"
 CONF_VOLUME_LEVEL = "volume_level"
+CONF_CLEAR_PLAYLIST_ACTION = "clear_playlist"
+CONF_MEDIA_NEXT_TRACK_ACTION = "media_next_track"
+CONF_MEDIA_PAUSE_ACTION = "media_pause"
+CONF_MEDIA_PLAY_ACTION = "media_play"
+CONF_MEDIA_PREVIOUS_TRACK_ACTION = "media_previous_track"
+CONF_MEDIA_SEEK_ACTION = "media_seek"
+CONF_MEDIA_STOP_ACTION = "media_stop"
+CONF_PLAY_MEDIA_ACTION = "play_media"
+CONF_REPEAT_SET_ACTION = "repeat_set"
+CONF_SELECT_SOUND_MODE_ACTION = "select_sound_mode"
+CONF_SELECT_SOURCE_ACTION = "select_source"
+CONF_SHUFFLE_SET_ACTION = "shuffle_set"
+CONF_VOLUME_DOWN_ACTION = "volume_down"
+CONF_VOLUME_MUTE_ACTION = "volume_mute"
+CONF_VOLUME_SET_ACTION = "volume_set"
+CONF_VOLUME_UP_ACTION = "volume_up"
+
 CONF_VOLUME_UP_AND_DOWN = "volume_up_and_down"
 
 DEFAULT_NAME = DEFAULT_NAMES[Platform.MEDIA_PLAYER]
 
 SCRIPT_FIELDS = (
-    SERVICE_CLEAR_PLAYLIST,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_REPEAT_SET,
-    SERVICE_SELECT_SOUND_MODE,
-    SERVICE_SELECT_SOURCE,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
+    CONF_CLEAR_PLAYLIST_ACTION,
+    CONF_MEDIA_NEXT_TRACK_ACTION,
+    CONF_MEDIA_PAUSE_ACTION,
+    CONF_MEDIA_PLAY_ACTION,
+    CONF_MEDIA_PREVIOUS_TRACK_ACTION,
+    CONF_MEDIA_SEEK_ACTION,
+    CONF_MEDIA_STOP_ACTION,
+    CONF_PLAY_MEDIA_ACTION,
+    CONF_REPEAT_SET_ACTION,
+    CONF_SELECT_SOUND_MODE_ACTION,
+    CONF_SELECT_SOURCE_ACTION,
+    CONF_SHUFFLE_SET_ACTION,
+    CONF_TURN_OFF,
+    CONF_TURN_ON,
+    CONF_VOLUME_DOWN_ACTION,
+    CONF_VOLUME_MUTE_ACTION,
+    CONF_VOLUME_SET_ACTION,
+    CONF_VOLUME_UP_ACTION,
 )
 
 STRING_TEMPLATES = (
@@ -164,22 +163,22 @@ MEDIA_PLAYER_COMMON_SCHEMA = probatio.Schema(
         **{
             probatio.Optional(action): cv.SCRIPT_SCHEMA
             for action in SCRIPT_FIELDS
-            if action not in (SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP)
+            if action not in (CONF_VOLUME_DOWN_ACTION, CONF_VOLUME_UP_ACTION)
         },
         probatio.Inclusive(
-            SERVICE_VOLUME_DOWN, CONF_VOLUME_UP_AND_DOWN
+            CONF_VOLUME_DOWN_ACTION, CONF_VOLUME_UP_AND_DOWN
         ): cv.SCRIPT_SCHEMA,
         probatio.Inclusive(
-            SERVICE_VOLUME_UP, CONF_VOLUME_UP_AND_DOWN
+            CONF_VOLUME_UP_ACTION, CONF_VOLUME_UP_AND_DOWN
         ): cv.SCRIPT_SCHEMA,
     }
 )
 
 _MEDIA_PLAYER_VALIDATION = (
     tcv.requires_option(CONF_SOURCE, CONF_SOURCE_LIST),
-    tcv.requires_option(SERVICE_SELECT_SOURCE, CONF_SOURCE_LIST),
+    tcv.requires_option(CONF_SELECT_SOURCE_ACTION, CONF_SOURCE_LIST),
     tcv.requires_option(CONF_SOUND_MODE, CONF_SOUND_MODE_LIST),
-    tcv.requires_option(SERVICE_SELECT_SOUND_MODE, CONF_SOUND_MODE_LIST),
+    tcv.requires_option(CONF_SELECT_SOUND_MODE_ACTION, CONF_SOUND_MODE_LIST),
 )
 
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
@@ -413,35 +412,35 @@ class AbstractTemplateMediaPlayer(
             )
 
         for attr, option, action in (
-            ("_attr_volume_level", CONF_VOLUME_LEVEL, SERVICE_VOLUME_SET),
-            ("_attr_is_volume_muted", CONF_IS_VOLUME_MUTED, SERVICE_VOLUME_MUTE),
-            ("_attr_source", CONF_SOURCE, SERVICE_SELECT_SOURCE),
-            ("_attr_sound_mode", CONF_SOUND_MODE, SERVICE_SELECT_SOUND_MODE),
-            ("_attr_shuffle", CONF_SHUFFLE, SERVICE_SHUFFLE_SET),
-            ("_attr_repeat", CONF_REPEAT, SERVICE_REPEAT_SET),
+            ("_attr_volume_level", CONF_VOLUME_LEVEL, CONF_VOLUME_SET_ACTION),
+            ("_attr_is_volume_muted", CONF_IS_VOLUME_MUTED, CONF_VOLUME_MUTE_ACTION),
+            ("_attr_source", CONF_SOURCE, CONF_SELECT_SOURCE_ACTION),
+            ("_attr_sound_mode", CONF_SOUND_MODE, CONF_SELECT_SOUND_MODE_ACTION),
+            ("_attr_shuffle", CONF_SHUFFLE, CONF_SHUFFLE_SET_ACTION),
+            ("_attr_repeat", CONF_REPEAT, CONF_REPEAT_SET_ACTION),
         ):
             self.add_assumed_attribute(attr, option, action)
 
         self._attr_supported_features = MediaPlayerEntityFeature(0)
         for action_id, supported_feature in (
-            (SERVICE_CLEAR_PLAYLIST, MediaPlayerEntityFeature.CLEAR_PLAYLIST),
-            (SERVICE_MEDIA_NEXT_TRACK, MediaPlayerEntityFeature.NEXT_TRACK),
-            (SERVICE_MEDIA_PAUSE, MediaPlayerEntityFeature.PAUSE),
-            (SERVICE_MEDIA_PLAY, MediaPlayerEntityFeature.PLAY),
-            (SERVICE_MEDIA_PREVIOUS_TRACK, MediaPlayerEntityFeature.PREVIOUS_TRACK),
-            (SERVICE_MEDIA_SEEK, MediaPlayerEntityFeature.SEEK),
-            (SERVICE_MEDIA_STOP, MediaPlayerEntityFeature.STOP),
-            (SERVICE_PLAY_MEDIA, MediaPlayerEntityFeature.PLAY_MEDIA),
-            (SERVICE_REPEAT_SET, MediaPlayerEntityFeature.REPEAT_SET),
-            (SERVICE_SELECT_SOUND_MODE, MediaPlayerEntityFeature.SELECT_SOUND_MODE),
-            (SERVICE_SELECT_SOURCE, MediaPlayerEntityFeature.SELECT_SOURCE),
-            (SERVICE_SHUFFLE_SET, MediaPlayerEntityFeature.SHUFFLE_SET),
-            (SERVICE_TURN_OFF, MediaPlayerEntityFeature.TURN_OFF),
-            (SERVICE_TURN_ON, MediaPlayerEntityFeature.TURN_ON),
-            (SERVICE_VOLUME_DOWN, MediaPlayerEntityFeature.VOLUME_STEP),
-            (SERVICE_VOLUME_MUTE, MediaPlayerEntityFeature.VOLUME_MUTE),
-            (SERVICE_VOLUME_SET, MediaPlayerEntityFeature.VOLUME_SET),
-            (SERVICE_VOLUME_UP, MediaPlayerEntityFeature.VOLUME_STEP),
+            (CONF_CLEAR_PLAYLIST_ACTION, MediaPlayerEntityFeature.CLEAR_PLAYLIST),
+            (CONF_MEDIA_NEXT_TRACK_ACTION, MediaPlayerEntityFeature.NEXT_TRACK),
+            (CONF_MEDIA_PAUSE_ACTION, MediaPlayerEntityFeature.PAUSE),
+            (CONF_MEDIA_PLAY_ACTION, MediaPlayerEntityFeature.PLAY),
+            (CONF_MEDIA_PREVIOUS_TRACK_ACTION, MediaPlayerEntityFeature.PREVIOUS_TRACK),
+            (CONF_MEDIA_SEEK_ACTION, MediaPlayerEntityFeature.SEEK),
+            (CONF_MEDIA_STOP_ACTION, MediaPlayerEntityFeature.STOP),
+            (CONF_PLAY_MEDIA_ACTION, MediaPlayerEntityFeature.PLAY_MEDIA),
+            (CONF_REPEAT_SET_ACTION, MediaPlayerEntityFeature.REPEAT_SET),
+            (CONF_SELECT_SOUND_MODE_ACTION, MediaPlayerEntityFeature.SELECT_SOUND_MODE),
+            (CONF_SELECT_SOURCE_ACTION, MediaPlayerEntityFeature.SELECT_SOURCE),
+            (CONF_SHUFFLE_SET_ACTION, MediaPlayerEntityFeature.SHUFFLE_SET),
+            (CONF_TURN_OFF, MediaPlayerEntityFeature.TURN_OFF),
+            (CONF_TURN_ON, MediaPlayerEntityFeature.TURN_ON),
+            (CONF_VOLUME_DOWN_ACTION, MediaPlayerEntityFeature.VOLUME_STEP),
+            (CONF_VOLUME_MUTE_ACTION, MediaPlayerEntityFeature.VOLUME_MUTE),
+            (CONF_VOLUME_SET_ACTION, MediaPlayerEntityFeature.VOLUME_SET),
+            (CONF_VOLUME_UP_ACTION, MediaPlayerEntityFeature.VOLUME_STEP),
         ):
             if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
@@ -523,47 +522,55 @@ class AbstractTemplateMediaPlayer(
     @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        await self._async_run_action(SERVICE_TURN_ON, state=MediaPlayerState.ON)
+        await self._async_run_action(CONF_TURN_ON, state=MediaPlayerState.ON)
 
     @override
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
-        await self._async_run_action(SERVICE_TURN_OFF, state=MediaPlayerState.OFF)
+        await self._async_run_action(CONF_TURN_OFF, state=MediaPlayerState.OFF)
 
     @override
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self._async_run_action(SERVICE_MEDIA_PLAY, state=MediaPlayerState.PLAYING)
+        await self._async_run_action(
+            CONF_MEDIA_PLAY_ACTION, state=MediaPlayerState.PLAYING
+        )
 
     @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self._async_run_action(SERVICE_MEDIA_PAUSE, state=MediaPlayerState.PAUSED)
+        await self._async_run_action(
+            CONF_MEDIA_PAUSE_ACTION, state=MediaPlayerState.PAUSED
+        )
 
     @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        await self._async_run_action(SERVICE_MEDIA_STOP, state=MediaPlayerState.IDLE)
+        await self._async_run_action(
+            CONF_MEDIA_STOP_ACTION, state=MediaPlayerState.IDLE
+        )
 
     @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        await self._async_run_action(SERVICE_MEDIA_NEXT_TRACK)
+        await self._async_run_action(CONF_MEDIA_NEXT_TRACK_ACTION)
 
     @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        await self._async_run_action(SERVICE_MEDIA_PREVIOUS_TRACK)
+        await self._async_run_action(CONF_MEDIA_PREVIOUS_TRACK_ACTION)
 
     @override
     async def async_clear_playlist(self) -> None:
         """Clear the playlist."""
-        await self._async_run_action(SERVICE_CLEAR_PLAYLIST)
+        await self._async_run_action(CONF_CLEAR_PLAYLIST_ACTION)
 
     @override
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
-        await self._async_run_action(SERVICE_MEDIA_SEEK, {"seek_position": position})
+        await self._async_run_action(
+            CONF_MEDIA_SEEK_ACTION, {"seek_position": position}
+        )
 
     @override
     async def async_play_media(
@@ -571,7 +578,7 @@ class AbstractTemplateMediaPlayer(
     ) -> None:
         """Play a piece of media."""
         await self._async_run_action(
-            SERVICE_PLAY_MEDIA,
+            CONF_PLAY_MEDIA_ACTION,
             {
                 "media_content_type": media_type,
                 "media_content_id": media_id,
@@ -583,55 +590,55 @@ class AbstractTemplateMediaPlayer(
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
-        await self._async_run_action(SERVICE_VOLUME_SET, {"volume_level": volume})
+        await self._async_run_action(CONF_VOLUME_SET_ACTION, {"volume_level": volume})
         self.write_assumed_attribute(CONF_VOLUME_LEVEL, volume)
 
     @override
     async def async_volume_up(self) -> None:
         """Turn the volume up."""
-        if SERVICE_VOLUME_UP not in self._action_scripts:
+        if CONF_VOLUME_UP_ACTION not in self._action_scripts:
             await super().async_volume_up()
             return
-        await self._async_run_action(SERVICE_VOLUME_UP)
+        await self._async_run_action(CONF_VOLUME_UP_ACTION)
 
     @override
     async def async_volume_down(self) -> None:
         """Turn the volume down."""
-        if SERVICE_VOLUME_DOWN not in self._action_scripts:
+        if CONF_VOLUME_DOWN_ACTION not in self._action_scripts:
             await super().async_volume_down()
             return
-        await self._async_run_action(SERVICE_VOLUME_DOWN)
+        await self._async_run_action(CONF_VOLUME_DOWN_ACTION)
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute the volume."""
-        await self._async_run_action(SERVICE_VOLUME_MUTE, {"is_volume_muted": mute})
+        await self._async_run_action(CONF_VOLUME_MUTE_ACTION, {"is_volume_muted": mute})
         self.write_assumed_attribute(CONF_IS_VOLUME_MUTED, mute)
 
     @override
     async def async_select_source(self, source: str) -> None:
         """Select an input source."""
-        await self._async_run_action(SERVICE_SELECT_SOURCE, {"source": source})
+        await self._async_run_action(CONF_SELECT_SOURCE_ACTION, {"source": source})
         self.write_assumed_attribute(CONF_SOURCE, source)
 
     @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a sound mode."""
         await self._async_run_action(
-            SERVICE_SELECT_SOUND_MODE, {"sound_mode": sound_mode}
+            CONF_SELECT_SOUND_MODE_ACTION, {"sound_mode": sound_mode}
         )
         self.write_assumed_attribute(CONF_SOUND_MODE, sound_mode)
 
     @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable or disable shuffle."""
-        await self._async_run_action(SERVICE_SHUFFLE_SET, {"shuffle": shuffle})
+        await self._async_run_action(CONF_SHUFFLE_SET_ACTION, {"shuffle": shuffle})
         self.write_assumed_attribute(CONF_SHUFFLE, shuffle)
 
     @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode."""
-        await self._async_run_action(SERVICE_REPEAT_SET, {"repeat": repeat})
+        await self._async_run_action(CONF_REPEAT_SET_ACTION, {"repeat": repeat})
         self.write_assumed_attribute(CONF_REPEAT, repeat)
 
     @override
