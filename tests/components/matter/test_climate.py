@@ -16,6 +16,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.matter.climate import SUPPORT_FAN_MODE_DEVICES
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -1235,3 +1236,11 @@ async def test_failed_power_on_does_not_write_mode(
             "climate", "turn_on", {"entity_id": ROOM_AC_ENTITY_ID}, blocking=True
         )
     matter_client.write_attribute.assert_not_called()
+
+
+def test_panasonic_fan_only_pid_allowlist_boundaries() -> None:
+    """Verify all Panasonic Room AC PIDs 0x0101-0x0149 are in SUPPORT_FAN_MODE_DEVICES."""
+    for pid in range(0x0101, 0x014A):
+        assert (0x0001, pid) in SUPPORT_FAN_MODE_DEVICES
+    assert (0x0001, 0x0100) not in SUPPORT_FAN_MODE_DEVICES
+    assert (0x0001, 0x014A) not in SUPPORT_FAN_MODE_DEVICES
