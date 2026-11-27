@@ -1,6 +1,7 @@
 """Support for (EMEA/EU-based) Honeywell TCC systems."""
 
 from collections.abc import Awaitable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any, Final, override
@@ -487,3 +488,11 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             self._first_refresh_done = True
 
         return self.loc.status
+
+
+@dataclass
+class EvoData:
+    """Dataclass for storing evohome data."""
+
+    account: EvoAccountCoordinator
+    locations: list[EvoLocationCoordinator]
