@@ -2,9 +2,10 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from chip.clusters import Objects as clusters
+from matter_server.client.models import device_types
 from matter_server.common.custom_clusters import HeimanCluster
 
 from homeassistant.components.button import (
@@ -12,13 +13,18 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
+from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.const import EntityCategory, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import BORDER_ROUTER_DEVICE_TYPES, DOMAIN
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
+from .thread_border_router import async_push_dataset, async_run_on_entry
+from .wifi_credentials import async_import_credentials
 
 
 async def async_setup_entry(
@@ -51,8 +57,116 @@ class MatterCommandButton(MatterEntity, ButtonEntity):
         await self.send_device_command(self.entity_description.command())
 
 
+async def _async_require_admin(hass: HomeAssistant, context: Context | None) -> None:
+    """Refuse a press by a user who is not an administrator.
+
+    As for an admin-only action, a press without a user, from an automation,
+    passes.
+    """
+    if context is None or context.user_id is None:
+        return
+    user = await hass.auth.async_get_user(context.user_id)
+    if user is None or not user.is_admin:
+        raise Unauthorized(context=context)
+
+
+class MatterThreadDatasetImportButton(MatterEntity, ButtonEntity):
+    """Button importing a Thread border router's dataset into Home Assistant."""
+
+    @override
+    async def async_press(self) -> None:
+        """Import the dataset, which holds the network key."""
+        await _async_require_admin(self.hass, self._context)
+        entry = cast(MatterConfigEntry, self.platform.config_entry)
+        await entry.runtime_data.thread_datasets.async_import(self._endpoint)
+
+
+class MatterThreadNetworkAdoptButton(MatterEntity, ButtonEntity):
+    """Button handing the preferred Thread network to a border router."""
+
+    @override
+    async def async_press(self) -> None:
+        """Adopt a router without a network into the preferred one."""
+        await _async_require_admin(self.hass, self._context)
+        if (preferred := await async_get_preferred_dataset(self.hass)) is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="no_preferred_dataset"
+            )
+        entry = cast(MatterConfigEntry, self.platform.config_entry)
+        # A router with a network would take the whole network along.
+        await async_run_on_entry(
+            self.hass,
+            entry,
+            async_push_dataset(
+                self.hass,
+                self.matter_client,
+                self._endpoint,
+                bytes.fromhex(preferred),
+                adopt_only=True,
+            ),
+            f"matter_adopt_thread_network_{self._endpoint.node.node_id}",
+        )
+
+
+class MatterWifiCredentialsImportButton(MatterEntity, ButtonEntity):
+    """Button handing a network manager's Wi-Fi credentials to the Matter server."""
+
+    @override
+    async def async_press(self) -> None:
+        """Import the credentials, replacing the server's."""
+        await _async_require_admin(self.hass, self._context)
+        await async_import_credentials(self.matter_client, self._endpoint)
+
+
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="ThreadDatasetImportButton",
+            translation_key="import_thread_network",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        entity_class=MatterThreadDatasetImportButton,
+        required_attributes=(
+            clusters.ThreadBorderRouterManagement.Attributes.ActiveDatasetTimestamp,
+        ),
+        device_type=BORDER_ROUTER_DEVICE_TYPES,
+        # Null while the router has no network; the button stays.
+        allow_none_value=True,
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="ThreadNetworkAdoptButton",
+            translation_key="adopt_thread_network",
+            entity_category=EntityCategory.CONFIG,
+            # Reconfigures the router's network; enabled deliberately.
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=MatterThreadNetworkAdoptButton,
+        required_attributes=(
+            clusters.ThreadBorderRouterManagement.Attributes.ActiveDatasetTimestamp,
+        ),
+        device_type=BORDER_ROUTER_DEVICE_TYPES,
+        # Null while the router has no network, which is when it is adopted.
+        allow_none_value=True,
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="WifiCredentialsImportButton",
+            translation_key="import_wifi_credentials",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        entity_class=MatterWifiCredentialsImportButton,
+        required_attributes=(clusters.WiFiNetworkManagement.Attributes.Ssid,),
+        device_type=(device_types.NetworkInfrastructureManager,),
+        # Null while sharing is off; the button stays.
+        allow_none_value=True,
+    ),
     MatterDiscoverySchema(
         platform=Platform.BUTTON,
         entity_description=MatterButtonEntityDescription(

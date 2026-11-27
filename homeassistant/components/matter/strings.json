@@ -129,6 +129,12 @@
       "end_of_service": {
         "name": "End of service"
       },
+      "ethernet_carrier_detect": {
+        "name": "Ethernet carrier"
+      },
+      "ethernet_full_duplex": {
+        "name": "Ethernet full duplex"
+      },
       "evse_charging_status": {
         "name": "Charging status"
       },
@@ -165,6 +171,9 @@
       "thermostat_remote_sensing_outdoor_temperature": {
         "name": "Outdoor temperature remote sensing"
       },
+      "thread_migration_pending": {
+        "name": "Thread migration pending"
+      },
       "valve_fault_blocked": {
         "name": "Valve blocked"
       },
@@ -182,8 +191,17 @@
       }
     },
     "button": {
+      "adopt_thread_network": {
+        "name": "Adopt preferred Thread network"
+      },
       "cancel_boost": {
         "name": "Cancel boost"
+      },
+      "import_thread_network": {
+        "name": "Import Thread network"
+      },
+      "import_wifi_credentials": {
+        "name": "Import Wi-Fi credentials"
       },
       "pause": {
         "name": "[%key:common::action::pause%]"
@@ -600,6 +618,40 @@
       "estimated_heat_required": {
         "name": "Required heating energy"
       },
+      "ethernet_collision_count": {
+        "name": "Ethernet collisions"
+      },
+      "ethernet_overrun_count": {
+        "name": "Ethernet overruns"
+      },
+      "ethernet_packet_rx_count": {
+        "name": "Ethernet packets received"
+      },
+      "ethernet_packet_tx_count": {
+        "name": "Ethernet packets transmitted"
+      },
+      "ethernet_phy_rate": {
+        "name": "Ethernet PHY rate",
+        "state": {
+          "1g": "1 Gbit/s",
+          "2_5g": "2.5 Gbit/s",
+          "5g": "5 Gbit/s",
+          "10g": "10 Gbit/s",
+          "10m": "10 Mbit/s",
+          "40g": "40 Gbit/s",
+          "100g": "100 Gbit/s",
+          "100m": "100 Mbit/s",
+          "200g": "200 Gbit/s",
+          "400g": "400 Gbit/s",
+          "unknown": "Unknown"
+        }
+      },
+      "ethernet_time_since_reset": {
+        "name": "Ethernet counters reset"
+      },
+      "ethernet_tx_error_count": {
+        "name": "Ethernet transmit errors"
+      },
       "eve_weather_trend": {
         "name": "Weather trend",
         "state": {
@@ -760,6 +812,12 @@
       "thread_network_name": {
         "name": "Thread network name"
       },
+      "thread_pan_id": {
+        "name": "Thread PAN ID"
+      },
+      "thread_partition_id": {
+        "name": "Thread partition ID"
+      },
       "thread_routing_role": {
         "name": "Thread routing role",
         "state": {
@@ -891,8 +949,101 @@
     "invalid_credential_data": {
       "message": "Invalid credential data: {reason}."
     },
+    "invalid_device": {
+      "message": "Device {device_id} is not a Matter device."
+    },
+    "matter_not_set_up": {
+      "message": "The Matter integration is not set up."
+    },
+    "matter_unloaded": {
+      "message": "The Matter integration was unloaded before the device was done."
+    },
+    "no_preferred_dataset": {
+      "message": "No dataset was given and there is no preferred Thread network."
+    },
+    "node_reconfiguring": {
+      "message": "The device is being reconfigured already. Try again once that is done."
+    },
+    "not_a_border_router": {
+      "message": "The selected device is not a Matter Thread border router."
+    },
+    "not_a_thread_device": {
+      "message": "The selected device is not a Matter Thread device that can be moved to another network."
+    },
     "set_credential_failed": {
       "message": "Failed to set credential: lock returned status `{status}`."
+    },
+    "thread_adoption_unconfirmed": {
+      "message": "The border router did not confirm the adoption and may have taken the Thread network nonetheless. Get Thread network from border router shows whether it has."
+    },
+    "thread_dataset_not_newer": {
+      "message": "Home Assistant already has a different Thread dataset with the same or a newer active timestamp for the network of this border router, so nothing was imported."
+    },
+    "thread_dataset_pending": {
+      "message": "The border router has a pending Thread network change already. Try again once it has taken effect."
+    },
+    "thread_dataset_push_failed": {
+      "message": "Could not hand the Thread network to the border router: {error}."
+    },
+    "thread_dataset_read_failed": {
+      "message": "Could not read the Thread dataset of the border router: {error}."
+    },
+    "thread_dataset_unusable": {
+      "message": "The border router returned no usable Thread dataset."
+    },
+    "thread_migration_failed": {
+      "message": "Could not move the device to the Thread network: {error}."
+    },
+    "thread_migration_incomplete": {
+      "message": "Could not move these devices to the Thread network: {devices}. Run the action again to retry them."
+    },
+    "thread_migration_not_switched": {
+      "message": "The device stayed on its Thread network and was not moved."
+    },
+    "thread_migration_running": {
+      "message": "A migration of all devices to a Thread network is under way. Try again once it is done."
+    },
+    "thread_migration_unconfirmed": {
+      "message": "The device reached the new Thread network but did not confirm the move. It stays there if the move was committed, and otherwise returns to its previous network when its fail-safe expires."
+    },
+    "thread_migration_unreachable": {
+      "message": "The device did not answer on the new Thread network and returns to its previous one when its fail-safe expires."
+    },
+    "thread_network_busy": {
+      "message": "Devices are being moved between Thread networks. Try again once that is done."
+    },
+    "thread_network_change_pending": {
+      "message": "A border router has a Thread network change pending. Try again once it has taken effect."
+    },
+    "thread_network_missing": {
+      "message": "The border router has no Thread network."
+    },
+    "thread_network_present": {
+      "message": "The border router has a Thread network already, which the button would move as a whole. Use the Push Thread network to border router action for that."
+    },
+    "thread_network_unreadable": {
+      "message": "The Thread network of the device could not be read, so it was not moved. Try again once the device is reachable."
+    },
+    "thread_pan_change_unsupported": {
+      "message": "The border router cannot change the Thread network it runs."
+    },
+    "unknown_dataset": {
+      "message": "Home Assistant stores no Thread dataset with ID {dataset_id}."
+    },
+    "wifi_credentials_import_failed": {
+      "message": "Could not import the Wi-Fi credentials of the network manager: {error}."
+    },
+    "wifi_credentials_set_failed": {
+      "message": "Could not set the Wi-Fi credentials: {error}."
+    },
+    "wifi_credentials_unusable": {
+      "message": "The network manager returned no usable Wi-Fi credentials."
+    },
+    "wifi_network_changed": {
+      "message": "The Wi-Fi network or passphrase of the network manager changed during the import. Press the button again."
+    },
+    "wifi_network_not_shared": {
+      "message": "The network manager shares no Wi-Fi network."
     }
   },
   "issues": {
@@ -956,6 +1107,40 @@
       "description": "Returns all users configured on a lock with their credentials.",
       "name": "Get lock users"
     },
+    "get_thread_dataset": {
+      "description": "Reads the Thread networks of a Matter border router: the active one, and the pending one while a migration is scheduled, each with its name, extended PAN ID, PAN ID, channel, timestamp and the ID of the dataset Home Assistant stores for it. The network key is not returned.",
+      "fields": {
+        "device_id": {
+          "description": "The Matter border router to read from.",
+          "name": "Border router"
+        }
+      },
+      "name": "Get Thread network from border router"
+    },
+    "migrate_thread_device": {
+      "description": "Moves a commissioned Matter Thread device to another Thread network without commissioning it again. A device that cannot reach the new network returns to its previous one by itself.",
+      "fields": {
+        "dataset_id": {
+          "description": "ID of a Thread dataset stored in Home Assistant. Defaults to the preferred network from the Thread settings.",
+          "name": "Dataset ID"
+        },
+        "device_id": {
+          "description": "The Matter Thread device to move.",
+          "name": "Device"
+        }
+      },
+      "name": "Migrate device to Thread network"
+    },
+    "migrate_thread_fleet": {
+      "description": "Moves every commissioned Matter Thread device to another Thread network, one at a time. Devices already on the network are skipped, border routers are left alone, and end devices go before the routers they depend on; when a device fails to move, the routers are held back. Offline devices are reported as failed. Running it again picks up the devices that were not moved.",
+      "fields": {
+        "dataset_id": {
+          "description": "ID of a Thread dataset stored in Home Assistant. Defaults to the preferred network from the Thread settings.",
+          "name": "Dataset ID"
+        }
+      },
+      "name": "Migrate all devices to Thread network"
+    },
     "open_commissioning_window": {
       "description": "Allows adding one of your devices to another Matter network by opening the commissioning window for this Matter device for 60 seconds.",
       "fields": {
@@ -965,6 +1150,20 @@
         }
       },
       "name": "Open commissioning window"
+    },
+    "push_thread_dataset": {
+      "description": "Hands a Thread network to a Matter border router. A border router without a network is adopted into it. One with a network receives it as a pending dataset, which moves that whole Thread network, with every device on it, after five minutes.",
+      "fields": {
+        "dataset_id": {
+          "description": "ID of a Thread dataset stored in Home Assistant. Defaults to the preferred network from the Thread settings.",
+          "name": "Dataset ID"
+        },
+        "device_id": {
+          "description": "The Matter border router to configure.",
+          "name": "Border router"
+        }
+      },
+      "name": "Push Thread network to border router"
     },
     "set_lock_credential": {
       "description": "Adds or updates a credential on a lock.",
@@ -1017,6 +1216,20 @@
         }
       },
       "name": "Set lock user"
+    },
+    "set_wifi_credentials": {
+      "description": "Sets the Wi-Fi network that the Matter server commissions new Wi-Fi devices onto. The password is stored in the database with each call of this action, and in the traces of automations and scripts that use it.",
+      "fields": {
+        "password": {
+          "description": "The passphrase of the Wi-Fi network.",
+          "name": "Password"
+        },
+        "ssid": {
+          "description": "The name of the Wi-Fi network.",
+          "name": "Network name"
+        }
+      },
+      "name": "Set Wi-Fi credentials"
     },
     "water_heater_boost": {
       "description": "Enables water heater boost for a specific duration.",

@@ -199,3 +199,57 @@ water_heater_boost:
           step: 1
           mode: slider
       default: 65
+
+set_wifi_credentials:
+  fields:
+    ssid:
+      required: true
+      selector:
+        text:
+    password:
+      required: true
+      selector:
+        text:
+          type: password
+
+push_thread_dataset:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: matter
+    dataset_id:
+      required: false
+      selector:
+        text:
+
+get_thread_dataset:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: matter
+
+migrate_thread_device:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: matter
+    dataset_id:
+      required: false
+      selector:
+        text:
+
+migrate_thread_fleet:
+  fields:
+    dataset_id:
+      required: false
+      selector:
+        text:

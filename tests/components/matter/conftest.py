@@ -9,11 +9,13 @@ from matter_server.client.models.node import MatterEndpoint, MatterNode
 from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.models import ServerInfoMessage
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 
+from homeassistant.auth.const import GROUP_ID_USER
 from homeassistant.components.matter import DOMAIN
 from homeassistant.components.matter.discovery import async_discover_entities
 from homeassistant.components.matter.models import MatterEntityInfo
+from homeassistant.components.thread import async_add_dataset, dataset_store
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -21,6 +23,8 @@ from .common import (
     setup_integration_with_node_fixture,
     setup_integration_with_node_fixtures,
 )
+
+from tests.components.thread import DATASET_2
 
 MOCK_FABRIC_ID = 12341234
 MOCK_COMPR_FABRIC_ID = 1234
@@ -121,3 +125,36 @@ async def matter_node(
     return await setup_integration_with_node_fixture(
         hass, node_fixture, matter_client, attributes
     )
+
+
+@pytest.fixture
+def short_border_agent_discovery_timeout() -> Generator[None]:
+    """Skip the Thread store's border agent discovery wait, which never elapses under a frozen clock."""
+    with patch.object(dataset_store, "BORDER_AGENT_DISCOVERY_TIMEOUT", 0):
+        yield
+
+
+@pytest.fixture
+def mock_thread_discovery(mock_async_zeroconf: MagicMock) -> MagicMock:
+    """Adding a Thread dataset starts Thread discovery, which would open a real socket."""
+    return mock_async_zeroconf
+
+
+@pytest.fixture(name="stored_dataset")
+async def stored_dataset_fixture(hass: HomeAssistant) -> str:
+    """Store DATASET_2 in the Thread store and return its ID."""
+    await async_add_dataset(hass, "test", DATASET_2)
+    store = await dataset_store.async_get_store(hass)
+    return next(
+        entry.id
+        for entry in store.datasets.values()
+        if entry.extended_pan_id == "1111111122222233"
+    )
+
+
+@pytest.fixture
+async def non_admin_user(hass: HomeAssistant) -> MockUser:
+    """Return a user who controls entities but is not an administrator."""
+    group = await hass.auth.async_get_group(GROUP_ID_USER)
+    assert group is not None
+    return MockUser(groups=[group]).add_to_hass(hass)

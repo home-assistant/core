@@ -5,6 +5,9 @@ import logging
 from typing import Final
 
 from chip.clusters import Objects as clusters
+from matter_server.client.models import device_types
+
+from homeassistant.util.hass_dict import HassKey
 
 ADDON_SLUG = "core_matter_server"
 
@@ -17,6 +20,18 @@ LOGGER = logging.getLogger(__package__)
 # prefixes to identify device identifier id types
 ID_TYPE_DEVICE_ID = "deviceid"
 ID_TYPE_SERIAL = "serial"
+
+# Set while a fleet migration of Thread devices runs
+FLEET_MIGRATION: HassKey[bool] = HassKey(f"{DOMAIN}_thread_fleet_migration")
+
+# Result of moving a Thread device to another network
+MIGRATED = "migrated"
+
+# Both device types carry the Thread Border Router Management cluster.
+BORDER_ROUTER_DEVICE_TYPES = (
+    device_types.NetworkInfrastructureManager,
+    device_types.ThreadBorderRouter,
+)
 
 FEATUREMAP_ATTRIBUTE_ID = 65532
 CLUSTER_REVISION_ATTRIBUTE_ID = 65533
@@ -38,8 +53,13 @@ class MatterService(StrEnum):
     GET_LOCK_CREDENTIAL_STATUS = "get_lock_credential_status"
     GET_LOCK_INFO = "get_lock_info"
     GET_LOCK_USERS = "get_lock_users"
+    GET_THREAD_DATASET = "get_thread_dataset"
+    MIGRATE_THREAD_DEVICE = "migrate_thread_device"
+    MIGRATE_THREAD_FLEET = "migrate_thread_fleet"
+    PUSH_THREAD_DATASET = "push_thread_dataset"
     SET_LOCK_CREDENTIAL = "set_lock_credential"
     SET_LOCK_USER = "set_lock_user"
+    SET_WIFI_CREDENTIALS = "set_wifi_credentials"
     WATER_HEATER_BOOST = "water_heater_boost"
 
 
@@ -57,6 +77,9 @@ class MatterServiceArgument(StrEnum):
     DURATION = "duration"
     EMERGENCY_BOOST = "emergency_boost"
     TEMPORARY_SETPOINT = "temporary_setpoint"
+    SSID = "ssid"
+    PASSWORD = "password"
+    DATASET_ID = "dataset_id"
 
 
 # --- Lock domain constants ---

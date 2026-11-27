@@ -6,6 +6,15 @@
       }
     },
     "button": {
+      "adopt_thread_network": {
+        "default": "mdi:router-wireless"
+      },
+      "import_thread_network": {
+        "default": "mdi:download-network"
+      },
+      "import_wifi_credentials": {
+        "default": "mdi:wifi-sync"
+      },
       "pause": {
         "default": "mdi:pause"
       },
@@ -224,11 +233,26 @@
     "get_lock_users": {
       "service": "mdi:account-multiple"
     },
+    "get_thread_dataset": {
+      "service": "mdi:download-network"
+    },
+    "migrate_thread_device": {
+      "service": "mdi:swap-horizontal"
+    },
+    "migrate_thread_fleet": {
+      "service": "mdi:swap-horizontal-bold"
+    },
+    "push_thread_dataset": {
+      "service": "mdi:router-wireless"
+    },
     "set_lock_credential": {
       "service": "mdi:key-plus"
     },
     "set_lock_user": {
       "service": "mdi:account-lock"
+    },
+    "set_wifi_credentials": {
+      "service": "mdi:wifi-lock"
     },
     "water_heater_boost": {
       "service": "mdi:water-boiler"

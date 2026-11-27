@@ -330,6 +330,20 @@ THREAD_ROUTING_ROLE_MAP = {
     clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnknownEnumValue: "unknown",
 }
 
+ETHERNET_PHY_RATE_MAP = {
+    clusters.EthernetNetworkDiagnostics.Enums.PHYRateEnum.kRate10M: "10m",
+    clusters.EthernetNetworkDiagnostics.Enums.PHYRateEnum.kRate100M: "100m",
+    clusters.EthernetNetworkDiagnostics.Enums.PHYRateEnum.kRate1G: "1g",
+    clusters.EthernetNetworkDiagnostics.Enums.PHYRateEnum.kRate25g: "2_5g",
+    clusters.EthernetNetworkDiagnostics.Enums.PHYRateEnum.kRate5G: "5g",
+    clusters.EthernetNetworkDiagnostics.Enums.PHYRateEnum.kRate10G: "10g",
+    clusters.EthernetNetworkDiagnostics.Enums.PHYRateEnum.kRate40G: "40g",
+    clusters.EthernetNetworkDiagnostics.Enums.PHYRateEnum.kRate100G: "100g",
+    clusters.EthernetNetworkDiagnostics.Enums.PHYRateEnum.kRate200G: "200g",
+    clusters.EthernetNetworkDiagnostics.Enums.PHYRateEnum.kRate400G: "400g",
+    clusters.EthernetNetworkDiagnostics.Enums.PHYRateEnum.kUnknownEnumValue: "unknown",
+}
+
 BOOT_REASON_MAP = {
     clusters.GeneralDiagnostics.Enums.BootReasonEnum.kUnspecified: "unspecified",
     clusters.GeneralDiagnostics.Enums.BootReasonEnum.kPowerOnReboot: "power_on_reboot",
@@ -2084,6 +2098,138 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.ThreadNetworkDiagnostics.Attributes.NetworkName,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThreadDiagnosticsPanId",
+            translation_key="thread_pan_id",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            # An identifier, conventionally written as hex, not a measurement.
+            device_to_ha=lambda value: f"0x{value:04X}",
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.ThreadNetworkDiagnostics.Attributes.PanId,),
+        # Null until the device has attached to a Thread network.
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThreadDiagnosticsPartitionId",
+            translation_key="thread_partition_id",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.ThreadNetworkDiagnostics.Attributes.PartitionId,),
+        # Null until the device has attached to a Thread network.
+        allow_none_value=True,
+    ),
+    # EthernetNetworkDiagnostics cluster sensors
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EthernetDiagnosticsPHYRate",
+            translation_key="ethernet_phy_rate",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            options=list(ETHERNET_PHY_RATE_MAP.values()),
+            device_to_ha=lambda value: ETHERNET_PHY_RATE_MAP.get(value, "unknown"),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EthernetNetworkDiagnostics.Attributes.PHYRate,),
+        # Null until the link has been negotiated.
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EthernetDiagnosticsPacketRxCount",
+            translation_key="ethernet_packet_rx_count",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.EthernetNetworkDiagnostics.Attributes.PacketRxCount,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EthernetDiagnosticsPacketTxCount",
+            translation_key="ethernet_packet_tx_count",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.EthernetNetworkDiagnostics.Attributes.PacketTxCount,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EthernetDiagnosticsTxErrCount",
+            translation_key="ethernet_tx_error_count",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.EthernetNetworkDiagnostics.Attributes.TxErrCount,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EthernetDiagnosticsCollisionCount",
+            translation_key="ethernet_collision_count",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.EthernetNetworkDiagnostics.Attributes.CollisionCount,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EthernetDiagnosticsOverrunCount",
+            translation_key="ethernet_overrun_count",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.EthernetNetworkDiagnostics.Attributes.OverrunCount,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EthernetDiagnosticsTimeSinceReset",
+            translation_key="ethernet_time_since_reset",
+            # Minutes since the interface, and with it its counters, was
+            # reset: report the instant, as the uptime sensor does.
+            device_class=SensorDeviceClass.UPTIME,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            device_to_ha=lambda value: dt_util.utcnow() - timedelta(minutes=value),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.EthernetNetworkDiagnostics.Attributes.TimeSinceReset,
+        ),
     ),
     # GeneralDiagnostics cluster sensors
     MatterDiscoverySchema(
