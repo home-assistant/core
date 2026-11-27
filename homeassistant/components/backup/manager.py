@@ -3,7 +3,8 @@
 import abc
 import asyncio
 from collections import defaultdict
-from collections.abc import AsyncIterator, Callable, Coroutine
+from collections.abc import AsyncIterator, Callable, Coroutine, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from enum import StrEnum
 import hashlib
@@ -12,6 +13,7 @@ from itertools import chain
 import json
 from pathlib import Path, PurePath, PureWindowsPath
 import shutil
+import subprocess
 import sys
 import tarfile
 import time
@@ -76,6 +78,84 @@ from .util import (
 )
 
 UPLOAD_PROGRESS_DEBOUNCE_SECONDS = 1
+
+
+class _IsolatedFileReadTar:
+    """Tar adapter that reads regular-file contents in a child process.
+
+    securetar.atomic_contents_add only calls TarFile.add with recursive=False.
+    Keep its traversal, exclusions and error handling while avoiding all
+    in-process file opens that could release Recorder's SQLite POSIX locks.
+    """
+
+    def __init__(
+        self, archive: tarfile.TarFile, commands: IO[bytes], data: IO[bytes]
+    ) -> None:
+        self._archive = archive
+        self._commands = commands
+        self._data = data
+
+    def add(
+        self, name: str, arcname: str | None = None, recursive: bool = True
+    ) -> None:
+        """Add a tar entry without opening regular files in this process."""
+        if recursive:
+            raise ValueError("Recursive additions must use securetar's traversal")
+        tar_info = self._archive.gettarinfo(name, arcname)
+        if tar_info is None:
+            return
+        if not tar_info.isfile() or tar_info.size == 0:
+            self._archive.addfile(tar_info)
+            return
+
+        command = json.dumps([name, tar_info.size]).encode() + b"\n"
+        self._commands.write(command)
+        self._commands.flush()
+        self._archive.addfile(tar_info, self._data)
+
+
+@contextmanager
+def _isolated_file_reads(archive: tarfile.TarFile) -> Iterator[tarfile.TarFile]:
+    """Give securetar a stream reader that cannot revoke Recorder's locks."""
+    with subprocess.Popen(
+        [sys.executable, "-I", str(Path(__file__).with_name("_stream_backup_file.py"))],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as process:
+        if TYPE_CHECKING:
+            assert process.stdin is not None
+            assert process.stdout is not None
+            assert process.stderr is not None
+
+        try:
+            # securetar's implementation only uses .add(recursive=False).
+            yield cast(
+                tarfile.TarFile,
+                _IsolatedFileReadTar(archive, process.stdin, process.stdout),
+            )
+            process.stdin.close()
+            process.stdout.close()
+            error = process.stderr.read()
+            return_code = process.wait()
+        except BaseException as err:
+            process.stdin.close()
+            process.stdout.close()
+            try:
+                process.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+
+            if stderr := process.stderr.read():
+                message = stderr.decode(errors="replace").strip()
+                LOGGER.error("Backup file reader failed: %s", message)
+                err.add_note(f"Backup file reader failed: {message}")
+            raise
+        if return_code != 0:
+            raise BackupReaderWriterError(
+                f"Could not stream backup files: {error.decode(errors='replace')}"
+            )
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -2000,12 +2080,15 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             tar_info.size = len(raw_bytes)
             tar_info.mtime = int(time.time())
             outer_secure_tarfile.tar.addfile(tar_info, fileobj=fileobj)
-            with outer_secure_tarfile.create_tar(
-                "./homeassistant.tar.gz",
-                gzip=True,
-            ) as core_tar:
+            with (
+                outer_secure_tarfile.create_tar(
+                    "./homeassistant.tar.gz",
+                    gzip=True,
+                ) as core_tar,
+                _isolated_file_reads(core_tar) as archive,
+            ):
                 atomic_contents_add(
-                    tar_file=core_tar,
+                    tar_file=archive,
                     origin_path=Path(self._hass.config.path()),
                     file_filter=is_excluded_by_filter,
                     arcname="data",
