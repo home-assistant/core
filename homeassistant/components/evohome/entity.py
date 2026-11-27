@@ -80,10 +80,14 @@ class EvoEntity(CoordinatorEntity[EvoLocationCoordinator]):
         """Return the evohome-specific state attributes."""
         return {"status": self._device_state_attrs}
 
-    @callback
     @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass, set its extra state attrs."""
+        await super().async_added_to_hass()
+        self._update_state_attrs()
+
+    def _update_state_attrs(self) -> None:
+        """Update the entity's extra state attrs."""
 
         self._device_state_attrs[self._evo_id_attr] = self._evo_device.id
 
@@ -92,11 +96,12 @@ class EvoEntity(CoordinatorEntity[EvoLocationCoordinator]):
 
         self._device_state_attrs = _recurse_and_revert(self._device_state_attrs)
 
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_state_attrs()
         super()._handle_coordinator_update()
-
-    async def update_attrs(self) -> None:
-        """Update the entity's extra state attrs."""
-        self._handle_coordinator_update()
 
 
 class EvoChild(EvoEntity):
@@ -168,14 +173,13 @@ class EvoChild(EvoEntity):
 
         return self._setpoints
 
-    @callback
     @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _update_state_attrs(self) -> None:
+        """Update the entity's extra state attrs."""
 
         self._device_state_attrs = {
             "activeFaults": self._evo_device.active_faults,
             "setpoints": self.setpoints,
         }
 
-        super()._handle_coordinator_update()
+        super()._update_state_attrs()

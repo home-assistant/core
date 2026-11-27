@@ -26,7 +26,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -112,9 +112,6 @@ async def async_setup_platform(
                 )
 
     async_add_entities(entities)
-
-    for entity in entities:
-        await entity.update_attrs()
 
 
 class EvoClimateEntity(EvoEntity, ClimateEntity):
@@ -422,19 +419,13 @@ class EvoController(EvoClimateEntity):
         evo_mode = HA_PRESET_TO_TCS.get(preset_mode, EvoSystemMode.AUTO)
         await self.coordinator.call_client_api(self._evo_device.set_mode(evo_mode))
 
-    @callback
     @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _update_state_attrs(self) -> None:
+        """Update the entity's extra state attrs."""
 
         self._device_state_attrs = {
             "activeSystemFaults": self._evo_device.active_faults
             + self._evo_device.gateway.active_faults
         }
 
-        super()._handle_coordinator_update()
-
-    @override
-    async def update_attrs(self) -> None:
-        """Update the entity's extra state attrs."""
-        self._handle_coordinator_update()
+        super()._update_state_attrs()
