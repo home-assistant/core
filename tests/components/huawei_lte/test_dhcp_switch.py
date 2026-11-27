@@ -18,11 +18,11 @@ from homeassistant.components.huawei_lte.const import DOMAIN
 from homeassistant.components.huawei_lte.switch import HuaweiLteDhcpSwitch
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_URL,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -82,7 +82,7 @@ async def call_switch(hass: HomeAssistant, service: SwitchService) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: SWITCH_DHCP},
+        {TargetKey.ENTITY_ID: SWITCH_DHCP},
         blocking=True,
     )
     await hass.async_block_till_done()
