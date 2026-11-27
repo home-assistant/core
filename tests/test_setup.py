@@ -1721,6 +1721,55 @@ async def test_async_prepare_setup_platform(
     assert button_platform is not None
 
 
+async def test_async_get_setup_results(hass: HomeAssistant) -> None:
+    """Test _async_get_setup_results."""
+    setup_started = asyncio.Event()
+    setup_stall = asyncio.Event()
+
+    async def mock_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return True
+
+    async def mock_setup_failed(hass: HomeAssistant, config: ConfigType) -> bool:
+        return False
+
+    mock_integration(hass, MockModule("test_scheduled"))
+    mock_integration(hass, MockModule("test_slow", async_setup=mock_setup))
+    mock_integration(hass, MockModule("test_failed", async_setup=mock_setup_failed))
+    domains = {"test_scheduled", "test_slow", "test_failed", "test_unknown"}
+
+    # Nothing is set up, and nothing is scheduled to be
+    assert setup._async_get_setup_results(hass, domains) == dict.fromkeys(
+        domains, False
+    )
+
+    setup.async_set_domains_to_be_loaded(hass, {"test_scheduled"})
+    setup_task = hass.async_create_task(
+        setup.async_setup_component(hass, "test_slow", {})
+    )
+    await setup_started.wait()
+    assert await setup.async_setup_component(hass, "test_failed", {}) is False
+
+    assert setup._async_get_setup_results(hass, domains) == {
+        "test_scheduled": None,
+        "test_slow": None,
+        "test_failed": False,
+        "test_unknown": False,
+    }
+
+    setup_stall.set()
+    assert await setup_task is True
+    assert await setup.async_setup_component(hass, "test_scheduled", {}) is True
+
+    assert setup._async_get_setup_results(hass, domains) == {
+        "test_scheduled": True,
+        "test_slow": True,
+        "test_failed": False,
+        "test_unknown": False,
+    }
+
+
 async def test_async_wait_component(hass: HomeAssistant) -> None:
     """Test async_wait_component."""
     setup_stall = asyncio.Event()

@@ -11,7 +11,7 @@ from uiprotect.data import (
 )
 from uiprotect.data.public_devices import PublicLight
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -140,7 +140,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS)
         led_level: int | None = None
         if brightness is not None:
             led_level = hass_to_unifi_brightness(brightness)

@@ -8,15 +8,6 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TIME,
-    ATTR_WEATHER_CLOUD_COVERAGE,
-    ATTR_WEATHER_DEW_POINT,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_UV_INDEX,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_GUST_SPEED,
-    ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
     Forecast,
     SingleCoordinatorWeatherEntity,
@@ -37,14 +28,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import (
-    ATTR_MAP,
-    CONDITIONS_MAP,
-    CONF_TRACK_HOME,
-    DEFAULT_NAME,
-    DOMAIN,
-    FORECAST_MAP,
-)
+from .const import CONDITIONS_MAP, CONF_TRACK_HOME, DEFAULT_NAME, DOMAIN, FORECAST_MAP
 from .coordinator import MetDataUpdateCoordinator, MetWeatherConfigEntry
 
 PARALLEL_UPDATES = 0
@@ -153,73 +137,55 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
     @override
     def native_temperature(self) -> float | None:
         """Return the temperature."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_TEMPERATURE]
-        )
+        return self.coordinator.data.current_weather_data.get("temperature")
 
     @property
     @override
     def native_pressure(self) -> float | None:
         """Return the pressure."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_PRESSURE]
-        )
+        return self.coordinator.data.current_weather_data.get("pressure")
 
     @property
     @override
     def humidity(self) -> float | None:
         """Return the humidity."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_HUMIDITY]
-        )
+        return self.coordinator.data.current_weather_data.get("humidity")
 
     @property
     @override
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_WIND_SPEED]
-        )
+        return self.coordinator.data.current_weather_data.get("wind_speed")
 
     @property
     @override
     def wind_bearing(self) -> float | str | None:
         """Return the wind direction."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_WIND_BEARING]
-        )
+        return self.coordinator.data.current_weather_data.get("wind_bearing")
 
     @property
     @override
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed in native units."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_WIND_GUST_SPEED]
-        )
+        return self.coordinator.data.current_weather_data.get("wind_gust")
 
     @property
     @override
     def cloud_coverage(self) -> float | None:
         """Return the cloud coverage."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_CLOUD_COVERAGE]
-        )
+        return self.coordinator.data.current_weather_data.get("cloudiness")
 
     @property
     @override
     def native_dew_point(self) -> float | None:
         """Return the dew point."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_DEW_POINT]
-        )
+        return self.coordinator.data.current_weather_data.get("dew_point")
 
     @property
     @override
     def uv_index(self) -> float | None:
         """Return the uv index."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_UV_INDEX]
-        )
+        return self.coordinator.data.current_weather_data.get("uv_index")
 
     def _forecast(self, hourly: bool) -> list[Forecast] | None:
         """Return the forecast array."""
