@@ -31,7 +31,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-    MediaPlayerEntityStateAttribute,
     MediaPlayerState,
     MediaType,
     RepeatMode,
@@ -841,16 +840,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         queue: list[DidlMusicTrack] = self.coordinator.soco.get_queue(max_items=0)
         return [
             {
-                MediaPlayerEntityStateAttribute.MEDIA_TITLE: getattr(
-                    track, "title", None
-                ),
-                MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: getattr(
-                    track, "album", None
-                ),
-                MediaPlayerEntityStateAttribute.MEDIA_ARTIST: getattr(
-                    track, "creator", None
-                ),
-                MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: track.get_uri(),
+                "media_title": getattr(track, "title", None),
+                "media_album_name": getattr(track, "album", None),
+                "media_artist": getattr(track, "creator", None),
+                "media_content_id": track.get_uri(),
             }
             for track in queue
         ]
