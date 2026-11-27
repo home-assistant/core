@@ -6,7 +6,7 @@ import logging
 from typing import override
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.const import DryingModes
+from pyvesync.const import DryingModes, HumidifierFeatures
 from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.binary_sensor import (
@@ -65,7 +65,7 @@ SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
         is_on=lambda device: device.state.drying_mode_status == DryingModes.RUNNING,
         device_class=BinarySensorDeviceClass.RUNNING,
         exists_fn=lambda device: (
-            is_humidifier(device) and "drying_mode" in device.features
+            is_humidifier(device) and HumidifierFeatures.DRYING_MODE in device.features
         ),
     ),
 )

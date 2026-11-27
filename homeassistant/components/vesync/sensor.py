@@ -12,6 +12,7 @@ from pyvesync.const import (
     RUNNING_STATUSES,
     AirFryerFeatures,
     AirQualityLevel,
+    HumidifierFeatures,
     TemperatureUnits,
     TimeUnits,
 )
@@ -267,7 +268,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda device: device.state.drying_mode_time_remain,
         exists_fn=lambda device: (
-            is_humidifier(device) and "drying_mode" in device.features
+            is_humidifier(device) and HumidifierFeatures.DRYING_MODE in device.features
         ),
     ),
     VeSyncSensorEntityDescription(
