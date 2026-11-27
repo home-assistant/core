@@ -4,6 +4,7 @@ import asyncio
 from asyncio import Lock, sleep
 from collections.abc import Awaitable, Callable, Iterator
 from contextlib import contextmanager
+from dataclasses import asdict, dataclass, field, fields
 from datetime import UTC, datetime
 from functools import partial
 import io
@@ -23,7 +24,6 @@ from aiogithubapi import (
     GitHubRatelimitException,
 )
 from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
-import attr
 import probatio
 
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -300,12 +300,12 @@ def valid_integration_categories(value: Any) -> list[str]:
     return list(value)
 
 
-@attr.s(auto_attribs=True)
+@dataclass(slots=True)
 class RepositoryData:
     """RepositoryData class."""
 
     archived: bool = False
-    authors: list[str] = attr.field(factory=list)
+    authors: list[str] = field(default_factory=list)
     category: str = ""
     config_flow: bool = False
     default_branch: str | None = None
@@ -323,7 +323,7 @@ class RepositoryData:
     # "0" until the repository is known on GitHub
     id: str = "0"
     # The categories in the manifest of an integration, like `energy.ev_charging`
-    integration_categories: list[str] = attr.field(factory=list)
+    integration_categories: list[str] = field(default_factory=list)
     installed_commit: str | None = None
     installed_version: str | None = None
     installed: bool = False
@@ -335,12 +335,12 @@ class RepositoryData:
     new: bool = True
     open_issues: int = 0
     prerelease: str | None = None
-    published_tags: list[str] = attr.field(factory=list)
+    published_tags: list[str] = field(default_factory=list)
     releases: bool = False
     selected_tag: str | None = None
     show_beta: bool = False
     stargazers_count: int = 0
-    topics: list[str] = attr.field(factory=list)
+    topics: list[str] = field(default_factory=list)
 
     @property
     def name(self) -> str | None:
@@ -356,7 +356,9 @@ class RepositoryData:
 
     def to_json(self) -> dict[str, Any]:
         """Export to json."""
-        return attr.asdict(self, filter=lambda attr, value: attr.name != "last_fetched")
+        data = asdict(self)
+        del data["last_fetched"]
+        return data
 
     @staticmethod
     def create_from_dict(source: dict[str, Any]) -> RepositoryData:
@@ -368,7 +370,7 @@ class RepositoryData:
     def update_data(self, data: dict[str, Any]) -> None:
         """Update data of the repository."""
         for key, value in data.items():
-            if key not in self.__dict__:
+            if key not in _REPOSITORY_DATA_FIELDS:
                 continue
 
             if key == "last_fetched" and isinstance(value, (int, float)):
@@ -384,7 +386,12 @@ class RepositoryData:
                 setattr(self, key, value)
 
 
-@attr.s(auto_attribs=True)
+_REPOSITORY_DATA_FIELDS = frozenset(
+    data_field.name for data_field in fields(RepositoryData)
+)
+
+
+@dataclass(slots=True)
 class RepositoryManifest:
     """The repository manifest, parsed from hacs.json."""
 
@@ -393,14 +400,14 @@ class RepositoryManifest:
     hacs: str | None = None  # The `hacs` key of hacs.json, not compared
     hide_default_branch: bool = False
     homeassistant: str | None = None  # Minimum Home Assistant version
-    manifest: dict[str, Any] = attr.field(factory=dict)
+    manifest: dict[str, Any] = field(default_factory=dict)
     name: str | None = None
     persistent_directory: str | None = None
     zip_release: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         """Export to json."""
-        return attr.asdict(self)
+        return asdict(self)
 
     @staticmethod
     def from_dict(
@@ -442,20 +449,25 @@ class RepositoryManifest:
     def update_data(self, data: dict[str, Any]) -> None:
         """Update the manifest data."""
         for key, value in data.items():
-            if key not in self.__dict__:
+            if key not in _REPOSITORY_MANIFEST_FIELDS:
                 continue
 
             setattr(self, key, value)
 
 
-@attr.s(auto_attribs=True)
+_REPOSITORY_MANIFEST_FIELDS = frozenset(
+    manifest_field.name for manifest_field in fields(RepositoryManifest)
+)
+
+
+@dataclass(slots=True)
 class RepositoryReleases:
     """The releases of a repository, newest first."""
 
-    objects: list[GitHubReleaseModel] = attr.field(factory=list)
+    objects: list[GitHubReleaseModel] = field(default_factory=list)
 
 
-@attr.s(auto_attribs=True)
+@dataclass(slots=True)
 class RepositoryPath:
     """Where the content is, in the repository and on disk."""
 
@@ -463,11 +475,11 @@ class RepositoryPath:
     remote: str | None = None
 
 
-@attr.s(auto_attribs=True)
+@dataclass(slots=True)
 class RepositoryContent:
     """The content a repository installs."""
 
-    path: RepositoryPath = attr.field(factory=RepositoryPath)
+    path: RepositoryPath = field(default_factory=RepositoryPath)
     single: bool = False
 
 
