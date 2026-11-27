@@ -97,6 +97,7 @@ def migrate_sensor_entities(
             )
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
+
 def _remove_adam_thermozone_temperature_sensor(
     ent_reg: er.EntityRegistry, device_id: str
 ) -> None:
