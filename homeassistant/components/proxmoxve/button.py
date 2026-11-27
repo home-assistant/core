@@ -236,15 +236,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ProxmoxVE buttons."""
-    coordinator = entry.runtime_data.status
+    status_coordinator = entry.runtime_data.status
 
     def _async_add_new_nodes(nodes: list[ProxmoxNodeData]) -> None:
         """Add new node buttons."""
         async_add_entities(
-            ProxmoxNodeButtonEntity(coordinator, entity_description, node)
+            ProxmoxNodeButtonEntity(status_coordinator, entity_description, node)
             for node in nodes
             for entity_description in NODE_BUTTONS
-            if coordinator.permissions.has_permission(
+            if status_coordinator.permissions.has_permission(
                 f"/{entity_description.permission_target}/{node.node.node}",
                 entity_description.permission,
             )
@@ -255,10 +255,10 @@ async def async_setup_entry(
     ) -> None:
         """Add new VM buttons."""
         async_add_entities(
-            ProxmoxVMButtonEntity(coordinator, entity_description, vm, node_data)
+            ProxmoxVMButtonEntity(status_coordinator, entity_description, vm, node_data)
             for (node_data, vm) in vms
             for entity_description in VM_BUTTONS
-            if coordinator.permissions.has_vm_permission(
+            if status_coordinator.permissions.has_vm_permission(
                 vm.vmid,
                 entity_description.permission,
             )
@@ -270,41 +270,41 @@ async def async_setup_entry(
         """Add new container buttons."""
         async_add_entities(
             ProxmoxContainerButtonEntity(
-                coordinator, entity_description, container, node_data
+                status_coordinator, entity_description, container, node_data
             )
             for (node_data, container) in containers
             for entity_description in CONTAINER_BUTTONS
-            if coordinator.permissions.has_vm_permission(
+            if status_coordinator.permissions.has_vm_permission(
                 container.vmid,
                 entity_description.permission,
             )
         )
 
-    coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
-    coordinator.new_vms_callbacks.append(_async_add_new_vms)
-    coordinator.new_containers_callbacks.append(_async_add_new_containers)
+    status_coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
+    status_coordinator.new_vms_callbacks.append(_async_add_new_vms)
+    status_coordinator.new_containers_callbacks.append(_async_add_new_containers)
 
     _async_add_new_nodes(
         [
             node_data
-            for node_data in coordinator.data.values()
-            if node_data.node.node in coordinator.known_nodes
+            for node_data in status_coordinator.data.values()
+            if node_data.node.node in status_coordinator.known_nodes
         ]
     )
     _async_add_new_vms(
         [
             (node_data, vm_data)
-            for node_data in coordinator.data.values()
+            for node_data in status_coordinator.data.values()
             for vmid, vm_data in node_data.vms.items()
-            if (node_data.node.node, vmid) in coordinator.known_vms
+            if (node_data.node.node, vmid) in status_coordinator.known_vms
         ]
     )
     _async_add_new_containers(
         [
             (node_data, container_data)
-            for node_data in coordinator.data.values()
+            for node_data in status_coordinator.data.values()
             for vmid, container_data in node_data.containers.items()
-            if (node_data.node.node, vmid) in coordinator.known_containers
+            if (node_data.node.node, vmid) in status_coordinator.known_containers
         ]
     )
 

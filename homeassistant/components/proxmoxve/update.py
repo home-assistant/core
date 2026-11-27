@@ -59,26 +59,26 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Proxmox VE update entities."""
-    coordinator = entry.runtime_data.status
-    software = entry.runtime_data.software
+    status_coordinator = entry.runtime_data.status
+    software_coordinator = entry.runtime_data.software
 
     def _async_add_new_nodes(nodes: list[ProxmoxNodeData]) -> None:
         """Add update entities for newly discovered nodes."""
         async_add_entities(
-            ProxmoxNodeUpdateEntity(software, entity_description, node)
+            ProxmoxNodeUpdateEntity(software_coordinator, entity_description, node)
             for node in nodes
             for entity_description in NODE_UPDATES
-            if coordinator.permissions.has_node_permission(
+            if status_coordinator.permissions.has_node_permission(
                 node.node.node, ProxmoxPermission.SYSMOD
             )
         )
 
-    coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
+    status_coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
     _async_add_new_nodes(
         [
             data
-            for data in coordinator.data.values()
-            if data.node.node in coordinator.known_nodes
+            for data in status_coordinator.data.values()
+            if data.node.node in status_coordinator.known_nodes
         ]
     )
 
