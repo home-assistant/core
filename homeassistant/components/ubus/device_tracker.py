@@ -20,7 +20,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_SSL,
     CONF_USERNAME,
@@ -53,7 +52,6 @@ from .const import (
     SIGNAL_CLIENTS_UPDATED,
 )
 from .coordinator import UbusConfigEntry, UbusDataUpdateCoordinator
-from .helpers import referencing_automations
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -132,10 +130,8 @@ async def _async_migrate_unique_ids(
     Trackers created before MACs were normalized keep the router's raw
     case; re-pointing the unique id reuses the entity, with its entity
     id and customizations, instead of creating a duplicate. Duplicates
-    are removed with their devices; the references to them are either
-    re-pointed (person storage) or, for the YAML persons and device
-    automations which cannot be updated automatically, the removal is
-    deferred behind a repair until they are resolved.
+    are removed with their devices; the storage persons that tracked
+    them are re-pointed at the survivor.
     """
     by_mac: dict[str, list[er.RegistryEntry]] = {}
     for registry_entry in er.async_entries_for_config_entry(
@@ -168,49 +164,12 @@ async def _async_migrate_unique_ids(
         survivor = min(candidates, key=lambda entry: entry.created_at)
         for entry in entries:
             if entry is not survivor:
-                # Storage persons are re-pointed at the survivor; YAML
-                # persons and device automations live in configuration
-                # which cannot be updated, so the removal is deferred
-                # behind a repair while either still references the
-                # duplicate or its dying device.
+                # The storage persons are re-pointed at the survivor;
+                # YAML persons and automations referencing the
+                # duplicate are broken, as disclosed in the breaking
+                # change.
                 await _async_repoint_person_trackers(
                     hass, entry.entity_id, survivor.entity_id
-                )
-                yaml_persons = _async_yaml_person_names(hass, entry.entity_id)
-                device_dies = (
-                    entry.device_id is not None
-                    and survivor.device_id is not None
-                    and entry.device_id != survivor.device_id
-                )
-                automations = referencing_automations(
-                    hass,
-                    entry.device_id if device_dies else None,
-                    entry.entity_id,
-                )
-                if yaml_persons or automations:
-                    ir.async_create_issue(
-                        hass,
-                        DOMAIN,
-                        f"dedup_referenced_{entry.unique_id}",
-                        config_entry_id=config_entry_id,
-                        is_fixable=False,
-                        is_persistent=True,
-                        issue_domain=DOMAIN,
-                        severity=ir.IssueSeverity.WARNING,
-                        translation_key="dedup_referenced",
-                        translation_placeholders={
-                            "tracker": entry.entity_id,
-                            "survivor": survivor.entity_id,
-                            "references": ", ".join(
-                                [f"person '{name}'" for name in yaml_persons]
-                                + [f"automation '{name}'" for name in automations]
-                            ),
-                        },
-                    )
-                    continue
-                # Any previous deferral is over.
-                ir.async_delete_issue(
-                    hass, DOMAIN, f"dedup_referenced_{entry.unique_id}"
                 )
                 entity_registry.async_remove(entry.entity_id)
                 _async_merge_device(device_registry, entity_registry, entry, survivor)
@@ -285,8 +244,8 @@ async def _async_repoint_person_trackers(
 ) -> None:
     """Re-point the persons' tracker lists at the surviving tracker.
 
-    Persons from the YAML configuration cannot be re-pointed, so the
-    caller defers the removal while one of them holds the tracker.
+    Persons from the YAML configuration cannot be re-pointed; the
+    duplicate is removed and the breaking change covers them.
     """
     if (person_data := _async_person_data(hass)) is None:
         return
@@ -302,18 +261,6 @@ async def _async_repoint_person_trackers(
                 ]
             },
         )
-
-
-@callback
-def _async_yaml_person_names(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Return the names of the YAML persons referencing a tracker."""
-    if (person_data := _async_person_data(hass)) is None:
-        return []
-    return [
-        person[CONF_NAME]
-        for person in person_data.yaml_collection.async_items()
-        if entity_id in person.get(PERSON_TRACKERS, [])
-    ]
 
 
 @callback

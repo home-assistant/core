@@ -78,14 +78,6 @@
     }
   },
   "issues": {
-    "dedup_referenced": {
-      "description": "The duplicate device tracker `{tracker}` was not removed because it is still referenced by {references}, which cannot be updated automatically. Update or remove those references; the duplicate is removed in favor of `{survivor}` when the OpenWrt (ubus) entry is reloaded or Home Assistant restarts.",
-      "title": "Duplicate tracker {tracker} was not removed"
-    },
-    "migration_device_references": {
-      "description": "While an OpenWrt (ubus) entry was migrated, a device was merged into another one. The device automations {references} still target the removed device and fail validation until they are updated to target the surviving device.",
-      "title": "Update device automations after migration"
-    },
     "migration_disabled_entry": {
       "description": "The disabled OpenWrt (ubus) entry for `{host}` was migrated to the main entry. Subentries cannot be disabled; delete the `{host}` subentry to restore the previous off state.",
       "title": "Disabled router {host} was migrated"

@@ -1,7 +1,7 @@
 {
   "domain": "ubus",
   "name": "OpenWrt (ubus)",
-  "after_dependencies": ["automation", "person"],
+  "after_dependencies": ["person"],
   "categories": [
     "presence_location.network_presence",
     "computers_network.routers_network"

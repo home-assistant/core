@@ -20,7 +20,6 @@ from homeassistant.helpers.typing import ConfigType
 from .config_flow import UbusConfigFlow
 from .const import DOMAIN, SUBENTRY_TYPE_ROUTER
 from .coordinator import UbusConfigEntry, UbusDataUpdateCoordinator
-from .helpers import referencing_automations
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -203,7 +202,7 @@ async def _async_migrate_other(
                     translation_placeholders={"host": host},
                 )
                 return
-            _async_reparent(hass, hub, entry, device_registry, entity_registry)
+            _async_reparent(hub, entry, device_registry, entity_registry)
             collision_hosts: list[str] = []
             created_subentries: list[ConfigSubentry] = []
             for subentry in entry.subentries.values():
@@ -344,7 +343,6 @@ def _merge_device_survivors(
 
 @callback
 def _async_reparent(
-    hass: HomeAssistant,
     hub: UbusConfigEntry,
     entry: ConfigEntry,
     device_registry: dr.DeviceRegistry,
@@ -390,26 +388,6 @@ def _async_reparent(
         ):
             entity_registry.async_update_entity(
                 device_entry.entity_id, device_id=survivor.id
-            )
-        # The removal below breaks device automations targeting the
-        # merged device, which live in the YAML configuration and
-        # cannot be re-pointed.
-        if referencing := referencing_automations(hass, loser.id, None):
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                f"migration_device_references_{loser.id}",
-                config_entry_id=hub.entry_id,
-                is_fixable=False,
-                is_persistent=True,
-                issue_domain=DOMAIN,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="migration_device_references",
-                translation_placeholders={
-                    "references": ", ".join(
-                        f"automation '{name}'" for name in referencing
-                    ),
-                },
             )
         device_registry.async_remove_device(loser.id)
         if survivor is device:
