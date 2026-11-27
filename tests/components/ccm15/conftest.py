@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from ccm15 import CCM15DeviceState, CCM15SlaveDevice
+from ccm15 import CCM15DeviceState, CCM15ReturnCode, CCM15SlaveDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -48,3 +48,13 @@ def ccm15_device() -> Generator[AsyncMock]:
             }
         )
         yield mock_get_status
+
+
+@pytest.fixture
+def ccm15_set_state() -> Generator[AsyncMock]:
+    """Mock the ccm15 device control write, accepted by default."""
+    with patch(
+        "homeassistant.components.ccm15.coordinator.CCM15Device.async_set_state",
+        return_value=CCM15ReturnCode.OK,
+    ) as mock_set_state:
+        yield mock_set_state
