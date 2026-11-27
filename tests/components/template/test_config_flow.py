@@ -117,15 +117,19 @@ NUMBER_OPTIONS = {
         ),
         (
             "climate",
-            {"hvac_mode": "{{ states('climate.one') }}"},
+            {},
             "heat",
             {"one": "heat", "two": "cool"},
             {},
             {
-                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
-                "set_hvac_mode": [],
+                "hvac_mode_options": {
+                    "hvac_mode": "{{ states('climate.one') }}",
+                    "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                    "set_hvac_mode": [],
+                }
             },
             {
+                "hvac_mode": "{{ states('climate.one') }}",
                 "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
                 "set_hvac_mode": [],
             },
@@ -511,14 +515,19 @@ async def test_config_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
 
-    availability = {"additional_options": {"availability": "{{ True }}"}}
+    availability = {"availability": "{{ True }}"}
 
     with patch(
         "homeassistant.components.template.async_setup_entry", wraps=async_setup_entry
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"name": "My template", **state_template, **extra_input, **availability},
+            {
+                "name": "My template",
+                **state_template,
+                **extra_input,
+                "additional_options": availability,
+            },
         )
         await hass.async_block_till_done()
 
@@ -619,12 +628,16 @@ async def test_config_flow_sensor_unit_of_measurement_context(
         ),
         (
             "climate",
-            {"hvac_mode": "{{ 'heat' }}"},
+            {},
             {
-                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
-                "set_hvac_mode": [],
+                "hvac_mode_options": {
+                    "hvac_mode": "{{ 'heat' }}",
+                    "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                    "set_hvac_mode": [],
+                }
             },
             {
+                "hvac_mode": "{{ 'heat' }}",
                 "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
                 "set_hvac_mode": [],
             },
@@ -915,23 +928,6 @@ async def test_config_flow_device(
             {"one": "open", "two": "closed"},
             {"set_cover_position": []},
             {"set_cover_position": []},
-            "state",
-            None,
-        ),
-        (
-            "climate",
-            {"hvac_mode": "{{ states('climate.one') }}"},
-            {"hvac_mode": "{{ states('climate.two') }}"},
-            ["heat", "cool"],
-            {"one": "heat", "two": "cool"},
-            {
-                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
-                "set_hvac_mode": [],
-            },
-            {
-                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
-                "set_hvac_mode": [],
-            },
             "state",
             None,
         ),
@@ -1346,6 +1342,111 @@ async def test_options_remove_device_class(
         **extra_options,
     }
     assert "device_class" not in config_entry.options
+
+
+async def test_options_section_fields(hass: HomeAssistant) -> None:
+    """Test fields in a section are suggested from and stored as flat options."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "binary_sensor",
+            "state": "{{ True }}",
+            "availability": "{{ True }}",
+            "delay_on": {"seconds": 1},
+        },
+        title="My template",
+        version=2,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    section_schema = result["data_schema"].schema["additional_options"].schema.schema
+    assert get_schema_suggested_value(section_schema, "availability") == "{{ True }}"
+    assert get_schema_suggested_value(section_schema, "delay_on") == {"seconds": 1}
+
+    # Availability is cleared, it must be removed from the stored options
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "state": "{{ False }}",
+            "additional_options": {"delay_on": {"seconds": 2}},
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "name": "My template",
+        "template_type": "binary_sensor",
+        "state": "{{ False }}",
+        "delay_on": {"seconds": 2},
+    }
+
+
+async def test_options_climate_sections(hass: HomeAssistant) -> None:
+    """Test the climate options are grouped in sections."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "climate",
+            "hvac_modes": "{{ ['off', 'heat'] }}",
+            "set_hvac_mode": [],
+            "target_temperature": "{{ 20 }}",
+            "set_temperature": [],
+            "min_temperature": 5.0,
+        },
+        title="My template",
+        version=2,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    hvac_mode_section = result["data_schema"].schema["hvac_mode_options"]
+    temperature_section = result["data_schema"].schema["temperature_options"]
+    # The HVAC mode section has required fields, so it is not collapsed
+    assert hvac_mode_section.options == {"collapsed": False}
+    assert temperature_section.options == {"collapsed": True}
+    assert (
+        get_schema_suggested_value(hvac_mode_section.schema.schema, "hvac_modes")
+        == "{{ ['off', 'heat'] }}"
+    )
+    assert (
+        get_schema_suggested_value(temperature_section.schema.schema, "min_temperature")
+        == 5.0
+    )
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "hvac_mode_options": {
+                "hvac_modes": "{{ ['off', 'cool'] }}",
+                "set_hvac_mode": [],
+            },
+            "temperature_options": {
+                "target_temperature": "{{ 21 }}",
+                "set_temperature": [],
+            },
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "name": "My template",
+        "template_type": "climate",
+        "hvac_modes": "{{ ['off', 'cool'] }}",
+        "set_hvac_mode": [],
+        "target_temperature": "{{ 21 }}",
+        "set_temperature": [],
+    }
 
 
 LIGHT_OPTIONS = {
@@ -2619,12 +2720,16 @@ async def test_option_flow_sensor_preview_config_entry_removed(
         ),
         (
             "climate",
-            {"hvac_mode": "{{ states('climate.one') }}"},
+            {},
             {
-                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
-                "set_hvac_mode": [],
+                "hvac_mode_options": {
+                    "hvac_mode": "{{ states('climate.one') }}",
+                    "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                    "set_hvac_mode": [],
+                }
             },
             {
+                "hvac_mode": "{{ states('climate.one') }}",
                 "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
                 "set_hvac_mode": [],
             },
@@ -2818,7 +2923,7 @@ async def test_options_flow_change_device(
         "name": "My template",
         "device_id": device_id2,
         **state_template,
-        **extra_input,
+        **extra_options,
     }
     assert template_config_entry.data == {}
     assert template_config_entry.options == {
@@ -2847,7 +2952,7 @@ async def test_options_flow_change_device(
         "template_type": template_type,
         "name": "My template",
         **state_template,
-        **extra_input,
+        **extra_options,
     }
     assert template_config_entry.data == {}
     assert template_config_entry.options == {
@@ -2877,7 +2982,7 @@ async def test_options_flow_change_device(
         "name": "My template",
         "device_id": device_id1,
         **state_template,
-        **extra_input,
+        **extra_options,
     }
     assert template_config_entry.data == {}
     assert template_config_entry.options == {

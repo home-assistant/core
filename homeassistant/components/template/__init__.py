@@ -137,6 +137,14 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry, options=options, version=2, minor_version=1
         )
 
+    if config_entry.version == 2 and config_entry.minor_version < 2:
+        # Options in UI sections are stored flat
+        options = {**config_entry.options}
+        options |= options.pop(CONF_ADDITIONAL_OPTIONS, {})
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, minor_version=2
+        )
+
     _LOGGER.debug(
         "Migration to configuration version %s.%s successful",
         config_entry.version,

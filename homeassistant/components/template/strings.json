@@ -119,39 +119,53 @@
       },
       "climate": {
         "data": {
-          "current_temperature": "[%key:component::climate::entity_component::_::state_attributes::current_temperature::name%]",
           "device_id": "[%key:common::config_flow::data::device%]",
-          "hvac_action": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::name%]",
-          "hvac_mode": "HVAC mode",
-          "hvac_modes": "[%key:component::climate::entity_component::_::state_attributes::hvac_modes::name%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "set_hvac_mode": "Actions on set HVAC mode",
-          "set_temperature": "Actions on set temperature",
-          "target_temperature": "[%key:component::climate::entity_component::_::state_attributes::temperature::name%]",
-          "temperature_unit": "[%key:component::template::common::temperature_unit%]"
+          "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
-          "current_temperature": "Defines a template for the current temperature.",
-          "device_id": "[%key:component::template::common::device_id_description%]",
-          "hvac_action": "Defines a template for the current HVAC action. Valid HVAC actions are `cooling`, `defrosting`, `drying`, `fan`, `heating`, `idle`, `off`, and `preheating`.",
-          "hvac_mode": "Defines a template for the current HVAC mode. Valid HVAC modes are `auto`, `cool`, `dry`, `fan_only`, `heat`, `heat_cool` and `off`.",
-          "hvac_modes": "Defines a template for a list of available HVAC modes. Valid HVAC modes for the list are `auto`, `cool`, `dry`, `fan_only`, `heat`, `heat_cool` and `off`.",
-          "set_hvac_mode": "Defines actions to run when the climate is given a `set_hvac_mode` command. Receives variable `hvac_mode`.",
-          "set_temperature": "Defines actions to run when the climate is given a `set_temperature` command. Receives variable `hvac_mode`, `temperature`, `target_temp_high`, and `target_temp_low`. If `hvac_mode` is received, the `set_hvac_mode` actions are executed before the actions in `set_temperature`.",
-          "target_temperature": "Defines a template for the target temperature.",
-          "temperature_unit": "[%key:component::template::common::temperature_unit_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "additional_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]",
-              "max_temperature": "[%key:component::climate::entity_component::_::state_attributes::max_temp::name%]",
-              "min_temperature": "[%key:component::climate::entity_component::_::state_attributes::min_temp::name%]"
+              "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
             "name": "[%key:component::template::common::additional_options%]"
+          },
+          "hvac_mode_options": {
+            "data": {
+              "hvac_action": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::name%]",
+              "hvac_mode": "HVAC mode",
+              "hvac_modes": "[%key:component::climate::entity_component::_::state_attributes::hvac_modes::name%]",
+              "set_hvac_mode": "Actions on set HVAC mode"
+            },
+            "data_description": {
+              "hvac_action": "Defines a template for the current HVAC action. Valid HVAC actions are `cooling`, `defrosting`, `drying`, `fan`, `heating`, `idle`, `off`, and `preheating`.",
+              "hvac_mode": "Defines a template for the current HVAC mode. Valid HVAC modes are `auto`, `cool`, `dry`, `fan_only`, `heat`, `heat_cool` and `off`.",
+              "hvac_modes": "Defines a template for a list of available HVAC modes. Valid HVAC modes for the list are `auto`, `cool`, `dry`, `fan_only`, `heat`, `heat_cool` and `off`.",
+              "set_hvac_mode": "Defines actions to run when the climate is given a `set_hvac_mode` command. Receives variable `hvac_mode`."
+            },
+            "name": "HVAC mode"
+          },
+          "temperature_options": {
+            "data": {
+              "current_temperature": "[%key:component::climate::entity_component::_::state_attributes::current_temperature::name%]",
+              "max_temperature": "[%key:component::climate::entity_component::_::state_attributes::max_temp::name%]",
+              "min_temperature": "[%key:component::climate::entity_component::_::state_attributes::min_temp::name%]",
+              "set_temperature": "Actions on set temperature",
+              "target_temperature": "[%key:component::climate::entity_component::_::state_attributes::temperature::name%]",
+              "temperature_unit": "[%key:component::template::common::temperature_unit%]"
+            },
+            "data_description": {
+              "current_temperature": "Defines a template for the current temperature.",
+              "set_temperature": "Defines actions to run when the climate is given a `set_temperature` command. Receives variable `hvac_mode`, `temperature`, `target_temp_high`, and `target_temp_low`. If `hvac_mode` is received, the `set_hvac_mode` actions are executed before the actions in `set_temperature`.",
+              "target_temperature": "Defines a template for the target temperature.",
+              "temperature_unit": "[%key:component::template::common::temperature_unit_description%]"
+            },
+            "name": "Temperature"
           }
         },
         "title": "Template Thermostat"
@@ -968,39 +982,53 @@
       },
       "climate": {
         "data": {
-          "current_temperature": "[%key:component::climate::entity_component::_::state_attributes::current_temperature::name%]",
           "device_id": "[%key:common::config_flow::data::device%]",
-          "hvac_action": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::name%]",
-          "hvac_mode": "[%key:component::template::config::step::climate::data::hvac_mode%]",
-          "hvac_modes": "[%key:component::climate::entity_component::_::state_attributes::hvac_modes::name%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "set_hvac_mode": "[%key:component::template::config::step::climate::data::set_hvac_mode%]",
-          "set_temperature": "[%key:component::template::config::step::climate::data::set_temperature%]",
-          "target_temperature": "[%key:component::climate::entity_component::_::state_attributes::temperature::name%]",
-          "temperature_unit": "[%key:component::template::common::temperature_unit%]"
+          "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
-          "current_temperature": "[%key:component::template::config::step::climate::data_description::current_temperature%]",
-          "device_id": "[%key:component::template::common::device_id_description%]",
-          "hvac_action": "[%key:component::template::config::step::climate::data_description::hvac_action%]",
-          "hvac_mode": "[%key:component::template::config::step::climate::data_description::hvac_mode%]",
-          "hvac_modes": "[%key:component::template::config::step::climate::data_description::hvac_modes%]",
-          "set_hvac_mode": "[%key:component::template::config::step::climate::data_description::set_hvac_mode%]",
-          "set_temperature": "[%key:component::template::config::step::climate::data_description::set_temperature%]",
-          "target_temperature": "[%key:component::template::config::step::climate::data_description::target_temperature%]",
-          "temperature_unit": "[%key:component::template::common::temperature_unit_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "additional_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]",
-              "max_temperature": "[%key:component::climate::entity_component::_::state_attributes::max_temp::name%]",
-              "min_temperature": "[%key:component::climate::entity_component::_::state_attributes::min_temp::name%]"
+              "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
             "name": "[%key:component::template::common::additional_options%]"
+          },
+          "hvac_mode_options": {
+            "data": {
+              "hvac_action": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::name%]",
+              "hvac_mode": "[%key:component::template::config::step::climate::sections::hvac_mode_options::data::hvac_mode%]",
+              "hvac_modes": "[%key:component::climate::entity_component::_::state_attributes::hvac_modes::name%]",
+              "set_hvac_mode": "[%key:component::template::config::step::climate::sections::hvac_mode_options::data::set_hvac_mode%]"
+            },
+            "data_description": {
+              "hvac_action": "[%key:component::template::config::step::climate::sections::hvac_mode_options::data_description::hvac_action%]",
+              "hvac_mode": "[%key:component::template::config::step::climate::sections::hvac_mode_options::data_description::hvac_mode%]",
+              "hvac_modes": "[%key:component::template::config::step::climate::sections::hvac_mode_options::data_description::hvac_modes%]",
+              "set_hvac_mode": "[%key:component::template::config::step::climate::sections::hvac_mode_options::data_description::set_hvac_mode%]"
+            },
+            "name": "[%key:component::template::config::step::climate::sections::hvac_mode_options::name%]"
+          },
+          "temperature_options": {
+            "data": {
+              "current_temperature": "[%key:component::climate::entity_component::_::state_attributes::current_temperature::name%]",
+              "max_temperature": "[%key:component::climate::entity_component::_::state_attributes::max_temp::name%]",
+              "min_temperature": "[%key:component::climate::entity_component::_::state_attributes::min_temp::name%]",
+              "set_temperature": "[%key:component::template::config::step::climate::sections::temperature_options::data::set_temperature%]",
+              "target_temperature": "[%key:component::climate::entity_component::_::state_attributes::temperature::name%]",
+              "temperature_unit": "[%key:component::template::common::temperature_unit%]"
+            },
+            "data_description": {
+              "current_temperature": "[%key:component::template::config::step::climate::sections::temperature_options::data_description::current_temperature%]",
+              "set_temperature": "[%key:component::template::config::step::climate::sections::temperature_options::data_description::set_temperature%]",
+              "target_temperature": "[%key:component::template::config::step::climate::sections::temperature_options::data_description::target_temperature%]",
+              "temperature_unit": "[%key:component::template::common::temperature_unit_description%]"
+            },
+            "name": "[%key:component::template::config::step::climate::sections::temperature_options::name%]"
           }
         },
         "title": "[%key:component::template::config::step::climate::title%]"
