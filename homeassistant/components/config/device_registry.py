@@ -11,7 +11,11 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, label_registry as lr
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    label_registry as lr,
+)
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.typing import Undefined
 
@@ -385,7 +389,7 @@ def websocket_forget_deleted_device(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Forget a deleted device, so it is not restored when added again."""
+    """Forget a deleted device and its deleted entities."""
     try:
         dr.async_get(hass).async_forget_deleted_device(msg["deleted_id"])
     except KeyError:
@@ -393,4 +397,5 @@ def websocket_forget_deleted_device(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Deleted device not found"
         )
         return
+    er.async_get(hass).async_forget_deleted_device_entities(msg["deleted_id"])
     connection.send_result(msg["id"])

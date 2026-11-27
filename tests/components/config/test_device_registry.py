@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
+    entity_registry as er,
     label_registry as lr,
 )
 from homeassistant.setup import async_setup_component
@@ -1432,6 +1433,41 @@ async def test_list_and_forget_deleted_devices(
 
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
+
+
+async def test_forget_deleted_device_forgets_its_entities(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test forgetting a deleted device also forgets its deleted entities."""
+    config_entry = MockConfigEntry(domain="hue")
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "0123")}
+    )
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "4567")}
+    )
+    for unique_id, device_id in (("1", device.id), ("2", other_device.id)):
+        entity_registry.async_get_or_create(
+            "light", "hue", unique_id, config_entry=config_entry, device_id=device_id
+        )
+    device_registry.async_remove_device(device.id)
+    device_registry.async_remove_device(other_device.id)
+
+    await client.send_json_auto_id(
+        {"type": "config/device_registry/forget_deleted", "deleted_id": device.id}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert [
+        deleted_device.id
+        for deleted_device in device_registry.async_get_deleted_devices()
+    ] == [other_device.id]
+    assert set(entity_registry.deleted_entities) == {("light", "hue", "2")}
 
 
 @pytest.mark.parametrize(

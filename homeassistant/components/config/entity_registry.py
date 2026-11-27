@@ -358,6 +358,7 @@ def _deleted_entity_dict(entry: er.DeletedRegistryEntry) -> dict[str, Any]:
         "config_entry_id": entry.config_entry_id,
         "config_subentry_id": entry.config_subentry_id,
         "created_at": entry.created_at.timestamp(),
+        "device_id": entry.device_id,
         "disabled_by": None if entry.disabled_by is Undefined else entry.disabled_by,
         "entity_id": entry.entity_id,
         "hidden_by": None if entry.hidden_by is Undefined else entry.hidden_by,

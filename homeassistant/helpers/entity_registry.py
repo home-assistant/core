@@ -90,7 +90,7 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 24
+STORAGE_VERSION_MINOR = 25
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -811,6 +811,7 @@ class DeletedRegistryEntry:
     config_subentry_id: str | None = attr.ib()
     created_at: datetime = attr.ib()
     device_class: str | None = attr.ib()
+    device_id: str | None = attr.ib()
     disabled_by: RegistryEntryDisabler | Undefined | None = attr.ib()
     domain: str = attr.ib(init=False, repr=False)
     hidden_by: RegistryEntryHider | Undefined | None = attr.ib()
@@ -847,6 +848,7 @@ class DeletedRegistryEntry:
                 "config_subentry_id": self.config_subentry_id,
                 "created_at": self.created_at,
                 "device_class": self.device_class,
+                "device_id": self.device_id,
                 "disabled_by": self.disabled_by
                 if self.disabled_by is not Undefined
                 else None,
@@ -1096,6 +1098,11 @@ class EntityRegistryStore(storage.Store[dict[str, Any]]):
                     # We don't know what the device name was, so the only thing we can
                     # do is to clear the overwritten name to not mislead users.
                     entity["name"] = None
+
+            if old_minor_version < 25:
+                # Version 1.25 adds device_id to deleted entities
+                for entity in data["deleted_entities"]:
+                    entity["device_id"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -1847,6 +1854,7 @@ class EntityRegistry(BaseRegistry):
             config_subentry_id=entity.config_subentry_id,
             created_at=entity.created_at,
             device_class=entity.device_class,
+            device_id=entity.device_id,
             disabled_by=entity.disabled_by,
             entity_id=entity_id,
             hidden_by=entity.hidden_by,
@@ -2589,6 +2597,7 @@ class EntityRegistry(BaseRegistry):
                     config_subentry_id=entity["config_subentry_id"],
                     created_at=datetime.fromisoformat(entity["created_at"]),
                     device_class=entity["device_class"],
+                    device_id=entity["device_id"],
                     disabled_by=get_optional_enum(
                         RegistryEntryDisabler,
                         entity["disabled_by"],
@@ -2771,6 +2780,21 @@ class EntityRegistry(BaseRegistry):
         if key is None:
             raise KeyError(deleted_entity_id)
         del self.deleted_entities[key]
+        self.async_schedule_save()
+
+    @callback
+    @verify_event_loop_thread("entity_registry.async_forget_deleted_device_entities")
+    def async_forget_deleted_device_entities(self, device_id: str) -> None:
+        """Forget the deleted entities of a deleted device."""
+        keys = [
+            key
+            for key, deleted_entity in self.deleted_entities.items()
+            if deleted_entity.device_id == device_id
+        ]
+        if not keys:
+            return
+        for key in keys:
+            del self.deleted_entities[key]
         self.async_schedule_save()
 
     @callback
