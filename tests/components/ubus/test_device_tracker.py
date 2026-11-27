@@ -3638,6 +3638,53 @@ async def test_migration_hub_polls_when_any_router_polled(
     assert hass.states.get(entity_id).state == STATE_NOT_HOME
 
 
+async def test_migration_hub_own_router_polling_enabled_warns(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the hub's own router gets the polling-enabled warning too.
+
+    Reconciling the hub's polling preference enables its own router
+    as well, so the notice must cover the hub's subentry, not only
+    the transferred ones.
+    """
+    _mock, _ubus = mock_ubus_by_host
+    off_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=MOCK_HOST,
+        entry_id="00000000000000000000000000A",
+        pref_disable_polling=True,
+    )
+    polling_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_HOST_CONFIG_B, title=MOCK_HOST_B
+    )
+    off_entry.add_to_hass(hass)
+    polling_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(off_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == [off_entry]
+    assert off_entry.pref_disable_polling is False
+    subentry = next(
+        subentry
+        for subentry in off_entry.subentries.values()
+        if subentry.unique_id == MOCK_HOST
+    )
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"migration_polling_enabled_{subentry.subentry_id}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "migration_polling_enabled"
+    assert issue.translation_placeholders == {"host": MOCK_HOST}
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.is_persistent
+    assert issue.config_entry_id == off_entry.entry_id
+    assert issue.config_subentry_id == subentry.subentry_id
+
+
 async def test_migration_polling_disabled_entry_warns(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],

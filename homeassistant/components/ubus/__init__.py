@@ -170,7 +170,7 @@ async def _async_migrate(hass: HomeAssistant) -> None:
     A disabled entry is never the hub. The hub's polling preference
     acts on every router, so it keeps polling when any entry polled on
     its own entry; a router whose entry had polling disabled starts
-    polling, with a warning per transferred subentry.
+    polling, with a warning per subentry, the hub's own included.
     """
     entries = [
         entry
@@ -184,12 +184,19 @@ async def _async_migrate(hass: HomeAssistant) -> None:
     hub = min(hubs or hub_candidates, key=lambda e: e.entry_id)
     # Polling is one entry-level preference, so the hub keeps polling
     # when any entry polled on its own entry; an entry which did not
-    # poll starts polling, warned per transferred subentry below.
+    # poll starts polling, warned per subentry.
+    polling_reconciled = False
     if hub.pref_disable_polling and any(
         not candidate.pref_disable_polling for candidate in hub_candidates
     ):
         hass.config_entries.async_update_entry(hub, pref_disable_polling=False)
+        polling_reconciled = True
     _async_convert_own_data(hass, hub)
+    if polling_reconciled:
+        # The flip also starts polling for the hub's own routers,
+        # which the transferred-entry warnings below do not reach.
+        for subentry in hub.subentries.values():
+            _async_create_polling_enabled_issue(hass, hub, subentry)
     for other in sorted((e for e in entries if e is not hub), key=lambda e: e.entry_id):
         await _async_migrate_other(hass, hub, other)
 
@@ -245,26 +252,24 @@ def _async_transfer_to_hub(
     # deleting the subentry reproduces the old behavior, and clears
     # the warning which is linked to it. A colliding host has no new
     # subentry, so there is nothing to delete.
-    translation_key: str | None = None
     if entry.disabled_by is not None:
-        translation_key = "migration_disabled_entry"
-    elif entry.pref_disable_polling and not hub.pref_disable_polling:
-        translation_key = "migration_polling_enabled"
-    if translation_key is not None:
         for created in created_subentries:
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                f"{translation_key}_{created.subentry_id}",
+                f"migration_disabled_entry_{created.subentry_id}",
                 config_entry_id=hub.entry_id,
                 config_subentry_id=created.subentry_id,
                 is_fixable=False,
                 is_persistent=True,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.WARNING,
-                translation_key=translation_key,
+                translation_key="migration_disabled_entry",
                 translation_placeholders={"host": created.title},
             )
+    elif entry.pref_disable_polling and not hub.pref_disable_polling:
+        for created in created_subentries:
+            _async_create_polling_enabled_issue(hass, hub, created)
     # The entry is a shell now: its routers are tracked on the hub,
     # so clearing its subentries and data means a failed removal
     # cannot leave a duplicate poller behind.
@@ -435,6 +440,33 @@ def _async_create_removal_failed_issue(
         severity=ir.IssueSeverity.ERROR,
         translation_key="migration_removal_failed",
         translation_placeholders={"host": host},
+    )
+
+
+@callback
+def _async_create_polling_enabled_issue(
+    hass: HomeAssistant,
+    hub: UbusConfigEntry,
+    subentry: ConfigSubentry,
+) -> None:
+    """Warn that this subentry's router starts polling on the hub.
+
+    A subentry cannot carry a polling preference, so the warning is
+    the only record of the router's previous off state; deleting the
+    subentry reproduces it and clears the warning.
+    """
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"migration_polling_enabled_{subentry.subentry_id}",
+        config_entry_id=hub.entry_id,
+        config_subentry_id=subentry.subentry_id,
+        is_fixable=False,
+        is_persistent=True,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="migration_polling_enabled",
+        translation_placeholders={"host": subentry.title},
     )
 
 
