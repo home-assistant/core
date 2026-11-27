@@ -258,12 +258,12 @@ async def test_discovery_stopped(
 ) -> None:
     """Test that player discovery returns early when discovery is stopped.
 
-    Regression test verifying discovery_stopped guard on line 237.
-    Ensures that after config entry unload, the discovery callback
-    returns early and does not reschedule or process players.
+    Regression test verifying discovery_stopped guard on line 237 and that
+    multiple discovery cycles only retain one cancel callback on unload.
     """
     discovery_calls = []
-    reschedule_calls = []
+    reschedules = []
+    was_cancelled = []
 
     async def mock_get_players():
         """Mock get_players and track when called."""
@@ -272,11 +272,10 @@ async def test_discovery_stopped(
 
     lms.async_get_players = mock_get_players
     cancel_callbacks = []
-    was_cancelled = []
 
     def mock_call_later(hass_arg, delay, callback):
         """Mock async_call_later to capture reschedule attempts."""
-        reschedule_calls.append(callback)
+        reschedules.append(callback)
         cancel_callbacks.append(callback)
 
         def cancel_callback():
@@ -292,21 +291,25 @@ async def test_discovery_stopped(
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
-        # Give background tasks time to run
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Initial discovery should have scheduled a callback
-    assert len(cancel_callbacks) >= 1
-    assert len(discovery_calls) >= 1
-    reschedule_count_at_setup = len(reschedule_calls)
+        # Simulate multiple discovery cycles before unload
+        for _ in range(2):
+            if cancel_callbacks:
+                await cancel_callbacks[-1]()
+                await hass.async_block_till_done()
 
-    # Unload cancels the latest timer
+    # Multiple discovery cycles should have been scheduled
+    assert len(reschedules) >= 3  # Initial + 2 reschedules
+    reschedule_count_before_unload = len(reschedules)
+
+    # Unload should cancel only the latest timer
     assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert len(was_cancelled) > 0
+    assert len(was_cancelled) == 1  # Only the latest timer's cancel was called
 
-    # Invoke the scheduled discovery callback after discovery_stopped is True
-    # It should return early at line 237 without rescheduling
+    # Invoke the latest callback after discovery_stopped is True
+    # It should return early without rescheduling
     await cancel_callbacks[-1]()
 
-    # Verify no new timer was scheduled (guard prevents rescheduling)
-    assert len(reschedule_calls) == reschedule_count_at_setup
+    # Verify no new reschedule was scheduled (guard prevents async_call_later)
+    assert len(reschedules) == reschedule_count_before_unload
