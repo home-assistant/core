@@ -5,10 +5,10 @@ from typing import Any, override
 from bond_async import Action, DeviceType
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -82,7 +82,9 @@ class BondCover(BondEntity, CoverEntity):
         """Set the cover position."""
         await self._bond.action(
             self._device_id,
-            Action.set_position(_hass_to_bond_position(kwargs[ATTR_POSITION])),
+            Action.set_position(
+                _hass_to_bond_position(kwargs[CoverServiceArgument.POSITION])
+            ),
         )
 
     @override

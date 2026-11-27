@@ -1,17 +1,19 @@
 """Device automation helpers for toggle entity."""
 
+from typing import Any
+
 import probatio
 
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.components.homeassistant.triggers.state import StateTriggerArgument
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_CONDITION,
     CONF_ENTITY_ID,
     CONF_FOR,
     CONF_PLATFORM,
     CONF_STATE,
     CONF_TYPE,
+    TargetKey,
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.helpers import (
@@ -126,7 +128,7 @@ async def async_call_action_from_config(
     else:
         action = "toggle"
 
-    service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
+    service_data: dict[str, Any] = {TargetKey.ENTITY_ID: config[CONF_ENTITY_ID]}
 
     await hass.services.async_call(
         domain, action, service_data, blocking=True, context=context

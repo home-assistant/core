@@ -60,7 +60,7 @@ class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):
         self._status_register = config.get(CONF_STATUS_REGISTER)
         self._status_register_type = config[CONF_STATUS_REGISTER_TYPE]
 
-        self._attr_is_closed = False
+        self._attr_is_closed = None
 
         # If we read cover status from coil, and not from
         # optional status register, we interpret boolean value
@@ -97,7 +97,8 @@ class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):
                 STATE_UNAVAILABLE: None,
                 STATE_UNKNOWN: None,
             }
-            self._set_attr_state(convert[state.state])
+            if (value := convert[state.state]) is not None:
+                self._set_attr_state(value)
 
     def _set_attr_state(self, value: str | bool | int) -> None:
         """Convert received value to HA state."""

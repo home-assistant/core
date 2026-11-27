@@ -11,8 +11,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import ThreemaConfigEntry
 from .const import DOMAIN
+from .coordinator import ThreemaConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -23,7 +23,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the gateway QR code for end-to-end encrypted gateways."""
-    client = entry.runtime_data
+    client = entry.runtime_data.client
     if (public_key := client.public_key) is None:
         return
 
@@ -46,7 +46,7 @@ class ThreemaQRCodeImage(ImageEntity):
     ) -> None:
         """Initialize the QR code image entity."""
         super().__init__(hass)
-        gateway_id = entry.runtime_data.gateway_id
+        gateway_id = entry.runtime_data.client.gateway_id
         self._qr_code = qr_code
 
         self._attr_unique_id = f"{gateway_id}_qr_code"

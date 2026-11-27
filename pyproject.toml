@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2026.12.0.dev0"
+version = "2027.1.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -649,7 +649,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.17.5"
+required-version = ">=0.17.6"
 extend-exclude = [
   # Recorded HTTP response bodies, served verbatim by the Marketplace test harness
   "tests/components/marketplace/fixtures/proxy",

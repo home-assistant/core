@@ -449,6 +449,12 @@ async def test_clean_area_no_registry_entry(hass: HomeAssistant) -> None:
     ):
         mock_vacuum.async_create_segments_issue()
 
+    with pytest.raises(
+        RuntimeError,
+        match="Cannot delete segments issue, registry entry is not set",
+    ):
+        mock_vacuum.async_delete_segments_issue()
+
 
 @pytest.mark.usefixtures("config_flow_fixture")
 async def test_last_seen_segments(
@@ -543,4 +549,51 @@ async def test_segments_changed_issue(
     )
     await hass.async_block_till_done()
 
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.usefixtures("config_flow_fixture")
+async def test_delete_segments_changed_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test deleting the segments changed issue."""
+    mock_vacuum = MockVacuumWithCleanArea(name="Testing", entity_id="vacuum.testing")
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get(mock_vacuum.entity_id)
+    issue_id = f"segments_changed_{entity_entry.id}"
+
+    # Deleting when no issue exists is a no-op
+    mock_vacuum.async_delete_segments_issue()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+    # Simulates an issue left open by an entity instance removed in a reload
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="segments_changed",
+        translation_placeholders={"entity_id": mock_vacuum.entity_id},
+    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    mock_vacuum.async_delete_segments_issue()
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

@@ -6,6 +6,7 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import DOMAIN
 from .coordinator import DevialetConfigEntry, DevialetCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
@@ -19,6 +20,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DevialetConfigEntry) -> 
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+    entry.async_create_background_task(
+        hass, coordinator.async_listen(), f"{DOMAIN}_notifications"
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

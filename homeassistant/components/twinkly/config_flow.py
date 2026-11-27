@@ -7,13 +7,14 @@ from aiohttp import ClientError
 from probatio import Required, Schema
 from ttls.client import Twinkly
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DEV_ID, DEV_MODEL, DEV_NAME, DEVICE_TIMEOUT, DOMAIN
+from .coordinator import TwinklyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _get_registered_mac(self, entry: ConfigEntry) -> str | None:
+    def _get_registered_mac(self, entry: TwinklyConfigEntry) -> str | None:
         """Return the MAC address stored in the device registry for the entry."""
         if TYPE_CHECKING:
             assert entry.unique_id is not None

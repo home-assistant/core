@@ -1,0 +1,15 @@
+get_forecast:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: victron_remote_monitoring
+    start:
+      required: false
+      selector:
+        datetime:
+    end:
+      required: false
+      selector:
+        datetime:

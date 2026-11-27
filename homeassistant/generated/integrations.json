@@ -1481,6 +1481,18 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "bambu_lab": {
+      "name": "Bambu Lab",
+      "integration_type": "device",
+      "categories": [
+        "computers_network.printers"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "bang_olufsen": {
       "name": "Bang & Olufsen",
       "integration_type": "device",
@@ -3020,7 +3032,7 @@
         "network"
       ],
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "device_sun_light_trigger": {
       "name": "Presence-based lights",
@@ -10757,6 +10769,9 @@
           "categories": [
             "climate.heat_pumps_air_conditioning"
           ],
+          "connectivity": [
+            "infrared"
+          ],
           "name": "O General Infrared"
         }
       }
@@ -14499,6 +14514,18 @@
             "infrared"
           ],
           "name": "Sony Infrared"
+        },
+        "sony_tv_rs232": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "media_entertainment.tv_streaming"
+          ],
+          "connectivity": [
+            "serial"
+          ],
+          "name": "Sony TV RS-232"
         }
       }
     },
@@ -15567,7 +15594,7 @@
         "cloud"
       ],
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_polling"
     },
     "tibber": {
       "name": "Tibber",

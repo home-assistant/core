@@ -1458,7 +1458,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "message_bird",
     "met",
     "met_eireann",
-    "meteo_france",
     "meteoclimatic",
     "mfi",
     "microbees",

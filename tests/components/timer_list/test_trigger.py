@@ -10,15 +10,10 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.components.common import assert_trigger_options_supported
 
 from homeassistant.components import automation
+from homeassistant.components.automation import AutomationService
 from homeassistant.components.timer_list.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_PLATFORM,
-    CONF_TARGET,
-    SERVICE_TURN_OFF,
-    TargetKey,
-)
+from homeassistant.const import CONF_PLATFORM, CONF_TARGET, TargetKey
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
@@ -288,8 +283,8 @@ async def test_trigger_unsubscribes_when_automation_turned_off(
 
     await hass.services.async_call(
         automation.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "automation.automation_0"},
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "automation.automation_0"},
         blocking=True,
     )
 

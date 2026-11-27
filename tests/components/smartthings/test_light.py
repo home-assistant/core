@@ -6,10 +6,7 @@ from unittest.mock import AsyncMock, call
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    mock_restore_cache_with_extra_data,
-)
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -413,9 +410,7 @@ async def test_color_mode_after_startup(
         ATTR_XY_COLOR: (0.61, 0.35),
     }
 
-    mock_restore_cache_with_extra_data(
-        hass, ((State("light.standing_light", STATE_ON), RESTORE_DATA),)
-    )
+    mock_restore_cache(hass, (State("light.standing_light", STATE_ON, RESTORE_DATA),))
     await setup_integration(hass, mock_config_entry)
 
     assert (

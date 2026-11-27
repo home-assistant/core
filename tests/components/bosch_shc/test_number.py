@@ -18,6 +18,7 @@ from .conftest import (
     heating_circuit_device,
     micromodule_dimmer_device,
     micromodule_relay_device,
+    outdoor_siren_device,
     setup_integration,
     shutter_contact2_device,
     smart_plug_compact_device,
@@ -951,3 +952,73 @@ async def test_heating_circuit_setpoints_not_configured(
         assert state.state == "unknown"
         assert state.attributes["min"] == 5.0
         assert state.attributes["max"] == 30.0
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "outdoor_sirens": [
+                outdoor_siren_device(
+                    alarm_duration=4.0,
+                    flash_duration=6.0,
+                    alarm_delay=10.0,
+                    flash_delay=20.0,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_outdoor_siren_configuration_numbers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The siren durations (minutes) and delays (seconds) are reported."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("number.outdoor_siren_siren_alarm_duration").state == "4.0"
+    assert (
+        hass.states.get("number.outdoor_siren_flashing_light_alarm_duration").state
+        == "6.0"
+    )
+    assert hass.states.get("number.outdoor_siren_siren_alarm_delay").state == "10.0"
+    assert (
+        hass.states.get("number.outdoor_siren_flashing_light_alarm_delay").state
+        == "20.0"
+    )
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "field"),
+    [
+        ("number.outdoor_siren_siren_alarm_duration", "alarm_duration"),
+        ("number.outdoor_siren_flashing_light_alarm_duration", "flash_duration"),
+        ("number.outdoor_siren_siren_alarm_delay", "alarm_delay"),
+        ("number.outdoor_siren_flashing_light_alarm_delay", "flash_delay"),
+    ],
+)
+@pytest.mark.parametrize(
+    "device_buckets", [{"outdoor_sirens": [outdoor_siren_device()]}], indirect=True
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_outdoor_siren_configuration_set_value(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    field: str,
+) -> None:
+    """Setting a value writes that one field through the siren configuration."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.outdoor_sirens[0]
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 5},
+        blocking=True,
+    )
+
+    device.siren.set_configuration.assert_called_with(**{field: 5})

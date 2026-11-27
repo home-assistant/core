@@ -548,6 +548,7 @@ _BOTH = [
         pytest.param([[], _BOTH], True, True, id="back_after_empty_garage"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_vehicle_leaving_garage(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
