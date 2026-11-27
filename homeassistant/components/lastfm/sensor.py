@@ -1,24 +1,20 @@
 """Sensor for Last.fm account status."""
 
-import hashlib
 from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_LAST_PLAYED,
     ATTR_PLAY_COUNT,
     ATTR_TOP_PLAYED,
     CONF_USERS,
-    DEFAULT_NAME,
-    DOMAIN,
     STATE_NOT_SCROBBLING,
 )
-from .coordinator import LastFMConfigEntry, LastFMDataUpdateCoordinator, LastFMUserData
+from .coordinator import LastFMConfigEntry, LastFMDataUpdateCoordinator
+from .entity import LastFmEntity
 
 
 async def async_setup_entry(
@@ -37,12 +33,10 @@ async def async_setup_entry(
     )
 
 
-class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity):
+class LastFmSensor(LastFmEntity, SensorEntity):
     """A class for the Last.fm account."""
 
-    _attr_attribution = "Data provided by Last.fm"
     _attr_translation_key = "lastfm"
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(
@@ -52,27 +46,8 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
         entry_id: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._username = username
-        self._attr_unique_id = hashlib.sha256(username.encode("utf-8")).hexdigest()
-        self._attr_device_info = DeviceInfo(
-            configuration_url="https://www.last.fm",
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{entry_id}_{self._attr_unique_id}")},
-            manufacturer=DEFAULT_NAME,
-            name=f"{DEFAULT_NAME} {username}",
-        )
-
-    @property
-    def user_data(self) -> LastFMUserData | None:
-        """Returns the user from the coordinator."""
-        return self.coordinator.data.get(self._username)
-
-    @property
-    @override
-    def available(self) -> bool:
-        """If user not found in coordinator, entity is unavailable."""
-        return super().available and self.user_data is not None
+        super().__init__(coordinator, username, entry_id)
+        self._attr_unique_id = self._user_hash
 
     @property
     @override
