@@ -26,3 +26,26 @@ async def test_all_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_disabled_by_default(
+    hass: HomeAssistant,
+    mock_palazzetti_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test default enabled and disabled entities."""
+    with patch("homeassistant.components.palazzetti.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    pellet_level_entry = entity_registry.async_get("sensor.stove_pellet_level")
+    assert pellet_level_entry is not None
+    assert pellet_level_entry.disabled_by is None
+
+    for entity_id in (
+        "sensor.stove_hydro_temperature_1",
+        "sensor.stove_hydro_temperature_2",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

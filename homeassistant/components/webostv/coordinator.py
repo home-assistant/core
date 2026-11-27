@@ -3,7 +3,12 @@
 from datetime import timedelta
 from typing import cast, override
 
-from aiowebostv import WebOsClient, WebOsTvPairError, WebOsTvState
+from aiowebostv import (
+    WebOsClient,
+    WebOsTvConnectionError,
+    WebOsTvPairError,
+    WebOsTvState,
+)
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
@@ -16,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailedUnreachable,
 )
 
-from .const import DOMAIN, LOGGER, WEBOSTV_EXCEPTIONS
+from .const import DOMAIN, LOGGER
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -54,7 +59,7 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         try:
             await self.client.connect()
-        except WEBOSTV_EXCEPTIONS as error:
+        except WebOsTvConnectionError as error:
             # can't recover if the TV is disconnected and no turn_on action,
             # automation triggers are attached only when Home Assistant is running
             if (

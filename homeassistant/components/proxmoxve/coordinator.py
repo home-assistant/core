@@ -1,6 +1,7 @@
 """Data Update Coordinator for Proxmox VE integration."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
 from datetime import timedelta
 import logging
@@ -56,9 +57,10 @@ from .const import (
     ProxmoxPermission,
 )
 
-type ProxmoxConfigEntry = ConfigEntry[ProxmoxCoordinator]
+type ProxmoxConfigEntry = ConfigEntry[ProxmoxRuntimeData]
 
-DEFAULT_UPDATE_INTERVAL = timedelta(seconds=60)
+STATUS_UPDATE_INTERVAL = timedelta(seconds=60)
+SOFTWARE_UPDATE_INTERVAL = timedelta(minutes=30)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,8 +73,6 @@ class NodeResources:
     containers: list[ContainerResource]
     storages: list[NodeStorageResource]
     backups: list[NodeTask]
-    version: NodeVersion | None
-    update: list[NodeAptUpdateProperty] | None
 
 
 @dataclass(slots=True, kw_only=True)
@@ -84,12 +84,58 @@ class ProxmoxNodeData:
     containers: dict[int, ContainerResource] = field(default_factory=dict)
     storages: dict[str, NodeStorageResource] = field(default_factory=dict)
     backups: list[NodeTask] = field(default_factory=list)
-    version: NodeVersion | None = None
-    update: list[NodeAptUpdateProperty] | None = None
 
 
-class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
-    """Data Update Coordinator for Proxmox VE integration."""
+@dataclass(slots=True, kw_only=True)
+class ProxmoxNodeSoftware:
+    """Version and pending updates of a single Proxmox node."""
+
+    version: NodeVersion
+    update: list[NodeAptUpdateProperty] | None
+
+
+@dataclass(slots=True, kw_only=True)
+class ProxmoxRuntimeData:
+    """Runtime data of a Proxmox VE config entry."""
+
+    status: ProxmoxStatusCoordinator
+    software: ProxmoxSoftwareCoordinator
+
+
+@contextmanager
+def _translate_update_errors() -> Generator[None]:
+    """Translate aioproxmox errors raised during a coordinator update."""
+    try:
+        yield
+    except ProxmoxAuthError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        ) from err
+    except ProxmoxSSLError as err:
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="ssl_error",
+        ) from err
+    except ProxmoxTimeoutError as err:
+        raise UpdateFailedUnreachable(
+            translation_domain=DOMAIN,
+            translation_key="timeout_connect",
+        ) from err
+    except ProxmoxAPIError as err:
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="api_error_details",
+        ) from err
+    except ProxmoxConnectionError as err:
+        raise UpdateFailedUnreachable(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
+
+
+class ProxmoxStatusCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
+    """Coordinator for the status of Proxmox VE nodes, guests and storages."""
 
     config_entry: ProxmoxConfigEntry
 
@@ -98,13 +144,13 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         hass: HomeAssistant,
         config_entry: ProxmoxConfigEntry,
     ) -> None:
-        """Initialize the Proxmox VE coordinator."""
+        """Initialize the Proxmox VE status coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=DOMAIN,
-            update_interval=DEFAULT_UPDATE_INTERVAL,
+            name=f"{DOMAIN}_status",
+            update_interval=STATUS_UPDATE_INTERVAL,
         )
         self.proxmox: ProxmoxVE
 
@@ -163,33 +209,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
     @override
     async def _async_update_data(self) -> dict[str, ProxmoxNodeData]:
         """Fetch data from Proxmox VE API."""
-        try:
+        with _translate_update_errors():
             node_pairs = await self._fetch_all_nodes()
-        except ProxmoxAuthError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from err
-        except ProxmoxSSLError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="ssl_error",
-            ) from err
-        except ProxmoxTimeoutError as err:
-            raise UpdateFailedUnreachable(
-                translation_domain=DOMAIN,
-                translation_key="timeout_connect",
-            ) from err
-        except ProxmoxAPIError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="api_error_details",
-            ) from err
-        except ProxmoxConnectionError as err:
-            raise UpdateFailedUnreachable(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
 
         data: dict[str, ProxmoxNodeData] = {}
         for node, resources in node_pairs:
@@ -201,8 +222,6 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 },
                 storages={s.storage: s for s in resources.storages},
                 backups=resources.backups,
-                version=resources.version,
-                update=resources.update,
             )
 
         self._async_add_remove_nodes(data)
@@ -265,8 +284,6 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 containers=[],
                 storages=[],
                 backups=[],
-                version=None,
-                update=None,
             )
 
         node_endpoint = self.proxmox.nodes(node.node)
@@ -279,20 +296,12 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         storages = storage_resources.storages
         node_tasks = await node_endpoint.tasks(typefilter="vzdump", limit=1)
         backups = node_tasks.tasks
-        version = await node_endpoint.version()
-
-        update: list[NodeAptUpdateProperty] | None = None
-        if self.permissions.has_node_permission(node.node, ProxmoxPermission.SYSMOD):
-            apt_update = await node_endpoint.apt().update()
-            update = apt_update.items
 
         return NodeResources(
             vms=vms,
             containers=containers,
             storages=storages,
             backups=backups,
-            version=version,
-            update=update,
         )
 
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:
@@ -399,8 +408,70 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 registry.async_remove_device(device.id)
 
 
+class ProxmoxSoftwareCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeSoftware]]):
+    """Coordinator for the version and pending updates of Proxmox VE nodes."""
+
+    config_entry: ProxmoxConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ProxmoxConfigEntry,
+        status: ProxmoxStatusCoordinator,
+    ) -> None:
+        """Initialize the Proxmox VE software coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}_software",
+            update_interval=SOFTWARE_UPDATE_INTERVAL,
+        )
+        self.status = status
+        config_entry.async_on_unload(
+            status.async_add_listener(self._async_status_updated)
+        )
+
+    @override
+    async def _async_update_data(self) -> dict[str, ProxmoxNodeSoftware]:
+        """Fetch version and pending updates of the online nodes."""
+        with _translate_update_errors():
+            return {
+                node: await self._get_node_software(node)
+                for node in self._online_nodes()
+            }
+
+    def _online_nodes(self) -> set[str]:
+        """Return the names of the online nodes."""
+        return {
+            node_data.node.node
+            for node_data in self.status.data.values()
+            if node_data.node.status == OperationalStatus.ONLINE
+        }
+
+    async def _get_node_software(self, node: str) -> ProxmoxNodeSoftware:
+        """Get the version and pending updates of a node."""
+        node_endpoint = self.status.proxmox.nodes(node)
+        update: list[NodeAptUpdateProperty] | None = None
+        if self.status.permissions.has_node_permission(node, ProxmoxPermission.SYSMOD):
+            update = (await node_endpoint.apt().update()).items
+        return ProxmoxNodeSoftware(version=await node_endpoint.version(), update=update)
+
+    @callback
+    def _async_status_updated(self) -> None:
+        """Fetch the software of nodes that came online since the last refresh."""
+        if (
+            self.data is not None
+            and self.last_update_success
+            and self._online_nodes() - self.data.keys()
+        ):
+            self.config_entry.async_create_background_task(
+                self.hass, self.async_request_refresh(), "proxmoxve_software"
+            )
+
+
 def node_device_info(
-    coordinator: ProxmoxCoordinator, node_data: ProxmoxNodeData
+    coordinator: ProxmoxStatusCoordinator, node_data: ProxmoxNodeData
 ) -> dr.DeviceInfo:
     """Return the device info for a Proxmox VE node device."""
     return dr.DeviceInfo(
@@ -413,7 +484,7 @@ def node_device_info(
     )
 
 
-def proxmox_base_url(coordinator: ProxmoxCoordinator) -> URL:
+def proxmox_base_url(coordinator: ProxmoxStatusCoordinator) -> URL:
     """Return the base URL for the Proxmox VE."""
     data = coordinator.config_entry.data
     return URL.build(
@@ -423,6 +494,6 @@ def proxmox_base_url(coordinator: ProxmoxCoordinator) -> URL:
     )
 
 
-def proxmox_node_url(coordinator: ProxmoxCoordinator, node: str) -> URL:
+def proxmox_node_url(coordinator: ProxmoxStatusCoordinator, node: str) -> URL:
     """Return the URL of a Proxmox VE node."""
     return proxmox_base_url(coordinator).with_fragment(f"v1:0:=node/{node}")

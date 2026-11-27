@@ -130,6 +130,13 @@ async def test_power_switch(hass: HomeAssistant, matter_node: MatterNode) -> Non
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_thermo_v4"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        pytest.param({}, id="eve"),
+        pytest.param({"0/40/2": 65521}, id="other_vendor"),
+    ],
+)
 async def test_numeric_switch(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -143,6 +150,11 @@ async def test_numeric_switch(
     assert state.attributes["friendly_name"] == "Eve Thermo 20EBP1701 Child lock"
     # test attribute changes
     set_node_attribute(matter_node, 1, 516, 1, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("switch.eve_thermo_20ebp1701_child_lock")
+    assert state.state == "on"
+    # any non-zero lockout level should be reported as locked, not unknown
+    set_node_attribute(matter_node, 1, 516, 1, 3)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("switch.eve_thermo_20ebp1701_child_lock")
     assert state.state == "on"

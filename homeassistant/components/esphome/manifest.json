@@ -6,7 +6,7 @@
   "codeowners": ["@jesserockz", "@kbx81", "@bdraco", "@arturpragacz"],
   "config_flow": true,
   "connectivity": ["esphome"],
-  "dependencies": ["assist_pipeline", "bluetooth", "intent", "ffmpeg", "http"],
+  "dependencies": ["assist_pipeline", "bluetooth", "ffmpeg", "http"],
   "dhcp": [
     {
       "registered_devices": true

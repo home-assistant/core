@@ -157,8 +157,8 @@ class KNXConfigEntryData(TypedDict, total=False):
     user_id: int | None  # not required
     user_password: str | None  # not required
     device_authentication: str | None  # not required
-    knxkeys_filename: str  # not required
-    knxkeys_password: str  # not required
+    knxkeys_filename: str | None  # not required
+    knxkeys_password: str | None  # not required
     backbone_key: str | None  # not required
     sync_latency_tolerance: int | None  # not required
 

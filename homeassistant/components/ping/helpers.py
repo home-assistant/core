@@ -180,10 +180,9 @@ class PingDataSubProcess(PingData):
                 self._count + PING_TIMEOUT,
             )
 
-            if pinger:
-                with suppress(TypeError, ProcessLookupError):
-                    pinger.kill()
-                del pinger
+            with suppress(TypeError, ProcessLookupError):
+                pinger.kill()
+            del pinger
 
             return None
         except AttributeError as err:

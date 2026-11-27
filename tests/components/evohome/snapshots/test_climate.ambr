@@ -72,7 +72,7 @@
 # name: test_ctl_set_hvac_mode[sys_006]
   list([
     tuple(
-      <SystemMode.OFF: 'off'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
       <SystemMode.AUTO: 'auto'>,
@@ -131,7 +131,7 @@
 # name: test_ctl_turn_off[sys_006]
   list([
     tuple(
-      <SystemMode.OFF: 'off'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---
@@ -844,7 +844,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
@@ -883,7 +882,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
@@ -1330,7 +1328,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
@@ -1677,7 +1674,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
@@ -1760,7 +1756,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       'status': dict({
@@ -1836,7 +1831,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
@@ -2053,7 +2047,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
@@ -2222,7 +2215,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
@@ -2393,7 +2385,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
@@ -2432,7 +2423,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'away',
@@ -2570,7 +2560,6 @@
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',

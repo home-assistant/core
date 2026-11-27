@@ -1,7 +1,9 @@
 """Velbus sensor platform tests."""
 
-from unittest.mock import AsyncMock, PropertyMock, patch
+import logging
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
@@ -156,3 +158,26 @@ async def test_vmb7in_water_counter_unavailable_when_no_total(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+async def test_unknown_sensor_type_skipped(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: AsyncMock,
+    mock_sensornumber: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unknown sensor types are skipped without breaking setup."""
+    unknown = MagicMock()
+    unknown.get_sensor_types.return_value = ["not_supported"]
+    unknown.get_full_name.return_value = "Experimental channel"
+    controller.return_value.get_all_sensor.return_value = [unknown, mock_sensornumber]
+
+    with (
+        caplog.at_level(logging.WARNING),
+        patch("homeassistant.components.velbus.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await init_integration(hass, config_entry)
+
+    assert hass.states.get("sensor.input_sensornumber") is not None
+    assert "Skipping unknown Velbus sensor type 'not_supported'" in caplog.text

@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from functools import partial
 from http import HTTPStatus
 import logging
 
@@ -72,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) ->
     async_register(
         hass, DOMAIN, "Watergate", webhook_id, get_webhook_handler(coordinator)
     )
+    entry.async_on_unload(partial(async_unregister, hass, webhook_id))
 
     _LOGGER.debug("Registered webhook: %s", webhook_id)
 
@@ -86,8 +88,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> None:
     """Unload a config entry."""
-    webhook_id = entry.data[CONF_WEBHOOK_ID]
-    async_unregister(hass, webhook_id)
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
     # Best effort: an unreachable device must not block the unload.
     try:
@@ -122,7 +122,8 @@ def get_webhook_handler(
             await coordinator.async_request_refresh()
             return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
 
-        if not (coordinator_data := coordinator.data):
+        # Despite its type, data is None before the first refresh
+        if not (coordinator_data := coordinator.data):  # type: ignore[truthy-bool]
             pass
         elif isinstance(data, ValveEventData):
             coordinator_data.state.valve_state = data.state

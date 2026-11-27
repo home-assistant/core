@@ -93,6 +93,8 @@ def create_mock_controller(
         "Setpoint": "24.0",
         "Temp": "22.0",
         "RAS": ras_mode,
+        "Tag1": "1 Example Street",
+        "Tag2": "Exampleville",
         "CtrlZone": zone_ctrl,
         "EcoLock": "true",
         "EcoMax": "30.0",

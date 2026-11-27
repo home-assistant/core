@@ -1,8 +1,10 @@
 """Tests for miele sensor module."""
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import MagicMock
+import http
+from unittest.mock import MagicMock, Mock
 
+from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 from pymiele import MieleDevices, MieleTemperature
 import pytest
@@ -18,11 +20,12 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.components.miele.sensor import _convert_temperature, _get_plate_count
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
-from . import get_data_callback
+from . import get_data_callback, setup_integration
 
 
 @pytest.mark.freeze_time("2025-05-31 12:30:00+00:00")
@@ -918,3 +921,53 @@ def test_convert_temperature_invalid_raw_types() -> None:
 def test_get_plate_count(tech_type: str, expected: int) -> None:
     """Cover _get_plate_count prefix matching, including the KM7999 entry."""
     assert _get_plate_count(tech_type) == expected
+
+
+async def test_filling_level_sensors_added_after_recovery(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test filling level sensors are added once the endpoint recovers."""
+    mock_miele_client.get_filling_levels.side_effect = ClientResponseError(
+        Mock(), Mock(), status=http.HTTPStatus.SERVICE_UNAVAILABLE
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.washing_machine_twindos_1_level") is None
+
+    mock_miele_client.get_filling_levels.side_effect = None
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.washing_machine_twindos_1_level").state == "63"
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_filling_levels_polling_stops_without_sensors_after_recovery(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test polling stops after recovery when no filling level sensors exist."""
+    mock_miele_client.get_filling_levels.side_effect = TimeoutError
+    await setup_integration(hass, mock_config_entry)
+
+    mock_miele_client.get_filling_levels.side_effect = None
+    mock_miele_client.get_filling_levels.return_value = []
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_miele_client.get_filling_levels.call_count == 2
+
+    freezer.tick(timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_miele_client.get_filling_levels.call_count == 2

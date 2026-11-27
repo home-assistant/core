@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unload_failed": "The gateway could not be stopped to try the new settings. Restart Home Assistant and reconfigure the gateway again.",
       "unsupported_brand": "This is a {brand} gateway. Its code and error tables are not written yet, so it cannot be set up. See the intesis-gw-modbus library for how to contribute them."
     },
     "error": {
@@ -20,6 +21,19 @@
         },
         "description": "Confirm what the indoor unit behind the gateway can do."
       },
+      "reconfigure": {
+        "data": {
+          "baudrate": "[%key:component::modbus::common::baud_rate%]",
+          "device": "[%key:component::modbus::common::serial_port%]",
+          "unit_id": "[%key:component::intesis_modbus::config::step::user::data::unit_id%]"
+        },
+        "data_description": {
+          "baudrate": "[%key:component::intesis_modbus::config::step::user::data_description::baudrate%]",
+          "device": "[%key:component::modbus::common::serial_port_description%]",
+          "unit_id": "[%key:component::intesis_modbus::config::step::user::data_description::unit_id%]"
+        },
+        "description": "Update how this gateway is reached, for example after it moved to another serial port or its DIP switches changed."
+      },
       "user": {
         "data": {
           "baudrate": "[%key:component::modbus::common::baud_rate%]",
@@ -35,7 +49,25 @@
       }
     }
   },
+  "device": {
+    "air_conditioner": {
+      "name": "{gateway} air conditioner"
+    }
+  },
   "entity": {
+    "binary_sensor": {
+      "alarm": {
+        "name": "Alarm"
+      }
+    },
+    "button": {
+      "clear_external_temperature": {
+        "name": "Clear external temperature reference"
+      },
+      "reset_error": {
+        "name": "Reset error"
+      }
+    },
     "climate": {
       "air_conditioner": {
         "state_attributes": {
@@ -55,9 +87,61 @@
           }
         }
       }
+    },
+    "number": {
+      "external_temperature": {
+        "name": "External temperature reference"
+      },
+      "window_timeout": {
+        "name": "Open window timeout"
+      }
+    },
+    "sensor": {
+      "control_lock": {
+        "name": "Control lock",
+        "state": {
+          "lock_all": "All locked",
+          "lock_on_off": "On/off locked",
+          "remote_only": "Remote only",
+          "remote_unlock": "Remote unlocked"
+        }
+      },
+      "error": {
+        "name": "Error",
+        "state": {
+          "communication_error": "Communication error with the unit",
+          "initialising": "Initializing",
+          "none": "No error",
+          "unit_error": "Unit error"
+        }
+      },
+      "error_code": {
+        "name": "Error code"
+      },
+      "input_reference_temperature": {
+        "name": "Input reference temperature"
+      },
+      "operation_hours": {
+        "name": "Operation time"
+      },
+      "outdoor_intake_temperature": {
+        "name": "Outdoor intake temperature"
+      },
+      "real_setpoint": {
+        "name": "Applied setpoint"
+      },
+      "return_path_temperature": {
+        "name": "Return path temperature"
+      },
+      "undervoltage_hours": {
+        "name": "Undervoltage time"
+      }
     }
   },
   "exceptions": {
+    "gateway_unavailable": {
+      "message": "The gateway does not answer."
+    },
     "modbus_error": {
       "message": "Could not read the gateway."
     },

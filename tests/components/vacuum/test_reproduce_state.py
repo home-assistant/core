@@ -4,14 +4,11 @@ import pytest
 from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED,
     DOMAIN,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
     VacuumActivity,
+    VacuumEntityStateAttribute,
+    VacuumService,
+    VacuumServiceArgument,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
@@ -28,7 +25,7 @@ async def test_reproducing_states(
     hass.states.async_set(
         "vacuum.entity_cleaning_fan",
         VacuumActivity.CLEANING,
-        {ATTR_FAN_SPEED: FAN_SPEED_LOW},
+        {VacuumEntityStateAttribute.FAN_SPEED: FAN_SPEED_LOW},
     )
     hass.states.async_set("vacuum.entity_cleaning", VacuumActivity.CLEANING, {})
     hass.states.async_set("vacuum.entity_docked", VacuumActivity.DOCKED, {})
@@ -36,11 +33,11 @@ async def test_reproducing_states(
     hass.states.async_set("vacuum.entity_returning", VacuumActivity.RETURNING, {})
     hass.states.async_set("vacuum.entity_paused", VacuumActivity.PAUSED, {})
 
-    start_calls = async_mock_service(hass, DOMAIN, SERVICE_START)
-    pause_calls = async_mock_service(hass, DOMAIN, SERVICE_PAUSE)
-    stop_calls = async_mock_service(hass, DOMAIN, SERVICE_STOP)
-    return_calls = async_mock_service(hass, DOMAIN, SERVICE_RETURN_TO_BASE)
-    fan_speed_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_FAN_SPEED)
+    start_calls = async_mock_service(hass, DOMAIN, VacuumService.START)
+    pause_calls = async_mock_service(hass, DOMAIN, VacuumService.PAUSE)
+    stop_calls = async_mock_service(hass, DOMAIN, VacuumService.STOP)
+    return_calls = async_mock_service(hass, DOMAIN, VacuumService.RETURN_TO_BASE)
+    fan_speed_calls = async_mock_service(hass, DOMAIN, VacuumService.SET_FAN_SPEED)
 
     # These calls should do nothing as entities already in desired state
     await async_reproduce_state(
@@ -49,7 +46,7 @@ async def test_reproducing_states(
             State(
                 "vacuum.entity_cleaning_fan",
                 VacuumActivity.CLEANING,
-                {ATTR_FAN_SPEED: FAN_SPEED_LOW},
+                {VacuumEntityStateAttribute.FAN_SPEED: FAN_SPEED_LOW},
             ),
             State("vacuum.entity_cleaning", VacuumActivity.CLEANING),
             State("vacuum.entity_docked", VacuumActivity.DOCKED),
@@ -93,7 +90,7 @@ async def test_reproducing_states(
             State(
                 "vacuum.entity_cleaning_fan",
                 VacuumActivity.CLEANING,
-                {ATTR_FAN_SPEED: FAN_SPEED_HIGH},
+                {VacuumEntityStateAttribute.FAN_SPEED: FAN_SPEED_HIGH},
             ),
             State("vacuum.entity_cleaning", VacuumActivity.PAUSED),
             State("vacuum.entity_docked", VacuumActivity.CLEANING),
@@ -131,5 +128,5 @@ async def test_reproducing_states(
     assert fan_speed_calls[0].domain == "vacuum"
     assert fan_speed_calls[0].data == {
         "entity_id": "vacuum.entity_cleaning_fan",
-        ATTR_FAN_SPEED: FAN_SPEED_HIGH,
+        VacuumServiceArgument.FAN_SPEED: FAN_SPEED_HIGH,
     }

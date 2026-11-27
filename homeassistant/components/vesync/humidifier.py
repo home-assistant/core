@@ -10,6 +10,7 @@ from homeassistant.components.humidifier import (
     MODE_AUTO,
     MODE_NORMAL,
     MODE_SLEEP,
+    HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
 )
@@ -100,6 +101,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
     # and this is to follow the device name
     _attr_name = None
 
+    _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
     _attr_supported_features = HumidifierEntityFeature.MODES
 
     _attr_translation_key = "vesync"

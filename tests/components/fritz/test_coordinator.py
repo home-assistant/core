@@ -15,7 +15,9 @@ from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.fritz.const import (
     CONF_FEATURE_DEVICE_TRACKING,
     CONF_OLD_DISCOVERY,
@@ -47,6 +49,7 @@ from .conftest import FritzConnectionMock, FritzServiceMock
 from .const import (
     MOCK_HOST_FRITZBOX,
     MOCK_HOST_PRINTER,
+    MOCK_MESH_MASTER_MAC,
     MOCK_SERIAL_NUMBER,
     MOCK_STATUS_DEVICE_INFO_DATA,
     MOCK_USER_DATA,
@@ -676,6 +679,62 @@ async def test_async_trigger_cleanup(
     )
     assert entity_registry.async_get("device_tracker.printer")
     assert entity_registry.async_get("switch.printer_internet_access")
+
+
+async def test_async_trigger_cleanup_removes_tracked_device_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test cleanup removes all entities of a dropped host and keeps box entities."""
+    fh_class_mock.get_hosts_attributes.return_value = [
+        MOCK_HOST_PRINTER,
+        MOCK_HOST_FRITZBOX,
+    ]
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
+
+    printer_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22"), entry.entry_id
+    )
+    assert printer_device
+    printer_entries = er.async_entries_for_device(
+        entity_registry, printer_device.id, include_disabled_entities=True
+    )
+    assert sorted(e.unique_id for e in printer_entries) == snapshot
+
+    box_entity_ids = {
+        e.entity_id
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    } - {e.entity_id for e in printer_entries}
+
+    # The box never tracks itself, so a tracker for its own MAC is stale
+    entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        f"{MOCK_MESH_MASTER_MAC}_tracker",
+        config_entry=entry,
+    )
+
+    fh_class_mock.get_hosts_attributes.return_value = [MOCK_HOST_FRITZBOX]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert device_registry.async_get(printer_device.id) is None
+    assert {
+        e.entity_id
+        for e in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    } == box_entity_ids
 
 
 async def test_async_trigger_cleanup_preserves_fritz_device(

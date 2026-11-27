@@ -21,7 +21,7 @@ from homeassistant.components.hyperion.const import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import TargetKey
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util, slugify
@@ -225,3 +225,30 @@ async def test_switches_can_be_enabled(
 
         entity_state = hass.states.get(entity_id)
         assert entity_state
+
+
+async def test_switch_availability_follows_connection(hass: HomeAssistant) -> None:
+    """Test the switch becomes unavailable when the connection is lost."""
+    client = create_mock_client()
+    client.components = TEST_COMPONENTS
+    register_test_entity(
+        hass,
+        SWITCH_DOMAIN,
+        f"{TYPE_HYPERION_COMPONENT_SWITCH_BASE}_all",
+        TEST_SWITCH_COMPONENT_ALL_ENTITY_ID,
+    )
+    await setup_test_config_entry(hass, hyperion_client=client)
+
+    client.has_loaded_state = False
+    call_registered_callback(client, "client-update", {"loaded-state": False})
+
+    entity_state = hass.states.get(TEST_SWITCH_COMPONENT_ALL_ENTITY_ID)
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
+
+    client.has_loaded_state = True
+    call_registered_callback(client, "client-update", {"loaded-state": True})
+
+    entity_state = hass.states.get(TEST_SWITCH_COMPONENT_ALL_ENTITY_ID)
+    assert entity_state
+    assert entity_state.state == "on"

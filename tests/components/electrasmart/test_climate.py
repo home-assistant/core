@@ -466,6 +466,112 @@ async def test_update_failure_keeps_the_old_state(
 
 
 @pytest.mark.usefixtures("setup_integration")
+async def test_a_failed_command_is_not_published_by_a_failed_poll(
+    hass: HomeAssistant,
+    mock_api: Mock,
+    mock_device: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A command that was not confirmed must not reach the state.
+
+    The library writes the requested value onto the device before the command
+    is sent, so after a refused command the device reports a temperature the
+    cloud never accepted. Only the poll that follows can confirm it, and when
+    that poll fails as well the entity has to keep the last known state.
+    """
+    mock_api.set_state = AsyncMock(side_effect=ElectraApiError("Failed to set state"))
+
+    with pytest.raises(
+        HomeAssistantError, match="Error communicating with Electra API"
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 25},
+            blocking=True,
+        )
+
+    # The device kept the value of the refused command.
+    mock_device.get_temperature = Mock(return_value=25)
+    mock_api.get_last_telemtry = AsyncMock(
+        side_effect=ElectraApiError("Failed to retrieve telemetry")
+    )
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TEMPERATURE] == 22
+    assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_a_skipped_poll_publishes_nothing(
+    hass: HomeAssistant,
+    mock_api: Mock,
+    mock_device: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A poll that skips an AC confirms nothing, so it publishes nothing.
+
+    A command pauses the polls of the AC it was sent to, and a second command
+    can be refused inside that window: the device then carries the value of
+    the refused command while the poll landing in the window skips the AC.
+    """
+    freezer.tick(SCAN_INTERVAL_SEC - 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # A command that the cloud accepts pauses the polls of this AC.
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    # A second command is refused, and the device keeps the value it asked for.
+    mock_api.set_state = AsyncMock(side_effect=ElectraApiError("Failed to set state"))
+
+    with pytest.raises(
+        HomeAssistantError, match="Error communicating with Electra API"
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 25},
+            blocking=True,
+        )
+
+    mock_device.get_temperature = Mock(return_value=25)
+
+    # The scheduled poll lands inside the paused window, so the AC is skipped.
+    freezer.tick(3)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_api.get_last_telemtry.assert_not_awaited()
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 22
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_a_failed_poll_still_reports_an_offline_ac_as_unavailable(
+    hass: HomeAssistant,
+    mock_api: Mock,
+    mock_device: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A failed poll only skips the state, it still updates availability."""
+    mock_device.is_disconnected = Mock(return_value=True)
+    mock_api.get_last_telemtry = AsyncMock(
+        side_effect=ElectraApiError("Failed to retrieve telemetry")
+    )
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("setup_integration")
 async def test_failed_updates_are_counted_until_the_next_success(
     hass: HomeAssistant,
     mock_api: Mock,

@@ -486,14 +486,6 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Handle device update."""
         self.async_write_ha_state()
 
-    @rpc_call
-    async def call_rpc(self, method: str, params: Any) -> Any:
-        """Call RPC method."""
-        LOGGER.debug(
-            "Call RPC for entity %s, method: %s, params: %s", self.name, method, params
-        )
-        return await self.coordinator.device.call_rpc(method, params)
-
 
 class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
     """Helper class to represent a block attribute."""

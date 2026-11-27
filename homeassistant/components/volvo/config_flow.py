@@ -1,13 +1,15 @@
 """Config flow for Volvo."""
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 import logging
 from typing import Any, override
 
 import probatio
 from volvocarsapi.api import VolvoCarsApi
+from volvocarsapi.auth import get_volvoid_server
 from volvocarsapi.models import VolvoApiException, VolvoCarsVehicle
 from volvocarsapi.scopes import ALL_SCOPES
+from yarl import URL
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -28,7 +30,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .api import ConfigFlowVolvoAuth
-from .const import CONF_VIN, DOMAIN, MANUFACTURER
+from .const import CONF_VIN, DOMAIN, MANUFACTURER, VOLVO_DEV_PORTAL_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,13 +55,18 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self._vehicles: list[VolvoCarsVehicle] = []
         self._config_data: dict = {}
 
-    @property
     @override
-    def extra_authorize_data(self) -> dict:
-        """Extra data that needs to be appended to the authorize url."""
-        return super().extra_authorize_data | {
-            "scope": " ".join(ALL_SCOPES),
-        }
+    async def async_generate_authorize_url(self) -> str:
+        """Generate a url for the user to authorize."""
+        url = URL(await super().async_generate_authorize_url())
+        scopes: Sequence[str] = ALL_SCOPES
+
+        # Read client ID from the URL so we can support both
+        # local credentials and Home Assistant's account linking.
+        if client_id := url.query.get("client_id"):
+            scopes = get_volvoid_server(client_id).all_scopes
+
+        return str(url.update_query(scope=" ".join(scopes)))
 
     @property
     @override
@@ -121,7 +128,11 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return await self.async_step_vin()
 
         if user_input is None:
-            if self.source == SOURCE_REAUTH:
+            if self.source == SOURCE_REAUTH and self._is_credential_changed():
+                # Chances are high that when changing Volvo API app, a new API
+                # key is needed as well.
+                user_input = {}
+            elif self.source == SOURCE_REAUTH:
                 user_input = self._config_data
                 api = _create_volvo_cars_api(
                     self.hass,
@@ -164,9 +175,7 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             step_id="api_key",
             data_schema=schema,
             errors=errors,
-            description_placeholders={
-                "volvo_dev_portal": "https://developer.volvocars.com/account/#your-api-applications"
-            },
+            description_placeholders={"volvo_dev_portal": VOLVO_DEV_PORTAL_URL},
         )
 
     async def async_step_vin(
@@ -237,6 +246,11 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             title=f"{MANUFACTURER} {vin}",
             data=self._config_data,
         )
+
+    def _is_credential_changed(self) -> bool:
+        new_implementation: str = self._config_data["auth_implementation"]
+        old_implementation: str = self._get_reauth_entry().data["auth_implementation"]
+        return new_implementation != old_implementation
 
     async def _async_load_vehicles(self, api: VolvoCarsApi) -> None:
         self._vehicles = []

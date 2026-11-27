@@ -81,9 +81,10 @@ class DeviceListener(SharingDeviceListener):
         # Get all devices from Tuya, makes blocking web calls
         try:
             manager.update_device_cache()
-        except requests.exceptions.ConnectionError as exc:
-            msg = "Unable to connect to Tuya"
-            raise ConfigEntryNotReady(msg) from exc
+        except requests.RequestException as exc:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from exc
         except Exception as exc:
             # While in general, we should avoid catching broad exceptions,
             # we have no other way of detecting this case.

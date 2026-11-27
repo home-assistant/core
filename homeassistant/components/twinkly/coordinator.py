@@ -14,8 +14,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.color import value_to_brightness
 
-from .const import DEV_NAME, DOMAIN, MIN_EFFECT_VERSION
+from .const import BRIGHTNESS_SCALE, DEV_NAME, DOMAIN, MIN_EFFECT_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,7 +105,7 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
         brightness = (
             int(brightness["value"]) if brightness["mode"] == "enabled" else 100
         )
-        brightness = round(brightness * 2.55) if is_on else 0
+        brightness = value_to_brightness(BRIGHTNESS_SCALE, brightness) if is_on else 0
         if self.device_name != device_info[DEV_NAME]:
             self._async_update_device_info(device_info[DEV_NAME])
         return TwinklyData(

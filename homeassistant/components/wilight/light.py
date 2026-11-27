@@ -5,12 +5,7 @@ from typing import Any, override
 from pywilight.const import ITEM_LIGHT, LIGHT_COLOR, LIGHT_DIMMER, LIGHT_ON_OFF
 from pywilight.wilight_device import PyWiLightDevice
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -98,8 +93,8 @@ class WiLightLightDimmer(WiLightDevice, LightEntity):
         """Turn the device on,set brightness if needed."""
         # Dimmer switches use a range of [0, 255] to control
         # brightness. Level 255 might mean to set it to previous value
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            brightness = kwargs[LightServiceArgument.BRIGHTNESS]
             await self._client.set_brightness(self._index, brightness)
         else:
             await self._client.turn_on(self._index)
@@ -164,17 +159,30 @@ class WiLightLightColor(WiLightDevice, LightEntity):
         # Brightness use a range of [0, 255] to control
         # Hue use a range of [0, 360] to control
         # Saturation use a range of [0, 100] to control
-        if ATTR_BRIGHTNESS in kwargs and ATTR_HS_COLOR in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
-            hue = hass_to_wilight_hue(kwargs[ATTR_HS_COLOR][0])
-            saturation = hass_to_wilight_saturation(kwargs[ATTR_HS_COLOR][1])
+        if (
+            LightServiceArgument.BRIGHTNESS in kwargs
+            and LightServiceArgument.HS_COLOR in kwargs
+        ):
+            brightness = kwargs[LightServiceArgument.BRIGHTNESS]
+            hue = hass_to_wilight_hue(kwargs[LightServiceArgument.HS_COLOR][0])
+            saturation = hass_to_wilight_saturation(
+                kwargs[LightServiceArgument.HS_COLOR][1]
+            )
             await self._client.set_hsb_color(self._index, hue, saturation, brightness)
-        elif ATTR_BRIGHTNESS in kwargs and ATTR_HS_COLOR not in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
+        elif (
+            LightServiceArgument.BRIGHTNESS in kwargs
+            and LightServiceArgument.HS_COLOR not in kwargs
+        ):
+            brightness = kwargs[LightServiceArgument.BRIGHTNESS]
             await self._client.set_brightness(self._index, brightness)
-        elif ATTR_BRIGHTNESS not in kwargs and ATTR_HS_COLOR in kwargs:
-            hue = hass_to_wilight_hue(kwargs[ATTR_HS_COLOR][0])
-            saturation = hass_to_wilight_saturation(kwargs[ATTR_HS_COLOR][1])
+        elif (
+            LightServiceArgument.BRIGHTNESS not in kwargs
+            and LightServiceArgument.HS_COLOR in kwargs
+        ):
+            hue = hass_to_wilight_hue(kwargs[LightServiceArgument.HS_COLOR][0])
+            saturation = hass_to_wilight_saturation(
+                kwargs[LightServiceArgument.HS_COLOR][1]
+            )
             await self._client.set_hs_color(self._index, hue, saturation)
         else:
             await self._client.turn_on(self._index)

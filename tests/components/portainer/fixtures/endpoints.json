@@ -382,5 +382,12 @@
       "allowVolumeBrowserForRegularUsers": false,
       "enableHostManagementFeatures": false
     }
+  },
+  {
+    "ContainerEngine": "",
+    "Id": 7,
+    "Name": "my-kubernetes",
+    "Status": 1,
+    "Type": 5
   }
 ]

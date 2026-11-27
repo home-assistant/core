@@ -79,7 +79,7 @@ async def test_system_reset_button_press(
     hass: HomeAssistant,
     system_button_id: str,
 ) -> None:
-    """Test SERVICE_PRESS on the system reset button."""
+    """Test ButtonService.PRESS on the system reset button."""
 
     with patch("evohomeasync2.control_system.ControlSystem.reset") as mock_fcn:
         await hass.services.async_call(
@@ -98,7 +98,7 @@ async def test_zone_reset_button_press(
     hass: HomeAssistant,
     zone_button_id: str,
 ) -> None:
-    """Test SERVICE_PRESS on a zone reset button."""
+    """Test ButtonService.PRESS on a zone reset button."""
 
     with patch("evohomeasync2.zone.Zone.reset") as mock_fcn:
         await hass.services.async_call(
@@ -117,7 +117,7 @@ async def test_dhw_reset_button_press(
     hass: HomeAssistant,
     dhw_button_id: str,
 ) -> None:
-    """Test SERVICE_PRESS on the DHW reset button."""
+    """Test ButtonService.PRESS on the DHW reset button."""
 
     with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
         await hass.services.async_call(
@@ -136,7 +136,7 @@ async def test_button_press_api_call_failed(
     hass: HomeAssistant,
     system_button_id: str,
 ) -> None:
-    """Test SERVICE_PRESS raises HomeAssistantError if the vendor's API call fails."""
+    """Test ButtonService.PRESS raises HomeAssistantError if the vendor's API call fails."""
 
     with (
         patch(
@@ -153,3 +153,26 @@ async def test_button_press_api_call_failed(
         )
 
     assert exc_info.value.translation_key == "api_request_failed"
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("button_fixture", "translation_key"),
+    [
+        pytest.param("system_button_id", "reset_system_mode", id="system"),
+        pytest.param("dhw_button_id", "clear_dhw_override", id="dhw"),
+        pytest.param("zone_button_id", "clear_zone_override", id="zone"),
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_reset_button_translation_key(
+    entity_registry: er.EntityRegistry,
+    request: pytest.FixtureRequest,
+    button_fixture: str,
+    translation_key: str,
+) -> None:
+    """Test each reset button has the translation_key that its icon is keyed by."""
+
+    entry = entity_registry.async_get(request.getfixturevalue(button_fixture))
+    assert entry is not None
+    assert entry.translation_key == translation_key

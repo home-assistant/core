@@ -3,7 +3,7 @@
 from collections.abc import Awaitable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Final, override
+from typing import TYPE_CHECKING, Any, Final, override
 
 import evohomeasync as ec1
 import evohomeasync2 as ec2
@@ -27,7 +27,7 @@ from evohomeasync2.typedefs import (
 )
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -36,6 +36,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SCHEDULE_MAX_AGE
+from .helpers import as_camel_case
 
 # any other reason gets "api_request_failed"
 _API_CALL_ERROR_TRANSLATION_KEYS: Final[dict[ec2.ApiCallErrorReason, str]] = {
@@ -52,6 +53,58 @@ def _api_call_error_key(err: ec2.ApiCallFailedError) -> str:
     return _API_CALL_ERROR_TRANSLATION_KEYS.get(err.reason, "api_request_failed")
 
 
+# a request that the client rejected, before any API call (i.e. invalid arguments)
+_REQUEST_ERROR_TRANSLATION_KEYS: Final[dict[ec2.RequestErrorReason, str]] = {
+    ec2.RequestErrorReason.MODE_UNKNOWN: "mode_unknown",
+    ec2.RequestErrorReason.MODE_UNSUPPORTED: "mode_not_supported",
+    ec2.RequestErrorReason.TIMESPAN_NOT_ALLOWED: "mode_cant_be_temporary",
+    ec2.RequestErrorReason.TIMESPAN_REQUIRED: "mode_timespan_required",
+    ec2.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE: "mode_timespan_not_in_future",
+}
+_TIMESPAN_UNSUPPORTED_TRANSLATION_KEYS: Final[dict[str, str]] = {
+    ec2.TimingMode.DURATION: "mode_cant_have_duration",
+    ec2.TimingMode.PERIOD: "mode_cant_have_period",
+}
+
+
+def _bad_request_error(err: ec2.BadApiRequestError) -> ServiceValidationError:
+    """Return the translated error of a request that the client has rejected.
+
+    The reason picks the message, and the details supply its placeholders (only the
+    mode is used, spelt as the set_system_mode action expects it). A zone/DHW override
+    has its own messages, without a placeholder.
+    """
+
+    if (mode := err.details.get("mode")) is None:  # e.g. TIMESPAN_CONFLICTING
+        return ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="request_invalid"
+        )
+
+    # a zone/DHW override (DHW uses ZoneMode too); a system mode can't be unknown
+    if mode in ec2.ZoneMode and err.reason != ec2.RequestErrorReason.MODE_UNKNOWN:
+        return ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key=(
+                "override_not_in_future"
+                if err.reason == ec2.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE
+                else "override_request_invalid"
+            ),
+        )
+
+    if err.reason == ec2.RequestErrorReason.TIMESPAN_UNSUPPORTED:
+        key = _TIMESPAN_UNSUPPORTED_TRANSLATION_KEYS.get(
+            err.details.get("timing_mode", ""), "mode_request_invalid"
+        )
+    else:
+        key = _REQUEST_ERROR_TRANSLATION_KEYS.get(err.reason, "mode_request_invalid")
+
+    return ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key=key,
+        translation_placeholders={"mode": as_camel_case(mode)},
+    )
+
+
 def _log_api_call_failure(logger: logging.Logger, err: ec2.ApiCallFailedError) -> None:
     """Log (as debug) what the translated error of a failed API call leaves out."""
     logger.debug(
@@ -63,8 +116,22 @@ def _log_api_call_failure(logger: logging.Logger, err: ec2.ApiCallFailedError) -
     )
 
 
+def _log_client_error(logger: logging.Logger, err: ec2.EvohomeError) -> None:
+    """Log (as debug) what the translated error of a client error leaves out."""
+    logger.debug(
+        "%s: %s (reason=%s, details=%s)",
+        type(err).__name__,
+        err,
+        err.reason,
+        err.details,
+    )
+
+
 type _Schedule = list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT]
 type _HighPrecisionTemps = dict[str, float | None]  # by DHW/zone id
+
+# keep the last high-precision temps for this many failed polls (i.e. 10 minutes)
+_HIGH_PRECISION_MAX_FAILED_POLLS: Final = 2
 
 _ERR_SCHEDULE_UPDATE: Final = (
     "%s: Failed to update the schedule (keeping any previous one): %s"
@@ -86,16 +153,15 @@ class _EvoCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         if not await self._DataUpdateCoordinator__wrap_async_setup():  # type: ignore[attr-defined]
             return
 
-        await self._async_refresh(
-            log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
-        )
+        await self._async_refresh(log_failures=False)
 
 
 class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
     """Coordinator for an evohome account (the user's config, high-precision temps).
 
     Its data is the latest high-precision temperatures, by DHW/zone id. They are
-    polled, but are not refreshed on demand (unlike a location).
+    polled, but are not refreshed on demand (unlike a location). If a poll fails, the
+    last temperatures are kept for a grace period, before the zones use their v2 ones.
     """
 
     def __init__(
@@ -123,6 +189,8 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
 
         self.data = {}
 
+        self._failed_polls = 0
+
     @override
     async def _async_setup(self) -> None:
         """Set up the coordinator.
@@ -132,8 +200,28 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
 
         try:
             await self.client.setup()  # only config for now
-        except ec2.EvohomeError as err:
-            raise UpdateFailed(err) from err
+
+        except ec2.ApiConnectionFailedError as err:
+            _log_api_call_failure(self.logger, err)
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="api_connection_failed",
+            ) from err
+
+        except ec2.ApiCallFailedError as err:
+            _log_api_call_failure(self.logger, err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key=_api_call_error_key(err),
+                retry_after=err.retry_after,
+            ) from err
+
+        except ec2.BadApiResponseError as err:
+            _log_client_error(self.logger, err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_response_invalid",
+            ) from err
 
     @override
     async def _async_update_data(self) -> _HighPrecisionTemps:
@@ -157,23 +245,37 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
                 err,
             )
             self.client_v1 = None
-            return self.data
+            return {}
 
         except (ec1.EvohomeError, TimeoutError) as err:
-            self.logger.warning(
-                (
-                    "Unable to obtain the latest high-precision temperatures. "
-                    "They will be ignored this refresh cycle: %r"
-                ),
-                err,
-            )
-            temps: _HighPrecisionTemps = {}  # now considered stale
+            self._failed_polls += 1
+            if self._failed_polls <= _HIGH_PRECISION_MAX_FAILED_POLLS:
+                self.logger.debug(
+                    "Unable to obtain the latest high-precision temperatures, "
+                    "so keeping the previous ones: %r",
+                    err,
+                )
+                return self.data
 
-        else:
-            temps = {}
-            for loc in self.client_v1.location_by_id.values():
-                if loc.tcs:
-                    temps |= await loc.tcs.get_temperatures(dont_update_status=True)
+            if self._failed_polls == _HIGH_PRECISION_MAX_FAILED_POLLS + 1:
+                self.logger.warning(
+                    (
+                        "Unable to obtain the latest high-precision temperatures. "
+                        "Standard-precision temperatures will be used until they "
+                        "are available again: %r"
+                    ),
+                    err,
+                )
+            return {}
+
+        if self._failed_polls > _HIGH_PRECISION_MAX_FAILED_POLLS:
+            self.logger.info("High-precision temperatures are available again")
+        self._failed_polls = 0
+
+        temps: _HighPrecisionTemps = {}
+        for loc in self.client_v1.location_by_id.values():
+            if loc.tcs:
+                temps |= await loc.tcs.get_temperatures(dont_update_status=True)
 
         self.logger.debug("Status (high-res temps) = %s", temps)
         return temps
@@ -182,19 +284,15 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
 class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
     """Coordinator for an evohome location (its status and schedules)."""
 
-    # These will not be None after _async_setup())
-    loc: ec2.Location
-    tcs: ec2.ControlSystem
-
     def __init__(
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
         account: EvoAccountCoordinator,
+        location: ec2.Location,
         *,
         name: str,
         update_interval: timedelta,
-        location_idx: int,
     ) -> None:
         """Class to manage fetching data."""
 
@@ -206,10 +304,14 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             update_interval=update_interval,
         )
 
+        if TYPE_CHECKING:
+            assert location.tcs is not None  # the caller skips locations without one
+
         self.account = account
         self.client = account.client
 
-        self.loc_idx = location_idx
+        self.loc = location
+        self.tcs = location.tcs
 
         self.data: EvoLocStatusT = None  # type: ignore[assignment]
 
@@ -218,26 +320,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
 
     @override
     async def _async_setup(self) -> None:
-        """Set up the coordinator.
-
-        Select the location from the account's configuration (fetched by the account
-        coordinator).
-        """
-
-        try:
-            self.loc = self.client.locations[self.loc_idx]
-        except IndexError as err:
-            raise UpdateFailed(
-                f"""
-                    Config error: 'location_idx' = {self.loc_idx},
-                    but the valid range is 0-{len(self.client.locations) - 1}.
-                    Unable to continue. Fix any configuration errors and restart HA
-                """
-            ) from err
-
-        if (tcs := self.loc.tcs) is None:
-            raise UpdateFailed(f"Config error: location {self.loc.id} has no TCS")
-        self.tcs = tcs
+        """Set up the coordinator (log the location's configuration)."""
 
         if self.logger.isEnabledFor(logging.DEBUG):
             loc_info = {
@@ -271,8 +354,9 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
     ) -> _T:
         """Call a client API and update the Coordinator state if required.
 
-        If the call fails, raise HomeAssistantError. The client's error is chained to
-        it, and logged only as debug, as HA reports the error.
+        If the call fails, raise HomeAssistantError (ServiceValidationError, if the client
+        rejected the request before making it). The client's error is chained to it, and
+        logged as debug: it is not logged at a higher level, as HA reports the error.
         """
 
         try:
@@ -284,6 +368,10 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
                 translation_domain=DOMAIN,
                 translation_key=_api_call_error_key(err),
             ) from err
+
+        except ec2.BadApiRequestError as err:  # e.g. InvalidSetModeError
+            _log_client_error(self.logger, err)
+            raise _bad_request_error(err) from err
 
         if request_refresh:  # wait a moment for system to quiesce before updating state
             await self.async_request_refresh()  # hass.async_create_task() won't help
@@ -300,7 +388,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             _log_api_call_failure(self.logger, err)
             raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
-                translation_key=_api_call_error_key(err),
+                translation_key="api_connection_failed",
             ) from err
 
         except ec2.ApiCallFailedError as err:
@@ -311,8 +399,19 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
                 retry_after=err.retry_after,
             ) from err
 
-        except ec2.EvohomeError as err:
-            raise UpdateFailed(err) from err
+        except ec2.BadApiResponseError as err:
+            _log_client_error(self.logger, err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_response_invalid",
+            ) from err
+
+        except ec2.StaleConfigError as err:
+            _log_client_error(self.logger, err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="config_stale",
+            ) from err
 
         self.logger.debug("Status = %s", status)
 
@@ -362,7 +461,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
                 raise
             self.logger.warning(_ERR_SCHEDULE_UPDATE, child, err.__cause__ or err)
             return  # the GET failed, so retry it at the next poll
-        except ec2.InvalidScheduleError as err:
+        except ec2.InvalidGetScheduleError as err:
             self.logger.warning(_ERR_SCHEDULE_UPDATE, child, err)
         else:
             self.logger.debug("%s: Schedule = %s", child, schedule)

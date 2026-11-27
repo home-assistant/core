@@ -148,6 +148,24 @@ async def test_agents_list_backups_fail(
     }
 
 
+async def test_agents_list_backups_closes_connection_on_open_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_ssh_connection: SSHClientConnectionMock,
+) -> None:
+    """Test the SSH connection is closed when opening the backup location fails."""
+    mock_ssh_connection._sftp._mock_chdir.side_effect = SFTPError(2, "No such file")
+
+    client = await hass_ws_client(hass)
+    with patch.object(mock_ssh_connection, "close", MagicMock()) as mock_close:
+        await client.send_json_auto_id({"type": "backup/info"})
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert f"{DOMAIN}.{TEST_AGENT_ID}" in response["result"]["agent_errors"]
+    mock_close.assert_called_once()
+
+
 async def test_agents_list_backups_include_bad_metadata(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

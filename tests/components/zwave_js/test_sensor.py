@@ -2,11 +2,17 @@
 
 import copy
 from datetime import timedelta
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 from zwave_js_server.const.command_class.meter import MeterType
+from zwave_js_server.const.command_class.multilevel_sensor import MultilevelSensorType
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
@@ -32,6 +38,8 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_STATE_CHANGED,
+    LIGHT_LUX,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -43,6 +51,8 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -189,6 +199,14 @@ async def test_numeric_sensor(
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
+    state = hass.states.get("sensor.multisensor_6_illuminance")
+
+    assert state
+    assert state.state == "0.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == LIGHT_LUX
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ILLUMINANCE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
     state = hass.states.get("sensor.basement_hsm200_illuminance")
 
     assert state
@@ -220,6 +238,457 @@ async def test_numeric_sensor(
     state = hass.states.get("sensor.basement_hsm200_illuminance")
     assert state
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    (
+        "sensor_type",
+        "scale",
+        "metadata_unit",
+        "label",
+        "entity_id",
+        "device_class",
+        "expected_state",
+        "expected_unit",
+    ),
+    [
+        pytest.param(
+            MultilevelSensorType.CARBON_MONOXIDE_LEVEL,
+            1,
+            "ppm",
+            "Carbon monoxide (CO) level",
+            "sensor.multisensor_6_carbon_monoxide_co_level",
+            SensorDeviceClass.CO,
+            "12.5",
+            UnitOfRatio.PARTS_PER_MILLION,
+            id="co_ppm",
+        ),
+        pytest.param(
+            MultilevelSensorType.CARBON_DIOXIDE_LEVEL,
+            0,
+            "ppm",
+            "Carbon dioxide (CO₂) level",
+            "sensor.multisensor_6_carbon_dioxide_co2_level",
+            SensorDeviceClass.CO2,
+            "12.5",
+            UnitOfRatio.PARTS_PER_MILLION,
+            id="co2_ppm",
+        ),
+        pytest.param(
+            MultilevelSensorType.WATER_PRESSURE,
+            0,
+            "kPa",
+            "Water pressure",
+            "sensor.multisensor_6_water_pressure",
+            SensorDeviceClass.PRESSURE,
+            "12.5",
+            UnitOfPressure.KPA,
+            id="water_pressure_kpa",
+        ),
+        pytest.param(
+            MultilevelSensorType.SUCTION_PRESSURE,
+            0,
+            "kPa",
+            "Suction pressure",
+            "sensor.multisensor_6_suction_pressure",
+            SensorDeviceClass.PRESSURE,
+            "12.5",
+            UnitOfPressure.KPA,
+            id="suction_pressure_kpa",
+        ),
+        pytest.param(
+            MultilevelSensorType.DISCHARGE_PRESSURE,
+            0,
+            "kPa",
+            "Discharge pressure",
+            "sensor.multisensor_6_discharge_pressure",
+            SensorDeviceClass.PRESSURE,
+            "12.5",
+            UnitOfPressure.KPA,
+            id="discharge_pressure_kpa",
+        ),
+        pytest.param(
+            MultilevelSensorType.BAROMETRIC_PRESSURE,
+            0,
+            "kPa",
+            "Barometric pressure",
+            "sensor.multisensor_6_barometric_pressure",
+            SensorDeviceClass.PRESSURE,
+            "12.5",
+            UnitOfPressure.KPA,
+            id="barometric_pressure_kpa",
+        ),
+        pytest.param(
+            MultilevelSensorType.ATMOSPHERIC_PRESSURE,
+            0,
+            "kPa",
+            "Atmospheric pressure",
+            "sensor.multisensor_6_atmospheric_pressure",
+            SensorDeviceClass.PRESSURE,
+            "12.5",
+            UnitOfPressure.KPA,
+            id="atmospheric_pressure_kpa",
+        ),
+        pytest.param(
+            MultilevelSensorType.SUCTION_PRESSURE,
+            1,
+            "psi",
+            "Suction pressure",
+            "sensor.multisensor_6_suction_pressure",
+            SensorDeviceClass.PRESSURE,
+            "86.1844625",
+            UnitOfPressure.KPA,
+            id="suction_pressure_psi",
+        ),
+        pytest.param(
+            MultilevelSensorType.DISCHARGE_PRESSURE,
+            1,
+            "psi",
+            "Discharge pressure",
+            "sensor.multisensor_6_discharge_pressure",
+            SensorDeviceClass.PRESSURE,
+            "86.1844625",
+            UnitOfPressure.KPA,
+            id="discharge_pressure_psi",
+        ),
+        pytest.param(
+            MultilevelSensorType.BAROMETRIC_PRESSURE,
+            1,
+            "inHg",
+            "Barometric pressure",
+            "sensor.multisensor_6_barometric_pressure",
+            SensorDeviceClass.PRESSURE,
+            "423.298580042625",
+            UnitOfPressure.HPA,
+            id="barometric_pressure_inhg",
+        ),
+        pytest.param(
+            MultilevelSensorType.ATMOSPHERIC_PRESSURE,
+            1,
+            "inHg",
+            "Atmospheric pressure",
+            "sensor.multisensor_6_atmospheric_pressure",
+            SensorDeviceClass.PRESSURE,
+            "423.298580042625",
+            UnitOfPressure.HPA,
+            id="atmospheric_pressure_inhg",
+        ),
+        pytest.param(
+            MultilevelSensorType.BLOOD_PRESSURE,
+            0,
+            "mmHg",
+            "Blood pressure",
+            "sensor.multisensor_6_blood_pressure",
+            SensorDeviceClass.PRESSURE,
+            "12.5",
+            UnitOfPressure.MMHG,
+            id="blood_pressure_mmhg",
+        ),
+        pytest.param(
+            MultilevelSensorType.CURRENT,
+            0,
+            "A",
+            "Current",
+            "sensor.multisensor_6_current",
+            SensorDeviceClass.CURRENT,
+            "12.5",
+            UnitOfElectricCurrent.AMPERE,
+            id="current_ampere",
+        ),
+        pytest.param(
+            MultilevelSensorType.VOLTAGE,
+            0,
+            "V",
+            "Voltage",
+            "sensor.multisensor_6_voltage",
+            SensorDeviceClass.VOLTAGE,
+            "12.5",
+            UnitOfElectricPotential.VOLT,
+            id="voltage_volt",
+        ),
+        pytest.param(
+            MultilevelSensorType.VOLTAGE,
+            1,
+            "mV",
+            "Voltage",
+            "sensor.multisensor_6_voltage",
+            SensorDeviceClass.VOLTAGE,
+            "12.5",
+            UnitOfElectricPotential.MILLIVOLT,
+            id="voltage_millivolt",
+        ),
+        pytest.param(
+            MultilevelSensorType.WATER_OXIDATION_REDUCTION_POTENTIAL,
+            0,
+            "mV",
+            "Water oxidation reduction potential",
+            "sensor.multisensor_6_water_oxidation_reduction_potential",
+            SensorDeviceClass.VOLTAGE,
+            "12.5",
+            UnitOfElectricPotential.MILLIVOLT,
+            id="water_oxidation_reduction_potential_millivolt",
+        ),
+        pytest.param(
+            MultilevelSensorType.POWER,
+            0,
+            "W",
+            "Power",
+            "sensor.multisensor_6_power",
+            SensorDeviceClass.POWER,
+            "12.5",
+            UnitOfPower.WATT,
+            id="power_watt",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("integration")
+async def test_multilevel_sensor_with_device_class(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    multisensor_6_state: dict[str, Any],
+    sensor_type: MultilevelSensorType,
+    scale: int,
+    metadata_unit: str,
+    label: str,
+    entity_id: str,
+    device_class: SensorDeviceClass,
+    expected_state: str,
+    expected_unit: str,
+) -> None:
+    """Test multilevel sensors with a device class."""
+    node_state = copy.deepcopy(multisensor_6_state)
+    value = next(
+        value
+        for value in node_state["values"]
+        if value["commandClass"] == 49 and value["property"] == "Air temperature"
+    )
+    value["metadata"]["label"] = label
+    value["metadata"]["ccSpecific"] = {"sensorType": sensor_type, "scale": scale}
+    value["metadata"]["unit"] = metadata_unit
+    value["value"] = 12.5
+
+    event = Event(
+        "node added",
+        {
+            "source": "controller",
+            "event": "node added",
+            "node": node_state,
+            "result": {},
+        },
+    )
+    client.driver.controller.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    # The psi and inHg cases are converted to the metric unit system.
+    assert state.state == expected_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == expected_unit
+    assert state.attributes[ATTR_DEVICE_CLASS] == device_class
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is None
+    assert entity_entry.disabled_by is None
+
+
+@pytest.mark.parametrize(
+    (
+        "property_",
+        "entity_id",
+        "sensor_type",
+        "old_scale",
+        "old_unit",
+        "old_state_class",
+        "new_scale",
+        "new_metadata_unit",
+        "expected_unit",
+    ),
+    [
+        pytest.param(
+            "Humidity",
+            HUMIDITY_SENSOR,
+            MultilevelSensorType.HUMIDITY,
+            1,
+            "g/m³",
+            SensorStateClass.MEASUREMENT,
+            0,
+            "%",
+            PERCENTAGE,
+            id="humidity",
+        ),
+        pytest.param(
+            "Illuminance",
+            "sensor.multisensor_6_illuminance",
+            MultilevelSensorType.ILLUMINANCE,
+            0,
+            "%",
+            SensorStateClass.MEASUREMENT,
+            1,
+            "Lux",
+            LIGHT_LUX,
+            id="illuminance",
+        ),
+        pytest.param(
+            "Ultraviolet",
+            "sensor.multisensor_6_ultraviolet",
+            MultilevelSensorType.ULTRAVIOLET,
+            255,
+            None,
+            None,
+            0,
+            None,
+            UV_INDEX,
+            id="invalid_scale_to_uv_index",
+        ),
+        pytest.param(
+            "Air temperature",
+            AIR_TEMPERATURE_SENSOR,
+            MultilevelSensorType.CARBON_MONOXIDE_LEVEL,
+            0,
+            "mol/m³",
+            SensorStateClass.MEASUREMENT,
+            1,
+            "ppm",
+            UnitOfRatio.PARTS_PER_MILLION,
+            id="co_mol_to_ppm",
+        ),
+        pytest.param(
+            "Air temperature",
+            AIR_TEMPERATURE_SENSOR,
+            MultilevelSensorType.BLOOD_PRESSURE,
+            1,
+            "mmHg",
+            None,
+            0,
+            "mmHg",
+            UnitOfPressure.MMHG,
+            id="blood_pressure_diastolic_to_systolic",
+        ),
+        pytest.param(
+            "Air temperature",
+            AIR_TEMPERATURE_SENSOR,
+            MultilevelSensorType.CURRENT,
+            1,
+            "mA",
+            None,
+            0,
+            "A",
+            UnitOfElectricCurrent.AMPERE,
+            id="current_milliampere_to_ampere",
+        ),
+        pytest.param(
+            "Air temperature",
+            AIR_TEMPERATURE_SENSOR,
+            MultilevelSensorType.POWER,
+            1,
+            "BTU/h",
+            None,
+            0,
+            "W",
+            UnitOfPower.WATT,
+            id="power_btu_per_hour_to_watt",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("integration")
+async def test_legacy_multilevel_sensor_scale_change(
+    hass: HomeAssistant,
+    client: MagicMock,
+    multisensor_6_state: dict[str, Any],
+    property_: str,
+    entity_id: str,
+    sensor_type: MultilevelSensorType,
+    old_scale: int,
+    old_unit: str | None,
+    old_state_class: SensorStateClass | None,
+    new_scale: int,
+    new_metadata_unit: str | None,
+    expected_unit: str,
+) -> None:
+    """Test a legacy multilevel sensor that changes to a migrated scale."""
+    node_state = copy.deepcopy(multisensor_6_state)
+    value = next(
+        value
+        for value in node_state["values"]
+        if value["commandClass"] == 49 and value["property"] == property_
+    )
+    value["metadata"]["ccSpecific"] = {"sensorType": sensor_type, "scale": old_scale}
+    value["metadata"]["unit"] = old_unit
+
+    event = Event(
+        "node added",
+        {
+            "source": "controller",
+            "event": "node added",
+            "node": node_state,
+            "result": {},
+        },
+    )
+    client.driver.controller.receive_event(event)
+    await hass.async_block_till_done()
+    node = client.driver.controller.nodes[node_state["nodeId"]]
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert state.attributes.get(ATTR_STATE_CLASS) == old_state_class
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == old_unit
+
+    event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": property_,
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": property_,
+                    "ccSpecific": {"sensorType": sensor_type, "scale": new_scale},
+                    "unit": new_metadata_unit,
+                },
+                "propertyName": property_,
+                "nodeId": node.node_id,
+            },
+        },
+    )
+    node.receive_event(event)
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": property_,
+                "newValue": 50,
+                "prevValue": value["value"],
+                "propertyName": property_,
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "50.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == expected_unit
+    # The cached device and state class are not updated on a scale change.
+    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert state.attributes.get(ATTR_STATE_CLASS) == old_state_class
 
 
 async def test_invalid_multilevel_sensor_scale(
@@ -824,24 +1293,16 @@ async def test_unit_change(hass: HomeAssistant, zp3111, client, integration) -> 
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
 
 
-async def test_new_sensor_invalid_scale(
-    hass: HomeAssistant, multisensor_6, client, integration
-) -> None:
-    """Test new-style numeric sensor handles UnknownValueData from invalid scale."""
-    entity_id = AIR_TEMPERATURE_SENSOR
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "9.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
-
-    # Update the metadata to an invalid scale (255) to trigger UnknownValueData
-    # in _get_scale_type on the next value update
-    event = Event(
+def _air_temperature_metadata_updated_event(
+    node: Node, scale: int, unit: str | None
+) -> Event:
+    """Return a metadata updated event for the air temperature value."""
+    return Event(
         "metadata updated",
         {
             "source": "node",
             "event": "metadata updated",
-            "nodeId": multisensor_6.node_id,
+            "nodeId": node.node_id,
             "args": {
                 "commandClassName": "Multilevel Sensor",
                 "commandClass": 49,
@@ -852,45 +1313,145 @@ async def test_new_sensor_invalid_scale(
                     "readable": True,
                     "writeable": False,
                     "label": "Air temperature",
-                    "ccSpecific": {"sensorType": 1, "scale": 255},
-                    "unit": None,
+                    "ccSpecific": {"sensorType": 1, "scale": scale},
+                    "unit": unit,
                 },
                 "propertyName": "Air temperature",
-                "nodeId": multisensor_6.node_id,
+                "nodeId": node.node_id,
             },
         },
     )
-    multisensor_6.receive_event(event)
-    await hass.async_block_till_done()
 
-    # Fire a value updated event to trigger on_value_update which calls
-    # _get_scale_type - the invalid scale should raise UnknownValueData
-    # which is caught and returns None, triggering a reload since
-    # None != original TemperatureScale.CELSIUS
+
+def _air_temperature_value_updated_event(
+    node: Node, new_value: float, prev_value: float
+) -> Event:
+    """Return a value updated event for the air temperature value."""
+    return Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "Air temperature",
+                "newValue": new_value,
+                "prevValue": prev_value,
+                "propertyName": "Air temperature",
+            },
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    ("scale", "unit", "expected_state", "expected_unit"),
+    [
+        # The metric test unit system converts the native °F to °C: 68 °F is 20 °C.
+        pytest.param(1, "°F", "20.0", UnitOfTemperature.CELSIUS, id="fahrenheit"),
+        # An invalid scale makes _get_scale_type catch UnknownValueData and return
+        # None, and the value is rediscovered as a numeric sensor without a unit.
+        pytest.param(255, None, "68.0", None, id="invalid_scale"),
+    ],
+)
+async def test_new_sensor_scale_change_rediscovers_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
+    scale: int,
+    unit: str | None,
+    expected_state: str,
+    expected_unit: str | None,
+) -> None:
+    """Test a scale change rediscovers the new-style sensor without a reload."""
+    entity_id = AIR_TEMPERATURE_SENSOR
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "9.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    # Let a scheduled reload run, so other entities would become unavailable.
+    with patch.object(
+        hass.config_entries,
+        "async_schedule_reload",
+        wraps=hass.config_entries.async_schedule_reload,
+    ) as mock_schedule_reload:
+        multisensor_6.receive_event(
+            _air_temperature_metadata_updated_event(multisensor_6, scale, unit)
+        )
+        await hass.async_block_till_done()
+        # Rediscovery waits for the value update that follows the metadata update.
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == "9.0"
+        multisensor_6.receive_event(
+            _air_temperature_value_updated_event(multisensor_6, 68, 9)
+        )
+        await hass.async_block_till_done()
+
+    mock_schedule_reload.assert_not_called()
+    client.disconnect.assert_not_called()
+    new_entity_entry = entity_registry.async_get(entity_id)
+    assert new_entity_entry
+    assert new_entity_entry.id == entity_entry.id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
+    # Neither the old value in the new scale nor the new value in the old scale
+    # is reported in between.
+    assert [
+        event.data["new_state"].state
+        for event in state_changed_events
+        if event.data["entity_id"] == entity_id
+    ] == [STATE_UNAVAILABLE, expected_state]
+    assert not [
+        event.data["entity_id"]
+        for event in state_changed_events
+        if event.data["entity_id"] != entity_id
+        and event.data["new_state"].state == STATE_UNAVAILABLE
+    ]
+
+
+async def test_new_sensor_no_rediscovery_without_scale_change(
+    hass: HomeAssistant,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the new-style sensor is not rediscovered when the scale is unchanged."""
+    entity_id = AIR_TEMPERATURE_SENSOR
+    state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
     with patch.object(
         hass.config_entries, "async_schedule_reload"
     ) as mock_schedule_reload:
-        event = Event(
-            "value updated",
-            {
-                "source": "node",
-                "event": "value updated",
-                "nodeId": multisensor_6.node_id,
-                "args": {
-                    "commandClassName": "Multilevel Sensor",
-                    "commandClass": 49,
-                    "endpoint": 0,
-                    "property": "Air temperature",
-                    "newValue": 68,
-                    "prevValue": 9,
-                    "propertyName": "Air temperature",
-                },
-            },
+        multisensor_6.receive_event(
+            _air_temperature_metadata_updated_event(multisensor_6, 0, "°C")
         )
-        multisensor_6.receive_event(event)
+        await hass.async_block_till_done()
+        multisensor_6.receive_event(
+            _air_temperature_value_updated_event(multisensor_6, 20, 9)
+        )
         await hass.async_block_till_done()
 
-    mock_schedule_reload.assert_called_once_with(integration.entry_id)
+    # Removing the entity for rediscovery would write an unavailable state in between.
+    assert [
+        event.data["new_state"].state
+        for event in state_changed_events
+        if event.data["entity_id"] == entity_id
+    ] == ["20.0"]
+    mock_schedule_reload.assert_not_called()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "20.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
 
 
 CONTROLLER_STATISTICS_ENTITY_PREFIX = "sensor.z_stick_gen5_usb_controller_"

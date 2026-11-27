@@ -1,0 +1,147 @@
+"""Repairs for the Holiday integration."""
+
+from typing import Any
+
+import probatio
+
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_COUNTRY
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.selector import CountrySelector, CountrySelectorConfig
+
+from .config_flow import (
+    SUPPORTED_COUNTRIES,
+    get_entry_name,
+    get_entry_options,
+    get_options_schema,
+)
+from .const import (
+    CONF_CATEGORIES,
+    CONF_PROVINCE,
+    DOMAIN,
+    ISSUE_UNSUPPORTED_CATEGORIES,
+    ISSUE_UNSUPPORTED_COUNTRY,
+    ISSUE_UNSUPPORTED_PROVINCE,
+)
+
+# The setting an issue is about, which the repair form doesn't fill in
+BROKEN_SETTING = {
+    ISSUE_UNSUPPORTED_PROVINCE: CONF_PROVINCE,
+    ISSUE_UNSUPPORTED_CATEGORIES: CONF_CATEGORIES,
+}
+
+
+class UnsupportedConfigurationFixFlow(RepairsFlow):
+    """Handler for fixing a configuration the holidays library no longer supports."""
+
+    def __init__(self, entry: ConfigEntry, issue: str) -> None:
+        """Create flow."""
+        self.entry = entry
+        self.issue = issue
+        self.country: str = entry.data[CONF_COUNTRY]
+        super().__init__()
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the first step of a fix flow."""
+        if self.issue == ISSUE_UNSUPPORTED_COUNTRY:
+            return await self.async_step_country()
+        return await self.async_step_options()
+
+    async def async_step_country(
+        self, user_input: dict[str, Any] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the country step of a fix flow."""
+        if user_input is not None:
+            self.country = user_input[CONF_COUNTRY]
+            return await self.async_step_options()
+
+        return self.async_show_form(
+            step_id="country",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_COUNTRY): CountrySelector(
+                        CountrySelectorConfig(countries=list(SUPPORTED_COUNTRIES))
+                    )
+                }
+            ),
+            description_placeholders=self._placeholders(),
+        )
+
+    async def async_step_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the province and categories step of a fix flow."""
+        if user_input is not None:
+            data = {CONF_COUNTRY: self.country}
+            if province := user_input.get(CONF_PROVINCE):
+                data[CONF_PROVINCE] = province
+            options = get_entry_options(user_input)
+            # Like the config flows, don't create a second calendar for the same holidays
+            match = {**data, **options}.items()
+            if any(
+                all(
+                    item in other.data.items() or item in other.options.items()
+                    for item in match
+                )
+                for other in self.hass.config_entries.async_entries(DOMAIN)
+                if other.entry_id != self.entry.entry_id
+            ):
+                return self.async_abort(reason="already_configured")
+            title = await self.hass.async_add_executor_job(
+                get_entry_name, self.hass.config.language, self.country, province
+            )
+            self.hass.config_entries.async_update_entry(
+                self.entry, title=title, data=data, options=options
+            )
+            await self.hass.config_entries.async_reload(self.entry.entry_id)
+            return self.async_create_entry(data={})
+
+        options_schema = await self.hass.async_add_executor_job(
+            get_options_schema, self.country
+        )
+        # Keep the saved settings that are still valid, only the broken one is empty
+        suggested_values: dict[str, Any] = {}
+        if self.country == self.entry.data[CONF_COUNTRY]:
+            broken = BROKEN_SETTING.get(self.issue)
+            suggested_values = {
+                key: value
+                for key, value in {**self.entry.data, **self.entry.options}.items()
+                if key != broken
+            }
+        return self.async_show_form(
+            step_id="options",
+            data_schema=self.add_suggested_values_to_schema(
+                options_schema, suggested_values
+            ),
+            description_placeholders={
+                **self._placeholders(),
+                "country": self.country,
+            },
+        )
+
+    def _placeholders(self) -> dict[str, str]:
+        """Return the placeholders of the configuration that is no longer supported."""
+        return {
+            "title": self.entry.title,
+            "country": self.entry.data[CONF_COUNTRY],
+            "province": self.entry.data.get(CONF_PROVINCE) or "",
+            "categories": ", ".join(self.entry.options.get(CONF_CATEGORIES, [])),
+        }
+
+
+async def async_create_fix_flow(
+    hass: HomeAssistant,
+    issue_id: str,
+    data: dict[str, Any] | None,
+) -> RepairsFlow:
+    """Create flow."""
+    if data and (entry := hass.config_entries.async_get_entry(data["entry_id"])):
+        return UnsupportedConfigurationFixFlow(entry, data["issue"])
+    return ConfirmRepairFlow()
