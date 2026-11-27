@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from boschshcpy import (
+    SHCIntrusionSystem,
     SHCMicromoduleDimmer,
     SHCMotionDetector2,
     SHCOutdoorSiren,
@@ -17,9 +18,12 @@ from boschshcpy.device import SHCDevice
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BoschConfigEntry
+from .const import DOMAIN
 from .entity import SHCEntity
 
 PARALLEL_UPDATES = 1
@@ -165,7 +169,16 @@ async def async_setup_entry(
             PREVIEW_MIN_BRIGHTNESS_DESCRIPTION,
         )
     )
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            *entities,
+            SHCIntrusionAlarmMuteButton(
+                hass=hass,
+                device=session.intrusion_system,
+                entry_id=config_entry.entry_id,
+            ),
+        ]
+    )
 
 
 class SHCButton[_DeviceT: SHCDevice](SHCEntity, ButtonEntity):
@@ -193,3 +206,59 @@ class SHCButton[_DeviceT: SHCDevice](SHCEntity, ButtonEntity):
     def press(self) -> None:
         """Press the button."""
         self.entity_description.press_fn(self._device)
+
+
+class SHCIntrusionAlarmMuteButton(ButtonEntity):
+    """Button that mutes a triggered intrusion alarm."""
+
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_translation_key = "intrusion_alarm_mute"
+
+    def __init__(
+        self, hass: HomeAssistant, device: SHCIntrusionSystem, entry_id: str
+    ) -> None:
+        """Initialize the mute button on the alarm system's device."""
+        self._device = device
+        system_id = f"{device.root_device_id}_{device.id}"
+        self._attr_unique_id = f"{system_id}_mute"
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, system_id)},
+            translation_key="intrusion_system",
+            manufacturer=device.manufacturer,
+            model=device.device_model,
+        )
+        if device.root_device_id is not None and (
+            hub := dr.async_get(hass).async_get_device_by_identifier(
+                (DOMAIN, device.root_device_id), entry_id
+            )
+        ):
+            device_info.via_device_id = hub.id
+        self._attr_device_info = device_info
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to SHC events."""
+        await super().async_added_to_hass()
+
+        def on_state_changed() -> None:
+            self.schedule_update_ha_state()
+
+        self._device.subscribe_callback(self.unique_id, on_state_changed)
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from SHC events."""
+        await super().async_will_remove_from_hass()
+        self._device.unsubscribe_callback(self.unique_id)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return false if the system is unavailable."""
+        return bool(self._device.system_availability)
+
+    @override
+    def press(self) -> None:
+        """Mute the active alarm."""
+        self._device.mute()
