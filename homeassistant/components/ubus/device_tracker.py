@@ -1,19 +1,27 @@
 """Support for OpenWrt (ubus) routers as a device tracker."""
 
 from functools import partial
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 import probatio
 
+from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     AsyncSeeCallback,
     ScannerEntity,
 )
+from homeassistant.components.person import (
+    CONF_DEVICE_TRACKERS as PERSON_TRACKERS,
+    DOMAIN as PERSON_DOMAIN,
+    PersonData,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
+    CONF_ID,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_SSL,
     CONF_USERNAME,
@@ -113,8 +121,7 @@ async def async_setup_scanner(
     return True
 
 
-@callback
-def _async_migrate_unique_ids(
+async def _async_migrate_unique_ids(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -124,10 +131,11 @@ def _async_migrate_unique_ids(
 
     Trackers created before MACs were normalized keep the router's raw
     case; re-pointing the unique id reuses the entity, with its entity
-    id and customizations, instead of creating a duplicate. Duplicate
-    trackers' person references and devices are preserved: references
-    follow the surviving tracker, and duplicate devices are merged into
-    the survivor's device, with their references following it.
+    id and customizations, instead of creating a duplicate. Duplicates
+    are removed with their devices; the references to them are either
+    re-pointed (person storage) or, for the YAML persons and device
+    automations which cannot be updated automatically, the removal is
+    deferred behind a repair until they are resolved.
     """
     by_mac: dict[str, list[er.RegistryEntry]] = {}
     for registry_entry in er.async_entries_for_config_entry(
@@ -160,23 +168,49 @@ def _async_migrate_unique_ids(
         survivor = min(candidates, key=lambda entry: entry.created_at)
         for entry in entries:
             if entry is not survivor:
-                # The duplicate's tracker and, with it, its device are
-                # gone now; the references to them follow the survivor.
-                hass.async_create_task(
-                    _async_repoint_tracker_references(
-                        hass, entry.entity_id, survivor.entity_id
-                    )
+                # Storage persons are re-pointed at the survivor; YAML
+                # persons and device automations live in configuration
+                # which cannot be updated, so the removal is deferred
+                # behind a repair while either holds the duplicate or
+                # its disappearing device.
+                await _async_repoint_person_trackers(
+                    hass, entry.entity_id, survivor.entity_id
                 )
-                if (
-                    entry.device_id is not None
-                    and survivor.device_id is not None
-                    and entry.device_id != survivor.device_id
-                ):
-                    hass.async_create_task(
-                        _async_repoint_device_references(
-                            hass, entry.device_id, survivor.device_id
-                        )
+                yaml_persons = _async_yaml_person_names(hass, entry.entity_id)
+                automations = (
+                    _async_referencing_automations(hass, entry.device_id)
+                    if (
+                        entry.device_id is not None
+                        and survivor.device_id is not None
+                        and entry.device_id != survivor.device_id
                     )
+                    else []
+                )
+                if yaml_persons or automations:
+                    ir.async_create_issue(
+                        hass,
+                        DOMAIN,
+                        f"dedup_referenced_{entry.unique_id}",
+                        config_entry_id=config_entry_id,
+                        is_fixable=False,
+                        is_persistent=True,
+                        issue_domain=DOMAIN,
+                        severity=ir.IssueSeverity.WARNING,
+                        translation_key="dedup_referenced",
+                        translation_placeholders={
+                            "tracker": entry.entity_id,
+                            "survivor": survivor.entity_id,
+                            "references": ", ".join(
+                                [f"person '{name}'" for name in yaml_persons]
+                                + [f"automation '{name}'" for name in automations]
+                            ),
+                        },
+                    )
+                    continue
+                # Any previous deferral is over.
+                ir.async_delete_issue(
+                    hass, DOMAIN, f"dedup_referenced_{entry.unique_id}"
+                )
                 entity_registry.async_remove(entry.entity_id)
                 _async_merge_device(device_registry, entity_registry, entry, survivor)
         if survivor.unique_id != survivor.unique_id.lower():
@@ -236,65 +270,61 @@ def _async_merge_device(
     device_registry.async_remove_device(dup_device.id)
 
 
-async def _async_repoint_tracker_references(
-    hass: HomeAssistant,
-    removed_entity_id: str,
-    survivor_entity_id: str,
-) -> None:
-    """Re-point references at the surviving tracker after a duplicate is removed.
+@callback
+def _async_person_data(hass: HomeAssistant) -> PersonData | None:
+    """Return the person integration's runtime data, if it is set up."""
+    data = hass.data.get(PERSON_DOMAIN)
+    if isinstance(data, PersonData):
+        return data
+    return None
 
-    Entry data holding device tracker entity ids, such as person
-    configurations, is left pointing at the removed tracker, so the
-    references move to the tracker that keeps the client.
+
+async def _async_repoint_person_trackers(
+    hass: HomeAssistant, removed_entity_id: str, survivor_entity_id: str
+) -> None:
+    """Re-point the persons' tracker lists at the surviving tracker.
+
+    Persons from the YAML configuration cannot be re-pointed, so the
+    caller defers the removal while one of them holds the tracker.
     """
-    for config_entry in hass.config_entries.async_entries():
-        device_trackers = config_entry.data.get("device_trackers")
-        if (
-            not isinstance(device_trackers, list)
-            or removed_entity_id not in device_trackers
-        ):
+    if (person_data := _async_person_data(hass)) is None:
+        return
+    for person in person_data.storage_collection.async_items():
+        if removed_entity_id not in person.get(PERSON_TRACKERS, []):
             continue
-        hass.config_entries.async_update_entry(
-            config_entry,
-            data={
-                **config_entry.data,
-                "device_trackers": [
-                    survivor_entity_id if entity_id == removed_entity_id else entity_id
-                    for entity_id in device_trackers
-                ],
+        await person_data.storage_collection.async_update_item(
+            person[CONF_ID],
+            {
+                PERSON_TRACKERS: [
+                    survivor_entity_id if tracker == removed_entity_id else tracker
+                    for tracker in person[PERSON_TRACKERS]
+                ]
             },
         )
 
 
-async def _async_repoint_device_references(
-    hass: HomeAssistant,
-    removed_device_id: str,
-    survivor_device_id: str,
-) -> None:
-    """Re-point device references at the surviving device after a merge.
+@callback
+def _async_yaml_person_names(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return the names of the YAML persons referencing a tracker."""
+    if (person_data := _async_person_data(hass)) is None:
+        return []
+    return [
+        person[CONF_NAME]
+        for person in person_data.yaml_collection.async_items()
+        if entity_id in person.get(PERSON_TRACKERS, [])
+    ]
 
-    Entry data holding device ids, such as device automations, is left
-    pointing at the removed device, which would fail validation, so the
-    references move to the device that survives the merge.
-    """
-    for config_entry in hass.config_entries.async_entries():
-        triggers = config_entry.data.get("trigger")
-        if not isinstance(triggers, list):
-            continue
-        new_triggers: list[dict[str, Any]] = []
-        changed = False
-        for trigger in triggers:
-            if (
-                isinstance(trigger, dict)
-                and trigger.get("device_id") == removed_device_id
-            ):
-                trigger = {**trigger, "device_id": survivor_device_id}
-                changed = True
-            new_triggers.append(trigger)
-        if changed:
-            hass.config_entries.async_update_entry(
-                config_entry, data={**config_entry.data, "trigger": new_triggers}
-            )
+
+@callback
+def _async_referencing_automations(hass: HomeAssistant, device_id: str) -> list[str]:
+    """Return the names of the loaded automations referencing a device."""
+    if (component := hass.data.get(AUTOMATION_DOMAIN)) is None:
+        return []
+    return [
+        entity.name or entity.entity_id
+        for entity in component.entities
+        if device_id in entity.referenced_devices
+    ]
 
 
 @callback
@@ -334,7 +364,7 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
     coordinator: UbusDataUpdateCoordinator = config_entry.runtime_data
 
-    _async_migrate_unique_ids(
+    await _async_migrate_unique_ids(
         hass, device_registry, entity_registry, config_entry.entry_id
     )
 
@@ -361,7 +391,20 @@ async def async_setup_entry(
             and registry_entry.platform == DOMAIN
             and registry_entry.unique_id is not None
         }
-        new_macs = [mac for mac in seen | owned if mac not in tracked]
+        new_macs = [
+            mac
+            for mac in seen | owned
+            if mac not in tracked
+            # A sighting must not create or re-assign the entity another
+            # entry owns while a raw-case id waits for normalization.
+            and (
+                mac in owned
+                or entity_registry.async_get_entity_id(
+                    DEVICE_TRACKER_DOMAIN, DOMAIN, mac
+                )
+                is None
+            )
+        ]
         tracked.update(new_macs)
         if new_macs:
             async_add_entities(

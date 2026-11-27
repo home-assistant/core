@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 from .config_flow import UbusConfigFlow
 from .const import DOMAIN, SUBENTRY_TYPE_ROUTER
 from .coordinator import UbusConfigEntry, UbusDataUpdateCoordinator
-from .device_tracker import _async_repoint_device_references
+from .device_tracker import _async_referencing_automations
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -391,11 +391,26 @@ def _async_reparent(
             entity_registry.async_update_entity(
                 device_entry.entity_id, device_id=survivor.id
             )
-        # The removal below orphans device references, such as device
-        # automations; they follow the surviving device.
-        hass.async_create_task(
-            _async_repoint_device_references(hass, loser.id, survivor.id)
-        )
+        # The removal below breaks device automations targeting the
+        # merged device, which live in the YAML configuration and
+        # cannot be re-pointed.
+        if referencing := _async_referencing_automations(hass, loser.id):
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"migration_device_references_{loser.id}",
+                config_entry_id=hub.entry_id,
+                is_fixable=False,
+                is_persistent=True,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="migration_device_references",
+                translation_placeholders={
+                    "references": ", ".join(
+                        f"automation '{name}'" for name in referencing
+                    ),
+                },
+            )
         device_registry.async_remove_device(loser.id)
         if survivor is device:
             # The entry removal would delete the device otherwise.

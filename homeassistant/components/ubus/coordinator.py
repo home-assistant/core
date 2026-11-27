@@ -666,7 +666,7 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         """
         return (
             bool(self.hosts)
-            and mac not in self._ungrounded
+            and mac.lower() not in self._ungrounded
             and all(
                 self.host_health.get(subentry_id, True) for subentry_id in self.hosts
             )

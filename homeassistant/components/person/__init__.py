@@ -74,6 +74,7 @@ CONFIG_SCHEMA = probatio.Schema(
 
 __all__ = [
     "ATTR_USER_ID",
+    "CONF_DEVICE_TRACKERS",
     "DOMAIN",
     "SERVICE_RELOAD",
     "Person",
