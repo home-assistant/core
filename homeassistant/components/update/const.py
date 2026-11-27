@@ -72,6 +72,7 @@ class UpdateInstallPhase(StrEnum):
     PREPARING = "preparing"
     BACKING_UP = "backing_up"
     WAITING = "waiting"
+    WAITING_FOR_USER = "waiting_for_user"
     DOWNLOADING = "downloading"
     INSTALLING = "installing"
     RESTARTING = "restarting"

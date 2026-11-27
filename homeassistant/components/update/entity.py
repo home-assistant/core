@@ -49,7 +49,7 @@ class UpdateReleaseNotesMessage:
 
 @dataclass(frozen=True, kw_only=True)
 class UpdateManualAction:
-    """Something a person has to do outside Home Assistant for an update."""
+    """Something a person has to do to install an update."""
 
     translation_domain: str
     translation_key: str
@@ -221,11 +221,12 @@ class UpdateEntity(
 
     @cached_property
     def manual_action(self) -> UpdateManualAction | None:
-        """Something a person has to do outside Home Assistant for the update.
+        """Something a person has to do to install the update.
 
-        For example, confirm the update on the device. Reported whether or not
-        an install is in progress, so it can also tell what an installed update
-        still needs to take effect. Return None once nothing is needed.
+        For example, confirm the update on the device. Set it as soon as it is
+        known, ideally before the install starts, and report the
+        waiting_for_user install phase while the install waits for it.
+        Only reported while an update is available or an install is in progress.
         """
         return self._attr_manual_action
 
@@ -411,7 +412,9 @@ class UpdateEntity(
             install_phase = None
             update_percentage = None
 
-        if (manual_action := self.manual_action) is not None:
+        if (manual_action := self.manual_action) is not None and (
+            in_progress or self.state == STATE_ON
+        ):
             manual_action_attr: dict[str, Any] | None = {
                 "translation_domain": manual_action.translation_domain,
                 "translation_key": manual_action.translation_key,
