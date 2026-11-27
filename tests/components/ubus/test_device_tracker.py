@@ -38,6 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
+    area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
@@ -994,64 +995,85 @@ async def test_late_refresh_after_subentry_removal_is_ignored(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_overlapping_update_reuses_in_flight_poll(
+async def test_timed_out_tick_reuses_in_flight_poll(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     hub_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test an update overlapping an in-flight poll re-awaits it, not a new one.
+    """Test a tick that times out re-awaits the in-flight poll on the next tick.
 
-    A tick that times out while its poll is still running in the executor
-    leaves that poll in flight; the next tick must re-await it, because a
+    The poll keeps running in the executor after the tick times out; a
     second poll for the same router would concurrently mutate its ubus
     session and lease state.
+
+    The intervals are shortened and the refreshes are driven by the
+    coordinator's own timers on the real clock, so the overlapping tick is
+    scheduled through Home Assistant rather than by calling the
+    coordinator.
     """
     _mock, ubus = mock_ubus_by_host
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    hub_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(hub_entry.entry_id)
-    await hass.async_block_till_done()
+    with (
+        patch(
+            "homeassistant.components.ubus.coordinator.UPDATE_INTERVAL",
+            timedelta(seconds=2),
+        ),
+        patch(
+            "homeassistant.components.ubus.coordinator.REQUEST_TIMEOUT",
+            timedelta(seconds=1),
+        ),
+    ):
+        hub_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(hub_entry.entry_id)
+        await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(
-        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
-    )
-    assert entity_id is not None
-    assert hass.states.get(entity_id).state == STATE_HOME
-    assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 1
-    coordinator = hub_entry.runtime_data
+        entity_id = entity_registry.async_get_entity_id(
+            DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == STATE_HOME
+        assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 1
 
-    # The next poll blocks in the executor until it is released.
-    poll_started = threading.Event()
-    release = threading.Event()
+        # The next poll blocks in the executor until it is released.
+        poll_started = threading.Event()
+        release = threading.Event()
 
-    def _blocked_clients(interface: str) -> dict:
-        poll_started.set()
-        release.wait()
-        return {"clients": {MAC_PHONE: {"authorized": True}}}
+        def _blocked_clients(interface: str) -> dict:
+            poll_started.set()
+            release.wait()
+            return {"clients": {MAC_PHONE: {"authorized": True}}}
 
-    ubus[MOCK_HOST].get_hostapd_clients.side_effect = _blocked_clients
-    try:
-        # The first update starts a poll that blocks in the executor.
-        first = hass.async_create_task(coordinator._async_update_data())
-        assert await hass.async_add_executor_job(poll_started.wait, 10)
+        ubus[MOCK_HOST].get_hostapd_clients.side_effect = _blocked_clients
+        try:
+            # The first tick starts a poll that blocks in the executor.
+            assert await hass.async_add_executor_job(poll_started.wait, 10)
+            # The tick times out while the poll keeps running in the
+            # executor; the failed tick marks the router unhealthy, so the
+            # client's stamps stop counting until the next tick succeeds.
+            await asyncio.sleep(1.5)
+            await hass.async_block_till_done()
+            assert hub_entry.runtime_data.last_update_success is False
+            assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+            # The next tick must re-await the in-flight poll rather than
+            # start a second one; releasing it lets that single poll
+            # complete and apply.
+            release.set()
+            # Wait past the next tick; the anchor calculation schedules it
+            # up to one interval after this release.
+            await asyncio.sleep(2.0)
+            await hass.async_block_till_done(wait_background_tasks=True)
+        finally:
+            release.set()
+
+        # One poll ran at setup and one blocked then was re-awaited by the
+        # second tick; a duplicate poll would have called the mock a third
+        # time.
         assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 2
-        # An update overlapping it must re-await the in-flight poll rather
-        # than start one of its own; releasing it completes both.
-        second = hass.async_create_task(coordinator._async_update_data())
-        release.set()
-        first_presence, second_presence = await asyncio.gather(first, second)
-    finally:
-        release.set()
-
-    # Both updates report the client from the single in-flight poll; a
-    # duplicate poll would have called the mock a third time.
-    assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 2
-    assert MAC_PHONE in first_presence
-    assert MAC_PHONE in second_presence
-    assert hass.states.get(entity_id).state == STATE_HOME
+        assert hass.states.get(entity_id).state == STATE_HOME
+        assert hub_entry.runtime_data.last_update_success is True
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -2110,14 +2132,36 @@ async def test_migration_merges_entries_into_hub(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_migration_merges_device_into_hubs_device(
+@pytest.mark.parametrize(
+    ("hub_customizations", "legacy_customizations", "expected_survivor"),
+    [
+        pytest.param((None, None), (None, None), "legacy", id="both-uncustomized"),
+        pytest.param(("Hub Phone", "hall"), (None, None), "hub", id="hub-customized"),
+        pytest.param(
+            (None, None), ("My Phone", "bedroom"), "legacy", id="legacy-customized"
+        ),
+    ],
+)
+async def test_migration_device_collision_keeps_established_device(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    hub_customizations: tuple[str | None, str | None],
+    legacy_customizations: tuple[str | None, str | None],
+    expected_survivor: str,
 ) -> None:
-    """Test a legacy device is merged into the hub's device for the client."""
+    """Test a device collision keeps the established device's id and data.
+
+    The device the user named or placed in an area is kept over the
+    other; when neither is customized the older one wins, so its id,
+    name, area and automation references survive the merge.
+    """
     _mock, ubus = mock_ubus_by_host
+    area_ids = {
+        name: area_registry.async_create(name).id for name in ("hall", "bedroom")
+    }
     # The hub must be the lowest entry id so it runs the migration.
     hub_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -2141,6 +2185,11 @@ async def test_migration_merges_device_into_hubs_device(
         config_entry_id=legacy_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
     )
+    device_registry.async_update_device(
+        legacy_device.id,
+        name_by_user=legacy_customizations[0],
+        area_id=area_ids.get(legacy_customizations[1]),
+    )
     entity_registry.async_get_or_create(
         DEVICE_TRACKER_DOMAIN,
         DOMAIN,
@@ -2154,20 +2203,127 @@ async def test_migration_merges_device_into_hubs_device(
     hub_device = device_registry.async_get_or_create(
         config_entry_id=hub_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
-        name="Hub Phone",
+    )
+    device_registry.async_update_device(
+        hub_device.id,
+        name_by_user=hub_customizations[0],
+        area_id=area_ids.get(hub_customizations[1]),
     )
 
     assert await hass.config_entries.async_setup(hub_entry.entry_id)
     await hass.async_block_till_done()
 
-    # The legacy device was merged into the hub's device.
-    assert device_registry.async_get(legacy_device.id) is None
+    survivor_device = legacy_device if expected_survivor == "legacy" else hub_device
+    loser_device = hub_device if survivor_device is legacy_device else legacy_device
+    # The established device keeps its id and customizations.
+    survivor = device_registry.async_get(survivor_device.id)
+    assert survivor is not None
+    expected_customizations = (
+        legacy_customizations if expected_survivor == "legacy" else hub_customizations
+    )
+    assert survivor.name_by_user == expected_customizations[0]
+    assert survivor.area_id == area_ids.get(expected_customizations[1])
+    assert device_registry.async_get(loser_device.id) is None
     entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
     )
     assert entity_id is not None
-    assert entity_registry.async_get(entity_id).device_id == hub_device.id
-    assert device_registry.async_get(hub_device.id).name == "Hub Phone"
+    assert entity_registry.async_get(entity_id).device_id == survivor_device.id
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_migration_device_collision_keeps_enabled_trackers_device(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test a device collision keeps the established tracker's device.
+
+    The hub holds a disabled tracker with a normalized unique id and the
+    legacy entry an enabled tracker with the pre-normalization case, so
+    the legacy tracker survives the unique id migration; the merge must
+    keep its customized device rather than delete it.
+    """
+    _mock, ubus = mock_ubus_by_host
+    living_room = area_registry.async_create("living-room")
+    hub_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=MOCK_HOST,
+        entry_id="00000000000000000000000000A",
+    )
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_B,
+        title=MOCK_HOST_B,
+        entry_id="00000000000000000000000000B",
+    )
+    legacy_entry.add_to_hass(hass)
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    # Pre-migration state: the legacy tracker predates MAC normalization,
+    # so its unique id and device keep the client's raw case.
+    legacy_device = device_registry.async_get_or_create(
+        config_entry_id=legacy_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
+    )
+    device_registry.async_update_device(
+        legacy_device.id,
+        name_by_user="My Phone",
+        area_id=living_room.id,
+    )
+    entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE.upper(),
+        config_entry=legacy_entry,
+        device_id=legacy_device.id,
+        disabled_by=None,
+    )
+    hub_entry.add_to_hass(hass)
+    hub_device = device_registry.async_get_or_create(
+        config_entry_id=hub_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
+    )
+    entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE,
+        config_entry=hub_entry,
+        device_id=hub_device.id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The legacy device survived the merge with its customizations and was
+    # re-parented to the hub; the hub's device was deleted.
+    assert device_registry.async_get(hub_device.id) is None
+    device = device_registry.async_get(legacy_device.id)
+    assert device is not None
+    assert device.config_entry_id == hub_entry.entry_id
+    assert device.name_by_user == "My Phone"
+    assert device.area_id == living_room.id
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).device_id == legacy_device.id
+    # The disabled hub tracker was removed by the unique id migration,
+    # which lower-cased the surviving tracker's unique id.
+    assert (
+        entity_registry.async_get_entity_id(
+            DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE.upper()
+        )
+        is None
+    )
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_HOME

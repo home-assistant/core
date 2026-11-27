@@ -284,6 +284,28 @@ async def _async_migrate_other(
         )
 
 
+def _merge_device_survivors(
+    device: dr.DeviceEntry, target_device: dr.DeviceEntry
+) -> tuple[dr.DeviceEntry, dr.DeviceEntry]:
+    """Return the device to keep and the one to merge into it.
+
+    A device the user named or placed in an area is established over the
+    other; otherwise the older one wins, so its id, name, area and
+    automation references survive the merge.
+    """
+    legacy_established = device.name_by_user is not None or device.area_id is not None
+    hub_established = (
+        target_device.name_by_user is not None or target_device.area_id is not None
+    )
+    if legacy_established != hub_established:
+        survivor = device if legacy_established else target_device
+    elif device.created_at <= target_device.created_at:
+        survivor = device
+    else:
+        survivor = target_device
+    return survivor, target_device if survivor is device else device
+
+
 @callback
 def _async_reparent(
     hass: HomeAssistant,
@@ -319,17 +341,23 @@ def _async_reparent(
             target_device = device_registry.async_get_device_by_connection(
                 (dr.CONNECTION_NETWORK_MAC, connection), hub.entry_id
             )
-        if target_device is not None:
-            # Merge the duplicate device into the hub's device, including the
-            # disabled entities only the duplicate holds.
-            for device_entry in er.async_entries_for_device(
-                entity_registry, device.id, include_disabled_entities=True
-            ):
-                entity_registry.async_update_entity(
-                    device_entry.entity_id, device_id=target_device.id
-                )
-            device_registry.async_remove_device(device.id)
-        else:
+        if target_device is None:
+            device_registry.async_update_device(
+                device.id, new_config_entry_id=hub.entry_id
+            )
+            continue
+        survivor, loser = _merge_device_survivors(device, target_device)
+        # Merge the losing device into the surviving one, including the
+        # disabled entities only the losing one holds.
+        for device_entry in er.async_entries_for_device(
+            entity_registry, loser.id, include_disabled_entities=True
+        ):
+            entity_registry.async_update_entity(
+                device_entry.entity_id, device_id=survivor.id
+            )
+        device_registry.async_remove_device(loser.id)
+        if survivor is device:
+            # The entry removal would delete the device otherwise.
             device_registry.async_update_device(
                 device.id, new_config_entry_id=hub.entry_id
             )
