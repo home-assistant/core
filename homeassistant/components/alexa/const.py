@@ -44,6 +44,7 @@ API_CHANGE = "change"
 API_PASSWORD = "password"
 
 CONF_DISPLAY_CATEGORIES = "display_categories"
+CONF_EXPOSE_POWER_CONTROLLER = "expose_power_controller"
 CONF_SUPPORTED_LOCALES = (
     "de-DE",
     "en-AU",
