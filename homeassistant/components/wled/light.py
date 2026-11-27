@@ -6,9 +6,6 @@ from typing import Any, cast, override
 from wled import Device as WLEDDevice, LightCapability, combine_white, split_white
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_EFFECT,
-    ATTR_TRANSITION,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -19,10 +16,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.group import IntegrationSpecificGroup
 
 from .const import (
+    ATTR_BRIGHTNESS,
     ATTR_CCT,
     ATTR_COLOR_PRIMARY,
+    ATTR_EFFECT,
     ATTR_ON,
     ATTR_SEGMENT_ID,
+    ATTR_TRANSITION,
     COLOR_TEMP_K_MAX,
     COLOR_TEMP_K_MIN,
     LIGHT_CAPABILITIES_COLOR_MODE_MAPPING,
