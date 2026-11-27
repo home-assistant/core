@@ -1,5 +1,6 @@
 """The tests for the Ring switch platform."""
 
+import asyncio
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -22,7 +23,7 @@ from homeassistant.components.camera import (
 )
 from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.ring.camera import FORCE_REFRESH_INTERVAL
-from homeassistant.components.ring.const import SCAN_INTERVAL
+from homeassistant.components.ring.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -390,6 +391,51 @@ async def test_camera_update_without_last_event(
     assert "Update for camera.front_live_view fails" not in caplog.text
     front_camera_mock.async_recording_url.assert_not_called()
     assert hass.states.get("camera.front_live_view").attributes["video_url"] is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_ring_client")
+async def test_camera_update_event_cleared_during_video_request(
+    hass: HomeAssistant,
+    mock_ring_devices: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a video url is dropped when its event is cleared during the request."""
+    await setup_platform(hass, Platform.CAMERA)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = entry.runtime_data.devices_coordinator
+
+    front_camera_mock = mock_ring_devices.get_device(765432)
+    request_started = asyncio.Event()
+    finish_request = asyncio.Event()
+
+    async def _recording_url(event_id: int) -> str:
+        request_started.set()
+        await finish_request.wait()
+        return "http://stale.url"
+
+    front_camera_mock.async_recording_url = AsyncMock(side_effect=_recording_url)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await request_started.wait()
+
+    # The next coordinator update finds no subscription and clears the event
+    front_camera_mock.has_subscription = False
+    refreshed = asyncio.Event()
+    remove_listener = coordinator.async_add_listener(refreshed.set)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await refreshed.wait()
+    remove_listener()
+
+    finish_request.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    front_camera_mock.async_recording_url.assert_called_once()
+    for entity_id in ("camera.front_live_view", "camera.front_last_recording"):
+        attributes = hass.states.get(entity_id).attributes
+        assert attributes["video_url"] is None
+        assert attributes["last_video_id"] is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

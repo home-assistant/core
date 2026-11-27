@@ -264,8 +264,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             self._attr_motion_detection_enabled = self._device.motion_detection
             self.async_write_ha_state()
 
-        # A camera without history or a subscription has no event, and a
-        # coordinator update can clear it while the video url is fetched
+        # A camera without history or a subscription has no event
         if (last_event := self._last_event) is None or last_event["recording"][
             "status"
         ] != "ready":
@@ -279,8 +278,15 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         if self._last_video_id != event_id:
             self._images = {}
 
-        self._video_url = await self._async_get_video(event_id)
+        video_url = await self._async_get_video(event_id)
 
+        # A coordinator update can clear or replace the event during the request
+        if (current_event := self._last_event) is None or current_event[
+            "id"
+        ] != event_id:
+            return
+
+        self._video_url = video_url
         self._last_video_id = event_id
         self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
 
