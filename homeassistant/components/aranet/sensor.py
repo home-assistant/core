@@ -64,7 +64,7 @@ SENSOR_DESCRIPTIONS = {
     "pressure": AranetSensorEntityDescription(
         key="pressure",
         name="Pressure",
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),

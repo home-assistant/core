@@ -1,12 +1,9 @@
 """The london_air component."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .sensor import APIData
-
-type LondonAirConfigEntry = ConfigEntry[APIData]
+from .sensor import APIData, LondonAirConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 

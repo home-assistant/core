@@ -78,6 +78,14 @@
           "description": "Enter your Powerwall system's local network address and its Wi-Fi password. Only the last 5 characters of the password are needed - find them on the QR label behind the front cover of your Powerwall 3, or behind the Backup Gateway door on Powerwall 2.",
           "title": "Connect to your Powerwall system"
         },
+        "legacy_credentials": {
+          "data": {
+            "host": "[%key:common::config_flow::data::host%]",
+            "password": "[%key:common::config_flow::data::password%]"
+          },
+          "description": "Enter your Powerwall system's local network address and its full gateway password. This Backup Gateway 1 needs the whole password, not only its last 5 characters.",
+          "title": "[%key:component::teslemetry::config_subentries::energy_site::step::credentials::title%]"
+        },
         "pair": {
           "description": "Flick the On/Off switch on your primary Powerwall off and back on to approve Home Assistant's access, then continue. This only needs to be done once. Removing this integration later does not revoke this access on your Powerwall or Backup Gateway.",
           "title": "Approve the local access key"
@@ -1378,6 +1386,9 @@
     "not_ready_connection_error": {
       "message": "Unable to connect to Teslemetry"
     },
+    "rear_trunk_state_unknown": {
+      "message": "The rear trunk state is unknown, try again once the vehicle reports it"
+    },
     "set_scheduled_charging_time": {
       "message": "Scheduled charging time is required when enabling"
     },
@@ -1463,6 +1474,10 @@
         }
       },
       "title": "Pair the virtual key for {vehicle}"
+    },
+    "local_control_failed": {
+      "description": "Home Assistant could not load the local control key file `{key_file}` in your configuration directory, so local control of {site} is unavailable and commands are sent through the cloud. Check that the file is readable and contains a valid private key, then reload the integration.",
+      "title": "[%key:component::teslemetry::issues::gateway_not_found::title%]"
     },
     "missing_scopes": {
       "description": "Tesla is refusing to share vehicle data with Teslemetry because your Tesla authorization is missing the required permissions. Select **Learn more** to sign in with Tesla again and grant the missing permissions, including Vehicle Information, then reload the integration.",

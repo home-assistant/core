@@ -18,7 +18,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.proxmoxve.coordinator import DEFAULT_UPDATE_INTERVAL
+from homeassistant.components.proxmoxve.coordinator import STATUS_UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -206,7 +206,7 @@ async def test_guest_uptime_unknown(
     assert state.state == STATE_UNKNOWN
     last_changed = state.last_changed
 
-    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    freezer.tick(STATUS_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

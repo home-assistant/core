@@ -2,13 +2,14 @@
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Awaitable, Callable, Generator, Mapping
+from collections.abc import Awaitable, Callable, Generator, Iterable, Mapping
 import contextlib
 import contextvars
-from dataclasses import dataclass, field
 from enum import StrEnum
 from functools import partial
 import logging.handlers
+import math
+from operator import itemgetter
 import time
 from types import ModuleType
 from typing import Any, Final, TypedDict
@@ -71,14 +72,22 @@ _DATA_SETUP_TIME: HassKey[
     defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]
 ] = HassKey("setup_time")
 
+# _DATA_SETUP_WAITS is a dict, holding the phase, start and end of each
+# finished wait for every setup that is currently being timed.
+_DATA_SETUP_WAITS: HassKey[
+    dict[tuple[str, str | None], list[tuple[SetupPhases, float, float]]]
+] = HassKey("setup_waits")
+
+# _DATA_SETUP_KEPT_WAITS is a dict, holding for each setup group the waits
+# of the setup whose time is kept in _DATA_SETUP_TIME for each phase.
+_DATA_SETUP_KEPT_WAITS: HassKey[
+    dict[tuple[str, str | None], dict[SetupPhases, dict[SetupPhases, float]]]
+] = HassKey("setup_kept_waits")
+
 _DATA_DEPS_REQS: HassKey[set[str]] = HassKey("deps_reqs_processed")
 
 _DATA_PERSISTENT_ERRORS: HassKey[dict[str, str | None]] = HassKey(
     "bootstrap_persistent_errors"
-)
-
-_DATA_BOOTSTRAP_PROGRESS: HassKey[_BootstrapProgressData] = HassKey(
-    "bootstrap_progress"
 )
 
 NOTIFY_FOR_TRANSLATION_KEYS = [
@@ -94,100 +103,6 @@ class EventComponentLoaded(TypedDict):
     """EventComponentLoaded data."""
 
     component: str
-
-
-class BootstrapPhase(StrEnum):
-    """Startup phases reported in the bootstrap progress."""
-
-    PREPARING = "preparing"
-    """Resolving the domains to set up; the total is not known yet."""
-    SETUP = "setup"
-    """Setting up the integrations of a bootstrap stage."""
-    WRAP_UP = "wrap_up"
-    """Waiting for the tasks created during integration setup."""
-    STARTING = "starting"
-    """CoreState.starting: start event listeners and startup jobs."""
-    RUNNING = "running"
-    """CoreState.running: startup is finished."""
-
-
-class BootstrapIntegrationsProgress(TypedDict):
-    """Integrations whose setup attempt finished during bootstrap."""
-
-    total: int | None
-    done: int
-    failed: list[str]
-
-
-class BootstrapProgress(TypedDict):
-    """Startup progress sent by bootstrap."""
-
-    phase: BootstrapPhase
-    elapsed: float
-    integrations: BootstrapIntegrationsProgress
-    active: dict[str, float]
-
-
-@dataclass(slots=True)
-class _BootstrapProgressData:
-    """Startup progress listeners and the source of the current progress."""
-
-    listeners: list[Callable[[BootstrapProgress], None]] = field(default_factory=list)
-    source: Callable[[], BootstrapProgress] | None = None
-
-
-@singleton.singleton(_DATA_BOOTSTRAP_PROGRESS)
-def _bootstrap_progress(hass: core.HomeAssistant) -> _BootstrapProgressData:
-    """Return the startup progress listeners and source."""
-    return _BootstrapProgressData()
-
-
-@callback
-def async_subscribe_bootstrap_progress(
-    hass: HomeAssistant, listener: Callable[[BootstrapProgress], None]
-) -> CALLBACK_TYPE:
-    """Subscribe to the startup progress.
-
-    Once bootstrap has started, the listener is called with the current
-    progress right away.
-    """
-    data = _bootstrap_progress(hass)
-    data.listeners.append(listener)
-    if data.source is not None:
-        _send_bootstrap_progress(listener, data.source())
-    return partial(data.listeners.remove, listener)
-
-
-@callback
-def _async_set_bootstrap_progress_source(
-    hass: HomeAssistant, source: Callable[[], BootstrapProgress]
-) -> None:
-    """Set the source of the current progress and send it to the listeners."""
-    _bootstrap_progress(hass).source = source
-    _async_dispatch_bootstrap_progress(hass)
-
-
-@callback
-def _async_dispatch_bootstrap_progress(hass: HomeAssistant) -> None:
-    """Send the current progress to the listeners."""
-    data = _bootstrap_progress(hass)
-    # The progress is only built when someone listens.
-    if not data.listeners or data.source is None:
-        return
-    progress = data.source()
-    # Listeners can unsubscribe while the progress is sent.
-    for listener in data.listeners.copy():
-        _send_bootstrap_progress(listener, progress)
-
-
-def _send_bootstrap_progress(
-    listener: Callable[[BootstrapProgress], None], progress: BootstrapProgress
-) -> None:
-    """Send the progress to a listener, logging its errors."""
-    try:
-        listener(progress)
-    except Exception:
-        _LOGGER.exception("Error sending bootstrap progress to %s", listener)
 
 
 @callback
@@ -220,17 +135,22 @@ def async_notify_setup_error(
 
 
 @callback
-def _async_get_domains_pending_setup(hass: core.HomeAssistant) -> set[str]:
-    """Return domains scheduled by bootstrap whose setup has not finished."""
-    return set(hass.data.get(_DATA_SETUP_DONE, ()))
-
-
-@callback
-def _async_get_setup_done_futures(
-    hass: core.HomeAssistant,
-) -> dict[str, asyncio.Future[bool]]:
-    """Return the setup done futures of domains scheduled by bootstrap."""
-    return hass.data.get(_DATA_SETUP_DONE, {})
+def _async_get_setup_results(
+    hass: core.HomeAssistant, domains: Iterable[str]
+) -> dict[str, bool | None]:
+    """Return if each domain was set up, or None while its setup is pending."""
+    setup_futures = hass.data.get(_DATA_SETUP, {})
+    setup_done_futures = hass.data.get(_DATA_SETUP_DONE, {})
+    results: dict[str, bool | None] = {}
+    for domain in domains:
+        if domain in setup_done_futures:
+            results[domain] = None
+        elif (setup_future := setup_futures.get(domain)) is not None:
+            # A finished setup is only kept if it failed.
+            results[domain] = False if setup_future.done() else None
+        else:
+            results[domain] = domain in hass.config.components
+    return results
 
 
 @core.callback
@@ -827,8 +747,9 @@ def async_pause_setup(hass: core.HomeAssistant, phase: SetupPhases) -> Generator
     setting up the base components so we can subtract it
     from the total setup time.
     """
-    if not (running := current_setup_group.get()) or running not in _setup_started(
-        hass
+    if (
+        not (running := current_setup_group.get())
+        or (waits := _setup_waits(hass).get(running)) is None
     ):
         # This means we are likely in a late platform setup
         # that is running in a task so we do not want
@@ -841,17 +762,45 @@ def async_pause_setup(hass: core.HomeAssistant, phase: SetupPhases) -> Generator
     try:
         yield
     finally:
-        time_taken = time.monotonic() - started
+        ended = time.monotonic()
+        waits.append((phase, started, ended))
         integration, group = running
-        # Add negative time for the time we waited
-        _setup_times(hass)[integration][group][phase] = -time_taken
         _LOGGER.debug(
             "Adding wait for %s for %s (%s) of %.2f",
             phase,
             integration,
             group,
-            time_taken,
+            ended - started,
         )
+
+
+def _merge_waits(
+    waits: list[tuple[SetupPhases, float, float]],
+) -> dict[SetupPhases, float]:
+    """Return the time waited for each phase, counting overlapping waits once."""
+    merged: defaultdict[SetupPhases, float] = defaultdict(float)
+    waited_until = -math.inf
+    for phase, started, ended in sorted(waits, key=itemgetter(1)):
+        if ended > waited_until:
+            merged[phase] += ended - max(started, waited_until)
+            waited_until = ended
+    return dict(merged)
+
+
+@singleton.singleton(_DATA_SETUP_WAITS)
+def _setup_waits(
+    hass: core.HomeAssistant,
+) -> dict[tuple[str, str | None], list[tuple[SetupPhases, float, float]]]:
+    """Return the finished waits of the setups being timed dict."""
+    return {}
+
+
+@singleton.singleton(_DATA_SETUP_KEPT_WAITS)
+def _setup_kept_waits(
+    hass: core.HomeAssistant,
+) -> dict[tuple[str, str | None], dict[SetupPhases, dict[SetupPhases, float]]]:
+    """Return the waits of the kept setup times dict."""
+    return {}
 
 
 @singleton.singleton(_DATA_SETUP_TIME)
@@ -898,22 +847,44 @@ def async_start_setup(
     started = time.monotonic()
     current_setup_group.set(current)
     setup_started[current] = started
+    setup_waits = _setup_waits(hass)
+    setup_waits[current] = []
 
     try:
         yield
     finally:
         time_taken = time.monotonic() - started
         del setup_started[current]
+        # Waits still running in tasks did not block this setup
+        waits = _merge_waits(setup_waits.pop(current))
+        wait_time = sum(waits.values())
         group_setup_times = _setup_times(hass)[integration][group]
+        group_kept_waits = _setup_kept_waits(hass).setdefault(current, {})
         # We may see the phase multiple times if there are multiple
-        # platforms, but we only care about the longest time.
-        group_setup_times[phase] = max(group_setup_times[phase], time_taken)
+        # platforms, but we only care about the longest time. The waits
+        # are kept with the time they belong to so they are not
+        # subtracted from a different setup of the phase.
+        kept = group_kept_waits.get(phase)
+        if kept is None or time_taken - wait_time > group_setup_times[phase] - sum(
+            kept.values()
+        ):
+            group_setup_times[phase] = time_taken
+            group_kept_waits[phase] = waits
+            for wait_phase in waits.keys() | (kept or {}).keys():
+                if phase_waits := [
+                    kept_phase_waits[wait_phase]
+                    for kept_phase_waits in group_kept_waits.values()
+                    if wait_phase in kept_phase_waits
+                ]:
+                    # Add negative time for the time we waited
+                    group_setup_times[wait_phase] = -sum(phase_waits)
+                else:
+                    group_setup_times.pop(wait_phase, None)
         if group is None:
             _LOGGER.info(
                 "Setup of domain %s took %.2f seconds", integration, time_taken
             )
         elif _LOGGER.isEnabledFor(logging.DEBUG):
-            wait_time = -sum(value for value in group_setup_times.values() if value < 0)
             calculated_time = time_taken - wait_time
             _LOGGER.debug(
                 "Phase %s for %s (%s) took %.2fs (elapsed=%.2fs) (wait_time=%.2fs)",

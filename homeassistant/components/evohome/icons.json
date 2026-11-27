@@ -18,9 +18,6 @@
     }
   },
   "services": {
-    "refresh_system": {
-      "service": "mdi:refresh"
-    },
     "set_dhw_override": {
       "service": "mdi:water-boiler"
     },

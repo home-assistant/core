@@ -5,6 +5,7 @@ from typing import Any, override
 
 from hyperion import client
 from hyperion.const import (
+    KEY_CLIENT,
     KEY_COMPONENTID,
     KEY_ORIGIN,
     KEY_OWNER,
@@ -115,7 +116,9 @@ class HyperionSensor(SensorEntity):
         self.entity_description = entity_description
         self._client = hyperion_client
         self._attr_native_value = None
-        self._client_callbacks: dict[str, Any] = {}
+        self._client_callbacks: dict[str, Any] = {
+            f"{KEY_CLIENT}-{KEY_UPDATE}": self._update_client
+        }
 
         device_id = get_hyperion_device_id(server_id, instance_num)
 
@@ -132,6 +135,11 @@ class HyperionSensor(SensorEntity):
     def available(self) -> bool:
         """Return server availability."""
         return bool(self._client.has_loaded_state)
+
+    @callback
+    def _update_client(self, _: dict[str, Any] | None = None) -> None:
+        """Update client connection state."""
+        self.async_write_ha_state()
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -173,9 +181,9 @@ class HyperionVisiblePrioritySensor(HyperionSensor):
             server_id, instance_num, TYPE_HYPERION_SENSOR_VISIBLE_PRIORITY
         )
 
-        self._client_callbacks = {
-            f"{KEY_PRIORITIES}-{KEY_UPDATE}": self._update_priorities
-        }
+        self._client_callbacks[f"{KEY_PRIORITIES}-{KEY_UPDATE}"] = (
+            self._update_priorities
+        )
 
     @callback
     def _update_priorities(self, _: dict[str, Any] | None = None) -> None:

@@ -143,14 +143,29 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
 
         # Cannot delete a credential currently in use by a ConfigEntry
         current = self.data[item_id]
-        entries = self.hass.config_entries.async_entries(current[CONF_DOMAIN])
-        for entry in entries:
-            if entry.data.get("auth_implementation") == item_id:
-                raise HomeAssistantError(
-                    f"Cannot delete credential in use by integration {entry.domain}"
-                )
+        domain = current[CONF_DOMAIN]
+        auth_domain = current.get(CONF_AUTH_DOMAIN, item_id)
+        # async_client_credentials only uses the last credential for an auth domain
+        if self.async_active_item_id(domain, auth_domain) == item_id:
+            for entry in self.hass.config_entries.async_entries(domain):
+                if entry.data.get("auth_implementation") == auth_domain:
+                    raise HomeAssistantError(
+                        f"Cannot delete credential in use by integration {entry.domain}"
+                    )
 
         await super().async_delete_item(item_id)
+
+    @callback
+    def async_active_item_id(self, domain: str, auth_domain: str) -> str | None:
+        """Return the id of the credential used for an auth domain."""
+        active_item_id = None
+        for item in self.async_items():
+            if (
+                item[CONF_DOMAIN] == domain
+                and item.get(CONF_AUTH_DOMAIN, item[CONF_ID]) == auth_domain
+            ):
+                active_item_id = item[CONF_ID]
+        return active_item_id
 
     async def async_import_item(self, info: dict[str, str]) -> None:
         """Import an yaml credential if it does not already exist."""
@@ -321,14 +336,9 @@ async def _async_config_entry_app_credentials(
     ):
         return None
 
-    for item in hass.data[DATA_COMPONENT].async_items():
-        item_id = item[CONF_ID]
-        if (
-            item[CONF_DOMAIN] == config_entry.domain
-            and item.get(CONF_AUTH_DOMAIN, item_id) == auth_domain
-        ):
-            return item_id
-    return None
+    return hass.data[DATA_COMPONENT].async_active_item_id(
+        config_entry.domain, auth_domain
+    )
 
 
 class ApplicationCredentialsProtocol(Protocol):

@@ -606,7 +606,6 @@ MOCK_LEDSTRIP_CONFIG = {
         "protocol": "ws2812b",
         "color_order": "rgb",
         "ddp_port": 4048,
-        "effects": ["solid", "blink", "fade", "rainbow"],
     }
 }
 

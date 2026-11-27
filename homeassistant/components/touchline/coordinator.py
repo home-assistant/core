@@ -5,6 +5,7 @@ import logging
 from typing import override
 
 from pytouchline_extended import (
+    ControllerStatus,
     RoomStatus,
     TouchlineConnectionError,
     TouchlineController,
@@ -33,6 +34,7 @@ class TouchlineCoordinator(DataUpdateCoordinator[dict[str, RoomStatus]]):
     """Poll all thermostats on a Touchline controller, keyed by unique ID."""
 
     config_entry: TouchlineConfigEntry
+    controller_status: ControllerStatus
 
     def __init__(self, hass: HomeAssistant, entry: TouchlineConfigEntry) -> None:
         """Initialize the coordinator."""
@@ -53,19 +55,28 @@ class TouchlineCoordinator(DataUpdateCoordinator[dict[str, RoomStatus]]):
             state = await self.controller.fetch_async()
         except TouchlineConnectionError as err:
             raise UpdateFailedUnreachable(
-                f"Touchline controller at {self.controller.url} cannot be reached"
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"url": self.controller.url},
             ) from err
         except TouchlineError as err:
             raise UpdateFailed(
-                f"Error communicating with Touchline controller at {self.controller.url}"
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"url": self.controller.url},
             ) from err
 
+        self.controller_status = state.controller
         rooms: dict[str, RoomStatus] = {}
         for room in state.rooms:
             if room.controller_id is None or room.device_id is None:
                 raise UpdateFailed(
-                    f"Touchline controller at {self.controller.url} returned no ID "
-                    f"for device {room.index}"
+                    translation_domain=DOMAIN,
+                    translation_key="missing_device_id",
+                    translation_placeholders={
+                        "url": self.controller.url,
+                        "index": str(room.index),
+                    },
                 )
             rooms[f"{room.controller_id}_{room.device_id}"] = room
         return rooms

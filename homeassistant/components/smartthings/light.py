@@ -16,7 +16,6 @@ from pysmartthings import (
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
@@ -27,7 +26,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import RestoredExtraData, RestoreEntity
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -36,6 +35,8 @@ from homeassistant.util.percentage import (
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
 from .entity import SmartThingsEntity
+
+EXTRA_DATA_COLOR_MODE = "color_mode"
 
 CAPABILITIES = (
     Capability.SWITCH_LEVEL,
@@ -151,8 +152,16 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        if (last_state := await self.async_get_last_extra_data()) is not None:
-            self._attr_color_mode = last_state.as_dict()[ATTR_COLOR_MODE]
+        if (extra_data := await self.async_get_last_extra_data()) is not None and (
+            color_mode := extra_data.as_dict().get(EXTRA_DATA_COLOR_MODE)
+        ) in self._attr_supported_color_modes:
+            self._attr_color_mode = ColorMode(color_mode)
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> RestoredExtraData:
+        """Return the color mode to restore, also when the light is off."""
+        return RestoredExtraData({EXTRA_DATA_COLOR_MODE: self._attr_color_mode})
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

@@ -9,7 +9,6 @@ from googleapiclient.http import HttpRequest
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    ATTR_MESSAGE,
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
@@ -77,7 +76,7 @@ class GMailNotificationService(BaseNotificationService):
         msg: HttpRequest
         users = (await self.auth.get_resource()).users()
         if data.get(ATTR_SEND) is False:
-            msg = users.drafts().create(userId=email_from, body={ATTR_MESSAGE: body})
+            msg = users.drafts().create(userId=email_from, body={"message": body})
         else:
             if not to_addrs:
                 raise ValueError("recipient address required")
