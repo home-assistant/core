@@ -1,7 +1,7 @@
 """Test Home Assistant template helper methods."""
 
 from collections import deque
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, MutableSequence
 from datetime import datetime
 from enum import Enum, IntEnum, IntFlag, StrEnum
 import gc
@@ -1114,6 +1114,23 @@ def test_attribute_verdict_uses_real_attribute_name() -> None:
 
     assert env.is_safe_attribute([], "count", None) is True
     assert env.is_safe_attribute([], CountLookalike("__class__"), None) is False
+
+
+@pytest.mark.usefixtures("clear_safe_attribute_cache")
+def test_attribute_verdict_follows_late_registration() -> None:
+    """Test a class registered as a mutable type afterwards loses its verdict."""
+
+    class RegisteredLater(AttributeNamesake):
+        """Object whose class becomes a mutable sequence after its first use."""
+
+    env = template.TemplateEnvironment(None)
+    obj = RegisteredLater()
+
+    assert env.is_safe_attribute(obj, "append", None) is True
+
+    MutableSequence.register(RegisteredLater)
+
+    assert env.is_safe_attribute(obj, "append", None) is False
 
 
 SANDBOX_OBJECTS = [

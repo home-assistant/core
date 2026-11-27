@@ -1,5 +1,6 @@
 """Template helper methods for rendering strings with Home Assistant data."""
 
+from abc import get_cache_token
 from ast import literal_eval
 import asyncio
 import collections.abc
@@ -138,8 +139,9 @@ COMPILED_CODE_PIN_SIZE = 256
 SAFE_ATTRIBUTE_CACHE_SIZE = 1024
 
 # Keyed by the id of the type, as a metaclass can make two types compare equal.
-# The entry holds the type, which keeps that id from being reused.
-_SAFE_ATTRIBUTE_CACHE: LRU[tuple[int, str], tuple[type, bool]] = LRU(
+# The entry holds the type, which keeps that id from being reused. The ABC cache
+# token changes when a class is registered as a mutable type later on.
+_SAFE_ATTRIBUTE_CACHE: LRU[tuple[int, str, object], tuple[type, bool]] = LRU(
     SAFE_ATTRIBUTE_CACHE_SIZE
 )
 
@@ -1026,7 +1028,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         if reported_class is not obj_type or type(attr) is not str:
             return self._is_safe_attribute_uncached(obj, attr, value)
 
-        cache_key = (id(obj_type), attr)
+        cache_key = (id(obj_type), attr, get_cache_token())
         cached = _SAFE_ATTRIBUTE_CACHE.get(cache_key)
 
         if cached is not None and cached[0] is obj_type:
