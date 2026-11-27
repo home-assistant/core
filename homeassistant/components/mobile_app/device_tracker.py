@@ -35,20 +35,18 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
-from .const import (
-    ATTR_ALTITUDE,
-    ATTR_COURSE,
-    ATTR_DEVICE_NAME,
-    ATTR_IN_ZONES,
-    ATTR_RAW_GPS,
-    ATTR_RAW_GPS_ACCURACY,
-    ATTR_SPEED,
-    ATTR_VERTICAL_ACCURACY,
-    SIGNAL_LOCATION_UPDATE,
-)
+from .const import ATTR_DEVICE_NAME, SIGNAL_LOCATION_UPDATE
 from .helpers import device_info
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_SPEED = "speed"
+ATTR_ALTITUDE = "altitude"
+ATTR_COURSE = "course"
+ATTR_VERTICAL_ACCURACY = "vertical_accuracy"
+ATTR_RAW_GPS = "raw_gps"
+ATTR_RAW_GPS_ACCURACY = "raw_gps_accuracy"
+ATTR_IN_ZONES = "in_zones"
 
 ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
 
