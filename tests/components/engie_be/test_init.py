@@ -421,6 +421,10 @@ async def test_remove_device(
 
     response = await client.remove_device(active_device.id)
     assert not response["success"]
+    assert response["error"]["message"] == (
+        "This household still has an active agreement at ENGIE. To remove it,"
+        " delete the ENGIE Belgium integration"
+    )
 
     response = await client.remove_device(stale_device.id)
     assert response["success"]
@@ -451,6 +455,9 @@ async def test_remove_device_while_not_loaded(
     response = await client.remove_device(device.id)
 
     assert not response["success"]
+    assert response["error"]["message"] == (
+        "ENGIE Belgium is not loaded. Try again once the integration is running"
+    )
     assert device_registry.async_get(device.id) is not None
 
 

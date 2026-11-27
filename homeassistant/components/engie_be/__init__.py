@@ -10,7 +10,11 @@ from aioengiebelgium import EngieBeAuthenticationError, EngieBeClient, EngieBeEr
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
@@ -256,11 +260,18 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Allow removing the device of a business agreement the account no longer lists."""
     if entry.state is not ConfigEntryState.LOADED:
-        return False
-    return not any(
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="remove_device_not_loaded"
+        )
+    if any(
         domain == DOMAIN and ban in entry.runtime_data.relations.data
         for domain, ban in device_entry.identifiers
-    )
+    ):
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="remove_device_active_agreement",
+        )
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> None:
