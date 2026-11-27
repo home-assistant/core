@@ -9,13 +9,6 @@ import probatio
 
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
-    SERVICE_CLEAN_SPOT,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
     Segment,
     StateVacuumEntity,
     VacuumActivity,
@@ -60,19 +53,27 @@ CONF_FAN_SPEED_LIST = "fan_speeds"
 CONF_SEGMENTS = "segments"
 CONF_VACUUMS = "vacuums"
 
+CONF_CLEAN_SPOT_ACTION = "clean_spot"
+CONF_LOCATE_ACTION = "locate"
+CONF_PAUSE_ACTION = "pause"
+CONF_RETURN_TO_BASE_ACTION = "return_to_base"
+CONF_SET_FAN_SPEED_ACTION = "set_fan_speed"
+CONF_START_ACTION = "start"
+CONF_STOP_ACTION = "stop"
+
 DEFAULT_NAME = DEFAULT_NAMES[Platform.VACUUM]
 
 ENTITY_ID_FORMAT = VACUUM_DOMAIN + ".{}"
 
 SCRIPT_FIELDS = (
     CONF_CLEAN_SEGMENTS,
-    SERVICE_CLEAN_SPOT,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
+    CONF_CLEAN_SPOT_ACTION,
+    CONF_LOCATE_ACTION,
+    CONF_PAUSE_ACTION,
+    CONF_RETURN_TO_BASE_ACTION,
+    CONF_SET_FAN_SPEED_ACTION,
+    CONF_START_ACTION,
+    CONF_STOP_ACTION,
 )
 
 CLEAN_AREA_GROUP = "clean_area_group"
@@ -91,13 +92,13 @@ VACUUM_COMMON_SCHEMA = probatio.Schema(
             CLEAN_AREA_GROUP,
             f"Options `{CONF_SEGMENTS}` and `{CONF_CLEAN_SEGMENTS}` must both exist",
         ): cv.template,
-        probatio.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
-        probatio.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
-        probatio.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
-        probatio.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
-        probatio.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
-        probatio.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
-        probatio.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_CLEAN_SPOT_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_LOCATE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_PAUSE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_RETURN_TO_BASE_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_SET_FAN_SPEED_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Required(CONF_START_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_STOP_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Inclusive(
             CONF_CLEAN_SEGMENTS,
             CLEAN_AREA_GROUP,
@@ -315,7 +316,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
             tcv.item_in_list(self, CONF_FAN_SPEED, self._attr_fan_speed_list),
         )
         self.add_assumed_attribute(
-            "_attr_fan_speed", CONF_FAN_SPEED, SERVICE_SET_FAN_SPEED
+            "_attr_fan_speed", CONF_FAN_SPEED, CONF_SET_FAN_SPEED_ACTION
         )
 
         self.setup_template(
@@ -330,13 +331,13 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         )
 
         for action_id, supported_feature in (
-            (SERVICE_START, 0),
-            (SERVICE_PAUSE, VacuumEntityFeature.PAUSE),
-            (SERVICE_STOP, VacuumEntityFeature.STOP),
-            (SERVICE_RETURN_TO_BASE, VacuumEntityFeature.RETURN_HOME),
-            (SERVICE_CLEAN_SPOT, VacuumEntityFeature.CLEAN_SPOT),
-            (SERVICE_LOCATE, VacuumEntityFeature.LOCATE),
-            (SERVICE_SET_FAN_SPEED, VacuumEntityFeature.FAN_SPEED),
+            (CONF_START_ACTION, 0),
+            (CONF_PAUSE_ACTION, VacuumEntityFeature.PAUSE),
+            (CONF_STOP_ACTION, VacuumEntityFeature.STOP),
+            (CONF_RETURN_TO_BASE_ACTION, VacuumEntityFeature.RETURN_HOME),
+            (CONF_CLEAN_SPOT_ACTION, VacuumEntityFeature.CLEAN_SPOT),
+            (CONF_LOCATE_ACTION, VacuumEntityFeature.LOCATE),
+            (CONF_SET_FAN_SPEED_ACTION, VacuumEntityFeature.FAN_SPEED),
             (CONF_CLEAN_SEGMENTS, VacuumEntityFeature.CLEAN_AREA),
         ):
             if (action_config := config.get(action_id)) is not None:
@@ -381,7 +382,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
             self._attr_activity = VacuumActivity.CLEANING
             self.async_write_ha_state()
         await self.async_run_script(
-            self._action_scripts[SERVICE_START], context=self._context
+            self._action_scripts[CONF_START_ACTION], context=self._context
         )
 
     @override
@@ -390,7 +391,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         if self._attr_assumed_state:
             self._attr_activity = VacuumActivity.PAUSED
             self.async_write_ha_state()
-        if script := self._action_scripts.get(SERVICE_PAUSE):
+        if script := self._action_scripts.get(CONF_PAUSE_ACTION):
             await self.async_run_script(script, context=self._context)
 
     @override
@@ -399,7 +400,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         if self._attr_assumed_state:
             self._attr_activity = VacuumActivity.IDLE
             self.async_write_ha_state()
-        if script := self._action_scripts.get(SERVICE_STOP):
+        if script := self._action_scripts.get(CONF_STOP_ACTION):
             await self.async_run_script(script, context=self._context)
 
     @override
@@ -408,7 +409,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         if self._attr_assumed_state:
             self._attr_activity = VacuumActivity.RETURNING
             self.async_write_ha_state()
-        if script := self._action_scripts.get(SERVICE_RETURN_TO_BASE):
+        if script := self._action_scripts.get(CONF_RETURN_TO_BASE_ACTION):
             await self.async_run_script(script, context=self._context)
 
     @override
@@ -417,13 +418,13 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         if self._attr_assumed_state:
             self._attr_activity = VacuumActivity.CLEANING
             self.async_write_ha_state()
-        if script := self._action_scripts.get(SERVICE_CLEAN_SPOT):
+        if script := self._action_scripts.get(CONF_CLEAN_SPOT_ACTION):
             await self.async_run_script(script, context=self._context)
 
     @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
-        if script := self._action_scripts.get(SERVICE_LOCATE):
+        if script := self._action_scripts.get(CONF_LOCATE_ACTION):
             await self.async_run_script(script, context=self._context)
 
     @override
@@ -438,7 +439,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
             )
             return
 
-        if script := self._action_scripts.get(SERVICE_SET_FAN_SPEED):
+        if script := self._action_scripts.get(CONF_SET_FAN_SPEED_ACTION):
             await self.async_run_script(
                 script, run_variables={"fan_speed": fan_speed}, context=self._context
             )
