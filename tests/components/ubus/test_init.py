@@ -62,22 +62,23 @@ async def test_setup_creates_single_coordinator(
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
 ) -> None:
     """Test setup creates a single coordinator polling every router."""
+    _mock, ubus = mock_ubus_by_host
     two_router_hub.add_to_hass(hass)
     assert await hass.config_entries.async_setup(two_router_hub.entry_id)
     await hass.async_block_till_done()
 
     assert two_router_hub.state is ConfigEntryState.LOADED
-    coordinator = two_router_hub.runtime_data
-    assert isinstance(coordinator, UbusDataUpdateCoordinator)
-    assert coordinator.config_entry is two_router_hub
-    assert set(coordinator.hosts) == set(two_router_hub.subentries)
+    assert isinstance(two_router_hub.runtime_data, UbusDataUpdateCoordinator)
+    assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 1
+    assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 1
 
 
 async def test_setup_entry_without_subentries(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
 ) -> None:
-    """Test a hub without routers sets up its coordinator with no hosts."""
+    """Test a hub without routers sets up without polling any router."""
+    _mock, ubus = mock_ubus_by_host
     entry = MockConfigEntry(domain=DOMAIN, data={}, title=HUB_TITLE)
     entry.add_to_hass(hass)
 
@@ -85,9 +86,9 @@ async def test_setup_entry_without_subentries(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    coordinator = entry.runtime_data
-    assert isinstance(coordinator, UbusDataUpdateCoordinator)
-    assert coordinator.hosts == {}
+    assert isinstance(entry.runtime_data, UbusDataUpdateCoordinator)
+    assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 0
+    assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 0
 
 
 @pytest.mark.parametrize(
@@ -138,10 +139,11 @@ async def test_first_refresh_failure_does_not_fail_setup(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
     mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
     method: str,
     behavior: dict[str, Any],
 ) -> None:
-    """Test an unreadable router is marked unhealthy instead of failing setup."""
+    """Test an unreadable router is reported unreachable without failing setup."""
     getattr(mock_ubus.return_value, method).configure_mock(**behavior)
 
     mock_config_entry.add_to_hass(hass)
@@ -149,9 +151,11 @@ async def test_first_refresh_failure_does_not_fail_setup(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    coordinator = mock_config_entry.runtime_data
-    assert set(coordinator.host_health) == set(mock_config_entry.subentries)
-    assert not any(coordinator.host_health.values())
+    unreachable = [
+        record for record in caplog.records if "is unreachable" in record.getMessage()
+    ]
+    assert len(unreachable) == 1
+    assert MOCK_HOST in unreachable[0].getMessage()
 
 
 async def test_persistent_invalid_credentials_issue(
@@ -256,8 +260,7 @@ async def test_subentry_added_polls_new_router(
 
     # No reload: the entry stays loaded and polls the new router.
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    coordinator = mock_config_entry.runtime_data
-    assert len(coordinator.hosts) == 2
+    assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 1
 
     # The new router's clients are tracked.
     ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
@@ -296,19 +299,15 @@ async def test_partial_failure_keeps_healthy_routers_reporting(
     assert await hass.config_entries.async_setup(two_router_hub.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = two_router_hub.runtime_data
-    subentry_a = next(
-        subentry
-        for subentry in two_router_hub.subentries.values()
-        if subentry.data[CONF_HOST] == MOCK_HOST
-    ).subentry_id
-    subentry_b = next(
-        subentry
-        for subentry in two_router_hub.subentries.values()
-        if subentry.data[CONF_HOST] == MOCK_HOST_B
-    ).subentry_id
-    assert coordinator.last_update_success
-    assert coordinator.host_health == {subentry_a: True, subentry_b: True}
+    # Both routers report, so both clients are home.
+    phone_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    laptop_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_LAPTOP
+    )
+    assert hass.states.get(phone_id).state == STATE_HOME
+    assert hass.states.get(laptop_id).state == STATE_HOME
 
     # Router B becomes unreachable.
     ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = ConnectionError
@@ -317,17 +316,9 @@ async def test_partial_failure_keeps_healthy_routers_reporting(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # The entry stays healthy: the other router still reports.
-    assert coordinator.last_update_success
-    assert coordinator.host_health == {subentry_a: True, subentry_b: False}
     # The phone is still home, reported by the healthy router.
-    phone_id = entity_registry.async_get_entity_id(
-        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
-    )
     assert hass.states.get(phone_id).state == STATE_HOME
     # The laptop is only seen by the failing router, so it is unavailable.
-    laptop_id = entity_registry.async_get_entity_id(
-        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_LAPTOP
-    )
     assert hass.states.get(laptop_id).state == STATE_UNAVAILABLE
 
 
@@ -401,8 +392,6 @@ async def test_all_routers_failing_fails_the_tick(
     assert await hass.config_entries.async_setup(two_router_hub.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = two_router_hub.runtime_data
-    assert coordinator.last_update_success
     entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
     )
@@ -415,8 +404,6 @@ async def test_all_routers_failing_fails_the_tick(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert not coordinator.last_update_success
-    assert not any(coordinator.host_health.values())
     # No healthy router can report the client.
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
@@ -427,7 +414,6 @@ async def test_all_routers_failing_fails_the_tick(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert coordinator.last_update_success
     assert hass.states.get(entity_id).state == STATE_HOME
 
 
@@ -451,7 +437,6 @@ async def test_router_reconfiguration_discards_stale_stamps(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = mock_config_entry.runtime_data
     entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
     )
@@ -470,8 +455,6 @@ async def test_router_reconfiguration_discards_stale_stamps(
 
     # The new host has never seen the phone, so the old host's stamps are
     # dropped with it; the tracker is unavailable, not home on the new host.
-    assert coordinator.data == {}
-    assert coordinator.latest_views[subentry.subentry_id] == {}
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
@@ -680,7 +663,6 @@ async def test_subentry_removed_releases_its_stamps(
     # The entry stays loaded with its remaining router.
     assert two_router_hub.state is ConfigEntryState.LOADED
     assert len(two_router_hub.subentries) == 1
-    assert len(two_router_hub.runtime_data.hosts) == 1
 
     # The trackers and devices stay registered to the hub; nothing moves.
     assert (

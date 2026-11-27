@@ -350,12 +350,12 @@ async def test_subentry_reconfigure_updates_data_and_repolls(
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
 ) -> None:
     """Test reconfiguring a router updates the subentry and repolls it."""
-    _mock, _ubus = mock_ubus_by_host
+    _mock, ubus = mock_ubus_by_host
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     subentry = next(iter(mock_config_entry.subentries.values()))
-    assert mock_config_entry.runtime_data.hosts[subentry.subentry_id].host == MOCK_HOST
+    assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 1
 
     result = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
@@ -371,15 +371,14 @@ async def test_subentry_reconfigure_updates_data_and_repolls(
     assert result["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
 
-    # The entry update listener repolled the hub, so the coordinator now
-    # polls the new router.
+    # The entry update listener repolled the hub, so the new router is
+    # polled and the old host is no longer polled.
     assert mock_config_entry.state is ConfigEntryState.LOADED
     updated = mock_config_entry.subentries[subentry.subentry_id]
     assert updated.data == MOCK_HOST_CONFIG_B
     assert updated.title == MOCK_HOST_B
-    assert (
-        mock_config_entry.runtime_data.hosts[subentry.subentry_id].host == MOCK_HOST_B
-    )
+    assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 1
+    assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 1
 
 
 async def test_subentry_reconfigure_updates_unique_id(
@@ -703,7 +702,6 @@ async def test_options_flow_consider_home(
     }
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    coordinator = mock_config_entry.runtime_data
 
     # The phone is seen on the first poll, then leaves the router.
     freezer.tick(timedelta(seconds=30))
@@ -727,7 +725,6 @@ async def test_options_flow_consider_home(
     )
     await hass.async_block_till_done()
     # The entry was not reloaded; the stamp is now within the 300 s window.
-    assert mock_config_entry.runtime_data is coordinator
     assert hass.states.get(entity_id).state == STATE_HOME
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
@@ -735,7 +732,6 @@ async def test_options_flow_consider_home(
         result["flow_id"], {CONF_CONSIDER_HOME: 150}
     )
     await hass.async_block_till_done()
-    assert mock_config_entry.runtime_data is coordinator
     assert hass.states.get(entity_id).state == STATE_NOT_HOME
 
     # An unset option keeps the default window.

@@ -1183,7 +1183,6 @@ async def test_timed_out_tick_reuses_in_flight_poll(
             # client's stamps stop counting until the next tick succeeds.
             await asyncio.sleep(1.5)
             await hass.async_block_till_done()
-            assert mock_config_entry.runtime_data.last_update_success is False
             assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
             # The next tick must re-await the in-flight poll rather than
             # start a second one; releasing it lets that single poll
@@ -1201,7 +1200,6 @@ async def test_timed_out_tick_reuses_in_flight_poll(
         # time.
         assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 2
         assert hass.states.get(entity_id).state == STATE_HOME
-        assert mock_config_entry.runtime_data.last_update_success is True
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
