@@ -58,6 +58,15 @@
       }
     },
     "number": {
+      "fan_speed_away": {
+        "name": "Fan speed (Away)"
+      },
+      "fan_speed_boost": {
+        "name": "Fan speed (Boost)"
+      },
+      "fan_speed_home": {
+        "name": "Fan speed (Home)"
+      },
       "supply_air_target_away": {
         "name": "Supply air temperature (Away)"
       },

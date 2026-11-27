@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
     MediaPlayerServiceArgument,
     MediaType,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, TargetKey
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -141,7 +141,7 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
             MP_DOMAIN,
             MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player_entity_id,
+                TargetKey.ENTITY_ID: media_player_entity_id,
                 MediaPlayerServiceArgument.MEDIA_CONTENT_ID: generate_media_source_id(
                     self.hass,
                     message=message,

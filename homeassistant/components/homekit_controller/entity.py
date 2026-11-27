@@ -11,7 +11,7 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
@@ -41,6 +41,7 @@ class HomeKitEntity(Entity):
         )
         self._char_name: str | None = None
         self._char_subscription: CALLBACK_TYPE | None = None
+        self._default_has_entity_name = self.has_entity_name
         self.async_setup()
         self._attr_unique_id = f"{accessory.unique_id}_{self._aid}_{self._iid}"
         super().__init__()
@@ -175,9 +176,14 @@ class HomeKitEntity(Entity):
         self.all_characteristics.update(self.pollable_characteristics)
         self.all_characteristics.update(self.watchable_characteristics)
         self.all_iids = {iid for _, iid in self.all_characteristics}
-        if not self.has_entity_name:
-            self._attr_name = self._homekit_name()
-            self._async_clear_property_cache(("name",))
+        if self._is_child_device_main_entity():
+            self._attr_has_entity_name = True
+            self._attr_name = None
+        else:
+            self._attr_has_entity_name = self._default_has_entity_name
+            if not self.has_entity_name:
+                self._attr_name = self._homekit_name()
+        self._async_clear_property_cache(("has_entity_name", "name"))
 
     def _setup_characteristic(self, char: Characteristic) -> None:
         """Configure an entity based on a HomeKit characteristics metadata."""
@@ -239,10 +245,16 @@ class HomeKitEntity(Entity):
                 return False
         return self._accessory.available
 
+    def _is_child_device_main_entity(self) -> bool:
+        """Return if the entity represents a service with its own child device."""
+        return (self._aid, self._iid) in self._accessory.child_devices
+
     @property
     @override
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo:
         """Return the device info."""
+        if child_device_info := self._accessory.child_device_info(self._aid, self._iid):
+            return child_device_info
         return self._accessory.device_info_for_accessory(self.accessory)
 
     def get_characteristic_types(self) -> list[str]:
@@ -285,6 +297,11 @@ class BaseCharacteristicEntity(HomeKitEntity):
         self._char = char
         super().__init__(accessory, devinfo)
         self._entity_key = (self._aid, self._iid, char.iid)
+
+    @override
+    def _is_child_device_main_entity(self) -> bool:
+        """Return False, as a characteristic is only a part of its service."""
+        return False
 
     @callback
     @override

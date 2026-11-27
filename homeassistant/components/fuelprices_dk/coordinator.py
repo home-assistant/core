@@ -5,13 +5,17 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, override
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientConnectionError, ClientResponseError
 from pybraendstofpriser import Braendstofpriser
 
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailedUnreachable,
+)
 
 from .const import CONF_STATION, DOMAIN, SUBENTRY_TYPE_STATION
 
@@ -48,7 +52,9 @@ class FuelPricesDKCoordinator(DataUpdateCoordinator[dict[int, FuelPricesDKStatio
             config_entry=config_entry,
         )
 
-        self._api = Braendstofpriser(config_entry.data[CONF_API_KEY])
+        self._api = Braendstofpriser(
+            config_entry.data[CONF_API_KEY], user_agent=SERVER_SOFTWARE
+        )
         self._station_ids = [
             subentry.data[CONF_STATION]["id"]
             for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_STATION)
@@ -65,7 +71,27 @@ class FuelPricesDKCoordinator(DataUpdateCoordinator[dict[int, FuelPricesDKStatio
         except ClientResponseError as exc:
             if exc.status == 401:
                 raise ConfigEntryAuthFailed(exc) from exc
+            if exc.status == 429:
+                raise UpdateFailedUnreachable(
+                    translation_domain=DOMAIN,
+                    translation_key="rate_limit_exceeded",
+                ) from exc
+            if 500 <= exc.status < 600:
+                raise UpdateFailedUnreachable(
+                    translation_domain=DOMAIN,
+                    translation_key="server_error",
+                ) from exc
             raise
+        except TimeoutError as exc:
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="request_timeout",
+            ) from exc
+        except ClientConnectionError as exc:
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from exc
 
         return {
             item["station"]["id"]: FuelPricesDKStation(

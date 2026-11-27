@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 
 from .config_flow import create_modbus_params
-from .const import DOMAIN, UNIT_ID
+from .const import UNIT_ID
 from .coordinator import E3dcConfigEntry, E3dcDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -28,17 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: E3dcConfigEntry) -> None
     entry.async_on_unload(device.close)
 
     coordinator = E3dcDataUpdateCoordinator(hass, entry, device)
-    # The first poll also reads the identity and probes which blocks the station serves
     await coordinator.async_config_entry_first_refresh()
-    if device.serial_number != entry.unique_id:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="serial_mismatch",
-            translation_placeholders={
-                "expected": str(entry.unique_id),
-                "found": str(device.serial_number),
-            },
-        )
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

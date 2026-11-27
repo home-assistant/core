@@ -80,6 +80,7 @@ async def test_cloud_system_health(
         "remote_enabled": True,
         "remote_connected": False,
         "remote_server": "us-west-1",
+        "remote_client_certificate_required": False,
         "alexa_enabled": True,
         "google_enabled": False,
         "cloud_ice_servers_enabled": True,
@@ -137,6 +138,8 @@ async def test_cloud_system_health_with_cert_and_disconnect(
     )
 
     await set_cloud_prefs({"remote_enabled": True})
+    hass.http.ssl_peer_certificate = "/ssl/ca.pem"
+    hass.http.ssl_peer_certificate_remote = True
 
     info = await get_system_health_info(hass, "cloud")
 
@@ -150,3 +153,4 @@ async def test_cloud_system_health_with_cert_and_disconnect(
     assert info["iot_last_disconnect_clean"] is False
     assert info["iot_last_disconnect_reason"] == "ping_timeout"
     assert info["iot_tries"] == 2
+    assert info["remote_client_certificate_required"] is True

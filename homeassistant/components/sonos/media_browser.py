@@ -96,12 +96,11 @@ def get_thumbnail_url_full(
             )
         return fix_image_url(getattr(item, "album_art_uri", ""))
 
-    return urllib.parse.unquote(
-        get_browse_image_url(
-            media_content_type,
-            media_content_id,
-            media_image_id,
-        )
+    # The content id must stay percent-encoded; aiohttp decodes the path once.
+    return get_browse_image_url(
+        media_content_type,
+        media_content_id,
+        media_image_id,
     )
 
 

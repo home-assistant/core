@@ -7,7 +7,7 @@ from elvia import error as ElviaError
 
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONF_METERING_POINT_ID, DOMAIN, LOGGER
@@ -29,11 +29,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Import meter values."""
         try:
             await importer.import_meter_values()
+        except ElviaError.AuthError:
+            entry.async_start_reauth(hass)
         except ElviaError.ElviaException as exception:
             LOGGER.exception("Unknown error %s", exception)
 
     try:
         await importer.import_meter_values()
+    except ElviaError.AuthError as exception:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        ) from exception
     except ElviaError.ElviaException as exception:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
@@ -47,3 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             timedelta(minutes=60),
         )
     )
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Unload a config entry."""

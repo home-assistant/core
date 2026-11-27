@@ -385,12 +385,12 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
         return self.positions.primary + self.positions.tilt
 
     @property
-    def open_tilt_position(self) -> ShadePosition:
+    def open_tilt_shade_position(self) -> ShadePosition:
         """Return the open tilt position and required additional positions."""
         return replace(self._shade.open_position_tilt, velocity=self.positions.velocity)
 
     @property
-    def close_tilt_position(self) -> ShadePosition:
+    def close_tilt_shade_position(self) -> ShadePosition:
         """Return the close tilt position and required additional positions."""
         return replace(
             self._shade.close_position_tilt, velocity=self.positions.velocity
@@ -400,14 +400,14 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         self._async_schedule_update_for_transition(self.transition_steps)
-        await self._async_execute_move(self.close_tilt_position)
+        await self._async_execute_move(self.close_tilt_shade_position)
         self.async_write_ha_state()
 
     @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         self._async_schedule_update_for_transition(100 - self.transition_steps)
-        await self._async_execute_move(self.open_tilt_position)
+        await self._async_execute_move(self.open_tilt_shade_position)
         self.async_write_ha_state()
 
     @override
@@ -474,13 +474,13 @@ class PowerViewShadeWithTiltOnClosed(PowerViewShadeWithTiltBase):
 
     @property
     @override
-    def open_tilt_position(self) -> ShadePosition:
+    def open_tilt_shade_position(self) -> ShadePosition:
         """Return the open tilt position and required additional positions."""
         return replace(self._shade.open_position_tilt, velocity=self.positions.velocity)
 
     @property
     @override
-    def close_tilt_position(self) -> ShadePosition:
+    def close_tilt_shade_position(self) -> ShadePosition:
         """Return the close tilt position and required additional positions."""
         return replace(
             self._shade.close_position_tilt, velocity=self.positions.velocity

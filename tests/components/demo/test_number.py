@@ -15,7 +15,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import ATTR_MODE, CommonServiceArgument, Platform
+from homeassistant.const import ATTR_MODE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -89,7 +89,7 @@ async def test_set_value_bad_attr(hass: HomeAssistant) -> None:
             NumberService.SET_VALUE,
             {
                 NumberServiceArgument.VALUE: None,
-                CommonServiceArgument.ENTITY_ID: ENTITY_VOLUME,
+                TargetKey.ENTITY_ID: ENTITY_VOLUME,
             },
             blocking=True,
         )
@@ -110,7 +110,7 @@ async def test_set_value_bad_range(hass: HomeAssistant) -> None:
             NumberService.SET_VALUE,
             {
                 NumberServiceArgument.VALUE: 1024,
-                CommonServiceArgument.ENTITY_ID: ENTITY_VOLUME,
+                TargetKey.ENTITY_ID: ENTITY_VOLUME,
             },
             blocking=True,
         )
@@ -130,7 +130,7 @@ async def test_set_set_value(hass: HomeAssistant) -> None:
         NumberService.SET_VALUE,
         {
             NumberServiceArgument.VALUE: 23,
-            CommonServiceArgument.ENTITY_ID: ENTITY_VOLUME,
+            TargetKey.ENTITY_ID: ENTITY_VOLUME,
         },
         blocking=True,
     )

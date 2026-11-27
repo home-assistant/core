@@ -14,15 +14,14 @@ from .helpers.deprecation import (
 )
 from .util.event_type import EventType
 from .util.hass_dict import HassKey
-from .util.signal_type import SignalType
 
 if TYPE_CHECKING:
     from .core import EventStateChangedData, EventStateReportedData
     from .helpers.typing import NoEventData
 
 APPLICATION_NAME: Final = "HomeAssistant"
-MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 12
+MAJOR_VERSION: Final = 2027
+MINOR_VERSION: Final = 1
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -463,11 +462,21 @@ ATTR_PERSONS: Final = "persons"
 
 
 class CommonServiceArgument(StrEnum):
-    """Action fields shared by the actions of many integrations."""
+    """Action fields shared by many integrations; target keys use TargetKey."""
 
     CONFIG_ENTRY_ID = "config_entry_id"
     DEVICE_ID = "device_id"
     ENTITY_ID = "entity_id"
+
+
+class TargetKey(StrEnum):
+    """Keys that select the entities of an action, condition or trigger target."""
+
+    ENTITY_ID = "entity_id"
+    DEVICE_ID = "device_id"
+    AREA_ID = "area_id"
+    FLOOR_ID = "floor_id"
+    LABEL_ID = "label_id"
 
 
 class EntityCapabilityAttribute(StrEnum):
@@ -695,6 +704,7 @@ class UnitOfVolumeFlowRate(StrEnum):
     CUBIC_METERS_PER_HOUR = "m³/h"
     CUBIC_METERS_PER_MINUTE = "m³/min"
     CUBIC_METERS_PER_SECOND = "m³/s"
+    CUBIC_FEET_PER_HOUR = "ft³/h"
     CUBIC_FEET_PER_MINUTE = "ft³/min"
     LITERS_PER_HOUR = "L/h"
     LITERS_PER_MINUTE = "L/min"
@@ -1002,6 +1012,7 @@ HTTP_BASIC_AUTHENTICATION: Final = "basic"
 HTTP_BEARER_AUTHENTICATION: Final = "bearer_token"
 HTTP_DIGEST_AUTHENTICATION: Final = "digest"
 
+HTTP_HEADER_HA_DEVICE_ID: Final = "Home-Assistant-Device-Id"
 HTTP_HEADER_X_REQUESTED_WITH: Final = "X-Requested-With"
 
 CONTENT_TYPE_JSON: Final = "application/json"
@@ -1057,10 +1068,6 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 
 # User used by Supervisor
 HASSIO_USER_NAME = "Supervisor"
-
-SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
-    "bootstrap_integrations"
-)
 
 
 # hass.data keys for logging information.

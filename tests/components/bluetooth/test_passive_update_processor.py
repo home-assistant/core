@@ -2010,6 +2010,19 @@ def test_restore_data_device_info_round_trip() -> None:
     assert restored.devices == devices
 
 
+def test_restore_data_int_model() -> None:
+    """Test a stored int model, which some parsers set, is restored as a string."""
+    stored = {
+        "devices": {"": {"name": "Main", "model": 17}},
+        "entity_descriptions": {},
+        "entity_names": {},
+        "entity_data": {},
+    }
+    restored = PassiveBluetoothDataUpdate()
+    restored.async_set_restore_data(stored, EntityDescription)
+    assert restored.devices == {None: DeviceInfo(name="Main", model="17")}
+
+
 @pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
 async def test_plain_device_info_deprecated(hass: HomeAssistant) -> None:
     """Test a plain device info is converted, and reported once."""

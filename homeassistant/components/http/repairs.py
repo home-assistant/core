@@ -6,7 +6,7 @@ import probatio
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HASS_DOMAIN,
-    SERVICE_HOMEASSISTANT_RESTART,
+    HomeAssistantService,
 )
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
@@ -100,7 +100,7 @@ class SSLProfileOutdatedFlow(RepairsFlow):
         await store.async_set_pending(
             cast(ConfData, {**_strip_meta(store.stable), CONF_SSL_PROFILE: upgrade})
         )
-        await self.hass.services.async_call(HASS_DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
+        await self.hass.services.async_call(HASS_DOMAIN, HomeAssistantService.RESTART)
         return self.async_create_entry(data={})
 
 

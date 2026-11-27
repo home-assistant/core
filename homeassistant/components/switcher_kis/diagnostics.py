@@ -4,11 +4,19 @@ from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import SwitcherConfigEntry
 
-TO_REDACT = {"device_id", "device_key", "ip_address", "mac_address"}
+TO_REDACT = {
+    CONF_TOKEN,
+    CONF_USERNAME,
+    "device_id",
+    "device_key",
+    "ip_address",
+    "mac_address",
+}
 
 
 async def async_get_config_entry_diagnostics(

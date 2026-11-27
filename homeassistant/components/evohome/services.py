@@ -7,18 +7,10 @@ import probatio
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
-from homeassistant.helpers.service import verify_domain_control
 
-from .const import (
-    DOMAIN,
-    EVOHOME_DATA,
-    REFRESH_BREAKS_IN_HA_VERSION,
-    EvoService,
-    EvoServiceArgument,
-)
-from .helpers import async_create_deprecation_issue_once
+from .const import DOMAIN, EvoService, EvoServiceArgument
 
 # Controller service schemas (registered as entity services)
 SET_SYSTEM_MODE_SCHEMA: Final[dict[str | probatio.Marker, Any]] = {
@@ -98,18 +90,6 @@ def _register_dhw_entity_services(hass: HomeAssistant) -> None:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the Evohome services."""
-
-    @verify_domain_control(DOMAIN)
-    async def force_refresh(call: ServiceCall) -> None:
-        """Obtain the latest state data via the vendor's RESTful API."""
-        async_create_deprecation_issue_once(
-            hass,
-            "deprecated_refresh_system_service",
-            REFRESH_BREAKS_IN_HA_VERSION,
-        )
-        await hass.data[EVOHOME_DATA].coordinator.async_refresh()
-
-    hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
 
     _register_ctl_entity_services(hass)
     _register_zone_entity_services(hass)

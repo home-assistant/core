@@ -25,6 +25,7 @@ async def async_get_config_entry_diagnostics(
             "entry_data": entry.data,
             "current": runtime_data.coordinator.current,
             "fire_current": runtime_data.fire_coordinator.fire_current,
+            "radar": runtime_data.radar_coordinator.data,
         },
         TO_REDACT,
     )

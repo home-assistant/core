@@ -19,6 +19,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.os_error import os_read_error
 
 from .const import DOMAIN, UPLOAD_SCOPE
 from .coordinator import GooglePhotosConfigEntry
@@ -62,19 +63,17 @@ def _read_file_contents(
                 translation_placeholders={"filename": filename},
             )
         filename_path = Path(filename)
-        if not filename_path.exists():
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="filename_does_not_exist",
-                translation_placeholders={"filename": filename},
-            )
-        if filename_path.stat().st_size > CONTENT_SIZE_LIMIT:
+        try:
+            size = filename_path.stat().st_size
+        except OSError as err:
+            raise os_read_error(err, filename) from err
+        if size > CONTENT_SIZE_LIMIT:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="file_too_large",
                 translation_placeholders={
                     "filename": filename,
-                    "size": str(filename_path.stat().st_size),
+                    "size": str(size),
                     "limit": str(CONTENT_SIZE_LIMIT),
                 },
             )
@@ -85,7 +84,11 @@ def _read_file_contents(
                 translation_key="filename_is_not_image",
                 translation_placeholders={"filename": filename},
             )
-        results.append((mime_type, filename_path.read_bytes()))
+        try:
+            content = filename_path.read_bytes()
+        except OSError as err:
+            raise os_read_error(err, filename) from err
+        results.append((mime_type, content))
     return results
 
 

@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import override
 
+from energyzero import EnergyPrices
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -49,7 +51,26 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         service_type="today_gas",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
         suggested_display_precision=3,
-        value_fn=lambda data: get_gas_price(data, 1),
+        value_fn=lambda data: get_gas_price(data.gas_today, 1),
+    ),
+    EnergyZeroSensorEntityDescription(
+        key="all_in_current_hour_price",
+        translation_key="all_in_current_hour_price",
+        service_type="today_gas",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
+        suggested_display_precision=3,
+        value_fn=lambda data: (
+            data.gas_all_in_today.current_price if data.gas_all_in_today else None
+        ),
+    ),
+    EnergyZeroSensorEntityDescription(
+        key="all_in_next_hour_price",
+        translation_key="all_in_next_hour_price",
+        service_type="today_gas",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
+        suggested_display_precision=3,
+        value_fn=lambda data: get_gas_price(data.gas_all_in_today, 1),
     ),
     EnergyZeroSensorEntityDescription(
         key="current_hour_price",
@@ -173,22 +194,20 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
 )
 
 
-def get_gas_price(data: EnergyZeroData, hours: int) -> float | None:
-    """Return the gas value.
+def get_gas_price(prices: EnergyPrices | None, hours: int) -> float | None:
+    """Return the gas price a number of hours from now.
 
     Args:
-        data: The data object.
+        prices: The gas prices, if available.
         hours: The number of hours to add to the current time.
 
     Returns:
-        The gas market price value.
+        The gas price value.
 
     """
-    if data.gas_today is None:
+    if prices is None:
         return None
-    return data.gas_today.price_at_time(
-        data.gas_today.utcnow() + timedelta(hours=hours)
-    )
+    return prices.price_at_time(prices.utcnow() + timedelta(hours=hours))
 
 
 async def async_setup_entry(

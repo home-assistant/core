@@ -38,17 +38,6 @@ SERVICE_NOTIFY = "notify"
 SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_PERSISTENT_NOTIFICATION = "persistent_notification"
 
-NOTIFY_SERVICE_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(ATTR_MESSAGE): cv.string,
-        probatio.Optional(ATTR_TITLE): cv.string,
-        probatio.Optional(ATTR_TARGET): probatio.All(
-            probatio.EnsureList(), [cv.string]
-        ),
-        probatio.Optional(ATTR_DATA): dict,
-    }
-)
-
 
 class NotifyEntityFeature(IntFlag):
     """Supported features of a notify entity."""
@@ -71,3 +60,15 @@ class NotifyServiceArgument(StrEnum):
     MESSAGE = "message"
     TARGET = "target"
     TITLE = "title"
+
+
+NOTIFY_SERVICE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(NotifyServiceArgument.MESSAGE): cv.string,
+        probatio.Optional(NotifyServiceArgument.TITLE): cv.string,
+        probatio.Optional(NotifyServiceArgument.TARGET): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(NotifyServiceArgument.DATA): dict,
+    }
+)

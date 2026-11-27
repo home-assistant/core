@@ -6,6 +6,8 @@ from typing import Any
 
 from pygeosphere_warnings import WarningLevel, WarningType, WeatherWarning
 
+from homeassistant.util.json import JsonArrayType
+
 LEVEL_NONE = "none"
 
 WARNING_TYPE_SLUGS: Mapping[WarningType, str] = {
@@ -116,3 +118,28 @@ def highest_warning_level(warnings: Iterable[WeatherWarning]) -> str:
     if not levels:
         return LEVEL_NONE
     return warning_level_slug(WarningLevel(max(levels)))
+
+
+def serialize_warning(warning: WeatherWarning) -> dict[str, Any]:
+    """Convert a warning into a fully JSON-serializable response object."""
+    return {
+        "warning_id": warning.warning_id,
+        "change_id": warning.change_id,
+        "course_id": warning.course_id,
+        "type": warning_type_slug(warning.warning_type),
+        "level": warning_level_slug(warning.level),
+        "start": warning.start.isoformat(),
+        "end": warning.end.isoformat(),
+        "text": warning.text,
+        "impacts": warning.impacts,
+        "recommendations": warning.recommendations,
+        "meteo_text": warning.meteo_text,
+        "update_reason": warning.update_reason,
+    }
+
+
+def serialize_warnings(
+    warnings: Iterable[WeatherWarning],
+) -> JsonArrayType:
+    """Serialize warnings in the shared deterministic order."""
+    return [serialize_warning(warning) for warning in sort_warnings(warnings)]

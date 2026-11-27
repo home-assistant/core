@@ -166,6 +166,26 @@
       "title": "Global options"
     }
   },
+  "device": {
+    "bottom": {
+      "name": "Bottom"
+    },
+    "channel": {
+      "name": "Channel {index}"
+    },
+    "left": {
+      "name": "Left"
+    },
+    "right": {
+      "name": "Right"
+    },
+    "top": {
+      "name": "Top"
+    },
+    "valve": {
+      "name": "Valve {index}"
+    }
+  },
   "device_automation": {
     "action_type": {
       "issue_all_led_effect": "Issue effect for all LEDs",
@@ -439,18 +459,6 @@
       "reset_total_energy": {
         "name": "Reset total energy"
       },
-      "reset_total_energy_bottom": {
-        "name": "Reset bottom total energy"
-      },
-      "reset_total_energy_left": {
-        "name": "Reset left total energy"
-      },
-      "reset_total_energy_right": {
-        "name": "Reset right total energy"
-      },
-      "reset_total_energy_top": {
-        "name": "Reset top total energy"
-      },
       "restart_device": {
         "name": "Restart device"
       },
@@ -487,14 +495,98 @@
       }
     },
     "event": {
+      "aux_config_button": {
+        "name": "Aux config button"
+      },
+      "aux_down_button": {
+        "name": "Aux down button"
+      },
+      "aux_up_button": {
+        "name": "Aux up button"
+      },
+      "both_buttons": {
+        "name": "Both buttons"
+      },
+      "button": {
+        "name": "[%key:component::event::entity_component::button::name%]"
+      },
       "button_numbered": {
         "name": "Button {number}"
+      },
+      "button_numbered_off": {
+        "name": "Off button {number}"
+      },
+      "button_numbered_on": {
+        "name": "On button {number}"
+      },
+      "center_button": {
+        "name": "Center button"
+      },
+      "close_button": {
+        "name": "Close button"
+      },
+      "config_button": {
+        "name": "Config button"
+      },
+      "dim_down_button": {
+        "name": "Dim down button"
+      },
+      "dim_up_button": {
+        "name": "Dim up button"
+      },
+      "down_button": {
+        "name": "Down button"
+      },
+      "hue_button": {
+        "name": "Hue button"
+      },
+      "left_button": {
+        "name": "Left button"
+      },
+      "minus_button": {
+        "name": "Minus button"
+      },
+      "next_button": {
+        "name": "Next button"
+      },
+      "off_button": {
+        "name": "Off button"
+      },
+      "on_button": {
+        "name": "On button"
+      },
+      "open_button": {
+        "name": "Open button"
+      },
+      "play_pause_button": {
+        "name": "Play/pause button"
+      },
+      "plus_button": {
+        "name": "Plus button"
+      },
+      "previous_button": {
+        "name": "Previous button"
+      },
+      "right_button": {
+        "name": "Right button"
       },
       "rocker_bottom": {
         "name": "Rocker {rocker} bottom"
       },
       "rocker_top": {
         "name": "Rocker {rocker} top"
+      },
+      "toggle_button": {
+        "name": "Toggle button"
+      },
+      "up_button": {
+        "name": "Up button"
+      },
+      "volume_down_button": {
+        "name": "Volume down button"
+      },
+      "volume_up_button": {
+        "name": "Volume up button"
       }
     },
     "fan": {
@@ -636,32 +728,8 @@
       "countdown_to_turn_off": {
         "name": "Countdown to turn off"
       },
-      "countdown_to_turn_off_bottom": {
-        "name": "Countdown to turn off bottom"
-      },
-      "countdown_to_turn_off_left": {
-        "name": "Countdown to turn off left"
-      },
-      "countdown_to_turn_off_right": {
-        "name": "Countdown to turn off right"
-      },
-      "countdown_to_turn_off_top": {
-        "name": "Countdown to turn off top"
-      },
       "countdown_to_turn_on": {
         "name": "Countdown to turn on"
-      },
-      "countdown_to_turn_on_bottom": {
-        "name": "Countdown to turn on bottom"
-      },
-      "countdown_to_turn_on_left": {
-        "name": "Countdown to turn on left"
-      },
-      "countdown_to_turn_on_right": {
-        "name": "Countdown to turn on right"
-      },
-      "countdown_to_turn_on_top": {
-        "name": "Countdown to turn on top"
       },
       "deadzone_temperature": {
         "name": "Deadzone temperature"
@@ -788,6 +856,9 @@
       },
       "inactive_power_threshold": {
         "name": "Inactive power threshold"
+      },
+      "indicator_luminance_level": {
+        "name": "Indicator luminance level"
       },
       "installation_height": {
         "name": "Height from sensor to tank bottom"
@@ -1233,12 +1304,6 @@
       "valve_countdown": {
         "name": "Irrigation time"
       },
-      "valve_countdown_1": {
-        "name": "Irrigation time 1"
-      },
-      "valve_countdown_2": {
-        "name": "Irrigation time 2"
-      },
       "valve_duration": {
         "name": "Irrigation duration"
       },
@@ -1406,6 +1471,9 @@
       "increased_non_neutral_output": {
         "name": "Increased non-neutral output"
       },
+      "indicator_mode": {
+        "name": "Indicator mode"
+      },
       "input_mode": {
         "name": "Input mode"
       },
@@ -1432,6 +1500,9 @@
       },
       "liquid_state": {
         "name": "Liquid state"
+      },
+      "local_control_mode": {
+        "name": "Local control mode"
       },
       "local_temperature_source": {
         "name": "Local temperature source"
@@ -1763,20 +1834,17 @@
           "preheating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::preheating%]"
         }
       },
+      "illumination": {
+        "name": "Illumination"
+      },
       "instantaneous_demand": {
         "name": "Instantaneous demand"
       },
       "internal_temp_monitor": {
         "name": "Internal temperature"
       },
-      "irriation_duration_2": {
-        "name": "Irrigation duration 2"
-      },
       "irrigation_duration": {
         "name": "Last irrigation duration"
-      },
-      "irrigation_duration_1": {
-        "name": "Irrigation duration 1"
       },
       "irrigation_end_time": {
         "name": "Irrigation end time"
@@ -2071,12 +2139,6 @@
       "valve_status": {
         "name": "Valve status"
       },
-      "valve_status_1": {
-        "name": "Status 1"
-      },
-      "valve_status_2": {
-        "name": "Status 2"
-      },
       "voc_index": {
         "name": "VOC index"
       },
@@ -2250,6 +2312,9 @@
       "linkage_alarm": {
         "name": "Linkage alarm"
       },
+      "local_control": {
+        "name": "Local control"
+      },
       "local_control_id": {
         "name": "{id} local control"
       },
@@ -2385,11 +2450,26 @@
       "window_open": {
         "name": "Window open"
       }
+    },
+    "update": {
+      "release_notes_messages": {
+        "battery_powered": "Battery powered devices can sometimes take multiple hours to update and you may need to wake the device for the update to begin.",
+        "network_reliability": "If you are having issues updating a specific device, make sure that you've eliminated [common environmental issues]({docs_url}) that could be affecting network reliability. OTA updates require a reliable network."
+      }
     }
   },
   "exceptions": {
+    "device_not_found": {
+      "message": "Device {ieee} was not found."
+    },
+    "group_not_found": {
+      "message": "Group {group_id} was not found."
+    },
     "no_gateway": {
       "message": "ZHA is not loaded, so this action cannot be performed."
+    },
+    "no_warning_device": {
+      "message": "Device {ieee} is not an IAS warning device, so this action cannot be performed."
     },
     "not_zigbee_device": {
       "message": "Device {ieee} is not a Zigbee device, so this action cannot be performed."

@@ -10,6 +10,11 @@
         "default": "mdi:qrcode"
       }
     },
+    "select": {
+      "firewall_policy_schedule_mode": {
+        "default": "mdi:calendar-clock"
+      }
+    },
     "sensor": {
       "client_bandwidth_rx": {
         "default": "mdi:download"

@@ -7,16 +7,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-)
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -120,8 +116,8 @@ async def test_cover_set_position(
     with patch("homeassistant.components.freedompro.cover.put_state") as mock_put_state:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 33},
+            CoverService.SET_POSITION,
+            {TargetKey.ENTITY_ID: [entity_id], CoverServiceArgument.POSITION: 33},
             blocking=True,
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"position": 33}')
@@ -184,8 +180,8 @@ async def test_cover_close(
     with patch("homeassistant.components.freedompro.cover.put_state") as mock_put_state:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"position": 0}')
@@ -236,8 +232,8 @@ async def test_cover_open(
     with patch("homeassistant.components.freedompro.cover.put_state") as mock_put_state:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"position": 100}')

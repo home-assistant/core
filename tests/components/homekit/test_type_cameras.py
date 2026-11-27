@@ -2072,24 +2072,23 @@ async def test_camera_secure_video_recording_problem_logged_once(
         )
 
     recording_ffmpeg.open.return_value = False
-    with caplog.at_level(logging.DEBUG):
-        await _collect(acc)
-        await _collect(acc)
-        assert warnings("Failed to start recording ffmpeg") == 1
+    await _collect(acc)
+    await _collect(acc)
+    assert warnings("Failed to start recording ffmpeg") == 1
 
-        acc.config[CONF_STREAM_SOURCE] = None
-        with patch(
-            "homeassistant.components.camera.async_get_stream_source",
-            return_value=None,
-        ):
-            await _collect(acc)
-        assert warnings("Camera has no stream source") == 1
+    acc.config[CONF_STREAM_SOURCE] = None
+    with patch(
+        "homeassistant.components.camera.async_get_stream_source",
+        return_value=None,
+    ):
+        await _collect(acc)
+    assert warnings("Camera has no stream source") == 1
 
-        acc.config[CONF_STREAM_SOURCE] = "rtsp://cam"
-        recording_ffmpeg.open.return_value = True
-        await _collect(acc)
-        recording_ffmpeg.open.return_value = False
-        await _collect(acc)
+    acc.config[CONF_STREAM_SOURCE] = "rtsp://cam"
+    recording_ffmpeg.open.return_value = True
+    await _collect(acc)
+    recording_ffmpeg.open.return_value = False
+    await _collect(acc)
     assert warnings("Failed to start recording ffmpeg") == 2
 
 
@@ -2339,14 +2338,13 @@ async def test_camera_secure_video_recording_long_stderr_line(
     _ffmpeg_output(recording_ffmpeg, _closed_pipe(INIT_SEGMENT + FRAGMENT), stderr)
     acc = await _recording_camera(hass, run_driver)
 
-    with caplog.at_level(logging.DEBUG):
-        recording = acc.handle_recording_stream(1)
-        assert (await anext(recording)).data == INIT_SEGMENT
-        stderr.feed_data(rest)
-        stderr.feed_eof()
-        # Let the stderr reader catch up before the recording ends.
-        await asyncio.sleep(0)
-        await asyncio.sleep(0)
-        assert [packet.data async for packet in recording] == [FRAGMENT, b""]
+    recording = acc.handle_recording_stream(1)
+    assert (await anext(recording)).data == INIT_SEGMENT
+    stderr.feed_data(rest)
+    stderr.feed_eof()
+    # Let the stderr reader catch up before the recording ends.
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+    assert [packet.data async for packet in recording] == [FRAGMENT, b""]
     assert "Recording ffmpeg: more output" in caplog.text
     assert "token" not in caplog.text

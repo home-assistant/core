@@ -13,39 +13,24 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ARTIST,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_REPEAT,
-    ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     RepeatMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_REPEAT_SET,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
     STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -196,10 +181,12 @@ async def test_media_play_pause_stop(
     data = {ATTR_ENTITY_ID: ENTITY_ID}
 
     # Test for play/pause command when separate play and pause controls are unavailable
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PAUSE, data, True)
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.MEDIA_PAUSE, data, True
+    )
     mock_stream_magic_client.play_pause.assert_called_once()
 
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.MEDIA_PLAY, data, True)
     assert mock_stream_magic_client.play_pause.call_count == 2
 
     # Test for separate play and pause controls
@@ -211,13 +198,15 @@ async def test_media_play_pause_stop(
     await mock_state_update(mock_stream_magic_client)
     await hass.async_block_till_done()
 
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PAUSE, data, True)
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.MEDIA_PAUSE, data, True
+    )
     mock_stream_magic_client.pause.assert_called_once()
 
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.MEDIA_PLAY, data, True)
     mock_stream_magic_client.play.assert_called_once()
 
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_STOP, data, True)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.MEDIA_STOP, data, True)
     mock_stream_magic_client.stop.assert_called_once()
 
 
@@ -231,11 +220,15 @@ async def test_media_next_previous_track(
 
     data = {ATTR_ENTITY_ID: ENTITY_ID}
 
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data, True)
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.MEDIA_NEXT_TRACK, data, True
+    )
 
     mock_stream_magic_client.next_track.assert_called_once()
 
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data, True)
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.MEDIA_PREVIOUS_TRACK, data, True
+    )
 
     mock_stream_magic_client.previous_track.assert_called_once()
 
@@ -256,16 +249,16 @@ async def test_shuffle_repeat_set(
     # Test shuffle
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SHUFFLE_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_SHUFFLE: False},
+        MediaPlayerService.SHUFFLE_SET,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SHUFFLE: False},
     )
 
     mock_stream_magic_client.set_shuffle.assert_called_with(ShuffleMode.OFF)
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SHUFFLE_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_SHUFFLE: True},
+        MediaPlayerService.SHUFFLE_SET,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SHUFFLE: True},
     )
 
     mock_stream_magic_client.set_shuffle.assert_called_with(ShuffleMode.ALL)
@@ -273,16 +266,22 @@ async def test_shuffle_repeat_set(
     # Test repeat
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_REPEAT_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.OFF},
+        MediaPlayerService.REPEAT_SET,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.REPEAT: RepeatMode.OFF,
+        },
     )
 
     mock_stream_magic_client.set_repeat.assert_called_with(CambridgeRepeatMode.OFF)
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_REPEAT_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+        MediaPlayerService.REPEAT_SET,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.REPEAT: RepeatMode.ALL,
+        },
     )
 
     mock_stream_magic_client.set_repeat.assert_called_with(CambridgeRepeatMode.ALL)
@@ -328,11 +327,11 @@ async def test_power_service(
 
     data = {ATTR_ENTITY_ID: ENTITY_ID}
 
-    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_ON, data, True)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.TURN_ON, data, True)
 
     mock_stream_magic_client.power_on.assert_called_once()
 
-    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_OFF, data, True)
+    await hass.services.async_call(MP_DOMAIN, MediaPlayerService.TURN_OFF, data, True)
 
     mock_stream_magic_client.power_off.assert_called_once()
 
@@ -351,8 +350,8 @@ async def test_media_seek(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_MEDIA_SEEK,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_SEEK_POSITION: 100},
+        MediaPlayerService.MEDIA_SEEK,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SEEK_POSITION: 100},
     )
 
     mock_stream_magic_client.media_seek.assert_called_once_with(100)
@@ -371,8 +370,8 @@ async def test_media_volume(
     # Test volume up
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_UP,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        MediaPlayerService.VOLUME_UP,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
     )
 
     mock_stream_magic_client.volume_up.assert_called_once()
@@ -380,16 +379,16 @@ async def test_media_volume(
     # Test volume down
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_DOWN,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        MediaPlayerService.VOLUME_DOWN,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
     )
 
     mock_stream_magic_client.volume_down.assert_called_once()
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.30},
+        MediaPlayerService.VOLUME_SET,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.VOLUME_LEVEL: 0.30},
     )
 
     mock_stream_magic_client.set_volume.assert_called_once_with(30)
@@ -405,11 +404,11 @@ async def test_play_media_preset_item_id(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: "preset",
-            ATTR_MEDIA_CONTENT_ID: "1",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "preset",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "1",
         },
         blocking=True,
     )
@@ -419,11 +418,11 @@ async def test_play_media_preset_item_id(
     with pytest.raises(ServiceValidationError, match="Missing preset for media_id: 10"):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: "preset",
-                ATTR_MEDIA_CONTENT_ID: "10",
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "preset",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "10",
             },
             blocking=True,
         )
@@ -433,11 +432,11 @@ async def test_play_media_preset_item_id(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: "preset",
-                ATTR_MEDIA_CONTENT_ID: "UNKNOWN_PRESET",
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "preset",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "UNKNOWN_PRESET",
             },
             blocking=True,
         )
@@ -453,11 +452,11 @@ async def test_play_media_airable_radio_id(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: "airable",
-            ATTR_MEDIA_CONTENT_ID: "12345678",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "airable",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "12345678",
         },
         blocking=True,
     )
@@ -477,11 +476,11 @@ async def test_play_media_internet_radio(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: "internet_radio",
-            ATTR_MEDIA_CONTENT_ID: "https://example.com",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "internet_radio",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "https://example.com",
         },
         blocking=True,
     )
@@ -508,11 +507,11 @@ async def test_play_media_unknown_type(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: "unsupported_content_type",
-                ATTR_MEDIA_CONTENT_ID: "1",
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "unsupported_content_type",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "1",
             },
             blocking=True,
         )

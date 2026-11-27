@@ -185,9 +185,10 @@ class ElevenLabsOptionsFlow(OptionsFlow):
             configure_voice = user_input.pop(CONF_CONFIGURE_VOICE)
             if configure_voice:
                 return await self.async_step_voice_settings()
+            # Keep the stored voice settings, which this step doesn't show.
             return self.async_create_entry(
                 title="ElevenLabs",
-                data=user_input,
+                data={**self.config_entry.options, **user_input},
             )
 
         schema = self.elevenlabs_config_option_schema()

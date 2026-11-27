@@ -131,6 +131,7 @@ class AssistSatelliteEntity(entity.Entity):
     _attr_supported_features = AssistSatelliteEntityFeature(0)
     _attr_pipeline_entity_id: str | None = None
     _attr_vad_sensitivity_entity_id: str | None = None
+    _attr_timer_list_entity_id: str | None = None
 
     _conversation_id: str | None = None
 
@@ -160,6 +161,11 @@ class AssistSatelliteEntity(entity.Entity):
     def vad_sensitivity_entity_id(self) -> str | None:
         """Entity ID of the VAD sensitivity to use for the next conversation."""
         return self._attr_vad_sensitivity_entity_id
+
+    @property
+    def timer_list_entity_id(self) -> str | None:
+        """Entity ID of the timer list that holds the satellite's timers."""
+        return self._attr_timer_list_entity_id
 
     @property
     def tts_options(self) -> dict[str, Any] | None:

@@ -1,0 +1,16 @@
+upload:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: webdav
+    filename:
+      required: true
+      selector:
+        text:
+          multiple: true
+    destination_folder:
+      required: true
+      selector:
+        text:

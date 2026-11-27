@@ -1,6 +1,7 @@
 """Support for MQTT sirens."""
 
 from collections.abc import Callable
+from enum import StrEnum
 import logging
 from typing import Any, cast, override
 
@@ -8,9 +9,6 @@ import probatio
 
 from homeassistant.components import siren
 from homeassistant.components.siren import (
-    ATTR_DURATION,
-    ATTR_TONE,
-    ATTR_VOLUME_LEVEL,
     TURN_ON_SCHEMA,
     SirenEntity,
     SirenEntityCapabilityAttribute,
@@ -89,11 +87,21 @@ DISCOVERY_SCHEMA = probatio.All(
     PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
 )
 
+
+# The siren platform has no state attributes for the turn on parameters
+class MqttSirenStateAttribute(StrEnum):
+    """Extra state attributes of MQTT sirens, named after the turn on parameters."""
+
+    DURATION = "duration"
+    TONE = "tone"
+    VOLUME_LEVEL = "volume_level"
+
+
 MQTT_SIREN_ATTRIBUTES_BLOCKED = frozenset(
     {
-        ATTR_DURATION,
-        ATTR_TONE,
-        ATTR_VOLUME_LEVEL,
+        MqttSirenStateAttribute.DURATION,
+        MqttSirenStateAttribute.TONE,
+        MqttSirenStateAttribute.VOLUME_LEVEL,
         SirenEntityCapabilityAttribute.AVAILABLE_TONES,
     }
 )
@@ -101,9 +109,9 @@ MQTT_SIREN_ATTRIBUTES_BLOCKED = frozenset(
 SUPPORTED_BASE = SirenEntityFeature.TURN_OFF | SirenEntityFeature.TURN_ON
 
 SUPPORTED_ATTRIBUTES = {
-    ATTR_DURATION: SirenEntityFeature.DURATION,
-    ATTR_TONE: SirenEntityFeature.TONES,
-    ATTR_VOLUME_LEVEL: SirenEntityFeature.VOLUME_SET,
+    MqttSirenStateAttribute.DURATION: SirenEntityFeature.DURATION,
+    MqttSirenStateAttribute.TONE: SirenEntityFeature.TONES,
+    MqttSirenStateAttribute.VOLUME_LEVEL: SirenEntityFeature.VOLUME_SET,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -163,16 +171,16 @@ class MqttSiren(MqttEntity, SirenEntity):
         _supported_features = SUPPORTED_BASE
         if config[CONF_SUPPORT_DURATION]:
             _supported_features |= SirenEntityFeature.DURATION
-            self._extra_attributes[ATTR_DURATION] = None
+            self._extra_attributes[MqttSirenStateAttribute.DURATION] = None
 
         if config.get(CONF_AVAILABLE_TONES):
             _supported_features |= SirenEntityFeature.TONES
             self._attr_available_tones = config[CONF_AVAILABLE_TONES]
-            self._extra_attributes[ATTR_TONE] = None
+            self._extra_attributes[MqttSirenStateAttribute.TONE] = None
 
         if config[CONF_SUPPORT_VOLUME_SET]:
             _supported_features |= SirenEntityFeature.VOLUME_SET
-            self._extra_attributes[ATTR_VOLUME_LEVEL] = None
+            self._extra_attributes[MqttSirenStateAttribute.VOLUME_LEVEL] = None
 
         self._attr_supported_features = _supported_features
         self._optimistic = config[CONF_OPTIMISTIC] or CONF_STATE_TOPIC not in config

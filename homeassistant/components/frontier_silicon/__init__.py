@@ -31,6 +31,9 @@ async def async_setup_entry(
     try:
         await afsapi.get_power()
     except FSConnectionError as exception:
+        # the client keeps an HTTP session open; close it, the setup is retried
+        # with a new client
+        await afsapi.close()
         raise ConfigEntryNotReady from exception
 
     entry.runtime_data = afsapi
@@ -43,3 +46,4 @@ async def async_unload_entry(
 ) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.close()

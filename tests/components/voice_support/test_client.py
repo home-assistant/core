@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, AsyncIterable
-import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -477,7 +476,6 @@ async def test_run_app_breaks_off(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test an app whose answers cannot be read any more is given up on."""
-    caplog.set_level(logging.DEBUG)
     websocket = FakeWebsocket([(0, aiohttp.ClientConnectionError("gone"))])
     run = _run(hass, websocket, _audio(WAKE, COMMAND))
 
@@ -638,7 +636,6 @@ async def test_run_answers(
     logged: str,
 ) -> None:
     """Test what each of the app's messages leaves in the run."""
-    caplog.set_level(logging.DEBUG)
     websocket = FakeWebsocket([(0, answer)])
     run = _run(hass, websocket, _audio())
     await asyncio.sleep(0)

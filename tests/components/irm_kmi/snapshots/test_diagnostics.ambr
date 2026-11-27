@@ -1,0 +1,110 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'location': '**REDACTED**',
+        'unique_id': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'irm_kmi',
+      'entry_id': '01JIRMKMI00000000000000000',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'pollen': dict({
+      'last_update_success': True,
+      'levels': dict({
+        'alder': 'green',
+        'ash': 'yellow',
+        'birch': 'orange',
+        'grasses': 'red',
+        'hazel': 'purple',
+        'mugwort': 'active',
+        'oak': 'none',
+      }),
+    }),
+    'weather': dict({
+      'country': 'BE',
+      'current_weather': dict({
+        'condition': 'cloudy',
+        'pressure': 1015.0,
+        'temperature': 7.2,
+        'uv_index': 0.7,
+        'wind_bearing': 180.0,
+        'wind_gust_speed': 50.0,
+        'wind_speed': 25.0,
+      }),
+      'daily_forecast': list([
+      ]),
+      'hourly_forecast': list([
+      ]),
+      'last_update_success': True,
+      'radar_forecast': list([
+        dict({
+          'datetime': '2023-12-28T15:10:00+01:00',
+          'might_rain': True,
+          'native_precipitation': 0.6,
+          'rain_forecast_max': 0.9,
+          'rain_forecast_min': 0.3,
+          'unit': 'mm/h',
+        }),
+        dict({
+          'datetime': '2023-12-28T15:20:00+01:00',
+          'might_rain': True,
+          'native_precipitation': 0.3,
+          'rain_forecast_max': 0.6,
+          'rain_forecast_min': 0.0,
+          'unit': 'mm/h',
+        }),
+        dict({
+          'datetime': '2023-12-28T15:30:00+01:00',
+          'might_rain': True,
+          'native_precipitation': 2.4,
+          'rain_forecast_max': 3.6,
+          'rain_forecast_min': 1.2,
+          'unit': 'mm/h',
+        }),
+        dict({
+          'datetime': '2023-12-28T15:40:00+01:00',
+          'might_rain': True,
+          'native_precipitation': 7.2,
+          'rain_forecast_max': 9.0,
+          'rain_forecast_min': 5.4,
+          'unit': 'mm/h',
+        }),
+      ]),
+      'warnings': list([
+        dict({
+          'ends_at': '2023-12-28T20:00:00+01:00',
+          'friendly_name': 'Fog',
+          'id': 7,
+          'level': 1,
+          'slug': 'fog',
+          'starts_at': '2023-12-28T16:00:00+01:00',
+          'text': 'Visibility is locally reduced to less than 200 meters.',
+        }),
+        dict({
+          'ends_at': '2023-12-29T12:00:00+01:00',
+          'friendly_name': 'Ice or snow',
+          'id': 2,
+          'level': 2,
+          'slug': 'ice_or_snow',
+          'starts_at': '2023-12-29T06:00:00+01:00',
+          'text': 'Roads are slippery in the morning.',
+        }),
+      ]),
+    }),
+  })
+# ---

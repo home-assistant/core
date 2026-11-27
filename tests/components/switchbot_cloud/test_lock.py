@@ -14,7 +14,7 @@ from homeassistant.const import (
     SERVICE_OPEN,
     SERVICE_UNLOCK,
     STATE_UNKNOWN,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 
@@ -61,7 +61,7 @@ async def test_lock(
         await hass.services.async_call(
             LOCK_DOMAIN,
             LockService.UNLOCK,
-            {CommonServiceArgument.ENTITY_ID: lock_id},
+            {TargetKey.ENTITY_ID: lock_id},
             blocking=True,
         )
     assert hass.states.get(lock_id).state == LockState.UNLOCKED
@@ -70,7 +70,7 @@ async def test_lock(
         await hass.services.async_call(
             LOCK_DOMAIN,
             LockService.LOCK,
-            {CommonServiceArgument.ENTITY_ID: lock_id},
+            {TargetKey.ENTITY_ID: lock_id},
             blocking=True,
         )
     assert hass.states.get(lock_id).state == LockState.LOCKED
@@ -113,7 +113,7 @@ async def test_lock_open(
         await hass.services.async_call(
             LOCK_DOMAIN,
             LockService.OPEN,
-            {CommonServiceArgument.ENTITY_ID: lock_id},
+            {TargetKey.ENTITY_ID: lock_id},
             blocking=True,
         )
     assert hass.states.get(lock_id).state == LockState.UNLOCKED
