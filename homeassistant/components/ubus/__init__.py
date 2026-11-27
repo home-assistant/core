@@ -279,8 +279,9 @@ async def _async_migrate_other(
                 DOMAIN,
                 f"migration_host_collision_{entry.entry_id}",
                 is_fixable=False,
+                is_persistent=True,
                 issue_domain=DOMAIN,
-                severity=ir.IssueSeverity.ERROR,
+                severity=ir.IssueSeverity.WARNING,
                 translation_key="migration_host_collision",
                 translation_placeholders={"host": ", ".join(collision_hosts)},
             )

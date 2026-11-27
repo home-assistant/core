@@ -2824,6 +2824,10 @@ async def test_migration_host_collision(
     )
     assert issue is not None
     assert issue.translation_key == "migration_host_collision"
+    # The collision is a one-time notice, not an error: it persists until
+    # the user dismisses it after checking the retained router.
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.is_persistent
     # The tracker was re-parented to the hub before the entry was removed.
     entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
