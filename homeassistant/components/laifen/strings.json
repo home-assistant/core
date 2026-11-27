@@ -26,6 +26,9 @@
   },
   "entity": {
     "sensor": {
+      "current_brushing_duration": {
+        "name": "Current brushing duration"
+      },
       "last_brushing_duration": {
         "name": "Last brushing duration"
       }

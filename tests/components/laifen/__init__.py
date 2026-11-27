@@ -10,6 +10,7 @@ ADDRESS = "C0:00:00:00:12:34"
 NAME = "LFTB01-P-1234"
 BATTERY_ENTITY_ID = "sensor.lftb01_p_1234_battery"
 DURATION_ENTITY_ID = "sensor.lftb01_p_1234_last_brushing_duration"
+CURRENT_DURATION_ENTITY_ID = "sensor.lftb01_p_1234_current_brushing_duration"
 
 LAIFEN_SERVICE_INFO = BluetoothServiceInfo(
     name=NAME,

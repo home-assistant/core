@@ -95,6 +95,7 @@ def mock_toothbrush(
     toothbrush.state = None
     toothbrush.firmware_version = None
     toothbrush.last_session = last_session
+    toothbrush.current_session = None
     callbacks: list[Callable[[], None]] = []
 
     def register_callback(callback: Callable[[], None]) -> Callable[[], None]:
