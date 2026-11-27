@@ -228,12 +228,13 @@ async def test_type_fallback_when_service_point_lookup_fails(
 @pytest.mark.parametrize(
     "relations",
     [
-        pytest.param(build_relations(address=None), id="no-address"),
+        pytest.param(build_relations(BAN, address=None), id="no-address"),
         pytest.param(
             build_relations(
+                BAN,
                 address=ConsumptionAddress(
                     street="", house_number="", postal_code="", city=""
-                )
+                ),
             ),
             id="empty-address",
         ),

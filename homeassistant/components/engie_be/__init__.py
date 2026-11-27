@@ -93,10 +93,9 @@ async def _async_is_dynamic(client: EngieBeClient, ban: str) -> bool | None:
 
 @callback
 def _async_remove_stale_devices(
-    hass: HomeAssistant, entry: EngieBeConfigEntry, bans: set[str]
+    device_registry: dr.DeviceRegistry, entry: EngieBeConfigEntry, bans: set[str]
 ) -> None:
     """Remove the devices of business agreements the account no longer lists."""
-    device_registry = dr.async_get(hass)
     identifiers = {(DOMAIN, ban) for ban in bans}
     for device_entry in dr.async_entries_for_config_entry(
         device_registry, entry.entry_id
@@ -134,10 +133,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
     relations = EngieBeRelationsCoordinator(hass, entry, client)
     await relations.async_config_entry_first_refresh()
 
-    if relations.data:
-        _async_remove_stale_devices(hass, entry, set(relations.data))
-
     device_registry = dr.async_get(hass)
+    if relations.data:
+        _async_remove_stale_devices(device_registry, entry, set(relations.data))
 
     @callback
     def _async_create_household(
@@ -257,6 +255,8 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: EngieBeConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Allow removing the device of a business agreement the account no longer lists."""
+    if entry.state is not ConfigEntryState.LOADED:
+        return False
     return not any(
         domain == DOMAIN and ban in entry.runtime_data.relations.data
         for domain, ban in device_entry.identifiers
