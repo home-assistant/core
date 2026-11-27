@@ -51,6 +51,7 @@ from homeassistant.components.bluetooth import (
     async_get_fallback_availability_interval,
     async_get_learned_advertising_interval,
     async_register_advertisement_callback,
+    async_register_event_driven,
     async_scanner_count,
     async_set_fallback_availability_interval,
     async_track_unavailable,
@@ -2100,6 +2101,61 @@ async def test_async_register_advertisement_callback(hass: HomeAssistant) -> Non
     cancel()
     inject_advertisement_with_source(hass, device, adv, "hci0")
     assert len(seen) == 2
+
+
+EVENT_DRIVEN_ADDRESS = "44:44:33:11:23:46"
+OPEN = b"\x01"
+CLOSED = b"\x02"
+
+
+def _event_advertisement(payload: bytes, rssi: int) -> AdvertisementData:
+    """Return an advertisement of the event-driven device."""
+    return generate_advertisement_data(
+        local_name="event", service_data={"fcd2": payload}, rssi=rssi
+    )
+
+
+def _event_driven_history() -> tuple[str, bytes]:
+    """Return the source and payload the manager holds for the device."""
+    service_info = bluetooth.async_last_service_info(
+        _get_manager().hass, EVENT_DRIVEN_ADDRESS, False
+    )
+    assert service_info is not None
+    return service_info.source, service_info.service_data["fcd2"]
+
+
+@pytest.mark.usefixtures(
+    "enable_bluetooth", "register_hci0_scanner", "register_hci1_scanner"
+)
+async def test_async_register_event_driven(hass: HomeAssistant) -> None:
+    """A new payload of an event-driven device is taken from a weaker scanner."""
+    device = generate_ble_device(EVENT_DRIVEN_ADDRESS, "event")
+    start = MONOTONIC_TIME()
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(OPEN, -50), start, HCI0_SOURCE_ADDRESS
+    )
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(OPEN, -90), start + 0.1, HCI1_SOURCE_ADDRESS
+    )
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(CLOSED, -90), start + 5, HCI1_SOURCE_ADDRESS
+    )
+    assert _event_driven_history() == (HCI0_SOURCE_ADDRESS, OPEN)
+
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(CLOSED, -90), start + 20, HCI1_SOURCE_ADDRESS
+    )
+    assert _event_driven_history() == (HCI1_SOURCE_ADDRESS, CLOSED)
+
+    cancel()
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(OPEN, -50), start + 25, HCI0_SOURCE_ADDRESS
+    )
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(CLOSED, -90), start + 45, HCI1_SOURCE_ADDRESS
+    )
+    assert _event_driven_history() == (HCI0_SOURCE_ADDRESS, OPEN)
 
 
 @pytest.mark.usefixtures("enable_bluetooth")

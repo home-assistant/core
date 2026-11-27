@@ -324,6 +324,14 @@ def async_set_fallback_availability_interval(
     _get_manager(hass).async_set_fallback_availability_interval(address, interval)
 
 
+@hass_callback
+def async_register_event_driven(
+    hass: HomeAssistant, address: str
+) -> Callable[[], None]:
+    """Take new payloads of an event-driven device from any scanner."""
+    return _get_manager(hass).async_register_event_driven(address)
+
+
 async def async_request_active_scan(
     hass: HomeAssistant, duration: float | None = None
 ) -> None:
