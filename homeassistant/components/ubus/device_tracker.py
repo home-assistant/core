@@ -362,6 +362,10 @@ async def async_setup_entry(
 class UbusScannerEntity(ScannerEntity):
     """Representation of a device connected to an OpenWrt router."""
 
+    # The state is driven by the hub's coordinator, not by per-entity
+    # polling; manual refreshes go through async_update.
+    _attr_should_poll = False
+
     def __init__(
         self, hass: HomeAssistant, config_entry: UbusConfigEntry, mac: str
     ) -> None:
@@ -436,6 +440,10 @@ class UbusScannerEntity(ScannerEntity):
             # drops its stamp.
             return None
         return {"source": subentry.data[CONF_HOST]}
+
+    async def async_update(self) -> None:
+        """Refresh the router client lists on request."""
+        await self._config_entry.runtime_data.async_refresh()
 
     @override
     async def async_added_to_hass(self) -> None:

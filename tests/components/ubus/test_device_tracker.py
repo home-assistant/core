@@ -2095,6 +2095,52 @@ async def test_device_renamed_when_latest_stamp_has_no_hostname(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_update_entity_service_refreshes_the_routers(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    hub_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test update_entity re-polls the routers, while the trackers do not poll."""
+    _mock, ubus = mock_ubus_by_host
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    hub_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    phone_entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert phone_entity_id is not None
+    assert hass.states.get(phone_entity_id).state == STATE_HOME
+
+    # The laptop connected after the initial poll; the trackers do not
+    # poll, so only a manual refresh surfaces it.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {
+            MAC_PHONE: {"authorized": True},
+            MAC_LAPTOP: {"authorized": True},
+        }
+    }
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": phone_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    laptop_entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_LAPTOP
+    )
+    assert laptop_entity_id is not None
+    assert hass.states.get(laptop_entity_id).state == STATE_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_tracker_recreated_when_client_returns_after_removal(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],

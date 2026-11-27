@@ -456,6 +456,8 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
                     # client view is for the old host.
                     self._inflight.pop(host, None)
                     self.latest_views.pop(subentry_id, None)
+                    # The health record belongs to the old host.
+                    self.host_health.pop(subentry_id, None)
                 self.hosts[subentry_id] = _UbusHost(subentry)
         self._polled_signature = self._subentries_signature()
         return self.hosts
@@ -509,13 +511,27 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
     def _async_refresh_finished(self) -> None:
         """Record host health, manage credential issues, signal changes."""
         for subentry_id, result in self._tick_results.items():
+            was_healthy = self.host_health.get(subentry_id, True)
             if isinstance(result, BaseException):
                 self.host_health[subentry_id] = False
                 if isinstance(result, InvalidCredentialsError):
                     self._async_create_credentials_issue(subentry_id)
+                if was_healthy:
+                    # With another router carrying the tick, this failure
+                    # would otherwise be discarded unlogged.
+                    _LOGGER.warning(
+                        "Router %s is unreachable: %s",
+                        self._router_host(subentry_id),
+                        result,
+                    )
             else:
                 self.host_health[subentry_id] = True
                 self._async_delete_credentials_issue(subentry_id)
+                if not was_healthy:
+                    _LOGGER.info(
+                        "Router %s is reachable again",
+                        self._router_host(subentry_id),
+                    )
         self._tick_results = {}
         subentries = self.config_entry.subentries
         for subentry_id in list(self.host_health):
@@ -549,6 +565,12 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
     def _async_delete_credentials_issue(self, subentry_id: str) -> None:
         """Close the credential repair when the router answers again."""
         ir.async_delete_issue(self.hass, DOMAIN, f"invalid_credentials_{subentry_id}")
+
+    def _router_host(self, subentry_id: str) -> str:
+        """Return the host of a subentry's router, for log messages."""
+        if (host := self.hosts.get(subentry_id)) is not None:
+            return host.host
+        return subentry_id
 
     @callback
     def async_signal_clients_updated(self) -> None:

@@ -294,6 +294,7 @@ class RouterSubentryFlow(ConfigSubentryFlow):
                         entry,
                         subentry,
                         data=user_input,
+                        unique_id=user_input[CONF_HOST],
                         title=user_input[CONF_HOST],
                     )
         return self.async_show_form(

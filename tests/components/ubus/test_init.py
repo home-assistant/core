@@ -1,6 +1,7 @@
 """Tests for the OpenWrt (ubus) integration setup."""
 
 from datetime import timedelta
+import logging
 from types import MappingProxyType
 from typing import Any
 from unittest.mock import MagicMock
@@ -327,6 +328,59 @@ async def test_partial_failure_keeps_healthy_routers_reporting(
         DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_LAPTOP
     )
     assert hass.states.get(laptop_id).state == STATE_UNAVAILABLE
+
+
+async def test_router_unreachable_and_recovery_logged(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_hub: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a router failure and its recovery are each logged once."""
+    caplog.set_level(logging.INFO)
+    _mock, ubus = mock_ubus_by_host
+    two_router_hub.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(two_router_hub.entry_id)
+    await hass.async_block_till_done()
+
+    # With the other router carrying the tick, router A's failure does not
+    # fail the refresh; only the per-router log explains it.
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = ConnectionError("down")
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    unreachable = [
+        record for record in caplog.records if "is unreachable" in record.getMessage()
+    ]
+    assert len(unreachable) == 1
+    assert MOCK_HOST in unreachable[0].getMessage()
+
+    # The repeated failure stays quiet.
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert (
+        len(
+            [
+                record
+                for record in caplog.records
+                if "is unreachable" in record.getMessage()
+            ]
+        )
+        == 1
+    )
+
+    # The recovery is logged once as well.
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = None
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    recovery = [
+        record for record in caplog.records if "reachable again" in record.getMessage()
+    ]
+    assert len(recovery) == 1
+    assert MOCK_HOST in recovery[0].getMessage()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

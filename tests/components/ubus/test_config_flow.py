@@ -366,6 +366,46 @@ async def test_subentry_reconfigure_updates_data_and_repolls(
     assert hub_entry.runtime_data.hosts[subentry.subentry_id].host == MOCK_HOST_B
 
 
+async def test_subentry_reconfigure_updates_unique_id(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    hub_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring a router moves its duplicate-host detection."""
+    _mock, _ubus = mock_ubus_by_host
+    hub_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+    subentry = next(iter(hub_entry.subentries.values()))
+    assert subentry.unique_id == MOCK_HOST
+
+    result = await hub_entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input=MOCK_HOST_CONFIG_B
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    assert hub_entry.subentries[subentry.subentry_id].unique_id == MOCK_HOST_B
+
+    # The new host is taken and the old one is free: a router for the new
+    # host is rejected, and the flow completes with the old host.
+    result = await hass.config_entries.subentries.async_init(
+        (hub_entry.entry_id, SUBENTRY_TYPE_ROUTER),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input=MOCK_HOST_CONFIG_B
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "already_configured"}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_subentry_reconfigure_host_collision_form_error(
     hass: HomeAssistant,
     two_router_hub: MockConfigEntry,
