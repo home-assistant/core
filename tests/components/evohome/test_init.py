@@ -9,7 +9,7 @@ import evohomeasync2 as ec2
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.evohome.const import DOMAIN, EVOHOME_DATA
+from homeassistant.components.evohome.const import DOMAIN, EVOHOME_DATA, EvoService
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -307,6 +307,20 @@ async def test_location_first_refresh_failure(
         ),
         LOG_SETUP_FAILED,
     ]
+
+
+async def test_services_registered_if_setup_fails(
+    hass: HomeAssistant,
+    config: dict[str, str],
+) -> None:
+    """Test the actions are registered even if setup fails."""
+
+    with patch.object(
+        ec2.EvohomeClient, "setup", side_effect=ec2.ApiCallFailedError("API failed")
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config}) is False
+
+    assert set(hass.services.async_services_for_domain(DOMAIN)) == set(EvoService)
 
 
 @pytest.mark.parametrize("install", ["default"])

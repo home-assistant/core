@@ -98,6 +98,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ):
         ir.async_delete_issue(hass, DOMAIN, issue_id)
 
+    async_setup_services(hass)
+
     token_manager = TokenManager(
         hass,
         config[DOMAIN][CONF_USERNAME],
@@ -147,7 +149,5 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for platform in (Platform.CLIMATE, Platform.BUTTON, Platform.WATER_HEATER):
         hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
-
-    async_setup_services(hass)
 
     return True
