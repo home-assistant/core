@@ -1,6 +1,5 @@
 """Define tests for the GeoNet NZ Quakes config flow."""
 
-from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -13,7 +12,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
 )
 from homeassistant.core import HomeAssistant
@@ -54,7 +52,6 @@ async def test_step_import(hass: HomeAssistant) -> None:
         CONF_RADIUS: 25,
         CONF_UNIT_SYSTEM: "metric",
         CONF_MMI: 2,
-        CONF_SCAN_INTERVAL: timedelta(minutes=4),
         CONF_MINIMUM_MAGNITUDE: 2.5,
     }
 
@@ -78,7 +75,6 @@ async def test_step_import(hass: HomeAssistant) -> None:
         CONF_RADIUS: 25,
         CONF_MMI: 2,
         CONF_UNIT_SYSTEM: "metric",
-        CONF_SCAN_INTERVAL: 240.0,
         CONF_MINIMUM_MAGNITUDE: 2.5,
     }
     assert result["result"].unique_id == "-41.2, 174.7"
@@ -112,7 +108,6 @@ async def test_step_user(hass: HomeAssistant) -> None:
             CONF_LONGITUDE: 174.7,
             CONF_RADIUS: 25,
             CONF_MMI: 4,
-            CONF_SCAN_INTERVAL: 300.0,
             CONF_MINIMUM_MAGNITUDE: 0.0,
         }
         assert result["result"].unique_id == "-41.2, 174.7"

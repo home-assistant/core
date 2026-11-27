@@ -20,5 +20,10 @@
         "default": "mdi:gas-station"
       }
     }
+  },
+  "services": {
+    "get_opening_times": {
+      "service": "mdi:clock-outline"
+    }
   }
 }

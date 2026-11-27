@@ -347,16 +347,20 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if context is None:
             context = cast(_FlowContextT, {})
         flow = await self.async_create_flow(handler, context=context, data=data)
-        if not flow:
-            raise UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
-        flow.flow_id = uuid_util.random_uuid_hex()
+        flow.flow_id = uuid_util.secure_uuid_hex()
         flow.context = context
         flow.init_data = data
         self._async_add_flow_progress(flow)
 
-        return await self._async_handle_step(flow, flow.init_step, data)
+        try:
+            return await self._async_handle_step(flow, flow.init_step, data)
+        except BaseException:
+            # The caller never gets the flow id of a flow that fails to start.
+            if flow.flow_id in self._progress:
+                self._async_remove_flow_progress(flow.flow_id)
+            raise
 
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
@@ -869,8 +873,13 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         progress_action: str,
         description_placeholders: Mapping[str, str] | None = None,
         progress_task: asyncio.Task[Any] | None = None,
+        translation_domain: str | None = None,
     ) -> _FlowResultT:
-        """Show a progress message to the user, without user input allowed."""
+        """Show a progress message to the user, without user input allowed.
+
+        Pass `translation_domain` to resolve the progress action from another
+        integration's translations instead of the one owning the flow.
+        """
         if progress_task is None and not self.__no_progress_task_reported:
             self.__no_progress_task_reported = True
             cls = self.__class__
@@ -897,6 +906,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             description_placeholders=description_placeholders,
             progress_task=progress_task,
         )
+        if translation_domain is not None:
+            flow_result["translation_domain"] = translation_domain
         if step_id is not None:
             flow_result["step_id"] = step_id
         else:

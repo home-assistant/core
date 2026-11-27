@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any, override
 
@@ -20,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, ZWAVE_TYPES
+from .const import DOMAIN, FIRMWARE_UPDATE_TIMEOUT, ZWAVE_TYPES
 from .coordinator import SmConfigEntry, SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
 
@@ -110,6 +111,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self._attr_unique_id = f"{coordinator.unique_id}-{device}"
 
         self._finished_event = asyncio.Event()
+        self._update_error = False
         self._firmware: Firmware | None = None
         self._unload: list[Callable[[], None]] = []
         self.idx = idx
@@ -253,14 +255,16 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
 
     @callback
     def _update_failed(self, event: MessageEvent) -> None:
+        """Notify the install task of a failure without interrupting the listener."""
+        self._update_error = True
         self._update_done()
-        self.coordinator.in_progress = False
-        raise HomeAssistantError(
+
+    def _firmware_update_error(self, translation_key: str) -> HomeAssistantError:
+        """Create an install error for this firmware."""
+        return HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="firmware_update_failed",
-            translation_placeholders={
-                "device_name": str(self.name),
-            },
+            translation_key=translation_key,
+            translation_placeholders={"device_name": str(self.name)},
         )
 
     @override
@@ -277,26 +281,43 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             self.coordinator.in_progress = True
             self._attr_in_progress = True
             self._attr_update_percentage = None
+            self._update_error = False
             self.register_callbacks()
 
             try:
-                await self.coordinator.async_execute_command(
+                accepted = await self.coordinator.async_execute_command(
                     self.coordinator.client.fw_update, firmware, self.idx
                 )
+                if not accepted:
+                    raise self._firmware_update_error("firmware_update_failed")
 
-                # block until update finished event received
-                await self._finished_event.wait()
+                # SSE can miss the completion event; the version check below decides.
+                with suppress(TimeoutError):
+                    async with asyncio.timeout(FIRMWARE_UPDATE_TIMEOUT):
+                        await self._finished_event.wait()
 
                 # allow time for SLZB-06 to reboot before updating coordinator data
                 try:
                     async with asyncio.timeout(180):
                         while (
                             self.coordinator.in_progress
+                            and not self._update_error
                             and self.installed_version != firmware.ver
                         ):
                             await self.coordinator.async_refresh()
                             await asyncio.sleep(1)
                 except TimeoutError as err:
+                    if self._update_error:
+                        raise self._firmware_update_error(
+                            "firmware_update_failed"
+                        ) from err
+                    # The last poll can see the new version just before the deadline.
+                    if self.installed_version == firmware.ver:
+                        return
+                    if not self._finished_event.is_set():
+                        raise self._firmware_update_error(
+                            "firmware_update_timeout"
+                        ) from err
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="reboot_timeout",
@@ -304,6 +325,9 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
                             "hostname": self.coordinator.config_entry.data[CONF_HOST],
                         },
                     ) from err
+
+                if self._update_error:
+                    raise self._firmware_update_error("firmware_update_failed")
             finally:
                 self._update_done()
                 self.coordinator.in_progress = False

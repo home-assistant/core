@@ -14,9 +14,9 @@
   "quality_scale": "platinum",
   "requirements": [
     "xknx==4.1.1",
-    "xknxproject==3.10.0",
-    "knx-frontend==2026.11.8.11926",
-    "knx-telegram-store[sqlite,postgres]==0.15.2"
+    "xknxproject==3.11.1",
+    "knx-frontend==2026.11.25.154408",
+    "knx-telegram-store[sqlite,postgres]==0.16.0"
   ],
   "single_config_entry": true
 }

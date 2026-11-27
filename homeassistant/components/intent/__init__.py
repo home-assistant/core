@@ -10,8 +10,8 @@ import probatio
 from homeassistant.components import http, sensor
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
-    SERVICE_PRESS as SERVICE_PRESS_BUTTON,
     ButtonDeviceClass,
+    ButtonService,
 )
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import (
@@ -20,8 +20,12 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverService,
 )
+from homeassistant.components.homeassistant import HomeAssistantService
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
+from homeassistant.components.input_button import (
+    DOMAIN as INPUT_BUTTON_DOMAIN,
+    InputButtonService,
+)
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.switch import SwitchDeviceClass
@@ -30,12 +34,7 @@ from homeassistant.components.valve import (
     ValveDeviceClass,
     ValveService,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import TargetKey
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import (
     area_registry as ar,
@@ -99,7 +98,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         OnOffIntentHandler(
             intent.INTENT_TURN_ON,
             HOMEASSISTANT_DOMAIN,
-            SERVICE_TURN_ON,
+            HomeAssistantService.TURN_ON,
             description=(
                 "Turns on/opens/presses a device or entity."
                 " For locks, this performs a 'lock' action."
@@ -114,7 +113,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         OnOffIntentHandler(
             intent.INTENT_TURN_OFF,
             HOMEASSISTANT_DOMAIN,
-            SERVICE_TURN_OFF,
+            HomeAssistantService.TURN_OFF,
             description=(
                 "Turns off/closes a device or entity."
                 " For locks, this performs an 'unlock' action."
@@ -129,7 +128,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         intent.ServiceIntentHandler(
             intent.INTENT_TOGGLE,
             HOMEASSISTANT_DOMAIN,
-            SERVICE_TOGGLE,
+            HomeAssistantService.TOGGLE,
             description="Toggles a device or entity",
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
@@ -178,7 +177,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         hass = intent_obj.hass
 
         if state.domain in (BUTTON_DOMAIN, INPUT_BUTTON_DOMAIN):
-            if service != SERVICE_TURN_ON:
+            if service != HomeAssistantService.TURN_ON:
                 raise intent.IntentHandleError(
                     f"Entity {state.entity_id} cannot be turned off"
                 )
@@ -187,8 +186,10 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                 hass.async_create_task(
                     hass.services.async_call(
                         state.domain,
-                        SERVICE_PRESS_BUTTON,
-                        {ATTR_ENTITY_ID: state.entity_id},
+                        ButtonService.PRESS
+                        if state.domain == BUTTON_DOMAIN
+                        else InputButtonService.PRESS,
+                        {TargetKey.ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
                     )
@@ -199,7 +200,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == COVER_DOMAIN:
             # on = open
             # off = close
-            if service == SERVICE_TURN_ON:
+            if service == HomeAssistantService.TURN_ON:
                 service_name: str = CoverService.OPEN
             else:
                 service_name = CoverService.CLOSE
@@ -209,7 +210,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                     hass.services.async_call(
                         COVER_DOMAIN,
                         service_name,
-                        {ATTR_ENTITY_ID: state.entity_id},
+                        {TargetKey.ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
                     )
@@ -220,7 +221,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == LOCK_DOMAIN:
             # on = lock
             # off = unlock
-            if service == SERVICE_TURN_ON:
+            if service == HomeAssistantService.TURN_ON:
                 service_name = LockService.LOCK
             else:
                 service_name = LockService.UNLOCK
@@ -230,7 +231,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                     hass.services.async_call(
                         LOCK_DOMAIN,
                         service_name,
-                        {ATTR_ENTITY_ID: state.entity_id},
+                        {TargetKey.ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
                     )
@@ -241,7 +242,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == VALVE_DOMAIN:
             # on = opened
             # off = closed
-            if service == SERVICE_TURN_ON:
+            if service == HomeAssistantService.TURN_ON:
                 service_name = ValveService.OPEN
             else:
                 service_name = ValveService.CLOSE
@@ -251,7 +252,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                     hass.services.async_call(
                         VALVE_DOMAIN,
                         service_name,
-                        {ATTR_ENTITY_ID: state.entity_id},
+                        {TargetKey.ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
                     )

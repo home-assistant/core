@@ -15,8 +15,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -121,7 +121,7 @@ async def test_button_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: MY_POSITION.entity_id},
+        {TargetKey.ENTITY_ID: MY_POSITION.entity_id},
         blocking=True,
     )
 
@@ -160,7 +160,7 @@ async def test_button_press_with_args(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: device.entity_id},
+        {TargetKey.ENTITY_ID: device.entity_id},
         blocking=True,
     )
 

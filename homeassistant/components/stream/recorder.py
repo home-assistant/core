@@ -68,6 +68,7 @@ class RecorderOutput(StreamOutput):
         os.makedirs(os.path.dirname(self.video_path), exist_ok=True)
 
         pts_adjuster: dict[str, int | None] = {"video": None, "audio": None}
+        last_dts: dict[str, int] = {}
         output: av.container.OutputContainer | None = None
         output_v = None
         output_a = None
@@ -150,6 +151,12 @@ class RecorderOutput(StreamOutput):
                     continue
                 packet.pts += pts_adjuster[packet.stream.type]  # type: ignore[operator]
                 packet.dts += pts_adjuster[packet.stream.type]  # type: ignore[operator]
+                # The mp4 muxer aborts the recording on non monotonic dts
+                if (
+                    prev_dts := last_dts.get(packet.stream.type)
+                ) is not None and packet.dts <= prev_dts:
+                    continue
+                last_dts[packet.stream.type] = packet.dts
                 # With B-frames the last frame in decode order does not end last
                 running_duration = max(
                     running_duration,
@@ -181,6 +188,11 @@ class RecorderOutput(StreamOutput):
                     out_file.write(chunk)
             os.remove(video_path + ".tmp")
 
+        def write_lookback_segments(segments: deque[Segment]) -> None:
+            """Write the completed lookback segments."""
+            while len(segments) > 1:  # The last segment is in progress
+                write_segment(segments.popleft())
+
         def finish_writing(segments: deque[Segment]) -> None:
             """Finish writing output."""
             # Should only have 0 or 1 segments, but loop through just in case
@@ -201,11 +213,7 @@ class RecorderOutput(StreamOutput):
                     self.video_path,
                 )
 
-        # Write lookback segments
-        while len(self._segments) > 1:  # The last segment is in progress
-            await self._hass.async_add_executor_job(
-                write_segment, self._segments.popleft()
-            )
+        await self._hass.async_add_executor_job(write_lookback_segments, self._segments)
         # Make sure the first segment has been added
         if not self._segments:
             await self.recv()

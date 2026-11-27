@@ -25,6 +25,7 @@ from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .manager import (
+    MIN_VERSION_SERIAL_PROXY_IDENTITY,
     ESPHomeManager,
     async_create_api_client,
     async_get_manufacturer_model,
@@ -54,9 +55,15 @@ def _async_scan_serial_ports(
             continue
 
         identities = entry_data.serial_proxy_identities
+        sends_identities = entry_data.api_version >= MIN_VERSION_SERIAL_PROXY_IDENTITY
 
         for instance, proxy in enumerate(device_info.serial_proxies):
             identity = identities.get(instance)
+
+            # Until its identity arrives, a port may be an empty USB socket
+            if identity is None and sends_identities:
+                continue
+
             url = serial_proxy.build_port_url(entry.entry_id, proxy.name, identity)
 
             if url is None:

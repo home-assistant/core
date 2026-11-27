@@ -1470,7 +1470,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1.6029802',
   })
 # ---
 # name: test_sensor[prices_incoming][sensor.zonneplan_gas_used_this_month-entry]

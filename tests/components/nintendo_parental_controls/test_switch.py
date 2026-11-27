@@ -6,7 +6,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -46,14 +46,14 @@ async def test_suspend_software(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        target={ATTR_ENTITY_ID: "switch.home_assistant_test_suspend_software"},
+        target={TargetKey.ENTITY_ID: "switch.home_assistant_test_suspend_software"},
         blocking=True,
     )
     assert len(mock_nintendo_device.set_restriction_mode.mock_calls) == 1
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        target={ATTR_ENTITY_ID: "switch.home_assistant_test_suspend_software"},
+        target={TargetKey.ENTITY_ID: "switch.home_assistant_test_suspend_software"},
         blocking=True,
     )
     assert len(mock_nintendo_device.set_restriction_mode.mock_calls) == 2

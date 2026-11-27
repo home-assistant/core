@@ -1,0 +1,20 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'avg': 4.8,
+      'jitter': 3.5,
+      'loss': 0.0,
+      'max': 10,
+      'min': 1,
+    }),
+    'is_alive': True,
+    'last_update_success': True,
+    'options': dict({
+      'consider_home': 180,
+      'count': 10.0,
+      'host': '**REDACTED**',
+    }),
+    'ping_method': 'icmp_privileged',
+  })
+# ---

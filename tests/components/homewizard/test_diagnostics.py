@@ -34,3 +34,17 @@ async def test_diagnostics(
         await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
         == snapshot
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["HWE-SKT"])
+async def test_diagnostics_v2(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    init_integration_v2: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test diagnostics for devices using the v2 API."""
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, init_integration_v2)
+        == snapshot
+    )

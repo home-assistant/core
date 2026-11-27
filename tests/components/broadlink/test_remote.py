@@ -24,8 +24,7 @@ from homeassistant.components.remote import (
     SERVICE_DELETE_COMMAND,
     SERVICE_LEARN_COMMAND,
     SERVICE_SEND_COMMAND,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    RemoteService,
 )
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -139,7 +138,7 @@ async def test_remote_send_command(
         remote = remotes[0]
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {"entity_id": remote.entity_id, "command": "b64:" + IR_PACKET},
             blocking=True,
         )
@@ -222,7 +221,7 @@ async def test_remote_turn_off_turn_on(
         remote = remotes[0]
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_TURN_OFF,
+            RemoteService.TURN_OFF,
             {"entity_id": remote.entity_id},
             blocking=True,
         )
@@ -230,7 +229,7 @@ async def test_remote_turn_off_turn_on(
 
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {"entity_id": remote.entity_id, "command": "b64:" + IR_PACKET},
             blocking=True,
         )
@@ -238,7 +237,7 @@ async def test_remote_turn_off_turn_on(
 
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_TURN_ON,
+            RemoteService.TURN_ON,
             {"entity_id": remote.entity_id},
             blocking=True,
         )
@@ -246,7 +245,7 @@ async def test_remote_turn_off_turn_on(
 
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {"entity_id": remote.entity_id, "command": "b64:" + IR_PACKET},
             blocking=True,
         )
@@ -275,7 +274,7 @@ async def test_remote_send_command_error_stops_sending(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
                 "entity_id": entity_id,
                 "command": ["b64:" + IR_PACKET] * 3,
@@ -480,7 +479,7 @@ async def test_remote_delete_command_reports_invalid_input(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_DELETE_COMMAND,
+            RemoteService.DELETE_COMMAND,
             {"entity_id": entity_id, "device": subdevice, "command": commands},
             blocking=True,
         )

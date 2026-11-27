@@ -18,8 +18,10 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import ADVICE_LEVELS, DOMAIN
 from .coordinator import StookwijzerConfigEntry, StookwijzerCoordinator
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -50,7 +52,7 @@ STOOKWIJZER_SENSORS = [
         translation_key="advice",
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda client: client.advice,
-        options=["code_yellow", "code_orange", "code_red"],
+        options=ADVICE_LEVELS,
     ),
 ]
 

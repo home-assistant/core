@@ -274,29 +274,16 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 _LOGGER.debug("Getting statistics at: %s", start)
                 # In the common case there should be a previous statistic at start time
                 # so we only need to fetch one statistic. If there isn't any, fetch all.
-                for end in (start + timedelta(seconds=1), None):
-                    stats = await get_instance(self.hass).async_add_executor_job(
-                        statistics_during_period,
-                        self.hass,
-                        start,
-                        end,
-                        {
-                            cost_statistic_id,
-                            compensation_statistic_id,
-                            consumption_statistic_id,
-                            return_statistic_id,
-                        },
-                        "hour",
-                        None,
-                        {"sum"},
-                    )
-                    if stats:
-                        break
-                    if end:
-                        _LOGGER.debug(
-                            "Not found. Trying to find the oldest statistic after %s",
-                            start,
-                        )
+                stats = await get_instance(self.hass).async_add_executor_job(
+                    self._get_statistics,
+                    start,
+                    {
+                        cost_statistic_id,
+                        compensation_statistic_id,
+                        consumption_statistic_id,
+                        return_statistic_id,
+                    },
+                )
                 # We are in this code path only if get_last_statistics found a stat
                 # so statistics_during_period should also have found at least one.
                 assert stats
@@ -400,6 +387,30 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
 
         return last_changed_per_account
 
+    def _get_statistics(
+        self, start: datetime, statistic_ids: set[str]
+    ) -> dict[str, list[Any]]:
+        """Get the statistics at start, or the oldest statistics after start."""
+        stats: dict[str, list[Any]] = {}
+        for end in (start + timedelta(seconds=1), None):
+            stats = statistics_during_period(
+                self.hass,
+                start,
+                end,
+                statistic_ids,
+                "hour",
+                None,
+                {"sum"},
+            )
+            if stats:
+                break
+            if end:
+                _LOGGER.debug(
+                    "Not found. Trying to find the oldest statistic after %s",
+                    start,
+                )
+        return stats
+
     async def _async_maybe_migrate_statistics(
         self,
         utility_account_id: str,
@@ -421,18 +432,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         if not migration_map:
             return False
 
-        need_migration_source_ids = set()
-        for source_id, target_id in migration_map.items():
-            last_target_stat = await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics,
-                self.hass,
-                1,
-                target_id,
-                True,
-                set(),
-            )
-            if not last_target_stat:
-                need_migration_source_ids.add(source_id)
+        need_migration_source_ids = await get_instance(
+            self.hass
+        ).async_add_executor_job(self._get_need_migration_source_ids, migration_map)
         if not need_migration_source_ids:
             return False
 
@@ -525,6 +527,21 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         )
 
         return True
+
+    def _get_need_migration_source_ids(self, migration_map: dict[str, str]) -> set[str]:
+        """Return the source IDs whose target statistic does not exist yet."""
+        need_migration_source_ids = set()
+        for source_id, target_id in migration_map.items():
+            last_target_stat = get_last_statistics(
+                self.hass,
+                1,
+                target_id,
+                True,
+                set(),
+            )
+            if not last_target_stat:
+                need_migration_source_ids.add(source_id)
+        return need_migration_source_ids
 
     async def _async_get_cost_reads(
         self, account: Account, time_zone_str: str, start_time: float | None = None

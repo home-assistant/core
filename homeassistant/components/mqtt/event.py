@@ -143,7 +143,7 @@ class MqttEvent(MqttEntity, EventEntity):
             return
         try:
             event_attributes = json_loads_object(payload)
-            event_type = str(event_attributes.pop(event.ATTR_EVENT_TYPE))
+            event_type = str(event_attributes.pop("event_type"))
             _LOGGER.debug(
                 (
                     "JSON event data detected after processing payload '%s' on"

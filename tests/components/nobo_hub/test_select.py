@@ -13,7 +13,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -22,7 +22,7 @@ from . import entity_unique_ids, fire_hub_update
 from .conftest import SERIAL
 
 GLOBAL_ENTITY = "select.my_eco_hub_global_override"
-PROFILE_ENTITY = "select.living_room_living_room_week_profile"
+PROFILE_ENTITY = "select.living_room_heating_week_profile"
 
 
 @pytest.fixture
@@ -52,7 +52,7 @@ async def test_global_override_select_away(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: GLOBAL_ENTITY,
+            TargetKey.ENTITY_ID: GLOBAL_ENTITY,
             SelectServiceArgument.OPTION: "away",
         },
         blocking=True,
@@ -74,7 +74,7 @@ async def test_week_profile_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: PROFILE_ENTITY,
+            TargetKey.ENTITY_ID: PROFILE_ENTITY,
             SelectServiceArgument.OPTION: "Default",
         },
         blocking=True,
@@ -116,7 +116,7 @@ async def test_select_option_wraps_library_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: option,
             },
             blocking=True,

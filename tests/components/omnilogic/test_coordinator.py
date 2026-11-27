@@ -5,10 +5,11 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from omnilogic import OmniLogic, OmniLogicException
+from omnilogic import LoginException, OmniLogic, OmniLogicException
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.omnilogic.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -59,3 +60,34 @@ async def test_rejected_token_logs_in_again(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert coordinator.last_update_success
+
+
+async def test_login_failure_starts_reauth(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a rejected login during an update starts reauthentication."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch.object(OmniLogic, "connect", return_value=True),
+        patch.object(OmniLogic, "get_telemetry_data", return_value=[]) as mock_data,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        # Empty telemetry creates no entities, and without a listener the
+        # coordinator does not poll.
+        entry.runtime_data.async_add_listener(lambda: None)
+
+        mock_data.side_effect = LoginException("Failed Login")
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id

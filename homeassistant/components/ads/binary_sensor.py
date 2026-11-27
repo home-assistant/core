@@ -31,10 +31,10 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Binary Sensor platform for ADS."""
@@ -45,7 +45,7 @@ def setup_platform(
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
     ads_sensor = AdsBinarySensor(ads_hub, name, ads_var, device_class)
-    add_entities([ads_sensor])
+    async_add_entities([ads_sensor])
 
 
 class AdsBinarySensor(AdsEntity, BinarySensorEntity):
