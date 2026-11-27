@@ -133,6 +133,11 @@ EVAL_CACHE_SIZE = 512
 # (like template editor keystrokes) cannot grow it indefinitely.
 COMPILED_CODE_PIN_SIZE = 256
 
+# Number of (type, attribute name) sandbox verdicts to remember. Bounded
+# because attribute names can come from the template itself.
+SAFE_ATTRIBUTE_CACHE_SIZE = 1024
+_SAFE_ATTRIBUTE_CACHE: LRU[tuple[type, str], bool] = LRU(SAFE_ATTRIBUTE_CACHE_SIZE)
+
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
 MAX_TEMPLATE_OUTPUT = 256 * 1024  # 256KiB
 
@@ -988,6 +993,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     @override
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
+        obj_type = type(obj)
+
+        # Namespace overrides __getattribute__, which makes isinstance on it slow
+        if obj_type is Namespace:
+            return True
+
         if isinstance(
             obj,
             (
@@ -1000,6 +1011,19 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         ):
             return attr[0] != "_"
 
+        # isinstance also consults __class__, so only cache when it is the real type
+        if obj.__class__ is not obj_type:
+            return self._is_safe_attribute_uncached(obj, attr, value)
+
+        cache_key = (obj_type, attr)
+        if (verdict := _SAFE_ATTRIBUTE_CACHE.get(cache_key)) is None:
+            verdict = self._is_safe_attribute_uncached(obj, attr, value)
+            _SAFE_ATTRIBUTE_CACHE[cache_key] = verdict
+
+        return verdict
+
+    def _is_safe_attribute_uncached(self, obj: Any, attr: str, value: Any) -> bool:
+        """Test if attribute is safe, using the Jinja sandbox rules."""
         if isinstance(obj, Namespace):
             return True
 
