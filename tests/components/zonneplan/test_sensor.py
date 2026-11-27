@@ -5,11 +5,19 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from pyzonneplan import ChargePointInstallation
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import ATTR_LAST_RESET
 from homeassistant.components.zonneplan import Platform
+from homeassistant.components.zonneplan.const import DOMAIN
+from homeassistant.components.zonneplan.coordinator import CHARGE_POINT_UPDATE_INTERVAL
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -19,6 +27,10 @@ from .conftest import MOCK_ACCOUNT
 BATTERY_STATE_ENTITY_ID = "sensor.thuisbatterij_battery_state"
 INVERTER_STATE_ENTITY_ID = "sensor.thuisbatterij_inverter_state"
 EARNED_TODAY_ENTITY_ID = "sensor.thuisbatterij_earned_today"
+CHARGE_POINT_STATE_ENTITY_ID = "sensor.laadpaal_status"
+CHARGE_POINT_POWER_ENTITY_ID = "sensor.laadpaal_power"
+LOAD_BALANCING_HEALTH_ENTITY_ID = "sensor.laadpaal_load_balancing_health"
+SESSION_COST_ENTITY_ID = "sensor.laadpaal_session_cost"
 
 
 @pytest.fixture(autouse=True)
@@ -201,3 +213,131 @@ async def test_battery_earned_today_without_measurement_groups(
     assert (state := hass.states.get(EARNED_TODAY_ENTITY_ID))
     assert state.state == "0.5000000"
     assert ATTR_LAST_RESET not in state.attributes
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "entity_id"),
+    [
+        pytest.param("state", None, CHARGE_POINT_STATE_ENTITY_ID, id="state_missing"),
+        pytest.param(
+            "state",
+            "Hibernating",
+            CHARGE_POINT_STATE_ENTITY_ID,
+            id="state_unknown_value",
+        ),
+        pytest.param(
+            "dynamic_load_balancing_health",
+            None,
+            LOAD_BALANCING_HEALTH_ENTITY_ID,
+            id="health_missing",
+        ),
+        pytest.param(
+            "dynamic_load_balancing_health",
+            "DEGRADED",
+            LOAD_BALANCING_HEALTH_ENTITY_ID,
+            id="health_unknown_value",
+        ),
+    ],
+)
+async def test_charge_point_enum_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+    field: str,
+    value: str | None,
+    entity_id: str,
+) -> None:
+    """Test the charge point enum sensors are unknown for a missing or new value."""
+    payload = await async_load_json_object_fixture(
+        hass, "get_charge_point.json", DOMAIN
+    )
+    payload["contracts"][0]["state"][field] = value
+    mock_zonneplan_client.async_get_charge_point.return_value = (
+        ChargePointInstallation.from_dict(payload)
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_charge_point_without_session_or_schedules(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+) -> None:
+    """Test the session and schedule sensors are unknown without a session or schedule."""
+    payload = await async_load_json_object_fixture(
+        hass, "get_charge_point.json", DOMAIN
+    )
+    contract = payload["contracts"][0]
+    contract["state"]["charge_point_session"] = None
+    contract["charge_schedules"] = []
+    for key in (
+        "session_charging_cost_total",
+        "session_flex_result",
+        "session_average_cost_in_cents",
+    ):
+        contract["meta"][key] = None
+    mock_zonneplan_client.async_get_charge_point.return_value = (
+        ChargePointInstallation.from_dict(payload)
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for entity_id in (
+        SESSION_COST_ENTITY_ID,
+        "sensor.laadpaal_session_flex_result",
+        "sensor.laadpaal_session_average_price",
+        "sensor.laadpaal_session_start",
+        "sensor.laadpaal_session_charged_distance",
+        "sensor.laadpaal_next_schedule_start",
+        "sensor.laadpaal_next_schedule_end",
+    ):
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_UNKNOWN
+    assert (state := hass.states.get(SESSION_COST_ENTITY_ID))
+    assert ATTR_LAST_RESET not in state.attributes
+
+
+async def test_charge_point_sensor_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the charge point sensors follow coordinator updates."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.zonneplan.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (state := hass.states.get(CHARGE_POINT_STATE_ENTITY_ID))
+    assert state.state == "charging"
+    assert (state := hass.states.get(CHARGE_POINT_POWER_ENTITY_ID))
+    assert state.state == "11000"
+
+    payload = await async_load_json_object_fixture(
+        hass, "get_charge_point.json", DOMAIN
+    )
+    payload["contracts"][0]["state"]["state"] = "VehicleDetected"
+    payload["contracts"][0]["state"]["power_actual"] = 0
+    mock_zonneplan_client.async_get_charge_point.return_value = (
+        ChargePointInstallation.from_dict(payload)
+    )
+    freezer.tick(CHARGE_POINT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(CHARGE_POINT_STATE_ENTITY_ID))
+    assert state.state == "vehicle_detected"
+    assert (state := hass.states.get(CHARGE_POINT_POWER_ENTITY_ID))
+    assert state.state == "0"

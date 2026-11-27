@@ -73,6 +73,14 @@
           "permanent_fault": "mdi:battery-alert"
         }
       },
+      "charge_point_state": {
+        "default": "mdi:ev-station",
+        "state": {
+          "charging": "mdi:battery-charging",
+          "error": "mdi:alert-circle-outline",
+          "vehicle_detected": "mdi:ev-plug-type2"
+        }
+      },
       "current_electricity_price": {
         "default": "mdi:cash-multiple"
       },
@@ -147,6 +155,12 @@
       "inverter_state": {
         "default": "mdi:current-ac"
       },
+      "load_balancing_health": {
+        "default": "mdi:scale-balance",
+        "state": {
+          "unhealthy": "mdi:alert-outline"
+        }
+      },
       "lowest_electricity_price_today": {
         "default": "mdi:cash-multiple"
       },
@@ -155,6 +169,24 @@
       },
       "next_hour_electricity_price": {
         "default": "mdi:cash-multiple"
+      },
+      "next_schedule_end": {
+        "default": "mdi:clock-end"
+      },
+      "next_schedule_start": {
+        "default": "mdi:clock-start"
+      },
+      "session_average_price": {
+        "default": "mdi:cash-multiple"
+      },
+      "session_charged_distance": {
+        "default": "mdi:map-marker-distance"
+      },
+      "session_flex_result": {
+        "default": "mdi:cash-sync"
+      },
+      "session_start": {
+        "default": "mdi:clock-start"
       },
       "total_earned": {
         "default": "mdi:cash"

@@ -20,6 +20,17 @@
     'number.thuisbatterij_maximum_charge_power',
     'number.thuisbatterij_maximum_discharge_power',
     'select.thuisbatterij_control_mode',
+    'sensor.laadpaal_load_balancing_health',
+    'sensor.laadpaal_next_schedule_end',
+    'sensor.laadpaal_next_schedule_start',
+    'sensor.laadpaal_power',
+    'sensor.laadpaal_session_average_price',
+    'sensor.laadpaal_session_charged_distance',
+    'sensor.laadpaal_session_cost',
+    'sensor.laadpaal_session_energy',
+    'sensor.laadpaal_session_flex_result',
+    'sensor.laadpaal_session_start',
+    'sensor.laadpaal_status',
     'sensor.thuisbatterij_backup_power_capacity',
     'sensor.thuisbatterij_battery',
     'sensor.thuisbatterij_battery_state',
@@ -52,6 +63,632 @@
 # name: test_entities_not_created_for_missing_market_segment[no_energy_contract]
   list([
   ])
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_load_balancing_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.laadpaal_load_balancing_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Load balancing health',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Load balancing health',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'load_balancing_health',
+    'unique_id': '00000000-0000-4000-8000-000000000301_load_balancing_health',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_load_balancing_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Load balancing health',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_load_balancing_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'healthy',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_next_schedule_end-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_next_schedule_end',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Next schedule end',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Next schedule end',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_schedule_end',
+    'unique_id': '00000000-0000-4000-8000-000000000301_next_schedule_end',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_next_schedule_end-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Next schedule end',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_next_schedule_end',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-09-29T14:00:00+00:00',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_next_schedule_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_next_schedule_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Next schedule start',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Next schedule start',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_schedule_start',
+    'unique_id': '00000000-0000-4000-8000-000000000301_next_schedule_start',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_next_schedule_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Next schedule start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_next_schedule_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-09-29T12:00:00+00:00',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000-0000-4000-8000-000000000301_power',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11000',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_session_average_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_session_average_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Session average price',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Session average price',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'session_average_price',
+    'unique_id': '00000000-0000-4000-8000-000000000301_session_average_price',
+    'unit_of_measurement': 'EUR/kWh',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_session_average_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Session average price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_session_average_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2500000',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_session_charged_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_session_charged_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Session charged distance',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Session charged distance',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'session_charged_distance',
+    'unique_id': '00000000-0000-4000-8000-000000000301_session_charged_distance',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_session_charged_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Session charged distance',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_session_charged_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_session_cost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_session_cost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Session cost',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Session cost',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'session_cost',
+    'unique_id': '00000000-0000-4000-8000-000000000301_session_cost',
+    'unit_of_measurement': '€',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_session_cost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Session cost',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-09-29T10:00:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_session_cost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.5000000',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_session_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_session_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Session energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Session energy',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'session_energy',
+    'unique_id': '00000000-0000-4000-8000-000000000301_session_energy',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_session_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Session energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_session_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.000',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_session_flex_result-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_session_flex_result',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Session flex result',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Session flex result',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'session_flex_result',
+    'unique_id': '00000000-0000-4000-8000-000000000301_session_flex_result',
+    'unit_of_measurement': '€',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_session_flex_result-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Session flex result',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-09-29T10:00:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_session_flex_result',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2000000',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_session_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_session_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Session start',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Session start',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'session_start',
+    'unique_id': '00000000-0000-4000-8000-000000000301_session_start',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_session_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Session start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_session_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-09-29T10:00:00+00:00',
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standby',
+        'vehicle_detected',
+        'charging',
+        'error',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_point_state',
+    'unique_id': '00000000-0000-4000-8000-000000000301_charge_point_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_incoming][sensor.laadpaal_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standby',
+        'vehicle_detected',
+        'charging',
+        'error',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charging',
+  })
 # ---
 # name: test_sensor[prices_incoming][sensor.thuisbatterij_backup_power_capacity-entry]
   EntityRegistryEntrySnapshot({
@@ -1815,6 +2452,632 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.2233858',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_load_balancing_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.laadpaal_load_balancing_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Load balancing health',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Load balancing health',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'load_balancing_health',
+    'unique_id': '00000000-0000-4000-8000-000000000301_load_balancing_health',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_load_balancing_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Load balancing health',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_load_balancing_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'healthy',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_next_schedule_end-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_next_schedule_end',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Next schedule end',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Next schedule end',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_schedule_end',
+    'unique_id': '00000000-0000-4000-8000-000000000301_next_schedule_end',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_next_schedule_end-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Next schedule end',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_next_schedule_end',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-09-29T14:00:00+00:00',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_next_schedule_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_next_schedule_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Next schedule start',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Next schedule start',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_schedule_start',
+    'unique_id': '00000000-0000-4000-8000-000000000301_next_schedule_start',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_next_schedule_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Next schedule start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_next_schedule_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-09-29T12:00:00+00:00',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000-0000-4000-8000-000000000301_power',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11000',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_session_average_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_session_average_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Session average price',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Session average price',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'session_average_price',
+    'unique_id': '00000000-0000-4000-8000-000000000301_session_average_price',
+    'unit_of_measurement': 'EUR/kWh',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_session_average_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Session average price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_session_average_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2500000',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_session_charged_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_session_charged_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Session charged distance',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Session charged distance',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'session_charged_distance',
+    'unique_id': '00000000-0000-4000-8000-000000000301_session_charged_distance',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_session_charged_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Session charged distance',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_session_charged_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_session_cost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_session_cost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Session cost',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Session cost',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'session_cost',
+    'unique_id': '00000000-0000-4000-8000-000000000301_session_cost',
+    'unit_of_measurement': '€',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_session_cost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Session cost',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-09-29T10:00:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_session_cost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.5000000',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_session_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_session_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Session energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Session energy',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'session_energy',
+    'unique_id': '00000000-0000-4000-8000-000000000301_session_energy',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_session_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Session energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_session_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.000',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_session_flex_result-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_session_flex_result',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Session flex result',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Session flex result',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'session_flex_result',
+    'unique_id': '00000000-0000-4000-8000-000000000301_session_flex_result',
+    'unit_of_measurement': '€',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_session_flex_result-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Session flex result',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-09-29T10:00:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_session_flex_result',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2000000',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_session_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_session_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Session start',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Session start',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'session_start',
+    'unique_id': '00000000-0000-4000-8000-000000000301_session_start',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_session_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Session start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_session_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-09-29T10:00:00+00:00',
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standby',
+        'vehicle_detected',
+        'charging',
+        'error',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000301')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.laadpaal_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'zonneplan',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_point_state',
+    'unique_id': '00000000-0000-4000-8000-000000000301_charge_point_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[prices_published][sensor.laadpaal_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laadpaal Status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'standby',
+        'vehicle_detected',
+        'charging',
+        'error',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laadpaal_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charging',
   })
 # ---
 # name: test_sensor[prices_published][sensor.thuisbatterij_backup_power_capacity-entry]
