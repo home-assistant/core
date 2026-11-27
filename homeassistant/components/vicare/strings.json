@@ -52,6 +52,9 @@
       "domestic_hot_water_circulation_pump": {
         "name": "DHW circulation pump"
       },
+      "domestic_hot_water_hygiene": {
+        "name": "DHW legionella protection"
+      },
       "domestic_hot_water_pump": {
         "name": "DHW pump"
       },
