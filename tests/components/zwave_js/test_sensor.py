@@ -384,10 +384,65 @@ async def test_numeric_sensor(
             UnitOfPressure.MMHG,
             id="blood_pressure_mmhg",
         ),
+        pytest.param(
+            MultilevelSensorType.CURRENT,
+            0,
+            "A",
+            "Current",
+            "sensor.multisensor_6_current",
+            SensorDeviceClass.CURRENT,
+            "12.5",
+            UnitOfElectricCurrent.AMPERE,
+            id="current_ampere",
+        ),
+        pytest.param(
+            MultilevelSensorType.VOLTAGE,
+            0,
+            "V",
+            "Voltage",
+            "sensor.multisensor_6_voltage",
+            SensorDeviceClass.VOLTAGE,
+            "12.5",
+            UnitOfElectricPotential.VOLT,
+            id="voltage_volt",
+        ),
+        pytest.param(
+            MultilevelSensorType.VOLTAGE,
+            1,
+            "mV",
+            "Voltage",
+            "sensor.multisensor_6_voltage",
+            SensorDeviceClass.VOLTAGE,
+            "12.5",
+            UnitOfElectricPotential.MILLIVOLT,
+            id="voltage_millivolt",
+        ),
+        pytest.param(
+            MultilevelSensorType.WATER_OXIDATION_REDUCTION_POTENTIAL,
+            0,
+            "mV",
+            "Water oxidation reduction potential",
+            "sensor.multisensor_6_water_oxidation_reduction_potential",
+            SensorDeviceClass.VOLTAGE,
+            "12.5",
+            UnitOfElectricPotential.MILLIVOLT,
+            id="water_oxidation_reduction_potential_millivolt",
+        ),
+        pytest.param(
+            MultilevelSensorType.POWER,
+            0,
+            "W",
+            "Power",
+            "sensor.multisensor_6_power",
+            SensorDeviceClass.POWER,
+            "12.5",
+            UnitOfPower.WATT,
+            id="power_watt",
+        ),
     ],
 )
 @pytest.mark.usefixtures("integration")
-async def test_multilevel_sensor_co_co2_and_pressure(
+async def test_multilevel_sensor_with_device_class(
     hass: HomeAssistant,
     client: MagicMock,
     entity_registry: er.EntityRegistry,
@@ -401,7 +456,7 @@ async def test_multilevel_sensor_co_co2_and_pressure(
     expected_state: str,
     expected_unit: str,
 ) -> None:
-    """Test CO, CO2 and pressure multilevel sensors."""
+    """Test multilevel sensors with a device class."""
     node_state = copy.deepcopy(multisensor_6_state)
     value = next(
         value
@@ -511,6 +566,30 @@ async def test_multilevel_sensor_co_co2_and_pressure(
             "mmHg",
             UnitOfPressure.MMHG,
             id="blood_pressure_diastolic_to_systolic",
+        ),
+        pytest.param(
+            "Air temperature",
+            AIR_TEMPERATURE_SENSOR,
+            MultilevelSensorType.CURRENT,
+            1,
+            "mA",
+            None,
+            0,
+            "A",
+            UnitOfElectricCurrent.AMPERE,
+            id="current_milliampere_to_ampere",
+        ),
+        pytest.param(
+            "Air temperature",
+            AIR_TEMPERATURE_SENSOR,
+            MultilevelSensorType.POWER,
+            1,
+            "BTU/h",
+            None,
+            0,
+            "W",
+            UnitOfPower.WATT,
+            id="power_btu_per_hour_to_watt",
         ),
     ],
 )

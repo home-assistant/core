@@ -1,0 +1,247 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Smart Litter Box",
+  "category": "msp",
+  "product_id": "unvgwjvxa1dgmzjz",
+  "product_name": "Smart Litter Box",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2026-11-22T07:04:13+00:00",
+  "create_time": "2026-11-22T07:04:13+00:00",
+  "update_time": "2026-11-22T07:04:13+00:00",
+  "function": {
+    "start": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "auto_clean": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "delay_clean_time": {
+      "type": "Integer",
+      "value": "{\"unit\":\"s\",\"min\":20,\"max\":600,\"scale\":0,\"step\":5}"
+    },
+    "sleep": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "sleep_start_time": {
+      "type": "Integer",
+      "value": "{\"unit\":\"\",\"min\":0,\"max\":1440,\"scale\":0,\"step\":1}"
+    },
+    "sleep_end_time": {
+      "type": "Integer",
+      "value": "{\"unit\":\"\",\"min\":0,\"max\":1440,\"scale\":0,\"step\":1}"
+    },
+    "uv": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": "{}"
+    }
+  },
+  "local_strategy": {
+    "3": {
+      "value_convert": "default",
+      "status_code": "start",
+      "config_item": {
+        "statusFormat": "{\"start\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "unvgwjvxa1dgmzjz"
+      }
+    },
+    "4": {
+      "value_convert": "default",
+      "status_code": "auto_clean",
+      "config_item": {
+        "statusFormat": "{\"auto_clean\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "unvgwjvxa1dgmzjz"
+      }
+    },
+    "5": {
+      "value_convert": "default",
+      "status_code": "delay_clean_time",
+      "config_item": {
+        "statusFormat": "{\"delay_clean_time\":\"$\"}",
+        "valueDesc": "{\"unit\":\"s\",\"min\":20,\"max\":600,\"scale\":0,\"step\":5}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "unvgwjvxa1dgmzjz"
+      }
+    },
+    "6": {
+      "value_convert": "default",
+      "status_code": "cat_weight",
+      "config_item": {
+        "statusFormat": "{\"cat_weight\":\"$\"}",
+        "valueDesc": "{\"unit\":\"g\",\"min\":0,\"max\":20000,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "unvgwjvxa1dgmzjz"
+      }
+    },
+    "7": {
+      "value_convert": "default",
+      "status_code": "excretion_times_day",
+      "config_item": {
+        "statusFormat": "{\"excretion_times_day\":\"$\"}",
+        "valueDesc": "{\"unit\":\"times\",\"min\":0,\"max\":60,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "unvgwjvxa1dgmzjz"
+      }
+    },
+    "8": {
+      "value_convert": "default",
+      "status_code": "excretion_time_day",
+      "config_item": {
+        "statusFormat": "{\"excretion_time_day\":\"$\"}",
+        "valueDesc": "{\"unit\":\"s\",\"min\":0,\"max\":600,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "unvgwjvxa1dgmzjz"
+      }
+    },
+    "10": {
+      "value_convert": "default",
+      "status_code": "sleep",
+      "config_item": {
+        "statusFormat": "{\"sleep\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "unvgwjvxa1dgmzjz"
+      }
+    },
+    "11": {
+      "value_convert": "default",
+      "status_code": "sleep_start_time",
+      "config_item": {
+        "statusFormat": "{\"sleep_start_time\":\"$\"}",
+        "valueDesc": "{\"unit\":\"\",\"min\":0,\"max\":1440,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "unvgwjvxa1dgmzjz"
+      }
+    },
+    "12": {
+      "value_convert": "default",
+      "status_code": "sleep_end_time",
+      "config_item": {
+        "statusFormat": "{\"sleep_end_time\":\"$\"}",
+        "valueDesc": "{\"unit\":\"\",\"min\":0,\"max\":1440,\"scale\":0,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "unvgwjvxa1dgmzjz"
+      }
+    },
+    "13": {
+      "value_convert": "default",
+      "status_code": "uv",
+      "config_item": {
+        "statusFormat": "{\"uv\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "unvgwjvxa1dgmzjz"
+      }
+    },
+    "23": {
+      "value_convert": "default",
+      "status_code": "factory_reset",
+      "config_item": {
+        "statusFormat": "{\"factory_reset\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "unvgwjvxa1dgmzjz"
+      }
+    }
+  },
+  "status_range": {
+    "start": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "auto_clean": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "delay_clean_time": {
+      "type": "Integer",
+      "value": "{\"unit\":\"s\",\"min\":20,\"max\":600,\"scale\":0,\"step\":5}",
+      "report_type": null
+    },
+    "cat_weight": {
+      "type": "Integer",
+      "value": "{\"unit\":\"g\",\"min\":0,\"max\":20000,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "excretion_times_day": {
+      "type": "Integer",
+      "value": "{\"unit\":\"times\",\"min\":0,\"max\":60,\"scale\":0,\"step\":1}",
+      "report_type": "sum"
+    },
+    "excretion_time_day": {
+      "type": "Integer",
+      "value": "{\"unit\":\"s\",\"min\":0,\"max\":600,\"scale\":0,\"step\":1}",
+      "report_type": "un_known"
+    },
+    "sleep": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "sleep_start_time": {
+      "type": "Integer",
+      "value": "{\"unit\":\"\",\"min\":0,\"max\":1440,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "sleep_end_time": {
+      "type": "Integer",
+      "value": "{\"unit\":\"\",\"min\":0,\"max\":1440,\"scale\":0,\"step\":1}",
+      "report_type": null
+    },
+    "uv": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    }
+  },
+  "status": {
+    "start": false,
+    "auto_clean": true,
+    "delay_clean_time": 20,
+    "cat_weight": 0,
+    "excretion_times_day": 1,
+    "excretion_time_day": 0,
+    "sleep": false,
+    "sleep_start_time": 0,
+    "sleep_end_time": 0,
+    "uv": true,
+    "factory_reset": false
+  },
+  "set_up": true,
+  "support_local": true,
+  "quirk": null,
+  "warnings": null
+}

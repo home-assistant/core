@@ -12,6 +12,7 @@ import jwt
 
 from homeassistant.components import webhook
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -47,6 +48,8 @@ from .const import (
 )
 from .helpers import AbstractConfig, async_get_entities
 from .smart_home import async_handle_message
+
+type GoogleConfigEntry = ConfigEntry[GoogleConfig]
 
 _LOGGER = logging.getLogger(__name__)
 

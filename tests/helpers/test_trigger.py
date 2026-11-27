@@ -4469,7 +4469,9 @@ async def _arm_off_to_on_trigger(
 
     trigger_config = {
         CONF_PLATFORM: "test.off_to_on",
-        CONF_TARGET: target if target is not None else {CONF_ENTITY_ID: entity_ids},
+        CONF_TARGET: target
+        if target is not None
+        else {TargetKey.ENTITY_ID: entity_ids},
         CONF_OPTIONS: options,
     }
 

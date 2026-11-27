@@ -1,9 +1,10 @@
 """Config flows for the EnOcean integration."""
 
+import asyncio
 import glob
 from typing import Any, override
 
-from enocean_async import Gateway
+from enocean_async import SerialProtocol, detect_serial_protocol
 import probatio
 
 from homeassistant.components import usb
@@ -21,7 +22,13 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER, MANUFACTURER
+from .const import (
+    CONF_PROTOCOL,
+    DOMAIN,
+    ERROR_INVALID_DONGLE_PATH,
+    LOGGER,
+    MANUFACTURER,
+)
 
 MANUAL_SCHEMA = probatio.Schema(
     {
@@ -30,17 +37,17 @@ MANUAL_SCHEMA = probatio.Schema(
 )
 
 
-def _detect_usb_dongle() -> list[str]:
+ENOCEAN_DONGLE_GLOBS = ["/dev/tty*FTOA2PV*", "/dev/serial/by-id/*EnOcean*"]
+# Matches any USB serial adapter, so these ports are listed without probing them
+GENERIC_SERIAL_GLOBS = ["/dev/tty.usbserial-*"]
+
+
+def _detect_usb_dongle(globs_to_test: list[str]) -> list[str]:
     """Return a list of candidate paths for USB EnOcean dongles.
 
     This method is currently a bit simplistic, it may need to be
     improved to support more configurations and OS.
     """
-    globs_to_test = [
-        "/dev/tty*FTOA2PV*",
-        "/dev/serial/by-id/*EnOcean*",
-        "/dev/tty.usbserial-*",
-    ]
     found_paths = []
     for current_glob in globs_to_test:
         found_paths.extend(glob.glob(current_glob))
@@ -102,14 +109,15 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a yaml configuration."""
 
-        if not await self.validate_enocean_conf(import_data):
+        protocol = await detect_serial_protocol(import_data[CONF_DEVICE])
+        if protocol is None:
             LOGGER.warning(
                 "Cannot import yaml configuration: %s is not a valid dongle path",
                 import_data[CONF_DEVICE],
             )
             return self.async_abort(reason="invalid_dongle_path")
 
-        return self.create_enocean_entry(import_data)
+        return self.create_enocean_entry(import_data, protocol)
 
     @override
     async def async_step_user(
@@ -127,7 +135,24 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_manual()
             return await self.async_step_manual(user_input)
 
-        devices = await self.hass.async_add_executor_job(_detect_usb_dongle)
+        candidates = await self.hass.async_add_executor_job(
+            _detect_usb_dongle, ENOCEAN_DONGLE_GLOBS
+        )
+        # Only a port with a dongle is listed: a FAM-USB, for example, shows up as
+        # two serial ports, of which one is connected to the radio module.
+        protocols = await asyncio.gather(
+            *(detect_serial_protocol(path) for path in candidates)
+        )
+        devices = [
+            path
+            for path, protocol in zip(candidates, protocols, strict=True)
+            if protocol is not None
+        ]
+        devices.extend(
+            await self.hass.async_add_executor_job(
+                _detect_usb_dongle, GENERIC_SERIAL_GLOBS
+            )
+        )
         if len(devices) == 0:
             return await self.async_step_manual()
         devices.append(self.MANUAL_PATH_VALUE)
@@ -153,8 +178,9 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Request manual USB dongle path."""
         errors = {}
         if user_input is not None:
-            if await self.validate_enocean_conf(user_input):
-                return self.create_enocean_entry(user_input)
+            protocol = await detect_serial_protocol(user_input[CONF_DEVICE])
+            if protocol is not None:
+                return self.create_enocean_entry(user_input, protocol)
             errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
 
         return self.async_show_form(
@@ -163,21 +189,10 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def validate_enocean_conf(self, user_input) -> bool:
-        """Return True if the user_input contains a valid dongle path."""
-        dongle_path = user_input[CONF_DEVICE]
-        try:
-            # Starting the gateway will raise an exception if it can't connect
-            gateway = Gateway(port=dongle_path)
-            await gateway.start()
-        except ConnectionError as exception:
-            LOGGER.warning("Dongle path %s is invalid: %s", dongle_path, str(exception))
-            return False
-        finally:
-            await gateway.stop()
-
-        return True
-
-    def create_enocean_entry(self, user_input):
+    def create_enocean_entry(
+        self, user_input: dict[str, Any], protocol: SerialProtocol
+    ) -> ConfigFlowResult:
         """Create an entry for the provided configuration."""
-        return self.async_create_entry(title=MANUFACTURER, data=user_input)
+        return self.async_create_entry(
+            title=MANUFACTURER, data={**user_input, CONF_PROTOCOL: protocol.value}
+        )

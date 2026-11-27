@@ -40,6 +40,7 @@ from homeassistant.components.fan import (
     FanEntityStateAttribute,
     FanServiceArgument,
 )
+from homeassistant.components.homeassistant import HomeAssistantService
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import (
     HumidifierEntityStateAttribute,
@@ -60,7 +61,6 @@ from homeassistant.components.media_player import (
     MediaPlayerServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_CLOSED,
@@ -68,6 +68,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     EntityStateAttribute,
+    TargetKey,
 )
 from homeassistant.core import Event, EventStateChangedData, State
 from homeassistant.helpers.event import async_track_state_change_event
@@ -475,7 +476,7 @@ class HueOneLightChangeView(HomeAssistantView):
         service: str | None = SERVICE_TURN_ON if parsed[STATE_ON] else SERVICE_TURN_OFF
 
         # Construct what we need to send to the service
-        data: dict[str, Any] = {ATTR_ENTITY_ID: entity_id}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: entity_id}
 
         # If the requested entity is a light, set the brightness, hue,
         # saturation and color temp
@@ -607,8 +608,8 @@ class HueOneLightChangeView(HomeAssistantView):
         if turn_on_needed:
             await hass.services.async_call(
                 core.DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: entity_id},
+                HomeAssistantService.TURN_ON,
+                {TargetKey.ENTITY_ID: entity_id},
                 blocking=False,
             )
 

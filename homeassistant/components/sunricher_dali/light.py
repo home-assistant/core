@@ -7,14 +7,7 @@ from PySrDaliGateway import CallbackEventType, Device
 from PySrDaliGateway.helper import is_light_device
 from PySrDaliGateway.types import LightStatus
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_HS_COLOR,
-    ATTR_RGBW_COLOR,
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -76,10 +69,10 @@ class DaliCenterLight(DaliDeviceEntity, LightEntity):
         _LOGGER.debug(
             "Turning on light %s with kwargs: %s", self._attr_unique_id, kwargs
         )
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
-        hs_color = kwargs.get(ATTR_HS_COLOR)
-        rgbw_color = kwargs.get(ATTR_RGBW_COLOR)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS)
+        color_temp_kelvin = kwargs.get(LightServiceArgument.COLOR_TEMP_KELVIN)
+        hs_color = kwargs.get(LightServiceArgument.HS_COLOR)
+        rgbw_color = kwargs.get(LightServiceArgument.RGBW_COLOR)
         self._light.turn_on(
             brightness=brightness,
             color_temp_kelvin=color_temp_kelvin,

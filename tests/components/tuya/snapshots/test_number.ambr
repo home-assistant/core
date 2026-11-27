@@ -3324,6 +3324,67 @@
     'state': '10.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.smart_litter_box_delay_clean_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 600.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 20.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'zjzmgd1axvjwgvnupsm')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.smart_litter_box_delay_clean_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Delay clean time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Delay clean time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'delay_clean_time',
+    'unique_id': 'tuya.zjzmgd1axvjwgvnupsmdelay_clean_time',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.smart_litter_box_delay_clean_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Litter Box Delay clean time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 600.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 20.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.smart_litter_box_delay_clean_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.smart_thermostats_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
