@@ -83,7 +83,7 @@ async def test_discovery_remote(
 async def test_discovery_climate_power_controller_opt_out(
     hass: HomeAssistant,
 ) -> None:
-    """Test the climate PowerController can be hidden without affecting other interfaces."""
+    """Test hiding the climate PowerController preserves other interfaces."""
     request = get_new_request("Alexa.Discovery", "Discover")
     climate_attributes = {
         ClimateEntityCapabilityAttribute.HVAC_MODES: [HVACMode.OFF, HVACMode.HEAT],
