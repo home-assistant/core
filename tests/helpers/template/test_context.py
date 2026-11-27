@@ -98,6 +98,21 @@ def test_render_with_context_bare_environment_globals() -> None:
     assert render_with_context("", template_obj) == "[0, 1, 2] False"
 
 
+def test_render_with_context_template_globals_reach_imports() -> None:
+    """Test globals of the template itself reach a macro imported without context."""
+    env = jinja2.Environment(
+        loader=jinja2.DictLoader(
+            {"macros.jinja": "{% macro show() %}{{ own_global }}{% endmacro %}"}
+        )
+    )
+    template_obj = env.from_string(
+        "{% import 'macros.jinja' as m %}{{ m.show() }}",
+        globals={"own_global": "from template"},
+    )
+
+    assert render_with_context("", template_obj) == "from template"
+
+
 def test_render_variables_shadow_globals(hass: HomeAssistant) -> None:
     """Test render variables shadow globals without leaking into later renders."""
     shadowing = template.Template("{{ pi }} {{ extra | default('unset') }}", hass)

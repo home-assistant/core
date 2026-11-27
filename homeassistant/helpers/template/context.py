@@ -40,17 +40,17 @@ def render_with_context(
 ) -> str:
     """Store template being rendered in a ContextVar to aid error handling."""
     environment = template.environment
-    template_globals = template.globals
+    environment_globals = environment.globals
 
-    # A context never writes to its parent, but its dict methods need a real dict
-    if kwargs or not isinstance(template_globals, dict):
-        parent = {**template_globals, **kwargs}
+    if template.globals is environment_globals:
+        # A context never writes to its parent, so the globals can be shared
+        parent = {**environment_globals, **kwargs} if kwargs else environment_globals
+        context = environment.context_class(
+            environment, parent, template.name, template.blocks
+        )
     else:
-        parent = template_globals
-
-    context = environment.context_class(
-        environment, parent, template.name, template.blocks
-    )
+        # Globals of its own have to be tracked, to pass them on to imports
+        context = template.new_context(kwargs)
 
     with template_context_manager as cm:
         cm.set_template(template_str, "rendering")
