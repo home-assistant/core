@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Mapping
 from copy import deepcopy
+import logging
 from typing import Any, override
 
 import probatio
@@ -26,12 +27,15 @@ from homeassistant.const import (
     TargetKey,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_SERVICES = "services"
 
@@ -122,8 +126,20 @@ class GroupNotifyPlatform(BaseNotificationService):
                 )
             )
 
-        if tasks:
-            await asyncio.wait(tasks)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for entity, result in zip(self.entities, results, strict=True):
+            if isinstance(result, Exception):
+                _LOGGER.error(
+                    "Failed to send notification to notify.%s"
+                    " from notify group notify.%s: %s",
+                    entity[CONF_ACTION],
+                    self._service_name,
+                    result,
+                    # Keep the traceback only for unexpected errors
+                    exc_info=None
+                    if isinstance(result, (HomeAssistantError, probatio.Invalid))
+                    else result,
+                )
 
 
 async def async_setup_entry(
