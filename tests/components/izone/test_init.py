@@ -670,7 +670,30 @@ async def test_setup_without_host_finds_it_by_uid(
             ),
             "cannot_connect",
             {"host": "192.0.2.1"},
-            id="verify_error",
+            id="no_reply",
+        ),
+        pytest.param(
+            AsyncMock(
+                side_effect=EndpointVerifyError(
+                    "192.0.2.1", VerifyFailure.UNREADABLE, uid="000000001"
+                )
+            ),
+            "unreadable_reply",
+            {"host": "192.0.2.1"},
+            id="unreadable",
+        ),
+        pytest.param(
+            AsyncMock(
+                side_effect=EndpointVerifyError(
+                    "192.0.2.1",
+                    VerifyFailure.OTHER_UID,
+                    uid="000000001",
+                    answered_uid="000000002",
+                )
+            ),
+            "other_controller",
+            {"host": "192.0.2.1", "answered_uid": "000000002"},
+            id="other_uid",
         ),
         pytest.param(
             AsyncMock(side_effect=OSError("bind failed")),
@@ -722,6 +745,36 @@ async def test_setup_without_host_lookup_failure_retries(
             "cannot_connect",
             {"host": "192.0.2.1"},
             id="connection-error",
+        ),
+        pytest.param(
+            EndpointVerifyError("izone.example", VerifyFailure.UNRESOLVED),
+            ConfigEntryState.SETUP_RETRY,
+            "host_unresolved",
+            {"host": "izone.example"},
+            id="unresolved",
+        ),
+        pytest.param(
+            EndpointVerifyError("192.0.2.1", VerifyFailure.NO_REPLY),
+            ConfigEntryState.SETUP_RETRY,
+            "cannot_connect",
+            {"host": "192.0.2.1"},
+            id="no-reply",
+        ),
+        pytest.param(
+            EndpointVerifyError("192.0.2.1", VerifyFailure.UNREADABLE),
+            ConfigEntryState.SETUP_RETRY,
+            "unreadable_reply",
+            {"host": "192.0.2.1"},
+            id="unreadable",
+        ),
+        pytest.param(
+            EndpointVerifyError(
+                "192.0.2.1", VerifyFailure.OTHER_UID, answered_uid="000000002"
+            ),
+            ConfigEntryState.SETUP_RETRY,
+            "other_controller",
+            {"host": "192.0.2.1", "answered_uid": "000000002"},
+            id="other-uid",
         ),
         pytest.param(
             UnpairedBridgeError("unpaired"),

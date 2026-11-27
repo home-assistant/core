@@ -7,14 +7,18 @@
       "discovery_failed": "Failed to start iZone discovery. Make sure your network is properly configured.",
       "discovery_started": "iZone discovery has started. Your controllers will appear as discovered devices under Settings \u003e Devices \u0026 services.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "unpaired_bridge": "This iZone Smart Hub is not paired with an air conditioner."
+      "other_controller": "A different iZone controller answered at the address this controller was discovered at.",
+      "unpaired_bridge": "This iZone Smart Hub is not paired with an air conditioner.",
+      "unreadable_reply": "A device answered at the controller's address, but not with iZone controller data."
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "host_unresolved": "The hostname didn't resolve to an IPv4 address. Check the hostname, or enter the Smart Hub IP address.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "required": "Please enter a host.",
-      "unpaired_bridge": "This iZone Smart Hub is not paired with an air conditioner."
+      "unpaired_bridge": "This iZone Smart Hub is not paired with an air conditioner.",
+      "unreadable_reply": "A device answered at this address, but not with iZone controller data. Check that the address belongs to the Smart Hub."
     },
     "flow_title": "{name}",
     "progress": {
@@ -38,7 +42,7 @@
           "selected_controller_uid": "Controller"
         },
         "data_description": {
-          "selected_controller_uid": "Select the controller to set up now. Controllers you skip stay available under Settings > Devices & services."
+          "selected_controller_uid": "Select the controller to set up now. Controllers you skip stay available under Settings \u003e Devices \u0026 services."
         },
         "description": "Multiple unconfigured iZone controllers were found:\n{controllers}\n\nChoose the controller you want to set up now. Any controller you do not select will remain available as a discovered device you can set up later under **Settings** > **Devices & services**."
       },
@@ -107,6 +111,9 @@
     "discovery_start_failed": {
       "message": "iZone discovery service failed to start"
     },
+    "host_unresolved": {
+      "message": "Unable to resolve iZone Smart Hub host name {host}"
+    },
     "invalid_airflow_step": {
       "message": "Airflow {value}% is not a multiple of 5%"
     },
@@ -115,6 +122,9 @@
     },
     "missing_unique_id": {
       "message": "iZone config entry is missing unique_id"
+    },
+    "other_controller": {
+      "message": "iZone controller {answered_uid} answered at {host} instead of this controller"
     },
     "refresh_rejected": {
       "message": "iZone controller rejected refresh: {error}"
@@ -127,6 +137,9 @@
     },
     "unable_to_connect": {
       "message": "Unable to connect to controller {uid}"
+    },
+    "unreadable_reply": {
+      "message": "The device at {host} didn't reply with iZone controller data"
     },
     "update_failed": {
       "message": "Error communicating with iZone controller: {error}"
