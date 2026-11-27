@@ -187,6 +187,43 @@ async def test_persistent_invalid_credentials_issue(
     )
 
 
+async def test_login_permission_denial_creates_credentials_issue(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    hub_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a permission denial at login is surfaced as a repair."""
+    mock_ubus.return_value.connect.configure_mock(
+        side_effect=PermissionError("login denied")
+    )
+    hub_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry_id = next(iter(hub_entry.subentries))
+    assert any(
+        issue.domain == DOMAIN
+        and issue.translation_key == "persistent_invalid_credentials"
+        and issue.config_subentry_id == subentry_id
+        for issue in issue_registry.issues.values()
+    )
+
+    mock_ubus.return_value.connect.configure_mock(
+        side_effect=None, return_value="session-id"
+    )
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not any(
+        issue.domain == DOMAIN
+        and issue.translation_key == "persistent_invalid_credentials"
+        for issue in issue_registry.issues.values()
+    )
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_subentry_added_polls_new_router(
     hass: HomeAssistant,

@@ -123,7 +123,12 @@ class _UbusHost:
         """Open a ubus session, raising UpdateFailed on failure."""
         try:
             session_id = self.ubus.connect()
-        except (ConnectionError, PermissionError, TypeError) as err:
+        except PermissionError as err:
+            # The router rejected the configured credentials.
+            raise InvalidCredentialsError(
+                f"Invalid credentials for ubus at {self.host}"
+            ) from err
+        except (ConnectionError, TypeError) as err:
             # openwrt-ubus-rpc raises TypeError when the HTTP request itself
             # fails, because it subscripts a None response.
             raise UpdateFailed(f"Error connecting to ubus at {self.host}") from err
@@ -556,13 +561,24 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
     def _signature(self) -> tuple:
         """Return a signature of the presence, health and router setup."""
         data = self.data_or_none or {}
-        home: list[tuple[str, str | None, str | None, bool]] = []
+        home: list[tuple[str, str | None, str | None, int | None, bool]] = []
         for mac in data:
             if (latest := self.latest_stamp(mac)) is None:
-                home.append((mac, None, None, False))
+                home.append((mac, None, None, None, False))
             else:
                 subentry_id, stamp = latest
-                home.append((mac, subentry_id, stamp.hostname, True))
+                # The resolved hostname and the sighting sequence, so a
+                # fresh sighting or a hostname learned by another router
+                # signals even when the tracker state is unchanged.
+                home.append(
+                    (
+                        mac,
+                        subentry_id,
+                        stamp.hostname or self.known_hostname(mac),
+                        stamp.seq,
+                        True,
+                    )
+                )
         return (
             tuple(sorted(home)),
             tuple(sorted(self.host_health.items())),

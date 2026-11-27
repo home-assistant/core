@@ -2080,14 +2080,10 @@ async def test_device_renamed_when_latest_stamp_has_no_hostname(
     assert phone is not None
     assert phone.name == MAC_PHONE
 
-    # Router A also sees the phone and a new client, while the phone's
-    # latest stamp still comes from lease-less router B; the new client
-    # changes the notification signature, so the rename sweep runs.
+    # Router A now sees the phone and learns its hostname from its leases,
+    # while the phone's latest stamp still comes from lease-less router B.
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
-        "clients": {
-            MAC_PHONE: {"authorized": True},
-            MAC_LAPTOP: {"authorized": True},
-        }
+        "clients": {MAC_PHONE: {"authorized": True}}
     }
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
@@ -2096,6 +2092,55 @@ async def test_device_renamed_when_latest_stamp_has_no_hostname(
     phone = device_registry.async_get(phone.id)
     assert phone is not None
     assert phone.name == "my-phone"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_tracker_recreated_when_client_returns_after_removal(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    hub_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a removed tracker is recreated when its client returns.
+
+    The client returns to the same router within consider_home, so its
+    previous stamp keeps the state home; only the fresh sighting signals
+    the discovery.
+    """
+    _mock, ubus = mock_ubus_by_host
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    hub_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+
+    # The client disconnects, and its tracker is removed while it is
+    # absent; the stale stamp keeps the tracker home until it expires.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {"clients": {}}
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+
+    # The client returns to the same router before the stamp expires.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
 
 
 async def test_disabled_trackers_not_recreated(
