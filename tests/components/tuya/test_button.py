@@ -38,17 +38,31 @@ async def test_platform_setup_and_discovery(
 
 
 @pytest.mark.parametrize(
-    "mock_device_code",
-    ["sd_lr33znaodtyarrrz"],
+    ("mock_device_code", "entity_id", "code"),
+    [
+        pytest.param(
+            "sd_lr33znaodtyarrrz",
+            "button.v20_reset_duster_cloth",
+            "reset_duster_cloth",
+            id="reset_duster_cloth",
+        ),
+        pytest.param(
+            "msp_unvgwjvxa1dgmzjz",
+            "button.smart_litter_box_start_cleaning",
+            "start",
+            id="start_cleaning",
+        ),
+    ],
 )
 async def test_action(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    entity_id: str,
+    code: str,
 ) -> None:
     """Test button action."""
-    entity_id = "button.v20_reset_duster_cloth"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     state = hass.states.get(entity_id)
@@ -62,5 +76,5 @@ async def test_action(
         blocking=True,
     )
     mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [{"code": "reset_duster_cloth", "value": True}]
+        mock_device.id, [{"code": code, "value": True}]
     )
