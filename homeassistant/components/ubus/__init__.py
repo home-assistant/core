@@ -46,7 +46,9 @@ async def _async_entry_updated(hass: HomeAssistant, entry: UbusConfigEntry) -> N
     """
     coordinator: UbusDataUpdateCoordinator = entry.runtime_data
     if coordinator.subentries_changed():
-        await coordinator.async_request_refresh()
+        # Refresh right away; a debounced request can be discarded while a
+        # tick holds the refresh lock.
+        await coordinator.async_refresh()
         return
     coordinator.async_signal_clients_updated()
 

@@ -1506,8 +1506,8 @@ async def test_late_refresh_after_subentry_removal_is_ignored(
         hass.config_entries.async_remove_subentry(
             two_router_hub, subentry_b.subentry_id
         )
-        await hass.async_block_till_done()
     finally:
+        # The removal's refresh waits for the in-flight tick.
         release.set()
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -1631,8 +1631,8 @@ async def test_in_flight_poll_ignored_for_reconfigured_subentry(
         hass.config_entries.async_update_subentry(
             mock_config_entry, subentry, data=MOCK_HOST_CONFIG_C, title=MOCK_HOST_C
         )
-        await hass.async_block_till_done()
     finally:
+        # The reconfiguration's refresh waits for the in-flight tick.
         release.set()
     await hass.async_block_till_done(wait_background_tasks=True)
 

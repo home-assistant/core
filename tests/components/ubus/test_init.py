@@ -623,6 +623,56 @@ async def test_slow_router_does_not_stretch_refresh_interval(
     assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 4
 
 
+async def test_router_addition_refreshes_while_tick_in_flight(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test adding a router subentry polls it right after the tick completes.
+
+    The refresh must not be debounced away while the tick holds the refresh
+    lock; the new router is polled without the debounce waiting out.
+    """
+    _mock, ubus = mock_ubus_by_host
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    poll_started = threading.Event()
+    poll_release = threading.Event()
+
+    def slow_read(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        # Hold the response until the test releases it.
+        poll_started.set()
+        poll_release.wait()
+        return {"clients": {}}
+
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = slow_read
+
+    # Start the next tick and hold it in flight.
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    assert await hass.async_add_executor_job(poll_started.wait, 10)
+
+    # A router is added while the tick is in flight.
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            data=MappingProxyType(MOCK_HOST_CONFIG_B),
+            subentry_type=SUBENTRY_TYPE_ROUTER,
+            title=MOCK_HOST_B,
+            unique_id=MOCK_HOST_B,
+        ),
+    )
+    poll_release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The new router was polled right after the tick, without the clock
+    # advancing to the refresh debounce.
+    assert ubus[MOCK_HOST_B].get_hostapd_clients.call_count == 1
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_subentry_removed_releases_its_stamps(
     hass: HomeAssistant,
