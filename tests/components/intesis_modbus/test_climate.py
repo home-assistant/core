@@ -318,6 +318,27 @@ async def test_write_failure_raises_home_assistant_error(
     assert err.value.translation_placeholders is None
 
 
+async def test_write_failing_midway_shows_what_was_applied(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """The mode the gateway took before the setpoint failed is shown at once."""
+    mock_connection.for_unit(1).fail_write(4, ModbusTimeoutError())
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.TEMPERATURE: 22,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
+            blocking=True,
+        )
+    assert hass.states.get(ENTITY_ID).state == HVACMode.COOL
+
+
 async def test_manual_update_polls_the_gateway(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -452,7 +473,7 @@ async def test_turn_on_and_off(
     init_integration: MockConfigEntry,
     mock_connection: MockModbusConnection,
 ) -> None:
-    """The turn on and turn off actions write the power register."""
+    """Each action writes the power register and shows what the gateway took."""
     writes: list[WriteEvent] = []
     mock_connection.for_unit(1).on_write(writes.append)
     await hass.services.async_call(
@@ -461,12 +482,14 @@ async def test_turn_on_and_off(
         {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
+    assert hass.states.get(ENTITY_ID).state == HVACMode.OFF
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         ClimateService.TURN_ON,
         {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
+    assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
     assert [(w.address, w.values[0]) for w in writes] == [(0, 0), (0, 1)]
 
 
