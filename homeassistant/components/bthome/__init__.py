@@ -115,6 +115,7 @@ def process_service_info(
             entry,
             data=entry.data | {CONF_SLEEPY_DEVICE: data.sleepy_device},
         )
+        coordinator.async_set_event_driven(data.sleepy_device)
     if update.events:
         address = service_info.device.address
         for device_key, event in update.events.items():
@@ -208,6 +209,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> No
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    coordinator.async_set_event_driven(coordinator.sleepy_device)
+    entry.async_on_unload(partial(coordinator.async_set_event_driven, False))
     # only start after all platforms have had a chance to subscribe
     entry.async_on_unload(coordinator.async_start())
 

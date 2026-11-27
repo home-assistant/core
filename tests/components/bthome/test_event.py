@@ -1,15 +1,33 @@
 """Test the BTHome events."""
 
+from collections.abc import Generator
+import time
+from unittest.mock import Mock, patch
+
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 from pytest_homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
+    FakeScanner,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement_with_time_and_source_connectable,
     inject_bluetooth_service_info,
 )
 
-from homeassistant.components.bthome.const import DOMAIN
+from homeassistant.components.bluetooth import async_register_scanner
+from homeassistant.components.bthome.const import (
+    BTHOME_BLE_EVENT,
+    CONF_SLEEPY_DEVICE,
+    DOMAIN,
+)
 from homeassistant.components.event import EventEntityStateAttribute
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from . import make_bthome_v2_adv
@@ -154,3 +172,168 @@ async def test_v2_events(
         )
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+BTHOME_UUID = "0000fcd2-0000-1000-8000-00805f9b34fb"
+BUTTON_ADDRESS = "A4:C1:38:8D:18:B2"
+STRONG_PROXY = "strong_proxy"
+WEAK_PROXY = "weak_proxy"
+WINDOW_ENTITY_ID = "binary_sensor.test_device_18b2_window"
+
+
+@pytest.fixture
+def proxies(hass: HomeAssistant) -> Generator[None]:
+    """Register a strong and a weak proxy for the whole test."""
+    cancels = [
+        async_register_scanner(hass, FakeScanner(STRONG_PROXY, STRONG_PROXY)),
+        async_register_scanner(hass, FakeScanner(WEAK_PROXY, WEAK_PROXY)),
+    ]
+    yield
+    for cancel in cancels:
+        cancel()
+
+
+def _inject_button_payload(
+    hass: HomeAssistant, payload: bytes, source: str, rssi: int, adv_time: float
+) -> None:
+    """Inject a button advertisement heard by one proxy."""
+    inject_advertisement_with_time_and_source_connectable(
+        hass,
+        generate_ble_device(BUTTON_ADDRESS, "Test Device"),
+        generate_advertisement_data(
+            local_name="Test Device",
+            service_data={BTHOME_UUID: payload},
+            service_uuids=[BTHOME_UUID],
+            rssi=rssi,
+        ),
+        adv_time,
+        source,
+        connectable=False,
+    )
+
+
+@pytest.mark.parametrize(
+    ("sleepy_device", "registrations"),
+    [
+        pytest.param(True, 1, id="sleepy"),
+        pytest.param(False, 0, id="not_sleepy"),
+    ],
+)
+async def test_sleepy_device_registered_until_unload(
+    hass: HomeAssistant, sleepy_device: bool, registrations: int
+) -> None:
+    """Test a sleepy device is registered as event-driven until unloaded."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=BUTTON_ADDRESS,
+        data={CONF_SLEEPY_DEVICE: sleepy_device},
+    )
+    entry.add_to_hass(hass)
+    cancel = Mock()
+    with patch(
+        "homeassistant.components.bthome.coordinator.async_register_event_driven",
+        return_value=cancel,
+    ) as mock_register:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_register.call_count == registrations
+    assert cancel.call_count == 0
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert cancel.call_count == registrations
+
+
+@pytest.mark.usefixtures("proxies")
+@pytest.mark.parametrize(
+    ("first_payload", "second_payload", "expected_events"),
+    [
+        pytest.param(
+            b"\x44\x00\x01\x3a\x01",
+            b"\x44\x00\x02\x3a\x02",
+            ["press", "double_press"],
+            id="sleepy_with_packet_id",
+        ),
+        pytest.param(
+            b"\x40\x00\x01\x3a\x01",
+            b"\x40\x00\x02\x3a\x02",
+            ["press"],
+            id="not_sleepy",
+        ),
+        pytest.param(
+            b"\x44\x3a\x01",
+            b"\x44\x3a\x02",
+            ["press", "double_press"],
+            id="no_packet_id",
+        ),
+    ],
+)
+async def test_event_from_non_owner_proxy(
+    hass: HomeAssistant,
+    first_payload: bytes,
+    second_payload: bytes,
+    expected_events: list[str],
+) -> None:
+    """Test a device first seen as sleepy takes a packet heard by a weak proxy."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=BUTTON_ADDRESS)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    events = async_capture_events(hass, BTHOME_BLE_EVENT)
+    now = time.monotonic()
+
+    _inject_button_payload(hass, first_payload, STRONG_PROXY, -60, now)
+    # Hand the weak proxy a copy, so the device is known by both proxies
+    _inject_button_payload(hass, first_payload, WEAK_PROXY, -90, now + 0.1)
+    await hass.async_block_till_done()
+    # The weak proxy is not 16 dB stronger, so only the event-driven rule takes it
+    _inject_button_payload(hass, second_payload, WEAK_PROXY, -90, now + 5)
+    await hass.async_block_till_done()
+
+    assert [event.data["event_type"] for event in events] == expected_events
+
+
+@pytest.mark.usefixtures("proxies")
+async def test_copies_of_one_packet_fire_one_event(hass: HomeAssistant) -> None:
+    """Test copies of one packet from several proxies fire one event."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=BUTTON_ADDRESS)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    events = async_capture_events(hass, BTHOME_BLE_EVENT)
+    now = time.monotonic()
+
+    _inject_button_payload(hass, b"\x44\x00\x01\x3a\x01", STRONG_PROXY, -60, now)
+    _inject_button_payload(hass, b"\x44\x00\x01\x3a\x01", WEAK_PROXY, -90, now + 1)
+    _inject_button_payload(hass, b"\x44\x00\x02\x3a\x02", WEAK_PROXY, -90, now + 5)
+    _inject_button_payload(hass, b"\x44\x00\x02\x3a\x02", STRONG_PROXY, -60, now + 5.5)
+    await hass.async_block_till_done()
+
+    assert [event.data["event_type"] for event in events] == ["press", "double_press"]
+
+
+@pytest.mark.usefixtures("proxies")
+async def test_reload_keeps_taking_packets_from_any_proxy(
+    hass: HomeAssistant,
+) -> None:
+    """Test a reload registers the device again."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=BUTTON_ADDRESS)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    now = time.monotonic()
+    _inject_button_payload(hass, b"\x44\x00\x01\x2d\x01", STRONG_PROXY, -60, now)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    _inject_button_payload(hass, b"\x44\x00\x02\x2d\x01", STRONG_PROXY, -60, now + 5)
+    await hass.async_block_till_done()
+    assert hass.states.get(WINDOW_ENTITY_ID).state == STATE_ON
+    # The strong proxy owns the device, so only the event-driven rule takes this
+    _inject_button_payload(hass, b"\x44\x00\x03\x2d\x00", WEAK_PROXY, -90, now + 10)
+    await hass.async_block_till_done()
+    assert hass.states.get(WINDOW_ENTITY_ID).state == STATE_OFF
