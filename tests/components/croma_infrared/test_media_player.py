@@ -23,15 +23,15 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_STOP,
-    SERVICE_SELECT_SOURCE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -136,8 +136,11 @@ async def test_mute(
     """Test muting sends the mute toggle and tracks the requested state."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: mute},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: mute,
+        },
         blocking=True,
     )
 
@@ -158,8 +161,11 @@ async def test_repeated_mute_sends_each_time(
     for _ in range(2):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_VOLUME_MUTE,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: mute},
+            MediaPlayerService.VOLUME_MUTE,
+            {
+                TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.IS_VOLUME_MUTED: mute,
+            },
             blocking=True,
         )
 
@@ -273,8 +279,11 @@ async def test_select_source(
     """Test selecting a source opens its app and tracks the source."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_INPUT_SOURCE: source},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.SOURCE: source,
+        },
         blocking=True,
     )
 
@@ -293,8 +302,11 @@ async def test_select_invalid_source(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_INPUT_SOURCE: "hdmi_1"},
+            MediaPlayerService.SELECT_SOURCE,
+            {
+                TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.SOURCE: "hdmi_1",
+            },
             blocking=True,
         )
 
@@ -316,8 +328,8 @@ async def test_sends_nec_frame(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
 

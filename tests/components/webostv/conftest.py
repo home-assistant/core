@@ -1,7 +1,7 @@
 """Common fixtures and objects for the LG webOS TV integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiowebostv import WebOsTvInfo, WebOsTvState
 import pytest
@@ -20,15 +20,6 @@ from .const import (
 
 
 @pytest.fixture
-def mock_send_magic_packet() -> Generator[Mock]:
-    """Mock sending Wake-on-LAN packets."""
-    with patch(
-        "homeassistant.components.webostv.media_player.send_magic_packet", autospec=True
-    ) as mock_send:
-        yield mock_send
-
-
-@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
@@ -38,7 +29,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="client")
-def client_fixture():
+def client_fixture() -> Generator[MagicMock]:
     """Patch of client library for tests."""
     with (
         patch(
@@ -59,6 +50,10 @@ def client_fixture():
                 "wifiInfo": {"macAddress": "AA:BB:CC:DD:EE:02"},
             },
         )
+        client.mac_addresses = {
+            "wired": "aa:bb:cc:dd:ee:01",
+            "wifi": "aa:bb:cc:dd:ee:02",
+        }
         client.client_key = CLIENT_KEY
         client.tv_state = WebOsTvState(
             apps=MOCK_APPS,
@@ -76,7 +71,7 @@ def client_fixture():
         client.is_registered = Mock(return_value=True)
         client.is_connected = Mock(return_value=True)
 
-        async def mock_state_update_callback():
+        async def mock_state_update_callback() -> None:
             await client.register_state_update_callback.call_args[0][0](client.tv_state)
 
         client.mock_state_update = AsyncMock(side_effect=mock_state_update_callback)

@@ -2,7 +2,14 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, override
+from typing import override
+
+from aioproxmox.model.pve import (
+    ContainerResource,
+    NodeStorageResource,
+    OperationalStatus,
+    QemuResource,
+)
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,15 +20,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    NODE_ONLINE,
-    STATUS_OK,
-    STORAGE_ACTIVE,
-    STORAGE_ENABLED,
-    STORAGE_SHARED,
-    VM_CONTAINER_RUNNING,
-    ProxmoxPermission,
-)
+from .const import STATUS_OK, ProxmoxPermission
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import (
     ProxmoxContainerEntity,
@@ -29,7 +28,6 @@ from .entity import (
     ProxmoxStorageEntity,
     ProxmoxVMEntity,
 )
-from .helpers import is_granted
 
 PARALLEL_UPDATES = 0
 
@@ -38,14 +36,14 @@ PARALLEL_UPDATES = 0
 class ProxmoxContainerBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class to hold Proxmox container binary sensor description."""
 
-    state_fn: Callable[[dict[str, Any]], bool | None]
+    state_fn: Callable[[ContainerResource], bool | None]
 
 
 @dataclass(frozen=True, kw_only=True)
 class ProxmoxVMBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class to hold Proxmox endpoint binary sensor description."""
 
-    state_fn: Callable[[dict[str, Any]], bool | None]
+    state_fn: Callable[[QemuResource], bool | None]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -61,14 +59,14 @@ class ProxmoxNodeBinarySensorEntityDescription(BinarySensorEntityDescription):
 class ProxmoxStorageBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class to hold Proxmox storage binary sensor description."""
 
-    state_fn: Callable[[dict[str, Any]], bool | None]
+    state_fn: Callable[[NodeStorageResource], bool | None]
 
 
 NODE_SENSORS: tuple[ProxmoxNodeBinarySensorEntityDescription, ...] = (
     ProxmoxNodeBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: data.node["status"] == NODE_ONLINE,
+        state_fn=lambda data: data.node.status == OperationalStatus.ONLINE,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         permission=ProxmoxPermission.VMAUDIT,  # PVEVMUsers are allowed this node, through "/vms"
@@ -78,7 +76,7 @@ NODE_SENSORS: tuple[ProxmoxNodeBinarySensorEntityDescription, ...] = (
         key="node_backup_status",
         translation_key="node_backup_status",
         state_fn=lambda data: bool(
-            data.backups and data.backups[0]["status"] != STATUS_OK
+            data.backups and data.backups[0].status != STATUS_OK
         ),
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -90,7 +88,7 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerBinarySensorEntityDescription, ...] = (
     ProxmoxContainerBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: data["status"] == VM_CONTAINER_RUNNING,
+        state_fn=lambda data: data.status == OperationalStatus.RUNNING,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -100,7 +98,7 @@ VM_SENSORS: tuple[ProxmoxVMBinarySensorEntityDescription, ...] = (
     ProxmoxVMBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: data["status"] == VM_CONTAINER_RUNNING,
+        state_fn=lambda data: data.status == OperationalStatus.RUNNING,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -110,19 +108,19 @@ STORAGE_SENSORS: tuple[ProxmoxStorageBinarySensorEntityDescription, ...] = (
     ProxmoxStorageBinarySensorEntityDescription(
         key="storage_active",
         translation_key="storage_active",
-        state_fn=lambda data: data["active"] == STORAGE_ACTIVE,
+        state_fn=lambda data: data.active,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ProxmoxStorageBinarySensorEntityDescription(
         key="storage_enabled",
         translation_key="storage_enabled",
-        state_fn=lambda data: data["enabled"] == STORAGE_ENABLED,
+        state_fn=lambda data: data.enabled,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ProxmoxStorageBinarySensorEntityDescription(
         key="storage_shared",
         translation_key="storage_shared",
-        state_fn=lambda data: data["shared"] == STORAGE_SHARED,
+        state_fn=lambda data: data.shared,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -134,91 +132,89 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Proxmox VE binary sensors."""
-    coordinator = entry.runtime_data
+    status_coordinator = entry.runtime_data.status
 
     def _async_add_new_nodes(nodes: list[ProxmoxNodeData]) -> None:
         """Add new node binary sensors."""
 
         async_add_entities(
-            ProxmoxNodeBinarySensor(coordinator, entity_description, node)
+            ProxmoxNodeBinarySensor(status_coordinator, entity_description, node)
             for node in nodes
             for entity_description in NODE_SENSORS
-            if is_granted(
-                coordinator.permissions,
-                p_type=entity_description.permission_target,
-                p_id=node.node["node"],
-                permission=entity_description.permission,
+            if status_coordinator.permissions.has_permission(
+                f"/{entity_description.permission_target}/{node.node.node}",
+                entity_description.permission,
             )
         )
 
     def _async_add_new_vms(
-        vms: list[tuple[ProxmoxNodeData, dict[str, Any]]],
+        vms: list[tuple[ProxmoxNodeData, QemuResource]],
     ) -> None:
         """Add new VM binary sensors."""
         async_add_entities(
-            ProxmoxVMBinarySensor(coordinator, entity_description, vm, node_data)
+            ProxmoxVMBinarySensor(status_coordinator, entity_description, vm, node_data)
             for (node_data, vm) in vms
             for entity_description in VM_SENSORS
         )
 
     def _async_add_new_containers(
-        containers: list[tuple[ProxmoxNodeData, dict[str, Any]]],
+        containers: list[tuple[ProxmoxNodeData, ContainerResource]],
     ) -> None:
         """Add new container binary sensors."""
         async_add_entities(
             ProxmoxContainerBinarySensor(
-                coordinator, entity_description, container, node_data
+                status_coordinator, entity_description, container, node_data
             )
             for (node_data, container) in containers
             for entity_description in CONTAINER_SENSORS
         )
 
     def _async_add_new_storages(
-        storages: list[tuple[ProxmoxNodeData, dict[str, Any]]],
+        storages: list[tuple[ProxmoxNodeData, NodeStorageResource]],
     ) -> None:
         """Add new storage binary sensors."""
         async_add_entities(
             ProxmoxStorageBinarySensor(
-                coordinator, entity_description, storage, node_data
+                status_coordinator, entity_description, storage, node_data
             )
             for (node_data, storage) in storages
             for entity_description in STORAGE_SENSORS
         )
 
-    coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
-    coordinator.new_vms_callbacks.append(_async_add_new_vms)
-    coordinator.new_containers_callbacks.append(_async_add_new_containers)
-    coordinator.new_storages_callbacks.append(_async_add_new_storages)
+    status_coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
+    status_coordinator.new_vms_callbacks.append(_async_add_new_vms)
+    status_coordinator.new_containers_callbacks.append(_async_add_new_containers)
+    status_coordinator.new_storages_callbacks.append(_async_add_new_storages)
 
     _async_add_new_nodes(
         [
             node_data
-            for node_data in coordinator.data.values()
-            if node_data.node["node"] in coordinator.known_nodes
+            for node_data in status_coordinator.data.values()
+            if node_data.node.node in status_coordinator.known_nodes
         ]
     )
     _async_add_new_vms(
         [
             (node_data, vm_data)
-            for node_data in coordinator.data.values()
+            for node_data in status_coordinator.data.values()
             for vmid, vm_data in node_data.vms.items()
-            if (node_data.node["node"], vmid) in coordinator.known_vms
+            if (node_data.node.node, vmid) in status_coordinator.known_vms
         ]
     )
     _async_add_new_containers(
         [
             (node_data, container_data)
-            for node_data in coordinator.data.values()
+            for node_data in status_coordinator.data.values()
             for vmid, container_data in node_data.containers.items()
-            if (node_data.node["node"], vmid) in coordinator.known_containers
+            if (node_data.node.node, vmid) in status_coordinator.known_containers
         ]
     )
     _async_add_new_storages(
         [
             (node_data, storage_data)
-            for node_data in coordinator.data.values()
+            for node_data in status_coordinator.data.values()
             for storage_id, storage_data in node_data.storages.items()
-            if (node_data.node["node"], storage_id) in coordinator.known_storages
+            if (node_data.node.node, storage_id) in status_coordinator.known_storages
         ]
     )
 

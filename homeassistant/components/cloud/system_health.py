@@ -32,6 +32,9 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         data["remote_enabled"] = client.prefs.remote_enabled
         data["remote_connected"] = cloud.remote.is_connected
         data["remote_server"] = cloud.remote.snitun_server
+        data["remote_client_certificate_required"] = (
+            client.remote_ssl_peer_certificate is not None
+        )
         data["alexa_enabled"] = client.prefs.alexa_enabled
         data["google_enabled"] = client.prefs.google_enabled
         data["cloud_ice_servers_enabled"] = client.prefs.cloud_ice_servers_enabled

@@ -1,36 +1,30 @@
 """Config flow for LG webOS TV integration."""
 
-from collections.abc import Mapping
+from collections.abc import AsyncIterator, Mapping
+from contextlib import asynccontextmanager
 from typing import Any, Self, override
 from urllib.parse import urlparse
 
-from aiowebostv import WebOsClient, WebOsTvPairError
+from aiowebostv import WebOsClient, WebOsTvConnectionError, WebOsTvPairError
 import probatio
-from wakeonlan import create_magic_packet
 
 from homeassistant.config_entries import (
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
 
-from .const import (
-    CONF_MAC_ADDRESSES,
-    CONF_SOURCES,
-    DEFAULT_NAME,
-    DOMAIN,
-    WEBOSTV_EXCEPTIONS,
-)
+from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN
 from .coordinator import WebOsTvConfigEntry
 from .helpers import get_sources
 
@@ -42,10 +36,11 @@ DATA_SCHEMA = probatio.Schema(
 )
 
 
+@asynccontextmanager
 async def async_control_connect(
     hass: HomeAssistant, host: str, key: str | None
-) -> WebOsClient:
-    """Create LG webOS client and connect to the TV."""
+) -> AsyncIterator[WebOsClient]:
+    """Connect to the TV and disconnect when done."""
     client = WebOsClient(
         host,
         key,
@@ -53,8 +48,10 @@ async def async_control_connect(
     )
 
     await client.connect()
-
-    return client
+    try:
+        yield client
+    finally:
+        await client.disconnect()
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -73,7 +70,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     @override
     def async_get_options_flow(config_entry: WebOsTvConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     @override
     async def async_step_user(
@@ -97,20 +94,21 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                client = await async_control_connect(self.hass, self._host, None)
+                async with async_control_connect(self.hass, self._host, None) as client:
+                    uuid = client.tv_info.hello["deviceUUID"]
+                    client_key = client.client_key
+                    model_name = client.tv_info.system.get("modelName")
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
-            except WEBOSTV_EXCEPTIONS:
+            except WebOsTvConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(
-                    client.tv_info.hello["deviceUUID"], raise_on_progress=False
-                )
+                await self.async_set_unique_id(uuid, raise_on_progress=False)
                 self._abort_if_unique_id_configured({CONF_HOST: self._host})
-                data = {CONF_HOST: self._host, CONF_CLIENT_SECRET: client.client_key}
+                data = {CONF_HOST: self._host, CONF_CLIENT_SECRET: client_key}
 
                 if not self._name:
-                    if model_name := client.tv_info.system.get("modelName"):
+                    if model_name:
                         self._name = f"{DEFAULT_NAME} {model_name}"
                     else:
                         self._name = DEFAULT_NAME
@@ -163,17 +161,16 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                client = await async_control_connect(self.hass, self._host, None)
+                async with async_control_connect(self.hass, self._host, None) as client:
+                    client_key = client.client_key
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
-            except WEBOSTV_EXCEPTIONS:
+            except WebOsTvConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 reauth_entry = self._get_reauth_entry()
-                data = {CONF_HOST: self._host, CONF_CLIENT_SECRET: client.client_key}
-                return self.async_update_reload_and_abort(
-                    reauth_entry, data_updates=data
-                )
+                data = {CONF_HOST: self._host, CONF_CLIENT_SECRET: client_key}
+                return self.async_update_reload_and_abort(reauth_entry, data=data)
 
         return self.async_show_form(step_id="reauth_confirm", errors=errors)
 
@@ -189,18 +186,18 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             client_key = reconfigure_entry.data.get(CONF_CLIENT_SECRET)
 
             try:
-                client = await async_control_connect(self.hass, host, client_key)
+                async with async_control_connect(self.hass, host, client_key) as client:
+                    uuid = client.tv_info.hello["deviceUUID"]
+                    client_key = client.client_key
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
-            except WEBOSTV_EXCEPTIONS:
+            except WebOsTvConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(client.tv_info.hello["deviceUUID"])
+                await self.async_set_unique_id(uuid)
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
-                data = {CONF_HOST: host, CONF_CLIENT_SECRET: client.client_key}
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry, data_updates=data
-                )
+                data = {CONF_HOST: host, CONF_CLIENT_SECRET: client_key}
+                return self.async_update_reload_and_abort(reconfigure_entry, data=data)
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -218,45 +215,27 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle options."""
 
-    def __init__(self, config_entry: WebOsTvConfigEntry) -> None:
-        """Initialize options flow."""
-        self.host = config_entry.data[CONF_HOST]
-        self.key = config_entry.data[CONF_CLIENT_SECRET]
+    config_entry: WebOsTvConfigEntry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
-        return await self._async_options(user_input)
-
-    async def _async_options(
-        self, user_input: dict[str, Any] | None
-    ) -> ConfigFlowResult:
-        """Show and save the options for the active Wake-on-LAN mode."""
         errors = {}
         if user_input is not None:
-            mac = user_input.get(CONF_MAC)
-            try:
-                if mac:
-                    create_magic_packet(mac)
-            except ValueError:
-                errors[CONF_MAC] = "invalid_mac"
-            else:
-                options_input = {CONF_SOURCES: user_input[CONF_SOURCES]}
-                if mac:
-                    options_input[CONF_MAC] = dr.format_mac(mac)
-                return self.async_create_entry(title="", data=options_input)
-        # Get sources
-        sources_list = []
-        try:
-            client = await async_control_connect(self.hass, self.host, self.key)
+            options_input = {CONF_SOURCES: user_input.get(CONF_SOURCES, [])}
+            return self.async_create_entry(title="", data=options_input)
+        entry = self.config_entry
+        option_sources = entry.options.get(CONF_SOURCES, [])
+        if (
+            entry.state is ConfigEntryState.LOADED
+            and (client := entry.runtime_data.client).is_connected()
+        ):
             sources_list = get_sources(client.tv_state)
-        except WebOsTvPairError:
-            errors["base"] = "error_pairing"
-        except WEBOSTV_EXCEPTIONS:
+        else:
             errors["base"] = "cannot_connect"
+            sources_list = option_sources
 
-        option_sources = self.config_entry.options.get(CONF_SOURCES, [])
         sources = [s for s in option_sources if s in sources_list]
         if not sources:
             sources = sources_list
@@ -267,35 +246,9 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     CONF_SOURCES,
                     description={"suggested_value": sources},
                 ): cv.multi_select({source: source for source in sources_list}),
-                probatio.Optional(
-                    CONF_MAC,
-                    description={
-                        "suggested_value": self.config_entry.options.get(CONF_MAC)
-                    },
-                ): TextSelector(),
             }
         )
 
-        step_id = "init"
-        placeholders = {}
-        if mac := self.config_entry.options.get(CONF_MAC):
-            step_id = "manual"
-            placeholders = {"mac_address": mac}
-        elif (
-            isinstance(macs := self.config_entry.data.get(CONF_MAC_ADDRESSES), dict)
-            and macs
-        ):
-            step_id = "automatic"
-            placeholders = {
-                "wired_mac": macs.get("wiredInfo", "—"),
-                "wifi_mac": macs.get("wifiInfo", "—"),
-            }
         return self.async_show_form(
-            step_id=step_id,
-            data_schema=options_schema,
-            errors=errors,
-            description_placeholders=placeholders,
+            step_id="init", data_schema=options_schema, errors=errors
         )
-
-    async_step_automatic = async_step_init
-    async_step_manual = async_step_init

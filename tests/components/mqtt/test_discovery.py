@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 import copy
+from datetime import timedelta
 import json
 from pathlib import Path
 import re
@@ -15,6 +16,7 @@ from pytest_homeassistant.common import (
     MockModule,
     async_capture_events,
     async_fire_mqtt_message,
+    async_fire_time_changed,
     async_get_device_automations,
     mock_config_flow,
     mock_integration,
@@ -69,6 +71,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.signal_type import SignalTypeFormat
 
 from .conftest import ENTRY_DEFAULT_BIRTH_MESSAGE
@@ -2618,8 +2621,11 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_WS_HEADERS",
     "CONF_WILL_MESSAGE",
     "CONF_CERTIFICATE",
+    "CONF_CERTIFICATE_FILE",
     "CONF_CLIENT_KEY",
+    "CONF_CLIENT_KEY_FILE",
     "CONF_CLIENT_CERT",
+    "CONF_CLIENT_CERT_FILE",
     "CONF_TLS_INSECURE",
 ]
 
@@ -3897,6 +3903,200 @@ async def test_unique_id_collission_has_priority(
     assert entity_registry.async_get("sensor.abc123_sbfspot_12345_2") is None
 
 
+DUPLICATE_UNIQUE_ID_DISABLED_DEVICE = "0AFFD2"
+DUPLICATE_UNIQUE_ID_ENABLED_DEVICE = "0AFFD3"
+DUPLICATE_UNIQUE_ID_ENTITY_ID = "sensor.wall_clock"
+
+
+def _single_component_duplicate_unique_id(device_identifier: str) -> tuple[str, str]:
+    """Return a single component discovery topic and payload."""
+    return f"homeassistant/sensor/{device_identifier}/clock/config", json.dumps(
+        {
+            "device": {"identifiers": [device_identifier], "name": "Wall"},
+            "o": {"name": "bla2mqtt"},
+            "name": "Clock",
+            "state_topic": "test-topic",
+            "unique_id": "clock",
+        }
+    )
+
+
+def _device_duplicate_unique_id(device_identifier: str) -> tuple[str, str]:
+    """Return a device discovery topic and payload."""
+    return f"homeassistant/device/{device_identifier}/config", json.dumps(
+        {
+            "device": {"identifiers": [device_identifier], "name": "Wall"},
+            "o": {"name": "bla2mqtt"},
+            "cmps": {
+                "clock": {
+                    "platform": "sensor",
+                    "name": "Clock",
+                    "state_topic": "test-topic",
+                    "unique_id": "clock",
+                }
+            },
+        }
+    )
+
+
+async def _async_reload_and_replay(
+    hass: HomeAssistant, retained_discovery: list[tuple[str, str]]
+) -> int:
+    """Reload the MQTT entry, replay retained discovery and return requested reloads."""
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient"):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+    for topic, payload in retained_discovery:
+        async_fire_mqtt_message(hass, topic, payload, retain=True)
+    await hass.async_block_till_done()
+    # An entity that was enabled in the registry requests a delayed reload
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
+        )
+        await hass.async_block_till_done()
+    return mock_schedule_reload.call_count
+
+
+@pytest.mark.parametrize(
+    "discovery",
+    [
+        pytest.param(_single_component_duplicate_unique_id, id="single_component"),
+        pytest.param(_device_duplicate_unique_id, id="device_discovery"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("replay_order", "owner", "disabled_by", "error"),
+    [
+        pytest.param(
+            (DUPLICATE_UNIQUE_ID_DISABLED_DEVICE, DUPLICATE_UNIQUE_ID_ENABLED_DEVICE),
+            DUPLICATE_UNIQUE_ID_DISABLED_DEVICE,
+            er.RegistryEntryDisabler.DEVICE,
+            "unique ID 'clock' is already used by disabled entity sensor.wall_clock",
+            id="disabled_device_first",
+        ),
+        pytest.param(
+            (DUPLICATE_UNIQUE_ID_ENABLED_DEVICE, DUPLICATE_UNIQUE_ID_DISABLED_DEVICE),
+            DUPLICATE_UNIQUE_ID_ENABLED_DEVICE,
+            None,
+            "Platform mqtt does not generate unique IDs",
+            id="enabled_device_first",
+        ),
+    ],
+)
+async def test_duplicate_unique_id_on_disabled_device_does_not_reload(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    discovery: Callable[[str], tuple[str, str]],
+    replay_order: tuple[str, str],
+    owner: str,
+    disabled_by: er.RegistryEntryDisabler | None,
+    error: str,
+) -> None:
+    """Test a unique ID shared with a disabled device does not cause a reload loop."""
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, DUPLICATE_UNIQUE_ID_DISABLED_DEVICE)},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+    async_fire_mqtt_message(
+        hass, *discovery(DUPLICATE_UNIQUE_ID_ENABLED_DEVICE), retain=True
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(DUPLICATE_UNIQUE_ID_ENTITY_ID) is not None
+    retained_discovery = [discovery(identifier) for identifier in replay_order]
+
+    assert await _async_reload_and_replay(hass, retained_discovery) == 0
+    assert error in caplog.text
+    caplog.clear()
+
+    # The first discovered entity still wins after the next reload
+    assert await _async_reload_and_replay(hass, retained_discovery) == 0
+    assert error in caplog.text
+    owner_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, owner), entry.entry_id
+    )
+    assert owner_device is not None
+    registry_entry = entity_registry.async_get(DUPLICATE_UNIQUE_ID_ENTITY_ID)
+    assert registry_entry is not None
+    assert registry_entry.device_id == owner_device.id
+    assert registry_entry.disabled_by is disabled_by
+
+
+async def test_duplicate_unique_id_of_disabled_entity_logs_discovery_topics(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the error for a duplicate unique ID refers to both discovery topics."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/bla/sens2/config",
+        json.dumps(SINGLE_DISABLED_COMPONENT_CONFIG),
+    )
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/other/sens2/config",
+        json.dumps(
+            SINGLE_DISABLED_COMPONENT_CONFIG
+            | {"dev": {"identifiers": ["other"], "name": "other"}}
+        ),
+    )
+    await hass.async_block_till_done()
+    assert (
+        "Ignoring discovered sensor on topic homeassistant/sensor/other/sens2/config "
+        "from external application bla2mqtt, version: 0.9, unique ID 'very_unique2' "
+        "is already used by disabled entity sensor.bla_disabled which was discovered "
+        "on topic homeassistant/sensor/bla/sens2/config from external application "
+        "bla2mqtt, version: 0.9; to resolve the duplicate unique ID, publish an "
+        "empty retained payload to at least one of these discovery topics"
+        in caplog.text
+    )
+    assert not entity_registry.async_is_registered("sensor.other_disabled")
+
+
+async def test_duplicate_unique_id_of_re_enabled_entity_is_discovered(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a duplicate unique ID is not ignored when the entity was enabled."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/bla/sens2/config",
+        json.dumps(SINGLE_DISABLED_COMPONENT_CONFIG),
+    )
+    await hass.async_block_till_done()
+    # The entity is not loaded until the config entry is reloaded
+    entity_registry.async_update_entity("sensor.bla_disabled", disabled_by=None)
+
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/other/sens2/config",
+        json.dumps(
+            SINGLE_DISABLED_COMPONENT_CONFIG
+            | {"dev": {"identifiers": ["other"], "name": "other"}}
+        ),
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.bla_disabled") is not None
+    assert "is already used by disabled entity" not in caplog.text
+
+
 async def test_update_with_bad_config_not_breaks_discovery(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -4293,6 +4493,109 @@ async def test_via_device_relinks_after_parent_removed(
     assert parent_stub is not None
     assert child is not None
     assert child.via_device_id == parent_stub.id
+
+
+@pytest.mark.parametrize(
+    "identifiers", [["sensor-id"], ["other-id", "sensor-id"]], ids=["single", "multi"]
+)
+async def test_self_referencing_via_device_is_ignored(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    identifiers: list[str],
+) -> None:
+    """Test a via_device that references the device itself is ignored.
+
+    The device registry rejects a device being its own via device, which used to
+    abort adding the entity.
+    """
+    await mqtt_mock_entry()
+
+    config = {
+        "name": "Temperature",
+        "state_topic": "test-sensor-topic",
+        "unique_id": "sensor_unique",
+        "device": {"identifiers": identifiers, "via_device": "sensor-id"},
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/sensor/sensor_unique/config", json.dumps(config)
+    )
+    await hass.async_block_till_done()
+
+    assert "Error adding entity" not in caplog.text
+    entity_id = entity_registry.async_get_entity_id("sensor", "mqtt", "sensor_unique")
+    assert entity_id is not None
+    assert hass.states.get(entity_id) is not None
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "sensor-id"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
+    assert device is not None
+    assert device.via_device_id is None
+    assert "has via_device 'sensor-id' that references the device itself" in (
+        caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    ("first_device", "second_device"),
+    [
+        (
+            {"identifiers": ["old-id", "new-id"]},
+            {"identifiers": ["new-id"], "via_device": "old-id"},
+        ),
+        (
+            {"identifiers": ["old-id"], "connections": [["mac", "02:5b:26:a8:dc:12"]]},
+            {
+                "identifiers": ["new-id"],
+                "connections": [["mac", "02:5b:26:a8:dc:12"]],
+                "via_device": "old-id",
+            },
+        ),
+    ],
+    ids=["retained_identifier", "connection"],
+)
+async def test_via_device_resolving_to_device_itself_is_ignored(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    first_device: dict[str, Any],
+    second_device: dict[str, Any],
+) -> None:
+    """Test a via_device that resolves to the device itself is ignored.
+
+    The via_device is not one of the announced identifiers, but resolves to the
+    registered device through an identifier retained from an earlier registration
+    or through a matching connection.
+    """
+    await mqtt_mock_entry()
+
+    for unique_id, device in (("first", first_device), ("second", second_device)):
+        config = {
+            "name": unique_id,
+            "state_topic": f"test-{unique_id}-topic",
+            "unique_id": unique_id,
+            "device": device,
+        }
+        async_fire_mqtt_message(
+            hass, f"homeassistant/sensor/{unique_id}/config", json.dumps(config)
+        )
+        await hass.async_block_till_done()
+
+    assert "Error adding entity" not in caplog.text
+    for unique_id in ("first", "second"):
+        entity_id = entity_registry.async_get_entity_id("sensor", "mqtt", unique_id)
+        assert entity_id is not None
+        assert hass.states.get(entity_id) is not None
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "old-id"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
+    assert device is not None
+    assert device.via_device_id is None
+    assert "has via_device 'old-id' that references the device itself" in caplog.text
 
 
 @pytest.mark.parametrize(

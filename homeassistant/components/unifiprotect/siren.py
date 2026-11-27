@@ -6,11 +6,10 @@ from typing import Any, cast, override
 from uiprotect.data import PublicDeviceModel, Siren, SirenDuration
 
 from homeassistant.components.siren import (
-    ATTR_DURATION,
-    ATTR_VOLUME_LEVEL,
     SirenEntity,
     SirenEntityDescription,
     SirenEntityFeature,
+    SirenServiceArgument,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -101,8 +100,8 @@ class ProtectSiren(ProtectDeviceEntity, SirenEntity):
                 translation_key="siren_not_available",
             )
 
-        duration: int | None = kwargs.get(ATTR_DURATION)
-        volume_level: float | None = kwargs.get(ATTR_VOLUME_LEVEL)
+        duration: int | None = kwargs.get(SirenServiceArgument.DURATION)
+        volume_level: float | None = kwargs.get(SirenServiceArgument.VOLUME_LEVEL)
 
         # Validate duration first (synchronous) before making any API calls.
         norm_duration: SirenDuration | None = None

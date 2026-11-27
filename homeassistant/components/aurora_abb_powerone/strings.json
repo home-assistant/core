@@ -67,5 +67,10 @@
         "name": "String 2 voltage"
       }
     }
+  },
+  "exceptions": {
+    "no_response": {
+      "message": "No response from the inverter, it may be dark"
+    }
   }
 }

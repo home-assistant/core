@@ -41,6 +41,8 @@ from homeassistant.util import dt as dt_util
 
 from . import ENTITY_ID, TEST_CONFIG
 
+pytestmark = pytest.mark.usefixtures("mock_radar_client")
+
 
 @pytest.mark.parametrize(
     "load_platforms",

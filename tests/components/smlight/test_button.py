@@ -13,7 +13,7 @@ from pytest_homeassistant.common import (
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.smlight.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -65,7 +65,7 @@ async def test_buttons(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: f"button.mock_title_{entity_id}"},
+        {TargetKey.ENTITY_ID: f"button.mock_title_{entity_id}"},
         blocking=True,
     )
 
@@ -206,7 +206,7 @@ async def test_multi_radio_press_calls_idx(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 

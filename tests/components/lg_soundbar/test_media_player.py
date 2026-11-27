@@ -7,16 +7,15 @@ from pytest_homeassistant.common import MockConfigEntry
 import temescal
 
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_SELECT_SOUND_MODE,
-    SERVICE_SELECT_SOURCE,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import find_update_callback, setup_integration
@@ -194,8 +193,11 @@ async def test_selecting_a_sound_mode_beyond_the_library_table(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOUND_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SOUND_MODE: "Unknown (25)"},
+        MediaPlayerService.SELECT_SOUND_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.SOUND_MODE: "Unknown (25)",
+        },
         blocking=True,
     )
 
@@ -215,8 +217,11 @@ async def test_selecting_a_named_sound_mode(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOUND_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SOUND_MODE: "Cinema"},
+        MediaPlayerService.SELECT_SOUND_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.SOUND_MODE: "Cinema",
+        },
         blocking=True,
     )
 
@@ -240,8 +245,8 @@ async def test_selecting_a_source_the_device_does_not_offer(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "E-ARC"},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: "E-ARC"},
         blocking=True,
     )
 

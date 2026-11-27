@@ -32,6 +32,10 @@ async def async_get_config_entry_diagnostics(
             "active_energy_burned": activity_data.active_energy_burned is not None,
             "total_calories": activity_data.total_calories is not None,
             "floors": activity_data.floors is not None,
+            "altitude": activity_data.altitude is not None,
+            "active_minutes": activity_data.active_minutes is not None,
+            "active_zone_minutes": activity_data.active_zone_minutes is not None,
+            "sedentary_period": activity_data.sedentary_period is not None,
         }
 
     body_diagnostics = None
@@ -40,8 +44,14 @@ async def async_get_config_entry_diagnostics(
         body_diagnostics = {
             "last_update_success": body_coordinator.last_update_success,
             "weight": body_data.weight is not None,
+            "height": body_data.height is not None,
+            "bmi": body_data.bmi is not None,
             "resting_heart_rate": body_data.resting_heart_rate is not None,
             "body_fat": body_data.body_fat is not None,
+            "heart_rate_variability": body_data.heart_rate_variability is not None,
+            "oxygen_saturation": body_data.oxygen_saturation is not None,
+            "respiratory_rate": body_data.respiratory_rate is not None,
+            "vo2_max": body_data.vo2_max is not None,
         }
 
     sleep_diagnostics = None

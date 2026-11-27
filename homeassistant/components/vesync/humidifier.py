@@ -4,11 +4,13 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
+from pyvesync.const import DeviceStatus
 
 from homeassistant.components.humidifier import (
     MODE_AUTO,
     MODE_NORMAL,
     MODE_SLEEP,
+    HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
 )
@@ -99,6 +101,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
     # and this is to follow the device name
     _attr_name = None
 
+    _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
     _attr_supported_features = HumidifierEntityFeature.MODES
 
     _attr_translation_key = "vesync"
@@ -220,4 +223,4 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
     @override
     def is_on(self) -> bool:
         """Return True if device is on."""
-        return self.device.state.device_status == "on"
+        return self.device.state.device_status == DeviceStatus.ON

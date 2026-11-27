@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SmartThingsConfigEntry
+from .entity import translate_api_errors
 
 
 async def async_setup_entry(
@@ -37,7 +38,8 @@ class SmartThingsScene(Scene):
     @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene."""
-        await self.client.execute_scene(self._scene.scene_id)
+        with translate_api_errors(self):
+            await self.client.execute_scene(self._scene.scene_id)
 
     @property
     @override

@@ -192,6 +192,7 @@ class SonosDiscoveryManager:
         self.data = data
         self.hosts = set(hosts)
         self.hosts_in_error: dict[str, bool] = {}
+        self.unresolved_hosts: set[str] = set()
         self.discovery_lock = asyncio.Lock()
         self.creation_lock = asyncio.Lock()
         self._known_invisible: set[SoCo] = set()
@@ -520,13 +521,29 @@ class SonosDiscoveryManager:
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)
 
+    async def _async_resolve_host(self, host: str) -> str | None:
+        """Return the IP address of a manual host, None when it can not be resolved."""
+        try:
+            ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
+        except OSError as err:
+            if host in self.unresolved_hosts:
+                _LOGGER.debug("Could not resolve Sonos host %s: %s", host, err)
+            else:
+                _LOGGER.warning("Could not resolve Sonos host %s: %s", host, err)
+                self.unresolved_hosts.add(host)
+            return None
+
+        self.unresolved_hosts.discard(host)
+        return ip_addr
+
     async def async_poll_manual_hosts(self, now: dt.datetime | None = None) -> None:
         """Add and maintain Sonos devices from a manual configuration."""
 
         # Loop through each configured host and verify that
         # Soco attributes are available for it.
         for host in self.hosts.copy():
-            ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
+            if (ip_addr := await self._async_resolve_host(host)) is None:
+                continue
             soco = SoCo(ip_addr)
             try:
                 visible_zones = await self.hass.async_add_executor_job(
@@ -572,7 +589,8 @@ class SonosDiscoveryManager:
         # error. Send a discovery message if a speaker does
         # not already exist, or ping if it is unavailable.
         for host in self.hosts.copy():
-            ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
+            if (ip_addr := await self._async_resolve_host(host)) is None:
+                continue
             soco = SoCo(ip_addr)
             # Skip hosts that are in error to avoid blocking
             # call on soco.uuid in event loop

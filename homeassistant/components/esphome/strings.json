@@ -133,6 +133,11 @@
           "okay_nabu": "[%key:component::esphome::entity::select::wake_word::state::okay_nabu%]"
         }
       }
+    },
+    "timer_list": {
+      "timers": {
+        "name": "Timers"
+      }
     }
   },
   "exceptions": {

@@ -55,6 +55,24 @@
       "schedule_override_active": {
         "name": "Schedule override active"
       },
+      "siren_ac_dc_error": {
+        "name": "AC/DC error"
+      },
+      "siren_acoustic_alarm": {
+        "name": "Acoustic alarm"
+      },
+      "siren_battery_defect": {
+        "name": "Battery defect"
+      },
+      "siren_battery_temperature_abnormal": {
+        "name": "Battery temperature abnormal"
+      },
+      "siren_primary_power_supply_outage": {
+        "name": "Primary power supply outage"
+      },
+      "siren_visual_alarm": {
+        "name": "Visual alarm"
+      },
       "summer_mode": {
         "name": "Heating break"
       },
@@ -63,6 +81,21 @@
       }
     },
     "button": {
+      "function_test_start": {
+        "name": "Start function test"
+      },
+      "function_test_stop": {
+        "name": "Stop function test"
+      },
+      "preview_max_brightness": {
+        "name": "Preview max brightness"
+      },
+      "preview_min_brightness": {
+        "name": "Preview min brightness"
+      },
+      "reset_energy_summation": {
+        "name": "Reset consumption value"
+      },
       "reset_tamper": {
         "name": "Reset tamper"
       },
@@ -74,6 +107,15 @@
       }
     },
     "event": {
+      "lower_button": {
+        "name": "Lower key"
+      },
+      "lower_left_button": {
+        "name": "Lower left key"
+      },
+      "lower_right_button": {
+        "name": "Lower right key"
+      },
       "smoke_detector_alarm": {
         "state_attributes": {
           "event_type": {
@@ -87,6 +129,15 @@
             }
           }
         }
+      },
+      "upper_button": {
+        "name": "Upper key"
+      },
+      "upper_left_button": {
+        "name": "Upper left key"
+      },
+      "upper_right_button": {
+        "name": "Upper right key"
       }
     },
     "light": {
@@ -98,6 +149,15 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "comfort_temperature": {
+        "name": "Comfort temperature"
+      },
+      "dimmer_max": {
+        "name": "Maximum brightness"
+      },
+      "dimmer_min": {
+        "name": "Minimum brightness"
+      },
       "dimmer_speed": {
         "name": "Dimming speed"
       },
@@ -106,6 +166,9 @@
       },
       "display_on_time": {
         "name": "Display on-time"
+      },
+      "eco_temperature": {
+        "name": "Eco temperature"
       },
       "energy_saving_enter_duration": {
         "name": "Energy-saving enter duration"
@@ -121,6 +184,18 @@
       },
       "offset": {
         "name": "Temperature offset"
+      },
+      "siren_alarm_delay": {
+        "name": "Siren alarm delay"
+      },
+      "siren_alarm_duration": {
+        "name": "Siren alarm duration"
+      },
+      "siren_flash_delay": {
+        "name": "Flashing light alarm delay"
+      },
+      "siren_flash_duration": {
+        "name": "Flashing light alarm duration"
       }
     },
     "select": {
@@ -273,6 +348,14 @@
       "air_quality": {
         "name": "Air quality"
       },
+      "battery_level": {
+        "name": "Battery level",
+        "state": {
+          "critically_low_battery": "Critically low",
+          "low_battery": "[%key:common::state::low%]",
+          "ok": "OK"
+        }
+      },
       "communication_quality": {
         "name": "Communication quality"
       },
@@ -401,6 +484,11 @@
         "name": "Vibration detection"
       }
     },
+    "update": {
+      "controller_update": {
+        "name": "Software update"
+      }
+    },
     "valve": {
       "valve": {
         "name": "Valve"
@@ -410,6 +498,12 @@
   "exceptions": {
     "unsupported_hvac_mode": {
       "message": "This entity does not support the HVAC mode {hvac_mode}."
+    },
+    "update_install_failed": {
+      "message": "Failed to start the firmware update on {name}"
+    },
+    "update_not_ready": {
+      "message": "Firmware update for {name} cannot be activated right now (current state: {state})."
     }
   }
 }

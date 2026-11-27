@@ -29,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import EVOHOME_DATA, NEXT_SP_FROM
-from .coordinator import EvoDataUpdateCoordinator
+from .coordinator import EvoLocationCoordinator
 from .entity import EvoChild
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,22 +51,25 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    coordinator = hass.data[EVOHOME_DATA].coordinator
-    tcs = hass.data[EVOHOME_DATA].tcs
+    entities: list[EvoDHW] = []
 
-    assert tcs.hotwater is not None  # mypy check
+    for coordinator in hass.data[EVOHOME_DATA].locations:
+        if (dhw := coordinator.tcs.hotwater) is None:
+            continue
 
-    _LOGGER.debug(
-        "Adding: DhwController (%s), id=%s",
-        tcs.hotwater.type,
-        tcs.hotwater.id,
-    )
+        _LOGGER.debug(
+            "Adding: %s, id=%s, name=%s, location_id=%s",
+            dhw.type,
+            dhw.id,
+            f"{coordinator.loc.name} DHW",
+            coordinator.loc.id,
+        )
+        entities.append(EvoDHW(coordinator, dhw))
 
-    entity = EvoDHW(coordinator, tcs.hotwater)
+    async_add_entities(entities)
 
-    async_add_entities([entity])
-
-    await entity.update_attrs()
+    for entity in entities:
+        await entity.update_attrs()
 
 
 class EvoDHW(EvoChild, WaterHeaterEntity):
@@ -85,7 +88,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     _evo_state_attr_names = (SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS)
 
     def __init__(
-        self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.HotWater
+        self, coordinator: EvoLocationCoordinator, evo_device: evo.HotWater
     ) -> None:
         """Initialize an evohome-compatible DHW controller."""
 
@@ -95,7 +98,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         self._attr_name = evo_device.name  # is static
 
         self._attr_precision = (
-            PRECISION_TENTHS if coordinator.client_v1 else PRECISION_WHOLE
+            PRECISION_TENTHS if coordinator.account.client_v1 else PRECISION_WHOLE
         )
 
     async def async_set_dhw_override(

@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.abode.const import DOMAIN
 from homeassistant.components.abode.services import AbodeService
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -66,7 +66,7 @@ async def test_camera_on(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             CAMERA_DOMAIN,
             "turn_on",
-            {ATTR_ENTITY_ID: "camera.test_cam"},
+            {TargetKey.ENTITY_ID: "camera.test_cam"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -81,7 +81,7 @@ async def test_camera_off(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             CAMERA_DOMAIN,
             "turn_off",
-            {ATTR_ENTITY_ID: "camera.test_cam"},
+            {TargetKey.ENTITY_ID: "camera.test_cam"},
             blocking=True,
         )
         await hass.async_block_till_done()

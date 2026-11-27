@@ -104,11 +104,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: todo
-    comment: |
-      Add `diagnostics.py` returning the latest coordinator data with
-      sensitive fields redacted.
+  diagnostics: done
   discovery-update-info:
     status: todo
     comment: |

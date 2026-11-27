@@ -3,20 +3,25 @@
 from datetime import timedelta
 from typing import cast, override
 
-from aiowebostv import WebOsClient, WebOsTvPairError, WebOsTvState
+from aiowebostv import (
+    WebOsClient,
+    WebOsTvConnectionError,
+    WebOsTvPairError,
+    WebOsTvState,
+)
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailedUnreachable,
 )
 
-from .const import CONF_MAC_ADDRESSES, DOMAIN, LOGGER, WEBOSTV_EXCEPTIONS
-from .helpers import get_mac_addresses
+from .const import DOMAIN, LOGGER
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -48,17 +53,15 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     @property
     def mac_addresses(self) -> list[str]:
-        """Return the manual MAC address or the discovered addresses."""
-        if mac := self.config_entry.options.get(CONF_MAC):
-            return [mac]
-        macs = self.config_entry.data.get(CONF_MAC_ADDRESSES, {})
-        if macs:
-            if isinstance(macs, dict):
-                return list(dict.fromkeys(macs.values()))
-            return cast(list[str], macs)
-        if mac := self.config_entry.data.get(CONF_MAC):
-            return [mac]
-        return []
+        """Return the TV MAC addresses persisted in the device registry."""
+        device = dr.async_get(self.hass).async_get_device_by_identifier(
+            (DOMAIN, cast(str, self.config_entry.unique_id)), self.config_entry.entry_id
+        )
+        return [
+            value
+            for kind, value in (device.connections if device else ())
+            if kind == dr.CONNECTION_NETWORK_MAC
+        ]
 
     @override
     async def _async_update_data(self) -> None:
@@ -68,8 +71,9 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         try:
             await self.client.connect()
-        except WEBOSTV_EXCEPTIONS as error:
-            # Automation triggers are attached only when Home Assistant is running.
+        except WebOsTvConnectionError as error:
+            # can't recover if the TV is disconnected and no turn_on action,
+            # automation triggers are attached only when Home Assistant is running
             if (
                 not self.turn_on
                 and not self.mac_addresses
@@ -88,13 +92,39 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ) from error
         else:
             update_client_key(self.hass, self.config_entry, self.client)
-            if (macs := get_mac_addresses(self.client.tv_info.connection)) and (
-                macs != self.config_entry.data.get(CONF_MAC_ADDRESSES)
-            ):
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data={**self.config_entry.data, CONF_MAC_ADDRESSES: macs},
-                )
+            dr.async_get(self.hass).async_get_or_create_from_info(
+                config_entry_id=self.config_entry.entry_id,
+                device_info=self.device_info,
+            )
+
+    @property
+    def device_info(self) -> dr.DeviceInfo:
+        """Return the device info from the TV info received on connect."""
+        tv_info = self.client.tv_info
+        device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, cast(str, self.config_entry.unique_id))},
+            manufacturer="LG",
+            name=self.config_entry.title,
+        )
+
+        maj_v = tv_info.software.get("major_ver")
+        min_v = tv_info.software.get("minor_ver")
+        if maj_v and min_v:
+            device_info.sw_version = f"{maj_v}.{min_v}"
+
+        if model := tv_info.system.get("modelName"):
+            device_info.model = model
+
+        if serial_number := tv_info.system.get("serialNumber"):
+            device_info.serial_number = serial_number
+
+        if connections := {
+            (dr.CONNECTION_NETWORK_MAC, mac)
+            for mac in self.client.mac_addresses.values()
+        }:
+            device_info.connections = connections
+
+        return device_info
 
     @callback
     def _async_turn_on_changed(self) -> None:
@@ -118,5 +148,5 @@ def update_client_key(
     if client.client_key != entry.data[CONF_CLIENT_SECRET]:
         host = entry.data[CONF_HOST]
         LOGGER.debug("Updating client key for host %s", host)
-        data = {**entry.data, CONF_CLIENT_SECRET: client.client_key}
+        data = {CONF_HOST: host, CONF_CLIENT_SECRET: client.client_key}
         hass.config_entries.async_update_entry(entry, data=data)

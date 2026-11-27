@@ -12,7 +12,7 @@ from requests import RequestException
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -115,6 +115,12 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
 
         tado_home = tado_home_call["homes"][0]
+        if tado_home.get("generation", "").lower() == "line_x":
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="tado_x_unsupported",
+                translation_placeholders={"home": tado_home["name"]},
+            )
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
 
