@@ -41,6 +41,7 @@ from .common import snapshot_matter_devices
         "aqara_light_switch_h2_us_4099",
         "aqara_light_switch_h2_us_4100",
         "aqara_light_switch_h2_us_4101",
+        "aqara_light_switch_h2_eu_4105",
         "cync_keypad_dimmer",
         "dewenwils_3_zone_transformer",
         "ductech_smartwings_levitate",
