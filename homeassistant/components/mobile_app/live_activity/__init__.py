@@ -7,16 +7,17 @@ from enum import StrEnum
 from functools import partial
 from typing import Any
 
-from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from ..const import (
     ATTR_APP_DATA,
+    ATTR_DATA,
     ATTR_LIVE_ACTIVITY_EVENT,
     ATTR_LIVE_ACTIVITY_EXPIRES_AT,
     ATTR_LIVE_ACTIVITY_TOKEN,
     ATTR_LIVE_UPDATE,
+    ATTR_MESSAGE,
     ATTR_START_LIVE_ACTIVITY_TOKEN,
     ATTR_TAG,
     ATTR_TOKEN,

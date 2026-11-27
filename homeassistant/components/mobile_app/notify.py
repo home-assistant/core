@@ -11,9 +11,6 @@ from typing import Any, override
 from aiohttp import ClientError, ClientSession
 
 from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
     NotifyEntity,
@@ -37,8 +34,10 @@ from .const import (
     ATTR_APP_DATA,
     ATTR_APP_ID,
     ATTR_APP_VERSION,
+    ATTR_DATA,
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
+    ATTR_MESSAGE,
     ATTR_OS_VERSION,
     ATTR_PUSH_RATE_LIMITS,
     ATTR_PUSH_RATE_LIMITS_ERRORS,
@@ -47,6 +46,7 @@ from .const import (
     ATTR_PUSH_RATE_LIMITS_SUCCESSFUL,
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
+    ATTR_TITLE,
     ATTR_WEBHOOK_ID,
     DATA_CONFIG_ENTRIES,
     DATA_NOTIFY,
