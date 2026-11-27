@@ -74,6 +74,14 @@
         "name": "Regenerate password"
       }
     },
+    "date": {
+      "firewall_policy_schedule_end_date": {
+        "name": "Schedule end date"
+      },
+      "firewall_policy_schedule_start_date": {
+        "name": "Schedule start date"
+      }
+    },
     "image": {
       "wlan_qr_code": {
         "name": "QR code"
