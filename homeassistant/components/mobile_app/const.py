@@ -59,9 +59,9 @@ ATTR_TOKEN = "token"
 
 MANUFACTURER_APPLE = "Apple"
 
-ATTR_DATA = "data"
-ATTR_MESSAGE = "message"
-ATTR_TITLE = "title"
+ATTR_PAYLOAD_DATA = "data"
+ATTR_PAYLOAD_MESSAGE = "message"
+ATTR_PAYLOAD_TITLE = "title"
 
 CLEAR_NOTIFICATION = "clear_notification"
 

@@ -12,12 +12,12 @@ from homeassistant.util import dt as dt_util
 
 from ..const import (
     ATTR_APP_DATA,
-    ATTR_DATA,
     ATTR_LIVE_ACTIVITY_EVENT,
     ATTR_LIVE_ACTIVITY_EXPIRES_AT,
     ATTR_LIVE_ACTIVITY_TOKEN,
     ATTR_LIVE_UPDATE,
-    ATTR_MESSAGE,
+    ATTR_PAYLOAD_DATA,
+    ATTR_PAYLOAD_MESSAGE,
     ATTR_START_LIVE_ACTIVITY_TOKEN,
     ATTR_TAG,
     ATTR_TOKEN,
@@ -73,8 +73,8 @@ def prepare_live_activity_remote_push(
         {
             **data,
             ATTR_LIVE_ACTIVITY_TOKEN: resolved.token,
-            ATTR_DATA: {
-                **(data.get(ATTR_DATA) or {}),
+            ATTR_PAYLOAD_DATA: {
+                **(data.get(ATTR_PAYLOAD_DATA) or {}),
                 ATTR_LIVE_ACTIVITY_EVENT: resolved.event,
             },
         },
@@ -86,7 +86,7 @@ def resolve_live_activity_push(
     hass: HomeAssistant, registration: Mapping[str, Any], data: dict[str, Any]
 ) -> LiveActivityPush | None:
     """Return Live Activity token routing data for a notification, or ``None``."""
-    notification_data = data.get(ATTR_DATA) or {}
+    notification_data = data.get(ATTR_PAYLOAD_DATA) or {}
     tag = notification_data.get(ATTR_TAG)
     if not tag:
         return None
@@ -99,7 +99,7 @@ def resolve_live_activity_push(
         and stored[ATTR_LIVE_ACTIVITY_EXPIRES_AT] > dt_util.utcnow().timestamp()
     )
 
-    if data.get(ATTR_MESSAGE) == CLEAR_NOTIFICATION:
+    if data.get(ATTR_PAYLOAD_MESSAGE) == CLEAR_NOTIFICATION:
         if stored_token_valid:
             return LiveActivityPush(stored[ATTR_TOKEN], LiveActivityEvent.END, tag)
         return None
