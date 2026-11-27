@@ -97,6 +97,7 @@ CONFIG_SCHEMA = probatio.Schema(
 
 __all__ = [
     "CONF_DISPLAY_CATEGORIES",
+    "CONF_EXPOSE_POWER_CONTROLLER",
     "DOMAIN",
 ]
 
