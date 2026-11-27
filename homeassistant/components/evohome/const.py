@@ -34,6 +34,8 @@ class EvoService(StrEnum):
     SET_SYSTEM_MODE = "set_system_mode"
     SET_ZONE_OVERRIDE = "set_zone_override"
     SET_DHW_OVERRIDE = "set_dhw_override"
+    GET_ZONE_SCHEDULE = "get_zone_schedule"
+    SET_ZONE_SCHEDULE = "set_zone_schedule"
 
 
 @unique
@@ -45,3 +47,4 @@ class EvoServiceArgument(StrEnum):
     DURATION = "duration"
     SETPOINT = "setpoint"
     STATE = "state"
+    SCHEDULE = "schedule"

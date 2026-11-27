@@ -60,11 +60,24 @@
     "request_invalid": {
       "message": "The request is not valid"
     },
+    "schedule_invalid": {
+      "message": "Invalid schedule for {day}: {reason}"
+    },
+    "schedule_not_confirmed": {
+      "message": "The evohome system did not confirm the new schedule of {zone} within 60 seconds"
+    },
+    "schedule_unavailable": {
+      "message": "The schedule of {zone} could not be read from the evohome system"
+    },
     "zone_only_service": {
       "message": "Only zones support the `{service}` action"
     }
   },
   "services": {
+    "get_zone_schedule": {
+      "description": "Gets the weekly schedule of a zone.",
+      "name": "Get zone schedule"
+    },
     "set_dhw_override": {
       "description": "Overrides a DHW's state, either indefinitely or for a specified duration, after which it will revert to following its schedule.",
       "fields": {
@@ -110,6 +123,16 @@
         }
       },
       "name": "Set zone override"
+    },
+    "set_zone_schedule": {
+      "description": "Replaces the weekly schedule of a zone. The response contains the new and the previous schedule.",
+      "fields": {
+        "schedule": {
+          "description": "A list with one entry for each day, Monday to Sunday. Each entry has a `day_of_week` and a list of `switchpoints`, each with a `time_of_day` (HH:MM) and a `heat_setpoint`.",
+          "name": "Schedule"
+        }
+      },
+      "name": "Set zone schedule"
     }
   }
 }

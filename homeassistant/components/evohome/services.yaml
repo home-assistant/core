@@ -66,3 +66,24 @@ set_dhw_override:
       selector:
         duration:
           enable_second: false
+
+get_zone_schedule:
+  target:
+    entity:
+      integration: evohome
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TARGET_TEMPERATURE
+
+set_zone_schedule:
+  target:
+    entity:
+      integration: evohome
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TARGET_TEMPERATURE
+  fields:
+    schedule:
+      required: true
+      selector:
+        object:

@@ -18,6 +18,9 @@
     }
   },
   "services": {
+    "get_zone_schedule": {
+      "service": "mdi:calendar-clock"
+    },
     "set_dhw_override": {
       "service": "mdi:water-boiler"
     },
@@ -26,6 +29,9 @@
     },
     "set_zone_override": {
       "service": "mdi:motion-sensor"
+    },
+    "set_zone_schedule": {
+      "service": "mdi:calendar-edit"
     }
   }
 }

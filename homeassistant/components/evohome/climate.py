@@ -1,15 +1,20 @@
 """Support for Climate entities of the Evohome integration."""
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any, override
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
+    SZ_DAY_OF_WEEK,
+    SZ_HEAT_SETPOINT,
     SZ_SETPOINT_STATUS,
+    SZ_SWITCHPOINTS,
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
     SZ_TEMPERATURE_STATUS,
+    SZ_TIME_OF_DAY,
     SZ_UNTIL,
     SystemMode as EvoSystemMode,
     ZoneMode as EvoZoneMode,
@@ -26,13 +31,14 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonValueType
 
-from .const import DOMAIN, EVOHOME_DATA, NEXT_SP_FROM, EvoService
+from .const import DOMAIN, EVOHOME_DATA, NEXT_SP_FROM, EvoService, EvoServiceArgument
 from .coordinator import EvoLocationCoordinator
 from .entity import EvoChild, EvoEntity, is_valid_zone, unique_zone_id
 from .helpers import as_snake_case
@@ -146,6 +152,47 @@ class EvoClimateEntity(EvoEntity, ClimateEntity):
             translation_placeholders={"service": EvoService.SET_ZONE_OVERRIDE},
         )
 
+    async def async_get_zone_schedule(self) -> ServiceResponse:
+        """Return the zone schedule; only supported by zones."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="zone_only_service",
+            translation_placeholders={"service": EvoService.GET_ZONE_SCHEDULE},
+        )
+
+    async def async_set_zone_schedule(
+        self, schedule: list[dict[str, Any]]
+    ) -> ServiceResponse:
+        """Set the zone schedule; only supported by zones."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="zone_only_service",
+            translation_placeholders={"service": EvoService.SET_ZONE_SCHEDULE},
+        )
+
+
+def _as_response_schedule(schedule: list[Any]) -> list[JsonValueType]:
+    """Convert a schedule from the client to the format used by the actions."""
+    return [
+        {
+            SZ_DAY_OF_WEEK: str(day[SZ_DAY_OF_WEEK]).capitalize(),
+            SZ_SWITCHPOINTS: [
+                {
+                    SZ_TIME_OF_DAY: switchpoint[SZ_TIME_OF_DAY][:5],
+                    SZ_HEAT_SETPOINT: switchpoint[SZ_HEAT_SETPOINT],
+                }
+                for switchpoint in day[SZ_SWITCHPOINTS]
+            ],
+        }
+        for day in schedule
+    ]
+
+
+def _minutes(value: str) -> int:
+    """Return the number of minutes in a "HH:MM:SS" string."""
+    hours, minutes, *_ = value.split(":")
+    return int(hours) * 60 + int(minutes)
+
 
 class EvoZone(EvoChild, EvoClimateEntity):
     """Base for any evohome-compatible heating zone."""
@@ -197,6 +244,103 @@ class EvoZone(EvoChild, EvoClimateEntity):
         await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
+
+    async def _async_fetch_schedule(self) -> list[JsonValueType]:
+        """Fetch the zone's schedule from the vendor and return it."""
+        await self.coordinator.async_get_schedule(self._evo_device)
+        try:
+            schedule = self._evo_device.schedule
+        except evo.NotFetchedError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="schedule_unavailable",
+                translation_placeholders={"zone": self.name},
+            ) from err
+        return _as_response_schedule(schedule)
+
+    @override
+    async def async_get_zone_schedule(self) -> ServiceResponse:
+        """Return the zone's weekly schedule."""
+        return {EvoServiceArgument.SCHEDULE: await self._async_fetch_schedule()}
+
+    def _validate_schedule(self, schedule: list[dict[str, Any]]) -> None:
+        """Validate a schedule against the zone's capabilities, and sort it."""
+        capabilities: dict[str, Any] = dict(
+            self._evo_device.schedule_capabilities or {}
+        )
+        min_switchpoints = capabilities.get("min_switchpoints_per_day", 1)
+        max_switchpoints = capabilities.get("max_switchpoints_per_day", 6)
+        resolution = _minutes(capabilities.get("timing_resolution", "00:10:00")) or 1
+        step = capabilities.get("setpoint_value_resolution", 0.5)
+
+        def invalid(day: str, reason: str) -> ServiceValidationError:
+            return ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="schedule_invalid",
+                translation_placeholders={"day": day, "reason": reason},
+            )
+
+        for day in schedule:
+            name = day[SZ_DAY_OF_WEEK]
+            switchpoints = day[SZ_SWITCHPOINTS]
+            if not min_switchpoints <= len(switchpoints) <= max_switchpoints:
+                raise invalid(
+                    name,
+                    f"a day needs {min_switchpoints} to {max_switchpoints} switchpoints",
+                )
+            times = [sp[SZ_TIME_OF_DAY] for sp in switchpoints]
+            if len(set(times)) != len(times):
+                raise invalid(name, "two switchpoints have the same time")
+            for switchpoint in switchpoints:
+                time = switchpoint[SZ_TIME_OF_DAY]
+                setpoint = switchpoint[SZ_HEAT_SETPOINT]
+                if _minutes(time) % resolution:
+                    raise invalid(
+                        name, f"{time[:5]} is not a multiple of {resolution} minutes"
+                    )
+                if not self.min_temp <= setpoint <= self.max_temp:
+                    raise invalid(
+                        name,
+                        f"{setpoint} is outside {self.min_temp} to {self.max_temp}",
+                    )
+                if round(setpoint / step, 6) % 1:
+                    raise invalid(name, f"{setpoint} is not a multiple of {step}")
+            switchpoints.sort(key=lambda sp: sp[SZ_TIME_OF_DAY])
+
+    @override
+    async def async_set_zone_schedule(
+        self, schedule: list[dict[str, Any]]
+    ) -> ServiceResponse:
+        """Replace the zone's weekly schedule, and return the previous one."""
+        self._validate_schedule(schedule)
+        previous_schedule = await self._async_fetch_schedule()
+
+        # the client expects its own enum for the day, which it converts for the vendor
+        new_schedule: list[Any] = [
+            {**day, SZ_DAY_OF_WEEK: evo.DayOfWeek(day[SZ_DAY_OF_WEEK].lower())}
+            for day in schedule
+        ]
+        task = await self.coordinator.call_client_api(
+            self._evo_device.set_schedule(new_schedule), request_refresh=False
+        )
+        try:
+            async with asyncio.timeout(60):
+                await self.coordinator.call_client_api(
+                    task.wait(), request_refresh=False
+                )
+        except TimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="schedule_not_confirmed",
+                translation_placeholders={"zone": self.name},
+            ) from err
+
+        current_schedule = await self._async_fetch_schedule()
+        await self.coordinator.async_request_refresh()
+        return {
+            EvoServiceArgument.SCHEDULE: current_schedule,
+            "previous_schedule": previous_schedule,
+        }
 
     @property
     @override
