@@ -22,6 +22,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
 from .const import DOMAIN, STATELESS_LLM_API
+from .types import MCPRequestContext
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,9 +99,14 @@ async def create_server(
     the client used to reach this instance and is used for absolute URLs.
     """
 
-    async def get_api_instance(ctx: ServerRequestContext[Any]) -> llm.APIInstance:
+    async def get_api_instance(
+        ctx: ServerRequestContext[Any, MCPRequestContext],
+    ) -> llm.APIInstance:
         """Get the LLM API selected."""
-        device_id = ctx.meta.get(META_DEVICE_ID) if ctx.meta else None
+        device_id: object = ctx.request.device_id if ctx.request is not None else None
+        # Request metadata is authoritative, including an explicit null device ID.
+        if ctx.meta is not None:
+            device_id = ctx.meta.get(META_DEVICE_ID, device_id)
         if device_id is not None and not isinstance(device_id, str):
             raise ValueError(f"{META_DEVICE_ID} must be a string")
 

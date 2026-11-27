@@ -7,7 +7,7 @@ from typing import Any
 
 import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 
 from .const import DOMAIN, InputNumberService, InputNumberServiceArgument
@@ -40,8 +40,8 @@ async def _async_reproduce_state(
         return
 
     service = InputNumberService.SET_VALUE
-    service_data = {
-        ATTR_ENTITY_ID: state.entity_id,
+    service_data: dict[str, Any] = {
+        TargetKey.ENTITY_ID: state.entity_id,
         InputNumberServiceArgument.VALUE: state.state,
     }
 

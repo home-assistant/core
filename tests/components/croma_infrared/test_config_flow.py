@@ -48,7 +48,6 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID
     }
-    assert result["result"].unique_id == MOCK_INFRARED_EMITTER_ENTITY_ID
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -114,7 +113,7 @@ async def test_reconfigure_flow_suggests_current_emitter(
 async def test_reconfigure_flow(
     hass: HomeAssistant, init_integration: MockConfigEntry, emitter_entity_id: str
 ) -> None:
-    """Test reconfiguring updates the emitter and unique ID and reloads the entry."""
+    """Test reconfiguring updates the emitter and reloads the entry."""
     result = await init_integration.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -125,7 +124,6 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert init_integration.data == {CONF_INFRARED_EMITTER_ENTITY_ID: emitter_entity_id}
-    assert init_integration.unique_id == emitter_entity_id
     assert init_integration.state is ConfigEntryState.LOADED
 
 
@@ -138,7 +136,6 @@ async def test_reconfigure_flow_already_configured(
     MockConfigEntry(
         domain=DOMAIN,
         data={CONF_INFRARED_EMITTER_ENTITY_ID: SECOND_EMITTER_ENTITY_ID},
-        unique_id=SECOND_EMITTER_ENTITY_ID,
     ).add_to_hass(hass)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
@@ -153,7 +150,6 @@ async def test_reconfigure_flow_already_configured(
         mock_config_entry.data[CONF_INFRARED_EMITTER_ENTITY_ID]
         == MOCK_INFRARED_EMITTER_ENTITY_ID
     )
-    assert mock_config_entry.unique_id == MOCK_INFRARED_EMITTER_ENTITY_ID
 
 
 @pytest.mark.usefixtures("init_infrared")
