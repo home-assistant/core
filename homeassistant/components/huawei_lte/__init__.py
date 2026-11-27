@@ -325,6 +325,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
     try:
         await hass.async_add_executor_job(router.update)
     except RequestException as ex:
+        await hass.async_add_executor_job(router.cleanup)
         raise ConfigEntryNotReady from ex
 
     # Check that we found required information

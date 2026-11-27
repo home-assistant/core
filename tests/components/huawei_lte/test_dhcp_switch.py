@@ -127,15 +127,20 @@ async def test_setup_retries_when_read_fails(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     client = magic_client()
     client.dhcp.settings.side_effect = ConnectTimeout()
+    connection = MagicMock()
 
     with (
-        patch("homeassistant.components.huawei_lte.Connection", MagicMock()),
+        patch(
+            "homeassistant.components.huawei_lte.Connection",
+            return_value=connection,
+        ),
         patch("homeassistant.components.huawei_lte.Client", return_value=client),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    connection.requests_session.close.assert_called_once()
 
 
 @pytest.mark.parametrize(
