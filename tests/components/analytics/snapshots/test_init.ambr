@@ -1,0 +1,83 @@
+# serializer version: 1
+# name: test_websocket_preview[all]
+  dict({
+    'analytics': dict({
+      'automation_count': 0,
+      'certificate': False,
+      'custom_integrations': list([
+      ]),
+      'installation_type': 'Home Assistant Tests',
+      'integration_count': 1,
+      'integrations': list([
+        'analytics',
+      ]),
+      'state_count': 0,
+      'user_count': 1,
+      'uuid': 'abcdefg',
+      'version': '1970.1.0',
+    }),
+    'snapshot': None,
+  })
+# ---
+# name: test_websocket_preview[base]
+  dict({
+    'analytics': dict({
+      'installation_type': 'Home Assistant Tests',
+      'uuid': 'abcdefg',
+      'version': '1970.1.0',
+    }),
+    'snapshot': None,
+  })
+# ---
+# name: test_websocket_preview[base_off]
+  dict({
+    'analytics': None,
+    'snapshot': None,
+  })
+# ---
+# name: test_websocket_preview[base_without_uuid]
+  dict({
+    'analytics': dict({
+      'installation_type': 'Home Assistant Tests',
+      'uuid': None,
+      'version': '1970.1.0',
+    }),
+    'snapshot': None,
+  })
+# ---
+# name: test_websocket_preview[no_preferences]
+  dict({
+    'analytics': None,
+    'snapshot': None,
+  })
+# ---
+# name: test_websocket_preview[statistics]
+  dict({
+    'analytics': dict({
+      'automation_count': 0,
+      'installation_type': 'Home Assistant Tests',
+      'integration_count': 1,
+      'state_count': 0,
+      'user_count': 1,
+      'uuid': 'abcdefg',
+      'version': '1970.1.0',
+    }),
+    'snapshot': None,
+  })
+# ---
+# name: test_websocket_preview[usage]
+  dict({
+    'analytics': dict({
+      'certificate': False,
+      'custom_integrations': list([
+      ]),
+      'installation_type': 'Home Assistant Tests',
+      'integrations': list([
+        'analytics',
+      ]),
+      'uuid': 'abcdefg',
+      'version': '1970.1.0',
+    }),
+    'snapshot': None,
+  })
+# ---
