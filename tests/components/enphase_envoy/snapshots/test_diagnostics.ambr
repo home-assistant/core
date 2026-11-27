@@ -856,6 +856,10 @@
       'encharge_inventory': None,
       'encharge_power': None,
       'enpower': None,
+      'generator': None,
+      'generator_config': None,
+      'generator_mode': None,
+      'generator_schedule': None,
       'inverters': dict({
         '1': dict({
           '__type': "<class 'pyenphase.models.inverter.EnvoyInverter'>",
@@ -1757,6 +1761,10 @@
       'encharge_inventory': None,
       'encharge_power': None,
       'enpower': None,
+      'generator': None,
+      'generator_config': None,
+      'generator_mode': None,
+      'generator_schedule': None,
       'inverters': dict({
         '1': dict({
           '__type': "<class 'pyenphase.models.inverter.EnvoyInverter'>",
@@ -2695,6 +2703,10 @@
       'encharge_inventory': None,
       'encharge_power': None,
       'enpower': None,
+      'generator': None,
+      'generator_config': None,
+      'generator_mode': None,
+      'generator_schedule': None,
       'inverters': dict({
         '1': dict({
           '__type': "<class 'pyenphase.models.inverter.EnvoyInverter'>",
@@ -3600,6 +3612,10 @@
       'encharge_inventory': None,
       'encharge_power': None,
       'enpower': None,
+      'generator': None,
+      'generator_config': None,
+      'generator_mode': None,
+      'generator_schedule': None,
       'inverters': dict({
         '1': dict({
           '__type': "<class 'pyenphase.models.inverter.EnvoyInverter'>",
@@ -18615,6 +18631,178 @@
                 None,
               ]),
               'area_id': None,
+              'capabilities': dict({
+                'max': 60,
+                'min': 10,
+                'mode': 'auto',
+                'step': 10,
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'number',
+              'entity_category': 'config',
+              'entity_id': 'number.generator_<<envoyserial>>_exercise_duration',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Exercise duration',
+              'options': dict({
+              }),
+              'original_device_class': 'duration',
+              'original_icon': None,
+              'original_name': 'Exercise duration',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'generator_exercise_duration',
+              'unique_id': '<<envoyserial>>_generator_exercise_duration',
+              'unit_of_measurement': 'min',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'device_class': 'duration',
+                'friendly_name': 'Generator <<envoyserial>> Exercise duration',
+                'max': 60,
+                'min': 10,
+                'mode': 'auto',
+                'step': 10,
+                'unit_of_measurement': 'min',
+              }),
+              'entity_id': 'number.generator_<<envoyserial>>_exercise_duration',
+              'state': '10',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+                None,
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'max': 4,
+                'min': 1,
+                'mode': 'auto',
+                'step': 1,
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'number',
+              'entity_category': 'config',
+              'entity_id': 'number.generator_<<envoyserial>>_exercise_interval',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Exercise interval',
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Exercise interval',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'generator_exercise_interval',
+              'unique_id': '<<envoyserial>>_generator_exercise_interval',
+              'unit_of_measurement': 'w',
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Generator <<envoyserial>> Exercise interval',
+                'max': 4,
+                'min': 1,
+                'mode': 'auto',
+                'step': 1,
+                'unit_of_measurement': 'w',
+              }),
+              'entity_id': 'number.generator_<<envoyserial>>_exercise_interval',
+              'state': '1',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+                None,
+              ]),
+              'area_id': None,
+              'capabilities': dict({
+                'options': list([
+                  'mon',
+                  'tue',
+                  'wed',
+                  'thu',
+                  'fri',
+                  'sat',
+                  'sun',
+                ]),
+              }),
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'select',
+              'entity_category': 'config',
+              'entity_id': 'select.generator_<<envoyserial>>_exercise_day',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Exercise day',
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Exercise day',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'generator_exercise_day',
+              'unique_id': '<<envoyserial>>_generator_exercise_day',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Generator <<envoyserial>> Exercise day',
+                'options': list([
+                  'mon',
+                  'tue',
+                  'wed',
+                  'thu',
+                  'fri',
+                  'sat',
+                  'sun',
+                ]),
+              }),
+              'entity_id': 'select.generator_<<envoyserial>>_exercise_day',
+              'state': 'thu',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+                None,
+              ]),
+              'area_id': None,
               'capabilities': None,
               'categories': dict({
               }),
@@ -19113,6 +19301,94 @@
               }),
               'entity_id': 'sensor.generator_<<envoyserial>>_warm_up_time',
               'state': '5',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+                None,
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'switch',
+              'entity_category': 'config',
+              'entity_id': 'switch.generator_<<envoyserial>>_charge_from_generator',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Charge from generator',
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Charge from generator',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'generator_charge_from_generator',
+              'unique_id': '<<envoyserial>>_generator_charge_from_generator',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Generator <<envoyserial>> Charge from generator',
+              }),
+              'entity_id': 'switch.generator_<<envoyserial>>_charge_from_generator',
+              'state': 'on',
+            }),
+          }),
+          dict({
+            'entity': dict({
+              'aliases': list([
+                None,
+              ]),
+              'area_id': None,
+              'capabilities': None,
+              'categories': dict({
+              }),
+              'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
+              'device_class': None,
+              'disabled_by': None,
+              'domain': 'time',
+              'entity_category': 'config',
+              'entity_id': 'time.generator_<<envoyserial>>_exercise_start_time',
+              'has_entity_name': True,
+              'hidden_by': None,
+              'icon': None,
+              'labels': list([
+              ]),
+              'name': None,
+              'object_id_base': 'Exercise start time',
+              'options': dict({
+              }),
+              'original_device_class': None,
+              'original_icon': None,
+              'original_name': 'Exercise start time',
+              'platform': 'enphase_envoy',
+              'previous_unique_id': None,
+              'suggested_object_id': None,
+              'supported_features': 0,
+              'translation_key': 'generator_exercise_start_time',
+              'unique_id': '<<envoyserial>>_generator_exercise_start_time',
+              'unit_of_measurement': None,
+            }),
+            'state': dict({
+              'attributes': dict({
+                'friendly_name': 'Generator <<envoyserial>> Exercise start time',
+              }),
+              'entity_id': 'time.generator_<<envoyserial>>_exercise_start_time',
+              'state': '13:30:00',
             }),
           }),
         ]),
@@ -20525,6 +20801,22 @@
       'enpower': dict({
         '__type': "<class 'pyenphase.models.enpower.EnvoyEnpower'>",
         'repr': "EnvoyEnpower(grid_mode='multimode-ongrid', admin_state=24, admin_state_str='ENPWR_STATE_OPER_CLOSED', comm_level_2_4_ghz=5, comm_level_sub_ghz=5, communicating=True, firmware_loaded_date=1695330323, firmware_version='1.2.2064_release/20.34', installed_date=1695330323, last_report_date=1695769447, mains_admin_state='closed', mains_oper_state='closed', operating=True, part_number='830-01760-r37', serial_number='654321', temperature=79, temperature_unit='F', zigbee_dongle_fw_version='1009')",
+      }),
+      'generator': dict({
+        '__type': "<class 'pyenphase.models.generator.EnvoyGenerator'>",
+        'repr': "EnvoyGenerator(admin_state='open', oper_state='open', admin_mode=2, schedule=1, start_soc=100, stop_soc=-1, exc_on=0, present=True, type=1)",
+      }),
+      'generator_config': dict({
+        '__type': "<class 'pyenphase.models.generator.EnvoyGeneratorConfig'>",
+        'repr': "EnvoyGeneratorConfig(max_cont_gen_amps=60.0, min_gen_loading_perc=5, max_gen_efficiency_perc=100, name_plate_rating_wat=22.0, start_method='auto', warm_up_mins=5, cool_down_mins=5, gen_type='Standby', model='G007042-3, G007043-3 (22kW)', manufacturer='Generac', last_updated_by='ITK', generator_id='3019990001', charge_from_generator=True)",
+      }),
+      'generator_mode': dict({
+        '__type': "<class 'pyenphase.models.generator.EnvoyGeneratorMode'>",
+        'repr': "EnvoyGeneratorMode(gen_cmd='on', last_updated_by='ITK')",
+      }),
+      'generator_schedule': dict({
+        '__type': "<class 'pyenphase.models.generator.EnvoyGeneratorSchedule'>",
+        'repr': "EnvoyGeneratorSchedule(exercise_freq_in_weeks=1, exercise_start=810, exercise_duration=10, exercise_day='Thu', default_start_soc=30, default_stop_soc=70, last_updated_by='ITK', schedule={'default': [{'id': 'always_on', 'start': '1/1', 'end': '12/31', 'days': [{'id': 'all_days', 'week_days': 'Mon,Tue,Wed,Thu,Fri,Sat,Sun', 'periods': [{'id': 'normal_1', 'start': 0.0, 'duration': 1440.0, 'start_soc': 100.0, 'stop_soc': -1.0, 'setting': 'AON'}]}]}]})",
       }),
       'inverters': dict({
         '1': dict({

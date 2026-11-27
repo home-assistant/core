@@ -2,23 +2,34 @@
 
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyenphase.exceptions import EnvoyError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import Platform
+from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
 from homeassistant.components.number import (
+    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import TargetKey
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+
+GENERATOR_EXERCISE_DURATION_ENTITY = "number.generator_1234_exercise_duration"
+GENERATOR_EXERCISE_INTERVAL_ENTITY = "number.generator_1234_exercise_interval"
 
 
 @pytest.mark.parametrize(
@@ -224,3 +235,115 @@ async def test_number_operation_relays_with_error(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
+@pytest.mark.parametrize(
+    ("test_entity", "expected_value", "test_value", "test_field"),
+    [
+        pytest.param(
+            GENERATOR_EXERCISE_DURATION_ENTITY,
+            10.0,
+            30.0,
+            "exercise_duration",
+            id="duration",
+        ),
+        pytest.param(
+            GENERATOR_EXERCISE_INTERVAL_ENTITY,
+            1.0,
+            4.0,
+            "exercise_freq_in_weeks",
+            id="interval",
+        ),
+    ],
+)
+async def test_number_operation_generator_schedule(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    test_entity: str,
+    expected_value: float,
+    test_value: float,
+    test_field: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the standby generator exercise schedule number entities operation."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry)
+
+    assert (entity_state := hass.states.get(test_entity))
+    assert float(entity_state.state) == expected_value
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: test_entity,
+            ATTR_VALUE: test_value,
+        },
+        blocking=True,
+    )
+
+    mock_envoy.update_generator_schedule.assert_awaited_once_with(
+        {test_field: int(test_value)}, refresh=True
+    )
+
+    # verify value is unavailable if data is none
+    mock_envoy.data.generator_schedule = None
+    mock_envoy.data.raw = {"changed": True}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (entity_state := hass.states.get(test_entity))
+    assert entity_state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
+@pytest.mark.parametrize(
+    ("test_entity", "test_value"),
+    [
+        pytest.param(GENERATOR_EXERCISE_DURATION_ENTITY, 30.0, id="duration"),
+        pytest.param(GENERATOR_EXERCISE_INTERVAL_ENTITY, 4.0, id="interval"),
+    ],
+)
+async def test_number_operation_generator_schedule_with_error(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    test_entity: str,
+    test_value: float,
+) -> None:
+    """Test the generator exercise schedule number entities with error returned."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry)
+
+    mock_envoy.update_generator_schedule.side_effect = EnvoyError("Test")
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Failed to execute async_set_native_value for {test_entity}, host",
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: test_entity,
+                ATTR_VALUE: test_value,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
+async def test_no_number_generator_schedule(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the exercise schedule number entities are not created without a schedule."""
+    mock_envoy.data.generator_schedule = None
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry)
+
+    assert hass.states.get(GENERATOR_EXERCISE_DURATION_ENTITY) is None
+    assert hass.states.get(GENERATOR_EXERCISE_INTERVAL_ENTITY) is None

@@ -1,20 +1,39 @@
 """Test Enphase Envoy switch platform."""
 
+import logging
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyenphase.exceptions import EnvoyError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import Platform
+from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    TargetKey,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+
+_LOGGER = logging.getLogger(__name__)
+
+GENERATOR_CHARGE_ENTITY = "switch.generator_1234_charge_from_generator"
 
 
 @pytest.mark.parametrize(
@@ -361,3 +380,94 @@ async def test_switch_relay_operation_with_error(
             {TargetKey.ENTITY_ID: test_entity},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
+)
+async def test_switch_generator_charge_operation(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the charge batteries from generator switch entity operation."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: GENERATOR_CHARGE_ENTITY},
+        blocking=True,
+    )
+    mock_envoy.set_generator_charge_from_generator.assert_awaited_once_with(False, True)
+    mock_envoy.set_generator_charge_from_generator.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: GENERATOR_CHARGE_ENTITY},
+        blocking=True,
+    )
+    mock_envoy.set_generator_charge_from_generator.assert_awaited_once_with(True, True)
+
+    # verify value is unavailable if data is none
+    mock_envoy.data.generator_config = None
+    mock_envoy.data.raw = {"changed": "1"}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (entity_state := hass.states.get(GENERATOR_CHARGE_ENTITY))
+    assert entity_state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
+)
+@pytest.mark.parametrize(
+    ("service", "action"),
+    [
+        pytest.param(SERVICE_TURN_OFF, "async_turn_off", id="turn_off"),
+        pytest.param(SERVICE_TURN_ON, "async_turn_on", id="turn_on"),
+    ],
+)
+async def test_switch_generator_charge_operation_with_error(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    service: str,
+    action: str,
+) -> None:
+    """Test the charge from generator switch entity with error returned."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry)
+
+    mock_envoy.set_generator_charge_from_generator.side_effect = EnvoyError("Test")
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Failed to execute {action} for {GENERATOR_CHARGE_ENTITY}, host",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: GENERATOR_CHARGE_ENTITY},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
+)
+async def test_no_switch_generator_charge(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the charge from generator switch is not created without a config."""
+    mock_envoy.data.generator_config = None
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry)
+
+    assert hass.states.get(GENERATOR_CHARGE_ENTITY) is None
