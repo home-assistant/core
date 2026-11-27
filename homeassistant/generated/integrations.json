@@ -14882,7 +14882,7 @@
     },
     "tcp": {
       "name": "TCP",
-      "integration_type": "service",
+      "integration_type": "hub",
       "categories": [
         "diy_makers.web_data_connectors"
       ],
