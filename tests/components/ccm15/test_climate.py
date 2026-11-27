@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from ccm15 import CCM15DeviceState, CCM15SlaveDevice, TriState
+from ccm15 import CCM15DeviceState, CCM15ReturnCode, CCM15SlaveDevice, TriState
 from freezegun.api import FrozenDateTimeFactory
 import httpx2
 import pytest
@@ -214,6 +214,33 @@ async def test_climate_fahrenheit_unit(
     assert state is not None
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 75
     assert state.attributes[ATTR_TEMPERATURE] == 86
+
+
+async def test_climate_refresh_after_accepted_command(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    ccm15_device: AsyncMock,
+) -> None:
+    """The device state is polled again once the controller accepts a command."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    ccm15_device.reset_mock()
+
+    with patch(
+        "homeassistant.components.ccm15.coordinator.CCM15Device.async_set_state",
+        return_value=CCM15ReturnCode.OK,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            ClimateService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ["climate.midea_0"]},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    ccm15_device.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("ccm15_device")
