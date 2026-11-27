@@ -211,7 +211,7 @@ async def process_wrong_login(request: Request) -> None:
         _LOGGER.warning("Banned IP %s for too many login attempts", remote_addr)
         persistent_notification.async_create(
             hass,
-            f"Too many login attempts from {remote_addr}. You can unblock it under"
+            f"Too many login attempts from {remote_addr}. You can unban it under"
             " [Settings > System > Network](/config/network).",
             "Banning IP address",
             NOTIFICATION_ID_BAN,

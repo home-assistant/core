@@ -70,11 +70,11 @@
       "description": "Removes the ban of an IP address that was banned after too many failed login attempts.",
       "fields": {
         "ip_address": {
-          "description": "The banned IP address to unblock.",
+          "description": "The banned IP address to unban.",
           "name": "IP address"
         }
       },
-      "name": "Unblock IP address"
+      "name": "Unban IP address"
     }
   }
 }

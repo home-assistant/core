@@ -287,7 +287,7 @@ async def test_ip_ban_stored(
         " See the log for details."
     )
     assert notifications["ip-ban"]["message"] == (
-        "Too many login attempts from 200.201.202.204. You can unblock it under"
+        "Too many login attempts from 200.201.202.204. You can unban it under"
         " [Settings > System > Network](/config/network)."
     )
 
