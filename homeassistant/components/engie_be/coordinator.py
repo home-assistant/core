@@ -129,6 +129,7 @@ class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreem
             name=f"{DOMAIN}_relations",
         )
         self.client = client
+        self.any_agreements = False
 
     @override
     async def _async_update_data(self) -> dict[str, BusinessAgreement]:
@@ -136,10 +137,15 @@ class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreem
         with _raise_update_errors():
             relations = await self.client.async_get_customer_account_relations()
 
-        agreements = {
-            agreement.business_agreement_number: agreement
+        all_agreements = [
+            agreement
             for account in relations.accounts
             for agreement in account.customer_account.business_agreements
+        ]
+        self.any_agreements = bool(all_agreements)
+        agreements = {
+            agreement.business_agreement_number: agreement
+            for agreement in all_agreements
             if agreement.active
         }
         if not agreements:

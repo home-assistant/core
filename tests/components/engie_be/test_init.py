@@ -357,6 +357,12 @@ async def test_device_created_for_household_without_prices(
             id="foreign_identifier",
         ),
         pytest.param(
+            build_relations(inactive_bans=(BAN_2,)),
+            (DOMAIN, BAN_2),
+            set(),
+            id="only_inactive_agreements",
+        ),
+        pytest.param(
             build_relations(),
             (DOMAIN, BAN_2),
             {(DOMAIN, BAN_2)},

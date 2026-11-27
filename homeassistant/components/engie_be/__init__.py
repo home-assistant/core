@@ -134,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
     await relations.async_config_entry_first_refresh()
 
     device_registry = dr.async_get(hass)
-    if relations.data:
+    if relations.any_agreements:
         _async_remove_stale_devices(device_registry, entry, set(relations.data))
 
     @callback
