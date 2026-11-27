@@ -1,6 +1,6 @@
 """Platform for Roth Touchline floor heating controller."""
 
-from typing import Any, NamedTuple, override
+from typing import TYPE_CHECKING, Any, NamedTuple, override
 
 from pytouchline_extended import RoomStatus, TouchlineError
 
@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -55,7 +55,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up Touchline devices from a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(Touchline(coordinator, room_id) for room_id in coordinator.data)
+    if TYPE_CHECKING:
+        assert entry.unique_id is not None
+    controller_device_id = dr.async_get_device_id_by_identifier(
+        hass, (DOMAIN, entry.unique_id), config_entry_id=entry.entry_id
+    )
+    async_add_entities(
+        Touchline(coordinator, room_id, controller_device_id)
+        for room_id in coordinator.data
+    )
 
 
 class Touchline(CoordinatorEntity[TouchlineCoordinator], ClimateEntity):
@@ -72,15 +80,22 @@ class Touchline(CoordinatorEntity[TouchlineCoordinator], ClimateEntity):
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "climate"
 
-    def __init__(self, coordinator: TouchlineCoordinator, room_id: str) -> None:
+    def __init__(
+        self,
+        coordinator: TouchlineCoordinator,
+        room_id: str,
+        controller_device_id: str,
+    ) -> None:
         """Initialize the Touchline device."""
         super().__init__(coordinator)
         self._room_id = room_id
         self._attr_unique_id = room_id
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, room_id)},
             name=self._room.name,
             manufacturer="Roth",
+            model="Thermostat",
+            via_device_id=controller_device_id,
         )
 
     @property

@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Any, override
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -91,7 +91,9 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._api(self._device_control.set_state(100 - kwargs[ATTR_POSITION]))
+        await self._api(
+            self._device_control.set_state(100 - kwargs[CoverServiceArgument.POSITION])
+        )
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:

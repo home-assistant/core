@@ -9,7 +9,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["async_upnp_client", "openhomedevice"],
-  "requirements": ["openhomedevice==2.5"],
+  "requirements": ["openhomedevice==2.8"],
   "ssdp": [
     {
       "st": "urn:av-openhome-org:service:Product:1"

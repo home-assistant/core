@@ -42,6 +42,7 @@ VENDOR_LABELING_LIST: dict[int, dict[int, list[str] | None]] = {
         2: ["label", "devicetype", "button"],  # Inovelli VTM35
         4: None,  # Inovelli VTM36
         16: ["label", "name", "button"],  # Inovelli VTM30
+        65: ["label", "name", "button"],  # Inovelli VTM32
     },
     65521: {  # Test/DIY devices
         32768: ["ha_entitylabel"],

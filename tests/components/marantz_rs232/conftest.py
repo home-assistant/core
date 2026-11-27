@@ -61,7 +61,7 @@ def mock_receiver(
         input_source=V2007Source.TV,
     )
 
-    async def connect() -> None:
+    async def connect(*, strict: bool = True) -> None:
         receiver.connected = True
 
     async def disconnect() -> None:

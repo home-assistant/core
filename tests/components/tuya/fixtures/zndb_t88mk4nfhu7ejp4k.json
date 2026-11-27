@@ -1,0 +1,496 @@
+{
+  "endpoint": "https://apigw.tuyacn.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Multi-Circuit Energy Meter",
+  "category": "zndb",
+  "product_id": "t88mk4nfhu7ejp4k",
+  "product_name": "Multi-Circuit Energy Meter",
+  "online": true,
+  "sub": false,
+  "time_zone": "+08:00",
+  "active_time": "2026-11-17T08:55:07+00:00",
+  "create_time": "2026-11-17T08:55:07+00:00",
+  "update_time": "2026-11-17T08:55:07+00:00",
+  "function": {
+    "clear": {
+      "code": "clear",
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "local_strategy": {
+    "1": {
+      "value_convert": "default",
+      "status_code": "forward_energy_total",
+      "config_item": {
+        "statusFormat": "{\"forward_energy_total\":\"$\"}",
+        "valueDesc": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":2,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "2": {
+      "value_convert": "default",
+      "status_code": "reverse_energy_total",
+      "config_item": {
+        "statusFormat": "{\"reverse_energy_total\":\"$\"}",
+        "valueDesc": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":2,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "6": {
+      "value_convert": "db_v1_params",
+      "status_code": "phase_a",
+      "config_item": {
+        "statusFormat": "{\"phase_a\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Json",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "7": {
+      "value_convert": "db_v1_params",
+      "status_code": "phase_b",
+      "config_item": {
+        "statusFormat": "{\"phase_b\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Json",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "8": {
+      "value_convert": "db_v1_params",
+      "status_code": "phase_c",
+      "config_item": {
+        "statusFormat": "{\"phase_c\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Json",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "9": {
+      "value_convert": "default",
+      "status_code": "power_total",
+      "config_item": {
+        "statusFormat": "{\"power_total\":\"$\"}",
+        "valueDesc": "{\"unit\":\"kW\",\"min\":-99999999,\"max\":999999999,\"scale\":3,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "10": {
+      "value_convert": "default",
+      "status_code": "fault",
+      "config_item": {
+        "statusFormat": "{\"fault\":\"$\"}",
+        "valueDesc": "{\"label\":[\"ov_pwr_t\",\"ov_pwr_a\",\"ov_pwr_b\",\"ov_pwr_c\",\"ov_pwr_sub_1\",\"ov_pwr_sub_2\",\"ov_pwr_sub_3\",\"ov_pwr_sub_4\",\"ov_pwr_sub_5\",\"ov_pwr_sub_6\",\"ov_pwr_sub_7\",\"ov_pwr_sub_8\",\"ov_pwr_sub_9\",\"ov_pwr_sub_10\",\"ov_pwr_sub_11\",\"ov_pwr_sub_12\",\"ov_pwr_sub_13\",\"ov_pwr_sub_14\",\"ov_pwr_sub_15\",\"ov_pwr_sub_16\",\"un_pwr_t\",\"un_pwr_a\",\"un_pwr_b\",\"un_pwr_c\"]}",
+        "valueType": "Bitmap",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "43": {
+      "value_convert": "default",
+      "status_code": "clear",
+      "config_item": {
+        "statusFormat": "{\"clear\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "101": {
+      "value_convert": "default",
+      "status_code": "phase_1",
+      "config_item": {
+        "statusFormat": "{\"phase_1\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "102": {
+      "value_convert": "default",
+      "status_code": "phase_2",
+      "config_item": {
+        "statusFormat": "{\"phase_2\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "103": {
+      "value_convert": "default",
+      "status_code": "phase_3",
+      "config_item": {
+        "statusFormat": "{\"phase_3\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "104": {
+      "value_convert": "default",
+      "status_code": "phase_4",
+      "config_item": {
+        "statusFormat": "{\"phase_4\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "105": {
+      "value_convert": "default",
+      "status_code": "phase_5",
+      "config_item": {
+        "statusFormat": "{\"phase_5\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "106": {
+      "value_convert": "default",
+      "status_code": "phase_6",
+      "config_item": {
+        "statusFormat": "{\"phase_6\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "107": {
+      "value_convert": "default",
+      "status_code": "phase_7",
+      "config_item": {
+        "statusFormat": "{\"phase_7\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "108": {
+      "value_convert": "default",
+      "status_code": "phase_8",
+      "config_item": {
+        "statusFormat": "{\"phase_8\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "109": {
+      "value_convert": "default",
+      "status_code": "phase_9",
+      "config_item": {
+        "statusFormat": "{\"phase_9\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "110": {
+      "value_convert": "default",
+      "status_code": "phase_10",
+      "config_item": {
+        "statusFormat": "{\"phase_10\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "111": {
+      "value_convert": "default",
+      "status_code": "phase_11",
+      "config_item": {
+        "statusFormat": "{\"phase_11\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "112": {
+      "value_convert": "default",
+      "status_code": "phase_12",
+      "config_item": {
+        "statusFormat": "{\"phase_12\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "113": {
+      "value_convert": "default",
+      "status_code": "phase_13",
+      "config_item": {
+        "statusFormat": "{\"phase_13\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "114": {
+      "value_convert": "default",
+      "status_code": "phase_14",
+      "config_item": {
+        "statusFormat": "{\"phase_14\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "115": {
+      "value_convert": "default",
+      "status_code": "phase_15",
+      "config_item": {
+        "statusFormat": "{\"phase_15\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    },
+    "116": {
+      "value_convert": "default",
+      "status_code": "phase_16",
+      "config_item": {
+        "statusFormat": "{\"phase_16\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Raw",
+        "enumMappingMap": {},
+        "pid": "t88mk4nfhu7ejp4k"
+      }
+    }
+  },
+  "status_range": {
+    "forward_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW·h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      },
+      "report_type": "minux"
+    },
+    "reverse_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW·h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      },
+      "report_type": "minux"
+    },
+    "phase_a": {
+      "type": "Json",
+      "value": {},
+      "report_type": null
+    },
+    "phase_b": {
+      "type": "Json",
+      "value": {},
+      "report_type": null
+    },
+    "phase_c": {
+      "type": "Json",
+      "value": {},
+      "report_type": null
+    },
+    "power_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": -99999999,
+        "max": 999999999,
+        "scale": 3,
+        "step": 1
+      },
+      "report_type": null
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": [
+          "ov_pwr_t",
+          "ov_pwr_a",
+          "ov_pwr_b",
+          "ov_pwr_c",
+          "ov_pwr_sub_1",
+          "ov_pwr_sub_2",
+          "ov_pwr_sub_3",
+          "ov_pwr_sub_4",
+          "ov_pwr_sub_5",
+          "ov_pwr_sub_6",
+          "ov_pwr_sub_7",
+          "ov_pwr_sub_8",
+          "ov_pwr_sub_9",
+          "ov_pwr_sub_10",
+          "ov_pwr_sub_11",
+          "ov_pwr_sub_12",
+          "ov_pwr_sub_13",
+          "ov_pwr_sub_14",
+          "ov_pwr_sub_15",
+          "ov_pwr_sub_16",
+          "un_pwr_t",
+          "un_pwr_a",
+          "un_pwr_b",
+          "un_pwr_c"
+        ]
+      },
+      "report_type": null
+    },
+    "clear": {
+      "type": "Boolean",
+      "value": {},
+      "report_type": null
+    },
+    "phase_1": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_2": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_3": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_4": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_5": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_6": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_7": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_8": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_9": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_10": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_11": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_12": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_13": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_14": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_15": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    },
+    "phase_16": {
+      "type": "Raw",
+      "value": {},
+      "report_type": null
+    }
+  },
+  "status": {
+    "forward_energy_total": 509977,
+    "reverse_energy_total": 0,
+    "phase_a": {
+      "electricCurrent": 37.508,
+      "power": 7.917,
+      "voltage": 230.1
+    },
+    "phase_b": {
+      "electricCurrent": 48.462,
+      "power": 10.152,
+      "voltage": 231.1
+    },
+    "phase_c": {
+      "electricCurrent": 46.644,
+      "power": 9.896,
+      "voltage": 229.4
+    },
+    "power_total": 27965,
+    "fault": 0,
+    "clear": false,
+    "phase_1": "Ag8I9QAtoQAIygAFrAAKdlQA",
+    "phase_2": "Ag8I9gA1CAALzQAC8wAMKmEA",
+    "phase_3": "Ag8I9gAdzwAGbgACVQAG114A",
+    "phase_4": "Ag8I9gAQAwADagABWgADrF0A",
+    "phase_5": "Ag8I/wAtEgAJIgAE7gAKYVgA",
+    "phase_6": "Ag8JBwA8jAANAwAFJQAN/l0A",
+    "phase_7": "Ag8JBwAbygAGOwABjgAGbGEA",
+    "phase_8": "Ag8I/QAkHAAH+gACUwAIT2AA",
+    "phase_9": "Ag8I/gAR7QAD9gABJwAEIGAA",
+    "phase_10": "Ag8I/QASTQAD9QABcQAENl4A",
+    "phase_11": "Ag8I/QAPOwADHgABmgADgVkA",
+    "phase_12": "Ag8JCAAL9gACvQAAYwACxGMA",
+    "phase_13": "Ag8JBgAsqgAIQQAGMAAKUVAA",
+    "phase_14": "Ag8I/QAN4QACyAABkwADMlcA",
+    "phase_15": "Ag8JBgAsWAAJbAAEBAAKPlwA",
+    "phase_16": "Ag8I9wAluQAIOQACtQAIqF8A"
+  },
+  "set_up": true,
+  "support_local": true
+}

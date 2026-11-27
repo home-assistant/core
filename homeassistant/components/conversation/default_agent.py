@@ -690,7 +690,11 @@ class DefaultAgent(ConversationEntity):
         except intent.IntentHandleError as err:
             # Intent was valid and entities matched constraints, but an error
             # occurred during handling.
-            _LOGGER.exception("Intent handling error")
+            _LOGGER.warning(
+                "Intent handling error: %s",
+                err,
+                exc_info=_LOGGER.isEnabledFor(logging.DEBUG),
+            )
             intent_response = _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.FAILED_TO_HANDLE,

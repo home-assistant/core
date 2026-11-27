@@ -27,17 +27,17 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    coordinator = hass.data[EVOHOME_DATA].coordinator
-    tcs = hass.data[EVOHOME_DATA].tcs
+    entities: list[EvoResetButtonBase] = []
 
-    entities: list[EvoResetButtonBase] = [EvoSystemResetButton(coordinator, tcs)]
+    for coordinator in hass.data[EVOHOME_DATA].locations:
+        tcs = coordinator.tcs
 
-    entities.extend(
-        EvoZoneResetButton(coordinator, z) for z in tcs.zones if is_valid_zone(z)
-    )
-
-    if tcs.hotwater:
-        entities.append(EvoDhwResetButton(coordinator, tcs.hotwater))
+        entities.append(EvoSystemResetButton(coordinator, tcs))
+        entities.extend(
+            EvoZoneResetButton(coordinator, z) for z in tcs.zones if is_valid_zone(z)
+        )
+        if tcs.hotwater:
+            entities.append(EvoDhwResetButton(coordinator, tcs.hotwater))
 
     async_add_entities(entities)
 

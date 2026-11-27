@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 import math
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from marantz_rs232 import V2007ReceiverState, V2007Source
 import pytest
@@ -34,6 +34,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
     TargetKey,
 )
 from homeassistant.core import HomeAssistant
@@ -170,10 +171,10 @@ async def test_disconnect_reloads(
     reconnect_allowed = asyncio.Event()
     connect = mock_receiver.connect.side_effect
 
-    async def reconnect() -> None:
+    async def reconnect(*, strict: bool = True) -> None:
         reconnect_started.set()
         await reconnect_allowed.wait()
-        await connect()
+        await connect(strict=strict)
 
     mock_receiver.connect.side_effect = reconnect
     receiver_update(None)
@@ -334,3 +335,97 @@ async def test_other_model_sources(
     mock_receiver.multi_room_a.input_source = V2007Source(code)
     receiver_update(V2007ReceiverState())
     assert hass.states.get(entity_id).attributes[ATTR_INPUT_SOURCE] == source
+
+
+@pytest.mark.parametrize(("power", "expected"), [(True, STATE_ON), (False, STATE_OFF)])
+async def test_startup_with_unknown_power(
+    hass: HomeAssistant,
+    mock_receiver: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    receiver_update: Callable[[V2007ReceiverState | None], None],
+    receiver_callbacks: list[Callable[[V2007ReceiverState | None], None]],
+    power: bool,
+    expected: str,
+) -> None:
+    """Allow power-on before the receiver reports its initial power state."""
+    mock_receiver.main.power = None
+    mock_receiver.multi_room_a.power = None
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(MAIN).state == STATE_UNKNOWN
+    mock_receiver.connect.assert_awaited_once_with(strict=False)
+    await hass.services.async_call(
+        MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: MAIN}, blocking=True
+    )
+    mock_receiver.main.power_on.assert_awaited_once()
+
+    mock_receiver.main.power = power
+    state = V2007ReceiverState()
+    state.main.power = power
+    receiver_update(state)
+    await hass.async_block_till_done()
+    assert hass.states.get(MAIN).state == expected
+    assert hass.states.get(MULTI) is None
+
+    mock_receiver.multi_room_a.power = power
+    state.multi_room_a.power = power
+    receiver_update(state)
+    receiver_update(state)
+    await hass.async_block_till_done()
+    assert hass.states.get(MULTI).state == expected
+    assert len(hass.states.async_all(MP_DOMAIN)) == 2
+
+    await hass.services.async_call(
+        MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: MULTI}, blocking=True
+    )
+    mock_receiver.multi_room_a.power_on.assert_awaited_once()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    receiver_update(state)
+    await hass.async_block_till_done()
+    assert hass.states.get(MULTI).state == STATE_UNAVAILABLE
+    assert not receiver_callbacks
+
+
+async def test_multi_room_feedback_during_unload(
+    hass: HomeAssistant,
+    mock_receiver: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    receiver_update: Callable[[V2007ReceiverState | None], None],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Ignore discovery after platform teardown and discover on the next setup."""
+    mock_receiver.multi_room_a.power = None
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    unload_platforms = hass.config_entries.async_unload_platforms_or_raise
+
+    async def unload_with_feedback(
+        entry: MockConfigEntry, platforms: list[Platform]
+    ) -> None:
+        await unload_platforms(entry, platforms)
+        assert entry.state is ConfigEntryState.UNLOAD_IN_PROGRESS
+        mock_receiver.multi_room_a.power = True
+        state = V2007ReceiverState()
+        state.multi_room_a.power = True
+        receiver_update(state)
+
+    with patch.object(
+        hass.config_entries,
+        "async_unload_platforms_or_raise",
+        side_effect=unload_with_feedback,
+    ):
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(MULTI) is None
+    assert hass.states.get(MULTI) is None
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(MULTI).state == STATE_ON
+    assert len(hass.states.async_all(MP_DOMAIN)) == 2

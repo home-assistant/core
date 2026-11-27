@@ -8,11 +8,10 @@ from reolink_aio.api import Host
 from reolink_aio.const import MAX_COLOR_TEMP, MIN_COLOR_TEMP
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityDescription,
+    LightServiceArgument,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -192,7 +191,7 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         if (
-            color_temp := kwargs.get(ATTR_COLOR_TEMP_KELVIN)
+            color_temp := kwargs.get(LightServiceArgument.COLOR_TEMP_KELVIN)
         ) is not None and self.entity_description.set_color_temp_fn is not None:
             await self.entity_description.set_color_temp_fn(
                 self._host.api, self._channel, color_temp
@@ -200,7 +199,7 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
 
         brightness_pct: int | None = None
         if (
-            brightness := kwargs.get(ATTR_BRIGHTNESS)
+            brightness := kwargs.get(LightServiceArgument.BRIGHTNESS)
         ) is not None and self.entity_description.get_brightness_fn is not None:
             brightness_pct = round(color_util.brightness_to_value((1, 100), brightness))
 

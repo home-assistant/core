@@ -18,7 +18,7 @@ license-expression==30.4.4
 mock-open==1.4.0
 mypy==2.4.1
 prek==0.5.11
-pydantic==2.14.3
+pydantic==2.14.4
 PyGithub==2.10.0
 pylint==4.1.4
 pylint-per-file-ignores==4.0.0
@@ -43,7 +43,7 @@ syrupy==7.0.2
 tqdm==4.70.1
 types-aiofiles==25.1.0.20261107
 types-atomicwrites==1.4.5.1
-types-croniter==6.2.4.20261006
+types-croniter==6.2.4.20261118
 types-chardet==0.1.5
 types-decorator==5.2.0.20260712
 types-pexpect==4.9.0.20260518

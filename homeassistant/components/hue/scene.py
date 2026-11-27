@@ -11,7 +11,7 @@ from aiohue.v2.models.scene import Scene as HueScene, ScenePut as HueScenePut
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartSceneState
 from aiohue.v2.models.zone import Zone
 
-from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
+from homeassistant.components.scene import Scene as SceneEntity, SceneServiceArgument
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -140,7 +140,9 @@ class HueSceneEntity(HueSceneEntityBase):
     @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate Hue scene."""
-        transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
+        transition = normalize_hue_transition(
+            kwargs.get(SceneServiceArgument.TRANSITION)
+        )
         # the options below are advanced only
         # as we're not allowed to override the default scene turn_on service
         # we've implemented a `activate_scene` entity service

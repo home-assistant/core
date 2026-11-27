@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from bosch_shc_camera_client.actions import ActionResult
 from bosch_shc_camera_client.cameras import Camera, CameraModel
 from bosch_shc_camera_client.cloud import CloudPutResult
 from bosch_shc_camera_client.states import CameraAccountStates, FirmwareStatus, WifiInfo
@@ -106,6 +107,17 @@ def mock_set_notifications() -> Generator[AsyncMock]:
         "bosch_shc_camera_client.client.cloud_set_notifications",
         autospec=True,
         return_value=CloudPutResult(ok=True, status=204),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_soft_reset() -> Generator[AsyncMock]:
+    """Mock the restart of the library."""
+    with patch(
+        "homeassistant.components.bosch_smart_camera.coordinator.soft_reset",
+        autospec=True,
+        return_value=ActionResult(ok=True, status=204),
     ) as mock:
         yield mock
 

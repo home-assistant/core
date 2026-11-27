@@ -9,6 +9,7 @@ from functools import partial
 import io
 import os
 from pathlib import Path
+import re
 import shutil
 import tempfile
 from typing import TYPE_CHECKING, Any, Literal, override
@@ -26,7 +27,7 @@ import attr
 import probatio
 
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, language as language_util
 from homeassistant.util.json import json_loads_object
 
 from ..const import DOMAIN, MAX_ARCHIVE_MEMBERS, MAX_DOWNLOAD_SIZE, RELEASE_LIMIT
@@ -83,6 +84,12 @@ README_FILENAMES = (
     "README.MD",
     "README",
     "readme",
+)
+
+# A README in another language next to README.md, such as README.de.md or
+# README.pt-BR.md, named with the language tags of the translations
+TRANSLATED_README = re.compile(
+    r"readme\.([a-z]{2,3}(?:-[a-z0-9]+)*)\.md", re.IGNORECASE
 )
 
 TOPIC_FILTER = (
@@ -396,8 +403,15 @@ class RepositoryManifest:
         return attr.asdict(self)
 
     @staticmethod
-    def from_dict(manifest: dict[str, Any]) -> RepositoryManifest:
-        """Set attributes from dicts."""
+    def from_dict(
+        manifest: dict[str, Any], repository: str | None = None
+    ) -> RepositoryManifest:
+        """Set attributes from dicts.
+
+        The repository it was read from is named in the warning for a value
+        that is left out, the stored data of every repository in the catalog
+        is read and not only of the ones that are installed.
+        """
         manifest_data = RepositoryManifest()
         manifest_data.manifest = {}
         for key, value in manifest.items():
@@ -406,7 +420,17 @@ class RepositoryManifest:
             try:
                 value = validator(value)
             except probatio.Invalid:
-                LOGGER.warning("Ignoring %s in hacs.json, %r is not valid", key, value)
+                if repository is None:
+                    LOGGER.warning(
+                        "Ignoring %s in hacs.json, %r is not valid", key, value
+                    )
+                else:
+                    LOGGER.warning(
+                        "Ignoring %s in hacs.json of %s, %r is not valid",
+                        key,
+                        repository,
+                        value,
+                    )
                 continue
             if value != getattr(manifest_data, key):
                 manifest_data.manifest[key] = value
@@ -479,6 +503,10 @@ class Repository:
         # The ref the tree was fetched for, its files are downloaded from there
         self.tree_ref: str | None = None
         self.treefiles: list[str] = []
+        # The files of the installed version, when it is not the one of the tree
+        self._installed_treefiles: tuple[str, list[str] | None] | None = None
+        # Pages asked for at once fetch the installed files only once
+        self._installed_treefiles_lock = Lock()
         self.ref: str | None = None
         self.logger = LOGGER
         # Two installs of one repository would write over each other's files
@@ -642,7 +670,9 @@ class Repository:
             tree_entry_filename(entry) for entry in self.tree
         ]:
             if manifest := await self.async_get_repository_manifest():
-                self.repository_manifest = RepositoryManifest.from_dict(manifest)
+                self.repository_manifest = RepositoryManifest.from_dict(
+                    manifest, self.data.full_name
+                )
         else:
             # Every install reads it, a repository without one can not be updated
             self.validate.errors.append(
@@ -717,7 +747,9 @@ class Repository:
             tree_entry_filename(entry) for entry in self.tree
         ]:
             if manifest := await self.async_get_repository_manifest():
-                self.repository_manifest = RepositoryManifest.from_dict(manifest)
+                self.repository_manifest = RepositoryManifest.from_dict(
+                    manifest, self.data.full_name
+                )
 
         self.additional_info = await self.async_get_readme_contents()
 
@@ -974,6 +1006,75 @@ class Repository:
             ):
                 return content
         return ""
+
+    async def async_get_translated_readme(self, language: str) -> str:
+        """Get the README in the language, empty when the repository has none.
+
+        Only READMEs in the tree are used, so a repository without translations
+        costs no request. An installed version that is not the one of the tree
+        costs one request for its files, once per version. The best match of the
+        language wins, as for the languages of conversation agents. It is fetched
+        for every page, like the README after a restart, so it always matches the
+        version to install.
+        """
+        treefiles = self.treefiles
+        installed = self.data.installed_version or self.data.installed_commit
+        version = installed if self.data.installed else self.tree_ref
+        # An installed repository shows the README of the installed version,
+        # which can name its translations differently than the version of the tree
+        if (
+            self.data.installed
+            and installed is not None
+            and self.tree_ref is not None
+            and installed != self.tree_ref
+        ):
+            treefiles = await self._async_get_installed_treefiles(installed)
+
+        readmes = {
+            match.group(1): filename
+            for filename in treefiles
+            if (match := TRANSLATED_README.fullmatch(filename))
+        }
+        if not (languages := language_util.matches(language, readmes)):
+            return ""
+
+        filename = readmes[languages[0]]
+        try:
+            return (
+                await self.get_documentation(filename=filename, version=version) or ""
+            )
+        except UnicodeDecodeError:
+            # README.md is still there to show
+            self.logger.warning("%s %s is not UTF-8", self.string, filename)
+            return ""
+
+    async def _async_get_installed_treefiles(self, installed: str) -> list[str]:
+        """Return the files of the installed version, the tree's when unknown.
+
+        They are fetched once per version, also when that fails, so a rate limit
+        is not asked again on every page. Pages asked for at the same time wait
+        for the first fetch instead of fetching again.
+        """
+        async with self._installed_treefiles_lock:
+            if (
+                self._installed_treefiles is None
+                or self._installed_treefiles[0] != installed
+            ):
+                files: list[str] | None
+                try:
+                    tree = await self.get_tree(installed)
+                except MarketplaceError as exception:
+                    self.logger.debug(
+                        "%s No tree for %s: %s", self.string, installed, exception
+                    )
+                    files = None
+                else:
+                    files = [entry.path for entry in tree or []]
+                self._installed_treefiles = (installed, files)
+            files = self._installed_treefiles[1]
+        if files is None:
+            return self.treefiles
+        return files
 
     def remove(self) -> None:
         """Forget the repository, its files stay where they are."""
@@ -1959,7 +2060,7 @@ class Repository:
         """Get the hacs.json file of the repository."""
         if (result := await self.get_repository_manifest_raw(version=version)) is None:
             return None
-        return RepositoryManifest.from_dict(result)
+        return RepositoryManifest.from_dict(result, self.data.full_name)
 
     @return_none_on_exception
     async def get_repository_manifest_raw(

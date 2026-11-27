@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_EXTERNAL_URL,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
-    SIGNAL_BOOTSTRAP_INTEGRATIONS,
     TargetKey,
 )
 from homeassistant.core import (
@@ -44,13 +43,16 @@ from homeassistant.helpers import (
     template,
     trace,
 )
+from homeassistant.helpers.bootstrap_progress import (
+    BootstrapProgress,
+    async_subscribe_bootstrap_progress,
+)
 from homeassistant.helpers.condition import (
     async_from_config as async_condition_from_config,
     async_get_all_descriptions as async_get_all_condition_descriptions,
     async_subscribe_platform_events as async_subscribe_condition_platform_events,
     async_validate_condition_config,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     convert_include_exclude_filter,
@@ -88,10 +90,8 @@ from homeassistant.loader import (
     async_get_integrations,
 )
 from homeassistant.setup import (
-    BootstrapProgress,
     async_get_loaded_integrations,
     async_get_setup_timings,
-    async_subscribe_bootstrap_progress,
     async_wait_component,
 )
 from homeassistant.util import slugify
@@ -137,7 +137,6 @@ def async_register_commands(
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
     async_reg(hass, handle_slugify)
-    async_reg(hass, handle_subscribe_bootstrap_integrations)
     async_reg(hass, handle_subscribe_bootstrap_progress)
     async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
@@ -227,29 +226,6 @@ def handle_subscribe_events(
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         event_type, forward_events
-    )
-
-    connection.send_result(msg["id"])
-
-
-@callback
-@decorators.websocket_command(
-    {
-        probatio.Required("type"): "subscribe_bootstrap_integrations",
-    }
-)
-def handle_subscribe_bootstrap_integrations(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Handle subscribe bootstrap integrations command."""
-
-    @callback
-    def forward_bootstrap_integrations(message: dict[str, Any]) -> None:
-        """Forward bootstrap integrations to websocket."""
-        connection.send_message(messages.event_message(msg["id"], message))
-
-    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
-        hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, forward_bootstrap_integrations
     )
 
     connection.send_result(msg["id"])
