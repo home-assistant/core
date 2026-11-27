@@ -7,13 +7,11 @@ from typing import Any, Concatenate, override
 from cieloconnectapi.exceptions import AuthenticationError
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -253,14 +251,12 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return await self.client.async_set_temperature(
                 self.native_temperature_unit,
-                **{
-                    ATTR_TARGET_TEMP_LOW: kwargs.get(ATTR_TARGET_TEMP_LOW),
-                    ATTR_TARGET_TEMP_HIGH: kwargs.get(ATTR_TARGET_TEMP_HIGH),
-                },
+                target_temp_low=kwargs.get(ClimateServiceArgument.TARGET_TEMP_LOW),
+                target_temp_high=kwargs.get(ClimateServiceArgument.TARGET_TEMP_HIGH),
             )
         return await self.client.async_set_temperature(
             self.native_temperature_unit,
-            **{ATTR_TEMPERATURE: kwargs.get(ATTR_TEMPERATURE)},
+            temperature=kwargs.get(ClimateServiceArgument.TEMPERATURE),
         )
 
     @async_handle_api_call
