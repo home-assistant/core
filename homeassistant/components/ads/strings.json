@@ -8,6 +8,9 @@
       "invalid_net_id": "Invalid AMS NetID. Use the format `x.x.x.x.x.x`.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "initiate_flow": {
+      "user": "Add PLC runtime"
+    },
     "step": {
       "user": {
         "data": {
