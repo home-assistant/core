@@ -359,10 +359,8 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         for host, poll in zip(hosts.values(), polls, strict=True):
             if poll.done():
                 self._inflight.pop(host, None)
-        # A router removed or reconfigured while the tick was in flight must
-        # not feed the merged presence: a removed router's clients would be
-        # resurrected, and a reconfigured router's in-flight result is from
-        # the old host, as the subentry id survives a host change.
+        # The subentry id survives a host change, so a removed or reconfigured
+        # router's in-flight result must not feed the merge.
         active = self.config_entry.subentries
         self._tick_results = {}
         observed_at: dict[str, datetime] = {}
@@ -377,11 +375,8 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
             self._tick_results[host.subentry_id] = result[1]
             observed_at[host.subentry_id] = result[0]
         old: ClientPresence = self.data_or_none or {}
-        # Stamps are dropped for routers which are gone or were pointed at a
-        # different host; every other stamp is kept, as a client stays
-        # reported while its most recent stamp is within consider_home, even
-        # when its router no longer sees it (a successful tick only restamps
-        # the clients it reports).
+        # Stamps of gone or rehosted routers are dropped; the rest are kept,
+        # as a client stays reported while its newest stamp is within consider_home.
         active_ids = set(self._tick_results)
         presence: ClientPresence = {}
         for mac, per_host in old.items():
@@ -423,10 +418,8 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         # router which is no longer monitored.
         self._ungrounded = (self._ungrounded | set(old)) - set(presence)
         if failed and len(failed) == len(self._tick_results):
-            # Every router failed; the entry reports the failure. The
-            # pruned presence stands in for the old data, as stamps of
-            # routers which are no longer polled would count as healthy
-            # with their health entry gone.
+            # Every router failed; the pruned presence stands in for the old
+            # data, as stamps of gone routers would count as healthy.
             self.data = presence
             errors = [
                 result
@@ -511,9 +504,7 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         interval = self._update_interval_seconds
         if self._tick_start is not None:
             # Anchor the next tick to this tick's start, so a slow tick does
-            # not delay the next one; a tick which overran the interval (a
-            # router that outran even the timeout) fires the next tick right
-            # away.
+            # not stretch the period; an overrun tick fires right away.
             self._update_interval_seconds = max(
                 interval - (self.hass.loop.time() - self._tick_start), 0
             )
