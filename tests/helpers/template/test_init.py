@@ -907,6 +907,31 @@ class ClassProxy(AttributeNamesake):
         return self._reported_class
 
 
+class ClassUnavailable(AttributeNamesake):
+    """Object that cannot report a class, which isinstance tolerates."""
+
+    @property
+    def __class__(self) -> type:
+        """Raise like an attribute that does not exist."""
+        raise AttributeError("__class__")
+
+
+class EqualsEveryTypeMeta(type):
+    """Metaclass of a class that hashes and compares like type."""
+
+    def __eq__(cls, other: object) -> bool:
+        """Claim to be equal to anything."""
+        return True
+
+    def __hash__(cls) -> int:
+        """Hash like type."""
+        return hash(type)
+
+
+class TypeLookalike(AttributeNamesake, metaclass=EqualsEveryTypeMeta):
+    """Object whose class is equal to type, without being a type."""
+
+
 class ListSubclass(list):
     """Subclass of a builtin mutable type."""
 
@@ -1054,6 +1079,20 @@ def test_attribute_verdict_follows_reported_class(hass: HomeAssistant) -> None:
     assert fake_list_first.async_render(variables) == "|append|"
 
 
+@pytest.mark.usefixtures("clear_safe_attribute_cache")
+def test_attribute_verdict_uses_type_identity(hass: HomeAssistant) -> None:
+    """Test a class cannot share a verdict with type through its metaclass."""
+    variables = {"safe": TypeLookalike(), "unsafe": list}
+
+    safe_first = template.Template("{{ safe.mro }}|{{ unsafe.mro }}", hass)
+    assert safe_first.async_render(variables) == "mro|"
+
+    template._SAFE_ATTRIBUTE_CACHE.clear()
+
+    unsafe_first = template.Template("{{ unsafe.mro }}|{{ safe.mro }}", hass)
+    assert unsafe_first.async_render(variables) == "|mro"
+
+
 SANDBOX_OBJECTS = [
     pytest.param([], id="list"),
     pytest.param({}, id="dict"),
@@ -1073,6 +1112,8 @@ SANDBOX_OBJECTS = [
     pytest.param(list, id="type"),
     pytest.param(ClassProxy(list), id="list_proxy"),
     pytest.param(ClassProxy(AttributeNamesake), id="namesake_proxy"),
+    pytest.param(ClassUnavailable(), id="class_unavailable"),
+    pytest.param(TypeLookalike(), id="class_equal_to_type"),
 ]
 
 

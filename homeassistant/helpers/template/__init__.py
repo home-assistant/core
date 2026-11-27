@@ -133,10 +133,15 @@ EVAL_CACHE_SIZE = 512
 # (like template editor keystrokes) cannot grow it indefinitely.
 COMPILED_CODE_PIN_SIZE = 256
 
-# Number of (type, attribute name) sandbox verdicts to remember. Bounded
-# because attribute names can come from the template itself.
+# Number of sandbox verdicts to remember. Bounded because attribute names can
+# come from the template itself.
 SAFE_ATTRIBUTE_CACHE_SIZE = 1024
-_SAFE_ATTRIBUTE_CACHE: LRU[tuple[type, str], bool] = LRU(SAFE_ATTRIBUTE_CACHE_SIZE)
+
+# Keyed by the id of the type, as a metaclass can make two types compare equal.
+# The entry holds the type, which keeps that id from being reused.
+_SAFE_ATTRIBUTE_CACHE: LRU[tuple[int, str], tuple[type, bool]] = LRU(
+    SAFE_ATTRIBUTE_CACHE_SIZE
+)
 
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
 MAX_TEMPLATE_OUTPUT = 256 * 1024  # 256KiB
@@ -1011,14 +1016,23 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         ):
             return attr[0] != "_"
 
+        try:
+            reported_class = obj.__class__
+        except AttributeError:
+            reported_class = None
+
         # isinstance also consults __class__, so only cache when it is the real type
-        if obj.__class__ is not obj_type:
+        if reported_class is not obj_type:
             return self._is_safe_attribute_uncached(obj, attr, value)
 
-        cache_key = (obj_type, attr)
-        if (verdict := _SAFE_ATTRIBUTE_CACHE.get(cache_key)) is None:
-            verdict = self._is_safe_attribute_uncached(obj, attr, value)
-            _SAFE_ATTRIBUTE_CACHE[cache_key] = verdict
+        cache_key = (id(obj_type), attr)
+        cached = _SAFE_ATTRIBUTE_CACHE.get(cache_key)
+
+        if cached is not None and cached[0] is obj_type:
+            return cached[1]
+
+        verdict = self._is_safe_attribute_uncached(obj, attr, value)
+        _SAFE_ATTRIBUTE_CACHE[cache_key] = (obj_type, verdict)
 
         return verdict
 
