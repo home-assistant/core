@@ -52,8 +52,14 @@
       "domestic_hot_water_circulation_pump": {
         "name": "DHW circulation pump"
       },
+      "domestic_hot_water_hygiene": {
+        "name": "DHW legionella protection"
+      },
       "domestic_hot_water_pump": {
         "name": "DHW pump"
+      },
+      "external_lock": {
+        "name": "External lock"
       },
       "frost_protection": {
         "name": "Frost protection"
@@ -67,11 +73,17 @@
       "identification_mode": {
         "name": "Identification mode"
       },
+      "malfunction_lock": {
+        "name": "Malfunction lock"
+      },
       "mounting_mode": {
         "name": "Mounting mode"
       },
       "one_time_charge": {
         "name": "One-time charge"
+      },
+      "service_message": {
+        "name": "Service message"
       },
       "solar_pump": {
         "name": "Solar pump"
@@ -213,6 +225,9 @@
       },
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"
+      },
+      "boiler_target_temperature": {
+        "name": "Boiler target temperature"
       },
       "boiler_temperature": {
         "name": "Boiler temperature"

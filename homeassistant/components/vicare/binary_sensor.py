@@ -109,6 +109,16 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         value_getter=lambda api: api.getDomesticHotWaterPumpActive(),
     ),
     ViCareBinarySensorEntityDescription(
+        key="dhw_hygiene_active",
+        translation_key="domestic_hot_water_hygiene",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        # A device with the function switched off only reports "enabled".
+        value_getter=lambda api: (
+            api.getDomesticHotWaterHygieneEnabled()
+            and api.getDomesticHotWaterHygieneActive()
+        ),
+    ),
+    ViCareBinarySensorEntityDescription(
         key="boiler_internal_pump_active",
         translation_key="boiler_internal_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
@@ -134,6 +144,23 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         key="device_error",
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_getter=lambda api: len(api.getDeviceErrors()) > 0,
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="service_message",
+        translation_key="service_message",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_getter=lambda api: len(api.getDeviceServiceMessages()) > 0,
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="malfunction_lock_active",
+        translation_key="malfunction_lock",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_getter=lambda api: api.getMalfunctionLockActive(),
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="external_lock_active",
+        translation_key="external_lock",
+        value_getter=lambda api: api.getExternalLockActive(),
     ),
     ViCareBinarySensorEntityDescription(
         key="identification_mode",
