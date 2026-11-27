@@ -1021,8 +1021,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         except AttributeError:
             reported_class = None
 
-        # isinstance also consults __class__, so only cache when it is the real type
-        if reported_class is not obj_type:
+        # isinstance also consults __class__, so only cache when it is the real type.
+        # A str subclass can compare equal to another attribute name.
+        if reported_class is not obj_type or type(attr) is not str:
             return self._is_safe_attribute_uncached(obj, attr, value)
 
         cache_key = (id(obj_type), attr)

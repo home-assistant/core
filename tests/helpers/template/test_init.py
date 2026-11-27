@@ -932,6 +932,20 @@ class TypeLookalike(AttributeNamesake, metaclass=EqualsEveryTypeMeta):
     """Object whose class is equal to type, without being a type."""
 
 
+class CountLookalike(str):
+    """Attribute name that hashes and compares like the safe name count."""
+
+    __slots__ = ()
+
+    def __eq__(self, other: object) -> bool:
+        """Claim to be equal to anything."""
+        return True
+
+    def __hash__(self) -> int:
+        """Hash like count."""
+        return hash("count")
+
+
 class ListSubclass(list):
     """Subclass of a builtin mutable type."""
 
@@ -1091,6 +1105,15 @@ def test_attribute_verdict_uses_type_identity(hass: HomeAssistant) -> None:
 
     unsafe_first = template.Template("{{ unsafe.mro }}|{{ safe.mro }}", hass)
     assert unsafe_first.async_render(variables) == "|mro"
+
+
+@pytest.mark.usefixtures("clear_safe_attribute_cache")
+def test_attribute_verdict_uses_real_attribute_name() -> None:
+    """Test an attribute name cannot share a verdict with a name it equals."""
+    env = template.TemplateEnvironment(None)
+
+    assert env.is_safe_attribute([], "count", None) is True
+    assert env.is_safe_attribute([], CountLookalike("__class__"), None) is False
 
 
 SANDBOX_OBJECTS = [
