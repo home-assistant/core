@@ -268,12 +268,12 @@ async def test_discovery_stopped(
         return []
 
     lms.async_get_players = mock_get_players
-    cancel_callbacks = []
+    discovery_callbacks = []
 
     def mock_call_later(hass_arg, delay, callback):
         """Mock async_call_later to capture reschedule attempts."""
         reschedules.append(callback)
-        cancel_callbacks.append(callback)
+        discovery_callbacks.append(callback)
 
         def cancel_callback():
             was_cancelled.append(True)
@@ -292,8 +292,8 @@ async def test_discovery_stopped(
 
         # Simulate multiple discovery cycles before unload
         for _ in range(2):
-            if cancel_callbacks:
-                await cancel_callbacks[-1]()
+            if discovery_callbacks:
+                await discovery_callbacks[-1]()
                 await hass.async_block_till_done()
 
         # Multiple discovery cycles should have been scheduled
@@ -306,7 +306,7 @@ async def test_discovery_stopped(
 
         # Invoke the latest callback after discovery_stopped is True
         # It should return early without rescheduling
-        await cancel_callbacks[-1]()
+        await discovery_callbacks[-1]()
 
         # Verify no new reschedule was scheduled (guard prevents async_call_later)
         assert len(reschedules) == reschedule_count_before_unload
