@@ -26,9 +26,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_PASSWORD,
     CONF_SSL,
     CONF_VERIFY_SSL,
     STATE_HOME,
+    STATE_NOT_HOME,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -382,6 +384,103 @@ async def test_router_reconfiguration_discards_stale_stamps(
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
     assert "source" not in state.attributes
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_credentials_change_preserves_sightings(
+    hass: HomeAssistant,
+    hub_entry: MockConfigEntry,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test updating a router's credentials keeps its sighting history.
+
+    The router's identity is its host, so changing the password must not
+    release the stamps; an away client stays grounded on the healthy router
+    and reports not_home rather than unavailable.
+    """
+    _mock, ubus = mock_ubus_by_host
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    hub_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # The client disconnects, and the router keeps answering without it.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {"clients": {}}
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # The router is healthy, so the absent client is known away.
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+
+    # Update the password on the same host.
+    subentry = next(iter(hub_entry.subentries.values()))
+    data = dict(subentry.data)
+    data[CONF_PASSWORD] = "new-password"
+    hass.config_entries.async_update_subentry(hub_entry, subentry, data=data)
+    await hass.async_block_till_done()
+
+    # The sightings survive the credentials change, as the same router
+    # polls successfully; the client stays known away.
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_host_reconfiguration_publishes_new_source(
+    hass: HomeAssistant,
+    hub_entry: MockConfigEntry,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test reconfiguring a router's host publishes the new source.
+
+    The same client is seen by the new host under the same subentry id, so
+    the trackers are notified of the subentry change itself rather than
+    waiting for the client set to change.
+    """
+    _mock, ubus = mock_ubus_by_host
+    clients = {"clients": {MAC_PHONE: {"authorized": True}}}
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = clients
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = clients
+    hub_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+
+    # Reconfigure the router to a different host that sees the same client.
+    subentry = next(iter(hub_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        hub_entry, subentry, data=MOCK_HOST_CONFIG_B, title=MOCK_HOST_B
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST_B
 
 
 async def test_slow_router_does_not_stretch_refresh_interval(

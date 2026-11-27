@@ -283,12 +283,10 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         # compares this to detect a change, as subentry updates mutate the
         # subentries in place. None until the first poll built the hosts.
         self._polled_signature: tuple | None = None
-        # The signature of the router configuration under which each
-        # subentry's stamps were last recorded. A subentry id survives a
-        # host change, so a stamp is only valid while its router is
-        # unchanged; a reconfigured router's stamps are dropped on the next
-        # merge.
-        self._stamp_signatures: dict[str, tuple] = {}
+        # The host each subentry's stamps were last recorded under; the
+        # subentry id survives a host change, so a stamp is only valid
+        # while the subentry still polls the same host.
+        self._stamp_hosts: dict[str, str] = {}
         self._tick_results: dict[str, BaseException | dict[str, str | None]] = {}
         # The poll running in the executor for each router; a tick which
         # times out re-awaits the same poll on the next tick, so two polls
@@ -362,19 +360,20 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
                 continue
             self._tick_results[host.subentry_id] = result
         old: ClientPresence = self.data_or_none or {}
-        # Stamps are dropped for routers which are gone or were reconfigured;
-        # every other stamp is kept, as a client stays reported while its
-        # most recent stamp is within consider_home, even when its router no
-        # longer sees it (a successful tick only restamps the clients it
-        # reports).
+        # Stamps are dropped for routers which are gone or were pointed at a
+        # different host; every other stamp is kept, as a client stays
+        # reported while its most recent stamp is within consider_home, even
+        # when its router no longer sees it (a successful tick only restamps
+        # the clients it reports).
         active_ids = set(self._tick_results)
         presence: ClientPresence = {}
         for mac, per_host in old.items():
             for subentry_id, stamp in per_host.items():
                 if subentry_id not in active_ids:
                     continue
-                if self._stamp_signatures.get(subentry_id) != subentry_signature(
-                    active[subentry_id]
+                if (
+                    self._stamp_hosts.get(subentry_id)
+                    != active[subentry_id].data[CONF_HOST]
                 ):
                     continue
                 presence.setdefault(mac, {})[subentry_id] = stamp
@@ -392,11 +391,10 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
                 presence.setdefault(mac, {})[subentry_id] = ClientStamp(
                     now, hostname, self._seq
                 )
-        # Record the router configuration each subentry's stamps now stand
-        # under, so a reconfigured router's stale stamps are dropped on the
-        # next merge.
-        self._stamp_signatures = {
-            subentry_id: subentry_signature(active[subentry_id])
+        # Record the host each subentry's stamps now stand under, so stamps
+        # recorded for a different host are dropped on the next merge.
+        self._stamp_hosts = {
+            subentry_id: active[subentry_id].data[CONF_HOST]
             for per_host in presence.values()
             for subentry_id in per_host
         }
@@ -552,7 +550,7 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
             async_dispatcher_send(self.hass, SIGNAL_CLIENTS_UPDATED)
 
     def _signature(self) -> tuple:
-        """Return a signature of the current presence and health."""
+        """Return a signature of the presence, health and router setup."""
         data = self.data_or_none or {}
         home: list[tuple[str, str | None, str | None, bool]] = []
         for mac in data:
@@ -564,6 +562,7 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         return (
             tuple(sorted(home)),
             tuple(sorted(self.host_health.items())),
+            self._subentries_signature(),
             self._consider_home(),
         )
 
