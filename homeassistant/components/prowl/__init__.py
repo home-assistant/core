@@ -4,7 +4,7 @@ import logging
 
 import prowlpy
 
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN, NotifyService
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config import config_per_platform
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
@@ -22,6 +22,7 @@ from .const import (
     CONF_NAMES,
     CONF_SETUP,
     DATA_LEGACY_SETUPS,
+    DEFAULT_LEGACY_SERVICE_NAME,
     DOMAIN,
     PLATFORMS,
 )
@@ -65,7 +66,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # YAML of any notify platform wins over an entry-backed legacy action. Other
     # platforms are not validated here; the loader skips blocks without a platform
     hass.data[DATA_YAML_SERVICE_NAMES] = {
-        slugify(_yaml_name(p_config) or NotifyService.NOTIFY)
+        slugify(_yaml_name(p_config) or DEFAULT_LEGACY_SERVICE_NAME)
         for platform, p_config in config_per_platform(config, NOTIFY_DOMAIN)
         if platform is not None and isinstance(p_config, dict)
     }
