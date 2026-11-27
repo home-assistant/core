@@ -16,6 +16,7 @@ from plugwise.exceptions import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.plugwise import async_migrate_entities
 from homeassistant.components.plugwise.const import (
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
