@@ -111,7 +111,7 @@ class EngieBePricesData:
 
 
 class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreement]]):
-    """Coordinator that tracks the account's active business agreements."""
+    """Coordinator that tracks the active business agreements and whether the account lists any."""
 
     config_entry: EngieBeConfigEntry
 

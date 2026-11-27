@@ -168,6 +168,7 @@ async def async_get_config_entry_diagnostics(
             "relations": {
                 "last_update_success": relations.last_update_success,
                 "agreement_count": len(relations.data),
+                "any_agreements": relations.any_agreements,
             },
             "households": {
                 _hashed_identifier(ban): _household_diagnostics(household)

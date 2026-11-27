@@ -258,7 +258,7 @@ def _async_start_tariff_retry(
 async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: EngieBeConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
-    """Allow removing the device of a business agreement the account no longer lists."""
+    """Allow removing the device of a business agreement that is no longer active."""
     if entry.state is not ConfigEntryState.LOADED:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="remove_device_not_loaded"
