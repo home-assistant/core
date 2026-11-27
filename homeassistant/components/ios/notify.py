@@ -7,12 +7,9 @@ from typing import Any, override
 import requests
 
 from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TARGET,
-    ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
+    NotifyServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -79,27 +76,27 @@ class iOSNotificationService(BaseNotificationService):
     @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the Lambda APNS gateway."""
-        data: dict[str, Any] = {ATTR_MESSAGE: message}
+        data: dict[str, Any] = {NotifyServiceArgument.MESSAGE: message}
 
         # Remove default title from notifications.
         if (
-            kwargs.get(ATTR_TITLE) is not None
-            and kwargs.get(ATTR_TITLE) != ATTR_TITLE_DEFAULT
+            kwargs.get(NotifyServiceArgument.TITLE) is not None
+            and kwargs.get(NotifyServiceArgument.TITLE) != ATTR_TITLE_DEFAULT
         ):
-            data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
+            data[NotifyServiceArgument.TITLE] = kwargs.get(NotifyServiceArgument.TITLE)
 
-        if not (targets := kwargs.get(ATTR_TARGET)):
+        if not (targets := kwargs.get(NotifyServiceArgument.TARGET)):
             targets = enabled_push_ids(self.hass)
 
-        if kwargs.get(ATTR_DATA) is not None:
-            data[ATTR_DATA] = kwargs.get(ATTR_DATA)
+        if kwargs.get(NotifyServiceArgument.DATA) is not None:
+            data[NotifyServiceArgument.DATA] = kwargs.get(NotifyServiceArgument.DATA)
 
         for target in targets:
             if target not in enabled_push_ids(self.hass):
                 _LOGGER.error("The target (%s) does not exist in .ios.conf", targets)
                 return
 
-            data[ATTR_TARGET] = target
+            data[NotifyServiceArgument.TARGET] = target
 
             req = requests.post(PUSH_URL, json=data, timeout=10)
 
