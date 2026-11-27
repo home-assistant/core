@@ -49,7 +49,7 @@ async def async_setup_entry(
     known_robots: set[str] = set()
 
     def _check_robots() -> None:
-        all_robots = list(coordinator.litter_robots())
+        all_robots = coordinator.litter_robots()
         current_robots = {robot.serial for robot in all_robots}
         new_robots = current_robots - known_robots
         if new_robots:

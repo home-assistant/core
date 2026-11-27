@@ -126,7 +126,7 @@ async def async_remove_config_entry_device(
         for identifier in device_entry.identifiers
         if identifier[0] == DOMAIN
         for _id in itertools.chain(
-            (robot.serial for robot in entry.runtime_data.account.robots),
+            (robot.serial for robot in entry.runtime_data.all_robots()),
             (pet.id for pet in entry.runtime_data.account.pets),
         )
         if _id == identifier[1]
