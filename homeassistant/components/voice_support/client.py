@@ -106,6 +106,15 @@ def normalize_wake_word(wake_word: str) -> str:
     return "".join(c for c in lowered if c.isalnum() or c == "_")
 
 
+def wake_word_matches(phrase: str, wake_word: str) -> bool:
+    """Whether a phrase names a wake word.
+
+    The wake word may have text before or after it, so a satellite can name
+    its wake words "Kitchen - Okay Nabu" and still have "okay_nabu" verified.
+    """
+    return normalize_wake_word(wake_word) in normalize_wake_word(phrase)
+
+
 @dataclass(frozen=True)
 class AudioRunRequest:
     """Metadata for an audio run."""
@@ -343,8 +352,9 @@ class VoiceSupportClient:
 
     def supports_wake_word(self, wake_word_phrase: str) -> bool:
         """Whether the app can verify this wake word."""
-        return (self.info is not None) and (
-            normalize_wake_word(wake_word_phrase) in self.info.wake_words
+        return (self.info is not None) and any(
+            wake_word_matches(wake_word_phrase, wake_word)
+            for wake_word in self.info.wake_words
         )
 
     async def async_start_run(
