@@ -90,6 +90,10 @@
       "description": "The OpenWrt (ubus) entry for `{host}` was removed because a router with the same host is already configured on the main entry. The router continues to be tracked through the existing subentry; check its settings to confirm they are the ones you want, then dismiss this notice.",
       "title": "Duplicate router {host} was removed"
     },
+    "migration_hub_reload_failed": {
+      "description": "The OpenWrt (ubus) entry for `{host}` was moved to the main entry, but the main entry could not be reloaded afterwards. Its routers may be untracked and the moved tracker ids may not be normalized; reload the main OpenWrt (ubus) entry to finish the migration.",
+      "title": "Failed to reload main entry for router {host}"
+    },
     "migration_removal_failed": {
       "description": "The OpenWrt (ubus) entry for `{host}` was moved to the main entry, but the old entry could not be deleted. It has been emptied, so it no longer polls the router; its client trackers are kept on the main entry. To complete the migration:\n\n1. Confirm the router is tracked on the main OpenWrt (ubus) entry.\n2. Delete the OpenWrt (ubus) entry for `{host}`.",
       "title": "Failed to remove old entry for router {host}"

@@ -3172,6 +3172,56 @@ async def test_late_hub_merge_normalizes_raw_case_tracker_ids(
     assert hass.states.get(legacy_tracker.entity_id).state == STATE_HOME
 
 
+async def test_late_hub_merge_reload_failure_creates_repair(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a failed hub reload after a late merge raises its own repair.
+
+    async_reload returns False on an unload or setup failure rather
+    than raising, so the migration's exception path cannot catch it;
+    the repair is tied to the hub, as the merged entry is removed.
+    """
+    _mock, _ubus = mock_ubus_by_host
+    hub = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=HUB_TITLE,
+        subentries_data=[router_subentry_data(MOCK_CONFIG)],
+    )
+    hub.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub.entry_id)
+    await hass.async_block_till_done()
+
+    legacy = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_B,
+        title=MOCK_HOST_B,
+        entry_id="00000000000000000000000000B",
+    )
+    legacy.add_to_hass(hass)
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=False,
+    ) as mock_reload:
+        assert await hass.config_entries.async_setup(legacy.entry_id)
+        await hass.async_block_till_done()
+
+    # The hub reload failed, so the repair is on the hub, which keeps
+    # the moved data; the merged entry is still removed.
+    assert mock_reload.call_count == 1
+    assert MOCK_HOST_B in {sub.unique_id for sub in hub.subentries.values()}
+    assert not hass.config_entries.async_get_entry(legacy.entry_id)
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"migration_hub_reload_failed_{legacy.entry_id}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "migration_hub_reload_failed"
+    assert issue.translation_placeholders == {"host": MOCK_HOST_B}
+    assert issue.config_entry_id == hub.entry_id
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("hub_customizations", "legacy_customizations", "expected"),

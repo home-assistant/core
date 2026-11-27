@@ -301,7 +301,10 @@ async def _async_migrate_other(
             # The hub already normalized its own tracker ids, before
             # the merge moved this entry's over; reload it so the
             # merged ids are normalized too, not left as duplicates.
-            await hass.config_entries.async_reload(hub.entry_id)
+            # async_reload returns False instead of raising on a
+            # failed unload or setup.
+            if not await hass.config_entries.async_reload(hub.entry_id):
+                _async_create_hub_reload_failed_issue(hass, hub, entry, host)
             # The removal needs the setup lock, which is held for the
             # rest of the setup, so it runs in a deferred task.
             hass.async_create_task(_async_deferred_removal(hass, hub, entry, host))
@@ -375,6 +378,29 @@ async def _async_migrate_other(
             )
         return False
     return True
+
+
+@callback
+def _async_create_hub_reload_failed_issue(
+    hass: HomeAssistant, hub: UbusConfigEntry, entry: ConfigEntry, host: str
+) -> None:
+    """Create the repair for a hub which could not be reloaded after a merge.
+
+    The merged entry is an empty shell which is removed anyway, and
+    issues are cleared with their entry, so the repair is tied to the
+    hub, which keeps the moved data.
+    """
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"migration_hub_reload_failed_{entry.entry_id}",
+        config_entry_id=hub.entry_id,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="migration_hub_reload_failed",
+        translation_placeholders={"host": host},
+    )
 
 
 @callback
