@@ -4,6 +4,7 @@ from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from huawei_lte_api.api.Dhcp import DhcpSettings
 from huawei_lte_api.exceptions import (
     ResponseErrorException,
@@ -20,7 +21,6 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_URL, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import magic_client
 
@@ -151,15 +151,18 @@ async def test_services_preserve_other_settings(hass: HomeAssistant) -> None:
     assert router["settings"] == replace(SETTINGS, dhcp_status=True)
 
 
-async def test_entity_tracks_router_changes(hass: HomeAssistant) -> None:
+async def test_entity_tracks_router_changes(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Follow a DHCP state change made outside Home Assistant."""
     client, router = make_client(SETTINGS)
     await setup_entry(hass, client)
     assert hass.states.is_state(SWITCH_DHCP, STATE_OFF)
 
     router["settings"] = replace(router["settings"], dhcp_status=True)
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.is_state(SWITCH_DHCP, STATE_ON)
 
@@ -186,10 +189,46 @@ def test_unchanged_state_does_not_write() -> None:
     ],
     ids=["device-error", "timeout", "invalid-type", "invalid-value", "missing-field"],
 )
-def test_command_error(error: Exception) -> None:
-    """Report failures to read or write as a Home Assistant error."""
+def test_read_error(error: Exception) -> None:
+    """Report a failure to read the settings as a Home Assistant error."""
     switch, router = make_switch()
     router.client.dhcp.settings.side_effect = error
+
+    with pytest.raises(HomeAssistantError) as err:
+        switch.turn_on()
+
+    assert err.value.translation_key == "dhcp_command_failed"
+    switch.schedule_update_ha_state.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "error",
+    [ResponseErrorException("boom", 1), ConnectTimeout()],
+    ids=["device-error", "timeout"],
+)
+def test_write_error(error: Exception) -> None:
+    """Report a failure to write the settings as a Home Assistant error."""
+    switch, router = make_switch()
+    router.client.dhcp.settings.side_effect = [
+        replace(SETTINGS),
+        replace(SETTINGS),
+    ]
+    router.client.dhcp.set_settings.side_effect = error
+
+    with pytest.raises(HomeAssistantError) as err:
+        switch.turn_on()
+
+    assert err.value.translation_key == "dhcp_command_failed"
+    switch.schedule_update_ha_state.assert_not_called()
+
+
+def test_confirmation_read_error() -> None:
+    """Report a failure to read the new state as a Home Assistant error."""
+    switch, router = make_switch()
+    router.client.dhcp.settings.side_effect = [
+        replace(SETTINGS),
+        ConnectTimeout(),
+    ]
 
     with pytest.raises(HomeAssistantError) as err:
         switch.turn_on()
