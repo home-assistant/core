@@ -19,7 +19,6 @@ from hass_nabucasa import (
 import probatio
 
 from homeassistant.components import alexa, google_assistant
-from homeassistant.components.alexa.const import CONF_EXPOSE_POWER_CONTROLLER
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
     CONF_DESCRIPTION,
@@ -118,7 +117,7 @@ ALEXA_ENTITY_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_DESCRIPTION): cv.string,
         probatio.Optional(alexa.CONF_DISPLAY_CATEGORIES): cv.string,
-        probatio.Optional(CONF_EXPOSE_POWER_CONTROLLER): cv.boolean,
+        probatio.Optional(alexa.CONF_EXPOSE_POWER_CONTROLLER): cv.boolean,
         probatio.Optional(CONF_NAME): cv.string,
     }
 )
