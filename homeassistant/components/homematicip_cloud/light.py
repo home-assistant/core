@@ -18,7 +18,6 @@ from packaging.version import Version
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
@@ -37,6 +36,8 @@ from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 _logger = logging.getLogger(__name__)
+
+ATTR_COLOR_NAME = "color_name"
 
 DIMMER_CHANNEL_TYPES = (
     FunctionalChannelType.DIMMER_CHANNEL,

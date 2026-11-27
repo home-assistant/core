@@ -6,7 +6,7 @@ from typing import Any, override
 from aiohttp import ClientSession
 from linkplay.bridge import LinkPlayBridge
 from linkplay.discovery import linkplay_factory_httpapi_bridge
-from linkplay.exceptions import LinkPlayRequestException
+from linkplay.exceptions import LinkPlayInvalidDataException, LinkPlayRequestException
 from linkplay.manufacturers import MANUFACTURER_WIIM
 import probatio
 
@@ -52,9 +52,13 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             bridge = await linkplay_factory_httpapi_bridge(discovery_info.host, session)
-        except LinkPlayRequestException:
-            _LOGGER.exception(
-                "Failed to connect to LinkPlay device at %s", discovery_info.host
+        except (LinkPlayRequestException, LinkPlayInvalidDataException) as err:
+            # Discovery runs on every start, so a device that can't be reached or
+            # answers in a way the library doesn't understand isn't an error
+            _LOGGER.debug(
+                "Failed to connect to LinkPlay device at %s: %s",
+                discovery_info.host,
+                err,
             )
             return self.async_abort(reason="cannot_connect")
 
@@ -103,9 +107,12 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
                 bridge = await linkplay_factory_httpapi_bridge(
                     user_input[CONF_HOST], session
                 )
-            except LinkPlayRequestException:
-                _LOGGER.exception(
-                    "Failed to connect to LinkPlay device at %s", user_input[CONF_HOST]
+            except (LinkPlayRequestException, LinkPlayInvalidDataException) as err:
+                # The form shows cannot_connect, so the traceback adds nothing
+                _LOGGER.debug(
+                    "Failed to connect to LinkPlay device at %s: %s",
+                    user_input[CONF_HOST],
+                    err,
                 )
                 errors["base"] = "cannot_connect"
 

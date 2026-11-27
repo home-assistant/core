@@ -5,7 +5,7 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
@@ -40,7 +40,7 @@ async def _async_reproduce_states(
         service: str, attributes: Iterable[HumidifierEntityStateAttribute]
     ) -> None:
         """Call service with the given state attributes."""
-        data = {"entity_id": state.entity_id}
+        data: dict[str, Any] = {TargetKey.ENTITY_ID: state.entity_id}
         for attribute in attributes:
             if attribute in state.attributes:
                 data[_STATE_ATTRIBUTE_TO_SERVICE_ARG[attribute]] = state.attributes[

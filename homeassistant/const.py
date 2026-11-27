@@ -14,7 +14,6 @@ from .helpers.deprecation import (
 )
 from .util.event_type import EventType
 from .util.hass_dict import HassKey
-from .util.signal_type import SignalType
 
 if TYPE_CHECKING:
     from .core import EventStateChangedData, EventStateReportedData
@@ -705,6 +704,7 @@ class UnitOfVolumeFlowRate(StrEnum):
     CUBIC_METERS_PER_HOUR = "m³/h"
     CUBIC_METERS_PER_MINUTE = "m³/min"
     CUBIC_METERS_PER_SECOND = "m³/s"
+    CUBIC_FEET_PER_HOUR = "ft³/h"
     CUBIC_FEET_PER_MINUTE = "ft³/min"
     LITERS_PER_HOUR = "L/h"
     LITERS_PER_MINUTE = "L/min"
@@ -1012,6 +1012,7 @@ HTTP_BASIC_AUTHENTICATION: Final = "basic"
 HTTP_BEARER_AUTHENTICATION: Final = "bearer_token"
 HTTP_DIGEST_AUTHENTICATION: Final = "digest"
 
+HTTP_HEADER_HA_DEVICE_ID: Final = "Home-Assistant-Device-Id"
 HTTP_HEADER_X_REQUESTED_WITH: Final = "X-Requested-With"
 
 CONTENT_TYPE_JSON: Final = "application/json"
@@ -1067,10 +1068,6 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 
 # User used by Supervisor
 HASSIO_USER_NAME = "Supervisor"
-
-SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
-    "bootstrap_integrations"
-)
 
 
 # hass.data keys for logging information.

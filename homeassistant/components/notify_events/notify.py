@@ -6,11 +6,7 @@ from typing import Any, override
 
 from notify_events import Message
 
-from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_TITLE,
-    BaseNotificationService,
-)
+from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -19,6 +15,7 @@ from .const import DOMAIN
 
 ATTR_LEVEL = "level"
 ATTR_PRIORITY = "priority"
+ATTR_TITLE = "title"
 
 ATTR_FILES = "files"
 ATTR_IMAGES = "images"

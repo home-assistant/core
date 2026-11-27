@@ -11,26 +11,22 @@ import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.firewall_policies import FirewallPolicies
 from aiounifi.models.api import ApiItem
-from aiounifi.models.firewall_policy import (
-    FirewallPolicy,
-    FirewallPolicyScheduleMode,
-    build_schedule,
-)
+from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicyScheduleMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
 from .const import DOMAIN
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
+    async_firewall_policy_device_info_fn,
     async_firewall_policy_supported_fn,
-    async_unifi_network_device_info_fn,
+    async_save_firewall_policy_schedule,
 )
 
 if TYPE_CHECKING:
@@ -67,13 +63,7 @@ async def async_firewall_policy_schedule_mode_control_fn(
             translation_domain=DOMAIN,
             translation_key="schedule_mode_not_supported",
         )
-    # "Today" is the controller's date: its clock is the one the schedule runs on.
-    await hub.async_save_firewall_policy(
-        obj_id,
-        schedule_fn=lambda current: build_schedule(
-            current, dt_util.now(hub.time_zone).date(), mode=mode
-        ),
-    )
+    await async_save_firewall_policy_schedule(hub, obj_id, mode=mode)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -95,11 +85,10 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSelectEntityDescription, ...] = (
         options=list(SCHEDULE_MODE_OPTIONS.values()),
         api_handler_fn=lambda api: api.firewall_policies,
         current_option_fn=async_firewall_policy_schedule_mode_fn,
-        device_info_fn=async_unifi_network_device_info_fn,
+        device_info_fn=async_firewall_policy_device_info_fn,
         object_fn=lambda api, obj_id: api.firewall_policies[obj_id],
         select_option_fn=async_firewall_policy_schedule_mode_control_fn,
         supported_fn=async_firewall_policy_supported_fn,
-        translation_placeholders_fn=lambda policy: {"policy_name": policy.name},
         unique_id_fn=lambda hub, obj_id: f"firewall_policy_schedule_mode-{obj_id}",
     ),
 )

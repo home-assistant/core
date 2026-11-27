@@ -485,10 +485,10 @@ class HTTPConfigStore:
         # Imported here to avoid a circular import at module load time.
         from homeassistant.components.homeassistant import (  # noqa: PLC0415
             DOMAIN as HASS_DOMAIN,
-            SERVICE_HOMEASSISTANT_RESTART,
+            HomeAssistantService,
         )
 
-        await self._hass.services.async_call(HASS_DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
+        await self._hass.services.async_call(HASS_DOMAIN, HomeAssistantService.RESTART)
 
     async def async_mark_yaml_migration_done(self) -> None:
         """Mark the YAML migration as done without migrating anything.

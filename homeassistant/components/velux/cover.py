@@ -17,13 +17,11 @@ from pyvlx.opening_device import (
 )
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_SPEED,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityCapabilityAttribute,
     CoverEntityFeature,
+    CoverServiceArgument,
     CoverSpeed,
 )
 from homeassistant.core import HomeAssistant
@@ -181,22 +179,22 @@ class VeluxCover(VeluxEntity, CoverEntity):
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        velocity = self._velocity_from_speed(kwargs.get(CoverServiceArgument.SPEED))
         await self.node.close(velocity=velocity, wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        velocity = self._velocity_from_speed(kwargs.get(CoverServiceArgument.SPEED))
         await self.node.open(velocity=velocity, wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position_percent = 100 - kwargs[ATTR_POSITION]
-        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        position_percent = 100 - kwargs[CoverServiceArgument.POSITION]
+        velocity = self._velocity_from_speed(kwargs.get(CoverServiceArgument.SPEED))
 
         await self.node.set_position(
             Position(position_percent=position_percent),
@@ -272,7 +270,7 @@ class VeluxDualRollerShutter(VeluxCover):
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        velocity = self._velocity_from_speed(kwargs.get(CoverServiceArgument.SPEED))
         await self.node.close(
             curtain=self.part, velocity=velocity, wait_for_completion=False
         )
@@ -281,7 +279,7 @@ class VeluxDualRollerShutter(VeluxCover):
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        velocity = self._velocity_from_speed(kwargs.get(CoverServiceArgument.SPEED))
         await self.node.open(
             curtain=self.part, velocity=velocity, wait_for_completion=False
         )
@@ -290,8 +288,8 @@ class VeluxDualRollerShutter(VeluxCover):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position_percent = 100 - kwargs[ATTR_POSITION]
-        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        position_percent = 100 - kwargs[CoverServiceArgument.POSITION]
+        velocity = self._velocity_from_speed(kwargs.get(CoverServiceArgument.SPEED))
 
         await self.node.set_position(
             Position(position_percent=position_percent),
@@ -350,7 +348,7 @@ class VeluxBlind(VeluxCover):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move cover tilt to a specific position."""
-        position_percent = 100 - kwargs[ATTR_TILT_POSITION]
+        position_percent = 100 - kwargs[CoverServiceArgument.TILT_POSITION]
         orientation = Position(position_percent=position_percent)
         await self.node.set_orientation(
             orientation=orientation, wait_for_completion=False

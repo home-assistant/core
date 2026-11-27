@@ -17,7 +17,7 @@
         "data_description": {
           "api_key": "[%key:component::aemet::config::step::user::data_description::api_key%]"
         },
-        "description": "The AEMET OpenData API key is no longer valid. AEMET API keys expire periodically, so you need to generate a new one at {api_key_url}"
+        "description": "The AEMET API key is no longer valid. Enter a new API key. To generate one, go to {api_key_url}."
       },
       "reconfigure": {
         "data": {
@@ -26,19 +26,18 @@
         "data_description": {
           "api_key": "[%key:component::aemet::config::step::user::data_description::api_key%]"
         },
-        "description": "Enter a new AEMET OpenData API key. AEMET API keys expire periodically, and you can generate a new one at {api_key_url}"
+        "description": "Enter a new AEMET API key. To generate one, go to {api_key_url}."
       },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "location": "[%key:common::config_flow::data::location%]",
-          "name": "Name of the integration"
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
           "api_key": "The API key from your AEMET OpenData account. It is free, but you need to register to get one.",
           "location": "The location used for the weather forecast and sensors. AEMET OpenData only covers Spain."
         },
-        "description": "To generate API key go to {api_key_url}"
+        "description": "To generate an API key, go to {api_key_url}."
       }
     }
   },
@@ -51,10 +50,31 @@
   },
   "exceptions": {
     "invalid_api_key": {
-      "message": "The AEMET OpenData API key is invalid or has expired"
+      "message": "The AEMET API key is invalid or has expired"
     },
     "town_not_found": {
       "message": "No AEMET town found for coordinates {latitude}, {longitude}"
+    }
+  },
+  "issues": {
+    "api_key_expiring": {
+      "fix_flow": {
+        "error": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+          "town_not_found": "[%key:component::aemet::config::error::town_not_found%]"
+        },
+        "step": {
+          "init": {
+            "data": {
+              "api_key": "[%key:common::config_flow::data::api_key%]"
+            },
+            "description": "Enter a new AEMET API key. To generate one, go to {api_key_url}.",
+            "title": "Replace the AEMET API key"
+          }
+        }
+      },
+      "title": "AEMET API key for {name} expires on {expiration_date}"
     }
   },
   "options": {

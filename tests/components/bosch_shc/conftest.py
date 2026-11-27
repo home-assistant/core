@@ -284,6 +284,10 @@ def outdoor_siren_device(
     acoustic_alarm_on: bool = False,
     visual_alarm_on: bool = False,
     tamper_activated: bool = False,
+    alarm_duration: float = 3.0,
+    flash_duration: float = 15.0,
+    alarm_delay: float = 0.0,
+    flash_delay: float = 0.0,
 ) -> SHCOutdoorSiren:
     """Build a minimal device double for the outdoor_sirens bucket."""
     device = create_autospec(SHCOutdoorSiren, instance=True, spec_set=True)
@@ -301,6 +305,10 @@ def outdoor_siren_device(
     siren_service.acoustic_alarm_on = acoustic_alarm_on
     siren_service.visual_alarm_on = visual_alarm_on
     siren_service.tamper_activated = tamper_activated
+    siren_service.alarm_duration = alarm_duration
+    siren_service.flash_duration = flash_duration
+    siren_service.alarm_delay = alarm_delay
+    siren_service.flash_delay = flash_delay
     device.siren = siren_service
     device.supports_power_supply = power_supply is not None
     device.power_supply = power_supply
@@ -837,6 +845,9 @@ def shutter_contact2_plus_device(
     bypass: BypassService.State = BypassService.State.BYPASS_INACTIVE,
     bypass_infinite: bool = False,
     vibration_enabled: bool = False,
+    vibrationsensor: VibrationSensorService.State = (
+        VibrationSensorService.State.NO_VIBRATION
+    ),
     sensitivity: VibrationSensorService.SensitivityState = (
         VibrationSensorService.SensitivityState.MEDIUM
     ),
@@ -854,6 +865,7 @@ def shutter_contact2_plus_device(
     device.status = "AVAILABLE"
     device.bypass = bypass
     device.bypass_infinite = bypass_infinite
+    device.vibrationsensor = vibrationsensor
     device.enabled = vibration_enabled
     device.sensitivity = sensitivity
     return device
@@ -1023,6 +1035,8 @@ def motion_detector2_device(
     occupied: bool = False,
     was_tampered: bool = False,
     temperature: float = 21.5,
+    supports_walk_test: bool = False,
+    supports_detection_test: bool = False,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -1035,6 +1049,8 @@ def motion_detector2_device(
     device.device_services = [FakeLatestMotionService()]
     device.deleted = False
     device.status = "AVAILABLE"
+    device.supports_walk_test = supports_walk_test
+    device.supports_detection_test = supports_detection_test
     device.pet_immunity_enabled = pet_immunity_enabled
     device.tamper_protection_enabled = tamper_protection_enabled
     device.supports_smart_sensitivity = supports_smart_sensitivity
