@@ -22,6 +22,7 @@ from .const import (
     CONF_DISPLAY_URL,
     CONF_ENDPOINT,
     CONF_ENTITY_CONFIG,
+    CONF_EXPOSE_POWER_CONTROLLER,
     CONF_FILTER,
     CONF_LOCALE,
     CONF_SUPPORTED_LOCALES,
@@ -48,6 +49,7 @@ ALEXA_ENTITY_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_DESCRIPTION): cv.string,
         probatio.Optional(CONF_DISPLAY_CATEGORIES): cv.string,
+        probatio.Optional(CONF_EXPOSE_POWER_CONTROLLER): cv.boolean,
         probatio.Optional(CONF_NAME): cv.string,
     }
 )
