@@ -5,16 +5,16 @@ from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
 from aiohttp import ClientError
-from aiopowerwall import (
+from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.tesla import EnergySiteRouter
+from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
+from tesla_fleet_api.tesla.powerwall import (
     PowerwallAuthenticationError,
     PowerwallClient,
     PowerwallCommandError,
     PowerwallError,
     PowerwallNotSupportedError,
 )
-from tesla_fleet_api.exceptions import TeslaFleetError
-from tesla_fleet_api.tesla import EnergySiteRouter
-from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
 
@@ -58,10 +58,16 @@ def cloud_energy_site(api: EnergySite | EnergySiteRouter) -> TeslemetryEnergySit
 
 
 def create_powerwall_client(
-    hass: HomeAssistant, host: str, password: str, key_pem: bytes
+    hass: HomeAssistant,
+    host: str,
+    password: str,
+    key_pem: bytes,
+    *,
+    legacy_gateway: bool,
 ) -> PowerwallClient:
     """Return a local Powerwall gateway client on the shared HTTP session."""
-    return PowerwallClient(
+    factory = PowerwallClient.legacy_gateway if legacy_gateway else PowerwallClient
+    return factory(
         host=host,
         gateway_password=password,
         rsa_private_key_pem=key_pem,
@@ -70,10 +76,17 @@ def create_powerwall_client(
 
 
 async def async_verify_local_gateway(
-    hass: HomeAssistant, host: str, password: str, key_pem: bytes
+    hass: HomeAssistant,
+    host: str,
+    password: str,
+    key_pem: bytes,
+    *,
+    legacy_gateway: bool,
 ) -> None:
     """Prove the LAN connection and the RSA key against the gateway."""
-    async with create_powerwall_client(hass, host, password, key_pem) as client:
+    async with create_powerwall_client(
+        hass, host, password, key_pem, legacy_gateway=legacy_gateway
+    ) as client:
         await client.connect()
         try:
             # connect() passed the password, so a failure here is key rejection.

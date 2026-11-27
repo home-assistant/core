@@ -1,0 +1,287 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "The API key was rejected. Check that the API key is valid and that the region matches your Azure Speech resource.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "gender": "Gender",
+          "language": "[%key:common::config_flow::data::language%]",
+          "region": "Region",
+          "type": "Voice"
+        },
+        "data_description": {
+          "api_key": "A key of your Azure Speech resource.",
+          "gender": "The gender of the voice.",
+          "language": "The default language of the speech.",
+          "region": "The location of your Azure Speech resource.",
+          "type": "The name of the voice without the language prefix, for example `JennyNeural`. The voice must be available for the selected language. You can find the available voices in the [Microsoft documentation]({voices_url})."
+        }
+      }
+    }
+  },
+  "entity": {
+    "tts": {
+      "text_to_speech": {
+        "name": "Text-to-speech"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to the Microsoft Text-to-Speech service."
+    },
+    "invalid_api_key": {
+      "message": "The Microsoft Text-to-Speech service rejected the API key. Check that the API key is valid and that the region matches your Azure Speech resource."
+    },
+    "synthesis_failed": {
+      "message": "Microsoft Text-to-Speech failed to synthesize the speech."
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically. The legacy `tts.{domain}_say` action (or the name you set with `service_name`) and the legacy `{domain}` text-to-speech engine keep working until you remove the YAML configuration. To fix this issue:\n\n1. Update your automations and scripts to use the `tts.speak` action with the new text-to-speech entity.\n2. Under **Settings** > **Voice assistants**, select the new text-to-speech entity in every assistant that uses the legacy `{domain}` engine.\n3. Remove the `{domain}` platform from the `tts` section of your configuration.yaml file and restart Home Assistant.",
+      "title": "[%key:component::homeassistant::issues::deprecated_yaml::title%]"
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using YAML is being removed, but your YAML configuration could not be imported because Home Assistant could not connect to the Microsoft Text-to-Speech service.\n\nCheck the region in your YAML configuration and restart Home Assistant to try again, or remove the `{domain}` platform from the `tts` section of your configuration.yaml file and set up the integration in the UI.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_api_key": {
+      "description": "Configuring {integration_title} using YAML is being removed, but your YAML configuration could not be imported because the API key was rejected.\n\nCheck the API key and region in your YAML configuration and restart Home Assistant to try again, or remove the `{domain}` platform from the `tts` section of your configuration.yaml file and set up the integration in the UI.",
+      "title": "[%key:component::microsoft::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} using YAML is being removed, but your YAML configuration could not be imported because of an unexpected error. Check the logs for details.\n\nRemove the `{domain}` platform from the `tts` section of your configuration.yaml file and set up the integration in the UI.",
+      "title": "[%key:component::microsoft::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "contour": "Pitch contour",
+          "pitch": "Pitch",
+          "rate": "Speaking rate",
+          "volume": "Volume"
+        },
+        "data_description": {
+          "contour": "Changes of the pitch over the course of the speech, in SSML `contour` format. Leave empty to not change the pitch contour.",
+          "pitch": "The pitch of the voice, for example `default`, `high` or `+10%`.",
+          "rate": "Speed up or slow down the speech.",
+          "volume": "Raise or lower the volume of the speech."
+        }
+      }
+    }
+  },
+  "selector": {
+    "gender": {
+      "options": {
+        "female": "Female",
+        "male": "Male"
+      }
+    },
+    "language": {
+      "options": {
+        "af-za": "Afrikaans (South Africa)",
+        "am-et": "Amharic (Ethiopia)",
+        "ar-ae": "Arabic (United Arab Emirates)",
+        "ar-bh": "Arabic (Bahrain)",
+        "ar-dz": "Arabic (Algeria)",
+        "ar-eg": "Arabic (Egypt)",
+        "ar-iq": "Arabic (Iraq)",
+        "ar-jo": "Arabic (Jordan)",
+        "ar-kw": "Arabic (Kuwait)",
+        "ar-lb": "Arabic (Lebanon)",
+        "ar-ly": "Arabic (Libya)",
+        "ar-ma": "Arabic (Morocco)",
+        "ar-om": "Arabic (Oman)",
+        "ar-qa": "Arabic (Qatar)",
+        "ar-sa": "Arabic (Saudi Arabia)",
+        "ar-sy": "Arabic (Syria)",
+        "ar-tn": "Arabic (Tunisia)",
+        "ar-ye": "Arabic (Yemen)",
+        "as-in": "Assamese (India)",
+        "az-az": "Azerbaijani (Latin, Azerbaijan)",
+        "bg-bg": "Bulgarian (Bulgaria)",
+        "bn-bd": "Bangla (Bangladesh)",
+        "bn-in": "Bengali (India)",
+        "bs-ba": "Bosnian (Bosnia and Herzegovina)",
+        "ca-es": "Catalan",
+        "cs-cz": "Czech (Czechia)",
+        "cy-gb": "Welsh (United Kingdom)",
+        "da-dk": "Danish (Denmark)",
+        "de-at": "German (Austria)",
+        "de-ch": "German (Switzerland)",
+        "de-de": "German (Germany)",
+        "el-gr": "Greek (Greece)",
+        "en-au": "English (Australia)",
+        "en-ca": "English (Canada)",
+        "en-gb": "English (United Kingdom)",
+        "en-hk": "English (Hong Kong SAR)",
+        "en-ie": "English (Ireland)",
+        "en-in": "English (India)",
+        "en-ke": "English (Kenya)",
+        "en-ng": "English (Nigeria)",
+        "en-nz": "English (New Zealand)",
+        "en-ph": "English (Philippines)",
+        "en-sg": "English (Singapore)",
+        "en-tz": "English (Tanzania)",
+        "en-us": "English (United States)",
+        "en-za": "English (South Africa)",
+        "es-ar": "Spanish (Argentina)",
+        "es-bo": "Spanish (Bolivia)",
+        "es-cl": "Spanish (Chile)",
+        "es-co": "Spanish (Colombia)",
+        "es-cr": "Spanish (Costa Rica)",
+        "es-cu": "Spanish (Cuba)",
+        "es-do": "Spanish (Dominican Republic)",
+        "es-ec": "Spanish (Ecuador)",
+        "es-es": "Spanish (Spain)",
+        "es-gq": "Spanish (Equatorial Guinea)",
+        "es-gt": "Spanish (Guatemala)",
+        "es-hn": "Spanish (Honduras)",
+        "es-mx": "Spanish (Mexico)",
+        "es-ni": "Spanish (Nicaragua)",
+        "es-pa": "Spanish (Panama)",
+        "es-pe": "Spanish (Peru)",
+        "es-pr": "Spanish (Puerto Rico)",
+        "es-py": "Spanish (Paraguay)",
+        "es-sv": "Spanish (El Salvador)",
+        "es-us": "Spanish (United States)",
+        "es-uy": "Spanish (Uruguay)",
+        "es-ve": "Spanish (Venezuela)",
+        "et-ee": "Estonian (Estonia)",
+        "eu-es": "Basque",
+        "fa-ir": "Persian (Iran)",
+        "fi-fi": "Finnish (Finland)",
+        "fil-ph": "Filipino (Philippines)",
+        "fr-be": "French (Belgium)",
+        "fr-ca": "French (Canada)",
+        "fr-ch": "French (Switzerland)",
+        "fr-fr": "French (France)",
+        "ga-ie": "Irish (Ireland)",
+        "gl-es": "Galician",
+        "gu-in": "Gujarati (India)",
+        "he-il": "Hebrew (Israel)",
+        "hi-in": "Hindi (India)",
+        "hr-hr": "Croatian (Croatia)",
+        "hu-hu": "Hungarian (Hungary)",
+        "hy-am": "Armenian (Armenia)",
+        "id-id": "Indonesian (Indonesia)",
+        "is-is": "Icelandic (Iceland)",
+        "it-it": "Italian (Italy)",
+        "iu-cans-ca": "Inuktitut (Syllabics, Canada)",
+        "iu-latn-ca": "Inuktitut (Latin, Canada)",
+        "ja-jp": "Japanese (Japan)",
+        "jv-id": "Javanese (Latin, Indonesia)",
+        "ka-ge": "Georgian (Georgia)",
+        "kk-kz": "Kazakh (Kazakhstan)",
+        "km-kh": "Khmer (Cambodia)",
+        "kn-in": "Kannada (India)",
+        "ko-kr": "Korean (Korea)",
+        "lo-la": "Lao (Laos)",
+        "lt-lt": "Lithuanian (Lithuania)",
+        "lv-lv": "Latvian (Latvia)",
+        "mk-mk": "Macedonian (North Macedonia)",
+        "ml-in": "Malayalam (India)",
+        "mn-mn": "Mongolian (Mongolia)",
+        "mr-in": "Marathi (India)",
+        "ms-my": "Malay (Malaysia)",
+        "mt-mt": "Maltese (Malta)",
+        "my-mm": "Burmese (Myanmar)",
+        "nb-no": "Norwegian Bokmål (Norway)",
+        "ne-np": "Nepali (Nepal)",
+        "nl-be": "Dutch (Belgium)",
+        "nl-nl": "Dutch (Netherlands)",
+        "or-in": "Odia (India)",
+        "pa-in": "Punjabi (India)",
+        "pl-pl": "Polish (Poland)",
+        "ps-af": "Pashto (Afghanistan)",
+        "pt-br": "Portuguese (Brazil)",
+        "pt-pt": "Portuguese (Portugal)",
+        "ro-ro": "Romanian (Romania)",
+        "ru-ru": "Russian (Russia)",
+        "si-lk": "Sinhala (Sri Lanka)",
+        "sk-sk": "Slovak (Slovakia)",
+        "sl-si": "Slovenian (Slovenia)",
+        "so-so": "Somali (Somalia)",
+        "sq-al": "Albanian (Albania)",
+        "sr-latn-rs": "Serbian (Latin, Serbia)",
+        "sr-rs": "Serbian (Cyrillic, Serbia)",
+        "su-id": "Sundanese (Indonesia)",
+        "sv-se": "Swedish (Sweden)",
+        "sw-ke": "Kiswahili (Kenya)",
+        "sw-tz": "Kiswahili (Tanzania)",
+        "ta-in": "Tamil (India)",
+        "ta-lk": "Tamil (Sri Lanka)",
+        "ta-my": "Tamil (Malaysia)",
+        "ta-sg": "Tamil (Singapore)",
+        "te-in": "Telugu (India)",
+        "th-th": "Thai (Thailand)",
+        "tr-tr": "Turkish (Türkiye)",
+        "uk-ua": "Ukrainian (Ukraine)",
+        "ur-in": "Urdu (India)",
+        "ur-pk": "Urdu (Pakistan)",
+        "uz-uz": "Uzbek (Latin, Uzbekistan)",
+        "vi-vn": "Vietnamese (Vietnam)",
+        "wuu-cn": "Chinese (Wu, Simplified)",
+        "yue-cn": "Chinese (Cantonese, Simplified)",
+        "zh-cn": "Chinese (Mandarin, Simplified)",
+        "zh-cn-guangxi": "Chinese (Guangxi Accent Mandarin, Simplified)",
+        "zh-cn-henan": "Chinese (Zhongyuan Mandarin Henan, Simplified)",
+        "zh-cn-liaoning": "Chinese (Northeastern Mandarin, Simplified)",
+        "zh-cn-shaanxi": "Chinese (Zhongyuan Mandarin Shaanxi, Simplified)",
+        "zh-cn-shandong": "Chinese (Jilu Mandarin, Simplified)",
+        "zh-cn-sichuan": "Chinese (Southwestern Mandarin, Simplified)",
+        "zh-hk": "Chinese (Cantonese, Traditional)",
+        "zh-tw": "Chinese (Taiwanese Mandarin, Traditional)",
+        "zu-za": "isiZulu (South Africa)"
+      }
+    },
+    "region": {
+      "options": {
+        "australiaeast": "Australia East",
+        "brazilsouth": "Brazil South",
+        "canadacentral": "Canada Central",
+        "canadaeast": "Canada East",
+        "centralindia": "Central India",
+        "centralus": "Central US",
+        "eastasia": "East Asia",
+        "eastus": "East US",
+        "eastus2": "East US 2",
+        "francecentral": "France Central",
+        "germanywestcentral": "Germany West Central",
+        "italynorth": "Italy North",
+        "japaneast": "Japan East",
+        "japanwest": "Japan West",
+        "koreacentral": "Korea Central",
+        "northcentralus": "North Central US",
+        "northeurope": "North Europe",
+        "norwayeast": "Norway East",
+        "qatarcentral": "Qatar Central",
+        "southafricanorth": "South Africa North",
+        "southcentralus": "South Central US",
+        "southeastasia": "Southeast Asia",
+        "swedencentral": "Sweden Central",
+        "switzerlandnorth": "Switzerland North",
+        "switzerlandwest": "Switzerland West",
+        "uaenorth": "UAE North",
+        "uksouth": "UK South",
+        "ukwest": "UK West",
+        "westcentralus": "West Central US",
+        "westeurope": "West Europe",
+        "westus": "West US",
+        "westus2": "West US 2",
+        "westus3": "West US 3"
+      }
+    }
+  }
+}

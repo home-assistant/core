@@ -975,6 +975,7 @@ class VolumeFlowRateConverter(BaseUnitConverter):
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 1,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE: 1 / _HRS_TO_MINUTES,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND: 1 / _HRS_TO_SECS,
+        UnitOfVolumeFlowRate.CUBIC_FEET_PER_HOUR: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _CUBIC_FOOT_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.LITERS_PER_HOUR: 1 / _L_TO_CUBIC_METER,
@@ -989,6 +990,7 @@ class VolumeFlowRateConverter(BaseUnitConverter):
         / (_HRS_TO_SECS * _ML_TO_CUBIC_METER),
     }
     VALID_UNITS = {
+        UnitOfVolumeFlowRate.CUBIC_FEET_PER_HOUR,
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,

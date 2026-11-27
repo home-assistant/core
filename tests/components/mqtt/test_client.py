@@ -27,8 +27,17 @@ from pytest_homeassistant.typing import (
 )
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt.client import RECONNECT_INTERVAL_SECONDS
-from homeassistant.components.mqtt.const import DOMAIN, SUPPORTED_COMPONENTS
+from homeassistant.components.mqtt.client import (
+    RECONNECT_INTERVAL_SECONDS,
+    SubscribePayloadType,
+)
+from homeassistant.components.mqtt.const import (
+    CONF_CERTIFICATE_FILE,
+    CONF_CLIENT_CERT_FILE,
+    CONF_CLIENT_KEY_FILE,
+    DOMAIN,
+    SUPPORTED_COMPONENTS,
+)
 from homeassistant.components.mqtt.models import (
     DATA_MQTT,
     MessageCallbackType,
@@ -43,6 +52,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.dt import utcnow
 
 from .conftest import ENTRY_DEFAULT_BIRTH_MESSAGE
@@ -322,6 +332,37 @@ async def test_all_subscriptions_run_when_decode_fails(
 
     await hass.async_block_till_done()
     assert len(recorded_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "encodings",
+    [
+        pytest.param(("utf-8", None), id="text_first"),
+        pytest.param((None, "utf-8"), id="raw_first"),
+    ],
+)
+async def test_subscriptions_with_different_encodings(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    encodings: tuple[str | None, str | None],
+) -> None:
+    """Test each subscription gets the payload decoded with its own encoding."""
+    await mqtt_mock_entry()
+    payloads: dict[str | None, list[SubscribePayloadType]] = {
+        encoding: [] for encoding in encodings
+    }
+    for encoding in encodings:
+        await mqtt.async_subscribe(
+            hass,
+            "test-topic",
+            lambda msg, encoding=encoding: payloads[encoding].append(msg.payload),
+            encoding=encoding,
+        )
+
+    async_fire_mqtt_message(hass, "test-topic", b"up_double")
+    await hass.async_block_till_done()
+
+    assert payloads == {"utf-8": ["up_double"], None: [b"up_double"]}
 
 
 async def test_subscribe_topic(
@@ -1934,6 +1975,135 @@ async def test_tls_version(
         mqtt_client_mock.tls_set.mock_calls[0][2]["tls_version"]
         == ssl.PROTOCOL_TLS_CLIENT
     )
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_CERTIFICATE_FILE: "/ssl/mqtt/ca.crt",
+            CONF_CLIENT_CERT_FILE: "/ssl/mqtt/client.crt",
+            CONF_CLIENT_KEY_FILE: "/ssl/mqtt/client.key",
+        }
+    ],
+)
+async def test_setup_uses_certificate_files(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test setup loads the certificates from the configured file paths."""
+    await mqtt_mock_entry()
+    await hass.async_block_till_done()
+    assert mqtt_client_mock.tls_set.mock_calls[0] == call(
+        "/ssl/mqtt/ca.crt",
+        certfile="/ssl/mqtt/client.crt",
+        keyfile="/ssl/mqtt/client.key",
+        tls_version=ssl.PROTOCOL_TLS_CLIENT,
+    )
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(FileNotFoundError(2, "No such file"), id="missing_file"),
+        pytest.param(PermissionError(13, "Permission denied"), id="unreadable_file"),
+        pytest.param(ssl.SSLError("KEY_VALUES_MISMATCH"), id="mismatching_key"),
+    ],
+)
+@pytest.mark.parametrize(
+    "protocol",
+    [
+        pytest.param("5", id="protocol_5"),
+        # Setup first tries to migrate the protocol
+        pytest.param("3.1.1", id="protocol_311_migration"),
+    ],
+)
+async def test_setup_certificates_cannot_be_loaded(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mock_try_connection_protocol_check: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    error: OSError,
+    protocol: str,
+) -> None:
+    """Test setup is retried when the certificate files cannot be loaded."""
+    mqtt_client_mock.tls_set.side_effect = error
+    mock_try_connection_protocol_check.side_effect = error
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PROTOCOL: protocol,
+            CONF_CERTIFICATE_FILE: "/ssl/mqtt/ca.crt",
+            CONF_CLIENT_CERT_FILE: "/ssl/mqtt/client.crt",
+            CONF_CLIENT_KEY_FILE: "/ssl/mqtt/client.key",
+        },
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+    waiter = hass.async_create_task(mqtt.async_wait_for_mqtt_client(hass))
+    await asyncio.sleep(0)
+
+    with patch.object(
+        mqtt.MQTT, "cleanup", autospec=True, side_effect=mqtt.MQTT.cleanup
+    ) as mock_cleanup:
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.reason == (
+        "Unable to load the certificates to connect to MQTT broker mock-broker. "
+        "Check that the certificate files exist and are readable, "
+        "and that the private key matches the client certificate"
+    )
+    # The listeners of the client that failed to set up are removed
+    assert mock_cleanup.call_count == 1
+    # The protocol migration is tried again when the setup is retried
+    assert issue_registry.async_get_issue(DOMAIN, "protocol_5_migration") is None
+
+    # Publishing is refused cleanly while the setup is retried
+    with pytest.raises(
+        HomeAssistantError, match='Cannot publish to topic "test-topic"'
+    ):
+        await mqtt.async_publish(hass, "test-topic", "test-payload")
+
+    # Waiters keep waiting while the setup is retried
+    assert not waiter.done()
+
+    # Integrations can subscribe while the setup is retried
+    messages: list[ReceiveMessage] = []
+    removed_messages: list[ReceiveMessage] = []
+    unsubscribe = await mqtt.async_subscribe(hass, "test-topic", messages.append)
+    unsubscribe_removed = await mqtt.async_subscribe(
+        hass, "test-topic", removed_messages.append
+    )
+
+    # Unsubscribing between two failed attempts removes the subscription
+    assert not await hass.config_entries.async_reload(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    unsubscribe_removed()
+
+    mqtt_client_mock.tls_set.side_effect = None
+    mock_try_connection_protocol_check.side_effect = None
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert await waiter is True
+
+    # The subscription is restored on the client that was set up
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+    await hass.async_block_till_done()
+    assert len(messages) == 1
+    assert messages[0].payload == "test-payload"
+    assert not removed_messages
+
+    # Unsubscribing after the setup succeeded removes the restored subscription
+    unsubscribe()
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+    await hass.async_block_till_done()
+    assert len(messages) == 1
+    assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 @pytest.mark.parametrize(

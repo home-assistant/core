@@ -5,7 +5,11 @@ import upcloud_api
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 
 from .const import DOMAIN
 from .coordinator import UpCloudConfigEntry, UpCloudDataUpdateCoordinator
@@ -23,6 +27,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> N
     try:
         await hass.async_add_executor_job(manager.authenticate)
     except upcloud_api.UpCloudAPIError as err:
+        if err.error_code == "AUTHENTICATION_FAILED":
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",

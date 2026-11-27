@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
-from linkplay.exceptions import LinkPlayRequestException
+from linkplay.exceptions import LinkPlayInvalidDataException, LinkPlayRequestException
 from linkplay.manufacturers import MANUFACTURER_WIIM
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -212,14 +212,22 @@ async def test_zeroconf_flow_re_entry(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "exception",
+    [
+        LinkPlayRequestException("Error"),
+        LinkPlayInvalidDataException("Unexpected JSON (unknown command)"),
+    ],
+)
 async def test_zeroconf_flow_errors(
     hass: HomeAssistant,
     mock_linkplay_factory_bridge: AsyncMock,
+    exception: Exception,
 ) -> None:
     """Test flow when the device discovered through Zeroconf cannot be reached."""
 
     # Temporarily make the mock_linkplay_factory_bridge throw an exception
-    mock_linkplay_factory_bridge.side_effect = (LinkPlayRequestException("Error"),)
+    mock_linkplay_factory_bridge.side_effect = (exception,)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -250,14 +258,22 @@ async def test_zeroconf_flow_ignores_wiim_device(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "exception",
+    [
+        LinkPlayRequestException("Error"),
+        LinkPlayInvalidDataException("Unexpected JSON (unknown command)"),
+    ],
+)
 async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_linkplay_factory_bridge: AsyncMock,
+    exception: Exception,
 ) -> None:
     """Test flow when the device cannot be reached."""
 
     # Temporarily make the mock_linkplay_factory_bridge throw an exception
-    mock_linkplay_factory_bridge.side_effect = (LinkPlayRequestException("Error"),)
+    mock_linkplay_factory_bridge.side_effect = (exception,)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -315,3 +331,119 @@ async def test_zeroconf_no_probe_existing_device(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_linkplay_factory_bridge.mock_calls) == 0
+
+
+@pytest.mark.usefixtures("mock_linkplay_factory_bridge", "mock_setup_entry")
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring the host."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST_REENTRY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_HOST: HOST_REENTRY}
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(
+            LinkPlayRequestException("Error"), "cannot_connect", id="cannot_connect"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_linkplay_factory_bridge: AsyncMock,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test reconfigure errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+    mock_linkplay_factory_bridge.side_effect = side_effect
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST_REENTRY}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    mock_linkplay_factory_bridge.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST_REENTRY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_HOST: HOST_REENTRY}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_linkplay_factory_bridge: AsyncMock,
+) -> None:
+    """Test reconfigure aborts when the host is a different device."""
+    mock_config_entry.add_to_hass(hass)
+    mock_linkplay_factory_bridge.return_value.device.uuid = "other_uuid"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST_REENTRY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == {CONF_HOST: HOST}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_unique_id_mismatch_discovery_in_progress(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_linkplay_factory_bridge: AsyncMock,
+) -> None:
+    """Test reconfigure reports a mismatch when the other device is being discovered."""
+    mock_config_entry.add_to_hass(hass)
+    mock_linkplay_factory_bridge.return_value.device.uuid = "other_uuid"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address(HOST_REENTRY),
+            ip_addresses=[ip_address(HOST_REENTRY)],
+            hostname="other.local.",
+            name="other._linkplay._tcp.local.",
+            port=59152,
+            type="_linkplay._tcp.local.",
+            properties={},
+        ),
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST_REENTRY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == {CONF_HOST: HOST}

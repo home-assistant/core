@@ -5,7 +5,11 @@ from typing import Any, override
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFeature
+from homeassistant.components.siren import (
+    SirenEntity,
+    SirenEntityFeature,
+    SirenServiceArgument,
+)
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
@@ -161,7 +165,7 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
         """Turn the device on."""
         self._cancel_timeout()
 
-        if tone := kwargs.get(ATTR_TONE):
+        if tone := kwargs.get(SirenServiceArgument.TONE):
             command = get_first_key(self._device.COMMANDS, tone)
         else:
             command = self._default_tone

@@ -19,7 +19,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.device_registry as dr
@@ -84,7 +84,7 @@ async def test_set_damper_limit(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 35},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 35},
         blocking=True,
     )
 
@@ -102,7 +102,7 @@ async def test_set_damper_limit_off_step_rejected(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: DAMPER_MIN_ENTITY,
+                TargetKey.ENTITY_ID: DAMPER_MIN_ENTITY,
                 NumberServiceArgument.VALUE: 42,
             },
             blocking=True,
@@ -145,7 +145,7 @@ async def test_set_damper_limit_error_handling(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: DAMPER_MAX_ENTITY,
+                TargetKey.ENTITY_ID: DAMPER_MAX_ENTITY,
                 NumberServiceArgument.VALUE: 80,
             },
             blocking=True,

@@ -16,7 +16,7 @@ import re
 import secrets
 import struct
 from time import monotonic, time, time_ns
-from typing import Any, Final, Protocol
+from typing import TYPE_CHECKING, Any, Final, Protocol
 
 from aiohttp import web
 import mutagen
@@ -260,7 +260,7 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
     default_entity_id: str | None = None
 
     for entity in hass.data[DATA_COMPONENT].entities:
-        if entity.platform and entity.platform.platform_name == "cloud":
+        if entity.platform.platform_name == "cloud":
             return entity.entity_id
 
         if default_entity_id is None:
@@ -615,27 +615,29 @@ async def _async_convert_audio(
 
     if is_input_gen:
         # Input is a generator, so we must manually feed in chunks
-        assert isinstance(audio_input, AsyncGenerator)
-        assert process.stdin
+        stdin = process.stdin
+        if TYPE_CHECKING:
+            assert isinstance(audio_input, AsyncGenerator)
+            assert stdin is not None
 
         async def write_input() -> None:
-            assert process.stdin
             try:
                 async for chunk in audio_input:
-                    process.stdin.write(chunk)
-                    await process.stdin.drain()
+                    stdin.write(chunk)
+                    await stdin.drain()
             finally:
-                if process.stdin:
-                    process.stdin.close()
+                stdin.close()
 
         writer_task = hass.async_create_background_task(
             write_input(), "tts_ffmpeg_conversion"
         )
 
-    assert process.stdout
+    stdout = process.stdout
+    if TYPE_CHECKING:
+        assert stdout is not None
     try:
         while True:
-            chunk = await process.stdout.read(FFMPEG_CHUNK_SIZE)
+            chunk = await stdout.read(FFMPEG_CHUNK_SIZE)
             if not chunk:
                 break
             yield chunk
@@ -647,8 +649,10 @@ async def _async_convert_audio(
         # Wait for process termination and check for errors.
         retcode = await process.wait()
         if retcode != 0:
-            assert process.stderr
-            stderr_data = await process.stderr.read()
+            stderr = process.stderr
+            if TYPE_CHECKING:
+                assert stderr is not None
+            stderr_data = await stderr.read()
             # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(stderr_data.decode())
             raise HomeAssistantError(
@@ -1919,8 +1923,7 @@ def websocket_list_engines(
                 language, entity.supported_languages, country
             )
         providers.append(provider_info)
-        if entity.platform:
-            entity_domains.add(entity.platform.platform_name)
+        entity_domains.add(entity.platform.platform_name)
     for engine_id, provider in hass.data[DATA_TTS_MANAGER].providers.items():
         if provider.has_entity:
             continue

@@ -1,6 +1,12 @@
 {
   "entity": {
     "binary_sensor": {
+      "sync_chambers": {
+        "default": "mdi:sync",
+        "state": {
+          "off": "mdi:sync-off"
+        }
+      },
       "water_lacks": {
         "default": "mdi:water-alert"
       },
@@ -9,8 +15,26 @@
       }
     },
     "button": {
+      "pause_cooking": {
+        "default": "mdi:pause"
+      },
+      "pause_cooking_basket": {
+        "default": "mdi:pause"
+      },
       "reset_filter": {
         "default": "mdi:air-filter"
+      },
+      "resume_cooking": {
+        "default": "mdi:play"
+      },
+      "resume_cooking_basket": {
+        "default": "mdi:play"
+      },
+      "stop_cooking": {
+        "default": "mdi:stop"
+      },
+      "stop_cooking_basket": {
+        "default": "mdi:stop"
       }
     },
     "fan": {
@@ -21,9 +45,21 @@
               "advanced_sleep": "mdi:sleep",
               "auto": "mdi:fan-auto",
               "eco": "mdi:leaf",
+              "normal": "mdi:fan",
               "pet": "mdi:paw",
               "sleep": "mdi:sleep",
               "turbo": "mdi:weather-tornado"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "vesync": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "humidity": "mdi:water-percent"
             }
           }
         }
@@ -42,18 +78,102 @@
         "default": "mdi:heat-wave"
       }
     },
+    "select": {
+      "auto_preference": {
+        "default": "mdi:fan-auto",
+        "state": {
+          "default": "mdi:fan-auto",
+          "efficient": "mdi:leaf",
+          "quiet": "mdi:volume-low"
+        }
+      },
+      "night_light_level": {
+        "default": "mdi:brightness-6",
+        "state": {
+          "auto": "mdi:brightness-auto",
+          "bright": "mdi:brightness-7",
+          "dim": "mdi:brightness-5",
+          "off": "mdi:lightbulb-off",
+          "on": "mdi:lightbulb-on"
+        }
+      }
+    },
+    "sensor": {
+      "cook_status": {
+        "default": "mdi:pot-steam",
+        "state": {
+          "appointing": "mdi:calendar-clock",
+          "cooking": "mdi:pot-steam",
+          "cooking_end": "mdi:check-circle",
+          "cooking_stop": "mdi:stop-circle",
+          "heating": "mdi:fire",
+          "hold": "mdi:pause-circle",
+          "preheat_end": "mdi:check-circle-outline",
+          "preheat_stop": "mdi:stop-circle-outline",
+          "pull_out": "mdi:tray-arrow-up",
+          "ready": "mdi:check",
+          "standby": "mdi:power-standby"
+        }
+      },
+      "cook_status_basket": {
+        "default": "mdi:pot-steam",
+        "state": {
+          "appointing": "mdi:calendar-clock",
+          "cooking": "mdi:pot-steam",
+          "cooking_end": "mdi:check-circle",
+          "cooking_stop": "mdi:stop-circle",
+          "heating": "mdi:fire",
+          "hold": "mdi:pause-circle",
+          "preheat_end": "mdi:check-circle-outline",
+          "preheat_stop": "mdi:stop-circle-outline",
+          "pull_out": "mdi:tray-arrow-up",
+          "ready": "mdi:check",
+          "standby": "mdi:power-standby"
+        }
+      },
+      "hepa_filter_life": {
+        "default": "mdi:air-filter"
+      },
+      "voc": {
+        "default": "mdi:molecule"
+      }
+    },
     "switch": {
       "auto_off_config": {
-        "default": "mdi:timer-off"
+        "default": "mdi:timer-off",
+        "state": {
+          "off": "mdi:timer"
+        }
       },
       "child_lock": {
-        "default": "mdi:lock"
+        "default": "mdi:lock",
+        "state": {
+          "off": "mdi:lock-open-variant"
+        }
       },
       "display": {
-        "default": "mdi:monitor"
+        "default": "mdi:monitor",
+        "state": {
+          "off": "mdi:monitor-off"
+        }
       },
       "drying_mode_power_off": {
-        "default": "mdi:weather-windy"
+        "default": "mdi:weather-windy",
+        "state": {
+          "off": "mdi:weather-windy-variant"
+        }
+      },
+      "light_detection": {
+        "default": "mdi:brightness-auto",
+        "state": {
+          "off": "mdi:brightness-5"
+        }
+      },
+      "mute": {
+        "default": "mdi:volume-off",
+        "state": {
+          "off": "mdi:volume-high"
+        }
       }
     }
   },

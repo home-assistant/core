@@ -527,3 +527,25 @@ class MockBridgeWithOpenCloseStopCover(MockBridge):
             "area": "822",
         }
         return devices
+
+
+class MockBridgeWithTiltOnlyBlind(MockBridge):
+    """Mock bridge that also exposes a tilt only blind."""
+
+    def load_devices(self):
+        """Add a tilt only blind to the mock devices."""
+        devices = super().load_devices()
+        devices["806"] = {
+            "device_id": "806",
+            "current_state": -1,
+            "fan_speed": None,
+            "zone": "806",
+            "name": "Basement Bedroom_Wood Blind",
+            "button_groups": None,
+            "type": "SerenaTiltOnlyWoodBlind",
+            "model": None,
+            "serial": 5442326,
+            "tilt": 100,
+            "area": "822",
+        }
+        return devices

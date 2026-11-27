@@ -118,6 +118,10 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info.properties,
         )
 
+        # The host is used in unbracketed "http://{host}:port" URLs.
+        if discovery_info.ip_address.version == 6:
+            return self.async_abort(reason="ipv6_not_supported")
+
         host = discovery_info.host
         udn_from_txt = discovery_info.properties.get("uuid")
         if udn_from_txt:

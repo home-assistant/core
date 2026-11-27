@@ -6,6 +6,7 @@ import contextlib
 import glob
 import os
 import sys
+from time import monotonic
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -23,14 +24,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import bootstrap, config as config_util, core, loader, runner
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    BASE_PLATFORMS,
-    CONF_DEBUG,
-    SIGNAL_BOOTSTRAP_INTEGRATIONS,
-)
-from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
+from homeassistant.const import BASE_PLATFORMS, CONF_DEBUG
+from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers import bootstrap_progress
 from homeassistant.helpers.translation import async_translations_loaded
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration
@@ -348,7 +345,7 @@ async def test_setting_up_empty_config(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test default integrations are set up with empty config."""
-    await bootstrap._async_set_up_integrations(hass, {})
+    await bootstrap._async_set_up_integrations(hass, {}, monotonic())
 
     assert all(
         domain in hass.config.components for domain in bootstrap.DEFAULT_INTEGRATIONS
@@ -363,7 +360,7 @@ async def test_setting_up_config(
 ) -> None:
     """Test we set up domains in config."""
     await bootstrap._async_set_up_integrations(
-        hass, {"group hello": {}, "homeassistant": {}}
+        hass, {"group hello": {}, "homeassistant": {}}, monotonic()
     )
 
     assert "group" in hass.config.components
@@ -409,7 +406,9 @@ async def test_setup_after_deps_all_present(hass: HomeAssistant) -> None:
         "homeassistant.components.logger.async_setup", gen_domain_setup("logger")
     ):
         await bootstrap._async_set_up_integrations(
-            hass, {"root": {}, "first_dep": {}, "second_dep": {}, "logger": {}}
+            hass,
+            {"root": {}, "first_dep": {}, "second_dep": {}, "logger": {}},
+            monotonic(),
         )
 
     assert "root" in hass.config.components
@@ -457,7 +456,7 @@ async def test_setup_after_deps_in_stage_1(hass: HomeAssistant) -> None:
     )
 
     await bootstrap._async_set_up_integrations(
-        hass, {"cloud": {}, "normal_integration": {}, "an_after_dep": {}}
+        hass, {"cloud": {}, "normal_integration": {}, "an_after_dep": {}}, monotonic()
     )
 
     assert "normal_integration" in hass.config.components
@@ -530,7 +529,7 @@ async def test_setup_after_deps_manifests_are_loaded_even_if_not_setup(
     )
 
     await bootstrap._async_set_up_integrations(
-        hass, {"cloud": {}, "normal_integration": {}}
+        hass, {"cloud": {}, "normal_integration": {}}, monotonic()
     )
 
     assert "normal_integration" in hass.config.components
@@ -614,6 +613,7 @@ async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
             "normal_integration": {},
             "an_after_dep": {},
         },
+        monotonic(),
     )
 
     assert "frontend" in hass.config.components
@@ -673,7 +673,9 @@ async def test_setup_after_deps_via_platform(hass: HomeAssistant) -> None:
     hass.bus.async_listen_once("component_loaded", continue_loading)
 
     await bootstrap._async_set_up_integrations(
-        hass, {"light": {"platform": "platform_int"}, "after_dep_of_platform_int": {}}
+        hass,
+        {"light": {"platform": "platform_int"}, "after_dep_of_platform_int": {}},
+        monotonic(),
     )
 
     assert "light" in hass.config.components
@@ -714,7 +716,9 @@ async def test_setup_after_deps_not_trigger_load(hass: HomeAssistant) -> None:
         ),
     )
 
-    await bootstrap._async_set_up_integrations(hass, {"root": {}, "second_dep": {}})
+    await bootstrap._async_set_up_integrations(
+        hass, {"root": {}, "second_dep": {}}, monotonic()
+    )
 
     assert "root" in hass.config.components
     assert "first_dep" not in hass.config.components
@@ -746,7 +750,7 @@ async def test_setup_after_deps_not_present(hass: HomeAssistant) -> None:
     )
 
     await bootstrap._async_set_up_integrations(
-        hass, {"root": {}, "first_dep": {}, "second_dep": {}}
+        hass, {"root": {}, "first_dep": {}, "second_dep": {}}, monotonic()
     )
 
     assert "root" in hass.config.components
@@ -794,7 +798,7 @@ async def test_setup_hass(
     log_file = Mock()
     log_no_color = Mock()
 
-    with patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000):
+    with patch.object(bootstrap_progress, "LOG_SLOW_STARTUP_INTERVAL", 5000):
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
@@ -871,8 +875,8 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
         return True
 
     with (
-        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.005),
-        patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.005),
+        patch.object(bootstrap_progress, "LOG_SLOW_STARTUP_INTERVAL", 0.005),
+        patch.object(bootstrap_progress, "SLOW_STARTUP_CHECK_INTERVAL", 0.005),
         patch(
             "homeassistant.components.frontend.async_setup",
             side_effect=_async_setup_that_blocks_startup,
@@ -1193,70 +1197,6 @@ async def test_setup_recovery_mode_if_no_frontend(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
-async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
-    hass: HomeAssistant,
-) -> None:
-    """Test empty integrations list is only sent at the end of bootstrap."""
-    # setup times only tracked when not running
-    hass.set_state(CoreState.not_running)
-
-    order = []
-
-    def gen_domain_setup(domain):
-        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-            order.append(domain)
-            await asyncio.sleep(0.05)
-
-            async def _background_task():
-                await asyncio.sleep(0.1)
-
-            await hass.async_create_task(_background_task())
-            return True
-
-        return async_setup
-
-    mock_integration(
-        hass,
-        MockModule(
-            domain="normal_integration",
-            async_setup=gen_domain_setup("normal_integration"),
-            partial_manifest={"after_dependencies": ["an_after_dep"]},
-        ),
-    )
-    mock_integration(
-        hass,
-        MockModule(
-            domain="an_after_dep",
-            async_setup=gen_domain_setup("an_after_dep"),
-        ),
-    )
-
-    integrations = []
-
-    @callback
-    def _bootstrap_integrations(data):
-        integrations.append(data)
-
-    async_dispatcher_connect(
-        hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, _bootstrap_integrations
-    )
-    with patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.025):
-        await bootstrap._async_set_up_integrations(
-            hass, {"normal_integration": {}, "an_after_dep": {}}
-        )
-        await hass.async_block_till_done()
-
-    assert integrations[0] != {}
-    assert "an_after_dep" in integrations[0]
-    assert integrations[-2] != {}
-    assert integrations[-1] == {}
-
-    assert "normal_integration" in hass.config.components
-    assert order == ["an_after_dep", "normal_integration"]
-
-
-@pytest.mark.parametrize("load_registries", [False])
 async def test_warning_logged_on_wrap_up_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1285,7 +1225,9 @@ async def test_warning_logged_on_wrap_up_timeout(
     )
 
     with patch.object(bootstrap, "WRAP_UP_TIMEOUT", 0):
-        await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+        await bootstrap._async_set_up_integrations(
+            hass, {"normal_integration": {}}, monotonic()
+        )
 
     task.cancel()
     with contextlib.suppress(asyncio.CancelledError):
@@ -1333,7 +1275,9 @@ async def test_tasks_logged_that_block_stage_1(
             bootstrap, "STAGE_1_INTEGRATIONS", {*original_stage_1, "normal_integration"}
         ),
     ):
-        await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+        await bootstrap._async_set_up_integrations(
+            hass, {"normal_integration": {}}, monotonic()
+        )
 
     task.cancel()
     with contextlib.suppress(asyncio.CancelledError):
@@ -1378,7 +1322,9 @@ async def test_tasks_logged_that_block_stage_2(
         patch.object(bootstrap, "COOLDOWN_TIME", 0),
         patch.object(bootstrap, "WRAP_UP_TIMEOUT", 0),
     ):
-        await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+        await bootstrap._async_set_up_integrations(
+            hass, {"normal_integration": {}}, monotonic()
+        )
 
     task.cancel()
     with contextlib.suppress(asyncio.CancelledError):
@@ -1398,7 +1344,9 @@ async def test_bootstrap_is_cancellation_safe(
     with patch.object(
         bootstrap, "async_setup_component", side_effect=asyncio.CancelledError
     ):
-        await bootstrap._async_set_up_integrations(hass, {"cancel_integration": {}})
+        await bootstrap._async_set_up_integrations(
+            hass, {"cancel_integration": {}}, monotonic()
+        )
         await hass.async_block_till_done()
 
     assert "Error setting up integration cancel_integration" in caplog.text
@@ -1417,7 +1365,7 @@ async def test_bootstrap_log_already_setup_stage(
 ) -> None:
     """Test logging when all integrations in a stage were already setup."""
     with patch.object(bootstrap, "STAGE_1_INTEGRATIONS", {"frontend"}):
-        await bootstrap._async_set_up_integrations(hass, {})
+        await bootstrap._async_set_up_integrations(hass, {}, monotonic())
         await hass.async_block_till_done()
 
     assert "Already set up stage 1: {'frontend'}" in caplog.text
@@ -1741,6 +1689,7 @@ async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
                 "logger": {},
                 "binary_sensor": {},
             },
+            monotonic(),
         )
 
     assert "binary_sensor" in hass.config.components

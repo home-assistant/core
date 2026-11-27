@@ -2,8 +2,9 @@
 
 import asyncio
 from datetime import timedelta
+import logging
 from typing import Any
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from pytest_homeassistant.common import (
@@ -31,6 +32,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import (
     Context,
@@ -171,7 +173,7 @@ async def test_turn_on_off_toggle(
 
     if toggle:
         await hass.services.async_call(
-            DOMAIN, ScriptService.TOGGLE, {ATTR_ENTITY_ID: ENTITY_ID}
+            DOMAIN, ScriptService.TOGGLE, {TargetKey.ENTITY_ID: ENTITY_ID}
         )
     else:
         await hass.services.async_call(DOMAIN, split_entity_id(ENTITY_ID)[1])
@@ -215,6 +217,50 @@ async def test_setup_with_invalid_configs(
     assert await async_setup_component(hass, DOMAIN, {"script": config})
 
     assert len(hass.states.async_entity_ids(DOMAIN)) == nbr_script_entities
+
+
+async def test_valid_config_does_not_collect_errors(hass: HomeAssistant) -> None:
+    """Test the errors of a config are only collected if it is not valid."""
+    with patch(
+        "homeassistant.components.script.config._async_collect_errors",
+        wraps=script.config._async_collect_errors,
+    ) as mock_collect_errors:
+        assert await async_setup_component(
+            hass,
+            script.DOMAIN,
+            {
+                script.DOMAIN: {
+                    "good_script": {
+                        "sequence": [
+                            {"condition": "template", "value_template": "1"},
+                            {"action": "test.automation"},
+                        ],
+                    },
+                }
+            },
+        )
+        assert hass.states.get("script.good_script").state == STATE_OFF
+        mock_collect_errors.assert_not_called()
+
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={script.DOMAIN: {"bad_script": {"sequence": [{}]}}},
+        ):
+            await hass.services.async_call(
+                script.DOMAIN, ScriptService.RELOAD, blocking=True
+            )
+        assert hass.states.get("script.bad_script").state == STATE_UNAVAILABLE
+        mock_collect_errors.assert_called_once()
+
+
+def _error_messages(caplog: pytest.LogCaptureFixture) -> list[str]:
+    """Return the errors which were logged by the script integration."""
+    return [
+        record.getMessage()
+        for record in caplog.records
+        if record.name == script.LOGGER.name and record.levelno == logging.ERROR
+    ]
 
 
 @pytest.mark.parametrize(
@@ -295,7 +341,8 @@ async def test_bad_config_validation_critical(
             },
             "failed to setup sequence",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
-            " at 'sequence[0]'. Got {'condition': 'state',",
+            " at 'sequence'. Got {'condition': 'state',"
+            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'blah'}",
             "validation_failed_sequence",
         ),
         (
@@ -310,8 +357,59 @@ async def test_bad_config_validation_critical(
             },
             "failed to setup sequence",
             "Invalid trigger 'not_a_platform' specified"
-            " at 'sequence[0].wait_for_trigger[1]'. Got {'platform': 'not_a_platform'}",
+            " at 'sequence.wait_for_trigger[1]'. Got {'platform': 'not_a_platform'}",
             "validation_failed_sequence",
+        ),
+        (
+            # Several errors in the sequence
+            "bad_script",
+            {
+                "sequence": [
+                    {
+                        "device_id": "unknown_device",
+                        "domain": "light",
+                        "type": "turn_on",
+                        "entity_id": "light.kitchen",
+                    },
+                    {"delay": 1},
+                    {
+                        "wait_for_trigger": [
+                            {"trigger": "event", "event_type": "valid"},
+                            {"trigger": "not_a_platform"},
+                        ],
+                    },
+                ],
+            },
+            "failed to setup sequence",
+            "Unknown device 'unknown_device' at 'sequence[0]'."
+            " Got {'device_id': 'unknown_device', 'domain': 'light',"
+            " 'type': 'turn_on', 'entity_id': 'light.kitchen'}\n"
+            "Invalid trigger 'not_a_platform' specified"
+            " at 'sequence[2].wait_for_trigger[1]'. Got {'trigger': 'not_a_platform'}",
+            "validation_failed_sequence",
+        ),
+        (
+            # Errors of the schema and of the sequence
+            "bad_script",
+            {
+                "fields": {"field": {"not_a_key": 1}},
+                "sequence": [
+                    {"not_an_action": 1},
+                    {
+                        "device_id": "unknown_device",
+                        "domain": "light",
+                        "type": "turn_on",
+                        "entity_id": "light.kitchen",
+                    },
+                ],
+            },
+            "could not be validated",
+            "not a valid option at 'fields.field.not_a_key'. Got 1\n"
+            "Unable to determine action at 'sequence[0]'. Got {'not_an_action': 1}\n"
+            "Unknown device 'unknown_device' at 'sequence[1]'."
+            " Got {'device_id': 'unknown_device', 'domain': 'light',"
+            " 'type': 'turn_on', 'entity_id': 'light.kitchen'}",
+            "validation_failed_schema",
         ),
     ],
 )
@@ -320,11 +418,11 @@ async def test_bad_config_validation(
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
     hass_admin_user: MockUser,
-    object_id,
-    broken_config,
-    problem,
-    details,
-    issue,
+    object_id: str,
+    broken_config: dict[str, Any],
+    problem: str,
+    details: str,
+    issue: str,
 ) -> None:
     """Test bad script configuration which can be detected during validation."""
     assert await async_setup_component(
@@ -344,11 +442,10 @@ async def test_bad_config_validation(
         },
     )
 
-    # Check we get the expected error message and issue
-    assert (
+    # Check we get the expected error message and issue, with all errors
+    assert _error_messages(caplog) == [
         f"Script with alias 'bad_script' {problem} and has been disabled: {details}"
-        in caplog.text
-    )
+    ]
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 1
     assert issues[0]["issue_id"] == f"script.bad_script_{issue}"
@@ -356,10 +453,9 @@ async def test_bad_config_validation(
     assert issues[0]["translation_placeholders"] == {
         "edit": "/config/script/edit/bad_script",
         "entity_id": "script.bad_script",
-        "error": ANY,
+        "error": details,
         "name": "bad_script",
     }
-    assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # Make sure both scripts are setup
     assert set(hass.states.async_entity_ids(DOMAIN)) == {
@@ -690,7 +786,7 @@ async def test_shared_context(hass: HomeAssistant) -> None:
     )
 
     await hass.services.async_call(
-        DOMAIN, ScriptService.TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, context=context
+        DOMAIN, ScriptService.TURN_ON, {TargetKey.ENTITY_ID: ENTITY_ID}, context=context
     )
     await asyncio.wait_for(started_flag.wait(), 1)
 
@@ -717,7 +813,7 @@ async def test_shared_context(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         ScriptService.TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         context=stop_context,
     )
@@ -1888,7 +1984,7 @@ async def test_script_service_changed_entity_id(
     )
 
     await hass.services.async_call(
-        DOMAIN, ScriptService.TURN_ON, {ATTR_ENTITY_ID: "script.custom_entity_id"}
+        DOMAIN, ScriptService.TURN_ON, {TargetKey.ENTITY_ID: "script.custom_entity_id"}
     )
     # Can't block till done while the script is waiting
     await asyncio.wait_for(called.wait(), 1)
@@ -2110,8 +2206,11 @@ async def test_blueprint_script(hass: HomeAssistant, calls: list[ServiceCall]) -
                 "service_to_call": {"dict": "not allowed"},
                 "a_number": 5,
             },
-            "Blueprint 'Call service' generated invalid script",
-            "value should be a string at 'sequence.action'",
+            "Blueprint 'Call service' generated invalid script with inputs"
+            " {'trigger_event': 'blueprint_event',"
+            " 'service_to_call': {'dict': 'not allowed'}, 'a_number': 5}",
+            "value should be a string at 'sequence.action'."
+            " Got {'dict': 'not allowed'}",
         ),
     ],
 )
@@ -2119,9 +2218,9 @@ async def test_blueprint_script_bad_config(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
-    blueprint_inputs,
-    problem,
-    details,
+    blueprint_inputs: dict[str, Any],
+    problem: str,
+    details: str,
 ) -> None:
     """Test blueprint script with bad inputs."""
     assert await async_setup_component(
@@ -2138,8 +2237,7 @@ async def test_blueprint_script_bad_config(
             }
         },
     )
-    assert problem in caplog.text
-    assert details in caplog.text
+    assert _error_messages(caplog) == [f"{problem}: {details}"]
 
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 1
@@ -2149,10 +2247,9 @@ async def test_blueprint_script_bad_config(
     assert issues[0]["translation_placeholders"] == {
         "edit": "/config/script/edit/test_script",
         "entity_id": "script.test_script",
-        "error": ANY,
+        "error": details,
         "name": "test_script",
     }
-    assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # The script is broken, but still listed under its blueprint
     assert script.scripts_with_blueprint(hass, "test_service.yaml") == [

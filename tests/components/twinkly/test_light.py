@@ -15,7 +15,6 @@ from syrupy.assertion import SnapshotAssertion
 from ttls.client import TwinklyError
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_RGB_COLOR,
@@ -23,16 +22,16 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_OFF,
     LightEntityFeature,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.twinkly import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -69,8 +68,8 @@ async def test_turn_on_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1"},
+        LightService.TURN_ON,
+        service_data={TargetKey.ENTITY_ID: "light.tree_1"},
         blocking=True,
     )
 
@@ -89,8 +88,11 @@ async def test_turn_on_with_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.BRIGHTNESS: 255,
+        },
         blocking=True,
     )
 
@@ -98,23 +100,37 @@ async def test_turn_on_with_brightness(
     mock_twinkly_client.turn_on.assert_called_once_with()
 
 
-async def test_brightness_to_zero(
+@pytest.mark.parametrize(
+    ("brightness", "percentage"),
+    [
+        pytest.param(1, 1, id="lowest"),
+        pytest.param(2, 1, id="rounds_to_one_percent"),
+        pytest.param(128, 50, id="half"),
+        pytest.param(255, 100, id="full"),
+    ],
+)
+async def test_turn_on_with_low_brightness(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_twinkly_client: AsyncMock,
+    brightness: int,
+    percentage: int,
 ) -> None:
-    """Test support of the light.turn_on service with a brightness parameter."""
+    """Test that every brightness above zero sets a percentage instead of turning off."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_BRIGHTNESS: 1},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.BRIGHTNESS: brightness,
+        },
         blocking=True,
     )
 
-    mock_twinkly_client.set_brightness.assert_not_called()
-    mock_twinkly_client.turn_off.assert_called_once_with()
+    mock_twinkly_client.set_brightness.assert_called_once_with(percentage)
+    mock_twinkly_client.turn_off.assert_not_called()
 
 
 async def test_turn_on_with_color_rgbw(
@@ -134,10 +150,10 @@ async def test_turn_on_with_color_rgbw(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         service_data={
-            ATTR_ENTITY_ID: "light.tree_1",
-            ATTR_RGBW_COLOR: (128, 64, 32, 0),
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.RGBW_COLOR: (128, 64, 32, 0),
         },
         blocking=True,
     )
@@ -165,8 +181,11 @@ async def test_turn_on_with_color_rgb(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_RGB_COLOR: (128, 64, 32)},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.RGB_COLOR: (128, 64, 32),
+        },
         blocking=True,
     )
 
@@ -193,8 +212,11 @@ async def test_turn_on_with_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "2 Rainbow"},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.EFFECT: "2 Rainbow",
+        },
         blocking=True,
     )
 
@@ -228,8 +250,11 @@ async def test_turn_on_reapplies_current_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "1 Rainbow"},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.EFFECT: "1 Rainbow",
+        },
         blocking=True,
     )
 
@@ -252,8 +277,11 @@ async def test_turn_on_with_current_movie_in_other_mode(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "1 Rainbow"},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.EFFECT: "1 Rainbow",
+        },
         blocking=True,
     )
 
@@ -274,8 +302,11 @@ async def test_turn_on_with_current_movie_in_movie_mode(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "1 Rainbow"},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.EFFECT: "1 Rainbow",
+        },
         blocking=True,
     )
 
@@ -305,8 +336,12 @@ async def test_turn_on_with_color_and_current_movie(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "1 Rainbow"} | data,
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.EFFECT: "1 Rainbow",
+        }
+        | data,
         blocking=True,
     )
 
@@ -329,8 +364,11 @@ async def test_turn_on_with_no_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: effect},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.EFFECT: effect,
+        },
         blocking=True,
     )
 
@@ -365,8 +403,8 @@ async def test_turn_on_with_missing_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1"} | data,
+        LightService.TURN_ON,
+        service_data={TargetKey.ENTITY_ID: "light.tree_1"} | data,
         blocking=True,
     )
 
@@ -394,8 +432,11 @@ async def test_turn_on_with_color_rgbw_and_missing_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "2 Rainbow"},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.EFFECT: "2 Rainbow",
+        },
         blocking=True,
     )
 
@@ -412,8 +453,8 @@ async def test_turn_off(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        service_data={ATTR_ENTITY_ID: "light.tree_1"},
+        LightService.TURN_OFF,
+        service_data={TargetKey.ENTITY_ID: "light.tree_1"},
         blocking=True,
     )
     mock_twinkly_client.turn_off.assert_called_once_with()

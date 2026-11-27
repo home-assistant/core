@@ -1,4 +1,22 @@
 {
+  "entity": {
+    "select": {
+      "auto_lock_time": {
+        "default": "mdi:lock-clock"
+      }
+    },
+    "switch": {
+      "beeper": {
+        "default": "mdi:volume-high",
+        "state": {
+          "off": "mdi:volume-off"
+        }
+      },
+      "lock_and_leave": {
+        "default": "mdi:gesture-tap-button"
+      }
+    }
+  },
   "services": {
     "add_code": {
       "service": "mdi:key-plus"

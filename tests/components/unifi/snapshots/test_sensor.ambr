@@ -530,7 +530,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry connections=[('mac', '01:02:03:04:05:ff')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('unifi', 'outlet-01:02:03:04:05:ff_2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -542,7 +542,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Outlet 2 outlet power',
+    'object_id_base': 'Outlet power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -550,7 +550,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Outlet 2 outlet power',
+    'original_name': 'Outlet power',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -564,7 +564,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dummy USP-PDU-Pro Outlet 2 outlet power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet 2 Outlet power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
@@ -1294,7 +1294,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry connections=[('mac', '10:00:00:00:01:01')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('unifi', 'port-10:00:00:00:01:01_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1306,7 +1306,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 1 PoE power',
+    'object_id_base': 'PoE power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1314,7 +1314,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Port 1 PoE power',
+    'original_name': 'PoE power',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1328,7 +1328,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock-name Port 1 PoE power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Port 1 PoE power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
@@ -1352,7 +1352,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry connections=[('mac', '10:00:00:00:01:01')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('unifi', 'port-10:00:00:00:01:01_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1364,7 +1364,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 1 RX',
+    'object_id_base': 'RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1375,7 +1375,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
-    'original_name': 'Port 1 RX',
+    'original_name': 'RX',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1389,7 +1389,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock-name Port 1 RX',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Port 1 RX',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
@@ -1413,7 +1413,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry connections=[('mac', '10:00:00:00:01:01')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('unifi', 'port-10:00:00:00:01:01_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1425,7 +1425,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 1 TX',
+    'object_id_base': 'TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1436,7 +1436,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
-    'original_name': 'Port 1 TX',
+    'original_name': 'TX',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1450,7 +1450,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock-name Port 1 TX',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Port 1 TX',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
@@ -1474,7 +1474,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry connections=[('mac', '10:00:00:00:01:01')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('unifi', 'port-10:00:00:00:01:01_2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1486,7 +1486,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 2 PoE power',
+    'object_id_base': 'PoE power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1494,7 +1494,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Port 2 PoE power',
+    'original_name': 'PoE power',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1508,7 +1508,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock-name Port 2 PoE power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Port 2 PoE power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
@@ -1532,7 +1532,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry connections=[('mac', '10:00:00:00:01:01')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('unifi', 'port-10:00:00:00:01:01_2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1544,7 +1544,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 2 RX',
+    'object_id_base': 'RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1555,7 +1555,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
-    'original_name': 'Port 2 RX',
+    'original_name': 'RX',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1569,7 +1569,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock-name Port 2 RX',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Port 2 RX',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
@@ -1593,7 +1593,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry connections=[('mac', '10:00:00:00:01:01')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('unifi', 'port-10:00:00:00:01:01_2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1605,7 +1605,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 2 TX',
+    'object_id_base': 'TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1616,7 +1616,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
-    'original_name': 'Port 2 TX',
+    'original_name': 'TX',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1630,7 +1630,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock-name Port 2 TX',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Port 2 TX',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
@@ -1654,7 +1654,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry connections=[('mac', '10:00:00:00:01:01')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('unifi', 'port-10:00:00:00:01:01_3')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1666,7 +1666,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 3 RX',
+    'object_id_base': 'RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1677,7 +1677,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
-    'original_name': 'Port 3 RX',
+    'original_name': 'RX',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1691,7 +1691,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock-name Port 3 RX',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Port 3 RX',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
@@ -1715,7 +1715,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry connections=[('mac', '10:00:00:00:01:01')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('unifi', 'port-10:00:00:00:01:01_3')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1727,7 +1727,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 3 TX',
+    'object_id_base': 'TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1738,7 +1738,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
-    'original_name': 'Port 3 TX',
+    'original_name': 'TX',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1752,7 +1752,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock-name Port 3 TX',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Port 3 TX',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
@@ -1776,7 +1776,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry connections=[('mac', '10:00:00:00:01:01')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('unifi', 'port-10:00:00:00:01:01_4')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1788,7 +1788,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 4 PoE power',
+    'object_id_base': 'PoE power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1796,7 +1796,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Port 4 PoE power',
+    'original_name': 'PoE power',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1810,7 +1810,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock-name Port 4 PoE power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Port 4 PoE power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
@@ -1834,7 +1834,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry connections=[('mac', '10:00:00:00:01:01')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('unifi', 'port-10:00:00:00:01:01_4')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1846,7 +1846,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 4 RX',
+    'object_id_base': 'RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1857,7 +1857,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
-    'original_name': 'Port 4 RX',
+    'original_name': 'RX',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1871,7 +1871,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock-name Port 4 RX',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Port 4 RX',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
@@ -1895,7 +1895,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry connections=[('mac', '10:00:00:00:01:01')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('unifi', 'port-10:00:00:00:01:01_4')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1907,7 +1907,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Port 4 TX',
+    'object_id_base': 'TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1918,7 +1918,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
-    'original_name': 'Port 4 TX',
+    'original_name': 'TX',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1932,7 +1932,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock-name Port 4 TX',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Port 4 TX',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
@@ -2536,7 +2536,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('unifi', 'firewall_policy-678ceb9fe3849d293243405c')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -2548,12 +2548,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Block streaming schedule status',
+    'object_id_base': 'Schedule status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Block streaming schedule status',
+    'original_name': 'Schedule status',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2567,7 +2567,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Block streaming schedule status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Block streaming Schedule status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <FirewallPolicyScheduleStatus.DISABLED: 'disabled'>,
         <FirewallPolicyScheduleStatus.INACTIVE: 'inactive'>,

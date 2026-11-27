@@ -32,6 +32,7 @@ class KacoDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     """Poll the inverter's readings, and report what actually came back."""
 
     config_entry: KacoConfigEntry
+    inverter_device_id: str
 
     def __init__(
         self,

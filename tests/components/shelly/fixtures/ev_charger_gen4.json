@@ -1,0 +1,426 @@
+{
+  "config": {
+    "ble": {
+      "rpc": {
+        "enable": true
+      }
+    },
+    "boolean:200": {
+      "access": "crw",
+      "default_value": false,
+      "id": 200,
+      "meta": {
+        "ui": {
+          "titles": ["Off", "On"],
+          "view": "toggle"
+        }
+      },
+      "name": "Start Charging",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "start_charging"
+    },
+    "bthome": {},
+    "cloud": {
+      "enable": true,
+      "server": "shelly-t1-eu.shelly.cloud:6022/jrpc"
+    },
+    "enum:200": {
+      "access": "cr",
+      "default_value": "charger_free",
+      "id": 200,
+      "meta": {
+        "cloud": ["log"],
+        "ui": {
+          "titles": {
+            "charger_charging": "Charging",
+            "charger_end": "End",
+            "charger_fault": "Fault",
+            "charger_free": "Free",
+            "charger_free_fault": "Free fault",
+            "charger_insert": "Insert",
+            "charger_pause": "Pause",
+            "charger_wait": "Wait"
+          },
+          "view": "label"
+        }
+      },
+      "name": "Charger state",
+      "options": [
+        "charger_free",
+        "charger_insert",
+        "charger_free_fault",
+        "charger_wait",
+        "charger_charging",
+        "charger_pause",
+        "charger_end",
+        "charger_fault"
+      ],
+      "owner": "service:0",
+      "persisted": false,
+      "role": "work_state"
+    },
+    "eth": {
+      "enable": true,
+      "gw": null,
+      "ip": null,
+      "ipv4mode": "dhcp",
+      "nameserver": null,
+      "netmask": null,
+      "server_mode": false
+    },
+    "modbus": {
+      "enable": false
+    },
+    "mqtt": {
+      "client_id": "evpc02-aabbccddeeff",
+      "enable": false,
+      "enable_control": true,
+      "enable_rpc": true,
+      "rpc_ntf": true,
+      "server": "mqtt.test.server",
+      "ssl_ca": null,
+      "status_ntf": false,
+      "topic_prefix": "evpc02-aabbccddeeff",
+      "use_client_cert": false,
+      "user": null
+    },
+    "number:200": {
+      "access": "crw",
+      "default_value": 8,
+      "id": 200,
+      "max": 32,
+      "meta": {
+        "ui": {
+          "unit": "A",
+          "view": "slider"
+        }
+      },
+      "min": 6,
+      "name": "Current limit",
+      "owner": "service:0",
+      "persisted": true,
+      "role": "current_limit"
+    },
+    "number:201": {
+      "access": "cr",
+      "default_value": 0,
+      "id": 201,
+      "max": 9999999999,
+      "meta": {
+        "ui": {
+          "unit": "kWh",
+          "view": "label"
+        }
+      },
+      "min": 0,
+      "name": "Session energy",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "energy_charge"
+    },
+    "number:202": {
+      "access": "cr",
+      "default_value": 0,
+      "id": 202,
+      "max": 50000,
+      "meta": {
+        "ui": {
+          "unit": "min",
+          "view": "label"
+        }
+      },
+      "min": 0,
+      "name": "Session duration",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "time_charge"
+    },
+    "object:200": {
+      "access": "cr",
+      "id": 200,
+      "meta": {
+        "cloud": ["bymin"],
+        "ui": {
+          "unit": "kWh"
+        }
+      },
+      "name": "Consumption",
+      "owner": "service:0",
+      "role": "phase_info"
+    },
+    "service:0": {
+      "active_ocpp": "ocpp21",
+      "auto_balance": {
+        "current_buffer": 2,
+        "em_ip": null,
+        "enable": false,
+        "exclude_self_current": true,
+        "max_current": 24,
+        "mode": "grid",
+        "phase_key": "",
+        "pv_overload_handle": "stop",
+        "timeout_handle": "keep"
+      },
+      "auto_charge": true,
+      "global_charge_limit": null,
+      "global_time_limit": null,
+      "id": 0,
+      "initial_current_limit": 0,
+      "insert_handshake": true,
+      "ocpp16": {
+        "connectionTimeout": 90,
+        "idTag": "TEST-ID-TAG",
+        "unlockConnectorOnEVSideDisconnect": true,
+        "url": "wss://ocpp.test.server/ocpp16/Test"
+      },
+      "ocpp21": {
+        "idToken": "TEST-ID-TOKEN",
+        "idTokenType": "Central",
+        "url": "ws://ocpp.test.server:8081/ocpp21/Test"
+      },
+      "randomize_delay": {
+        "enable": false
+      }
+    },
+    "sys": {
+      "cfg_rev": 109,
+      "debug": {
+        "file_level": null,
+        "level": 2,
+        "mqtt": {
+          "enable": false
+        },
+        "udp": {
+          "addr": null
+        },
+        "websocket": {
+          "enable": false
+        }
+      },
+      "device": {
+        "discoverable": true,
+        "eco_mode": false,
+        "enhanced_security": false,
+        "fw_id": "20261023-101151/r2.2-76-ge70fad4930-main-dirty",
+        "mac": "AABBCCDDEEFF",
+        "name": "Test Name",
+        "tls_check_cert_validity_time": true
+      },
+      "location": {
+        "lat": 15.2201,
+        "lon": 33.0121,
+        "tz": "Europe/Sofia"
+      },
+      "rpc_udp": {
+        "dst_addr": null,
+        "listen_port": null
+      },
+      "sntp": {
+        "server": "sntp.test.server"
+      },
+      "ui_data": {
+        "device_revision": "1-15"
+      }
+    },
+    "wifi": {
+      "ap": {
+        "enable": true,
+        "is_open": true,
+        "range_extender": {
+          "enable": false
+        },
+        "ssid": "EVPC02-AABBCCDDEEFF"
+      },
+      "roam": {
+        "interval": 60,
+        "rssi_thr": -80
+      },
+      "sta": {
+        "enable": true,
+        "gw": null,
+        "ip": null,
+        "ipv4mode": "dhcp",
+        "is_open": false,
+        "nameserver": null,
+        "netmask": null,
+        "ssid": "Wifi-Network-Name"
+      },
+      "sta1": {
+        "enable": false,
+        "gw": null,
+        "ip": null,
+        "ipv4mode": "dhcp",
+        "is_open": true,
+        "nameserver": null,
+        "netmask": null,
+        "ssid": null
+      }
+    },
+    "ws": {
+      "enable": false,
+      "server": null,
+      "ssl_ca": "ca.pem"
+    }
+  },
+  "shelly": {
+    "app": "XC5E+charger:wall:3126",
+    "auth_domain": null,
+    "auth_en": false,
+    "ch": [
+      {
+        "key": "service:0",
+        "type": "charger:wall:3126"
+      }
+    ],
+    "enhanced_security": false,
+    "fw_id": "20261023-101151/r2.2-76-ge70fad4930-main-dirty",
+    "gen": 4,
+    "id": "evpc02-aabbccddeeff",
+    "jti": "000000000000",
+    "jwt": {
+      "m": "TOPAC",
+      "n": "EVPC02-22W",
+      "p": "EVPC02",
+      "url": null
+    },
+    "mac": "AABBCCDDEEFF",
+    "model": "S3XT-0S",
+    "name": "Test Name",
+    "provision": "unmanaged",
+    "slot": 0,
+    "ver": "2.3.99+1-local"
+  },
+  "status": {
+    "ble": {
+      "addr": "AA:BB:CC:DD:EE:FF,p",
+      "flags": ["advertising"]
+    },
+    "boolean:200": {
+      "last_update_ts": 0,
+      "source": "",
+      "value": false
+    },
+    "bthome": {},
+    "cloud": {
+      "connected": true
+    },
+    "enum:200": {
+      "last_update_ts": 1795164035,
+      "source": "sys",
+      "value": "charger_pause"
+    },
+    "eth": {
+      "ip": null,
+      "ip6": null
+    },
+    "modbus": {
+      "writes": {
+        "applied": 0,
+        "rejected": 0
+      }
+    },
+    "mqtt": {
+      "connected": false
+    },
+    "number:200": {
+      "last_update_ts": 1794988492,
+      "source": "sys",
+      "value": 32
+    },
+    "number:201": {
+      "last_update_ts": 1795167254,
+      "source": "sys",
+      "value": 0
+    },
+    "number:202": {
+      "last_update_ts": 0,
+      "source": "",
+      "value": 0
+    },
+    "object:200": {
+      "last_update_ts": 1795176031,
+      "source": "sys",
+      "value": {
+        "counter": {
+          "by_minute": [0, 0, 0],
+          "minute_ts": 1795175940,
+          "total": 0.13
+        },
+        "phase_a": {
+          "current": 0,
+          "power": 0,
+          "voltage": 237.9
+        },
+        "phase_b": {
+          "current": 0,
+          "power": 0,
+          "voltage": 6.9
+        },
+        "phase_c": {
+          "current": 0,
+          "power": 0,
+          "voltage": 5
+        },
+        "total_act_energy": 0.13,
+        "total_current": 0,
+        "total_power": 0
+      }
+    },
+    "service:0": {
+      "dev_mode": true,
+      "etag": "ad093b47be52e48412c2ee86bfce7abd",
+      "files": {
+        "code": {
+          "sha256": "d07457c33f8e650aee5f72718330d57d23e3f3700cc8504c0d41f354c082a8f4"
+        },
+        "manifest": {
+          "sha256": "8253a4e7f6e7a501b9107881dfc071fb093a3d8473f493be08f78b60e0ea6a82"
+        },
+        "ui": {
+          "sha256": "aad9ab41fc7417a923035ecd91ed009ced42f8d872b3af1066096c46a096f1cf"
+        }
+      },
+      "state": "running",
+      "stats": {
+        "mem": 15730,
+        "mem_peak": 24184
+      }
+    },
+    "sys": {
+      "available_updates": {},
+      "backup": {},
+      "bthc_rev": 0,
+      "btrelay_rev": 0,
+      "cfg_rev": 109,
+      "fs_free": 229376,
+      "fs_size": 917504,
+      "kvs_rev": 18,
+      "last_sync_ts": 1795174484,
+      "mac": "AABBCCDDEEFF",
+      "ram_free": 4937555,
+      "ram_min_free": 4883939,
+      "ram_size": 5917371,
+      "reset_reason": 3,
+      "restart_required": false,
+      "schedule_rev": 0,
+      "time": "14:00",
+      "unixtime": 1795176035,
+      "uptime": 8798,
+      "utc_offset": 7200,
+      "webhook_rev": 0
+    },
+    "wifi": {
+      "bssid": "11:22:33:44:55:66",
+      "channel": 8,
+      "rssi": -43,
+      "ssid": "Wifi-Network-Name",
+      "sta_ip": "192.168.1.10",
+      "sta_ip6": ["fe80::a8bb:ccff:fedd:eeff", "fd00::a8bb:ccff:fedd:eeff"],
+      "status": "got ip"
+    },
+    "ws": {
+      "connected": false
+    }
+  }
+}

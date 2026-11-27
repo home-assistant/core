@@ -605,6 +605,8 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         if self._delay_handle is not None:
             self._delay_handle.cancel()
             self._delay_handle = None
+        # The write time belongs to the timer that was just cleaned up.
+        self._next_write_time = 0.0
 
     async def _async_callback_delayed_write(self) -> None:
         """Handle a delayed write callback."""

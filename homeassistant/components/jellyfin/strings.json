@@ -41,6 +41,20 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_remove_active_device": {
+      "message": "This device is still connected to Jellyfin. It cannot be removed while the client is active. Disable or hide it instead."
+    },
+    "cannot_remove_server_device": {
+      "message": "The Jellyfin server device cannot be removed. Remove the Jellyfin integration instead."
+    },
+    "server_unreachable": {
+      "message": "Unable to reach the Jellyfin server"
+    },
+    "update_failed": {
+      "message": "Error communicating with the Jellyfin server: {error}"
+    }
+  },
   "options": {
     "step": {
       "init": {

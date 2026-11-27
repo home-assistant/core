@@ -4,7 +4,7 @@
     tuple(
       3,
       'NEXT_TIME_BLOCK',
-      24.76,
+      17.78,
       None,
       'AIR_CONDITIONING',
       'ON',
@@ -24,7 +24,7 @@
     tuple(
       3,
       'NEXT_TIME_BLOCK',
-      24.76,
+      17.78,
       None,
       'AIR_CONDITIONING',
       'ON',
@@ -64,7 +64,7 @@
     tuple(
       3,
       'NEXT_TIME_BLOCK',
-      24.76,
+      17.78,
       None,
       'AIR_CONDITIONING',
       'ON',

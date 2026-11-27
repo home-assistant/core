@@ -1,0 +1,18 @@
+blueprint:
+  name: Test sensor with deprecated attributes
+  description: Creates a sensor with a device class in its attributes
+  domain: template
+  input:
+    sensor:
+      name: Sensor Entity
+      description: The sensor entity
+      selector:
+        entity:
+          domain: sensor
+variables:
+  sensor: !input sensor
+sensor:
+  state: "{{ states(sensor) }}"
+  attributes:
+    device_class: energy
+    other: "{{ states(sensor) }}"

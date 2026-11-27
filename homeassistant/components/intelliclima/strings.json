@@ -51,6 +51,11 @@
           "sensor": "Sensor"
         }
       }
+    },
+    "sensor": {
+      "estimated_co2": {
+        "name": "Estimated carbon dioxide"
+      }
     }
   }
 }

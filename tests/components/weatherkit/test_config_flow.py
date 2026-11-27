@@ -9,6 +9,7 @@ from apple_weatherkit.client import (
     WeatherKitApiClientError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.weatherkit.config_flow import (
@@ -21,6 +22,7 @@ from homeassistant.components.weatherkit.const import (
     CONF_TEAM_ID,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -188,4 +190,102 @@ async def test_auto_fix_key_input(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     assert result["data"][CONF_KEY_PEM] == EXAMPLE_CONFIG_DATA[CONF_KEY_PEM]
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+NEW_KEY_PEM = "-----BEGIN PRIVATE KEY-----\nnewkey\n-----END PRIVATE KEY-----"
+REAUTH_INPUT = {CONF_KEY_ID: "QNEWKEY456", CONF_KEY_PEM: "newkey"}
+
+
+async def test_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test reauthentication updates the key and reloads the entry."""
+    entry = MockConfigEntry(domain=DOMAIN, data=EXAMPLE_CONFIG_DATA)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+        return_value=[DataSetType.CURRENT_WEATHER],
+    ) as mock_get_availability:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], REAUTH_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    mock_get_availability.assert_called_once_with(
+        EXAMPLE_CONFIG_DATA[CONF_LATITUDE], EXAMPLE_CONFIG_DATA[CONF_LONGITUDE]
+    )
+    assert entry.data == {
+        **EXAMPLE_CONFIG_DATA,
+        CONF_KEY_ID: "QNEWKEY456",
+        CONF_KEY_PEM: NEW_KEY_PEM,
+    }
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(
+            WeatherKitApiClientAuthenticationError, "invalid_auth", id="invalid_auth"
+        ),
+        pytest.param(
+            WeatherKitApiClientCommunicationError,
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(WeatherKitApiClientError, "unknown", id="unknown"),
+        pytest.param([[]], "unsupported_location", id="unsupported_location"),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    side_effect: type[Exception] | list[list[DataSetType]],
+    expected_error: str,
+) -> None:
+    """Test reauthentication shows errors and recovers on retry."""
+    entry = MockConfigEntry(domain=DOMAIN, data=EXAMPLE_CONFIG_DATA)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], REAUTH_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_KEY_ID)
+        == "QNEWKEY456"
+    )
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_KEY_PEM) is None
+    )
+    assert entry.data == EXAMPLE_CONFIG_DATA
+
+    with patch(
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+        return_value=[DataSetType.CURRENT_WEATHER],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], REAUTH_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_KEY_ID] == "QNEWKEY456"
+    assert entry.data[CONF_KEY_PEM] == NEW_KEY_PEM
     assert len(mock_setup_entry.mock_calls) == 1

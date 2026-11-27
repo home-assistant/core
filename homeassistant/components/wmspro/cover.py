@@ -10,10 +10,9 @@ from wmspro.const import (
 )
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -78,7 +77,7 @@ class WebControlProCover(WebControlProGenericEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         action = self._dest.action(self._drive_action_desc)
-        await action(percentage=100 - kwargs[ATTR_POSITION])
+        await action(percentage=100 - kwargs[CoverServiceArgument.POSITION])
 
     @property
     @override
@@ -163,7 +162,7 @@ class WebControlProSlatRotate(WebControlProSlat):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position and tilt for open/close."""
-        target_position = kwargs[ATTR_POSITION]
+        target_position = kwargs[CoverServiceArgument.POSITION]
         if target_position == 0:
             await self.async_close_cover()
         elif target_position == 100:
@@ -189,7 +188,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         action = self._dest.action(self._tilt_action_desc)
         rotation = percentage_to_ranged_value(
             (action.minValue, action.maxValue),
-            100 - kwargs[ATTR_TILT_POSITION],
+            100 - kwargs[CoverServiceArgument.TILT_POSITION],
         )
         await action(rotation=rotation)
 

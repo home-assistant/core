@@ -7,6 +7,8 @@
     "auto_equalize_recondition": "Auto equalize / recondition",
     "battery_safe": "Battery Safe",
     "battery_voltage_too_high": "Battery voltage too high",
+    "blinking": "Blinking",
+    "blinking_inverted": "Blinking inverted",
     "bms_connection_lost": "BMS connection lost",
     "bulk": "Bulk",
     "bulk_time_limit_exceeded": "Bulk time limit exceeded",
@@ -57,6 +59,7 @@
     "low_temperature": "Low temperature",
     "max_power_today": "Max power today",
     "max_power_yesterday": "Max power yesterday",
+    "microgrid_operation": "Microgrid operation",
     "mppt_active": "MPPT active",
     "network_misconfigured": "Network misconfigured",
     "no_alarm": "No alarm",
@@ -95,6 +98,7 @@
     "sensor_battery_voltage": "Sensor battery voltage",
     "shore": "Shore",
     "shore_power": "Shore power",
+    "standard_operation": "Standard operation",
     "starting_up": "Starting up",
     "state": "State",
     "status": "Status",
@@ -263,11 +267,20 @@
       "system_dynamicess_available": {
         "name": "Dynamic ESS available"
       },
+      "vebus_device_device_number_relay_test_ok": {
+        "name": "{device_number} relay test OK"
+      },
       "vebus_inverter_connected": {
         "name": "[%key:common::state::connected%]"
       },
       "vebus_inverter_remote_generator_selected": {
         "name": "Remote generator selected"
+      },
+      "vebus_microgrid_allow_black_start": {
+        "name": "Microgrid black start allowed"
+      },
+      "vebus_microgrid_operation_reset_pending": {
+        "name": "Microgrid operation change pending reset"
       }
     },
     "button": {
@@ -577,6 +590,20 @@
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]"
         }
+      },
+      "vebus_microgrid_operation": {
+        "name": "[%key:component::victron_gx::common::microgrid_operation%]",
+        "state": {
+          "microgrid": "[%key:component::victron_gx::common::microgrid_operation%]",
+          "standard": "[%key:component::victron_gx::common::standard_operation%]"
+        }
+      },
+      "vebus_weak_ac_input": {
+        "name": "AC input strength",
+        "state": {
+          "strong": "Strong",
+          "weak": "Weak"
+        }
       }
     },
     "sensor": {
@@ -722,6 +749,14 @@
       "battery_consumed_amphours": {
         "name": "Consumed amp-hours"
       },
+      "battery_contactor": {
+        "name": "Contactor",
+        "state": {
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
+        }
+      },
       "battery_cumulative_ah_drawn": {
         "name": "Cumulative Ah drawn"
       },
@@ -760,6 +795,14 @@
       },
       "battery_high_charge_temperature": {
         "name": "High charge temperature",
+        "state": {
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
+        }
+      },
+      "battery_high_current": {
+        "name": "High current",
         "state": {
           "alarm": "[%key:component::victron_gx::common::alarm%]",
           "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
@@ -1369,6 +1412,9 @@
       },
       "evcharger_session_energy": {
         "name": "Last session energy"
+      },
+      "evcharger_session_saved_cost": {
+        "name": "Session saved cost"
       },
       "evcharger_session_time": {
         "name": "Last session time"
@@ -2475,6 +2521,78 @@
       "vebus_inverter_input_voltage_phase": {
         "name": "Input voltage {phase}"
       },
+      "vebus_inverter_led_absorption": {
+        "name": "Absorption LED",
+        "state": {
+          "blinking": "[%key:component::victron_gx::common::blinking%]",
+          "blinking_inverted": "[%key:component::victron_gx::common::blinking_inverted%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "vebus_inverter_led_bulk": {
+        "name": "Bulk LED",
+        "state": {
+          "blinking": "[%key:component::victron_gx::common::blinking%]",
+          "blinking_inverted": "[%key:component::victron_gx::common::blinking_inverted%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "vebus_inverter_led_float": {
+        "name": "Float LED",
+        "state": {
+          "blinking": "[%key:component::victron_gx::common::blinking%]",
+          "blinking_inverted": "[%key:component::victron_gx::common::blinking_inverted%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "vebus_inverter_led_inverter": {
+        "name": "Inverter LED",
+        "state": {
+          "blinking": "[%key:component::victron_gx::common::blinking%]",
+          "blinking_inverted": "[%key:component::victron_gx::common::blinking_inverted%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "vebus_inverter_led_low_battery": {
+        "name": "Low battery LED",
+        "state": {
+          "blinking": "[%key:component::victron_gx::common::blinking%]",
+          "blinking_inverted": "[%key:component::victron_gx::common::blinking_inverted%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "vebus_inverter_led_mains": {
+        "name": "Mains LED",
+        "state": {
+          "blinking": "[%key:component::victron_gx::common::blinking%]",
+          "blinking_inverted": "[%key:component::victron_gx::common::blinking_inverted%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "vebus_inverter_led_overload": {
+        "name": "Overload LED",
+        "state": {
+          "blinking": "[%key:component::victron_gx::common::blinking%]",
+          "blinking_inverted": "[%key:component::victron_gx::common::blinking_inverted%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "vebus_inverter_led_temperature": {
+        "name": "Temperature LED",
+        "state": {
+          "blinking": "[%key:component::victron_gx::common::blinking%]",
+          "blinking_inverted": "[%key:component::victron_gx::common::blinking_inverted%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
       "vebus_inverter_output_apparent_power_phase": {
         "name": "[%key:component::victron_gx::common::output_apparent_power_phase%]"
       },
@@ -2518,9 +2636,37 @@
           "sustain": "[%key:component::victron_gx::common::sustain%]",
           "sustain_alt": "[%key:component::victron_gx::common::sustain_alt%]"
         }
+      },
+      "vebus_microgrid_direct_drive_p_ref": {
+        "name": "Microgrid grid-following active power reference"
+      },
+      "vebus_microgrid_direct_drive_q_ref": {
+        "name": "Microgrid grid-following reactive power reference"
+      },
+      "vebus_microgrid_droop_p_ref": {
+        "name": "Microgrid droop active power reference"
+      },
+      "vebus_microgrid_droop_q_ref": {
+        "name": "Microgrid droop reactive power reference"
+      },
+      "vebus_microgrid_operation": {
+        "name": "[%key:component::victron_gx::common::microgrid_operation%]",
+        "state": {
+          "microgrid": "[%key:component::victron_gx::common::microgrid_operation%]",
+          "standard": "[%key:component::victron_gx::common::standard_operation%]"
+        }
+      },
+      "vebus_nominal_inverter_power": {
+        "name": "Nominal inverter power"
+      },
+      "vebus_nominal_inverter_power_phase": {
+        "name": "Nominal inverter power {phase}"
       }
     },
     "switch": {
+      "acsystem_pv_disable": {
+        "name": "Disable PV"
+      },
       "dcgenset_enable_remote_start_mode": {
         "name": "Enable remote start mode"
       },
@@ -2556,6 +2702,9 @@
       },
       "hub4_force_charge": {
         "name": "Force charge"
+      },
+      "hub4_pv_disable": {
+        "name": "Disable PV inverters"
       },
       "multi_disable_charge": {
         "name": "ESS disable charge"
@@ -2595,6 +2744,9 @@
       },
       "system_ess_schedule_charge_slot_enabled": {
         "name": "ESS BatteryLife schedule charge {slot} enabled"
+      },
+      "system_pv_disable": {
+        "name": "Disable all PV"
       },
       "system_relay_relay": {
         "name": "Relay {relay} state"

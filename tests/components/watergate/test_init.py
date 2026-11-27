@@ -128,6 +128,35 @@ async def test_setup_retry_when_device_unavailable(
     assert mock_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_succeeds_after_a_retry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_watergate_client: Generator[AsyncMock],
+    mock_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Setup succeeds and handles webhooks once the device is available again."""
+    mock_watergate_client.async_get_telemetry_data.side_effect = WatergateApiException(
+        "boom"
+    )
+    await init_integration(hass, mock_entry)
+    assert mock_entry.state is ConfigEntryState.SETUP_RETRY
+
+    mock_watergate_client.async_get_telemetry_data.side_effect = None
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client_no_auth()
+    await client.post(
+        f"/api/webhook/{MOCK_WEBHOOK_ID}",
+        json={"type": "valve", "data": {"state": "closed"}},
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("valve.sonic").state == ValveState.CLOSED
+
+
 async def test_update_failure_is_translated(
     hass: HomeAssistant,
     mock_watergate_client: Generator[AsyncMock],

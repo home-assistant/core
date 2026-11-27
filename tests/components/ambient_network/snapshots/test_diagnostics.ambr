@@ -1,0 +1,69 @@
+# serializer version: 1
+# name: test_diagnostics[AA:AA:AA:AA:AA:AA]
+  dict({
+    'last_measured': '2023-11-08T20:12:00.914000+00:00',
+    'last_update_success': True,
+    'other_fields': list([
+      'batt_co2',
+      'created_at',
+      'dateutc',
+      'dateutc5',
+      'stationtype',
+      'totalrainin',
+      'type',
+      'tz',
+    ]),
+    'readings': dict({
+      'baromabsin': 28.869,
+      'baromrelin': 29.586,
+      'dailyrainin': 0,
+      'dewPoint': 82.0,
+      'feelsLike': 85.0,
+      'hourlyrainin': 0,
+      'humidity': 60,
+      'lastRain': 1698659100000,
+      'maxdailygust': 22.82,
+      'monthlyrainin': 0,
+      'solarradiation': 37.64,
+      'tempf': 82.9,
+      'uv': 0,
+      'weeklyrainin': 0,
+      'winddir': 11,
+      'windgustmph': 9.17,
+      'windspeedmph': 8.72,
+    }),
+    'station_type': 'AMBWeatherPro_V5.0.6',
+  })
+# ---
+# name: test_diagnostics[DD:DD:DD:DD:DD:DD]
+  dict({
+    'last_measured': None,
+    'last_update_success': True,
+    'other_fields': list([
+      'batt_co2',
+      'stationtype',
+      'totalrainin',
+      'type',
+      'tz',
+    ]),
+    'readings': dict({
+      'baromabsin': 28.869,
+      'baromrelin': 29.586,
+      'dailyrainin': 0,
+      'dewPoint': 82.0,
+      'feelsLike': 85.0,
+      'hourlyrainin': 0,
+      'humidity': 60,
+      'maxdailygust': 22.82,
+      'monthlyrainin': 0,
+      'solarradiation': 37.64,
+      'tempf': 82.9,
+      'uv': 0,
+      'weeklyrainin': 0,
+      'winddir': 11,
+      'windgustmph': 9.17,
+      'windspeedmph': 8.72,
+    }),
+    'station_type': 'AMBWeatherPro_V5.0.6',
+  })
+# ---

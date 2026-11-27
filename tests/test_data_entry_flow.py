@@ -682,6 +682,38 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
     assert result["title"] == "Hello"
 
 
+@pytest.mark.parametrize(
+    "translation_domain",
+    [None, "homeassistant"],
+    ids=["own_domain", "shared_domain"],
+)
+async def test_show_progress_translation_domain(
+    hass: HomeAssistant, manager: MockFlowManager, translation_domain: str | None
+) -> None:
+    """Test the progress action can be translated by another integration."""
+    manager.hass = hass
+    task = hass.async_create_task(asyncio.Event().wait())
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_show_progress(
+                step_id="init",
+                progress_action="task_one",
+                progress_task=task,
+                translation_domain=translation_domain,
+            )
+
+    result = await manager.async_init("test")
+
+    assert result["type"] is data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["progress_action"] == "task_one"
+    assert result.get("translation_domain") == translation_domain
+
+    # Cancels the pending progress task
+    manager.async_abort(result["flow_id"])
+
+
 async def test_show_progress_error(
     hass: HomeAssistant, manager: MockFlowManager
 ) -> None:
@@ -1082,16 +1114,6 @@ async def test_abort_flow_exception_finish_flow_translation_domain(
     assert form["translation_domain"] == "homeassistant"
 
 
-async def test_init_unknown_flow(manager: MockFlowManager) -> None:
-    """Test that UnknownFlow is raised when async_create_flow returns None."""
-
-    with (
-        pytest.raises(data_entry_flow.UnknownFlow),
-        patch.object(manager, "async_create_flow", return_value=None),
-    ):
-        await manager.async_init("test")
-
-
 async def test_async_get_unknown_flow(manager: MockFlowManager) -> None:
     """Test UnknownFlow raised when async_get gets unknown flow_id."""
 
@@ -1112,6 +1134,24 @@ async def test_move_to_unknown_step_raises_and_removes_from_in_progress(
         await manager.async_init("test", context={"init_step": "does_not_exist"})
 
     assert manager.async_progress() == []
+
+
+async def test_first_step_exception_removes_flow_from_in_progress(
+    manager: MockFlowManager,
+) -> None:
+    """Test an exception in the first step removes the flow from in progress."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+
+        async def async_step_init(self, user_input=None):
+            raise ValueError("Boom")
+
+    with pytest.raises(ValueError, match="Boom"):
+        await manager.async_init("test")
+
+    assert manager.async_progress(include_uninitialized=True) == []
 
 
 @pytest.mark.parametrize(

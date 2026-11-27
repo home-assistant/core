@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -58,11 +59,12 @@ async def test_form(hass: HomeAssistant, mock_hikcamera: MagicMock) -> None:
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_SSL: False,
+        CONF_VERIFY_SSL: True,
     }
 
-    # Verify HikCamera was called with the ssl parameter
+    # Certificate verification defaults to on; it is unused over plain HTTP
     mock_hikcamera.assert_called_once_with(
-        f"http://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, False
+        f"http://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, True
     )
 
 
@@ -225,9 +227,22 @@ async def test_form_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("form", "verify_ssl"),
+    [
+        pytest.param({}, True, id="verified_by_default"),
+        pytest.param({CONF_VERIFY_SSL: True}, True, id="verified"),
+        pytest.param({CONF_VERIFY_SSL: False}, False, id="unverified"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_form_with_ssl(hass: HomeAssistant, mock_hikcamera: MagicMock) -> None:
-    """Test user flow with ssl enabled passes ssl parameter to HikCamera."""
+async def test_form_with_ssl(
+    hass: HomeAssistant,
+    mock_hikcamera: MagicMock,
+    form: dict[str, bool],
+    verify_ssl: bool,
+) -> None:
+    """Test the user flow passes HTTPS and the certificate choice to HikCamera."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -240,14 +255,14 @@ async def test_form_with_ssl(hass: HomeAssistant, mock_hikcamera: MagicMock) -> 
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_SSL: True,
+            **form,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SSL] is True
+    assert result["data"][CONF_VERIFY_SSL] is verify_ssl
     assert result["result"].unique_id == TEST_DEVICE_ID
-
-    # Verify HikCamera was called with ssl=True
     mock_hikcamera.assert_called_once_with(
-        f"https://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, True
+        f"https://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, verify_ssl
     )

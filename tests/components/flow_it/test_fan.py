@@ -7,15 +7,13 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fan import (
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 
 ENTITY_ID = "fan.001122334455"
@@ -65,8 +63,8 @@ async def test_fan_set_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 60},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 60},
         blocking=True,
     )
     mock_ariaq.return_value.send_command.assert_awaited_once_with(
@@ -85,8 +83,8 @@ async def test_fan_set_percentage_zero(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 0},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 0},
         blocking=True,
     )
     mock_ariaq.return_value.send_command.assert_awaited_once_with(
@@ -105,8 +103,8 @@ async def test_fan_set_preset_mode(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "boost"},
+        FanService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PRESET_MODE: "boost"},
         blocking=True,
     )
     mock_ariaq.return_value.send_command.assert_awaited_once_with(

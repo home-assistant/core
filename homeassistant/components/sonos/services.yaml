@@ -27,6 +27,7 @@ set_sleep_timer:
       domain: media_player
   fields:
     sleep_time:
+      required: true
       selector:
         number:
           min: 0

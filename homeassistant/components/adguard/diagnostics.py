@@ -15,7 +15,7 @@ async def async_get_config_entry_diagnostics(
     data = entry.runtime_data
     state = data.state.data
     statistics = data.statistics.data
-    update = data.update.data
+    update = data.update.data_or_none
 
     # Addresses, domains, clients and upstreams are left out, as they are private.
     return {
@@ -72,6 +72,6 @@ async def async_get_config_entry_diagnostics(
         ],
         "update": {
             "last_update_success": data.update.last_update_success,
-            "available": update.to_dict() if update else None,
+            "available": update.to_dict() if update is not None else None,
         },
     }

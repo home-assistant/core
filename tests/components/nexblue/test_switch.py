@@ -15,7 +15,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.nexblue.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.nexblue.const import CHARGER_UPDATE_INTERVAL, DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -56,7 +56,7 @@ async def test_charger_removed_from_list_becomes_unavailable(
     """Test a charger missing from a refresh does not raise an exception."""
     mock_client.async_list_chargers.return_value = []
 
-    freezer.tick(UPDATE_INTERVAL)
+    freezer.tick(CHARGER_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -392,7 +392,7 @@ async def test_charging_session_states(
         CHARGER_STATUS, charging_state=charging_state
     )
 
-    freezer.tick(UPDATE_INTERVAL)
+    freezer.tick(CHARGER_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

@@ -8,15 +8,12 @@ import pytest
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
@@ -119,8 +116,8 @@ async def test_cover(
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 77},
+            CoverService.SET_POSITION,
+            {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.POSITION: 77},
             blocking=True,
         )
 
@@ -140,8 +137,8 @@ async def test_cover(
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: entity_id},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -160,8 +157,8 @@ async def test_cover(
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: entity_id},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -180,8 +177,8 @@ async def test_cover(
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: entity_id},
+            CoverService.STOP,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -238,8 +235,8 @@ async def test_cover_control_fail(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 COVER_DOMAIN,
-                SERVICE_SET_COVER_POSITION,
-                {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 44},
+                CoverService.SET_POSITION,
+                {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.POSITION: 44},
                 blocking=True,
             )
 
@@ -257,8 +254,8 @@ async def test_cover_control_fail(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 COVER_DOMAIN,
-                SERVICE_SET_COVER_POSITION,
-                {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 27},
+                CoverService.SET_POSITION,
+                {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.POSITION: 27},
                 blocking=True,
             )
 
