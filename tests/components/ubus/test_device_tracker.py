@@ -2938,12 +2938,22 @@ async def test_migration_merges_entries_into_hub(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("hub_customizations", "legacy_customizations", "expected_survivor"),
+    ("hub_customizations", "legacy_customizations", "expected"),
     [
-        pytest.param((None, None), (None, None), "legacy", id="both-uncustomized"),
-        pytest.param(("Hub Phone", "hall"), (None, None), "hub", id="hub-customized"),
         pytest.param(
-            (None, None), ("My Phone", "bedroom"), "legacy", id="legacy-customized"
+            (None, None), (None, None), ("legacy", "hub"), id="both-uncustomized"
+        ),
+        pytest.param(
+            ("Hub Phone", "hall"),
+            (None, None),
+            ("hub", "legacy"),
+            id="hub-customized",
+        ),
+        pytest.param(
+            (None, None),
+            ("My Phone", "bedroom"),
+            ("legacy", "hub"),
+            id="legacy-customized",
         ),
     ],
 )
@@ -2955,7 +2965,7 @@ async def test_migration_device_collision_keeps_established_device(
     area_registry: ar.AreaRegistry,
     hub_customizations: tuple[str | None, str | None],
     legacy_customizations: tuple[str | None, str | None],
-    expected_survivor: str,
+    expected: tuple[str, str],
 ) -> None:
     """Test a device collision keeps the established device's id and data.
 
@@ -3018,22 +3028,20 @@ async def test_migration_device_collision_keeps_established_device(
     assert await hass.config_entries.async_setup(hub_entry.entry_id)
     await hass.async_block_till_done()
 
-    survivor_device = legacy_device if expected_survivor == "legacy" else hub_device
-    loser_device = hub_device if survivor_device is legacy_device else legacy_device
+    survivor_key, loser_key = expected
+    devices = {"legacy": legacy_device, "hub": hub_device}
+    customizations = {"legacy": legacy_customizations, "hub": hub_customizations}
     # The established device keeps its id and customizations.
-    survivor = device_registry.async_get(survivor_device.id)
+    survivor = device_registry.async_get(devices[survivor_key].id)
     assert survivor is not None
-    expected_customizations = (
-        legacy_customizations if expected_survivor == "legacy" else hub_customizations
-    )
-    assert survivor.name_by_user == expected_customizations[0]
-    assert survivor.area_id == area_ids.get(expected_customizations[1])
-    assert device_registry.async_get(loser_device.id) is None
+    assert survivor.name_by_user == customizations[survivor_key][0]
+    assert survivor.area_id == area_ids.get(customizations[survivor_key][1])
+    assert device_registry.async_get(devices[loser_key].id) is None
     entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
     )
     assert entity_id is not None
-    assert entity_registry.async_get(entity_id).device_id == survivor_device.id
+    assert entity_registry.async_get(entity_id).device_id == devices[survivor_key].id
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_HOME
