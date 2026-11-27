@@ -15,6 +15,9 @@ DEV_LED_PROFILE = "led_profile"
 DEV_PROFILE_RGB = "RGB"
 DEV_PROFILE_RGBW = "RGBW"
 
+# The device takes brightness as a percentage
+BRIGHTNESS_SCALE = (1, 100)
+
 # Minimum version required to support effects
 MIN_EFFECT_VERSION = "2.7.1"
 
