@@ -18,6 +18,6 @@ TEST_INSTALLS: Final = (
     "sys_004",  # RoundModulation; multi-location account, empty gateway
     "sys_006",  # multi-location account, lots of faults
 )
-#   "botched",  # as default: but with activeFaults, ghost zones & unknown types
+#   "botched",  # as default: but with activeFaults, ghost & unsupported zones
 
 TEST_INSTALLS_WITH_DHW: Final = ("default", "botched", "sys_006")
