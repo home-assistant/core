@@ -33,6 +33,8 @@ from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 _logger = logging.getLogger(__name__)
 
+ATTR_COLOR_NAME = "color_name"
+
 DIMMER_CHANNEL_TYPES = (
     FunctionalChannelType.DIMMER_CHANNEL,
     FunctionalChannelType.MULTI_MODE_INPUT_DIMMER_CHANNEL,
@@ -40,8 +42,6 @@ DIMMER_CHANNEL_TYPES = (
 )
 
 # the HmIP-BSL names its two signal lamps by position
-ATTR_COLOR_NAME = "color_name"
-
 NOTIFICATION_LIGHT_POSITIONS = {2: "Top", 3: "Bottom"}
 
 
