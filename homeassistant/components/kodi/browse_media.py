@@ -50,11 +50,14 @@ async def build_item_response(media_library, payload, get_thumbnail_url=None):
     search_id = payload["search_id"]
     search_type = payload["search_type"]
 
-    _, title, media = await get_media_info(media_library, search_id, search_type)
-    thumbnail = await get_thumbnail_url(search_type, search_id)
-
+    thumbnail, title, media = await get_media_info(
+        media_library, search_id, search_type
+    )
     if media is None:
         return None
+
+    if thumbnail is not None and get_thumbnail_url is not None:
+        thumbnail = await get_thumbnail_url(search_type, search_id)
 
     children = await asyncio.gather(
         *(item_payload(item, get_thumbnail_url) for item in media)
@@ -349,6 +352,34 @@ async def get_media_info(media_library, search_id, search_type):
                 )
             )
             title = season["seasondetails"]["label"]
+
+    elif search_type == MediaType.EPISODE:
+        if search_id:
+            episode = await media_library.call_method(
+                "VideoLibrary.GetEpisodeDetails",
+                episodeid=int(search_id),
+                properties=properties,
+            )
+            thumbnail = media_library.thumbnail_url(
+                episode["episodedetails"]["art"].get(
+                    "poster", episode["episodedetails"].get("thumbnail")
+                )
+            )
+            title = episode["episodedetails"]["label"]
+
+    elif search_type == MediaType.TRACK:
+        if search_id:
+            song = await media_library.call_method(
+                "AudioLibrary.GetSongDetails",
+                songid=int(search_id),
+                properties=properties,
+            )
+            thumbnail = media_library.thumbnail_url(
+                song["songdetails"]["art"].get(
+                    "poster", song["songdetails"].get("thumbnail")
+                )
+            )
+            title = song["songdetails"]["label"]
 
     elif search_type == MediaType.CHANNEL:
         # A channel is asked for by id when its thumbnail is fetched through the
