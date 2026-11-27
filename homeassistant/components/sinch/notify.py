@@ -15,7 +15,6 @@ import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    ATTR_MESSAGE,
     ATTR_TARGET,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
@@ -73,10 +72,7 @@ class SinchNotificationService(BaseNotificationService):
         targets = kwargs.get(ATTR_TARGET, self.default_recipients)
         data = kwargs.get(ATTR_DATA) or {}
 
-        clx_args = {ATTR_MESSAGE: message, ATTR_SENDER: self.sender}
-
-        if ATTR_SENDER in data:
-            clx_args[ATTR_SENDER] = data[ATTR_SENDER]
+        sender = data.get(ATTR_SENDER, self.sender)
 
         if not targets:
             _LOGGER.error("At least 1 target is required")
@@ -85,7 +81,7 @@ class SinchNotificationService(BaseNotificationService):
         try:
             for target in targets:
                 result: MtBatchTextSmsResult = self.client.create_text_message(
-                    clx_args[ATTR_SENDER], target, clx_args[ATTR_MESSAGE]
+                    sender, target, message
                 )
                 batch_id = result.batch_id
                 _LOGGER.debug(
