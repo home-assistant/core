@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -10,7 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
-from homeassistant.components.ubus.config_flow import HUB_TITLE, UbusConfigFlow
+from homeassistant.components.ubus.config_flow import HUB_TITLE
 from homeassistant.components.ubus.const import (
     CONF_DHCP_SOFTWARE,
     DOMAIN,
@@ -194,25 +194,25 @@ async def test_user_flow_second_entry_aborts(
 
 
 async def test_user_flow_aborts_when_hub_created_during_validation(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_ubus: MagicMock
+    hass: HomeAssistant, mock_ubus: MagicMock
 ) -> None:
     """Test a user flow aborts when a concurrent flow creates the hub."""
     concurrent_hub = MockConfigEntry(domain=DOMAIN, data={}, title=HUB_TITLE)
-    concurrent_hub.add_to_hass(hass)
 
-    # The concurrent flow creates the hub while the validation is in
-    # flight, after the flow's entry checks at the start of each step.
-    with patch.object(
-        UbusConfigFlow,
-        "_async_current_entries",
-        side_effect=[[], [], [concurrent_hub]],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=USER_INPUT
-        )
+    # The concurrent flow creates the hub while the validation's
+    # connection is in flight, after the flow's entry checks.
+    def connect_during_validation() -> str:
+        concurrent_hub.add_to_hass(hass)
+        return "session-id"
+
+    mock_ubus.return_value.connect.side_effect = connect_during_validation
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -497,22 +497,22 @@ async def test_import_flow_adds_subentry_to_hub(
 
 
 async def test_import_flow_joins_hub_created_during_validation(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_ubus: MagicMock
+    hass: HomeAssistant, mock_ubus: MagicMock
 ) -> None:
     """Test an import joins a hub created by a concurrent import."""
     concurrent_hub = MockConfigEntry(domain=DOMAIN, data={}, title=HUB_TITLE)
-    concurrent_hub.add_to_hass(hass)
 
-    # The concurrent import creates the hub while the validation is in
-    # flight, between the flow's two entry checks.
-    with patch.object(
-        UbusConfigFlow,
-        "_async_current_entries",
-        side_effect=[[], [concurrent_hub]],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_HOST_CONFIG_B
-        )
+    # The concurrent import creates the hub while the validation's
+    # connection is in flight, between the flow's two entry checks.
+    def connect_during_validation() -> str:
+        concurrent_hub.add_to_hass(hass)
+        return "session-id"
+
+    mock_ubus.return_value.connect.side_effect = connect_during_validation
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_HOST_CONFIG_B
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -525,7 +525,7 @@ async def test_import_flow_joins_hub_created_during_validation(
 
 
 async def test_import_flow_host_collision_with_concurrent_hub(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_ubus: MagicMock
+    hass: HomeAssistant, mock_ubus: MagicMock
 ) -> None:
     """Test an import aborts cleanly when a concurrent hub added the host."""
     concurrent_hub = MockConfigEntry(
@@ -541,16 +541,18 @@ async def test_import_flow_host_collision_with_concurrent_hub(
             ),
         ),
     )
-    concurrent_hub.add_to_hass(hass)
 
-    with patch.object(
-        UbusConfigFlow,
-        "_async_current_entries",
-        side_effect=[[], [concurrent_hub]],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_HOST_CONFIG_B
-        )
+    # The concurrent import creates the hub with this host while the
+    # validation's connection is in flight, after the flow's host check.
+    def connect_during_validation() -> str:
+        concurrent_hub.add_to_hass(hass)
+        return "session-id"
+
+    mock_ubus.return_value.connect.side_effect = connect_during_validation
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_HOST_CONFIG_B
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
