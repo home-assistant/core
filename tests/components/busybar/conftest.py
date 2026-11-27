@@ -31,10 +31,21 @@ def mock_client() -> Generator[AsyncMock]:
     client.status.return_value = types.Status(
         device=types.StatusDevice(serial_number="BUSY123", otp_model="BB.1"),
         firmware=types.StatusFirmware(version="1.0", branch="release"),
-        power=types.StatusPower(battery_charge=82),
+        system=types.StatusSystem(boot_time=1767225600),
+        power=types.StatusPower(
+            state=types.PowerState.CHARGING,
+            battery_charge=82,
+            battery_voltage=4183,
+            battery_current=180,
+            usb_voltage=4843,
+        ),
     )
     client.wifi_status.return_value = types.StatusResponse(
-        state=types.WifiState.CONNECTED, ssid="Home", rssi=-48
+        state=types.WifiState.CONNECTED,
+        ssid="Home",
+        channel=6,
+        rssi=-48,
+        ip_config=types.WifiIpConfig(address="192.168.50.20"),
     )
     module = "homeassistant.components.busybar"
     with (

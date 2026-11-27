@@ -5,9 +5,41 @@
       '82',
       '%',
     ),
+    'sensor.busy_bar_battery_current': tuple(
+      '180',
+      <UnitOfElectricCurrent.MILLIAMPERE: 'mA'>,
+    ),
+    'sensor.busy_bar_battery_voltage': tuple(
+      '4183',
+      <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+    ),
+    'sensor.busy_bar_charging_state': tuple(
+      'charging',
+      None,
+    ),
+    'sensor.busy_bar_ip_address': tuple(
+      '192.168.50.20',
+      None,
+    ),
+    'sensor.busy_bar_uptime': tuple(
+      '2026-01-01T00:00:00+00:00',
+      None,
+    ),
+    'sensor.busy_bar_usb_voltage': tuple(
+      '4843',
+      <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+    ),
+    'sensor.busy_bar_wi_fi_channel': tuple(
+      '6',
+      None,
+    ),
     'sensor.busy_bar_wi_fi_signal': tuple(
       '-48',
       'dBm',
+    ),
+    'sensor.busy_bar_wi_fi_ssid': tuple(
+      'Home',
+      None,
     ),
   })
 # ---
