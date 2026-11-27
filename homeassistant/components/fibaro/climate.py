@@ -264,7 +264,7 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         siblings = self.controller.get_siblings(self.fibaro_device)
         for device in siblings:
             if device != self.fibaro_device:
-                self.controller.register(device.fibaro_id, self._update_callback)
+                self.controller.register(device.fibaro_id, self._handle_push_event)
 
     @property
     @override

@@ -7,6 +7,7 @@ from typing import Any, override
 from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.const import ATTR_ARMED, ATTR_BATTERY_LEVEL
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -52,13 +53,21 @@ class FibaroEntity(Entity):
         """Call when entity is added to hass."""
         self.async_on_remove(
             self.controller.register(
-                self.fibaro_device.fibaro_id, self._update_callback
+                self.fibaro_device.fibaro_id, self._handle_push_event
             )
         )
 
-    def _update_callback(self, fibaro_device: DeviceModel) -> None:
-        """Update the state."""
-        self.schedule_update_ha_state(True)
+        # Initial data is already available, so update the entity state
+        self._update_from_data()
+
+    @callback
+    def _handle_push_event(self, fibaro_device: DeviceModel) -> None:
+        """Handle push events from the Fibaro Hub.
+
+        Update the entity state and write it.
+        """
+        self._update_from_data()
+        self.schedule_update_ha_state()
 
     @property
     def level(self) -> int | None:
@@ -128,7 +137,7 @@ class FibaroEntity(Entity):
 
         return attr
 
-    def update(self) -> None:
+    def _update_from_data(self) -> None:
         """Update the available state of the entity."""
         if self.fibaro_device.has_dead:
             self._attr_available = not self.fibaro_device.dead
