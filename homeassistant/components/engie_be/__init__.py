@@ -15,7 +15,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_REFRESH_TOKEN, CONTRACTS_RETRY_INTERVAL, LOGGER
+from .const import CONF_REFRESH_TOKEN, CONTRACTS_RETRY_INTERVAL, DOMAIN, LOGGER
 from .coordinator import (
     EngieBeEpexCoordinator,
     EngieBePeaksCoordinator,
@@ -91,6 +91,20 @@ async def _async_is_dynamic(client: EngieBeClient, ban: str) -> bool | None:
     return contracts.is_dynamic()
 
 
+@callback
+def _async_remove_stale_devices(
+    hass: HomeAssistant, entry: EngieBeConfigEntry, bans: set[str]
+) -> None:
+    """Remove the devices of business agreements the account no longer lists."""
+    device_registry = dr.async_get(hass)
+    identifiers = {(DOMAIN, ban) for ban in bans}
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        if device_entry.identifiers.isdisjoint(identifiers):
+            device_registry.async_remove_device(device_entry.id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> None:
     """Set up ENGIE Belgium from a config entry."""
 
@@ -119,6 +133,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
 
     relations = EngieBeRelationsCoordinator(hass, entry, client)
     await relations.async_config_entry_first_refresh()
+
+    if relations.data:
+        _async_remove_stale_devices(hass, entry, set(relations.data))
 
     device_registry = dr.async_get(hass)
 
@@ -234,6 +251,16 @@ def _async_start_tariff_retry(
         hass, _start_retry_classification, CONTRACTS_RETRY_INTERVAL
     )
     entry.async_on_unload(cancel_retry)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: EngieBeConfigEntry, device_entry: dr.AnyDeviceEntry
+) -> bool:
+    """Allow removing the device of a business agreement the account no longer lists."""
+    return not any(
+        domain == DOMAIN and ban in entry.runtime_data.relations.data
+        for domain, ban in device_entry.identifiers
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> None:

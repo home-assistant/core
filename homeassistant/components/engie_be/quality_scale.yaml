@@ -72,7 +72,7 @@ rules:
   repair-issues:
     status: exempt
     comment: The integration has no user-fixable issues beyond reauthentication.
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done

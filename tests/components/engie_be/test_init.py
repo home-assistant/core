@@ -19,6 +19,7 @@ from aioengiebelgium import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.engie_be.const import (
     BRUSSELS_TIME_ZONE,
@@ -31,6 +32,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .conftest import (
     BAN,
@@ -53,6 +55,18 @@ from .conftest import (
 )
 
 BAN_2_EPEX_CURRENT_HOUR_UNIQUE_ID = f"{BAN_2}_epex_current_hour"
+NO_AGREEMENTS = CustomerAccountRelations(
+    accounts=(
+        AccountRelation(
+            id="account-1",
+            admin=True,
+            customer_account=CustomerAccount(
+                customer_account_number="can-1",
+                business_agreements=(),
+            ),
+        ),
+    )
+)
 
 
 def _current_hour_price(
@@ -276,18 +290,7 @@ async def test_setup_without_active_agreements(
 ) -> None:
     """Test setup succeeds without devices or entities when there are no active business agreements."""
     mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
-        CustomerAccountRelations(
-            accounts=(
-                AccountRelation(
-                    id="account-1",
-                    admin=True,
-                    customer_account=CustomerAccount(
-                        customer_account_number="can-1",
-                        business_agreements=(),
-                    ),
-                ),
-            )
-        )
+        NO_AGREEMENTS
     )
     mock_config_entry.add_to_hass(hass)
 
@@ -344,6 +347,69 @@ async def test_device_created_for_household_without_prices(
     )
     assert ban_device is not None
     assert er.async_entries_for_device(entity_registry, ban_device.id)
+
+
+@pytest.mark.parametrize(
+    ("relations", "expected_bans"),
+    [
+        pytest.param(build_relations(BAN), {BAN}, id="agreement_ended"),
+        pytest.param(NO_AGREEMENTS, {BAN_2}, id="no_agreements"),
+    ],
+)
+async def test_stale_devices_removed_at_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    relations: CustomerAccountRelations,
+    expected_bans: set[str],
+) -> None:
+    """Test setup removes the devices of ended agreements, unless the account lists none."""
+    mock_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, BAN_2)}
+    )
+    mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
+        relations
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert {
+        ban
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, mock_config_entry.entry_id
+        )
+        for _, ban in device_entry.identifiers
+    } == expected_bans
+
+
+@pytest.mark.usefixtures("mock_engie_client")
+async def test_remove_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test only the device of an agreement the account no longer lists can be removed."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_entry(hass, mock_config_entry)
+    active_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BAN), mock_config_entry.entry_id
+    )
+    assert active_device is not None
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, BAN_2)}
+    )
+    client = await hass_ws_client(hass)
+
+    response = await client.remove_device(active_device.id)
+    assert not response["success"]
+
+    response = await client.remove_device(stale_device.id)
+    assert response["success"]
+    assert device_registry.async_get(stale_device.id) is None
 
 
 async def test_token_refresh_skips_unchanged_tokens(
