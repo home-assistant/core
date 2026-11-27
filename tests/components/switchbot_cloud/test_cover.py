@@ -111,7 +111,7 @@ async def test_cover_set_attributes_coordinator_is_none(
 
 
 @pytest.mark.parametrize(
-    ("deviceType", "service", "command", "args", "param"),
+    ("device_type", "service", "command", "args", "param"),
     [
         ("Curtain4", SERVICE_OPEN_COVER, CommonCommands.ON, {}, "default"),
         ("Curtain4", SERVICE_CLOSE_COVER, CommonCommands.OFF, {}, "default"),
