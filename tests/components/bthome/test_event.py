@@ -182,16 +182,20 @@ async def test_v2_events(
 BUTTON_ADDRESS = "A4:C1:38:8D:18:B2"
 STRONG_PROXY = "strong_proxy"
 WEAK_PROXY = "weak_proxy"
+CONNECTABLE_PROXY = "connectable_proxy"
 WINDOW_ENTITY_ID = "binary_sensor.test_device_18b2_window"
 BUTTON_ENTITY_ID = "event.test_device_18b2_button"
 
 
 @pytest.fixture
 def proxies(hass: HomeAssistant) -> Generator[None]:
-    """Register a strong and a weak proxy for the whole test."""
+    """Register a strong, a weak and a connectable proxy for the whole test."""
     cancels = [
         async_register_scanner(hass, FakeScanner(STRONG_PROXY, STRONG_PROXY)),
         async_register_scanner(hass, FakeScanner(WEAK_PROXY, WEAK_PROXY)),
+        async_register_scanner(
+            hass, FakeScanner(CONNECTABLE_PROXY, CONNECTABLE_PROXY, connectable=True)
+        ),
     ]
     yield
     for cancel in cancels:
@@ -199,7 +203,12 @@ def proxies(hass: HomeAssistant) -> Generator[None]:
 
 
 def _inject_button_payload(
-    hass: HomeAssistant, payload: bytes, source: str, rssi: int, adv_time: float
+    hass: HomeAssistant,
+    payload: bytes,
+    source: str,
+    rssi: int,
+    adv_time: float,
+    connectable: bool = False,
 ) -> None:
     """Inject a button advertisement heard by one proxy."""
     inject_advertisement_with_time_and_source_connectable(
@@ -213,7 +222,7 @@ def _inject_button_payload(
         ),
         adv_time,
         source,
-        connectable=False,
+        connectable=connectable,
     )
 
 
@@ -321,6 +330,67 @@ async def test_reload_keeps_taking_packets_from_any_proxy(
     _inject_button_payload(hass, b"\x44\x00\x04\x2d\x00", WEAK_PROXY, -90, now + 15)
     await hass.async_block_till_done()
     assert hass.states.get(WINDOW_ENTITY_ID).state == STATE_OFF
+
+
+@pytest.mark.usefixtures("proxies")
+@pytest.mark.parametrize(
+    ("first_payload", "second_payload", "late_proxy", "connectable"),
+    [
+        pytest.param(
+            b"\x44\x00\x01\x3a\x01\x2d\x01",
+            b"\x44\x00\x02\x3a\x02\x2d\x00",
+            STRONG_PROXY,
+            False,
+            id="packet_id",
+        ),
+        pytest.param(
+            b"\x44\x3a\x01\x2d\x01",
+            b"\x44\x3a\x02\x2d\x00",
+            STRONG_PROXY,
+            False,
+            id="no_packet_id",
+        ),
+        pytest.param(
+            b"\x44\x3a\x01\x2d\x01",
+            b"\x44\x3a\x02\x2d\x00",
+            CONNECTABLE_PROXY,
+            True,
+            id="no_packet_id_connectable",
+        ),
+    ],
+)
+async def test_late_copy_of_older_packet_is_ignored(
+    hass: HomeAssistant,
+    first_payload: bytes,
+    second_payload: bytes,
+    late_proxy: str,
+    connectable: bool,
+) -> None:
+    """Test a stronger proxy's late copy of an older packet keeps the newer one."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=BUTTON_ADDRESS)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    events = async_capture_events(hass, BTHOME_BLE_EVENT)
+    now = time.monotonic()
+
+    _inject_button_payload(hass, first_payload, STRONG_PROXY, -60, now)
+    _inject_button_payload(hass, first_payload, WEAK_PROXY, -90, now + 0.1)
+    await hass.async_block_till_done()
+    _inject_button_payload(hass, second_payload, WEAK_PROXY, -90, now + 5)
+    await hass.async_block_till_done()
+    # 30 dB stronger, but a repeat of the older packet within the repeat window
+    _inject_button_payload(hass, first_payload, late_proxy, -60, now + 6, connectable)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WINDOW_ENTITY_ID).state == STATE_OFF
+    assert [event.data["event_type"] for event in events] == ["press", "double_press"]
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WINDOW_ENTITY_ID).state == STATE_OFF
+    assert [event.data["event_type"] for event in events] == ["press", "double_press"]
 
 
 @pytest.mark.parametrize(
