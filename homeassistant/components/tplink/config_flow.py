@@ -171,6 +171,27 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         current_entry = await self.async_set_unique_id(
             formatted_mac, raise_on_progress=False
         )
+        if current_entry and current_entry.data[CONF_HOST] != host:
+            # Discovery may report an incorrect IP address. Verify the device
+            # at the new address before replacing an existing entry's host.
+            try:
+                verified_device = await Discover.discover_single(
+                    host, credentials=await get_credentials(self.hass)
+                )
+            except (KasaException, OSError) as err:
+                _LOGGER.debug("Could not verify TP-Link device at %s: %s", host, err)
+                return self.async_abort(reason="cannot_connect")
+            if (
+                verified_device is None
+                or dr.format_mac(verified_device.mac) != formatted_mac
+            ):
+                _LOGGER.debug(
+                    "Ignoring TP-Link discovery at %s: device MAC does not match %s",
+                    host,
+                    formatted_mac,
+                )
+                return self.async_abort(reason="already_configured")
+
         if current_entry and (
             result := self._update_config_if_entry_in_setup_error(
                 current_entry, host, device

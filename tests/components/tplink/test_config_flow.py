@@ -1449,7 +1449,12 @@ async def test_integration_discovery_with_ip_change(
     assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS
 
     mocked_device = _mocked_device(device_config=DEVICE_CONFIG_KLAP)
-    with override_side_effect(mock_connect["connect"], lambda *_, **__: mocked_device):
+    with (
+        override_side_effect(mock_connect["connect"], lambda *_, **__: mocked_device),
+        override_side_effect(
+            mock_discovery["discover_single"], lambda *_, **__: mocked_device
+        ),
+    ):
         discovery_result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
@@ -1602,16 +1607,100 @@ async def test_dhcp_discovery_with_ip_change(
     assert len(flows) == 0
     assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS
 
-    discovery_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
-        data=DhcpServiceInfo(
-            ip=IP_ADDRESS2, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
-        ),
-    )
+    relocated_device = _mocked_device(mac=MAC_ADDRESS, ip_address=IP_ADDRESS2)
+    with override_side_effect(
+        mock_discovery["discover_single"], lambda *_, **__: relocated_device
+    ):
+        discovery_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip=IP_ADDRESS2, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
+            ),
+        )
     assert discovery_result["type"] is FlowResultType.ABORT
     assert discovery_result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS2
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        pytest.param(config_entries.SOURCE_DHCP, id="dhcp"),
+        pytest.param(config_entries.SOURCE_INTEGRATION_DISCOVERY, id="integration"),
+    ],
+)
+async def test_discovery_does_not_replace_host_with_another_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+    source: str,
+) -> None:
+    """Ignore an advertised IP if the device at that address has a different MAC."""
+    mock_config_entry.add_to_hass(hass)
+    with (
+        patch("homeassistant.components.tplink.Discover.discover", return_value={}),
+        override_side_effect(mock_connect["connect"], KasaException()),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    if source == config_entries.SOURCE_DHCP:
+        data = DhcpServiceInfo(
+            ip=IP_ADDRESS2, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
+        )
+    else:
+        data = {
+            CONF_HOST: IP_ADDRESS2,
+            CONF_MAC: MAC_ADDRESS,
+            CONF_ALIAS: ALIAS,
+            CONF_DEVICE: _mocked_device(
+                device_config=DEVICE_CONFIG_KLAP,
+                mac=MAC_ADDRESS,
+                ip_address=IP_ADDRESS2,
+            ),
+        }
+
+    # The advertisement claims the entry's MAC at the new IP, but directly
+    # discovering that IP shows a different device.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": source}, data=data
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS
+    mock_discovery["discover_single"].assert_awaited_once()
+
+
+async def test_discovery_does_not_replace_host_when_new_address_is_unreachable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Keep a configured host if the advertised address cannot be verified."""
+    mock_config_entry.add_to_hass(hass)
+    with (
+        patch("homeassistant.components.tplink.Discover.discover", return_value={}),
+        override_side_effect(mock_connect["connect"], KasaException()),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    with override_side_effect(mock_discovery["discover_single"], TimeoutError()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip=IP_ADDRESS2, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
+            ),
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS
 
 
 async def test_dhcp_discovery_discover_fail(
@@ -1961,7 +2050,12 @@ async def test_reauth_update_from_discovery_with_ip_change(
         device_config=DEVICE_CONFIG_KLAP,
         mac=mock_config_entry.unique_id,
     )
-    with override_side_effect(mock_connect["connect"], lambda *_, **__: device):
+    with (
+        override_side_effect(mock_connect["connect"], lambda *_, **__: device),
+        override_side_effect(
+            mock_discovery["discover_single"], lambda *_, **__: device
+        ),
+    ):
         discovery_result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
