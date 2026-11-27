@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
+from mozart_api.const import BaseWebSocketResponse
 from mozart_api.models import (
     BatteryState,
     BeoRemoteButton,
@@ -17,7 +18,7 @@ from mozart_api.models import (
     VolumeState,
     WebsocketNotificationTag,
 )
-from mozart_api.mozart_client import BaseWebSocketResponse, MozartClient
+from mozart_api.mozart_client import MozartClient
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
