@@ -345,7 +345,7 @@ async def test_install_unavailable_version(
         pytest.param(
             {"isRooted": False},
             {
-                "severity": "warning",
+                "severity": "info",
                 "message": "Fully Kiosk downloads [version 1.61.4]"
                 f"({APK_URL}) from its website, but someone has to confirm the "
                 "installation on the device's screen, because Fully Kiosk is not "
@@ -377,6 +377,46 @@ async def test_release_notes(
         "release_notes": None,
         "messages": [message],
     }
+
+
+@pytest.mark.parametrize(
+    ("device_info", "manual_action"),
+    [
+        pytest.param({}, None, id="rooted"),
+        pytest.param(
+            {"isRooted": False, "isDeviceOwner": True}, None, id="device_owner"
+        ),
+        pytest.param(
+            {"isRooted": False},
+            {
+                "translation_domain": "update",
+                "translation_key": "confirm_on_device",
+                "translation_placeholders": {},
+            },
+            id="confirmation_required",
+        ),
+        pytest.param(
+            {
+                "appVersionName": "1.54.1-play",
+                "installerSource": "com.android.vending",
+                "isRooted": False,
+            },
+            None,
+            id="google_play",
+        ),
+    ],
+    indirect=["device_info"],
+)
+async def test_manual_action(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[None]],
+    manual_action: dict[str, Any] | None,
+) -> None:
+    """Test the confirmation on the device is announced before the install."""
+    await setup_integration()
+
+    attributes = hass.states.get(ENTITY_ID).attributes
+    assert attributes[UpdateEntityStateAttribute.MANUAL_ACTION] == manual_action
 
 
 @pytest.mark.parametrize(
@@ -426,12 +466,7 @@ async def test_install_error(
 ) -> None:
     """Test the installation fails or does not finish in time."""
     await setup_integration()
-
-    async def install_release(release: Release, **kwargs: Any) -> None:
-        kwargs["onStatus"](INSTALL_STATUS_AWAITING_CONFIRMATION)
-        raise side_effect
-
-    mock_fully_kiosk.installRelease.side_effect = install_release
+    mock_fully_kiosk.installRelease.side_effect = side_effect
 
     with pytest.raises(HomeAssistantError) as excinfo:
         await install(hass)
@@ -439,18 +474,18 @@ async def test_install_error(
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_IN_PROGRESS] is False
-    assert state.attributes[UpdateEntityStateAttribute.MANUAL_ACTION] is None
 
 
+@pytest.mark.parametrize("device_info", [{"isRooted": False}], indirect=True)
 async def test_install_status(
     hass: HomeAssistant,
     mock_fully_kiosk: MagicMock,
     setup_integration: Callable[[], Awaitable[None]],
     device_info: dict[str, Any],
 ) -> None:
-    """Test the install phases and the confirmation the device asks for."""
+    """Test the install phases reported by the device."""
     await setup_integration()
-    reported: list[tuple[str | None, dict[str, Any] | None]] = []
+    phases: list[str | None] = []
 
     async def install_release(release: Release, **kwargs: Any) -> None:
         for status in (
@@ -460,30 +495,14 @@ async def test_install_status(
         ):
             kwargs["onStatus"](status)
             attributes = hass.states.get(ENTITY_ID).attributes
-            reported.append(
-                (
-                    attributes[UpdateEntityStateAttribute.INSTALL_PHASE],
-                    attributes[UpdateEntityStateAttribute.MANUAL_ACTION],
-                )
-            )
+            phases.append(attributes[UpdateEntityStateAttribute.INSTALL_PHASE])
         device_info["appVersionName"] = "1.61.4"
 
     mock_fully_kiosk.installRelease.side_effect = install_release
 
     await install(hass)
 
-    assert reported == [
-        ("downloading", None),
-        (
-            "installing",
-            {
-                "translation_domain": "update",
-                "translation_key": "confirm_on_device",
-                "translation_placeholders": {},
-            },
-        ),
-        ("restarting", None),
-    ]
+    assert phases == ["downloading", "waiting_for_user", "restarting"]
     attributes = hass.states.get(ENTITY_ID).attributes
     assert attributes[UpdateEntityStateAttribute.INSTALL_PHASE] is None
     assert attributes[UpdateEntityStateAttribute.MANUAL_ACTION] is None

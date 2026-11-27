@@ -25,8 +25,8 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
     UpdateInstallPhase,
+    UpdateManualAction,
     UpdateReleaseNotesMessage,
-    UpdateReleaseNotesMessageSeverity,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -48,7 +48,7 @@ VERSION_HISTORY_URL = "https://www.fully-kiosk.com/docs/en/features/version-hist
 INSTALL_PHASES = {
     INSTALL_STATUS_DOWNLOADING: UpdateInstallPhase.DOWNLOADING,
     INSTALL_STATUS_INSTALLING: UpdateInstallPhase.INSTALLING,
-    INSTALL_STATUS_AWAITING_CONFIRMATION: UpdateInstallPhase.INSTALLING,
+    INSTALL_STATUS_AWAITING_CONFIRMATION: UpdateInstallPhase.WAITING_FOR_USER,
     INSTALL_STATUS_RESTARTING: UpdateInstallPhase.RESTARTING,
 }
 
@@ -128,23 +128,30 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
         """Explain how the latest release is installed."""
         if (release := self._get_release()) is None:
             return ()
-        placeholders = {"version": release.versionName, "apk_url": release.url}
-        if canInstallApkSilently(self.coordinator.data):
-            return (
-                UpdateReleaseNotesMessage(
-                    translation_domain=DOMAIN,
-                    translation_key="install_without_confirmation",
-                    translation_placeholders=placeholders,
-                ),
-            )
         return (
             UpdateReleaseNotesMessage(
                 translation_domain=DOMAIN,
-                translation_key="install_with_confirmation",
-                severity=UpdateReleaseNotesMessageSeverity.WARNING,
-                translation_placeholders=placeholders,
+                translation_key=(
+                    "install_without_confirmation"
+                    if canInstallApkSilently(self.coordinator.data)
+                    else "install_with_confirmation"
+                ),
+                translation_placeholders={
+                    "version": release.versionName,
+                    "apk_url": release.url,
+                },
             ),
         )
+
+    @property
+    @override
+    def manual_action(self) -> UpdateManualAction | None:
+        """Ask to confirm the installation on devices that can't skip it."""
+        if UpdateEntityFeature.INSTALL not in self.supported_features or (
+            canInstallApkSilently(self.coordinator.data)
+        ):
+            return None
+        return MANUAL_ACTION_CONFIRM_ON_DEVICE
 
     @override
     async def async_release_notes(self) -> str | None:
@@ -209,17 +216,10 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
                 translation_domain=DOMAIN,
                 translation_key="install_failed",
             ) from err
-        finally:
-            self._attr_manual_action = None
         await self.coordinator.async_refresh()
 
     @callback
     def _async_install_status(self, status: str) -> None:
-        """Show the install status reported by the device."""
+        """Show the install phase reported by the device."""
         self._attr_install_phase = INSTALL_PHASES[status]
-        self._attr_manual_action = (
-            MANUAL_ACTION_CONFIRM_ON_DEVICE
-            if status == INSTALL_STATUS_AWAITING_CONFIRMATION
-            else None
-        )
         self.async_write_ha_state()
