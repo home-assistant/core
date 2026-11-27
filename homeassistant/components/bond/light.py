@@ -6,12 +6,7 @@ from typing import Any, override
 from aiohttp.client_exceptions import ClientResponseError
 from bond_async import Action, DeviceType
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
@@ -155,14 +150,14 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
         """Turn on the light."""
         basic_on = True
 
-        if brightness := kwargs.get(ATTR_BRIGHTNESS):
+        if brightness := kwargs.get(LightServiceArgument.BRIGHTNESS):
             await self._bond.action(
                 self._device_id,
                 Action.set_brightness(round((brightness * 100) / 255)),
             )
             basic_on = False
 
-        if color_temp := kwargs.get(ATTR_COLOR_TEMP_KELVIN):
+        if color_temp := kwargs.get(LightServiceArgument.COLOR_TEMP_KELVIN):
             await self._bond.action(
                 self._device_id,
                 # API resolution is 100K
@@ -274,7 +269,7 @@ class BondFireplace(BondEntity, LightEntity):
         """Turn the fireplace on."""
         _LOGGER.debug("Fireplace async_turn_on called with: %s", kwargs)
 
-        if brightness := kwargs.get(ATTR_BRIGHTNESS):
+        if brightness := kwargs.get(LightServiceArgument.BRIGHTNESS):
             flame = round((brightness * 100) / 255)
             await self._bond.action(self._device_id, Action.set_flame(flame))
         else:
