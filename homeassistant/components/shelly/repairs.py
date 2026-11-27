@@ -14,6 +14,7 @@ from aioshelly.rpc_device import RpcDevice
 from awesomeversion import AwesomeVersion
 import probatio
 
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
@@ -40,7 +41,6 @@ from .const import (
     BLEScannerMode,
 )
 from .utils import (
-    get_coiot_address,
     get_coiot_port,
     get_device_entry_gen,
     get_rpc_key_id,
@@ -376,10 +376,8 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
-        coiot_addr = await get_coiot_address(self.hass)
+        coiot_addr = await async_get_source_ip(self.hass, self._device.ip_address)
         coiot_port = get_coiot_port(self.hass)
-        if coiot_addr is None or coiot_port is None:
-            return self.async_abort(reason="cannot_configure")
         try:
             await self._device.configure_coiot_protocol(coiot_addr, coiot_port)
             await self._device.trigger_reboot()
