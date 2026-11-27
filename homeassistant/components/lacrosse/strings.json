@@ -64,7 +64,7 @@
   "entity": {
     "sensor": {
       "battery": {
-        "name": "Battery"
+        "name": "[%key:component::sensor::entity_component::battery::name%]"
       }
     }
   },

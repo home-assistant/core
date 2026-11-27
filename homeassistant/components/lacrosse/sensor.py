@@ -141,26 +141,26 @@ async def async_setup_platform(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
-    if result["type"] is FlowResultType.ABORT and result["reason"] not in (
-        "already_configured",
-        "already_in_progress",
-    ):
-        device = config.get(CONF_DEVICE, DEFAULT_DEVICE)
-        async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_cannot_connect_{device}",
-            breaks_in_ha_version="2027.4.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_import_issue_cannot_connect",
-            translation_placeholders={
-                "device": device,
-                "integration_title": "LaCrosse",
-            },
-        )
-        return
+    if result["type"] is FlowResultType.ABORT:
+        if result["reason"] == "already_in_progress":
+            return
+        if result["reason"] != "already_configured":
+            device = config.get(CONF_DEVICE, DEFAULT_DEVICE)
+            async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_cannot_connect_{device}",
+                breaks_in_ha_version="2027.4.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue_cannot_connect",
+                translation_placeholders={
+                    "device": device,
+                    "integration_title": "LaCrosse",
+                },
+            )
+            return
 
     async_create_issue(
         hass,
@@ -189,7 +189,6 @@ def _add_sensors(
 
         typ: str = device_config[CONF_TYPE]
         sensor_class = TYPE_CLASSES[typ]
-        name = typ.capitalize()
         expire_after: int | None = device_config.get(CONF_EXPIRE_AFTER)
         sensors.append(
             sensor_class(
@@ -198,7 +197,7 @@ def _add_sensors(
                 receiver_entry_id,
                 config[CONF_DEVICE],
                 device,
-                name,
+                None,
                 expire_after,
                 device_config,
             )
@@ -230,7 +229,7 @@ class LaCrosseSensor(SensorEntity):
         receiver_entry_id: str,
         receiver_device: str,
         device_id: str,
-        name: str,
+        name: str | None,
         expire_after: int | None,
         config: ConfigType,
     ) -> None:
@@ -245,7 +244,8 @@ class LaCrosseSensor(SensorEntity):
         )
         self._expire_after = expire_after
         self._expiration_trigger: CALLBACK_TYPE | None = None
-        self._attr_name = name
+        if name is not None:
+            self._attr_name = name
         self._attr_unique_id = f"{receiver_entry_id}_{device_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{receiver_device}_{config[CONF_ID]}")},
@@ -334,6 +334,8 @@ class LaCrosseHumidity(LaCrosseSensor):
 
 class LaCrosseBattery(LaCrosseSensor):
     """Implementation of a Lacrosse battery sensor."""
+
+    _attr_translation_key = "battery"
 
     @property
     @override

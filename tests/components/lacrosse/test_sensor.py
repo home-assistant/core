@@ -195,7 +195,7 @@ async def test_yaml_import_failure(
 async def test_yaml_import_already_in_progress(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test an overlapping import creates a deprecation issue, not a failure."""
+    """Test an overlapping import does not create an issue."""
     with patch.object(
         hass.config_entries.flow,
         "async_init",
@@ -206,7 +206,7 @@ async def test_yaml_import_already_in_progress(
         )
         await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(
+    assert not issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
     assert not issue_registry.async_get_issue(
