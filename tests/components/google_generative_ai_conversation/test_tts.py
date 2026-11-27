@@ -622,6 +622,39 @@ async def test_tts_audio_stream_without_audio(
         _ = b"".join([chunk async for chunk in stream.async_stream_result()])
 
 
+@pytest.mark.usefixtures("setup")
+@pytest.mark.parametrize(
+    "chunks",
+    [
+        [_stream_chunk(b"\x00\x00", "audio/mpeg")],
+        [
+            _stream_chunk(b"\x00\x00", "audio/L16;rate=24000"),
+            _stream_chunk(b"\x01\x00", "audio/L16;rate=48000"),
+        ],
+    ],
+    ids=["unsupported_format", "format_changed"],
+)
+async def test_tts_audio_stream_bad_format(
+    hass: HomeAssistant,
+    mock_genai_client: AsyncMock,
+    chunks: list[types.GenerateContentResponse],
+) -> None:
+    """Raise when the stream cannot be turned into a single PCM stream."""
+    mock_genai_client.return_value.aio.models.generate_content_stream.return_value = (
+        chunks
+    )
+
+    stream = tts.async_create_stream(
+        hass,
+        "tts.google_ai_tts",
+        options={TextToSpeechCommonOption.PREFERRED_FORMAT: "wav"},
+    )
+    stream.async_set_message("Hello")
+
+    with pytest.raises(HomeAssistantError):
+        _ = b"".join([chunk async for chunk in stream.async_stream_result()])
+
+
 @pytest.mark.usefixtures("mock_init_component")
 @pytest.mark.parametrize(
     ("model", "expected_options"),

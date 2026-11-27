@@ -50,6 +50,7 @@ VOICES_MAX_PAGES = 10
 
 def _extract_audio_parts(
     response: types.GenerateContentResponse,
+    expected_mime_type: str | None = None,
 ) -> tuple[bytes, str] | None:
     """Return the audio payload of a response, if it carries one."""
     if (
@@ -67,6 +68,10 @@ def _extract_audio_parts(
         raise TypeError(f"Expected bytes for audio data, got {type(data).__name__}")
     if not isinstance(mime_type, str):
         raise TypeError(f"Expected str for mime_type, got {type(mime_type).__name__}")
+    if expected_mime_type is not None and mime_type != expected_mime_type:
+        raise ValueError(
+            f"Audio format changed mid-stream: {expected_mime_type} -> {mime_type}"
+        )
 
     return data, mime_type
 
@@ -441,7 +446,7 @@ class GoogleGenerativeAITextToSpeechEntity(
         """Yield audio as the model produces it."""
         model, contents, config = self._build_request(message, options)
 
-        started = False
+        first_mime_type: str | None = None
         try:
             stream = await self._genai_client.aio.models.generate_content_stream(
                 model=model,
@@ -450,14 +455,16 @@ class GoogleGenerativeAITextToSpeechEntity(
             )
 
             async for response in stream:
-                if (audio_parts := _extract_audio_parts(response)) is None:
+                if (
+                    audio_parts := _extract_audio_parts(response, first_mime_type)
+                ) is None:
                     continue
                 data, mime_type = audio_parts
                 if not data:
                     continue
 
-                if not started:
-                    started = True
+                if first_mime_type is None:
+                    first_mime_type = mime_type
                     if mime_type != "audio/wav":
                         yield streaming_wav_header(mime_type)
 
@@ -467,7 +474,7 @@ class GoogleGenerativeAITextToSpeechEntity(
             LOGGER.error("Error during TTS stream: %s", exc, exc_info=True)
             raise HomeAssistantError(exc) from exc
 
-        if not started:
+        if first_mime_type is None:
             # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Error during TTS stream: no content returned")
             raise HomeAssistantError("No content returned from TTS generation")
