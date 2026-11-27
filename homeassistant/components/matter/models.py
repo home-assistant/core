@@ -67,6 +67,36 @@ class MatterEntityInfo:
         return self.attributes_to_watch[0]
 
 
+@dataclass(frozen=True, kw_only=True)
+class SemanticTag:
+    """A semantic tag to look for in an endpoint's Descriptor TagList."""
+
+    namespace_id: int
+    tag: int
+    # the tag's label, compared case-insensitively (None matches any label)
+    label: str | None = None
+
+    def on_endpoint(self, endpoint: MatterEndpoint) -> bool:
+        """Return True if the endpoint's TagList contains this semantic tag."""
+        tag_list = endpoint.get_attribute_value(
+            None, clusters.Descriptor.Attributes.TagList
+        )
+        if not isinstance(tag_list, list):
+            return False
+        for semantic_tag in tag_list:
+            if (
+                getattr(semantic_tag, "namespaceID", None) != self.namespace_id
+                or getattr(semantic_tag, "tag", None) != self.tag
+            ):
+                continue
+            if self.label is None:
+                return True
+            label = getattr(semantic_tag, "label", None)
+            if isinstance(label, str) and label.casefold() == self.label.casefold():
+                return True
+        return False
+
+
 @dataclass
 class MatterDiscoverySchema:
     """Matter discovery schema.
@@ -120,6 +150,10 @@ class MatterDiscoverySchema:
     # these attributes are copied over to attributes_to_watch and
     # are not discovered by other entities
     optional_attributes: tuple[type[ClusterAttributeDescriptor], ...] | None = None
+
+    # [optional] semantic tags that MAY NOT be present
+    # in the endpoint's Descriptor TagList for this scheme to pass
+    absent_semantic_tags: tuple[SemanticTag, ...] | None = None
 
     # [optional] the primary attribute's cluster featuremap must contain this value
     # for example for the DoorSensor on a DoorLock Cluster
