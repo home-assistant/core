@@ -1406,6 +1406,8 @@ async def test_url_change_updates_announcement(
     mock_async_zeroconf.async_update_service.assert_called_once()
     info = mock_async_zeroconf.async_update_service.mock_calls[-1].args[0]
     assert info.name == "Home-2._home-assistant._tcp.local."
+    # The registry looks the service up by its key, which follows the name
+    assert info.key == registered.key == "home-2._home-assistant._tcp.local."
     assert info.properties[b"external_url"] == b"https://example.com"
     assert info.properties[b"base_url"] == b"https://example.com"
     mock_async_zeroconf.async_unregister_service.assert_not_called()
