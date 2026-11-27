@@ -16,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> 
 
     coordinator = PlugwiseDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    migrate_sensor_entities(hass, coordinator)
+    migrate_entities(hass, coordinator)
 
     entry.runtime_data = coordinator
 
@@ -67,11 +67,11 @@ def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None
     return None
 
 
-def migrate_sensor_entities(
+def migrate_entities(
     hass: HomeAssistant,
     coordinator: PlugwiseDataUpdateCoordinator,
 ) -> None:
-    """Migrate Sensors if needed."""
+    """Migrate entities if needed."""
     ent_reg = er.async_get(hass)
     is_adam = coordinator.api.smile.name == "Adam"
 

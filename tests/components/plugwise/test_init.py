@@ -16,7 +16,7 @@ from plugwise.exceptions import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.plugwise import async_migrate_entities
+from homeassistant.components.plugwise import migrate_entities
 from homeassistant.components.plugwise.const import (
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
@@ -318,7 +318,7 @@ async def test_remove_thermozone_temperature_sensor(
     )
     coordinator.api.smile.name = gateway_name
 
-    await async_migrate_entities(hass, coordinator)
+    migrate_entities(hass, coordinator)
 
     assert (
         entity_registry.async_get_entity_id(
