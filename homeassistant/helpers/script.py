@@ -16,9 +16,9 @@ import probatio
 from propcache.api import cached_property
 
 from homeassistant import exceptions
-from homeassistant.components import scene
 from homeassistant.components.device_automation import action as device_action
 from homeassistant.components.logger import LOGSEVERITY
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
@@ -1373,8 +1373,8 @@ class _ScriptRun:
         self._step_log("activate scene")
         trace_set_result(scene=self._action[CONF_SCENE])
         await self._hass.services.async_call(
-            scene.DOMAIN,
-            scene.SceneService.TURN_ON,
+            SCENE_DOMAIN,
+            SceneService.TURN_ON,
             {TargetKey.ENTITY_ID: self._action[CONF_SCENE]},
             blocking=True,
             context=self._context,
