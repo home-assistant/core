@@ -1,7 +1,7 @@
 """Tests for the OpenWrt (ubus) config flow."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -9,13 +9,18 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
-from homeassistant.components.ubus.config_flow import HUB_TITLE
+from homeassistant.components.ubus.config_flow import HUB_TITLE, UbusConfigFlow
 from homeassistant.components.ubus.const import (
     CONF_DHCP_SOFTWARE,
     DOMAIN,
     SUBENTRY_TYPE_ROUTER,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_USER,
+    ConfigEntryState,
+    ConfigSubentryData,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -183,6 +188,34 @@ async def test_user_flow_second_entry_aborts(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_aborts_when_hub_created_during_validation(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_ubus: MagicMock
+) -> None:
+    """Test a user flow aborts when a concurrent flow creates the hub."""
+    concurrent_hub = MockConfigEntry(domain=DOMAIN, data={}, title=HUB_TITLE)
+    concurrent_hub.add_to_hass(hass)
+
+    # The concurrent flow creates the hub while the validation is in
+    # flight, after the flow's entry checks at the start of each step.
+    with patch.object(
+        UbusConfigFlow,
+        "_async_current_entries",
+        side_effect=[[], [], [concurrent_hub]],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert [entry.entry_id for entry in hass.config_entries.async_entries(DOMAIN)] == [
+        concurrent_hub.entry_id
+    ]
 
 
 async def test_subentry_flow_adds_router(
@@ -399,6 +432,69 @@ async def test_import_flow_adds_subentry_to_hub(
     assert {subentry.unique_id for subentry in hub_entry.subentries.values()} == {
         MOCK_HOST,
         MOCK_HOST_B,
+    }
+
+
+async def test_import_flow_joins_hub_created_during_validation(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_ubus: MagicMock
+) -> None:
+    """Test an import joins a hub created by a concurrent import."""
+    concurrent_hub = MockConfigEntry(domain=DOMAIN, data={}, title=HUB_TITLE)
+    concurrent_hub.add_to_hass(hass)
+
+    # The concurrent import creates the hub while the validation is in
+    # flight, between the flow's two entry checks.
+    with patch.object(
+        UbusConfigFlow,
+        "_async_current_entries",
+        side_effect=[[], [concurrent_hub]],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_HOST_CONFIG_B
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert {subentry.unique_id for subentry in concurrent_hub.subentries.values()} == {
+        MOCK_HOST_B
+    }
+    assert [entry.entry_id for entry in hass.config_entries.async_entries(DOMAIN)] == [
+        concurrent_hub.entry_id
+    ]
+
+
+async def test_import_flow_host_collision_with_concurrent_hub(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_ubus: MagicMock
+) -> None:
+    """Test an import aborts cleanly when a concurrent hub added the host."""
+    concurrent_hub = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=HUB_TITLE,
+        subentries_data=(
+            ConfigSubentryData(
+                data=MOCK_HOST_CONFIG_B,
+                subentry_type=SUBENTRY_TYPE_ROUTER,
+                title=MOCK_HOST_B,
+                unique_id=MOCK_HOST_B,
+            ),
+        ),
+    )
+    concurrent_hub.add_to_hass(hass)
+
+    with patch.object(
+        UbusConfigFlow,
+        "_async_current_entries",
+        side_effect=[[], [concurrent_hub]],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_HOST_CONFIG_B
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert {subentry.unique_id for subentry in concurrent_hub.subentries.values()} == {
+        MOCK_HOST_B
     }
 
 

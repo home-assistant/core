@@ -1,5 +1,6 @@
 """Config flow for the OpenWrt (ubus) integration."""
 
+import contextlib
 from types import MappingProxyType
 from typing import Any, override
 
@@ -25,6 +26,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -110,6 +112,19 @@ def _router_subentry_data(data: dict[str, Any]) -> ConfigSubentryData:
     )
 
 
+def _async_find_hub(entries: list[ConfigEntry]) -> ConfigEntry | None:
+    """Return the entry which is, or becomes, the hub of the install.
+
+    A hub has no data; in a pre-migration install the entry which is
+    set up first (the lowest id) becomes the hub, so an import joins
+    the same entry the setup migration will use.
+    """
+    hub = next((entry for entry in entries if not entry.data), None)
+    if hub is None and entries:
+        hub = min(entries, key=lambda entry: entry.entry_id)
+    return hub
+
+
 class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenWrt (ubus)."""
 
@@ -151,6 +166,10 @@ class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             else:
+                # A concurrent flow may have created the hub while the
+                # validation was in flight.
+                if self._async_current_entries():
+                    return self.async_abort(reason="already_configured")
                 return self.async_create_entry(
                     title=HUB_TITLE,
                     data={},
@@ -164,12 +183,7 @@ class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a configuration from configuration.yaml."""
         entries = self._async_current_entries()
-        # Find the hub, creating it below if the install is legacy: the
-        # entry which is set up first becomes the hub, so the import joins
-        # the same one the setup migration will use.
-        hub = next((entry for entry in entries if not entry.data), None)
-        if hub is None and entries:
-            hub = min(entries, key=lambda entry: entry.entry_id)
+        hub = _async_find_hub(entries)
         hosts = {entry.data[CONF_HOST] for entry in entries if entry.data} | {
             subentry.unique_id
             for entry in entries
@@ -186,6 +200,9 @@ class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             return self.async_abort(reason="invalid_auth")
 
+        # A concurrent import may have created or joined the hub while the
+        # validation was in flight.
+        hub = _async_find_hub(self._async_current_entries())
         if hub is None:
             return self.async_create_entry(
                 title=HUB_TITLE,
@@ -193,15 +210,17 @@ class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 subentries=[_router_subentry_data(import_data)],
             )
 
-        self.hass.config_entries.async_add_subentry(
-            hub,
-            ConfigSubentry(
-                data=MappingProxyType(import_data),
-                subentry_type=SUBENTRY_TYPE_ROUTER,
-                title=import_data[CONF_HOST],
-                unique_id=import_data[CONF_HOST],
-            ),
-        )
+        # The concurrent import may have added this host itself.
+        with contextlib.suppress(AbortFlow):
+            self.hass.config_entries.async_add_subentry(
+                hub,
+                ConfigSubentry(
+                    data=MappingProxyType(import_data),
+                    subentry_type=SUBENTRY_TYPE_ROUTER,
+                    title=import_data[CONF_HOST],
+                    unique_id=import_data[CONF_HOST],
+                ),
+            )
         return self.async_abort(reason="already_configured")
 
 
