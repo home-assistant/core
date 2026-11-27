@@ -68,13 +68,12 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
-    _attr_supported_speeds = list(CURTAIN_MODE_MAP)
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         mode: str | None = kwargs.get("speed")
-        if mode is not None:
+        if mode is not None and self.supported_speeds is not None:
             await self.send_api_command(
                 CurtainCommands.SET_POSITION,
                 parameters=f"0,{CURTAIN_MODE_MAP.get(mode)},{0}",
@@ -88,7 +87,7 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         mode: str | None = kwargs.get("speed")
-        if mode is not None:
+        if mode is not None and self.supported_speeds is not None:
             await self.send_api_command(
                 CurtainCommands.SET_POSITION,
                 parameters=f"0,{CURTAIN_MODE_MAP.get(mode)},{100}",
@@ -104,7 +103,7 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
         position: int | None = kwargs.get("position")
         mode: str | None = kwargs.get("speed")
         if position is not None:
-            if mode is not None:
+            if mode is not None and self.supported_speeds is not None:
                 await self.send_api_command(
                     CurtainCommands.SET_POSITION,
                     parameters=f"0,{CURTAIN_MODE_MAP.get(mode)},{100 - position}",
@@ -134,6 +133,7 @@ class SwitchBotCloudCoverCurtainN(SwitchBotCloudCoverCurtain):
         | CoverEntityFeature.SET_POSITION
         | CoverEntityFeature.SPEED
     )
+    _attr_supported_speeds = list(CURTAIN_MODE_MAP)
 
 
 class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
