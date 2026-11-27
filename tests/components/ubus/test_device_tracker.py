@@ -3104,6 +3104,78 @@ async def test_reenabled_entry_merges_into_late_hub(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_late_hub_merge_normalizes_raw_case_tracker_ids(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a raw-case tracker id is normalized when merging into a hub.
+
+    The hub's device tracker already ran its one-time unique-id
+    normalization when the hub was set up, so the merge reloads the
+    hub to normalize the tracker ids it moves over; left raw, the id
+    would track as a duplicate of the lowercase sighting.
+    """
+    _mock, ubus = mock_ubus_by_host
+    hub = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=HUB_TITLE,
+        subentries_data=[router_subentry_data(MOCK_CONFIG)],
+    )
+    hub.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub.entry_id)
+    await hass.async_block_till_done()
+
+    legacy = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_B,
+        title=MOCK_HOST_B,
+        entry_id="00000000000000000000000000B",
+    )
+    legacy.add_to_hass(hass)
+    # A tracker from before MACs were normalized keeps the raw case.
+    legacy_tracker = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE.upper(),
+        config_entry=legacy,
+    )
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+
+    # Merging the entry into the loaded hub removes it and leaves one
+    # tracker for the client.
+    assert await hass.config_entries.async_setup(legacy.entry_id)
+    await hass.async_block_till_done()
+    assert not hass.config_entries.async_get_entry(legacy.entry_id)
+    assert hub.state is ConfigEntryState.LOADED
+
+    # The hub's reload normalized the raw-case id: one tracker for the
+    # client, on the hub, with the lowercase unique id and the legacy
+    # entity id, instead of a duplicate of the lowercase sighting.
+    trackers = [
+        registry_entry
+        for registry_entry in entity_registry.entities.values()
+        if registry_entry.domain == DEVICE_TRACKER_DOMAIN
+        and registry_entry.platform == DOMAIN
+    ]
+    assert len(trackers) == 1
+    assert (
+        entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE)
+        == legacy_tracker.entity_id
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE.upper()
+        )
+        is None
+    )
+    assert hass.states.get(legacy_tracker.entity_id).state == STATE_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("hub_customizations", "legacy_customizations", "expected"),
     [

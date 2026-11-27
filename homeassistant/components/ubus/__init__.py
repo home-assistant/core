@@ -298,6 +298,10 @@ async def _async_migrate_other(
         if holding_setup_lock:
             collision_hosts = _async_transfer_to_hub(hass, hub, entry, host)
             transferred = True
+            # The hub already normalized its own tracker ids, before
+            # the merge moved this entry's over; reload it so the
+            # merged ids are normalized too, not left as duplicates.
+            await hass.config_entries.async_reload(hub.entry_id)
             # The removal needs the setup lock, which is held for the
             # rest of the setup, so it runs in a deferred task.
             hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
