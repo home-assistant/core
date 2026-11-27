@@ -1,6 +1,7 @@
 """Fixtures and helpers for the evohome tests."""
 
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Callable, Iterator
+from contextlib import contextmanager
 from datetime import timedelta, timezone
 from http import HTTPMethod
 from typing import Any
@@ -129,6 +130,20 @@ def mock_make_request(install: str) -> Callable:
     return make_request
 
 
+@contextmanager
+def mock_evohome_api(install: str) -> Iterator[None]:
+    """Mock the vendor's web API (authentication and GETs) for an installation."""
+
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request(install),
+        ),
+        patch("_evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
+    ):
+        yield
+
+
 @pytest.fixture
 def config() -> ConfigType:
     "Return a default/minimal configuration."
@@ -162,14 +177,8 @@ async def setup_evohome(
     dt_util.set_default_time_zone(timezone(timedelta(minutes=utc_offset)))
 
     with (
-        # patch("homeassistant.components.evohome.ec1.EvohomeClient",
-        #       return_value=None),
         patch("homeassistant.components.evohome.ec2.EvohomeClient") as mock_client,
-        patch(
-            "evohomeasync2.auth.CredentialsManagerBase._post_request",
-            mock_post_request(install),
-        ),
-        patch("_evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
+        mock_evohome_api(install),
     ):
         evo: EvohomeClient | None = None
 

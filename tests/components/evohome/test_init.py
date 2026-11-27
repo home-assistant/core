@@ -15,7 +15,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .conftest import mock_make_request, mock_post_request, setup_evohome
+from .conftest import (
+    mock_evohome_api,
+    mock_make_request,
+    mock_post_request,
+    setup_evohome,
+)
 from .const import USERNAME
 
 _MSG_429 = (
@@ -221,13 +226,7 @@ async def _async_setup_evohome(
 ) -> bool:
     """Set up evohome from a mocked vendor's server, and return the result."""
 
-    with (
-        patch(
-            "evohomeasync2.auth.CredentialsManagerBase._post_request",
-            mock_post_request(install),
-        ),
-        patch("_evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
-    ):
+    with mock_evohome_api(install):
         return await async_setup_component(hass, DOMAIN, {DOMAIN: config})
 
 
@@ -285,11 +284,6 @@ async def test_location_first_refresh_failure(
     """Test a translated error of a failed first refresh is logged by its cause."""
 
     with (
-        patch(
-            "evohomeasync2.auth.CredentialsManagerBase._post_request",
-            mock_post_request("default"),
-        ),
-        patch("_evohome.auth.AbstractAuth._make_request", mock_make_request("default")),
         patch.object(
             ec2.Location,
             "get_status",
@@ -297,7 +291,7 @@ async def test_location_first_refresh_failure(
         ),
         caplog.at_level(logging.ERROR),
     ):
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config}) is False
+        assert await _async_setup_evohome(hass, config, "default") is False
 
     assert caplog.record_tuples == [
         (
