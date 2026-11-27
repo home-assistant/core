@@ -6,7 +6,7 @@ from functools import partial
 from typing import override
 
 from homematicip.base.channel_event import ChannelEvent
-from homematicip.base.enums import FunctionalChannelType
+from homematicip.base.enums import FunctionalChannelType, MultiModeInputMode
 from homematicip.base.functionalChannels import FunctionalChannel
 from homematicip.device import Device
 
@@ -61,6 +61,12 @@ EVENT_DESCRIPTIONS: tuple[HmipEventEntityDescription, ...] = (
         },
         channel_selector_fn=lambda channel: (
             channel.functionalChannelType == FunctionalChannelType.SINGLE_KEY_CHANNEL
+            or (
+                channel.functionalChannelType
+                == FunctionalChannelType.MULTI_MODE_INPUT_CHANNEL
+                and channel.multiModeInputMode == MultiModeInputMode.KEY_BEHAVIOR
+                and channel.channelRole != "DOOR_BELL_INPUT"
+            )
         ),
         is_multi_channel=True,
     ),
