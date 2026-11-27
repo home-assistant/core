@@ -120,6 +120,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         self.boot_time: datetime | None = None
 
         self._initial_update: bool = True
+        self.has_pending_network: bool = False
         self.update_subscribers: dict[tuple[str, str], set[str]] = (
             self.set_subscribers_tuples(arguments)
         )
@@ -213,12 +214,20 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             )
 
         io_counters: dict[str, snetio] | None = None
-        if self.update_subscribers[("io_counters", "")] or self._initial_update:
+        if (
+            self.update_subscribers[("io_counters", "")]
+            or self.has_pending_network
+            or self._initial_update
+        ):
             io_counters = self._psutil.net_io_counters(pernic=True)
             _LOGGER.debug("io_counters: %s", io_counters)
 
         addresses: dict[str, list[snicaddr]] | None = None
-        if self.update_subscribers[("addresses", "")] or self._initial_update:
+        if (
+            self.update_subscribers[("addresses", "")]
+            or self.has_pending_network
+            or self._initial_update
+        ):
             addresses = self._psutil.net_if_addrs()
             _LOGGER.debug("ip_addresses: %s", addresses)
 
