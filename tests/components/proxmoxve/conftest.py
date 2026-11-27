@@ -242,6 +242,38 @@ def mock_proxmox_client() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_pve2_node(mock_proxmox_client: MagicMock) -> MagicMock:
+    """Add online node pve2 to the cluster, with its own endpoint and VM 300."""
+    pve2_vm = {
+        **load_json_array_fixture("nodes/qemu.json", DOMAIN)[0],
+        "vmid": 300,
+        "name": "vm-pve2",
+    }
+    node = _mock_endpoint(NodeEndpoint)
+    node.qemu_all.return_value = [QemuResource.from_dict(pve2_vm)]
+    node.lxc_all.return_value = []
+    node.storage.return_value = NodeStorageResources(storages=[])
+    node.tasks.return_value = NodeTasks(tasks=[])
+    node.version.return_value = NodeVersion.from_dict(
+        load_json_object_fixture("nodes/version.json", DOMAIN)
+    )
+    apt = _mock_endpoint(NodeAptEndpoint)
+    apt.update.return_value = NodeAptUpdate(items=[])
+    node.apt.return_value = apt
+
+    default_node = mock_proxmox_client._node_mock
+    mock_proxmox_client.nodes.side_effect = lambda name: (
+        node if name == "pve2" else default_node
+    )
+    mock_proxmox_client.cluster_resources.resources = [
+        resource
+        for resource in mock_proxmox_client._all_cluster_resources
+        if resource.node in ("pve1", "pve2")
+    ]
+    return node
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(

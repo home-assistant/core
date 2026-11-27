@@ -1,6 +1,7 @@
 """Data Update Coordinator for Proxmox VE integration."""
 
-from collections.abc import Callable, Generator
+import asyncio
+from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
 from datetime import timedelta
@@ -102,6 +103,44 @@ class ProxmoxRuntimeData:
     software: ProxmoxSoftwareCoordinator
 
 
+async def _gather_per_node[_T](
+    coros: dict[str, Coroutine[Any, Any, _T]],
+) -> tuple[dict[str, _T], dict[str, ProxmoxAPIError]]:
+    """Run a fetch per node in parallel, collecting the API errors of failed nodes.
+
+    Other errors concern the connection to the API host, so they fail the refresh,
+    as does every node failing.
+    """
+    results = await asyncio.gather(*coros.values(), return_exceptions=True)
+    data: dict[str, _T] = {}
+    failed: dict[str, ProxmoxAPIError] = {}
+    for node, result in zip(coros, results, strict=True):
+        if isinstance(result, ProxmoxAPIError):
+            failed[node] = result
+        elif isinstance(result, BaseException):
+            raise result
+        else:
+            data[node] = result
+    if failed and not data:
+        raise next(iter(failed.values()))
+    return data, failed
+
+
+def _log_failed_nodes(
+    what: str,
+    previous: set[str],
+    failed: dict[str, ProxmoxAPIError],
+    succeeded: set[str],
+) -> None:
+    """Log nodes that started failing or recovered."""
+    for node in failed.keys() - previous:
+        _LOGGER.warning(
+            "Failed to fetch the %s of node %s: %s", what, node, failed[node]
+        )
+    for node in previous & succeeded:
+        _LOGGER.info("Fetching the %s of node %s works again", what, node)
+
+
 @contextmanager
 def _translate_update_errors() -> Generator[None]:
     """Translate aioproxmox errors raised during a coordinator update."""
@@ -159,6 +198,8 @@ class ProxmoxStatusCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]
         self.known_containers: set[tuple[str, int]] = set()
         self.known_storages: set[tuple[str, str]] = set()
         self.permissions = PVEPermissions()
+        # Online nodes whose resources could not be fetched in the last refresh
+        self.failed_nodes: set[str] = set()
 
         self.new_nodes_callbacks: list[Callable[[list[ProxmoxNodeData]], None]] = []
         self.new_vms_callbacks: list[
@@ -210,10 +251,22 @@ class ProxmoxStatusCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]
     async def _async_update_data(self) -> dict[str, ProxmoxNodeData]:
         """Fetch data from Proxmox VE API."""
         with _translate_update_errors():
-            node_pairs = await self._fetch_all_nodes()
+            nodes, node_resources, failed = await self._fetch_all_nodes()
 
+        _log_failed_nodes("resources", self.failed_nodes, failed, set(node_resources))
+        self.failed_nodes = set(failed)
+        previous_data = self.data or {}
         data: dict[str, ProxmoxNodeData] = {}
-        for node, resources in node_pairs:
+        for node in nodes:
+            if (resources := node_resources.get(node.node)) is None:
+                # Keep the last known resources, so their devices are not removed
+                previous = previous_data.get(node.node)
+                data[node.node] = (
+                    replace(previous, node=node)
+                    if previous is not None
+                    else ProxmoxNodeData(node=node)
+                )
+                continue
             data[node.node] = ProxmoxNodeData(
                 node=node,
                 vms={vm.vmid: vm for vm in resources.vms},
@@ -258,16 +311,25 @@ class ProxmoxStatusCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]
         await self.proxmox.connect()
         self.permissions = await self.proxmox.access.permissions()
 
-    async def _fetch_all_nodes(self) -> list[tuple[ClusterNodeResource, NodeResources]]:
+    async def _fetch_all_nodes(
+        self,
+    ) -> tuple[
+        list[ClusterNodeResource],
+        dict[str, NodeResources],
+        dict[str, ProxmoxAPIError],
+    ]:
         """Fetch all nodes with their VMs, containers, storages, etc."""
         cluster_resources = await self.proxmox.cluster.resources()
         # The node VM list reports host memory; cluster resources carry the
         # guest memory that pvestatd reads from the balloon driver.
         guest_memory = {vm.vmid: vm.mem for vm in cluster_resources.qemu}
-        return [
-            (node, await self._get_node_data(node, guest_memory))
-            for node in cluster_resources.nodes
-        ]
+        node_resources, failed = await _gather_per_node(
+            {
+                node.node: self._get_node_data(node, guest_memory)
+                for node in cluster_resources.nodes
+            }
+        )
+        return cluster_resources.nodes, node_resources, failed
 
     async def _get_node_data(
         self,
@@ -428,6 +490,8 @@ class ProxmoxSoftwareCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeSoft
             update_interval=SOFTWARE_UPDATE_INTERVAL,
         )
         self.status = status
+        # Online nodes whose software could not be fetched in the last refresh
+        self.failed_nodes: set[str] = set()
         config_entry.async_on_unload(
             status.async_add_listener(self._async_status_updated)
         )
@@ -436,10 +500,12 @@ class ProxmoxSoftwareCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeSoft
     async def _async_update_data(self) -> dict[str, ProxmoxNodeSoftware]:
         """Fetch version and pending updates of the online nodes."""
         with _translate_update_errors():
-            return {
-                node: await self._get_node_software(node)
-                for node in self._online_nodes()
-            }
+            data, failed = await _gather_per_node(
+                {node: self._get_node_software(node) for node in self._online_nodes()}
+            )
+        _log_failed_nodes("software", self.failed_nodes, failed, set(data))
+        self.failed_nodes = set(failed)
+        return data
 
     def _online_nodes(self) -> set[str]:
         """Return the names of the online nodes."""
@@ -463,7 +529,7 @@ class ProxmoxSoftwareCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeSoft
         if (
             self.data is not None
             and self.last_update_success
-            and self._online_nodes() - self.data.keys()
+            and self._online_nodes() - self.data.keys() - self.failed_nodes
         ):
             self.config_entry.async_create_background_task(
                 self.hass, self.async_request_refresh(), "proxmoxve_software"
