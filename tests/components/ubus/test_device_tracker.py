@@ -13,7 +13,10 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.device_tracker.const import DEFAULT_CONSIDER_HOME
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
 from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.components.ubus.config_flow import HUB_TITLE
 from homeassistant.components.ubus.const import DOMAIN, SUBENTRY_TYPE_ROUTER
@@ -47,6 +50,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     MAC_GUEST,
@@ -1285,6 +1289,108 @@ async def test_dropped_client_goes_not_home_after_consider_home(
     assert state is not None
     assert state.state == STATE_NOT_HOME
     assert "source" not in state.attributes
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_slow_router_does_not_stretch_sighting_times(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_hub: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test each router's stamps carry its poll's own observation time.
+
+    The slow router is the first subentry, so its stamps would win the
+    source by order alone; the observation times must decide instead.
+    """
+    _mock, ubus = mock_ubus_by_host
+    two_router_hub.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        two_router_hub, options={CONF_CONSIDER_HOME: 5}
+    )
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {
+            MAC_PHONE: {"authorized": True},
+            MAC_LAPTOP: {"authorized": True},
+        }
+    }
+    assert await hass.config_entries.async_setup(two_router_hub.entry_id)
+    await hass.async_block_till_done()
+
+    slow_started = threading.Event()
+    slow_release = threading.Event()
+    fast_release = threading.Event()
+    fast_observed = threading.Event()
+
+    def slow_read(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        # Hold the response for twenty seconds, as a slow router.
+        slow_started.set()
+        slow_release.wait()
+        return {"clients": {MAC_PHONE: {"authorized": True}}}
+
+    def fast_read(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        # Hold the response until the test releases it.
+        fast_release.wait()
+        return {
+            "clients": {
+                MAC_PHONE: {"authorized": True},
+                MAC_LAPTOP: {"authorized": True},
+            }
+        }
+
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = slow_read
+    ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = fast_read
+
+    # Start the next tick and hold both routers in flight.
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    assert await hass.async_add_executor_job(slow_started.wait, 10)
+
+    # Wait for the fast router's poll to be observed, so its sighting time
+    # is fixed before the clock advances again.
+    for host, poll in two_router_hub.runtime_data._inflight.items():
+        if host.host == MOCK_HOST_B:
+            poll.add_done_callback(lambda _: fast_observed.set())
+    freezer.tick(timedelta(seconds=10))
+    fast_release.set()
+    assert await hass.async_add_executor_job(fast_observed.wait, 10)
+    fast_seen = dt_util.utcnow()
+
+    freezer.tick(timedelta(seconds=10))
+    slow_release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    slow_seen = dt_util.utcnow()
+
+    coordinator = two_router_hub.runtime_data
+    subentry_ids = {
+        subentry.data[CONF_HOST]: subentry.subentry_id
+        for subentry in two_router_hub.subentries.values()
+    }
+    phone = coordinator.data[MAC_PHONE]
+    # Each router's stamps carry its poll's own observation time.
+    assert phone[subentry_ids[MOCK_HOST]].last_seen == slow_seen
+    assert phone[subentry_ids[MOCK_HOST_B]].last_seen == fast_seen
+    # The newest observation reports the source, not the subentry order.
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["source"] == MOCK_HOST
+    # The laptop was last seen by the fast router only; the slow router's
+    # late answer must not stretch its consider_home window.
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_LAPTOP
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

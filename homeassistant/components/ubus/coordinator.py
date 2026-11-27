@@ -56,6 +56,19 @@ def _poll_exception_retrieved(poll: asyncio.Future) -> None:
         poll.exception()
 
 
+async def _poll_observed(poll: asyncio.Future[Any]) -> tuple[datetime, Any]:
+    """Await one router's poll, returning its result and when it was observed.
+
+    The time is taken as this poll's wait returns, so a slow router does
+    not stretch the sighting times of the clients the fast routers saw.
+    """
+    result = await asyncio.wait_for(
+        asyncio.shield(poll),
+        timeout=REQUEST_TIMEOUT.total_seconds(),
+    )
+    return dt_util.utcnow(), result
+
+
 class InvalidCredentialsError(UpdateFailed):
     """The router rejected the configured credentials."""
 
@@ -338,13 +351,7 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
                 self._inflight[host] = poll
             polls.append(poll)
         results = await asyncio.gather(
-            *(
-                asyncio.wait_for(
-                    asyncio.shield(poll),
-                    timeout=REQUEST_TIMEOUT.total_seconds(),
-                )
-                for poll in polls
-            ),
+            *(_poll_observed(poll) for poll in polls),
             return_exceptions=True,
         )
         # A poll whose tick timed out was re-awaited here, so its result is
@@ -358,12 +365,17 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         # the old host, as the subentry id survives a host change.
         active = self.config_entry.subentries
         self._tick_results = {}
+        observed_at: dict[str, datetime] = {}
         for host, result in zip(hosts.values(), results, strict=True):
             subentry = active.get(host.subentry_id)
             if subentry is None or host.signature != subentry_signature(subentry):
                 self.latest_views.pop(host.subentry_id, None)
                 continue
-            self._tick_results[host.subentry_id] = result
+            if isinstance(result, BaseException):
+                self._tick_results[host.subentry_id] = result
+                continue
+            self._tick_results[host.subentry_id] = result[1]
+            observed_at[host.subentry_id] = result[0]
         old: ClientPresence = self.data_or_none or {}
         # Stamps are dropped for routers which are gone or were pointed at a
         # different host; every other stamp is kept, as a client stays
@@ -382,19 +394,23 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
                 ):
                     continue
                 presence.setdefault(mac, {})[subentry_id] = stamp
-        now = dt_util.utcnow()
         failed: set[str] = set()
-        for subentry_id, result in self._tick_results.items():
-            if isinstance(result, BaseException):
+        fresh: list[tuple[str, dict[str, str | None]]] = []
+        for subentry_id, view in self._tick_results.items():
+            if isinstance(view, BaseException):
                 failed.add(subentry_id)
                 # A failed poll sees nothing new.
                 self.latest_views.pop(subentry_id, None)
                 continue
-            self.latest_views[subentry_id] = result
-            for mac, hostname in result.items():
+            self.latest_views[subentry_id] = view
+            fresh.append((subentry_id, view))
+        # Stamps are sequenced by observation time, so the newest sighting
+        # reports the client's source.
+        for subentry_id, view in sorted(fresh, key=lambda item: observed_at[item[0]]):
+            for mac, hostname in view.items():
                 self._seq += 1
                 presence.setdefault(mac, {})[subentry_id] = ClientStamp(
-                    now, hostname, self._seq
+                    observed_at[subentry_id], hostname, self._seq
                 )
         # Record the host each subentry's stamps now stand under, so stamps
         # recorded for a different host are dropped on the next merge.
