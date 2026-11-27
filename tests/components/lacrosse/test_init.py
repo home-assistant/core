@@ -1,6 +1,5 @@
 """Tests for the LaCrosse integration setup."""
 
-from types import MappingProxyType
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -16,86 +15,53 @@ from homeassistant.config_entries import (
     SOURCE_IMPORT,
     SOURCE_USER,
     ConfigEntryState,
-    ConfigSubentry,
+    ConfigSubentryDataWithId,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 
-ENTRY_DATA = {
-    "device": "/dev/ttyUSB0",
-    "baud": 57600,
-    "datarate": 57600,
-    "frequency": 868300,
-    "led": True,
-    "toggle_interval": 5,
-    "toggle_mask": 255,
-}
-
-
-@pytest.fixture
-def config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return a receiver with a configured sensor subentry."""
-    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA)
-    entry.add_to_hass(hass)
-    hass.config_entries.async_add_subentry(
-        entry,
-        ConfigSubentry(
-            data=MappingProxyType({"id": 1, "name": "Outdoor"}),
-            subentry_type="sensor",
-            title="Outdoor",
-            unique_id="1",
-            subentry_id="sensor_1",
-        ),
-    )
-    return entry
+from .conftest import ENTRY_DATA
 
 
 async def test_receivers_with_same_sensor_key(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    mock_subentries: list[ConfigSubentryDataWithId],
 ) -> None:
     """Test identical sensor keys on different receivers remain independent."""
     second_entry = MockConfigEntry(
-        domain=DOMAIN, data={**ENTRY_DATA, "device": "/dev/ttyUSB1"}
+        domain=DOMAIN,
+        data={**ENTRY_DATA, "device": "/dev/ttyUSB1"},
+        subentries_data=mock_subentries,
     )
 
     with patch("homeassistant.components.lacrosse.pylacrosse.LaCrosse"):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         second_entry.add_to_hass(hass)
-        hass.config_entries.async_add_subentry(
-            second_entry,
-            ConfigSubentry(
-                data=next(iter(config_entry.subentries.values())).data,
-                subentry_type="sensor",
-                title="Outdoor",
-                unique_id="1",
-                subentry_id="sensor_1",
-            ),
-        )
         assert await hass.config_entries.async_setup(second_entry.entry_id)
         await hass.async_block_till_done()
 
         for entry in (config_entry, second_entry):
-            subentry = next(iter(entry.subentries.values()))
-            entity_id = entity_registry.async_get_entity_id(
-                "sensor",
-                DOMAIN,
-                f"{entry.entry_id}_{sensor_entity_key(subentry.subentry_id, 'temperature')}",
-            )
-            assert entity_id is not None
-            entity = entity_registry.async_get(entity_id)
-            assert entity.config_entry_id == entry.entry_id
-            assert entity.config_subentry_id in entry.subentries
-            assert hass.states.get(entity_id) is not None
+            for subentry in entry.subentries.values():
+                entity_id = entity_registry.async_get_entity_id(
+                    "sensor",
+                    DOMAIN,
+                    f"{entry.entry_id}_{sensor_entity_key(subentry.subentry_id, 'temperature')}",
+                )
+                assert entity_id is not None
+                entity = entity_registry.async_get(entity_id)
+                assert entity.config_entry_id == entry.entry_id
+                assert entity.config_subentry_id == subentry.subentry_id
+                assert hass.states.get(entity_id) is not None
 
         assert await hass.config_entries.async_reload(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert len(entity_registry.entities) == 6
+    assert len(entity_registry.entities) == 12
 
 
 async def test_setup_and_unload(
@@ -125,7 +91,7 @@ async def test_setup_and_unload(
         receiver.set_toggle_interval.assert_called_once_with(5)
         receiver.set_toggle_mask.assert_called_once_with(255)
         receiver.start_scan.assert_called_once()
-        assert receiver.register_callback.call_count == 3
+        assert receiver.register_callback.call_count == 6
 
         entity_id = entity_registry.async_get_entity_id(
             "sensor",
@@ -157,17 +123,11 @@ async def test_setup_and_unload(
 async def test_sensor_entity_id_survives_sensor_id_change_and_reload(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test subentry-based entity IDs survive a sensor ID change and reload."""
-    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA)
-    entry.add_to_hass(hass)
-    subentry = ConfigSubentry(
-        data=MappingProxyType({"id": 1, "name": "Outdoor"}),
-        subentry_type="sensor",
-        title="Outdoor",
-        unique_id="1",
-    )
-    hass.config_entries.async_add_subentry(entry, subentry)
+    entry = config_entry
+    subentry = entry.subentries["sensor_1"]
     unique_id = (
         f"{entry.entry_id}_{sensor_entity_key(subentry.subentry_id, 'temperature')}"
     )
@@ -362,11 +322,15 @@ async def test_remove_sensor_subentry(
             (DOMAIN, "/dev/ttyUSB0_1"), entry.entry_id
         )
         assert device is not None
-        subentry_id = next(iter(entry.subentries))
+        subentry_id = "sensor_1"
         assert hass.config_entries.async_remove_subentry(entry, subentry_id)
         await hass.async_block_till_done()
-        assert not entry.subentries
+        assert set(entry.subentries) == {"sensor_2"}
         assert device_registry.async_get(device.id) is None
+        remaining_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "/dev/ttyUSB0_2"), entry.entry_id
+        )
+        assert remaining_device is not None
         temperature_entity_id = entity_registry.async_get_entity_id(
             "sensor",
             DOMAIN,
@@ -376,6 +340,11 @@ async def test_remove_sensor_subentry(
         assert entry.state is ConfigEntryState.LOADED
         assert await hass.config_entries.async_reload(entry.entry_id)
         assert device_registry.async_get(device.id) is None
+        assert hass.config_entries.async_remove_subentry(entry, "sensor_2")
+        await hass.async_block_till_done()
+        assert not entry.subentries
+        assert device_registry.async_get(remaining_device.id) is None
+        assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_add_sensor_to_running_hub(
@@ -394,21 +363,21 @@ async def test_add_sensor_to_running_hub(
         )
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            {"id": 2},
+            {"id": 3},
         )
         await hass.async_block_till_done()
         subentry = next(
             subentry
             for subentry in entry.subentries.values()
-            if subentry.unique_id == "2"
+            if subentry.unique_id == "3"
         )
         device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, "/dev/ttyUSB0_2"), entry.entry_id
+            (DOMAIN, "/dev/ttyUSB0_3"), entry.entry_id
         )
         assert device is not None
         assert device.config_subentry_id == subentry.subentry_id
         entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-        assert len(entities) == 6
+        assert len(entities) == 9
         assert {
             entity.config_subentry_id
             for entity in entities

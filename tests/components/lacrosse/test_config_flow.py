@@ -60,25 +60,6 @@ def test_sensor_subentries_empty_name_uses_sensor_id() -> None:
     assert subentries[0]["title"] == "LaCrosse sensor 1"
 
 
-@pytest.fixture
-def config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return a hub with two ID/name sensor subentries."""
-    entry = MockConfigEntry(domain=DOMAIN, data=RECEIVER_DATA)
-    entry.add_to_hass(hass)
-    for sensor_id, name in ((1, "Outdoor"), (2, "LaCrosse sensor 2")):
-        hass.config_entries.async_add_subentry(
-            entry,
-            ConfigSubentry(
-                data=MappingProxyType({"id": sensor_id, "name": name}),
-                subentry_type="sensor",
-                title=name,
-                unique_id=str(sensor_id),
-                subentry_id=f"sensor_{sensor_id}",
-            ),
-        )
-    return entry
-
-
 @pytest.mark.parametrize(
     ("frequency", "expected_frequency"),
     [
@@ -613,6 +594,7 @@ async def test_add_sensor(
 ) -> None:
     """Test Add Sensor creates a device subentry under the selected hub."""
     original = dict(config_entry.subentries)
+    original_data = dict(config_entry.data)
     result = await hass.config_entries.subentries.async_init(
         (config_entry.entry_id, "sensor"),
         context={"source": config_entries.SOURCE_USER},
@@ -628,7 +610,7 @@ async def test_add_sensor(
         {**TEMPERATURE_SENSOR, "id": 3},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.data == RECEIVER_DATA
+    assert config_entry.data == original_data
     assert len(config_entry.subentries) == 3
     subentry = next(
         subentry

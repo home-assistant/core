@@ -12,7 +12,6 @@ from homeassistant.components.lacrosse.sensor import (
     LaCrosseHumidity,
     LaCrosseSensor,
     LaCrosseTemperature,
-    _add_sensors,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -21,6 +20,7 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 
+@pytest.mark.usefixtures("mock_lacrosse")
 @pytest.mark.parametrize(
     "sensor_types",
     [
@@ -39,25 +39,24 @@ async def test_import_creates_all_entities(
     sensor_types: tuple[str, ...],
 ) -> None:
     """Test YAML imports create every supported measurement."""
-    with patch("homeassistant.components.lacrosse.pylacrosse.LaCrosse"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                "device": "/dev/ttyUSB0",
-                "baud": 57600,
-                "sensors": {
-                    f"outdoor_{sensor_type}": {
-                        "id": 1,
-                        "type": sensor_type,
-                        "name": "Outdoor",
-                        "expire_after": 60,
-                    }
-                    for sensor_type in sensor_types
-                },
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            "device": "/dev/ttyUSB0",
+            "baud": 57600,
+            "sensors": {
+                f"outdoor_{sensor_type}": {
+                    "id": 1,
+                    "type": sensor_type,
+                    "name": "Outdoor",
+                    "expire_after": 60,
+                }
+                for sensor_type in sensor_types
             },
-        )
-        await hass.async_block_till_done()
+        },
+    )
+    await hass.async_block_till_done()
 
     entry = result["result"]
     entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
@@ -109,28 +108,24 @@ async def test_yaml_import(
 
 @pytest.mark.usefixtures("mock_lacrosse", "mock_setup_entry")
 @pytest.mark.parametrize(
-    "unique_id",
+    "mock_unique_id",
     [
         pytest.param(None, id="without-unique-id"),
         pytest.param("/dev/ttyUSB0", id="with-unique-id"),
     ],
 )
 async def test_yaml_import_already_configured(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry, unique_id: str | None
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test an existing receiver still creates only the deprecation issue."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"device": "/dev/ttyUSB0", "baud": 57600},
-        unique_id=unique_id,
-    )
-    entry.add_to_hass(hass)
     assert await async_setup_component(
         hass, "sensor", {"sensor": {"platform": DOMAIN, "sensors": {}}}
     )
     await hass.async_block_till_done()
 
-    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert hass.config_entries.async_entries(DOMAIN) == [config_entry]
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
@@ -292,29 +287,25 @@ async def test_yaml_import_mixed_outcomes(
     )
 
 
-def test_sensor_name_includes_sensor_type(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_lacrosse")
+async def test_sensor_name_includes_sensor_type(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test a friendly name is combined with the sensor type."""
-    added_sensors: list[LaCrosseSensor] = []
-    _add_sensors(
-        hass,
-        MagicMock(),
-        "receiver_entry_id",
-        {
-            "device": "/dev/ttyUSB0",
-            "sensors": {
-                "subentry_id_humidity": {
-                    "id": 1,
-                    "type": "humidity",
-                    "name": "Test",
-                }
-            },
-        },
-        added_sensors.extend,
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert added_sensors[0].name == "Humidity"
-    assert added_sensors[0].has_entity_name
-    assert added_sensors[0].device_info.name == "Test"
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        f"{config_entry.entry_id}_{sensor_entity_key('sensor_1', 'humidity')}",
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Outdoor Humidity"
 
 
 @pytest.mark.parametrize(
@@ -350,6 +341,7 @@ def test_sensor_name_includes_sensor_type(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize("sensor_type", ["temperature", "humidity", "battery"])
 def test_device_uses_name(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     config: dict[str, str | int],
     device_name: str,
     object_id: str,
@@ -364,8 +356,8 @@ def test_device_uses_name(
     sensor = sensor_class(
         hass,
         MagicMock(),
-        "receiver_entry_id",
-        "/dev/ttyUSB0",
+        mock_config_entry.entry_id,
+        mock_config_entry.data["device"],
         f"{object_id}_{sensor_type}",
         device_name,
         None,
@@ -376,18 +368,20 @@ def test_device_uses_name(
     assert sensor.entity_id == f"sensor.{object_id}_{sensor_type}"
 
 
-async def test_temperature_and_humidity_sensor_values(hass: HomeAssistant) -> None:
+async def test_temperature_and_humidity_sensor_values(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test temperature and humidity sensor values update from the receiver."""
     receiver = MagicMock()
     sensor_data = MagicMock(
         temperature=21.5, humidity=54, low_battery=False, new_battery=True
     )
-    config = {"id": 1}
+    config = dict(mock_config_entry.subentries["sensor_1"].data)
     temperature = LaCrosseTemperature(
         hass,
         receiver,
-        "receiver_entry_id",
-        "/dev/ttyUSB0",
+        mock_config_entry.entry_id,
+        mock_config_entry.data["device"],
         "outdoor_temperature",
         "Outdoor temperature",
         None,
@@ -396,8 +390,8 @@ async def test_temperature_and_humidity_sensor_values(hass: HomeAssistant) -> No
     humidity = LaCrosseHumidity(
         hass,
         receiver,
-        "receiver_entry_id",
-        "/dev/ttyUSB0",
+        mock_config_entry.entry_id,
+        mock_config_entry.data["device"],
         "outdoor_humidity",
         "Outdoor humidity",
         None,
@@ -415,18 +409,20 @@ async def test_temperature_and_humidity_sensor_values(hass: HomeAssistant) -> No
     }
 
 
-def test_sensor_registers_callback_when_created(hass: HomeAssistant) -> None:
+def test_sensor_registers_callback_when_created(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test receiver callbacks are registered when the entity is created."""
     receiver = MagicMock()
     sensor = LaCrosseSensor(
         hass,
         receiver,
-        "receiver_entry_id",
-        "/dev/ttyUSB0",
+        mock_config_entry.entry_id,
+        mock_config_entry.data["device"],
         "outdoor_temperature",
         "Outdoor temperature",
         None,
-        {"id": 1},
+        dict(mock_config_entry.subentries["sensor_1"].data),
     )
 
     assert sensor.should_poll is True
@@ -435,17 +431,19 @@ def test_sensor_registers_callback_when_created(hass: HomeAssistant) -> None:
     )
 
 
-async def test_sensor_cancels_expiration_when_removed(hass: HomeAssistant) -> None:
+async def test_sensor_cancels_expiration_when_removed(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test the expiration trigger is cancelled when the entity is removed."""
     sensor = LaCrosseSensor(
         hass,
         MagicMock(),
-        "receiver_entry_id",
-        "/dev/ttyUSB0",
+        mock_config_entry.entry_id,
+        mock_config_entry.data["device"],
         "outdoor_temperature",
         "Outdoor temperature",
         30,
-        {"id": 1},
+        dict(mock_config_entry.subentries["sensor_1"].data),
     )
     expiration_trigger = MagicMock()
     sensor._expiration_trigger = expiration_trigger
@@ -470,18 +468,19 @@ async def test_battery_sensor_updates_and_expires(
     new_battery: bool,
     expected_value: str,
     expected_icon: str,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test battery values, icons, and expiration scheduling."""
     receiver = MagicMock()
     sensor = LaCrosseBattery(
         hass,
         receiver,
-        "receiver_entry_id",
-        "/dev/ttyUSB0",
+        mock_config_entry.entry_id,
+        mock_config_entry.data["device"],
         "outdoor_battery",
         "Outdoor battery",
         30,
-        {"id": 1},
+        dict(mock_config_entry.subentries["sensor_1"].data),
     )
     expiration_trigger = MagicMock()
     sensor_data = MagicMock(
