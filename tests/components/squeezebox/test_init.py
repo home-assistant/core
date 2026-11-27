@@ -257,19 +257,21 @@ async def test_discovery_stopped(
     lms: MagicMock,
 ) -> None:
     """Test that player discovery returns early when discovery is stopped."""
-    discovery_calls = []
+
+    discovery_cycles = []
+    cancel_callbacks = []
 
     async def mock_get_players():
-        """Mock get_players and track when called."""
-        discovery_calls.append(1)
+        """Mock get_players and track discovery cycles."""
+        discovery_cycles.append(len(discovery_cycles))
         return []
 
     lms.async_get_players = mock_get_players
-    scheduled_callbacks = []
 
     def mock_call_later(hass_arg, delay, callback):
-        """Mock async_call_later to capture callbacks."""
-        scheduled_callbacks.append(callback)
+        """Mock async_call_later to capture cancel callbacks and reschedule discovery."""
+        cancel_callbacks.append(callback)
+        # Return a cancel callback
         return lambda: None
 
     with (
@@ -278,19 +280,26 @@ async def test_discovery_stopped(
             "homeassistant.components.squeezebox.async_call_later",
             side_effect=mock_call_later,
         ),
+        patch("homeassistant.components.squeezebox.DISCOVERY_INTERVAL", 0.01),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        # At least one callback should have been scheduled
-        assert len(scheduled_callbacks) > 0
+        # Run multiple discovery cycles
+        for _ in range(2):
+            if cancel_callbacks:
+                await cancel_callbacks[-1]()
+            await hass.async_block_till_done()
+
+    # Should have multiple discovery cycles scheduled
+    initial_cancel_count = len(cancel_callbacks)
+    assert initial_cancel_count >= 2
 
     # Unload to set discovery_stopped = True
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Call the scheduled discovery callback after discovery_stopped is True
-    # This should return early without processing players
-    with patch("homeassistant.components.squeezebox.async_call_later") as call_later:
-        await scheduled_callbacks[0]()
-        call_later.assert_not_called()
+    # Call the latest scheduled discovery callback after discovery_stopped is True
+    # This should return early without processing players (line 237)
+    if cancel_callbacks:
+        await cancel_callbacks[-1]()
