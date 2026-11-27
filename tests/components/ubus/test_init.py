@@ -45,7 +45,9 @@ from .conftest import (
     MOCK_CONFIG,
     MOCK_HOST,
     MOCK_HOST_B,
+    MOCK_HOST_C,
     MOCK_HOST_CONFIG_B,
+    MOCK_HOST_CONFIG_C,
     router_subentry_data,
 )
 
@@ -333,6 +335,53 @@ async def test_all_routers_failing_fails_the_tick(
 
     assert coordinator.last_update_success
     assert hass.states.get(entity_id).state == STATE_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_router_reconfiguration_discards_stale_stamps(
+    hass: HomeAssistant,
+    hub_entry: MockConfigEntry,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test reconfiguring a router's host discards the old host's stamps.
+
+    The subentry id survives the host change, so the old host's sightings
+    must not be retained and reported as coming from the new host.
+    """
+    _mock, ubus = mock_ubus_by_host
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    hub_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = hub_entry.runtime_data
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+
+    # Reconfigure the router to a different host.
+    subentry = next(iter(hub_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        hub_entry, subentry, data=MOCK_HOST_CONFIG_C, title=MOCK_HOST_C
+    )
+    await hass.async_block_till_done()
+
+    # The new host has never seen the phone, so the old host's stamps are
+    # dropped with it; the tracker is unavailable, not home on the new host.
+    assert coordinator.data == {}
+    assert coordinator.latest_views[subentry.subentry_id] == {}
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert "source" not in state.attributes
 
 
 async def test_slow_router_does_not_stretch_refresh_interval(

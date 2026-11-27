@@ -283,6 +283,12 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         # compares this to detect a change, as subentry updates mutate the
         # subentries in place. None until the first poll built the hosts.
         self._polled_signature: tuple | None = None
+        # The signature of the router configuration under which each
+        # subentry's stamps were last recorded. A subentry id survives a
+        # host change, so a stamp is only valid while its router is
+        # unchanged; a reconfigured router's stamps are dropped on the next
+        # merge.
+        self._stamp_signatures: dict[str, tuple] = {}
         self._tick_results: dict[str, BaseException | dict[str, str | None]] = {}
         # The poll running in the executor for each router; a tick which
         # times out re-awaits the same poll on the next tick, so two polls
@@ -343,25 +349,35 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         for host, poll in zip(hosts.values(), polls, strict=True):
             if poll.done():
                 self._inflight.pop(host, None)
-        # A router removed while the tick was in flight must not resurrect
-        # its clients in the merged presence.
+        # A router removed or reconfigured while the tick was in flight must
+        # not feed the merged presence: a removed router's clients would be
+        # resurrected, and a reconfigured router's in-flight result is from
+        # the old host, as the subentry id survives a host change.
         active = self.config_entry.subentries
-        self._tick_results = {
-            host.subentry_id: result
-            for host, result in zip(hosts.values(), results, strict=True)
-            if host.subentry_id in active
-        }
+        self._tick_results = {}
+        for host, result in zip(hosts.values(), results, strict=True):
+            subentry = active.get(host.subentry_id)
+            if subentry is None or host.signature != subentry_signature(subentry):
+                self.latest_views.pop(host.subentry_id, None)
+                continue
+            self._tick_results[host.subentry_id] = result
         old: ClientPresence = self.data_or_none or {}
-        # Stamps of a host which no longer exists are dropped; every other
-        # stamp is kept, as a client stays reported while its most recent
-        # stamp is within consider_home, even when its router no longer
-        # sees it (a successful tick only restamps the clients it reports).
+        # Stamps are dropped for routers which are gone or were reconfigured;
+        # every other stamp is kept, as a client stays reported while its
+        # most recent stamp is within consider_home, even when its router no
+        # longer sees it (a successful tick only restamps the clients it
+        # reports).
         active_ids = set(self._tick_results)
         presence: ClientPresence = {}
         for mac, per_host in old.items():
             for subentry_id, stamp in per_host.items():
-                if subentry_id in active_ids:
-                    presence.setdefault(mac, {})[subentry_id] = stamp
+                if subentry_id not in active_ids:
+                    continue
+                if self._stamp_signatures.get(subentry_id) != subentry_signature(
+                    active[subentry_id]
+                ):
+                    continue
+                presence.setdefault(mac, {})[subentry_id] = stamp
         now = dt_util.utcnow()
         failed: set[str] = set()
         for subentry_id, result in self._tick_results.items():
@@ -376,6 +392,14 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
                 presence.setdefault(mac, {})[subentry_id] = ClientStamp(
                     now, hostname, self._seq
                 )
+        # Record the router configuration each subentry's stamps now stand
+        # under, so a reconfigured router's stale stamps are dropped on the
+        # next merge.
+        self._stamp_signatures = {
+            subentry_id: subentry_signature(active[subentry_id])
+            for per_host in presence.values()
+            for subentry_id in per_host
+        }
         if failed and len(failed) == len(self._tick_results):
             # Every router failed; the entry reports the failure.
             errors = [
@@ -421,8 +445,10 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
             if host is None or subentry_signature(subentry) != host.signature:
                 if host is not None:
                     # A reconfigured router's stuck poll queries the old
-                    # configuration; it must not feed the new one.
+                    # configuration; it must not feed the new one, and its
+                    # client view is for the old host.
                     self._inflight.pop(host, None)
+                    self.latest_views.pop(subentry_id, None)
                 self.hosts[subentry_id] = _UbusHost(subentry)
         self._polled_signature = self._subentries_signature()
         return self.hosts

@@ -995,6 +995,69 @@ async def test_late_refresh_after_subentry_removal_is_ignored(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_in_flight_poll_ignored_for_reconfigured_subentry(
+    hass: HomeAssistant,
+    hub_entry: MockConfigEntry,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an in-flight poll is ignored when the subentry is reconfigured.
+
+    Reconfiguration retains the subentry id, so the in-flight response from
+    the old host must not stamp its clients as being on the new host.
+    """
+    _mock, ubus = mock_ubus_by_host
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    hub_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+
+    # The next poll is blocked in flight, and the subentry is reconfigured
+    # to a different host while the poll is running.
+    poll_started = threading.Event()
+    release = threading.Event()
+
+    def _blocked_clients(interface: str) -> dict:
+        poll_started.set()
+        release.wait()
+        return {"clients": {MAC_PHONE: {"authorized": True}}}
+
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = _blocked_clients
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    # Wait for the poll to be in flight, then reconfigure the subentry.
+    try:
+        assert await hass.async_add_executor_job(poll_started.wait, 10)
+        subentry = next(iter(hub_entry.subentries.values()))
+        hass.config_entries.async_update_subentry(
+            hub_entry, subentry, data=MOCK_HOST_CONFIG_C, title=MOCK_HOST_C
+        )
+        await hass.async_block_till_done()
+    finally:
+        release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The in-flight result from the old host is ignored, so without a fresh
+    # stamp from the new host the tracker is unavailable.
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert "source" not in state.attributes
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_timed_out_tick_reuses_in_flight_poll(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
