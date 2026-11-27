@@ -87,7 +87,7 @@
           "name": "Item name"
         },
         "parent": {
-          "description": "The name or UID of the to-do item to add this item to as a subtask. The parent cannot be a subtask itself.",
+          "description": "The name or UID of the to-do item to add this item to as a subtask. The parent cannot be a subtask itself. If you have items with duplicate names, you can reference specific ones using their UID instead.",
           "name": "Parent item name or UID"
         }
       },
@@ -137,7 +137,7 @@
           "name": "Item name or UID"
         },
         "parent": {
-          "description": "The name or UID of the to-do item to make this item a subtask of. The parent cannot be a subtask itself.",
+          "description": "The name or UID of the to-do item to make this item a subtask of. The parent cannot be a subtask itself. If you have items with duplicate names, you can reference specific ones using their UID instead.",
           "name": "[%key:component::todo::services::add_item::fields::parent::name%]"
         },
         "rename": {

@@ -1,5 +1,6 @@
 """Tests for the todo integration."""
 
+import asyncio
 import dataclasses
 import datetime as dt
 from datetime import timedelta
@@ -33,7 +34,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import create_mock_platform
+from . import MockTodoListEntity, create_mock_platform
 
 TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
 TEST_OFFSET = "-06:00"
@@ -1014,6 +1015,273 @@ async def test_parent_invalid(
     assert exc.value.translation_placeholders == translation_placeholders
     subtask_entity.async_create_todo_item.assert_not_called()
     subtask_entity.async_update_todo_item.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("items", "service", "service_data", "translation_key", "translation_placeholders"),
+    [
+        (
+            [
+                TodoItem(summary="Item #1", status=TodoItemStatus.NEEDS_ACTION),
+            ],
+            TodoServices.ADD_ITEM,
+            {
+                TodoServiceArgument.ITEM: "New item",
+                TodoServiceArgument.PARENT: "Item #1",
+            },
+            "parent_not_found",
+            {"parent": "Item #1"},
+        ),
+        (
+            [
+                TodoItem(
+                    summary="Item #1", uid="1", status=TodoItemStatus.NEEDS_ACTION
+                ),
+                TodoItem(
+                    summary="Item #2",
+                    uid="2",
+                    status=TodoItemStatus.COMPLETED,
+                    parent_uid="1",
+                ),
+                TodoItem(
+                    summary="Item #3", uid="3", status=TodoItemStatus.NEEDS_ACTION
+                ),
+            ],
+            TodoServices.UPDATE_ITEM,
+            {TodoServiceArgument.ITEM: "1", TodoServiceArgument.PARENT: "3"},
+            "item_has_subtasks",
+            {"item": "Item #1"},
+        ),
+        (
+            [
+                TodoItem(uid="1", status=TodoItemStatus.NEEDS_ACTION),
+                TodoItem(
+                    summary="Item #2",
+                    uid="2",
+                    status=TodoItemStatus.NEEDS_ACTION,
+                    parent_uid="1",
+                ),
+                TodoItem(
+                    summary="Item #3", uid="3", status=TodoItemStatus.NEEDS_ACTION
+                ),
+            ],
+            TodoServices.UPDATE_ITEM,
+            {TodoServiceArgument.ITEM: "1", TodoServiceArgument.PARENT: "3"},
+            "item_has_subtasks",
+            {"item": "1"},
+        ),
+    ],
+    ids=[
+        "parent_without_uid",
+        "item_has_only_completed_subtasks",
+        "item_without_summary_has_subtasks",
+    ],
+)
+async def test_parent_invalid_for_list(
+    hass: HomeAssistant,
+    subtask_entity: TodoListEntity,
+    items: list[TodoItem],
+    service: TodoServices,
+    service_data: dict[str, Any],
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+) -> None:
+    """Test a parent that can't be set on a list with these items."""
+    subtask_entity._attr_todo_items = items
+    await create_mock_platform(hass, [subtask_entity])
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            service_data,
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
+            blocking=True,
+        )
+
+    assert exc.value.translation_key == translation_key
+    assert exc.value.translation_placeholders == translation_placeholders
+    subtask_entity.async_create_todo_item.assert_not_called()
+    subtask_entity.async_update_todo_item.assert_not_called()
+
+
+async def test_update_todo_item_service_parent_with_same_name(
+    hass: HomeAssistant,
+    subtask_entity: TodoListEntity,
+) -> None:
+    """Test an item can be a subtask of another item with the same name."""
+    subtask_entity._attr_todo_items = [
+        TodoItem(summary="Task", uid="1", status=TodoItemStatus.NEEDS_ACTION),
+        TodoItem(summary="Task", uid="2", status=TodoItemStatus.NEEDS_ACTION),
+    ]
+    await create_mock_platform(hass, [subtask_entity])
+
+    await hass.services.async_call(
+        DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {TodoServiceArgument.ITEM: "2", TodoServiceArgument.PARENT: "1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
+        blocking=True,
+    )
+
+    args = subtask_entity.async_update_todo_item.call_args
+    assert args
+    assert args.kwargs.get("item") == TodoItem(
+        summary="Task",
+        uid="2",
+        status=TodoItemStatus.NEEDS_ACTION,
+        parent_uid="1",
+    )
+
+
+@pytest.mark.parametrize(
+    ("first", "second", "translation_key"),
+    [
+        (
+            (
+                TodoServices.UPDATE_ITEM,
+                {TodoServiceArgument.ITEM: "1", TodoServiceArgument.PARENT: "3"},
+            ),
+            (
+                TodoServices.UPDATE_ITEM,
+                {TodoServiceArgument.ITEM: "3", TodoServiceArgument.PARENT: "1"},
+            ),
+            "parent_is_subtask",
+        ),
+        (
+            (
+                TodoServices.UPDATE_ITEM,
+                {TodoServiceArgument.ITEM: "3", TodoServiceArgument.PARENT: "1"},
+            ),
+            (
+                TodoServices.ADD_ITEM,
+                {TodoServiceArgument.ITEM: "New item", TodoServiceArgument.PARENT: "3"},
+            ),
+            "parent_is_subtask",
+        ),
+        (
+            (
+                TodoServices.ADD_ITEM,
+                {TodoServiceArgument.ITEM: "New item", TodoServiceArgument.PARENT: "3"},
+            ),
+            (
+                TodoServices.UPDATE_ITEM,
+                {TodoServiceArgument.ITEM: "3", TodoServiceArgument.PARENT: "1"},
+            ),
+            "item_has_subtasks",
+        ),
+    ],
+    ids=["cycle", "add_below_new_subtask", "move_new_parent"],
+)
+async def test_parent_set_while_another_parent_is_set(
+    hass: HomeAssistant,
+    subtask_entity: TodoListEntity,
+    first: tuple[TodoServices, dict[str, str]],
+    second: tuple[TodoServices, dict[str, str]],
+    translation_key: str,
+) -> None:
+    """Test a parent is checked against the list after the parent set before it."""
+    subtask_entity._attr_todo_items = [
+        TodoItem(summary="Item #1", uid="1", status=TodoItemStatus.NEEDS_ACTION),
+        TodoItem(summary="Item #3", uid="3", status=TodoItemStatus.NEEDS_ACTION),
+    ]
+    saved = asyncio.Event()
+
+    async def save(item: TodoItem) -> None:
+        await saved.wait()
+        items = subtask_entity._attr_todo_items or []
+        item = dataclasses.replace(item, uid=item.uid or "new")
+        subtask_entity._attr_todo_items = [
+            *(existing for existing in items if existing.uid != item.uid),
+            item,
+        ]
+
+    subtask_entity.async_create_todo_item.side_effect = save
+    subtask_entity.async_update_todo_item.side_effect = save
+    await create_mock_platform(hass, [subtask_entity])
+
+    calls = [
+        hass.async_create_task(
+            hass.services.async_call(
+                DOMAIN,
+                service,
+                service_data,
+                target={TargetKey.ENTITY_ID: "todo.entity1"},
+                blocking=True,
+            ),
+            eager_start=True,
+        )
+        for service, service_data in (first, second)
+    ]
+    saved.set()
+    await calls[0]
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await calls[1]
+    assert exc.value.translation_key == translation_key
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "service_data"),
+    [
+        (
+            "todo.entity1",
+            {TodoServiceArgument.ITEM: "1", TodoServiceArgument.RENAME: "Renamed"},
+        ),
+        (
+            "todo.entity2",
+            {TodoServiceArgument.ITEM: "3", TodoServiceArgument.PARENT: "1"},
+        ),
+    ],
+    ids=["without_parent", "on_other_list"],
+)
+async def test_update_runs_while_parent_is_set(
+    hass: HomeAssistant,
+    subtask_entity: TodoListEntity,
+    entity_id: str,
+    service_data: dict[str, str],
+) -> None:
+    """Test a call only waits for one that sets a parent if it sets one on that list."""
+    other_list = MockTodoListEntity(list(subtask_entity.todo_items or []))
+    other_list.entity_id = "todo.entity2"
+    other_list._attr_supported_features = subtask_entity.supported_features
+    saved = asyncio.Event()
+
+    async def wait_for_other_call(item: TodoItem) -> None:
+        if item.uid == "3":
+            await saved.wait()
+        else:
+            saved.set()
+
+    async def save_on_other_list(item: TodoItem) -> None:
+        saved.set()
+
+    subtask_entity.async_update_todo_item.side_effect = wait_for_other_call
+    other_list.async_update_todo_item = save_on_other_list
+    await create_mock_platform(hass, [subtask_entity, other_list])
+
+    calls = [
+        hass.async_create_task(
+            hass.services.async_call(
+                DOMAIN,
+                TodoServices.UPDATE_ITEM,
+                data,
+                target={TargetKey.ENTITY_ID: target},
+                blocking=True,
+            ),
+            eager_start=True,
+        )
+        for target, data in (
+            (
+                "todo.entity1",
+                {TodoServiceArgument.ITEM: "3", TodoServiceArgument.PARENT: "1"},
+            ),
+            (entity_id, service_data),
+        )
+    ]
+
+    async with asyncio.timeout(1):
+        await asyncio.gather(*calls)
 
 
 async def test_remove_todo_item_service_by_id(
