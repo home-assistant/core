@@ -213,7 +213,7 @@ class KebaHandler(KebaKeContact):
             timeout = param[KebaServiceArgument.FAILSAFE_TIMEOUT]
             fallback = param[KebaServiceArgument.FAILSAFE_FALLBACK]
             persist = param[KebaServiceArgument.FAILSAFE_PERSIST]
-            await self.set_failsafe(int(timeout), float(fallback), bool(persist))
+            await self.set_failsafe(int(timeout), float(fallback), int(persist))
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:
             _LOGGER.warning(

@@ -40,7 +40,7 @@ FAILSAFE = {
         (KebaService.DEAUTHORIZE, {}, "stop", ("00845500",), 2),
         (KebaService.ENABLE, {}, "enable", (True,), 2),
         (KebaService.DISABLE, {}, "enable", (False,), 2),
-        (KebaService.SET_FAILSAFE, FAILSAFE, "set_failsafe", (30, 6.0, True), 2),
+        (KebaService.SET_FAILSAFE, FAILSAFE, "set_failsafe", (30, 6.0, 1), 2),
     ],
 )
 async def test_action(

@@ -1,5 +1,6 @@
 """Define tests for the AEMET OpenData coordinator."""
 
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aemet_opendata.exceptions import AemetError, AuthError
@@ -13,7 +14,7 @@ from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .util import async_init_integration, mock_api_call
+from .util import async_init_integration, create_api_key, mock_api_call
 
 
 async def test_coordinator_error(
@@ -46,7 +47,10 @@ async def test_coordinator_auth_error(
 
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
-    config_entry = await async_init_integration(hass)
+    config_entry = await async_init_integration(
+        hass,
+        data={CONF_API_KEY: create_api_key(datetime(2021, 2, 1, tzinfo=UTC))},
+    )
 
     with patch(
         "homeassistant.components.aemet.AEMET.api_call",

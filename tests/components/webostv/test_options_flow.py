@@ -90,6 +90,7 @@ async def test_options_flow_entry_not_loaded(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: HOST, CONF_CLIENT_SECRET: CLIENT_KEY},
+        options={CONF_SOURCES: ["Input01"]},
         unique_id=FAKE_UUID,
     )
     entry.add_to_hass(hass)
@@ -98,3 +99,19 @@ async def test_options_flow_entry_not_loaded(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+    # The saved sources stay selectable while the TV is unavailable
+    assert result["data_schema"].schema[CONF_SOURCES].options == {"Input01": "Input01"}
+
+
+async def test_options_flow_no_sources_selected(hass: HomeAssistant, client) -> None:
+    """Test options flow when no source is selected."""
+    entry = await setup_webostv(hass, options={CONF_SOURCES: ["Input01"]})
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_SOURCES: []}

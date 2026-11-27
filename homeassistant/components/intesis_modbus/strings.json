@@ -60,6 +60,14 @@
         "name": "Alarm"
       }
     },
+    "button": {
+      "clear_external_temperature": {
+        "name": "Clear external temperature reference"
+      },
+      "reset_error": {
+        "name": "Reset error"
+      }
+    },
     "climate": {
       "air_conditioner": {
         "state_attributes": {

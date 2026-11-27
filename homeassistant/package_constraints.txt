@@ -37,7 +37,7 @@ fnv-hash-fast==2.0.3
 gazetteer-matcher==1.1.0
 go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
-habluetooth==7.2.0
+habluetooth==7.2.1
 hass-nabucasa==2.9.0
 hassil==3.13.0
 home-assistant-bluetooth==2.0.0
@@ -144,7 +144,7 @@ multidict>=6.0.2
 Brotli>=1.2.1
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.14.3
+pydantic==2.14.4
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0

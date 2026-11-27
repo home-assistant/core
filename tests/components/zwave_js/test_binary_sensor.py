@@ -247,7 +247,10 @@ def _add_water_alarm_notification_values(node_state: NodeDataType) -> NodeDataTy
 
 
 def _add_home_security_notification_values(node_state: NodeDataType) -> NodeDataType:
-    """Return a node state with more Home Security notification values."""
+    """Return a node state with more Home Security notification values and states.
+
+    States 4, 5, 6 and 9 are synthetic: zwave-js reports them as events.
+    """
     updated_state = copy.deepcopy(node_state)
     cover_status_value = next(
         value_data
@@ -263,6 +266,8 @@ def _add_home_security_notification_values(node_state: NodeDataType) -> NodeData
                 "0": "idle",
                 "1": "Intrusion (location provided)",
                 "2": "Intrusion",
+                "5": "Glass breakage (location provided)",
+                "6": "Glass breakage",
             },
         ),
         (
@@ -278,6 +283,16 @@ def _add_home_security_notification_values(node_state: NodeDataType) -> NodeData
         updated_state["values"].append(value_data)
     cover_status_value["metadata"]["states"]["4"] = "Tampering, invalid code"
     cover_status_value["metadata"]["states"]["9"] = "Tampering, product moved"
+    motion_sensor_status_value = next(
+        value_data
+        for value_data in updated_state["values"]
+        if value_data.get("commandClass") == 113
+        and value_data.get("property") == "Home Security"
+        and value_data.get("propertyKey") == "Motion sensor status"
+    )
+    motion_sensor_status_value["metadata"]["states"]["7"] = (
+        "Motion detection (location provided)"
+    )
     return updated_state
 
 
@@ -2072,6 +2087,27 @@ def multisensor_6_home_security_fixture(
             id="tampering_product_moved",
         ),
         pytest.param(
+            "binary_sensor.multisensor_6_glass_breakage_location_provided",
+            BinarySensorDeviceClass.GLASS_BREAK,
+            None,
+            STATE_OFF,
+            id="glass_breakage_location_provided",
+        ),
+        pytest.param(
+            "binary_sensor.multisensor_6_glass_breakage",
+            BinarySensorDeviceClass.GLASS_BREAK,
+            None,
+            STATE_OFF,
+            id="glass_breakage",
+        ),
+        pytest.param(
+            "binary_sensor.multisensor_6_motion_detection_location_provided",
+            BinarySensorDeviceClass.MOTION,
+            None,
+            STATE_OFF,
+            id="motion_detection_location_provided",
+        ),
+        pytest.param(
             NOTIFICATION_MOTION_BINARY_SENSOR,
             BinarySensorDeviceClass.MOTION,
             None,
@@ -2123,9 +2159,12 @@ async def test_home_security_notification_sensors_count(
         "Cover status.4",
         "Cover status.9",
         "Magnetic interference status.11",
+        "Motion sensor status.7",
         "Motion sensor status.8",
         "Sensor status.1",
         "Sensor status.2",
+        "Sensor status.5",
+        "Sensor status.6",
     ]
 
 

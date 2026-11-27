@@ -116,8 +116,22 @@ def _log_api_call_failure(logger: logging.Logger, err: ec2.ApiCallFailedError) -
     )
 
 
+def _log_client_error(logger: logging.Logger, err: ec2.EvohomeError) -> None:
+    """Log (as debug) what the translated error of a client error leaves out."""
+    logger.debug(
+        "%s: %s (reason=%s, details=%s)",
+        type(err).__name__,
+        err,
+        err.reason,
+        err.details,
+    )
+
+
 type _Schedule = list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT]
 type _HighPrecisionTemps = dict[str, float | None]  # by DHW/zone id
+
+# keep the last high-precision temps for this many failed polls (i.e. 10 minutes)
+_HIGH_PRECISION_MAX_FAILED_POLLS: Final = 2
 
 _ERR_SCHEDULE_UPDATE: Final = (
     "%s: Failed to update the schedule (keeping any previous one): %s"
@@ -146,7 +160,8 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
     """Coordinator for an evohome account (the user's config, high-precision temps).
 
     Its data is the latest high-precision temperatures, by DHW/zone id. They are
-    polled, but are not refreshed on demand (unlike a location).
+    polled, but are not refreshed on demand (unlike a location). If a poll fails, the
+    last temperatures are kept for a grace period, before the zones use their v2 ones.
     """
 
     def __init__(
@@ -174,6 +189,8 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
 
         self.data = {}
 
+        self._failed_polls = 0
+
     @override
     async def _async_setup(self) -> None:
         """Set up the coordinator.
@@ -199,8 +216,12 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
                 retry_after=err.retry_after,
             ) from err
 
-        except ec2.EvohomeError as err:
-            raise UpdateFailed(err) from err
+        except ec2.BadApiResponseError as err:
+            _log_client_error(self.logger, err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_response_invalid",
+            ) from err
 
     @override
     async def _async_update_data(self) -> _HighPrecisionTemps:
@@ -224,23 +245,37 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
                 err,
             )
             self.client_v1 = None
-            return self.data
+            return {}
 
         except (ec1.EvohomeError, TimeoutError) as err:
-            self.logger.warning(
-                (
-                    "Unable to obtain the latest high-precision temperatures. "
-                    "They will be ignored this refresh cycle: %r"
-                ),
-                err,
-            )
-            temps: _HighPrecisionTemps = {}  # now considered stale
+            self._failed_polls += 1
+            if self._failed_polls <= _HIGH_PRECISION_MAX_FAILED_POLLS:
+                self.logger.debug(
+                    "Unable to obtain the latest high-precision temperatures, "
+                    "so keeping the previous ones: %r",
+                    err,
+                )
+                return self.data
 
-        else:
-            temps = {}
-            for loc in self.client_v1.location_by_id.values():
-                if loc.tcs:
-                    temps |= await loc.tcs.get_temperatures(dont_update_status=True)
+            if self._failed_polls == _HIGH_PRECISION_MAX_FAILED_POLLS + 1:
+                self.logger.warning(
+                    (
+                        "Unable to obtain the latest high-precision temperatures. "
+                        "Standard-precision temperatures will be used until they "
+                        "are available again: %r"
+                    ),
+                    err,
+                )
+            return {}
+
+        if self._failed_polls > _HIGH_PRECISION_MAX_FAILED_POLLS:
+            self.logger.info("High-precision temperatures are available again")
+        self._failed_polls = 0
+
+        temps: _HighPrecisionTemps = {}
+        for loc in self.client_v1.location_by_id.values():
+            if loc.tcs:
+                temps |= await loc.tcs.get_temperatures(dont_update_status=True)
 
         self.logger.debug("Status (high-res temps) = %s", temps)
         return temps
@@ -335,12 +370,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             ) from err
 
         except ec2.BadApiRequestError as err:  # e.g. InvalidSetModeError
-            self.logger.debug(
-                "The request was rejected by the client: %s (reason=%s, details=%s)",
-                err,
-                err.reason,
-                err.details,
-            )
+            _log_client_error(self.logger, err)
             raise _bad_request_error(err) from err
 
         if request_refresh:  # wait a moment for system to quiesce before updating state
@@ -369,8 +399,19 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
                 retry_after=err.retry_after,
             ) from err
 
-        except ec2.EvohomeError as err:
-            raise UpdateFailed(err) from err
+        except ec2.BadApiResponseError as err:
+            _log_client_error(self.logger, err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_response_invalid",
+            ) from err
+
+        except ec2.StaleConfigError as err:
+            _log_client_error(self.logger, err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="config_stale",
+            ) from err
 
         self.logger.debug("Status = %s", status)
 
