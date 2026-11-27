@@ -8,12 +8,15 @@ from typing import Any, Concatenate
 
 from homematicip.base.enums import FunctionalChannelType
 from homematicip.base.functionalChannels import AccessAuthorizationChannel
+from homematicip.client import Client
 from homematicip.connection.rest_connection import RestResult
 from homematicip.device import Device
 
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import HMIPC_CLIENT_ID
 from .entity import HomematicipGenericEntity
+from .hap import HomematicIPConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +62,13 @@ def handle_errors[_HomematicipGenericEntityT: HomematicipGenericEntity, **_P](
             )
 
     return inner
+
+
+def get_own_client(config_entry: HomematicIPConfigEntry) -> Client | None:
+    """Return the client of this config entry, None if its ID was not stored."""
+    if client_id := config_entry.data.get(HMIPC_CLIENT_ID):
+        return config_entry.runtime_data.home.search_client_by_id(client_id)
+    return None
 
 
 def get_door_opener_authorization_channel(

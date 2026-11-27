@@ -2,6 +2,7 @@
 
 from typing import override
 
+from homematicip.base.enums import UserRole
 from homematicip.base.functionalChannels import (
     AccessAuthorizationChannel,
     DeviceBaseChannel,
@@ -15,7 +16,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .helpers import get_door_opener_authorization_channel, handle_errors
+from .helpers import (
+    get_door_opener_authorization_channel,
+    get_own_client,
+    handle_errors,
+)
 
 DOOR_OPENER_MODELS = {"HmIP-FLC", "HmIP-FDC"}
 
@@ -39,14 +44,17 @@ async def async_setup_entry(
         if getattr(device, "modelType", None) in DOOR_OPENER_MODELS
         and (auth_channel := get_door_opener_authorization_channel(device)) is not None
     )
-    entities.extend(
-        HomematicipIdentifyButton(hap, device)
-        for device in hap.home.devices
-        for channel in device.functionalChannels
-        if isinstance(channel, DeviceBaseChannel)
-        and channel.index == 0
-        and channel.identifySupported
-    )
+    # a restricted client gets CLIENT_ACCESS_DENIED on identify
+    own_client = get_own_client(config_entry)
+    if own_client is None or own_client.userRole is not UserRole.RESTRICTED_USER:
+        entities.extend(
+            HomematicipIdentifyButton(hap, device)
+            for device in hap.home.devices
+            for channel in device.functionalChannels
+            if isinstance(channel, DeviceBaseChannel)
+            and channel.index == 0
+            and channel.identifySupported
+        )
     async_add_entities(entities)
 
 

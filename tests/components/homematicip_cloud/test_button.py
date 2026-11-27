@@ -4,16 +4,24 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pytest_homeassistant.common import snapshot_platform
+from homematicip.base.enums import UserRole
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.components.homematicip_cloud import DOMAIN
+from homeassistant.components.homematicip_cloud.const import (
+    HMIPC_AUTHTOKEN,
+    HMIPC_CLIENT_ID,
+    HMIPC_HAPID,
+    HMIPC_NAME,
+)
 from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .helper import HomeFactory, get_and_check_entity_basics
+from .helper import AUTH_TOKEN, HomeFactory, get_and_check_entity_basics
 
 
 async def test_hmip_garage_door_controller_button(
@@ -228,3 +236,41 @@ async def test_hmip_identify_button_not_supported(
 
     assert hass.states.get("button.garagentor_identify") is None
     assert hass.states.get("button.garagentor")
+
+
+async def test_hmip_identify_button_restricted_client(
+    hass: HomeAssistant, mock_connection
+) -> None:
+    """Test that a restricted client gets no identify buttons."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="3014F711A000000BAD0CAAAA",
+        data={
+            HMIPC_HAPID: "3014F711A000000BAD0CAAAA",
+            HMIPC_AUTHTOKEN: AUTH_TOKEN,
+            HMIPC_NAME: "",
+            HMIPC_CLIENT_ID: "00000000-0000-0000-0000-000000000000",
+        },
+    )
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.BUTTON],
+    ):
+        mock_hap = await HomeFactory(hass, mock_connection, entry).async_get_mock_hap(
+            test_devices=["BSL2"], test_groups=[]
+        )
+
+        assert hass.states.get("button.bsl2_identify") is None
+
+        home = mock_hap.home
+        home.search_client_by_id(
+            "00000000-0000-0000-0000-000000000000"
+        ).userRole = UserRole.USER
+        with patch(
+            "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.get_hap",
+            return_value=home,
+        ):
+            await hass.config_entries.async_reload(entry.entry_id)
+            await hass.async_block_till_done()
+
+    assert hass.states.get("button.bsl2_identify")
