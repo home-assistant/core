@@ -70,6 +70,7 @@ from .server import (
     async_verify_peer_certificate,
     make_server,
 )
+from .services import async_setup_services
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -188,6 +189,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = await async_load_config(hass, config)
 
     websocket_api_module.async_register_websocket_commands(hass)
+    async_setup_services(hass)
 
     supervisor_unix_socket_path: Path | None = None
     if socket_env := os.environ.get("SUPERVISOR_CORE_API_SOCKET"):

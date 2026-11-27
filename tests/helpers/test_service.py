@@ -30,6 +30,7 @@ from homeassistant import config_entries, exceptions
 from homeassistant.auth.permissions import PolicyPermissions
 import homeassistant.components  # noqa: F401
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN, Group
+from homeassistant.components.http import DOMAIN as HTTP_DOMAIN
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
 from homeassistant.components.shell_command import DOMAIN as SHELL_COMMAND_DOMAIN
@@ -892,11 +893,13 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     assert proxy_load_services_files.mock_calls[0][1][0] == unordered(
         [
             await async_get_integration(hass, GROUP_DOMAIN),
+            await async_get_integration(hass, HTTP_DOMAIN),
         ]
     )
 
-    assert len(descriptions) == 1
+    assert len(descriptions) == 2
     assert GROUP_DOMAIN in descriptions
+    assert HTTP_DOMAIN in descriptions
     assert "description" not in descriptions[GROUP_DOMAIN]["reload"]
     assert "fields" in descriptions[GROUP_DOMAIN]["reload"]
 
@@ -942,7 +945,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
         await async_setup_component(hass, LOGGER_DOMAIN, logger_config)
         descriptions = await service.async_get_all_descriptions(hass)
 
-    assert len(descriptions) == 2
+    assert len(descriptions) == 3
     assert LOGGER_DOMAIN in descriptions
     assert descriptions[LOGGER_DOMAIN]["set_default_level"]["name"] == "Translated name"
     assert (

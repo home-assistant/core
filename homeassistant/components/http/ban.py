@@ -8,8 +8,9 @@ from datetime import datetime
 from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
+import os
 from socket import gethostbyaddr
-from typing import Any, Concatenate, Final
+from typing import Any, Concatenate, Final, TypedDict
 
 from aiohttp.web import (
     AppKey,
@@ -25,12 +26,19 @@ import probatio
 from homeassistant.config import load_yaml_config_file
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
 from homeassistant.helpers.http import KEY_HASS, HomeAssistantView
-from homeassistant.util import dt as dt_util, yaml as yaml_util
+from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
 
-from .const import is_supervisor_unix_socket_request
+from .const import (
+    ATTR_IP_ADDRESS,
+    ATTR_IP_BANS,
+    DOMAIN,
+    NO_LOGIN_ATTEMPT_THRESHOLD,
+    is_supervisor_unix_socket_request,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -43,23 +51,70 @@ KEY_LOGIN_THRESHOLD = AppKey[int]("ban_manager.ip_bans_lookup")
 NOTIFICATION_ID_BAN: Final = "ip-ban"
 NOTIFICATION_ID_LOGIN: Final = "http-login"
 
+# Imported once into the store, then renamed with MIGRATED_SUFFIX
 IP_BANS_FILE: Final = "ip_bans.yaml"
+MIGRATED_SUFFIX: Final = ".migrated"
+STORAGE_KEY: Final = f"{DOMAIN}.ip_bans"
+STORAGE_VERSION: Final = 1
+ISSUE_IP_BANS_YAML_IMPORT_ERROR: Final = "ip_bans_yaml_import_error"
+ISSUE_IP_BANS_YAML_IGNORED: Final = "ip_bans_yaml_ignored"
 # Bound the reverse DNS lookup so a slow resolver cannot stall the response
 REVERSE_DNS_TIMEOUT: Final = 1
 ATTR_BANNED_AT: Final = "banned_at"
+ATTR_YAML_MIGRATION_DONE: Final = "yaml_migration_done"
 
 SCHEMA_IP_BAN_ENTRY: Final = probatio.Schema(
     {probatio.Optional(ATTR_BANNED_AT, default=None): probatio.Any(None, cv.datetime)}
 )
+SCHEMA_STORED_IP_BAN: Final = probatio.Schema(
+    {
+        probatio.Required(ATTR_IP_ADDRESS): str,
+        probatio.Required(ATTR_BANNED_AT): cv.datetime,
+    }
+)
+SCHEMA_STORE: Final = probatio.Schema(
+    {
+        probatio.Optional(ATTR_IP_BANS, default=list): list,
+        probatio.Optional(ATTR_YAML_MIGRATION_DONE, default=False): bool,
+    },
+    extra=probatio.ALLOW_EXTRA,
+)
+
+
+class StoredIpBan(TypedDict):
+    """A ban as stored and returned by the WebSocket API."""
+
+    ip_address: str
+    banned_at: str
+
+
+class IpBanStoreData(TypedDict):
+    """Stored IP bans."""
+
+    ip_bans: list[StoredIpBan]
+    yaml_migration_done: bool
 
 
 @callback
-def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> None:
-    """Create IP Ban middleware for the app."""
-    app.middlewares.append(ban_middleware)
-    app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict[IPv4Address | IPv6Address, int](int)
-    app[KEY_LOGIN_THRESHOLD] = login_threshold
-    app[KEY_BAN_MANAGER] = IpBanManager(hass)
+def setup_bans(
+    hass: HomeAssistant,
+    app: Application,
+    login_threshold: int,
+    is_ban_enabled: bool = True,
+) -> None:
+    """Set up the IP ban manager, and the middleware when banning is enabled.
+
+    The manager is always set up so existing bans can be listed and removed.
+    """
+    if is_ban_enabled:
+        app.middlewares.append(ban_middleware)
+    failed_login_attempts = app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict[
+        IPv4Address | IPv6Address, int
+    ](int)
+    app[KEY_LOGIN_THRESHOLD] = (
+        login_threshold if is_ban_enabled else NO_LOGIN_ATTEMPT_THRESHOLD
+    )
+    app[KEY_BAN_MANAGER] = IpBanManager(hass, failed_login_attempts)
 
     async def ban_startup(app: Application) -> None:
         """Initialize bans when app starts up."""
@@ -156,7 +211,8 @@ async def process_wrong_login(request: Request) -> None:
         _LOGGER.warning("Banned IP %s for too many login attempts", remote_addr)
         persistent_notification.async_create(
             hass,
-            f"Too many login attempts from {remote_addr}",
+            f"Too many login attempts from {remote_addr}. You can unblock it under"
+            " [Settings > System > Network](/config/network).",
             "Banning IP address",
             NOTIFICATION_ID_BAN,
         )
@@ -188,8 +244,6 @@ def process_success_login(request: Request) -> None:
     """Process a success login attempt.
 
     Reset failed login attempts counter for remote IP address.
-    No release IP address from banned list function, it can only be done by
-    manual modify ip bans config file.
     """
     app = request.app
     # Check if ban middleware is loaded
@@ -215,60 +269,153 @@ class IpBan:
     ) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
-        self.banned_at = banned_at or dt_util.utcnow()
+        if banned_at is None:
+            banned_at = dt_util.utcnow()
+        elif banned_at.tzinfo is None:
+            # Old versions wrote naive UTC timestamps to ip_bans.yaml
+            banned_at = banned_at.replace(tzinfo=dt_util.UTC)
+        self.banned_at = dt_util.as_utc(banned_at)
+
+    def as_dict(self) -> StoredIpBan:
+        """Return the ban as stored and returned by the WebSocket API."""
+        return {
+            ATTR_IP_ADDRESS: str(self.ip_address),
+            ATTR_BANNED_AT: self.banned_at.isoformat(),
+        }
 
 
 class IpBanManager:
     """Manage IP bans."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        failed_login_attempts: defaultdict[IPv4Address | IPv6Address, int],
+    ) -> None:
         """Init the ban manager."""
         self.hass = hass
-        self.path = hass.config.path(IP_BANS_FILE)
         self.ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
+        self._failed_login_attempts = failed_login_attempts
+        self._store = Store[IpBanStoreData](
+            hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
+        )
+        self._yaml_migration_done = False
 
     async def async_load(self) -> None:
-        """Load the existing IP bans."""
+        """Load the IP bans, importing ip_bans.yaml once.
+
+        A missing or unreadable store means no bans, so it can never keep
+        the HTTP server from starting.
+        """
         try:
-            list_ = await self.hass.async_add_executor_job(
-                load_yaml_config_file, self.path
-            )
-        except FileNotFoundError:
-            return
+            data = await self._store.async_load()
         except HomeAssistantError as err:
-            _LOGGER.error("Unable to load %s: %s", self.path, str(err))
+            _LOGGER.error("Unable to load the IP bans: %s", err)
+            data = None
+        if data is not None:
+            try:
+                data = SCHEMA_STORE(data)
+            except probatio.Invalid as err:
+                _LOGGER.error("Unable to load the IP bans: %s", err)
+                data = None
+        if data is not None:
+            self._yaml_migration_done = data[ATTR_YAML_MIGRATION_DONE]
+            for entry in data[ATTR_IP_BANS]:
+                try:
+                    entry = SCHEMA_STORED_IP_BAN(entry)
+                    ban = IpBan(entry[ATTR_IP_ADDRESS], entry[ATTR_BANNED_AT])
+                except probatio.Invalid, ValueError:
+                    _LOGGER.error("Failed to load IP ban %s", entry)
+                    continue
+                self.ip_bans_lookup[ban.ip_address] = ban
+
+        path = self.hass.config.path(IP_BANS_FILE)
+        if not self._yaml_migration_done:
+            await self._async_import_yaml(path)
+        elif await self.hass.async_add_executor_job(os.path.isfile, path):
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                ISSUE_IP_BANS_YAML_IGNORED,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=ISSUE_IP_BANS_YAML_IGNORED,
+            )
+
+    async def _async_import_yaml(self, path: str) -> None:
+        """Import ip_bans.yaml into the store and rename it."""
+        try:
+            list_ = await self.hass.async_add_executor_job(load_yaml_config_file, path)
+        except FileNotFoundError:
+            list_ = None
+        except HomeAssistantError as err:
+            # Not marked as migrated, so the file is imported once it is fixed
+            _LOGGER.error("Unable to load %s: %s", path, err)
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                ISSUE_IP_BANS_YAML_IMPORT_ERROR,
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key=ISSUE_IP_BANS_YAML_IMPORT_ERROR,
+            )
             return
 
-        ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
-        for ip_ban, ip_info in list_.items():
+        for ip_ban, ip_info in (list_ or {}).items():
             try:
                 ip_info = SCHEMA_IP_BAN_ENTRY(ip_info)
                 ban = IpBan(ip_ban, ip_info["banned_at"])
-                ip_bans_lookup[ban.ip_address] = ban
             except probatio.Invalid as err:
                 _LOGGER.error("Failed to load IP ban %s: %s", ip_info, err)
                 continue
             except ValueError:
                 _LOGGER.error("Failed to load IP ban: invalid IP address %s", ip_ban)
                 continue
+            self.ip_bans_lookup.setdefault(ban.ip_address, ban)
 
-        self.ip_bans_lookup = ip_bans_lookup
+        self._yaml_migration_done = True
+        await self._async_save()
+        if list_ is None:
+            return
 
-    def _add_ban(self, ip_ban: IpBan) -> None:
-        """Update config file with new banned IP address."""
-        with open(self.path, "a", encoding="utf8") as out:
-            ip_ = {
-                str(ip_ban.ip_address): {ATTR_BANNED_AT: ip_ban.banned_at.isoformat()}
+        # Store errors are only logged; keep the file unless the import is stored
+        stored = await self._store.async_load()
+        if stored is None or not stored.get(ATTR_YAML_MIGRATION_DONE):
+            _LOGGER.error("Unable to store the IP bans imported from %s", path)
+            return
+        migrated_path = f"{path}{MIGRATED_SUFFIX}"
+        try:
+            await self.hass.async_add_executor_job(os.replace, path, migrated_path)
+        except OSError as err:
+            _LOGGER.error("Unable to rename %s: %s", path, err)
+            return
+        _LOGGER.info(
+            "Imported the IP bans from %s and renamed it to %s", path, migrated_path
+        )
+
+    async def _async_save(self) -> None:
+        """Save the IP bans."""
+        await self._store.async_save(
+            {
+                ATTR_IP_BANS: [ban.as_dict() for ban in self.ip_bans_lookup.values()],
+                ATTR_YAML_MIGRATION_DONE: self._yaml_migration_done,
             }
-            # Write in a single write call to avoid interleaved writes
-            out.write("\n" + yaml_util.dump(ip_))
+        )
 
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""
         if remote_addr not in self.ip_bans_lookup:
-            new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
-            try:
-                await self.hass.async_add_executor_job(self._add_ban, new_ban)
-            except OSError as err:
-                # The ban still applies until Home Assistant restarts.
-                _LOGGER.error("Unable to save the ban of %s: %s", remote_addr, err)
+            # Applies right away; a failed save is logged by the store
+            self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
+            await self._async_save()
+
+    async def async_remove_ban(self, remote_addr: IPv4Address | IPv6Address) -> bool:
+        """Lift a ban and reset the failed login attempts of the address.
+
+        Return False when the address is not banned.
+        """
+        if self.ip_bans_lookup.pop(remote_addr, None) is None:
+            return False
+        self._failed_login_attempts.pop(remote_addr, None)
+        await self._async_save()
+        return True
