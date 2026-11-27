@@ -46,9 +46,9 @@ def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
             )
         media_data = data[JellyfinServiceArgument.MEDIA]
 
-        if "media_content_id" in media_data:
+        if JellyfinServiceArgument.MEDIA_CONTENT_ID in media_data:
             data[JellyfinServiceArgument.MEDIA_CONTENT_ID] = media_data[
-                "media_content_id"
+                JellyfinServiceArgument.MEDIA_CONTENT_ID
             ]
 
         del data[JellyfinServiceArgument.MEDIA]
