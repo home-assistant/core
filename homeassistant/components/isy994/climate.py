@@ -16,22 +16,16 @@ from pyisy.constants import (
 from pyisy.nodes import Node
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_OFF,
     FAN_ON,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_TENTHS,
-    Platform,
-    UnitOfTemperature,
-)
+from homeassistant.const import PRECISION_TENTHS, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -196,9 +190,9 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        target_temp = kwargs.get(ClimateServiceArgument.TEMPERATURE)
+        target_temp_low = kwargs.get(ClimateServiceArgument.TARGET_TEMP_LOW)
+        target_temp_high = kwargs.get(ClimateServiceArgument.TARGET_TEMP_HIGH)
         if target_temp is not None:
             if self.hvac_mode == HVACMode.COOL:
                 target_temp_high = target_temp

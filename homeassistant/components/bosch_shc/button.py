@@ -13,6 +13,7 @@ from boschshcpy import (
     SHCSmokeDetector,
 )
 from boschshcpy.device import SHCDevice
+from boschshcpy.services_impl import DetectionTestService, WalkTestService
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -94,6 +95,39 @@ PREVIEW_MIN_BRIGHTNESS_DESCRIPTION = SHCButtonEntityDescription[SHCMicromoduleDi
 )
 
 
+def _function_test_start(device: SHCMotionDetector2) -> None:
+    if device.supports_walk_test:
+        device.set_walk_state_request(WalkTestService.WalkStateRequest.WALK_STATE_START)
+    else:
+        device.set_detection_state_request(
+            DetectionTestService.DetectionStateRequest.DETECTION_STATE_START
+        )
+
+
+def _function_test_stop(device: SHCMotionDetector2) -> None:
+    if device.supports_walk_test:
+        device.set_walk_state_request(WalkTestService.WalkStateRequest.WALK_STATE_STOP)
+    else:
+        device.set_detection_state_request(
+            DetectionTestService.DetectionStateRequest.DETECTION_STATE_STOP
+        )
+
+
+FUNCTION_TEST_START_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
+    key="function_test_start",
+    translation_key="function_test_start",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    press_fn=_function_test_start,
+)
+
+FUNCTION_TEST_STOP_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
+    key="function_test_stop",
+    translation_key="function_test_stop",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    press_fn=_function_test_stop,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -127,6 +161,20 @@ async def async_setup_entry(
         for device in session.device_helper.motion_detectors2
         if device.supports_tamper_reset
     )
+    for device in session.device_helper.motion_detectors2:
+        if not (device.supports_walk_test or device.supports_detection_test):
+            continue
+        descriptions = (FUNCTION_TEST_START_DESCRIPTION, FUNCTION_TEST_STOP_DESCRIPTION)
+        entities.extend(
+            SHCButton(
+                hass=hass,
+                device=device,
+                parent_id=shc_info.unique_id,
+                entry_id=config_entry.entry_id,
+                description=description,
+            )
+            for description in descriptions
+        )
     entities.extend(
         SHCButton(
             hass=hass,

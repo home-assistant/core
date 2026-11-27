@@ -43,7 +43,9 @@ _LOGGER = logging.getLogger(__name__)
 class PortainerContainerUpdateEntityDescription(UpdateEntityDescription):
     """Describes Portainer container update entity."""
 
-    installed_version: Callable[[LocalImageInformation], str | None]
+    installed_version: Callable[
+        [LocalImageInformation, PortainerImageUpdateStatus | None], str | None
+    ]
     latest_version: Callable[[PortainerImageUpdateStatus | None], str | None]
 
 
@@ -64,8 +66,14 @@ CONTAINER_IMAGE: tuple[PortainerContainerUpdateEntityDescription] = (
         key="container_image_update",
         translation_key="container_image_update",
         entity_category=EntityCategory.CONFIG,
-        installed_version=lambda data: (
-            _short_digest(data.repo_digests[0].partition("@")[2])
+        installed_version=lambda data, status: (
+            _short_digest(
+                status.registry_digest
+                if status is not None
+                and status.registry_digest
+                in [digest.partition("@")[2] for digest in data.repo_digests]
+                else data.repo_digests[0].partition("@")[2]
+            )
             if data.repo_digests
             else None
         ),
@@ -182,7 +190,7 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
     def installed_version(self) -> str | None:
         """Return installed version."""
         return self.entity_description.installed_version(
-            self.container_data.local_image
+            self.container_data.local_image, self.container_data.image_status
         )
 
     @override

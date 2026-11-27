@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
-from linkplay.exceptions import LinkPlayRequestException
+from linkplay.exceptions import LinkPlayInvalidDataException, LinkPlayRequestException
 from linkplay.manufacturers import MANUFACTURER_WIIM
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -212,14 +212,22 @@ async def test_zeroconf_flow_re_entry(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "exception",
+    [
+        LinkPlayRequestException("Error"),
+        LinkPlayInvalidDataException("Unexpected JSON (unknown command)"),
+    ],
+)
 async def test_zeroconf_flow_errors(
     hass: HomeAssistant,
     mock_linkplay_factory_bridge: AsyncMock,
+    exception: Exception,
 ) -> None:
     """Test flow when the device discovered through Zeroconf cannot be reached."""
 
     # Temporarily make the mock_linkplay_factory_bridge throw an exception
-    mock_linkplay_factory_bridge.side_effect = (LinkPlayRequestException("Error"),)
+    mock_linkplay_factory_bridge.side_effect = (exception,)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -250,14 +258,22 @@ async def test_zeroconf_flow_ignores_wiim_device(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "exception",
+    [
+        LinkPlayRequestException("Error"),
+        LinkPlayInvalidDataException("Unexpected JSON (unknown command)"),
+    ],
+)
 async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_linkplay_factory_bridge: AsyncMock,
+    exception: Exception,
 ) -> None:
     """Test flow when the device cannot be reached."""
 
     # Temporarily make the mock_linkplay_factory_bridge throw an exception
-    mock_linkplay_factory_bridge.side_effect = (LinkPlayRequestException("Error"),)
+    mock_linkplay_factory_bridge.side_effect = (exception,)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

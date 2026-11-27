@@ -69,19 +69,18 @@ from homeassistant.helpers import (
     system_state,
     trace,
 )
+from homeassistant.helpers.bootstrap_progress import (
+    BootstrapIntegrationsProgress,
+    BootstrapPhase,
+    BootstrapProgress,
+    _async_set_bootstrap_progress_source,
+)
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
 from homeassistant.loader import Integration, async_get_integration
-from homeassistant.setup import (
-    BootstrapIntegrationsProgress,
-    BootstrapPhase,
-    BootstrapProgress,
-    _async_set_bootstrap_progress_source,
-    async_set_domains_to_be_loaded,
-    async_setup_component,
-)
+from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 

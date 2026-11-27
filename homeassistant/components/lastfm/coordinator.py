@@ -48,6 +48,7 @@ class LastFMUserData:
     now_playing: str | None
     top_track: str | None
     last_track: str | None
+    now_playing_image: str | None
 
 
 class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData]]):
@@ -118,7 +119,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
         now_playing = None
         last_tracks = []
         try:
-            now_playing = format_track(user.get_now_playing())
+            now_playing = user.get_now_playing()
             last_tracks = user.get_recent_tracks(limit=1)
         except PyLastError as exc:
             self._raise_if_auth_failed(exc)
@@ -148,7 +149,18 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
         return LastFMUserData(
             play_count,
             image,
-            now_playing,
+            format_track(now_playing),
             top_track,
             last_track,
+            self._get_cover_image(now_playing),
         )
+
+    def _get_cover_image(self, track: Track | None) -> str | None:
+        """Return the album art of a track."""
+        if track is None:
+            return None
+        try:
+            return track.get_cover_image()
+        except IndexError:
+            # pylast raises IndexError when Last.fm returns no images
+            return None

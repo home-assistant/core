@@ -45,6 +45,7 @@ CONF_USER_DATA_WITH_SECRET = {
     CONF_MAIN_USER: USERNAME_1,
 }
 CONF_FRIENDS_DATA = {CONF_USERS: [USERNAME_2]}
+COVER_IMAGE = "https://lastfm.freetls.fastly.net/i/u/300x300/cover.png"
 
 
 class MockNetwork:
@@ -183,6 +184,18 @@ class MockSessionKeyGenerator:
         if self.session_key_error:
             raise self.session_key_error
         return self.session_key, self.session_username
+
+
+def mock_track(images: list[str] | Undefined = Undefined) -> Track:
+    """Return a track as returned by pylast, with its cover images."""
+    return Track(
+        "artist",
+        "title",
+        MockNetwork("lastfm"),
+        info={"image": ["small", "medium", "large", COVER_IMAGE]}
+        if images is Undefined
+        else {"image": images},
+    )
 
 
 def patch_user(user: MockUser) -> MockUser:
