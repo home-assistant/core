@@ -66,6 +66,7 @@ from .const import (
     ATTR_SHUFFLE_ENABLED,
     DOMAIN,
     LOGGER,
+    SLEEP_TIMER_OFF,
 )
 from .entity import MusicAssistantDashboardEntity, MusicAssistantEntity
 from .helpers import (
@@ -775,46 +776,31 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     @catch_musicassistant_error
     async def _async_handle_set_sleep_timer(
         self,
-        mode: SleepTimerMode,
+        mode: str,
         duration: timedelta | None = None,
         username: str | None = None,
     ) -> None:
-        """Set the sleep timer of the player."""
-        if mode is SleepTimerMode.DURATION and duration is None:
+        """Set or clear the sleep timer of the player."""
+        if mode == SleepTimerMode.DURATION and duration is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="sleep_timer_duration_required",
             )
-        if mode is not SleepTimerMode.DURATION and duration is not None:
+        if mode != SleepTimerMode.DURATION and duration is not None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="sleep_timer_duration_not_allowed",
             )
+        user = username if username is not None else user_from_context(self._context)
         with catch_user_not_found(username):
+            if mode == SLEEP_TIMER_OFF:
+                await self.mass.players.clear_sleep_timer(self.player_id, user=user)
+                return
             await self.mass.players.set_sleep_timer(
                 self.player_id,
                 int(duration.total_seconds()) if duration is not None else None,
-                mode,
-                user=(
-                    username
-                    if username is not None
-                    else user_from_context(self._context)
-                ),
-            )
-
-    @catch_musicassistant_error
-    async def _async_handle_clear_sleep_timer(
-        self, username: str | None = None
-    ) -> None:
-        """Clear the sleep timer of the player."""
-        with catch_user_not_found(username):
-            await self.mass.players.clear_sleep_timer(
-                self.player_id,
-                user=(
-                    username
-                    if username is not None
-                    else user_from_context(self._context)
-                ),
+                SleepTimerMode(mode),
+                user=user,
             )
 
     @override

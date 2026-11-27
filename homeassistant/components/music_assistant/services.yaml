@@ -332,6 +332,7 @@ set_sleep_timer:
       selector:
         select:
           options:
+            - "off"
             - "duration"
             - "end_of_item"
             - "end_of_chapter"
@@ -340,20 +341,6 @@ set_sleep_timer:
       example: "00:30:00"
       selector:
         duration:
-    username:
-      example: "john"
-      selector:
-        text:
-
-clear_sleep_timer:
-  target:
-    entity:
-      domain: media_player
-      integration: music_assistant
-      device_class: speaker
-      supported_features:
-        - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
-  fields:
     username:
       example: "john"
       selector:

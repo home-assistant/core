@@ -460,21 +460,12 @@
       "options": {
         "duration": "After a duration",
         "end_of_chapter": "End of the current chapter",
-        "end_of_item": "End of the current item"
+        "end_of_item": "End of the current item",
+        "off": "[%key:common::state::off%]"
       }
     }
   },
   "services": {
-    "clear_sleep_timer": {
-      "description": "Clears the sleep timer of a Music Assistant player.",
-      "fields": {
-        "username": {
-          "description": "[%key:component::music_assistant::services::play_queue_item::fields::username::description%]",
-          "name": "[%key:component::music_assistant::services::get_library::fields::username::name%]"
-        }
-      },
-      "name": "Clear sleep timer"
-    },
     "get_library": {
       "description": "Retrieves items from a Music Assistant library.",
       "fields": {
@@ -674,14 +665,14 @@
       }
     },
     "set_sleep_timer": {
-      "description": "Stops playback on a Music Assistant player after a duration, or at the end of the current item or chapter.",
+      "description": "Stops playback on a Music Assistant player after a duration, or at the end of the current item or chapter. Off clears the sleep timer.",
       "fields": {
         "duration": {
           "description": "Time until playback stops. Only for the duration mode.",
           "name": "Duration"
         },
         "mode": {
-          "description": "When playback stops. An item without chapters stops at its end.",
+          "description": "When playback stops, or off to clear the sleep timer. An item without chapters stops at its end.",
           "name": "Mode"
         },
         "username": {

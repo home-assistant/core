@@ -2150,11 +2150,12 @@ CALLING_USER = {"provider": "homeassistant", "user_id": "ha_user_1", "required":
 
 
 @pytest.mark.parametrize(
-    ("schema_version", "service_data", "expected_kwargs"),
+    ("schema_version", "service_data", "expected_command", "expected_kwargs"),
     [
         pytest.param(
             117,
             {MusicAssistantServiceArgument.DURATION: "00:30:00"},
+            "players/sleep_timer/set",
             {"seconds": 1800, "require_schema": 117, "user": CALLING_USER},
             id="duration_calling_user",
         ),
@@ -2164,12 +2165,14 @@ CALLING_USER = {"provider": "homeassistant", "user_id": "ha_user_1", "required":
                 MusicAssistantServiceArgument.DURATION: "00:30:00",
                 MusicAssistantServiceArgument.USERNAME: "john",
             },
+            "players/sleep_timer/set",
             {"seconds": 1800, "require_schema": 117, "user": "john"},
             id="duration_given_user",
         ),
         pytest.param(
             117,
             {MusicAssistantServiceArgument.MODE: "end_of_chapter"},
+            "players/sleep_timer/set",
             {
                 "seconds": None,
                 "mode": "end_of_chapter",
@@ -2181,14 +2184,40 @@ CALLING_USER = {"provider": "homeassistant", "user_id": "ha_user_1", "required":
         pytest.param(
             105,
             {MusicAssistantServiceArgument.DURATION: "00:30:00"},
+            "players/sleep_timer/set",
             {"seconds": 1800, "require_schema": None},
             id="duration_older_server",
         ),
         pytest.param(
             105,
             {MusicAssistantServiceArgument.MODE: "end_of_item"},
+            "players/sleep_timer/set",
             {"seconds": None, "mode": "end_of_item", "require_schema": 105},
             id="end_of_item_older_server",
+        ),
+        pytest.param(
+            117,
+            {MusicAssistantServiceArgument.MODE: "off"},
+            "players/sleep_timer/clear",
+            {"require_schema": 117, "user": CALLING_USER},
+            id="off_calling_user",
+        ),
+        pytest.param(
+            117,
+            {
+                MusicAssistantServiceArgument.MODE: "off",
+                MusicAssistantServiceArgument.USERNAME: "john",
+            },
+            "players/sleep_timer/clear",
+            {"require_schema": 117, "user": "john"},
+            id="off_given_user",
+        ),
+        pytest.param(
+            105,
+            {MusicAssistantServiceArgument.MODE: "off"},
+            "players/sleep_timer/clear",
+            {"require_schema": None},
+            id="off_older_server",
         ),
     ],
 )
@@ -2197,9 +2226,10 @@ async def test_media_player_set_sleep_timer_action(
     music_assistant_client: MagicMock,
     schema_version: int,
     service_data: dict[str, Any],
+    expected_command: str,
     expected_kwargs: dict[str, Any],
 ) -> None:
-    """Test set_sleep_timer sends the mode and acts as a user where the server supports it."""
+    """Test set_sleep_timer sets or clears the timer as a user where the server supports it."""
     music_assistant_client.server_info.schema_version = schema_version
     await setup_integration_from_fixtures(hass, music_assistant_client)
     music_assistant_client.send_command.return_value = 1767225600.0
@@ -2212,7 +2242,7 @@ async def test_media_player_set_sleep_timer_action(
         context=Context(user_id="ha_user_1"),
     )
     assert music_assistant_client.send_command.call_args == call(
-        "players/sleep_timer/set", player_id="00:00:00:00:00:01", **expected_kwargs
+        expected_command, player_id="00:00:00:00:00:01", **expected_kwargs
     )
 
 
@@ -2227,6 +2257,14 @@ async def test_media_player_set_sleep_timer_action(
             },
             "sleep_timer_duration_not_allowed",
             id="duration_with_end_of_item",
+        ),
+        pytest.param(
+            {
+                MusicAssistantServiceArgument.MODE: "off",
+                MusicAssistantServiceArgument.DURATION: "00:30:00",
+            },
+            "sleep_timer_duration_not_allowed",
+            id="duration_with_off",
         ),
     ],
 )
@@ -2297,44 +2335,3 @@ async def test_media_player_set_sleep_timer_action_older_server(
             blocking=True,
         )
     assert err.value.translation_key == "server_too_old"
-
-
-@pytest.mark.parametrize(
-    ("schema_version", "extra_data", "expected_kwargs"),
-    [
-        pytest.param(
-            117,
-            {},
-            {"require_schema": 117, "user": CALLING_USER},
-            id="calling_user",
-        ),
-        pytest.param(
-            117,
-            {MusicAssistantServiceArgument.USERNAME: "john"},
-            {"require_schema": 117, "user": "john"},
-            id="given_user",
-        ),
-        pytest.param(105, {}, {"require_schema": None}, id="older_server"),
-    ],
-)
-async def test_media_player_clear_sleep_timer_action(
-    hass: HomeAssistant,
-    music_assistant_client: MagicMock,
-    schema_version: int,
-    extra_data: dict[str, Any],
-    expected_kwargs: dict[str, Any],
-) -> None:
-    """Test clear_sleep_timer acts as a user where the server supports it."""
-    music_assistant_client.server_info.schema_version = schema_version
-    await setup_integration_from_fixtures(hass, music_assistant_client)
-    MockUser(id="ha_user_1", is_owner=True).add_to_hass(hass)
-    await hass.services.async_call(
-        DOMAIN,
-        MusicAssistantService.CLEAR_SLEEP_TIMER,
-        {TargetKey.ENTITY_ID: "media_player.test_player_1"} | extra_data,
-        blocking=True,
-        context=Context(user_id="ha_user_1"),
-    )
-    assert music_assistant_client.send_command.call_args == call(
-        "players/sleep_timer/clear", player_id="00:00:00:00:00:01", **expected_kwargs
-    )
