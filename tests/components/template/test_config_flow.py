@@ -3133,14 +3133,6 @@ LIST_OR_TEMPLATE_INPUT = [
         id="climate_hvac_modes",
     ),
     pytest.param(
-        "device_tracker",
-        {},
-        "in_zones",
-        "in_zones",
-        ["zone.home"],
-        id="device_tracker_in_zones",
-    ),
-    pytest.param(
         "event",
         {"event_type": "{{ 'a' }}"},
         "event_types",
@@ -3271,7 +3263,6 @@ async def test_config_flow_list_or_template_without_template(
 @pytest.mark.parametrize(
     ("template_type", "user_input", "option"),
     [
-        pytest.param("device_tracker", {}, "in_zones", id="device_tracker_in_zones"),
         pytest.param("media_player", {}, "source_list", id="media_player_source_list"),
         pytest.param("vacuum", {"start": []}, "fan_speeds", id="vacuum_fan_speeds"),
     ],

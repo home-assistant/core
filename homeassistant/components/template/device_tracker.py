@@ -111,9 +111,7 @@ def validate_in_zones(
 
 TRACKER_COMMON_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_IN_ZONES): tcv.list_or_template(
-            probatio.All(cv.entity_id, cv.entity_domain(zone.DOMAIN))
-        ),
+        probatio.Optional(CONF_IN_ZONES): cv.template,
         probatio.Optional(CONF_LATITUDE): cv.template,
         probatio.Optional(CONF_LOCATION_ACCURACY): cv.template,
         probatio.Optional(CONF_LONGITUDE): cv.template,

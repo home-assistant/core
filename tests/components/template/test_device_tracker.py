@@ -104,7 +104,7 @@ async def setup_single_attribute_tracker(
     style: ConfigurationStyle,
     config: ConfigType,
     attribute: str,
-    attribute_template: str | list[str],
+    attribute_template: str,
 ) -> None:
     """Do setup of device_tracker integration testing a single attribute."""
     await setup_zones(hass)
@@ -257,9 +257,6 @@ async def test_syntax_error(hass: HomeAssistant) -> None:
             ["zone.home", "zone.work"],
             STATE_HOME,
         ),
-        (["zone.work"], ["zone.work"], "Work"),
-        (["zone.work", "zone.home"], ["zone.home", "zone.work"], STATE_HOME),
-        (["zone.something"], [], STATE_NOT_HOME),
         ("{{ ['zone.something'] }}", [], STATE_NOT_HOME),
         ("{{ ['sensor.something'] }}", [], STATE_NOT_HOME),
         ("{{ ['not_an_entity_id'] }}", [], STATE_NOT_HOME),
@@ -341,26 +338,6 @@ async def test_in_zones_creates_error(
     assert state.attributes["in_zones"] == []
 
     assert error in caplog_setup_text or error in caplog.text
-
-
-@pytest.mark.parametrize(
-    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
-)
-@pytest.mark.parametrize(
-    "in_zones", [["zone.home", "sensor.something"], ["not_an_entity_id"]]
-)
-async def test_bad_static_in_zones(
-    hass: HomeAssistant,
-    style: ConfigurationStyle,
-    in_zones: list[str],
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a static in_zones list with an item that is not a zone is a config error."""
-    await setup_zones(hass)
-    await setup_entity(hass, TEST_TRACKER, style, 0, {"in_zones": in_zones})
-
-    assert hass.states.async_all(TEST_TRACKER.domain) == []
-    assert "Invalid config for 'template'" in caplog.text
 
 
 @pytest.mark.parametrize(

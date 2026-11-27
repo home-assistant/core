@@ -6,7 +6,7 @@ from typing import Any, cast, override
 
 import probatio
 
-from homeassistant.components import websocket_api, zone
+from homeassistant.components import websocket_api
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.media_player import SERVICE_SELECT_SOURCE
 from homeassistant.components.number import (
@@ -224,7 +224,6 @@ _REQUIRED_OPTIONS: dict[str, tuple[tuple[str, str, str], ...]] = {
 # Options that take a list of items or a template rendering one
 _LIST_OR_TEMPLATE_OPTIONS: dict[str, tuple[str, ...]] = {
     Platform.CLIMATE: (CONF_HVAC_MODES,),
-    Platform.DEVICE_TRACKER: (CONF_IN_ZONES,),
     Platform.EVENT: (CONF_EVENT_TYPES,),
     Platform.MEDIA_PLAYER: (CONF_SOURCE_LIST,),
     Platform.SELECT: (CONF_OPTIONS,),
@@ -234,7 +233,6 @@ _LIST_OR_TEMPLATE_OPTIONS: dict[str, tuple[str, ...]] = {
 
 # Optional list options are unset when the frontend sends an empty list
 _OPTIONAL_LIST_OPTIONS: dict[str, tuple[str, ...]] = {
-    Platform.DEVICE_TRACKER: (CONF_IN_ZONES,),
     Platform.MEDIA_PLAYER: (CONF_SOURCE_LIST,),
     Platform.VACUUM: (CONF_FAN_SPEED_LIST,),
 }
@@ -407,11 +405,7 @@ def generate_schema(
 
     if domain == Platform.DEVICE_TRACKER:
         schema |= {
-            probatio.Optional(CONF_IN_ZONES): _list_or_template_selector(
-                selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=zone.DOMAIN, multiple=True)
-                )
-            ),
+            probatio.Optional(CONF_IN_ZONES): selector.TemplateSelector(),
             probatio.Optional(CONF_LATITUDE): selector.TemplateSelector(),
             probatio.Optional(CONF_LONGITUDE): selector.TemplateSelector(),
         }
