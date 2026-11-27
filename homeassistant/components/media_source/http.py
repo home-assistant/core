@@ -6,9 +6,6 @@ import probatio
 
 from homeassistant.components import frontend, websocket_api
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_FILTER_CLASSES,
-    ATTR_MEDIA_SEARCH_QUERY,
     CONTENT_AUTH_EXPIRY_TIME,
     BrowseError,
     MediaClass,
@@ -35,7 +32,7 @@ def async_setup(hass: HomeAssistant) -> None:
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "media_source/browse_media",
-        probatio.Optional(ATTR_MEDIA_CONTENT_ID, default=""): str,
+        probatio.Optional("media_content_id", default=""): str,
     }
 )
 @websocket_api.async_response
@@ -56,9 +53,9 @@ async def websocket_browse_media(
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "media_source/search_media",
-        probatio.Optional(ATTR_MEDIA_CONTENT_ID, default=""): str,
-        probatio.Required(ATTR_MEDIA_SEARCH_QUERY): str,
-        probatio.Optional(ATTR_MEDIA_FILTER_CLASSES): [probatio.Coerce(MediaClass)],
+        probatio.Optional("media_content_id", default=""): str,
+        probatio.Required("search_query"): str,
+        probatio.Optional("media_filter_classes"): [probatio.Coerce(MediaClass)],
     }
 )
 @websocket_api.async_response
@@ -71,8 +68,8 @@ async def websocket_search_media(
             hass,
             msg["media_content_id"],
             SearchMediaQuery(
-                search_query=msg[ATTR_MEDIA_SEARCH_QUERY],
-                media_filter_classes=msg.get(ATTR_MEDIA_FILTER_CLASSES),
+                search_query=msg["search_query"],
+                media_filter_classes=msg.get("media_filter_classes"),
             ),
         )
     except BrowseError as err:
@@ -85,7 +82,7 @@ async def websocket_search_media(
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "media_source/resolve_media",
-        probatio.Required(ATTR_MEDIA_CONTENT_ID): str,
+        probatio.Required("media_content_id"): str,
         probatio.Optional("expires", default=CONTENT_AUTH_EXPIRY_TIME): int,
     }
 )
