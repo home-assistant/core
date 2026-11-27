@@ -128,7 +128,10 @@ def _async_find_hub(entries: list[ConfigEntry]) -> ConfigEntry | None:
 class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenWrt (ubus)."""
 
-    VERSION = 1
+    # The hub entry holds no data of its own; an older release which reads
+    # the router data from entry.data must reject such an entry instead of
+    # adopting it, which a version-2 entry guarantees.
+    VERSION = 2
 
     @classmethod
     @callback

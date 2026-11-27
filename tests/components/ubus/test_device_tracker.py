@@ -23,6 +23,7 @@ from homeassistant.config_entries import (
     ConfigEntryError,
     ConfigEntryState,
     ConfigSubentry,
+    UnknownEntry,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -49,7 +50,9 @@ from .conftest import (
     MOCK_CONFIG,
     MOCK_HOST,
     MOCK_HOST_B,
+    MOCK_HOST_C,
     MOCK_HOST_CONFIG_B,
+    MOCK_HOST_CONFIG_C,
     router_subentry_data,
 )
 
@@ -2007,18 +2010,21 @@ async def test_migration_merges_entries_into_hub(
     ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    assert await hass.config_entries.async_setup(legacy_entry.entry_id)
-    await hass.async_block_till_done()
-    entity_id = entity_registry.async_get_entity_id(
-        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    # A tracker and device the legacy entry created before the migration,
+    # which runs in component setup, before any entry is set up.
+    legacy_device = device_registry.async_get_or_create(
+        config_entry_id=legacy_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
     )
-    assert entity_id is not None
-    assert entity_registry.async_get(entity_id).config_entry_id == legacy_entry.entry_id
-    device = device_registry.async_get_device_by_connection(
-        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), legacy_entry.entry_id
+    entity = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE,
+        config_entry=legacy_entry,
+        device_id=legacy_device.id,
+        disabled_by=None,
     )
-    assert device is not None
-
+    entity_id = entity.entity_id
     hub_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(hub_entry.entry_id)
     await hass.async_block_till_done()
@@ -2032,8 +2038,10 @@ async def test_migration_merges_entries_into_hub(
     }
     # The tracker was re-parented to the hub with the hub's device.
     assert entity_registry.async_get(entity_id).config_entry_id == hub_entry.entry_id
-    assert device_registry.async_get(device.id) is not None
-    assert device_registry.async_get(device.id).config_entry_id == hub_entry.entry_id
+    assert device_registry.async_get(legacy_device.id) is not None
+    assert device_registry.async_get(legacy_device.id).config_entry_id == (
+        hub_entry.entry_id
+    )
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_HOME
@@ -2065,12 +2073,20 @@ async def test_migration_merges_device_into_hubs_device(
     ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    assert await hass.config_entries.async_setup(legacy_entry.entry_id)
-    await hass.async_block_till_done()
-    legacy_device = device_registry.async_get_device_by_connection(
-        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), legacy_entry.entry_id
+    # A tracker and device the legacy entry created before the migration,
+    # which runs in component setup, before any entry is set up.
+    legacy_device = device_registry.async_get_or_create(
+        config_entry_id=legacy_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
     )
-    assert legacy_device is not None
+    entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE,
+        config_entry=legacy_entry,
+        device_id=legacy_device.id,
+        disabled_by=None,
+    )
     hub_entry.add_to_hass(hass)
     # The hub already holds a device for the client.
     hub_device = device_registry.async_get_or_create(
@@ -2146,8 +2162,6 @@ async def test_migration_idempotent_on_second_setup(
         entry_id="00000000000000000000000000B",
     )
     legacy_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(legacy_entry.entry_id)
-    await hass.async_block_till_done()
     hub_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(hub_entry.entry_id)
     await hass.async_block_till_done()
@@ -2185,8 +2199,6 @@ async def test_migration_failure_leaves_entry_and_reports(
         entry_id="00000000000000000000000000B",
     )
     legacy_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(legacy_entry.entry_id)
-    await hass.async_block_till_done()
     hub_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.ubus._async_reparent", side_effect=RuntimeError
@@ -2230,8 +2242,6 @@ async def test_migration_host_collision(
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
         "clients": {MAC_PHONE: {"authorized": True}}
     }
-    assert await hass.config_entries.async_setup(duplicate.entry_id)
-    await hass.async_block_till_done()
     first.add_to_hass(hass)
     assert await hass.config_entries.async_setup(first.entry_id)
     await hass.async_block_till_done()
@@ -2253,3 +2263,148 @@ async def test_migration_host_collision(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_HOME
+
+
+async def test_migration_unload_failure_keeps_entry(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a legacy entry which cannot be unloaded is left in place."""
+    _mock, _ubus = mock_ubus_by_host
+    hub_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=MOCK_HOST,
+        entry_id="00000000000000000000000000A",
+    )
+    # A legacy entry which was set up and has not been unloaded yet when
+    # the consolidation runs.
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_B,
+        title=MOCK_HOST_B,
+        entry_id="00000000000000000000000000B",
+        state=ConfigEntryState.LOADED,
+    )
+    legacy_entry.add_to_hass(hass)
+    hub_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.ubus.async_unload_entry", side_effect=RuntimeError
+    ):
+        assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hub_entry.state is ConfigEntryState.LOADED
+    # The entry which could not be unloaded is left in place with a repair
+    # issue; it is set up like any other entry, so its router keeps polling
+    # on its own entry, converted to a single-router hub.
+    assert legacy_entry in hass.config_entries.async_entries(DOMAIN)
+    assert legacy_entry.state is ConfigEntryState.LOADED
+    assert legacy_entry.version == 2
+    assert legacy_entry.data == {}
+    assert {sub.unique_id for sub in legacy_entry.subentries.values()} == {MOCK_HOST_B}
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"migration_failed_{legacy_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "migration_failed"
+
+
+async def test_migration_host_collision_keeps_remaining_routers(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a colliding router does not block the transfer of the rest."""
+    _mock, _ubus = mock_ubus_by_host
+    hub_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=HUB_TITLE,
+        entry_id="00000000000000000000000000A",
+        subentries_data=[router_subentry_data(MOCK_HOST_CONFIG_B)],
+    )
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=MOCK_HOST_B,
+        entry_id="00000000000000000000000000B",
+        subentries_data=[
+            router_subentry_data(MOCK_HOST_CONFIG_B),
+            router_subentry_data(MOCK_HOST_CONFIG_C),
+        ],
+    )
+    hub_entry.add_to_hass(hass)
+    legacy_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The colliding router kept the hub's copy; the other router was
+    # transferred before the entry was removed.
+    assert hass.config_entries.async_entries(DOMAIN) == [hub_entry]
+    assert {subentry.unique_id for subentry in hub_entry.subentries.values()} == {
+        MOCK_HOST_B,
+        MOCK_HOST_C,
+    }
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"migration_host_collision_{legacy_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "migration_host_collision"
+    assert issue.translation_placeholders == {"host": MOCK_HOST_B}
+
+
+async def test_migration_completes_before_entry_startup(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+) -> None:
+    """Test a consolidated entry can no longer be set up after the hub."""
+    _mock, _ubus = mock_ubus_by_host
+    hub_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=MOCK_HOST,
+        entry_id="00000000000000000000000000A",
+    )
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_B,
+        title=MOCK_HOST_B,
+        entry_id="00000000000000000000000000B",
+    )
+    legacy_entry.add_to_hass(hass)
+    hub_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The migration ran in component setup, before the entry startup
+    # snapshot, so the consolidated entry is already gone and the hub is
+    # on the new schema version.
+    assert hass.config_entries.async_entries(DOMAIN) == [hub_entry]
+    assert hub_entry.version == 2
+    assert hub_entry.data == {}
+    with pytest.raises(UnknownEntry):
+        await hass.config_entries.async_setup(legacy_entry.entry_id)
+
+
+async def test_version_one_entry_converted_at_entry_setup(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+) -> None:
+    """Test a version-1 entry is converted to the hub schema when set up."""
+    _mock, _ubus = mock_ubus_by_host
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=MOCK_HOST,
+    )
+    legacy_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(legacy_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert legacy_entry.version == 2
+    assert legacy_entry.data == {}
+    assert {subentry.unique_id for subentry in legacy_entry.subentries.values()} == {
+        MOCK_HOST
+    }
