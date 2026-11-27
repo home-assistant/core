@@ -22,6 +22,7 @@
       'device_tracker': 1,
       'notify': 1,
       'sensor': 2,
+      'timer_list': 1,
     }),
     'push': dict({
       'cloud_push': True,

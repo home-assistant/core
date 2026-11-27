@@ -3,11 +3,10 @@
 
 import asyncio
 from contextlib import suppress
-from functools import partial
 from typing import Any, override
 
 from homeassistant.auth import EVENT_USER_REMOVED
-from homeassistant.components import cloud, intent, notify as hass_notify
+from homeassistant.components import cloud, notify as hass_notify
 from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
@@ -31,6 +30,7 @@ from . import (  # noqa: F401
     device_tracker as device_tracker_pre_import,
     notify as notify_pre_import,
     sensor as sensor_pre_import,
+    timer_list as timer_list_pre_import,
     websocket_api,
 )
 from .const import (
@@ -58,8 +58,7 @@ from .const import (
 from .helpers import async_is_local_only_user
 from .http_api import RegistrationsView
 from .live_activity.store import async_cleanup_expired_live_activity_tokens
-from .timers import async_handle_timer_event
-from .util import async_create_cloud_hook, async_retire_webhook, supports_push
+from .util import async_create_cloud_hook, async_retire_webhook
 from .webhook import handle_webhook
 
 PLATFORMS = [
@@ -67,6 +66,7 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.NOTIFY,
     Platform.SENSOR,
+    Platform.TIMER_LIST,
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -233,13 +233,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await _async_setup_cloudhook(hass, entry, registration[CONF_USER_ID], webhook_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    if supports_push(hass, webhook_id):
-        entry.async_on_unload(
-            intent.async_register_timer_handler(
-                hass, device.id, partial(async_handle_timer_event, hass, entry)
-            )
-        )
 
     await hass_notify.async_reload(hass, DOMAIN)
 
