@@ -456,7 +456,7 @@ async def test_async_track_state_change_filtered_domain_listener_first_add_once(
 async def test_async_track_state_change_filtered_entity_listener_first_add_once(
     hass: HomeAssistant,
 ) -> None:
-    """Test a domain entity's first event is delivered once."""
+    """Test first add when the entity listener is registered before the domain listener."""
     calls = []
 
     @callback
