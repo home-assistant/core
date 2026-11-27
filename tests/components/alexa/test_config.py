@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from .test_common import get_default_config
 
@@ -20,3 +21,22 @@ async def test_enable_proactive_mode_in_parallel(hass: HomeAssistant) -> None:
         )
 
     mock_enable_proactive_mode.assert_awaited_once()
+
+
+async def test_smart_home_entity_config_expose_power_controller(
+    hass: HomeAssistant,
+) -> None:
+    """Test standalone Alexa config accepts expose_power_controller."""
+    assert await async_setup_component(
+        hass,
+        "alexa",
+        {
+            "alexa": {
+                "smart_home": {
+                    "entity_config": {
+                        "climate.test": {"expose_power_controller": False}
+                    }
+                }
+            }
+        },
+    )
