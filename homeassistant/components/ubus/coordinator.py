@@ -1,9 +1,10 @@
 """DataUpdateCoordinator for the OpenWrt (ubus) integration."""
 
 import asyncio
+import contextlib
 from datetime import datetime, timedelta
 import logging
-from typing import NamedTuple, override
+from typing import Any, NamedTuple, override
 
 from openwrt.ubus import Ubus
 
@@ -42,6 +43,17 @@ LEASE_REREAD_INTERVAL = timedelta(minutes=10)
 REQUEST_TIMEOUT = UPDATE_INTERVAL - timedelta(seconds=2)
 
 type UbusConfigEntry = ConfigEntry["UbusDataUpdateCoordinator"]
+
+
+def _poll_exception_retrieved(poll: asyncio.Future) -> None:
+    """Mark a finished poll's exception as retrieved.
+
+    A poll whose router is removed or reconfigured while it runs is never
+    awaited again; without this its failure would be logged as an unhandled
+    exception.
+    """
+    with contextlib.suppress(asyncio.CancelledError):
+        poll.exception()
 
 
 class InvalidCredentialsError(UpdateFailed):
@@ -272,6 +284,10 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         # subentries in place. None until the first poll built the hosts.
         self._polled_signature: tuple | None = None
         self._tick_results: dict[str, BaseException | dict[str, str | None]] = {}
+        # The poll running in the executor for each router; a tick which
+        # times out re-awaits the same poll on the next tick, so two polls
+        # never mutate a router's session and lease state at once.
+        self._inflight: dict[_UbusHost, asyncio.Future[Any]] = {}
         self._tick_start: float | None = None
         self._last_signature: tuple | None = None
         self._seq = 0
@@ -304,16 +320,29 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
             # be verified while their last known router is unmonitored.
             self._ungrounded |= set(self.data_or_none or {})
             return {}
+        polls: list[asyncio.Future[Any]] = []
+        for host in hosts.values():
+            poll = self._inflight.get(host)
+            if poll is None:
+                poll = self.hass.async_add_executor_job(host.poll)
+                poll.add_done_callback(_poll_exception_retrieved)
+                self._inflight[host] = poll
+            polls.append(poll)
         results = await asyncio.gather(
             *(
                 asyncio.wait_for(
-                    self.hass.async_add_executor_job(host.poll),
+                    asyncio.shield(poll),
                     timeout=REQUEST_TIMEOUT.total_seconds(),
                 )
-                for host in hosts.values()
+                for poll in polls
             ),
             return_exceptions=True,
         )
+        # A poll whose tick timed out was re-awaited here, so its result is
+        # applied; the next tick starts a fresh poll for the router.
+        for host, poll in zip(hosts.values(), polls, strict=True):
+            if poll.done():
+                self._inflight.pop(host, None)
         # A router removed while the tick was in flight must not resurrect
         # its clients in the merged presence.
         active = self.config_entry.subentries
@@ -377,7 +406,9 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
             set(self.hosts) | set(self.host_health) | set(self.latest_views)
         ):
             if subentry_id not in subentries:
-                self.hosts.pop(subentry_id, None)
+                host = self.hosts.pop(subentry_id, None)
+                if host is not None:
+                    self._inflight.pop(host, None)
                 self.host_health.pop(subentry_id, None)
                 self.latest_views.pop(subentry_id, None)
                 ir.async_delete_issue(
@@ -388,6 +419,10 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         for subentry_id, subentry in subentries.items():
             host = self.hosts.get(subentry_id)
             if host is None or subentry_signature(subentry) != host.signature:
+                if host is not None:
+                    # A reconfigured router's stuck poll queries the old
+                    # configuration; it must not feed the new one.
+                    self._inflight.pop(host, None)
                 self.hosts[subentry_id] = _UbusHost(subentry)
         self._polled_signature = self._subentries_signature()
         return self.hosts

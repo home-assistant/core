@@ -1,5 +1,6 @@
 """Tests for the OpenWrt (ubus) device tracker."""
 
+import asyncio
 from datetime import timedelta
 import threading
 from types import MappingProxyType
@@ -990,6 +991,67 @@ async def test_late_refresh_after_subentry_removal_is_ignored(
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
     assert "source" not in state.attributes
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_overlapping_update_reuses_in_flight_poll(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    hub_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an update overlapping an in-flight poll re-awaits it, not a new one.
+
+    A tick that times out while its poll is still running in the executor
+    leaves that poll in flight; the next tick must re-await it, because a
+    second poll for the same router would concurrently mutate its ubus
+    session and lease state.
+    """
+    _mock, ubus = mock_ubus_by_host
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    hub_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_HOME
+    assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 1
+    coordinator = hub_entry.runtime_data
+
+    # The next poll blocks in the executor until it is released.
+    poll_started = threading.Event()
+    release = threading.Event()
+
+    def _blocked_clients(interface: str) -> dict:
+        poll_started.set()
+        release.wait()
+        return {"clients": {MAC_PHONE: {"authorized": True}}}
+
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = _blocked_clients
+    try:
+        # The first update starts a poll that blocks in the executor.
+        first = hass.async_create_task(coordinator._async_update_data())
+        assert await hass.async_add_executor_job(poll_started.wait, 10)
+        assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 2
+        # An update overlapping it must re-await the in-flight poll rather
+        # than start one of its own; releasing it completes both.
+        second = hass.async_create_task(coordinator._async_update_data())
+        release.set()
+        first_presence, second_presence = await asyncio.gather(first, second)
+    finally:
+        release.set()
+
+    # Both updates report the client from the single in-flight poll; a
+    # duplicate poll would have called the mock a third time.
+    assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 2
+    assert MAC_PHONE in first_presence
+    assert MAC_PHONE in second_presence
+    assert hass.states.get(entity_id).state == STATE_HOME
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -2111,6 +2173,54 @@ async def test_migration_merges_device_into_hubs_device(
     assert state.state == STATE_HOME
 
 
+async def test_migration_moves_device_without_tracker(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a device whose tracker was deleted moves to the hub with the entry."""
+    _mock, ubus = mock_ubus_by_host
+    hub_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=MOCK_HOST,
+        entry_id="00000000000000000000000000A",
+    )
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_B,
+        title=MOCK_HOST_B,
+        entry_id="00000000000000000000000000B",
+    )
+    for host in (MOCK_HOST, MOCK_HOST_B):
+        ubus[host].get_hostapd_clients.return_value = {"clients": {}}
+    legacy_entry.add_to_hass(hass)
+    # A device the legacy entry created before the migration, whose tracker
+    # was deleted and whose client is no longer on any network: removing the
+    # entry must not delete the device with it.
+    legacy_device = device_registry.async_get_or_create(
+        config_entry_id=legacy_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
+    )
+    device_registry.async_update_device(legacy_device.id, name_by_user="My Phone")
+    hub_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The entry is gone, but the device survived on the hub, untouched.
+    assert hass.config_entries.async_entries(DOMAIN) == [hub_entry]
+    device = device_registry.async_get(legacy_device.id)
+    assert device is not None
+    assert device.config_entry_id == hub_entry.entry_id
+    assert device.name_by_user == "My Phone"
+    # The client is not connected, so no tracker was recreated.
+    assert (
+        entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE)
+        is None
+    )
+
+
 async def test_migration_disabled_entry_becomes_subentry(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
@@ -2408,3 +2518,41 @@ async def test_version_one_entry_converted_at_entry_setup(
     assert {subentry.unique_id for subentry in legacy_entry.subentries.values()} == {
         MOCK_HOST
     }
+
+
+async def test_migration_skips_newer_schema_entries(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+) -> None:
+    """Test an entry on a newer schema is left in place by the migration."""
+    _mock, _ubus = mock_ubus_by_host
+    # A hub a newer release wrote with a schema this release does not
+    # know, which must not be downgraded or consolidated away.
+    newer_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=HUB_TITLE,
+        entry_id="00000000000000000000000000A",
+        version=3,
+        subentries_data=[router_subentry_data(MOCK_HOST_CONFIG_B)],
+    )
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_C,
+        title=MOCK_HOST_C,
+        entry_id="00000000000000000000000000B",
+    )
+    newer_entry.add_to_hass(hass)
+    legacy_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(legacy_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The newer entry is untouched, and the legacy entry became its own
+    # single-router hub instead of joining it.
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    assert newer_entry.version == 3
+    assert newer_entry.data == {}
+    assert {sub.unique_id for sub in newer_entry.subentries.values()} == {MOCK_HOST_B}
+    assert legacy_entry.version == 2
+    assert legacy_entry.data == {}
+    assert {sub.unique_id for sub in legacy_entry.subentries.values()} == {MOCK_HOST_C}

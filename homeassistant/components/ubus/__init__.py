@@ -17,6 +17,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.typing import ConfigType
 
+from .config_flow import UbusConfigFlow
 from .const import DOMAIN, SUBENTRY_TYPE_ROUTER
 from .coordinator import UbusConfigEntry, UbusDataUpdateCoordinator
 
@@ -131,8 +132,16 @@ async def _async_migrate(hass: HomeAssistant) -> None:
     subentry and re-parents every other entry (including disabled ones)
     into subentries, then removes those entries. It happens exactly once,
     in component setup, before any entry is set up.
+
+    Entries on a schema newer than the config flow's version were written
+    by a newer release; after a rollback this migration must not downgrade
+    or remove them, so they are left in place.
     """
-    entries = hass.config_entries.async_entries(DOMAIN)
+    entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.version <= UbusConfigFlow.VERSION
+    ]
     hub_candidates = [e for e in entries if e.disabled_by is None]
     if not hub_candidates:
         return
@@ -285,8 +294,10 @@ def _async_reparent(
 ) -> None:
     """Re-parent this entry's trackers and devices to the hub.
 
-    A tracker is re-homed before its device: moving a device to another
-    entry deletes the old entry's registry entries linked to it.
+    Trackers are re-homed before any device moves: moving a device to
+    another entry deletes the old entry's registry entries linked to it.
+    Devices are found from the device registry, so a device whose tracker
+    was deleted moves too and is not lost with the entry's removal.
     """
     for registry_entry in er.async_entries_for_config_entry(
         entity_registry, entry.entry_id
@@ -297,18 +308,17 @@ def _async_reparent(
             or registry_entry.unique_id is None
         ):
             continue
-        mac = registry_entry.unique_id
         entity_registry.async_update_entity(
             registry_entry.entity_id, config_entry_id=hub.entry_id
         )
-        device = device_registry.async_get_device_by_connection(
-            (dr.CONNECTION_NETWORK_MAC, mac), entry.entry_id
-        )
-        if device is None:
-            continue
-        target_device = device_registry.async_get_device_by_connection(
-            (dr.CONNECTION_NETWORK_MAC, mac), hub.entry_id
-        )
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        target_device: dr.DeviceEntry | None = None
+        for connection_type, connection in device.connections:
+            if connection_type != dr.CONNECTION_NETWORK_MAC:
+                continue
+            target_device = device_registry.async_get_device_by_connection(
+                (dr.CONNECTION_NETWORK_MAC, connection), hub.entry_id
+            )
         if target_device is not None:
             # Merge the duplicate device into the hub's device, including the
             # disabled entities only the duplicate holds.
