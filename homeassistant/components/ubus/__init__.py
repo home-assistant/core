@@ -196,6 +196,7 @@ async def _async_migrate_other(
                     hass,
                     DOMAIN,
                     f"migration_failed_{entry.entry_id}",
+                    config_entry_id=entry.entry_id,
                     is_fixable=False,
                     issue_domain=DOMAIN,
                     severity=ir.IssueSeverity.ERROR,
@@ -205,44 +206,61 @@ async def _async_migrate_other(
                 return
             _async_reparent(hass, hub, entry, device_registry, entity_registry)
             collision_hosts: list[str] = []
+            created_subentries: list[ConfigSubentry] = []
             for subentry in entry.subentries.values():
+                new_subentry = ConfigSubentry(
+                    data=MappingProxyType(dict(subentry.data)),
+                    subentry_type=SUBENTRY_TYPE_ROUTER,
+                    title=subentry.title,
+                    unique_id=subentry.unique_id,
+                )
                 try:
-                    hass.config_entries.async_add_subentry(
-                        hub,
-                        ConfigSubentry(
-                            data=MappingProxyType(dict(subentry.data)),
-                            subentry_type=SUBENTRY_TYPE_ROUTER,
-                            title=subentry.title,
-                            unique_id=subentry.unique_id,
-                        ),
-                    )
+                    hass.config_entries.async_add_subentry(hub, new_subentry)
                 except AbortFlow:
                     # A host collision: the hub keeps its copy of this
                     # router, and the remaining routers are still
                     # transferred below.
                     collision_hosts.append(subentry.title)
+                else:
+                    created_subentries.append(new_subentry)
             if entry.data:
                 data = dict(entry.data)
+                new_subentry = ConfigSubentry(
+                    data=MappingProxyType(data),
+                    subentry_type=SUBENTRY_TYPE_ROUTER,
+                    title=data[CONF_HOST],
+                    unique_id=data[CONF_HOST],
+                )
                 try:
-                    hass.config_entries.async_add_subentry(
-                        hub,
-                        ConfigSubentry(
-                            data=MappingProxyType(data),
-                            subentry_type=SUBENTRY_TYPE_ROUTER,
-                            title=data[CONF_HOST],
-                            unique_id=data[CONF_HOST],
-                        ),
-                    )
+                    hass.config_entries.async_add_subentry(hub, new_subentry)
                 except AbortFlow:
                     collision_hosts.append(data[CONF_HOST])
+                else:
+                    created_subentries.append(new_subentry)
             if entry.disabled_by is not None:
                 # Subentries cannot be disabled; deleting the subentry
-                # reproduces the old "off" behavior.
+                # reproduces the old "off" behavior, and clears the
+                # warning which is linked to it.
+                disabled_subentry = next(
+                    (
+                        created
+                        for created in created_subentries
+                        if created.unique_id == host
+                    ),
+                    None,
+                )
                 ir.async_create_issue(
                     hass,
                     DOMAIN,
                     f"migration_disabled_entry_{entry.entry_id}",
+                    config_entry_id=hub.entry_id,
+                    config_subentry_id=(
+                        disabled_subentry.subentry_id
+                        if disabled_subentry is not None
+                        else None
+                    ),
                     is_fixable=False,
+                    is_persistent=True,
                     issue_domain=DOMAIN,
                     severity=ir.IssueSeverity.WARNING,
                     translation_key="migration_disabled_entry",
@@ -276,6 +294,7 @@ async def _async_migrate_other(
             hass,
             DOMAIN,
             f"migration_failed_{entry.entry_id}",
+            config_entry_id=entry.entry_id,
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.ERROR,

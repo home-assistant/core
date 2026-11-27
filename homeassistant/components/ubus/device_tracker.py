@@ -443,7 +443,7 @@ class UbusScannerEntity(ScannerEntity):
 
     async def async_update(self) -> None:
         """Refresh the router client lists on request."""
-        await self._config_entry.runtime_data.async_refresh()
+        await self._config_entry.runtime_data.async_request_refresh()
 
     @override
     async def async_added_to_hass(self) -> None:

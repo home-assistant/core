@@ -2139,6 +2139,17 @@ async def test_update_entity_service_refreshes_the_routers(
     assert laptop_entity_id is not None
     assert hass.states.get(laptop_entity_id).state == STATE_HOME
 
+    # Manual refreshes are debounced: a request for another tracker does
+    # not poll the routers again within the debounce window.
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": laptop_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert ubus[MOCK_HOST].get_hostapd_clients.call_count == 2
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_tracker_recreated_when_client_returns_after_removal(
@@ -2671,6 +2682,24 @@ async def test_migration_disabled_entry_becomes_subentry(
     assert issue.translation_key == "migration_disabled_entry"
     assert issue.translation_placeholders == {"host": MOCK_HOST_B}
     assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.is_persistent
+    assert issue.config_entry_id == hub_entry.entry_id
+    subentry = next(
+        subentry
+        for subentry in hub_entry.subentries.values()
+        if subentry.unique_id == MOCK_HOST_B
+    )
+    assert issue.config_subentry_id == subentry.subentry_id
+
+    # Deleting the subentry clears the warning.
+    hass.config_entries.async_remove_subentry(hub_entry, subentry.subentry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"migration_disabled_entry_{disabled_entry.entry_id}"
+        )
+        is None
+    )
 
 
 async def test_migration_idempotent_on_second_setup(
@@ -2745,6 +2774,17 @@ async def test_migration_failure_leaves_entry_and_reports(
     assert issue is not None
     assert issue.translation_key == "migration_failed"
     assert issue.translation_placeholders == {"host": MOCK_HOST_B}
+    assert issue.config_entry_id == legacy_entry.entry_id
+
+    # Removing the entry clears its repair.
+    assert await hass.config_entries.async_remove(legacy_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"migration_failed_{legacy_entry.entry_id}"
+        )
+        is None
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
