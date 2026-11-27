@@ -5,8 +5,13 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock
 
-import aiohttp
-from aiowebostv import WebOsTvInfo, WebOsTvPairError
+from aiowebostv import (
+    WebOsTvCommandError,
+    WebOsTvConnectionError,
+    WebOsTvInfo,
+    WebOsTvPairError,
+    WebOsTvRegistrationError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed, mock_restore_cache
@@ -36,7 +41,6 @@ from homeassistant.components.webostv.const import (
     CONF_SOURCES,
     DOMAIN,
     LIVE_TV_APP_ID,
-    WebOsTvCommandError,
     WebOsTvService,
     WebOsTvServiceArgument,
 )
@@ -621,11 +625,13 @@ async def test_app_id(hass: HomeAssistant, client) -> None:
 @pytest.mark.parametrize(
     "side_effect",
     [
-        pytest.param(TimeoutError(), id="timeout"),
-        pytest.param(ConnectionResetError(), id="connection_reset"),
         pytest.param(
-            aiohttp.ClientOSError(104, "Connection reset by peer"),
-            id="client_os_error",
+            WebOsTvConnectionError("Timed out connecting to ws://1.2.3.4:3000"),
+            id="connection_error",
+        ),
+        pytest.param(
+            WebOsTvRegistrationError("400 prevent registering your device with TV"),
+            id="registration_error",
         ),
     ],
 )
@@ -1326,7 +1332,7 @@ async def test_availability(
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
 
     # Make the entity go offline - should log unavailable message
-    client.connect.side_effect = TimeoutError
+    client.connect.side_effect = WebOsTvConnectionError
     client.is_connected.return_value = False
     await mock_scan_interval(hass, freezer)
 
@@ -1357,7 +1363,7 @@ async def test_availability(
     assert available_log not in caplog.text
 
     # Test offline again to ensure the flag resets properly
-    client.connect.side_effect = TimeoutError
+    client.connect.side_effect = WebOsTvConnectionError
     await mock_scan_interval(hass, freezer)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
@@ -1403,7 +1409,7 @@ async def test_availability_during_startup(
     hass.set_state(CoreState.starting)
     await setup_webostv(hass)
 
-    client.connect.side_effect = TimeoutError
+    client.connect.side_effect = WebOsTvConnectionError
     client.is_connected.return_value = False
     client.tv_state.is_on = False
     await mock_scan_interval(hass, freezer)

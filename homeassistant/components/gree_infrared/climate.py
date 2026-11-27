@@ -11,14 +11,14 @@ from infrared_protocols.commands.gree_ac import (
 )
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     ClimateExtraStoredData,
+    ClimateServiceArgument,
     HVACMode,
     RestoreClimate,
 )
@@ -27,12 +27,7 @@ from homeassistant.components.infrared import (
     InfraredReceivedSignal,
     InfraredReceiverConsumerEntity,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    UnitOfTemperature,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -159,7 +154,11 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         ):
             if last_state.state in self._attr_hvac_modes:
                 self._attr_hvac_mode = HVACMode(last_state.state)
-            if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
+            if (
+                fan_mode := last_state.attributes.get(
+                    ClimateEntityStateAttribute.FAN_MODE
+                )
+            ) in _HA_FAN_TO_LIB:
                 self._attr_fan_mode = fan_mode
             if (
                 climate_data := await self.async_get_last_climate_data(
@@ -243,8 +242,8 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature, switching the HVAC mode when one is given."""
-        temp = round(kwargs[ATTR_TEMPERATURE])
-        hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+        temp = round(kwargs[ClimateServiceArgument.TEMPERATURE])
+        hvac_mode: HVACMode | None = kwargs.get(ClimateServiceArgument.HVAC_MODE)
         if hvac_mode is not None:
             self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
 

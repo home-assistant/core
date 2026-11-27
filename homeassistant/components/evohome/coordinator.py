@@ -130,6 +130,9 @@ def _log_client_error(logger: logging.Logger, err: ec2.EvohomeError) -> None:
 type _Schedule = list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT]
 type _HighPrecisionTemps = dict[str, float | None]  # by DHW/zone id
 
+# keep the last high-precision temps for this many failed polls (i.e. 10 minutes)
+_HIGH_PRECISION_MAX_FAILED_POLLS: Final = 2
+
 _ERR_SCHEDULE_UPDATE: Final = (
     "%s: Failed to update the schedule (keeping any previous one): %s"
 )
@@ -157,7 +160,8 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
     """Coordinator for an evohome account (the user's config, high-precision temps).
 
     Its data is the latest high-precision temperatures, by DHW/zone id. They are
-    polled, but are not refreshed on demand (unlike a location).
+    polled, but are not refreshed on demand (unlike a location). If a poll fails, the
+    last temperatures are kept for a grace period, before the zones use their v2 ones.
     """
 
     def __init__(
@@ -184,6 +188,8 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
         self.client_v1 = client_v1
 
         self.data = {}
+
+        self._failed_polls = 0
 
     @override
     async def _async_setup(self) -> None:
@@ -239,23 +245,37 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
                 err,
             )
             self.client_v1 = None
-            return self.data
+            return {}
 
         except (ec1.EvohomeError, TimeoutError) as err:
-            self.logger.warning(
-                (
-                    "Unable to obtain the latest high-precision temperatures. "
-                    "They will be ignored this refresh cycle: %r"
-                ),
-                err,
-            )
-            temps: _HighPrecisionTemps = {}  # now considered stale
+            self._failed_polls += 1
+            if self._failed_polls <= _HIGH_PRECISION_MAX_FAILED_POLLS:
+                self.logger.debug(
+                    "Unable to obtain the latest high-precision temperatures, "
+                    "so keeping the previous ones: %r",
+                    err,
+                )
+                return self.data
 
-        else:
-            temps = {}
-            for loc in self.client_v1.location_by_id.values():
-                if loc.tcs:
-                    temps |= await loc.tcs.get_temperatures(dont_update_status=True)
+            if self._failed_polls == _HIGH_PRECISION_MAX_FAILED_POLLS + 1:
+                self.logger.warning(
+                    (
+                        "Unable to obtain the latest high-precision temperatures. "
+                        "Standard-precision temperatures will be used until they "
+                        "are available again: %r"
+                    ),
+                    err,
+                )
+            return {}
+
+        if self._failed_polls > _HIGH_PRECISION_MAX_FAILED_POLLS:
+            self.logger.info("High-precision temperatures are available again")
+        self._failed_polls = 0
+
+        temps: _HighPrecisionTemps = {}
+        for loc in self.client_v1.location_by_id.values():
+            if loc.tcs:
+                temps |= await loc.tcs.get_temperatures(dont_update_status=True)
 
         self.logger.debug("Status (high-res temps) = %s", temps)
         return temps

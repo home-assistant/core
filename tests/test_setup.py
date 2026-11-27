@@ -1721,6 +1721,55 @@ async def test_async_prepare_setup_platform(
     assert button_platform is not None
 
 
+async def test_async_get_setup_results(hass: HomeAssistant) -> None:
+    """Test _async_get_setup_results."""
+    setup_started = asyncio.Event()
+    setup_stall = asyncio.Event()
+
+    async def mock_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return True
+
+    async def mock_setup_failed(hass: HomeAssistant, config: ConfigType) -> bool:
+        return False
+
+    mock_integration(hass, MockModule("test_scheduled"))
+    mock_integration(hass, MockModule("test_slow", async_setup=mock_setup))
+    mock_integration(hass, MockModule("test_failed", async_setup=mock_setup_failed))
+    domains = {"test_scheduled", "test_slow", "test_failed", "test_unknown"}
+
+    # Nothing is set up, and nothing is scheduled to be
+    assert setup._async_get_setup_results(hass, domains) == dict.fromkeys(
+        domains, False
+    )
+
+    setup.async_set_domains_to_be_loaded(hass, {"test_scheduled"})
+    setup_task = hass.async_create_task(
+        setup.async_setup_component(hass, "test_slow", {})
+    )
+    await setup_started.wait()
+    assert await setup.async_setup_component(hass, "test_failed", {}) is False
+
+    assert setup._async_get_setup_results(hass, domains) == {
+        "test_scheduled": None,
+        "test_slow": None,
+        "test_failed": False,
+        "test_unknown": False,
+    }
+
+    setup_stall.set()
+    assert await setup_task is True
+    assert await setup.async_setup_component(hass, "test_scheduled", {}) is True
+
+    assert setup._async_get_setup_results(hass, domains) == {
+        "test_scheduled": True,
+        "test_slow": True,
+        "test_failed": False,
+        "test_unknown": False,
+    }
+
+
 async def test_async_wait_component(hass: HomeAssistant) -> None:
     """Test async_wait_component."""
     setup_stall = asyncio.Event()
@@ -1786,80 +1835,3 @@ async def test_async_wait_component_waiter_cancelled(hass: HomeAssistant) -> Non
 
     assert await setup_task is True
     assert setup_done_future.result() is True
-
-
-async def test_subscribe_bootstrap_progress(hass: HomeAssistant) -> None:
-    """Test the bootstrap progress is only built and sent for subscribers."""
-    progress = {"phase": "setup"}
-    source = Mock(return_value=progress)
-    first = Mock()
-    unsubscribe_first = setup.async_subscribe_bootstrap_progress(hass, first)
-    first.assert_not_called()
-
-    setup._async_set_bootstrap_progress_source(hass, source)
-    first.assert_called_once_with(progress)
-
-    # A late subscriber gets the current progress right away.
-    second = Mock()
-    unsubscribe_second = setup.async_subscribe_bootstrap_progress(hass, second)
-    second.assert_called_once_with(progress)
-
-    unsubscribe_first()
-    setup._async_dispatch_bootstrap_progress(hass)
-    assert first.call_count == 1
-    assert second.call_count == 2
-    assert source.call_count == 3
-
-    unsubscribe_second()
-    setup._async_dispatch_bootstrap_progress(hass)
-    assert second.call_count == 2
-    assert source.call_count == 3
-
-
-async def test_bootstrap_progress_listener_raises(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test a listener that raises does not stop the progress for the others."""
-    progress = {"phase": "setup"}
-    setup.async_subscribe_bootstrap_progress(hass, Mock(side_effect=ValueError))
-    listener = Mock()
-    setup.async_subscribe_bootstrap_progress(hass, listener)
-
-    setup._async_set_bootstrap_progress_source(hass, Mock(return_value=progress))
-
-    listener.assert_called_once_with(progress)
-    assert "Error sending bootstrap progress to" in caplog.text
-
-
-async def test_bootstrap_progress_late_listener_raises(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test a late listener that raises still gets its unsubscribe callback."""
-    setup._async_set_bootstrap_progress_source(
-        hass, Mock(return_value={"phase": "setup"})
-    )
-    listener = Mock(side_effect=ValueError)
-
-    unsubscribe = setup.async_subscribe_bootstrap_progress(hass, listener)
-
-    assert "Error sending bootstrap progress to" in caplog.text
-    unsubscribe()
-    setup._async_dispatch_bootstrap_progress(hass)
-    listener.assert_called_once()
-
-
-async def test_bootstrap_progress_listener_unsubscribes_itself(
-    hass: HomeAssistant,
-) -> None:
-    """Test a listener unsubscribing itself does not skip the next listener."""
-    progress = {"phase": "running"}
-    first = Mock(side_effect=lambda _: unsubscribe_first())
-    unsubscribe_first = setup.async_subscribe_bootstrap_progress(hass, first)
-    second = Mock()
-    setup.async_subscribe_bootstrap_progress(hass, second)
-
-    setup._async_set_bootstrap_progress_source(hass, Mock(return_value=progress))
-    setup._async_dispatch_bootstrap_progress(hass)
-
-    first.assert_called_once_with(progress)
-    assert second.call_count == 2

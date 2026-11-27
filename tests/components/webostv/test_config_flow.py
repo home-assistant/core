@@ -1,6 +1,6 @@
 """Test the LG webOS TV config flow."""
 
-from aiowebostv import WebOsTvPairError
+from aiowebostv import WebOsTvConnectionError, WebOsTvPairError
 import pytest
 
 from homeassistant import config_entries
@@ -87,7 +87,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, client) -> None:
         data=MOCK_USER_CONFIG,
     )
 
-    client.connect.side_effect = ConnectionResetError
+    client.connect.side_effect = WebOsTvConnectionError
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
@@ -251,7 +251,7 @@ async def test_reauth_successful(hass: HomeAssistant, client) -> None:
     ("side_effect", "error"),
     [
         (WebOsTvPairError, "error_pairing"),
-        (ConnectionResetError, "cannot_connect"),
+        (WebOsTvConnectionError, "cannot_connect"),
     ],
 )
 async def test_reauth_errors(hass: HomeAssistant, client, side_effect, error) -> None:
@@ -306,7 +306,7 @@ async def test_reconfigure_successful(hass: HomeAssistant, client) -> None:
     ("side_effect", "error"),
     [
         (WebOsTvPairError, "error_pairing"),
-        (ConnectionResetError, "cannot_connect"),
+        (WebOsTvConnectionError, "cannot_connect"),
     ],
 )
 async def test_reconfigure_errors(
