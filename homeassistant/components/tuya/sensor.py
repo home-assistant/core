@@ -5,7 +5,6 @@
 # so it is not redundant here.
 # pylint: disable=home-assistant-redundant-translation-key
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
@@ -167,87 +166,86 @@ def _has_multiple_phase_channels(device: CustomerDevice) -> bool:
 
 
 def _indexed_electricity_data(
-    dpcode: DPCode | tuple[DPCode, ...],
+    dpcode: tuple[DPCode, ...],
     index: int,
-    *,
-    wrapper_classes: tuple[tuple[type[DPCodeTypeInformationWrapper], ...], ...] = (
-        (ElectricityCurrentHexStringWrapper,),
-        (ElectricityPowerHexStringWrapper,),
-        (ElectricityVoltageHexStringWrapper,),
-        (ElectricityReactivePowerHexStringWrapper,),
-        (ElectricityApparentPowerHexStringWrapper,),
-        (ElectricityPowerFactorHexStringWrapper,),
-    ),
-    channel_condition: Callable[[CustomerDevice], bool] = _has_multiple_phase_channels,
 ) -> tuple[TuyaSensorEntityDescription, ...]:
     """Build sensors extracted from an indexed electricity DPCode."""
-    key_prefix = dpcode if isinstance(dpcode, str) else dpcode[0]
-    (
-        current_wrapper,
-        power_wrapper,
-        voltage_wrapper,
-        reactive_power_wrapper,
-        apparent_power_wrapper,
-        power_factor_wrapper,
-    ) = wrapper_classes
     return (
         TuyaSensorEntityDescription(
-            key=f"{key_prefix}electriccurrent",
+            key=f"{dpcode[0]}electriccurrent",
             dpcode=dpcode,
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-            wrapper_class=current_wrapper,
+            wrapper_class=(
+                ElectricityCurrentHexStringWrapper,
+                ElectricityCurrentRawWrapper,
+            ),
             channel_index=index,
-            channel_condition=channel_condition,
+            channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
-            key=f"{key_prefix}power",
+            key=f"{dpcode[0]}power",
             dpcode=dpcode,
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
-            wrapper_class=power_wrapper,
+            wrapper_class=(
+                ElectricityPowerHexStringWrapper,
+                ElectricityPowerRawWrapper,
+            ),
             channel_index=index,
-            channel_condition=channel_condition,
+            channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
-            key=f"{key_prefix}voltage",
+            key=f"{dpcode[0]}voltage",
             dpcode=dpcode,
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=voltage_wrapper,
+            wrapper_class=(
+                ElectricityVoltageHexStringWrapper,
+                ElectricityVoltageRawWrapper,
+            ),
             channel_index=index,
-            channel_condition=channel_condition,
+            channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
-            key=f"{key_prefix}reactivepower",
+            key=f"{dpcode[0]}reactivepower",
             dpcode=dpcode,
             device_class=SensorDeviceClass.REACTIVE_POWER,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
-            wrapper_class=reactive_power_wrapper,
+            wrapper_class=(
+                ElectricityReactivePowerHexStringWrapper,
+                ElectricityReactivePowerRawWrapper,
+            ),
             channel_index=index,
-            channel_condition=channel_condition,
+            channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
-            key=f"{key_prefix}apparentpower",
+            key=f"{dpcode[0]}apparentpower",
             dpcode=dpcode,
             device_class=SensorDeviceClass.APPARENT_POWER,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfApparentPower.KILO_VOLT_AMPERE,
-            wrapper_class=apparent_power_wrapper,
+            wrapper_class=(
+                ElectricityApparentPowerHexStringWrapper,
+                ElectricityApparentPowerRawWrapper,
+            ),
             channel_index=index,
-            channel_condition=channel_condition,
+            channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
-            key=f"{key_prefix}powerfactor",
+            key=f"{dpcode[0]}powerfactor",
             dpcode=dpcode,
             device_class=SensorDeviceClass.POWER_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=power_factor_wrapper,
+            wrapper_class=(
+                ElectricityPowerFactorHexStringWrapper,
+                ElectricityPowerFactorRawWrapper,
+            ),
             channel_index=index,
-            channel_condition=channel_condition,
+            channel_condition=_has_multiple_phase_channels,
         ),
     )
 
@@ -1975,32 +1973,6 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             for description in _indexed_electricity_data(
                 (DPCode(f"phase_s{index}"), DPCode(f"phase_{index}")),
                 index,
-                wrapper_classes=(
-                    (
-                        ElectricityCurrentHexStringWrapper,
-                        ElectricityCurrentRawWrapper,
-                    ),
-                    (
-                        ElectricityPowerHexStringWrapper,
-                        ElectricityPowerRawWrapper,
-                    ),
-                    (
-                        ElectricityVoltageHexStringWrapper,
-                        ElectricityVoltageRawWrapper,
-                    ),
-                    (
-                        ElectricityReactivePowerHexStringWrapper,
-                        ElectricityReactivePowerRawWrapper,
-                    ),
-                    (
-                        ElectricityApparentPowerHexStringWrapper,
-                        ElectricityApparentPowerRawWrapper,
-                    ),
-                    (
-                        ElectricityPowerFactorHexStringWrapper,
-                        ElectricityPowerFactorRawWrapper,
-                    ),
-                ),
             )
         ),
     ),
