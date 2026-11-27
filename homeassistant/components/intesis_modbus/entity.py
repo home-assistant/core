@@ -21,12 +21,13 @@ class IntesisEntity(CoordinatorEntity[IntesisCoordinator | IntesisUnitCoordinato
         self,
         coordinator: IntesisCoordinator | IntesisUnitCoordinator,
         key: str,
-        report_name: str,
+        report_name: str | None,
     ) -> None:
         """Place the entity on the device its coordinator follows.
 
         That is the gateway, or the air conditioner behind it. report_name is
-        the gateway sub-system the entity's value is read from.
+        the gateway sub-system the entity's value is read from; an entity that
+        reads no value, such as a button, has none.
         """
         super().__init__(coordinator)
         self._report_name = report_name
@@ -37,7 +38,10 @@ class IntesisEntity(CoordinatorEntity[IntesisCoordinator | IntesisUnitCoordinato
     @override
     def available(self) -> bool:
         """Whether this entity's value was read in the most recent poll."""
-        return super().available and self._report_name in self.coordinator.data.updated
+        return super().available and (
+            self._report_name is None
+            or self._report_name in self.coordinator.data.updated
+        )
 
     async def _async_write(self, write: Callable[[], Awaitable[None]]) -> None:
         """Run one write against the gateway, then read back what it took.
